@@ -230,15 +230,18 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             IFunctionNode functionNode = (IFunctionNode) offsetNode;
             IContainerNode parameters = functionNode.getParametersContainerNode();
             IExpressionNode typeNode = functionNode.getReturnTypeNode();
-            int line = position.getPosition().getLine();
-            int column = position.getPosition().getCharacter();
-            if (line >= parameters.getEndLine()
-                    && column > parameters.getEndColumn()
-                    && line <= typeNode.getLine()
-                    && column <= typeNode.getColumn())
+            if(typeNode != null)
             {
-                autoCompleteTypes(result);
-                return CompletableFuture.completedFuture(result);
+                int line = position.getPosition().getLine();
+                int column = position.getPosition().getCharacter();
+                if (line >= parameters.getEndLine()
+                        && column > parameters.getEndColumn()
+                        && line <= typeNode.getLine()
+                        && column <= typeNode.getColumn())
+                {
+                    autoCompleteTypes(result);
+                    return CompletableFuture.completedFuture(result);
+                }
             }
         }
         if (parentNode != null
