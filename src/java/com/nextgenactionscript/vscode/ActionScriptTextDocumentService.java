@@ -1198,7 +1198,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             TextEditImpl[] editsArray = textEdits.toArray(new TextEditImpl[textEdits.size()]);
             changes.put(compilationUnit.getAbsoluteFilename(), editsArray);
         }
-        result.setChanges(changes);
+        //result.setChanges(changes);
     }
 
     private void findIdentifiers(IASNode node, IDefinition definition, List<IIdentifierNode> result)
