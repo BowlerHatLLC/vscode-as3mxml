@@ -227,11 +227,13 @@ function createLanguageServer(): Promise<StreamInfo>
 				"-Dnextgeas.vscode.port=" + port,
 				"com.nextgenactionscript.vscode.Main",
 			];
-			if(typeof global.v8debug === "object")
+			//failed assertions in the compiler will crash the extension,
+			//so this should not be enabled by default, even for debugging
+			/*if(typeof global.v8debug === "object")
 			{
 				//enable java assertions when debugging extension
 				args.unshift("-ea");
-			}
+			}*/
 			
 			let server = net.createServer(socket =>
 			{
