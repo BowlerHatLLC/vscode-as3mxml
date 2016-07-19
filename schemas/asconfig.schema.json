@@ -25,8 +25,7 @@
 			"description": "The specified files, and all of their dependencies, will be included when the IDE checks for errors.",
 			"items":
 			{
-				"type": "string",
-				"format": "uri"
+				"type": "string"
 			},
 			"minItems": 1
 		},
@@ -47,8 +46,7 @@
 					"description": "Specifies a list of SWC files or directories to exclude from linking when compiling a SWF file. This option provides compile-time link checking for external components that are dynamically linked.",
 					"items":
 					{
-						"type": "string",
-						"format": "uri"
+						"type": "string"
 					}
 				},
 				"library-path":
@@ -57,9 +55,13 @@
 					"description": "Links SWC libraries to the generated output of the build. The compiler only links in those classes for the SWC file that are required. You can specify a directory or individual SWC files.",
 					"items":
 					{
-						"type": "string",
-						"format": "uri"
+						"type": "string"
 					}
+				},
+				"output":
+				{
+					"type": "string",
+					"description": "The path the save the generated output."
 				},
 				"source-map":
 				{
@@ -72,8 +74,7 @@
 					"description": "Adds directories or files to the source path. The compiler searches directories in the source path for MXML, AS, or CSS source files that are used in your applications and includes those that are required at compile time.",
 					"items":
 					{
-						"type": "string",
-						"format": "uri"
+						"type": "string"
 					}
 				},
 				"swf-version":
