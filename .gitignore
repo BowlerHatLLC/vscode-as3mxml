@@ -1,0 +1,16 @@
+lib/
+out/
+target/
+.metadata/
+.idea/
+.settings/
+node_modules/
+.DS_Store
+Thumbs.db
+._*
+.project
+*.local.properties
+*.stackdump
+*.p12
+*.lnk
+*.iml

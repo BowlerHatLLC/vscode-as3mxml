@@ -1,0 +1,115 @@
+{
+  "name": "vscode-nextgenas",
+  "displayName": "NextGen ActionScript",
+  "description": "Visual Studio Code extension for transpiling ActionScript with Apache FlexJS",
+  "version": "0.1.0",
+  "publisher": "bowlerhatllc",
+  "license": "Apache-2.0",
+  "categories": [
+    "Languages",
+    "Debuggers"
+  ],
+  "main": "out/extension",
+  "files": [
+    "target/NextGenAS_vscode.jar",
+    "target/lib",
+    "out",
+    "NOTICE",
+    "LICENSE",
+    "README.md"
+  ],
+  "scripts": {
+    "postinstall": "node ./node_modules/vscode/bin/install",
+    "vscode:prepublish": "npm run compile",
+    "compile": "ant",
+    "compile-debug": "ant build-debug"
+  },
+  "engines": {
+    "vscode": "^1.3.0"
+  },
+  "devDependencies": {
+    "typescript": "^1.8.10",
+    "vscode": "^0.11.13"
+  },
+  "dependencies": {
+    "portfinder": "^1.0.3",
+    "vscode-languageclient": "^2.2.1"
+  },
+  "activationEvents": [
+    "onLanguage:nextgenas",
+    "workspaceContains:asconfig.json"
+  ],
+  "contributes": {
+    "languages":
+    [
+      {
+        "id": "nextgenas",
+        "extensions": [ ".as" ],
+        "aliases": [
+          "NextGen ActionScript",
+          "NextGenAS",
+          "ActionScript",
+          "as"
+        ],
+        "configuration": "./nextgenas.configuration.json"
+      }
+    ],
+		"grammars": [
+			{
+				"language": "nextgenas",
+				"scopeName": "source.actionscript.3",
+				"path": "./syntaxes/AS3.tmLanguage"
+			}
+    ],
+    "jsonValidation": [
+      {
+        "fileMatch": "asconfig.json",
+        "url": "./schemas/asconfig.schema.json"
+      }
+    ],
+    "configuration": {
+      "type": "object",
+      "description": "NextGen ActionScript configuration",
+      "properties": {
+        "nextgenas.flexjssdk": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "Specifies the folder path of Apache FlexJS SDK."            
+        }
+      }
+    },
+    "debuggers": [
+        {
+          "type": "nextgenas-node",
+          "label": "NextGenAS Node.js",
+          "enableBreakpointsFor": {
+            "languageIds": [
+              "nextgenas"
+            ]
+          },
+          "initialConfigurations": [
+            {
+              "name": "NextGenAS Node.js Launch",
+              "type": "node",
+              "request": "launch",
+              "program": "${workspaceRoot}/bin/js-debug/index.js",
+              "stopOnEntry": false,
+              "args": [],
+			        "cwd": "${workspaceRoot}/bin/js-debug",
+			        "preLaunchTask": null,
+			        "runtimeExecutable": null,
+			        "runtimeArgs": [
+                "--nolazy"
+              ],
+              "env": {
+                "NODE_ENV": "development"
+              },
+              "externalConsole": false,
+              "sourceMaps": true,
+              "outDir": "${workspaceRoot}/bin/js-debug"
+            }
+          ]
+        }
+    ]
+  }
+}

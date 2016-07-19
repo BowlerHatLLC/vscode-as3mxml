@@ -1,0 +1,1 @@
+# NextGen ActionScript extension for Visual Studio Code

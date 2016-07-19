@@ -1,0 +1,10 @@
+<ivysettings>
+	<settings defaultResolver="chain"/>
+	<resolvers>
+		<chain name="chain">
+			<ibiblio name="apache-snapshots" m2compatible="true" root="https://repository.apache.org/content/repositories/snapshots"/>
+			<ibiblio name="nexus" m2compatible="true"/>
+			<ibiblio name="public" m2compatible="true"/>
+		</chain>
+	</resolvers>
+</ivysettings>

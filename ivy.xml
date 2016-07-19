@@ -1,0 +1,11 @@
+<ivy-module version="2.0">
+	<info organisation="com.nextgenactionscript" module="nextgenas-vscode"/>
+	<dependencies>
+		<dependency org="org.apache.flex.flexjs.compiler" name="compiler" rev="0.7.0-SNAPSHOT"/>
+		<dependency org="org.apache.flex.flexjs.compiler" name="compiler-jx" rev="0.7.0-SNAPSHOT"/>
+		<dependency org="io.typefox.lsapi" name="io.typefox.lsapi" rev="0.2.0-SNAPSHOT"/>
+		<dependency org="io.typefox.lsapi" name="io.typefox.lsapi.services" rev="0.2.0-SNAPSHOT"/>
+		<dependency org="org.antlr" name="antlr-complete" rev="3.5.2"/>
+		<dependency org="org.everit.json" name="org.everit.json.schema" rev="1.3.0"/>
+	</dependencies>
+</ivy-module>

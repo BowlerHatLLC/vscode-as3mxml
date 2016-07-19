@@ -1,0 +1,98 @@
+{
+	"title": "JSON schema for the ActionScript configuration file",
+	"type": "object",
+	"default":
+	{
+		"config": "js"
+	},
+	"properties":
+	{
+		"type":
+		{
+			"type": "string",
+			"description": "The project type. Supported values include \"app\" and \"lib\".",
+			"pattern": "^(app|lib)$"
+		},
+		"config":
+		{
+			"type": "string",
+			"description": "The default configuration file to use from the SDK. Supported values include \"js\", \"node\", \"flex\", \"air\", and \"airmobile\".",
+			"pattern": "^(js|node|flex|air|airmobile)$"
+		},
+		"files":
+		{
+			"type": "array",
+			"description": "The specified files, and all of their dependencies, will be included when the IDE checks for errors.",
+			"items":
+			{
+				"type": "string",
+				"format": "uri"
+			},
+			"minItems": 1
+		},
+		"compilerOptions":
+		{
+			"type": "object",
+			"description": "Instructs the Apache FlexJS compiler how to compile the project.",
+			"properties":
+			{
+				"debug":
+				{
+					"type": "boolean",
+					"description": "The generated output of the build will contain extra debug data."
+				},
+				"external-library-path":
+				{
+					"type": "array",
+					"description": "Specifies a list of SWC files or directories to exclude from linking when compiling a SWF file. This option provides compile-time link checking for external components that are dynamically linked.",
+					"items":
+					{
+						"type": "string",
+						"format": "uri"
+					}
+				},
+				"library-path":
+				{
+					"type": "array",
+					"description": "Links SWC libraries to the generated output of the build. The compiler only links in those classes for the SWC file that are required. You can specify a directory or individual SWC files.",
+					"items":
+					{
+						"type": "string",
+						"format": "uri"
+					}
+				},
+				"source-map":
+				{
+					"type": "boolean",
+					"description": "If transpiling to JavaScript, emits source maps in the debug build for each ActionScript file."
+				},
+				"source-path":
+				{
+					"type": "array",
+					"description": "Adds directories or files to the source path. The compiler searches directories in the source path for MXML, AS, or CSS source files that are used in your applications and includes those that are required at compile time.",
+					"items":
+					{
+						"type": "string",
+						"format": "uri"
+					}
+				},
+				"swf-version":
+				{
+					"type": "number",
+					"description": "If targeting the Adobe Flash runtimes, specifies the SWF file format version of the output SWF file. Features requiring a later version of the SWF file format are not compiled into the application. This is different from the Player version in that it refers to the SWF specification versioning scheme.",
+					"minimum": 14
+				},
+				"target-player":
+				{
+					"type": "string",
+					"description": "If targeting the Adobe Flash runtimes, Specifies the version of Flash Player that you want to target with the application. Features requiring a later version of Flash Player are not compiled into the application.",
+					"pattern": "^[0-9]+(\\.[0-9]+){0,1}$"
+				}
+			}
+		}
+	},
+	"required":
+	[
+		"config"
+	]
+}
