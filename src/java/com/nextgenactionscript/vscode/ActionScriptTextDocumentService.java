@@ -1839,6 +1839,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 {
                     detailBuilder.append("(property) ");
                 }
+                else if (variableDefinition instanceof IConstantDefinition)
+                {
+                    detailBuilder.append("(const) ");
+                }
                 else
                 {
                     detailBuilder.append("(variable) ");
