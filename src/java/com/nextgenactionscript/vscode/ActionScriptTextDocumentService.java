@@ -1770,6 +1770,19 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return ast.getContainingNode(offset);
     }
 
+    private void appendInterfaceNamesToDetail(StringBuilder detailBuilder, IInterfaceDefinition[] interfaceDefinitions)
+    {
+        for (int i = 0, count = interfaceDefinitions.length; i < count; i++)
+        {
+            if (i > 0)
+            {
+                detailBuilder.append(", ");
+            }
+            IInterfaceDefinition baseInterface = interfaceDefinitions[i];
+            detailBuilder.append(baseInterface.getBaseName());
+        }
+    }
+
     private String getDefinitionDetail(IDefinition definition)
     {
         StringBuilder detailBuilder = new StringBuilder();
@@ -1793,15 +1806,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 detailBuilder.append(" ");
                 detailBuilder.append(IASKeywordConstants.IMPLEMENTS);
                 detailBuilder.append(" ");
-                for (int i = 0, count = interfaceDefinitions.length; i < count; i++)
-                {
-                    if (i > 0)
-                    {
-                        detailBuilder.append(", ");
-                    }
-                    IInterfaceDefinition baseInterface = interfaceDefinitions[i];
-                    detailBuilder.append(baseInterface.getBaseName());
-                }
+                appendInterfaceNamesToDetail(detailBuilder, interfaceDefinitions);
             }
         }
         else if (definition instanceof IInterfaceDefinition)
@@ -1816,15 +1821,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 detailBuilder.append(" ");
                 detailBuilder.append(IASKeywordConstants.EXTENDS);
                 detailBuilder.append(" ");
-                for (int i = 0, count = interfaceDefinitions.length; i < count; i++)
-                {
-                    if (i > 0)
-                    {
-                        detailBuilder.append(", ");
-                    }
-                    IInterfaceDefinition baseInterface = interfaceDefinitions[i];
-                    detailBuilder.append(baseInterface.getBaseName());
-                }
+                appendInterfaceNamesToDetail(detailBuilder, interfaceDefinitions);
             }
         }
         else if (definition instanceof IVariableDefinition)
