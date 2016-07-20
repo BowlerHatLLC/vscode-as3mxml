@@ -35,10 +35,56 @@
 			"description": "Instructs the Apache FlexJS compiler how to compile the project.",
 			"properties":
 			{
+				"accessible":
+				{
+					"type": "boolean",
+					"description": "In a SWF project, enables accessibility features. The default value is false."
+				},
 				"debug":
 				{
 					"type": "boolean",
 					"description": "The generated output of the build will contain extra debug data."
+				},
+				"debug-password":
+				{
+					"type": "string",
+					"description": "In a SWF project, an optional password for remote debugging."
+				},
+				"default-frame-rate":
+				{
+					"type": "number",
+					"description": "In a SWF project, sets the application's frame rate. The default value is 24.",
+					"multipleOf": 1
+				},
+				"default-size":
+				{
+					"type": "object",
+					"description": "In a SWF project, defines the default application size, in pixels.",
+					"properties":
+					{
+						"width":
+						{
+							"type": "number",
+							"description": "Defines the default SWF application width, in pixels.",
+							"multipleOf": 1
+						},
+						"height":
+						{
+							"type": "number",
+							"description": "Defines the default SWF application height, in pixels.",
+							"multipleOf": 1
+						}
+					},
+					"required":
+					[
+						"width",
+						"height"
+					]
+				},
+				"dump-config":
+				{
+					"type": "string",
+					"description": "Combines all configuration options and saves them to the specified file."
 				},
 				"external-library-path":
 				{
@@ -58,15 +104,54 @@
 						"type": "string"
 					}
 				},
+				"link-report":
+				{
+					"type": "string",
+					"description": "Generates linking information and saves it to the specified output file."
+				},
+				"load-config":
+				{
+					"type": "array",
+					"description": "Specifies the locations of XML configuration files that define extra compiler options.",
+					"items":
+					{
+						"type": "string"
+					}
+				},
+				"locale":
+				{
+					"type": "array",
+					"description": "Specifies one or more locales to be compiled into the application.",
+					"items":
+					{
+						"type": "string",
+						"pattern": "^[a-z]{2}([-_][A-Z]{2}){0,1}$"
+					}
+				},
+				"omit-trace-statements":
+				{
+					"type": "boolean",
+					"description": "Omits trace() statements. The default value is false."
+				},
+				"optimize":
+				{
+					"type": "boolean",
+					"description": "In a SWF project, enables the ActionScript optimizer to reduce file size and increases performance by optimizing the SWF file's bytecode. The default value is true."
+				},
 				"output":
 				{
 					"type": "string",
-					"description": "The path the save the generated output."
+					"description": "The path where the generated output should be saved."
+				},
+				"strict":
+				{
+					"type": "boolean",
+					"description": "Performs compile-time type checking on assignments and options supplied to method calls. The default value is true."
 				},
 				"source-map":
 				{
 					"type": "boolean",
-					"description": "If transpiling to JavaScript, emits source maps in the debug build for each ActionScript file."
+					"description": "In a transpiled JS project, emits source maps in the debug build for each ActionScript file. The default value is false."
 				},
 				"source-path":
 				{
@@ -80,14 +165,46 @@
 				"swf-version":
 				{
 					"type": "number",
-					"description": "If targeting the Adobe Flash runtimes, specifies the SWF file format version of the output SWF file. Features requiring a later version of the SWF file format are not compiled into the application. This is different from the Player version in that it refers to the SWF specification versioning scheme.",
-					"minimum": 14
+					"description": "In a SWF project, specifies the SWF file format version. Features requiring a later version of the SWF file format are not compiled into the application. This is different from the target-player version in that it refers to the SWF specification versioning scheme.",
+					"minimum": 9,
+					"multipleOf": 1
 				},
 				"target-player":
 				{
 					"type": "string",
-					"description": "If targeting the Adobe Flash runtimes, Specifies the version of Flash Player that you want to target with the application. Features requiring a later version of Flash Player are not compiled into the application.",
+					"description": "In a SWF project, specifies the runtime version. Features requiring a later version of the runtime are not compiled into the application.",
 					"pattern": "^[0-9]+(\\.[0-9]+){0,1}$"
+				},
+				"tools-locale":
+				{
+					"type": "string",
+					"description": "Specifies the locale to use when reporting compiler errors and warnings.",
+					"pattern": "^[a-z]{2}([-_][A-Z]{2}){0,1}$"
+				},
+				"use-direct-blit":
+				{
+					"type": "boolean",
+					"description": "In a SWF project, equivalent to wmode=\"direct\" when running in a standalone SWF runtime instead of a browser plug-in. The default value is false." 
+				},
+				"use-gpu":
+				{
+					"type": "boolean",
+					"description": "In a SWF project, equivalent to wmode=\"gpu\" when running in a standalone SWF runtime instead of a browser plug-in. The default value is false." 
+				},
+				"use-network":
+				{
+					"type": "boolean",
+					"description": "In a SWF project, specifies that the current application uses network services or can access the local file system. The default value is true." 
+				},
+				"use-resource-bundle-metadata":
+				{
+					"type": "boolean",
+					"description": "Enables resource bundles, and instructs the compiler to process the contents of the [ResourceBundle] metadata tag. The default value is true." 
+				},
+				"verbose-stacktraces":
+				{
+					"type": "boolean",
+					"description": "In a SWF project, includes line numbers in the generated output, but results in a larger SWF file. When a run-time error occurs, the stacktrace shows line numbers. The default value is false." 
 				}
 			}
 		}
