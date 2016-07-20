@@ -61,6 +61,7 @@ import org.apache.flex.compiler.internal.parsing.as.StreamingASTokenizer;
 import org.apache.flex.compiler.internal.projects.CompilerProject;
 import org.apache.flex.compiler.internal.projects.FlexJSProject;
 import org.apache.flex.compiler.internal.tree.as.FileNode;
+import org.apache.flex.compiler.internal.tree.as.FullNameNode;
 import org.apache.flex.compiler.internal.units.SWCCompilationUnit;
 import org.apache.flex.compiler.internal.workspaces.Workspace;
 import org.apache.flex.compiler.problems.CompilerProblemSeverity;
@@ -77,6 +78,7 @@ import org.apache.flex.compiler.tree.as.IFileNode;
 import org.apache.flex.compiler.tree.as.IFunctionCallNode;
 import org.apache.flex.compiler.tree.as.IFunctionNode;
 import org.apache.flex.compiler.tree.as.IIdentifierNode;
+import org.apache.flex.compiler.tree.as.IImportNode;
 import org.apache.flex.compiler.tree.as.IMemberAccessExpressionNode;
 import org.apache.flex.compiler.tree.as.INamespaceDecorationNode;
 import org.apache.flex.compiler.tree.as.IScopedDefinitionNode;
@@ -256,6 +258,38 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             {
                 autoCompleteTypes(result);
                 return CompletableFuture.completedFuture(result);
+            }
+        }
+
+        //import (must be before member access)
+        if (parentNode != null
+                && parentNode instanceof IImportNode)
+        {
+            IImportNode importNode = (IImportNode) parentNode;
+            IExpressionNode nameNode = importNode.getImportNameNode();
+            if (offsetNode == nameNode)
+            {
+                String importName = importNode.getImportName();
+                importName = importName.substring(0, position.getPosition().getCharacter() - nameNode.getColumn());
+                autoCompleteImport(importName, result);
+                return CompletableFuture.completedFuture(result);
+            }
+        }
+        if (parentNode != null
+                && parentNode instanceof FullNameNode)
+        {
+            IASNode gpNode = parentNode.getParent();
+            if (gpNode != null && gpNode instanceof IImportNode)
+            {
+                IImportNode importNode = (IImportNode) gpNode;
+                IExpressionNode nameNode = importNode.getImportNameNode();
+                if (parentNode == nameNode)
+                {
+                    String importName = importNode.getImportName();
+                    importName = importName.substring(0, position.getPosition().getCharacter() - nameNode.getColumn());
+                    autoCompleteImport(importName, result);
+                    return CompletableFuture.completedFuture(result);
+                }
             }
         }
 
@@ -991,6 +1025,70 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             addDefinitionsInScopeToAutoComplete(leftType, false, result);
             return;
+        }
+    }
+
+    private void autoCompleteImport(String importName, CompletionListImpl result)
+    {
+        List<CompletionItemImpl> items = result.getItems();
+        for (ICompilationUnit unit : compilationUnits)
+        {
+            Collection<IDefinition> definitions = null;
+            try
+            {
+                definitions = unit.getFileScopeRequest().get().getExternallyVisibleDefinitions();
+            }
+            catch (Exception e)
+            {
+                //safe to ignore
+                continue;
+            }
+            for (IDefinition definition : definitions)
+            {
+                if (definition instanceof ITypeDefinition)
+                {
+                    String qualifiedName = definition.getQualifiedName();
+                    if (qualifiedName.startsWith(importName))
+                    {
+                        int index = importName.lastIndexOf(".");
+                        if (index != -1)
+                        {
+                            qualifiedName = qualifiedName.substring(index + 1);
+                        }
+                        index = qualifiedName.indexOf(".");
+                        if (index > 0)
+                        {
+                            qualifiedName = qualifiedName.substring(0, index);
+                        }
+                        CompletionItemImpl item = new CompletionItemImpl();
+                        item.setLabel(qualifiedName);
+                        if (definition.getBaseName().equals(qualifiedName))
+                        {
+                            ITypeDefinition typeDefinition = (ITypeDefinition) definition;
+                            if (typeDefinition instanceof IInterfaceDefinition)
+                            {
+                                item.setKind(CompletionItemKind.Interface);
+                            }
+                            else if (typeDefinition instanceof IClassDefinition)
+                            {
+                                item.setKind(CompletionItemKind.Class);
+                            }
+                            else
+                            {
+                                item.setKind(CompletionItemKind.Text);
+                            }
+                        }
+                        else
+                        {
+                            item.setKind(CompletionItemKind.Text);
+                        }
+                        if (!items.contains(item))
+                        {
+                            items.add(item);
+                        }
+                    }
+                }
+            }
         }
     }
 
