@@ -41,6 +41,7 @@ import io.typefox.lsapi.ServerCapabilitiesImpl;
 import io.typefox.lsapi.ShowMessageRequestParams;
 import io.typefox.lsapi.SignatureHelpOptionsImpl;
 import io.typefox.lsapi.SymbolInformation;
+import io.typefox.lsapi.TextDocumentSyncKind;
 import io.typefox.lsapi.WorkspaceSymbolParams;
 import io.typefox.lsapi.services.LanguageServer;
 import io.typefox.lsapi.services.TextDocumentService;
@@ -121,7 +122,7 @@ public class ActionScriptLanguageServer implements LanguageServer
 
         if (hasValidSDK)
         {
-            serverCapabilities.setTextDocumentSync(ServerCapabilities.SYNC_INCREMENTAL);
+            serverCapabilities.setTextDocumentSync(TextDocumentSyncKind.Incremental);
 
             CompletionOptionsImpl completionOptions = new CompletionOptionsImpl();
             completionOptions.setTriggerCharacters(Arrays.asList(".", ":", " "));
@@ -142,7 +143,7 @@ public class ActionScriptLanguageServer implements LanguageServer
         }
         else
         {
-            serverCapabilities.setTextDocumentSync(ServerCapabilities.SYNC_NONE);
+            serverCapabilities.setTextDocumentSync(TextDocumentSyncKind.None);
         }
         result.setCapabilities(serverCapabilities);
         

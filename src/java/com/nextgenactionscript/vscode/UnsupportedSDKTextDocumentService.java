@@ -38,6 +38,7 @@ import io.typefox.lsapi.Hover;
 import io.typefox.lsapi.Location;
 import io.typefox.lsapi.MessageParams;
 import io.typefox.lsapi.MessageParamsImpl;
+import io.typefox.lsapi.MessageType;
 import io.typefox.lsapi.PublishDiagnosticsParams;
 import io.typefox.lsapi.ReferenceParams;
 import io.typefox.lsapi.RenameParams;
@@ -156,7 +157,7 @@ public class UnsupportedSDKTextDocumentService implements TextDocumentService
             hasShownMinVersionError = true;
             MessageParamsImpl m = new MessageParamsImpl();
             m.setMessage("Expected Apache FlexJS SDK 0.7.0 or newer. Found: " + server.getFlexJSVersion() + " instead.");
-            m.setType(MessageParams.TYPE_ERROR);
+            m.setType(MessageType.Error);
             server.showMessage(m);
         }
     }

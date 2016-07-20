@@ -97,10 +97,12 @@ import io.typefox.lsapi.Command;
 import io.typefox.lsapi.CommandImpl;
 import io.typefox.lsapi.CompletionItem;
 import io.typefox.lsapi.CompletionItemImpl;
+import io.typefox.lsapi.CompletionItemKind;
 import io.typefox.lsapi.CompletionList;
 import io.typefox.lsapi.CompletionListImpl;
 import io.typefox.lsapi.Diagnostic;
 import io.typefox.lsapi.DiagnosticImpl;
+import io.typefox.lsapi.DiagnosticSeverity;
 import io.typefox.lsapi.DidChangeTextDocumentParams;
 import io.typefox.lsapi.DidChangeWatchedFilesParams;
 import io.typefox.lsapi.DidCloseTextDocumentParams;
@@ -132,6 +134,7 @@ import io.typefox.lsapi.SignatureHelpImpl;
 import io.typefox.lsapi.SignatureInformationImpl;
 import io.typefox.lsapi.SymbolInformation;
 import io.typefox.lsapi.SymbolInformationImpl;
+import io.typefox.lsapi.SymbolKind;
 import io.typefox.lsapi.TextDocumentContentChangeEvent;
 import io.typefox.lsapi.TextDocumentIdentifier;
 import io.typefox.lsapi.TextDocumentItem;
@@ -967,7 +970,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
         }
         CompletionItemImpl item = new CompletionItemImpl();
-        item.setKind(CompletionItem.KIND_CLASS);
+        item.setKind(CompletionItemKind.Class);
         item.setLabel("void");
         result.getItems().add(item);
     }
@@ -1043,11 +1046,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         CompletionItemImpl item = new CompletionItemImpl();
         if (definition instanceof IClassDefinition)
         {
-            item.setKind(CompletionItem.KIND_CLASS);
+            item.setKind(CompletionItemKind.Class);
         }
         else if (definition instanceof IInterfaceDefinition)
         {
-            item.setKind(CompletionItem.KIND_INTERFACE);
+            item.setKind(CompletionItemKind.Interface);
         }
         else if (definition instanceof IFunctionDefinition)
         {
@@ -1057,11 +1060,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 //ignore constructors
                 return;
             }
-            item.setKind(CompletionItem.KIND_FUNCTION);
+            item.setKind(CompletionItemKind.Function);
         }
         else if (definition instanceof IVariableDefinition)
         {
-            item.setKind(CompletionItem.KIND_VARIABLE);
+            item.setKind(CompletionItemKind.Variable);
         }
         item.setDetail(getDefinitionDetail(definition));
         item.setLabel(definition.getBaseName());
@@ -1071,7 +1074,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private void addKeywordAutoComplete(String keyword, CompletionListImpl result)
     {
         CompletionItemImpl item = new CompletionItemImpl();
-        item.setKind(CompletionItem.KIND_KEYWORD);
+        item.setKind(CompletionItemKind.Keyword);
         item.setLabel(keyword);
         result.getItems().add(item);
     }
@@ -1225,7 +1228,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
     }
 
-    private int getCompilerProblemSeverity(ICompilerProblem problem)
+    private DiagnosticSeverity getCompilerProblemSeverity(ICompilerProblem problem)
     {
         CompilerProblemCategorizer categorizer = new CompilerProblemCategorizer(null);
         CompilerProblemSeverity severity = categorizer.getProblemSeverity(problem);
@@ -1233,15 +1236,15 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             case ERROR:
             {
-                return Diagnostic.SEVERITY_ERROR;
+                return DiagnosticSeverity.Error;
             }
             case WARNING:
             {
-                return Diagnostic.SEVERITY_WARNING;
+                return DiagnosticSeverity.Warning;
             }
             default:
             {
-                return Diagnostic.SEVERITY_INFO;
+                return DiagnosticSeverity.Information;
             }
         }
     }
@@ -1345,7 +1348,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     {
         DiagnosticImpl diagnostic = new DiagnosticImpl();
 
-        int severity = getCompilerProblemSeverity(problem);
+        DiagnosticSeverity severity = getCompilerProblemSeverity(problem);
         diagnostic.setSeverity(severity);
 
         RangeImpl range = getSourceLocationRange(problem);
@@ -2050,19 +2053,19 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         SymbolInformationImpl symbol = new SymbolInformationImpl();
         if(definition instanceof IClassDefinition)
         {
-            symbol.setKind(SymbolInformation.KIND_CLASS);
+            symbol.setKind(SymbolKind.Class);
         }
         else if(definition instanceof IInterfaceDefinition)
         {
-            symbol.setKind(SymbolInformation.KIND_INTERFACE);
+            symbol.setKind(SymbolKind.Interface);
         }
         else if(definition instanceof IFunctionDefinition)
         {
-            symbol.setKind(SymbolInformation.KIND_FUNCTION);
+            symbol.setKind(SymbolKind.Function);
         }
         else
         {
-            symbol.setKind(SymbolInformation.KIND_VARIABLE);
+            symbol.setKind(SymbolKind.Variable);
         }
         symbol.setName(definition.getQualifiedName());
         LocationImpl location = new LocationImpl();
