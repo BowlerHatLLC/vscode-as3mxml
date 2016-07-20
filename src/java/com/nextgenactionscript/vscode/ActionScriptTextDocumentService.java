@@ -166,13 +166,14 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private IWorkspace currentWorkspace;
     private ASConfigOptions currentOptions;
     private LanguageServerFileSpecGetter fileSpecGetter;
-    private Consumer<PublishDiagnosticsParams> publishDiagnostics = p -> {
+    private Consumer<PublishDiagnosticsParams> publishDiagnostics = p ->
+    {
     };
 
     public ActionScriptTextDocumentService()
     {
     }
-    
+
     public Path getWorkspaceRoot()
     {
         return workspaceRoot;
@@ -233,7 +234,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             IFunctionNode functionNode = (IFunctionNode) offsetNode;
             IContainerNode parameters = functionNode.getParametersContainerNode();
             IExpressionNode typeNode = functionNode.getReturnTypeNode();
-            if(typeNode != null)
+            if (typeNode != null)
             {
                 int line = position.getPosition().getLine();
                 int column = position.getPosition().getCharacter();
@@ -481,7 +482,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             List<Location> result = new ArrayList<>();
             for (ICompilationUnit compilationUnit : compilationUnits)
             {
-                if(compilationUnit instanceof SWCCompilationUnit)
+                if (compilationUnit instanceof SWCCompilationUnit)
                 {
                     continue;
                 }
@@ -529,15 +530,15 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     public CompletableFuture<List<? extends SymbolInformation>> workspaceSymbol(WorkspaceSymbolParams params)
     {
         ICompilationUnit mainUnit = getMainCompilationUnit();
-        if(mainUnit == null)
+        if (mainUnit == null)
         {
             return CompletableFuture.completedFuture(Collections.emptyList());
         }
         List<SymbolInformationImpl> result = new ArrayList<>();
         String query = params.getQuery();
-        for(ICompilationUnit unit : compilationUnits)
+        for (ICompilationUnit unit : compilationUnits)
         {
-            if(unit instanceof SWCCompilationUnit)
+            if (unit instanceof SWCCompilationUnit)
             {
                 continue;
             }
@@ -546,11 +547,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             {
                 scopes = unit.getFileScopeRequest().get().getScopes();
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 return CompletableFuture.completedFuture(Collections.emptyList());
             }
-            for(IASScope scope : scopes)
+            for (IASScope scope : scopes)
             {
                 querySymbolsInScope(query, scope, result);
             }
@@ -581,12 +582,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             scopes = unit.getFileScopeRequest().get().getScopes();
         }
-        catch(Exception e)
+        catch (Exception e)
         {
             return CompletableFuture.completedFuture(Collections.emptyList());
         }
         List<SymbolInformationImpl> result = new ArrayList<>();
-        for(IASScope scope : scopes)
+        for (IASScope scope : scopes)
         {
             scopeToSymbols(scope, result);
         }
@@ -614,7 +615,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             //I don't know why this can be null
             String code = diagnostic.getCode();
-            if(code == null)
+            if (code == null)
             {
                 continue;
             }
@@ -627,12 +628,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     int end = message.length() - 1;
                     String typeString = message.substring(start, end);
                     ArrayList<String> types = new ArrayList<>();
-                    for(ICompilationUnit unit : compilationUnits)
+                    for (ICompilationUnit unit : compilationUnits)
                     {
                         try
                         {
                             Collection<IDefinition> definitions = unit.getFileScopeRequest().get().getExternallyVisibleDefinitions();
-                            if(definitions == null)
+                            if (definitions == null)
                             {
                                 continue;
                             }
@@ -641,7 +642,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                                 if (definition instanceof ITypeDefinition)
                                 {
                                     ITypeDefinition typeDefinition = (ITypeDefinition) definition;
-                                    if(typeDefinition.getBaseName().equals(typeString))
+                                    if (typeDefinition.getBaseName().equals(typeString))
                                     {
                                         types.add(typeDefinition.getQualifiedName());
                                     }
@@ -653,7 +654,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                             //safe to ignore
                         }
                     }
-                    for(String qualifiedName : types)
+                    for (String qualifiedName : types)
                     {
                         CommandImpl command = new CommandImpl();
                         command.setCommand("nextgenas.addImport");
@@ -788,7 +789,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     public void didChangeWatchedFiles(DidChangeWatchedFilesParams params)
     {
-        for(FileEvent event : params.getChanges())
+        for (FileEvent event : params.getChanges())
         {
             URI uri = URI.create(event.getUri());
             Optional<Path> optionalPath = getFilePath(uri);
@@ -798,15 +799,15 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             Path path = optionalPath.get();
             File file = path.toFile();
-            if(file.getName().equals("asconfig.json"))
+            if (file.getName().equals("asconfig.json"))
             {
                 asconfigFileChanged = true;
             }
         }
-        if(asconfigFileChanged)
+        if (asconfigFileChanged)
         {
             Path path = getMainCompilationUnitPath();
-            if(path != null)
+            if (path != null)
             {
                 checkFilePathForProblems(path);
             }
@@ -818,7 +819,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     {
         publishDiagnostics = callback;
     }
-    
+
     private File getASConfigFile()
     {
         if (workspaceRoot == null)
@@ -827,7 +828,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         Path asconfigPath = workspaceRoot.resolve("asconfig.json");
         File asconfigFile = new File(asconfigPath.toUri());
-        if(!asconfigFile.exists())
+        if (!asconfigFile.exists())
         {
             return null;
         }
@@ -836,7 +837,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private void loadASConfigFile()
     {
-        if(!asconfigFileChanged && currentOptions != null)
+        if (!asconfigFileChanged && currentOptions != null)
         {
             //the options are fully up-to-date
             return;
@@ -844,7 +845,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         currentOptions = null;
         asconfigFileChanged = true;
         File asconfigFile = getASConfigFile();
-        if(asconfigFile == null)
+        if (asconfigFile == null)
         {
             return;
         }
@@ -852,20 +853,20 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         String config = null;
         String[] files = null;
         CompilerOptions compilerOptions = new CompilerOptions();
-        try(InputStream schemaInputStream = getClass().getResourceAsStream("/schemas/asconfig.schema.json"))
+        try (InputStream schemaInputStream = getClass().getResourceAsStream("/schemas/asconfig.schema.json"))
         {
             JSONObject rawJsonSchema = new JSONObject(new JSONTokener(schemaInputStream));
             Schema schema = SchemaLoader.load(rawJsonSchema);
             String contents = FileUtils.readFileToString(asconfigFile);
             JSONObject json = new JSONObject(contents);
             schema.validate(json);
-            if(json.has("type")) //optional, defaults to "app"
+            if (json.has("type")) //optional, defaults to "app"
             {
                 String typeString = json.getString("type");
                 type = ProjectType.fromToken(typeString);
             }
             config = json.getString("config");
-            if(json.has("files")) //optional
+            if (json.has("files")) //optional
             {
                 JSONArray jsonFiles = json.getJSONArray("files");
                 int fileCount = jsonFiles.length();
@@ -877,14 +878,14 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     files[i] = filePath.toString();
                 }
             }
-            if(json.has("compilerOptions")) //optional
+            if (json.has("compilerOptions")) //optional
             {
                 JSONObject jsonCompilerOptions = json.getJSONObject("compilerOptions");
-                if(jsonCompilerOptions.has("debug"))
+                if (jsonCompilerOptions.has("debug"))
                 {
                     compilerOptions.debug = jsonCompilerOptions.getBoolean("debug");
                 }
-                if(jsonCompilerOptions.has("external-library-path"))
+                if (jsonCompilerOptions.has("external-library-path"))
                 {
                     JSONArray jsonExternalLibraryPath = jsonCompilerOptions.getJSONArray("external-library-path");
                     ArrayList<File> externalLibraryPath = new ArrayList<>();
@@ -896,7 +897,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     }
                     compilerOptions.externalLibraryPath = externalLibraryPath;
                 }
-                if(jsonCompilerOptions.has("library-path"))
+                if (jsonCompilerOptions.has("library-path"))
                 {
                     JSONArray jsonLibraryPath = jsonCompilerOptions.getJSONArray("library-path");
                     ArrayList<File> libraryPath = new ArrayList<>();
@@ -909,7 +910,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     compilerOptions.libraryPath = libraryPath;
                 }
                 //skipping sourceMap
-                if(jsonCompilerOptions.has("source-path"))
+                if (jsonCompilerOptions.has("source-path"))
                 {
                     JSONArray jsonSourcePath = jsonCompilerOptions.getJSONArray("source-path");
                     ArrayList<File> sourcePath = new ArrayList<>();
@@ -921,18 +922,18 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     }
                     compilerOptions.libraryPath = sourcePath;
                 }
-                if(jsonCompilerOptions.has("warnings"))
+                if (jsonCompilerOptions.has("warnings"))
                 {
                     compilerOptions.warnings = jsonCompilerOptions.getBoolean("warnings");
                 }
             }
         }
-        catch(ValidationException e)
+        catch (ValidationException e)
         {
             System.err.println("Failed to validate asconfig.json: " + e);
             return;
         }
-        catch(Exception e)
+        catch (Exception e)
         {
             System.err.println("Failed to parse asconfig.json: " + e);
             e.printStackTrace();
@@ -1412,7 +1413,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private ICompilationUnit findCompilationUnit(String absoluteFileName)
     {
-        if(compilationUnits == null)
+        if (compilationUnits == null)
         {
             return null;
         }
@@ -1429,11 +1430,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private Path getMainCompilationUnitPath()
     {
         loadASConfigFile();
-        if(currentOptions == null)
+        if (currentOptions == null)
         {
             return null;
         }
-        if(currentOptions.files.length == 0)
+        if (currentOptions.files.length == 0)
         {
             return null;
         }
@@ -1444,7 +1445,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private ICompilationUnit getMainCompilationUnit()
     {
         Path path = getMainCompilationUnitPath();
-        if(path == null)
+        if (path == null)
         {
             return null;
         }
@@ -1466,16 +1467,16 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             currentWorkspace.fileChanged(fileSpecGetter.getFileSpecification(path.toAbsolutePath().toString()));
         }
         String[] files = currentOptions.files;
-        for(int i = files.length - 1; i >= 0; i--)
+        for (int i = files.length - 1; i >= 0; i--)
         {
             String file = files[i];
             ICompilationUnit existingUnit = findCompilationUnit(file);
-            if(existingUnit != null)
+            if (existingUnit != null)
             {
                 continue;
             }
             IInvisibleCompilationUnit unit = currentProject.createInvisibleCompilationUnit(file, fileSpecGetter);
-            if(unit == null)
+            if (unit == null)
             {
                 System.err.println("Could not create compilation unit for file: " + file);
                 continue;
@@ -1489,9 +1490,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         compilationUnits = currentProject.getCompilationUnits();
         if (currentUnit == null)
         {
-            for(ICompilationUnit unit : compilationUnits)
+            for (ICompilationUnit unit : compilationUnits)
             {
-                if(unit.getAbsoluteFilename().equals(absolutePath))
+                if (unit.getAbsoluteFilename().equals(absolutePath))
                 {
                     currentUnit = unit;
                     break;
@@ -1504,7 +1505,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private void clearInvisibleCompilationUnits()
     {
-        for(IInvisibleCompilationUnit unit : invisibleUnits)
+        for (IInvisibleCompilationUnit unit : invisibleUnits)
         {
             //it's not enough to simply call remove() on the unit, we also need
             //to remove the file spec from the workspace. otherwise, an
@@ -1520,7 +1521,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     {
         clearInvisibleCompilationUnits();
         loadASConfigFile();
-        if(currentOptions == null)
+        if (currentOptions == null)
         {
             currentWorkspace = null;
             currentProject = null;
@@ -1528,7 +1529,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             compilationUnits = null;
             return null;
         }
-        if(asconfigFileChanged)
+        if (asconfigFileChanged)
         {
             asconfigFileChanged = false;
 
@@ -1553,12 +1554,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         JSGoogConfiguration configuration = new JSGoogConfiguration();
         Configurator configurator = new Configurator(JSGoogConfiguration.class);
         configurator.setToken("configname", currentOptions.config);
-        if(currentOptions.files != null)
+        if (currentOptions.files != null)
         {
             if (currentOptions.type.equals(ProjectType.LIB))
             {
                 ArrayList<File> files = new ArrayList<>();
-                for(String filePath : currentOptions.files)
+                for (String filePath : currentOptions.files)
                 {
                     File file = new File(filePath);
                     files.add(file);
@@ -1575,33 +1576,33 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         //configuration buffer before addExternalLibraryPath() is called
         configurator.setExcludeNativeJSLibraries(false);
         boolean result = configurator.applyToProject(project);
-        if(!result)
+        if (!result)
         {
             return null;
         }
         //set things after the first applyToProject() so that cfgbuf is not null
         //because setting some values checks the cfgbuf
-        if(compilerOptions.sourcePath != null)
+        if (compilerOptions.sourcePath != null)
         {
             configurator.addSourcePath(compilerOptions.sourcePath);
         }
-        if(compilerOptions.libraryPath != null)
+        if (compilerOptions.libraryPath != null)
         {
             configurator.addLibraryPath(compilerOptions.libraryPath);
         }
-        if(compilerOptions.externalLibraryPath != null)
+        if (compilerOptions.externalLibraryPath != null)
         {
             configurator.addExternalLibraryPath(compilerOptions.externalLibraryPath);
         }
         configurator.enableDebugging(compilerOptions.debug, null);
         configurator.showActionScriptWarnings(compilerOptions.warnings);
         result = configurator.applyToProject(project);
-        if(!result)
+        if (!result)
         {
             return null;
         }
         ITarget.TargetType targetType = ITarget.TargetType.SWF;
-        if(currentOptions.type.equals(ProjectType.LIB))
+        if (currentOptions.type.equals(ProjectType.LIB))
         {
             targetType = ITarget.TargetType.SWC;
         }
@@ -1634,7 +1635,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         CompilerProject project = (CompilerProject) mainUnit.getProject();
         Collection<ICompilerProblem> fatalProblems = project.getFatalProblems();
-        if(fatalProblems == null || fatalProblems.size() == 0)
+        if (fatalProblems == null || fatalProblems.size() == 0)
         {
             fatalProblems = project.getProblems();
         }
@@ -1668,7 +1669,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             for (ICompilationUnit unit : compilationUnits)
             {
-                if(unit instanceof SWCCompilationUnit)
+                if (unit instanceof SWCCompilationUnit)
                 {
                     //compiled compilation units won't have problems
                     continue;
@@ -1701,7 +1702,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 }
             }
         }
-        catch(Exception e)
+        catch (Exception e)
         {
             System.err.println("test: " + e);
             return false;
@@ -1984,7 +1985,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             else if (definition instanceof ITypeDefinition)
             {
                 ITypeDefinition typeDefinition = (ITypeDefinition) definition;
-                if(typeDefinition.getBaseName().startsWith(query) ||
+                if (typeDefinition.getBaseName().startsWith(query) ||
                         typeDefinition.getQualifiedName().startsWith(query))
                 {
                     SymbolInformationImpl symbol = definitionToSymbol(typeDefinition);
@@ -1993,10 +1994,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 IASScope typeScope = typeDefinition.getContainedScope();
                 querySymbolsInScope(query, typeScope, result);
             }
-            else if(definition instanceof IFunctionDefinition)
+            else if (definition instanceof IFunctionDefinition)
             {
                 IFunctionDefinition functionDefinition = (IFunctionDefinition) definition;
-                if(functionDefinition.getBaseName().startsWith(query) ||
+                if (functionDefinition.getBaseName().startsWith(query) ||
                         functionDefinition.getQualifiedName().startsWith(query))
                 {
                     SymbolInformationImpl symbol = definitionToSymbol(functionDefinition);
@@ -2005,10 +2006,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 IASScope functionScope = functionDefinition.getContainedScope();
                 querySymbolsInScope(query, functionScope, result);
             }
-            else if(definition instanceof IVariableDefinition)
+            else if (definition instanceof IVariableDefinition)
             {
                 IVariableDefinition variableDefinition = (IVariableDefinition) definition;
-                if(variableDefinition.getBaseName().startsWith(query) ||
+                if (variableDefinition.getBaseName().startsWith(query) ||
                         variableDefinition.getQualifiedName().startsWith(query))
                 {
                     SymbolInformationImpl symbol = definitionToSymbol(variableDefinition);
@@ -2027,13 +2028,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             {
                 continue;
             }
-            if(definition instanceof IPackageDefinition)
+            if (definition instanceof IPackageDefinition)
             {
                 IPackageDefinition packageDefinition = (IPackageDefinition) definition;
                 IASScope packageScope = packageDefinition.getContainedScope();
                 scopeToSymbols(packageScope, result);
             }
-            else if(definition instanceof ITypeDefinition)
+            else if (definition instanceof ITypeDefinition)
             {
                 ITypeDefinition typeDefinition = (ITypeDefinition) definition;
                 SymbolInformationImpl symbol = definitionToSymbol(typeDefinition);
@@ -2041,29 +2042,29 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 IASScope typeScope = typeDefinition.getContainedScope();
                 scopeToSymbols(typeScope, result);
             }
-            else if(definition instanceof IFunctionDefinition || definition instanceof IVariableDefinition)
+            else if (definition instanceof IFunctionDefinition || definition instanceof IVariableDefinition)
             {
                 SymbolInformationImpl localSymbol = definitionToSymbol(definition);
                 result.add(localSymbol);
             }
         }
     }
-    
+
     private SymbolInformationImpl definitionToSymbol(IDefinition definition)
     {
         SymbolInformationImpl symbol = new SymbolInformationImpl();
-        if(definition instanceof IClassDefinition)
+        if (definition instanceof IClassDefinition)
         {
             symbol.setKind(SymbolKind.Class);
         }
-        else if(definition instanceof IInterfaceDefinition)
+        else if (definition instanceof IInterfaceDefinition)
         {
             symbol.setKind(SymbolKind.Interface);
         }
-        else if(definition instanceof IFunctionDefinition)
+        else if (definition instanceof IFunctionDefinition)
         {
             IFunctionDefinition functionDefinition = (IFunctionDefinition) definition;
-            if(functionDefinition.isConstructor())
+            if (functionDefinition.isConstructor())
             {
                 symbol.setKind(SymbolKind.Constructor);
             }
@@ -2072,11 +2073,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 symbol.setKind(SymbolKind.Function);
             }
         }
-        else if(definition instanceof IFunctionDefinition)
+        else if (definition instanceof IFunctionDefinition)
         {
             symbol.setKind(SymbolKind.Function);
         }
-        else if(definition instanceof IConstantDefinition)
+        else if (definition instanceof IConstantDefinition)
         {
             symbol.setKind(SymbolKind.Constant);
         }
