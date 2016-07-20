@@ -2061,7 +2061,23 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         else if(definition instanceof IFunctionDefinition)
         {
+            IFunctionDefinition functionDefinition = (IFunctionDefinition) definition;
+            if(functionDefinition.isConstructor())
+            {
+                symbol.setKind(SymbolKind.Constructor);
+            }
+            else
+            {
+                symbol.setKind(SymbolKind.Function);
+            }
+        }
+        else if(definition instanceof IFunctionDefinition)
+        {
             symbol.setKind(SymbolKind.Function);
+        }
+        else if(definition instanceof IConstantDefinition)
+        {
+            symbol.setKind(SymbolKind.Constant);
         }
         else
         {
