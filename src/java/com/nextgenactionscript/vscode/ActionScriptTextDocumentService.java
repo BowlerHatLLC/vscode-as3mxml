@@ -323,17 +323,19 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
 
         //local scope
-        if (parentNode != null && parentNode instanceof IScopedNode)
+        do
         {
-            IScopedNode scopedNode = (IScopedNode) parentNode;
-            autoCompleteScope(scopedNode, result);
+            //just keep traversing up until we get a scoped node or run out of
+            //nodes to check
+            if (offsetNode instanceof IScopedNode)
+            {
+                IScopedNode scopedNode = (IScopedNode) offsetNode;
+                autoCompleteScope(scopedNode, result);
+                return CompletableFuture.completedFuture(result);
+            }
+            offsetNode = offsetNode.getParent();
         }
-        if (offsetNode instanceof IScopedNode)
-        {
-            IScopedNode scopedNode = (IScopedNode) offsetNode;
-            autoCompleteScope(scopedNode, result);
-            return CompletableFuture.completedFuture(result);
-        }
+        while (offsetNode != null);
 
         return CompletableFuture.completedFuture(result);
     }
