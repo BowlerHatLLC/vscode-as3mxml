@@ -60,6 +60,7 @@ import org.apache.flex.compiler.internal.parsing.as.RepairingTokenBuffer;
 import org.apache.flex.compiler.internal.parsing.as.StreamingASTokenizer;
 import org.apache.flex.compiler.internal.projects.CompilerProject;
 import org.apache.flex.compiler.internal.projects.FlexJSProject;
+import org.apache.flex.compiler.internal.scopes.TypeScope;
 import org.apache.flex.compiler.internal.tree.as.FileNode;
 import org.apache.flex.compiler.internal.tree.as.FullNameNode;
 import org.apache.flex.compiler.internal.units.SWCCompilationUnit;
@@ -71,10 +72,8 @@ import org.apache.flex.compiler.scopes.IASScope;
 import org.apache.flex.compiler.targets.ITarget;
 import org.apache.flex.compiler.targets.ITargetSettings;
 import org.apache.flex.compiler.tree.as.IASNode;
-import org.apache.flex.compiler.tree.as.IBlockNode;
 import org.apache.flex.compiler.tree.as.IContainerNode;
 import org.apache.flex.compiler.tree.as.IExpressionNode;
-import org.apache.flex.compiler.tree.as.IFileNode;
 import org.apache.flex.compiler.tree.as.IFunctionCallNode;
 import org.apache.flex.compiler.tree.as.IFunctionNode;
 import org.apache.flex.compiler.tree.as.IIdentifierNode;
@@ -323,41 +322,17 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
         }
 
-        if (offsetNode instanceof IFileNode)
+        //local scope
+        if (parentNode != null && parentNode instanceof IScopedNode)
         {
-            //a package may only be defined at the file level
-            addKeywordAutoComplete(IASKeywordConstants.PACKAGE, result);
+            IScopedNode scopedNode = (IScopedNode) parentNode;
+            autoCompleteScope(scopedNode, result);
         }
-        IScopedNode containingScope = offsetNode.getContainingScope();
-        if (containingScope != null)
+        if (offsetNode instanceof IScopedNode)
         {
-            IASScope scope = containingScope.getScope();
-            if (offsetNode instanceof IScopedNode)
-            {
-                IScopedNode scopedNode = (IScopedNode) offsetNode;
-                scope = scopedNode.getScope();
-            }
-            IDefinition scopeDefinition = scope.getDefinition();
-            if (!(scopeDefinition instanceof ITypeDefinition || scopeDefinition instanceof IFunctionDefinition))
-            {
-                //you can't nest types inside other types or inside functions
-                addKeywordAutoComplete(IASKeywordConstants.CLASS, result);
-                addKeywordAutoComplete(IASKeywordConstants.INTERFACE, result);
-            }
-        }
-        if (offsetNode instanceof IBlockNode)
-        {
-            addKeywordAutoComplete(IASKeywordConstants.VAR, result);
-            addKeywordAutoComplete(IASKeywordConstants.CONST, result);
-            addKeywordAutoComplete(IASKeywordConstants.FUNCTION, result);
-            addKeywordAutoComplete(IASKeywordConstants.NAMESPACE, result);
-            addKeywordAutoComplete(IASKeywordConstants.IMPORT, result);
-            addKeywordAutoComplete(IASKeywordConstants.BREAK, result);
-            addKeywordAutoComplete(IASKeywordConstants.CONTINUE, result);
-            addKeywordAutoComplete(IASKeywordConstants.IF, result);
-            addKeywordAutoComplete(IASKeywordConstants.ELSE, result);
-            addKeywordAutoComplete(IASKeywordConstants.TRY, result);
-            addKeywordAutoComplete(IASKeywordConstants.CATCH, result);
+            IScopedNode scopedNode = (IScopedNode) offsetNode;
+            autoCompleteScope(scopedNode, result);
+            return CompletableFuture.completedFuture(result);
         }
 
         return CompletableFuture.completedFuture(result);
@@ -1010,6 +985,33 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         result.getItems().add(item);
     }
 
+    private void autoCompleteScope(IScopedNode node, CompletionListImpl result)
+    {
+        IScopedNode currentNode = node;
+        while (currentNode != null)
+        {
+            IASScope currentScope = currentNode.getScope();
+            boolean staticOnly = currentNode == node
+                    && currentScope instanceof TypeScope;
+            for (IDefinition localDefinition : currentScope.getAllLocalDefinitions())
+            {
+                if (localDefinition.isImplicit())
+                {
+                    continue;
+                }
+                if (localDefinition.getBaseName().length() == 0)
+                {
+                    continue;
+                }
+                if (!staticOnly || localDefinition.isStatic())
+                {
+                    addDefinitionAutoComplete(localDefinition, result);
+                }
+            }
+            currentNode = currentNode.getContainingScope();
+        }
+    }
+
     private void autoCompleteMemberAccess(IMemberAccessExpressionNode node, CompletionListImpl result)
     {
         IExpressionNode leftOperand = node.getLeftOperandNode();
@@ -1017,13 +1019,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         if (leftDefinition != null && leftDefinition instanceof ITypeDefinition)
         {
             ITypeDefinition typeDefinition = (ITypeDefinition) leftDefinition;
-            addDefinitionsInScopeToAutoComplete(typeDefinition, true, result);
+            addDefinitionsInTypeScopeToAutoComplete(typeDefinition, true, result);
             return;
         }
         ITypeDefinition leftType = leftOperand.resolveType(currentProject);
         if (leftType != null)
         {
-            addDefinitionsInScopeToAutoComplete(leftType, false, result);
+            addDefinitionsInTypeScopeToAutoComplete(leftType, false, result);
             return;
         }
     }
@@ -1092,7 +1094,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
     }
 
-    private void addDefinitionsInScopeToAutoComplete(ITypeDefinition typeDefinition, boolean isStatic, CompletionListImpl result)
+    private void addDefinitionsInTypeScopeToAutoComplete(ITypeDefinition typeDefinition, boolean isStatic, CompletionListImpl result)
     {
         IASScope scope = typeDefinition.getContainedScope();
         if (scope != null)
@@ -1126,7 +1128,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             IClassDefinition baseClassDefinition = classDefinition.resolveBaseClass(currentProject);
             if (baseClassDefinition != null)
             {
-                addDefinitionsInScopeToAutoComplete(baseClassDefinition, isStatic, result);
+                addDefinitionsInTypeScopeToAutoComplete(baseClassDefinition, isStatic, result);
             }
         }
         else if (typeDefinition instanceof IInterfaceDefinition)
@@ -1135,7 +1137,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             IInterfaceDefinition[] interfaceDefinitions = interfaceDefinition.resolveExtendedInterfaces(currentProject);
             for (IInterfaceDefinition extendedInterfaceDefinition : interfaceDefinitions)
             {
-                addDefinitionsInScopeToAutoComplete(extendedInterfaceDefinition, isStatic, result);
+                addDefinitionsInTypeScopeToAutoComplete(extendedInterfaceDefinition, isStatic, result);
             }
         }
     }
