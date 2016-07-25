@@ -30,13 +30,11 @@ import org.apache.flex.compiler.tree.as.IASNode;
 import io.typefox.lsapi.CompletionOptionsImpl;
 import io.typefox.lsapi.DidChangeConfigurationParams;
 import io.typefox.lsapi.DidChangeWatchedFilesParams;
-import io.typefox.lsapi.FileEvent;
 import io.typefox.lsapi.InitializeParams;
 import io.typefox.lsapi.InitializeResult;
 import io.typefox.lsapi.InitializeResultImpl;
 import io.typefox.lsapi.MessageParams;
 import io.typefox.lsapi.MessageParamsImpl;
-import io.typefox.lsapi.ServerCapabilities;
 import io.typefox.lsapi.ServerCapabilitiesImpl;
 import io.typefox.lsapi.ShowMessageRequestParams;
 import io.typefox.lsapi.SignatureHelpOptionsImpl;
@@ -50,7 +48,8 @@ import io.typefox.lsapi.services.WorkspaceService;
 
 public class ActionScriptLanguageServer implements LanguageServer
 {
-    private Consumer<MessageParams> showMessageCallback = m -> {
+    private Consumer<MessageParams> showMessageCallback = m ->
+    {
     };
     private boolean hasValidSDK = false;
 
@@ -110,9 +109,9 @@ public class ActionScriptLanguageServer implements LanguageServer
     @Override
     public CompletableFuture<InitializeResult> initialize(InitializeParams params)
     {
-        if(textDocumentService instanceof ActionScriptTextDocumentService)
+        if (textDocumentService instanceof ActionScriptTextDocumentService)
         {
-            ActionScriptTextDocumentService service = (ActionScriptTextDocumentService) textDocumentService; 
+            ActionScriptTextDocumentService service = (ActionScriptTextDocumentService) textDocumentService;
             Path workspaceRoot = Paths.get(params.getRootPath()).toAbsolutePath().normalize();
             service.setWorkspaceRoot(workspaceRoot);
         }
@@ -133,9 +132,7 @@ public class ActionScriptLanguageServer implements LanguageServer
             serverCapabilities.setHoverProvider(true);
             serverCapabilities.setReferencesProvider(true);
             serverCapabilities.setCodeActionProvider(true);
-
-            //lsapi does not implement rename properly, so wait for a fix
-            //c.setRenameProvider(true);
+            serverCapabilities.setRenameProvider(true);
 
             SignatureHelpOptionsImpl signatureHelpOptions = new SignatureHelpOptionsImpl();
             signatureHelpOptions.setTriggerCharacters(Arrays.asList("(", ","));
@@ -146,7 +143,7 @@ public class ActionScriptLanguageServer implements LanguageServer
             serverCapabilities.setTextDocumentSync(TextDocumentSyncKind.None);
         }
         result.setCapabilities(serverCapabilities);
-        
+
         return CompletableFuture.completedFuture(result);
     }
 
@@ -171,6 +168,11 @@ public class ActionScriptLanguageServer implements LanguageServer
             public void onShowMessage(Consumer<MessageParams> callback)
             {
                 showMessageCallback = callback;
+                if (textDocumentService instanceof ActionScriptTextDocumentService)
+                {
+                    ActionScriptTextDocumentService actionScriptService = (ActionScriptTextDocumentService) textDocumentService;
+                    actionScriptService.showMessageCallback = callback;
+                }
             }
 
             @Override
@@ -211,7 +213,7 @@ public class ActionScriptLanguageServer implements LanguageServer
             @Override
             public void didChangeWatchedFiles(DidChangeWatchedFilesParams params)
             {
-                if(textDocumentService instanceof ActionScriptTextDocumentService)
+                if (textDocumentService instanceof ActionScriptTextDocumentService)
                 {
                     ActionScriptTextDocumentService service = (ActionScriptTextDocumentService) textDocumentService;
                     service.didChangeWatchedFiles(params);

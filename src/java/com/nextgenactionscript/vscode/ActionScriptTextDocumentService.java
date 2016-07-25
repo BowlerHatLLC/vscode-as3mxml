@@ -73,6 +73,7 @@ import org.apache.flex.compiler.targets.ITarget;
 import org.apache.flex.compiler.targets.ITargetSettings;
 import org.apache.flex.compiler.tree.as.IASNode;
 import org.apache.flex.compiler.tree.as.IContainerNode;
+import org.apache.flex.compiler.tree.as.IDefinitionNode;
 import org.apache.flex.compiler.tree.as.IExpressionNode;
 import org.apache.flex.compiler.tree.as.IFunctionCallNode;
 import org.apache.flex.compiler.tree.as.IFunctionNode;
@@ -121,6 +122,9 @@ import io.typefox.lsapi.HoverImpl;
 import io.typefox.lsapi.Location;
 import io.typefox.lsapi.LocationImpl;
 import io.typefox.lsapi.MarkedStringImpl;
+import io.typefox.lsapi.MessageParams;
+import io.typefox.lsapi.MessageParamsImpl;
+import io.typefox.lsapi.MessageType;
 import io.typefox.lsapi.ParameterInformationImpl;
 import io.typefox.lsapi.Position;
 import io.typefox.lsapi.PositionImpl;
@@ -168,6 +172,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private ASConfigOptions currentOptions;
     private LanguageServerFileSpecGetter fileSpecGetter;
     private Consumer<PublishDiagnosticsParams> publishDiagnostics = p ->
+    {
+    };
+    public Consumer<MessageParams> showMessageCallback = m ->
     {
     };
 
@@ -720,13 +727,24 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return null;
         }
 
+        if (offsetNode instanceof IDefinitionNode)
+        {
+            IDefinitionNode definitionNode = (IDefinitionNode) offsetNode;
+            IExpressionNode expressionNode = definitionNode.getNameExpressionNode();
+            WorkspaceEditImpl result = renameExpression(expressionNode, params.getNewName());
+            return CompletableFuture.completedFuture(result);
+        }
         if (offsetNode instanceof IIdentifierNode)
         {
             IIdentifierNode expressionNode = (IIdentifierNode) offsetNode;
-            WorkspaceEditImpl result = new WorkspaceEditImpl();
-            renameIdentifier(expressionNode, params.getNewName(), result);
+            WorkspaceEditImpl result = renameExpression(expressionNode, params.getNewName());
             return CompletableFuture.completedFuture(result);
         }
+
+        MessageParamsImpl message = new MessageParamsImpl();
+        message.setType(MessageType.Info);
+        message.setMessage("You cannot rename this element.");
+        showMessageCallback.accept(message);
 
         return null;
     }
@@ -1261,14 +1279,43 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return result;
     }
 
-    private void renameIdentifier(IIdentifierNode node, String newName, WorkspaceEditImpl result)
+    private WorkspaceEditImpl renameExpression(IExpressionNode node, String newName)
     {
         IDefinition resolved = node.resolve(currentProject);
         if (resolved == null)
         {
-            return;
+            MessageParamsImpl message = new MessageParamsImpl();
+            message.setType(MessageType.Info);
+            message.setMessage("You cannot rename this element.");
+            showMessageCallback.accept(message);
+            return null;
         }
-        Map<String, TextEditImpl[]> changes = new HashMap<>();
+        if (resolved.getContainingFilePath().endsWith(".swc"))
+        {
+            MessageParamsImpl message = new MessageParamsImpl();
+            message.setType(MessageType.Info);
+            message.setMessage("You cannot rename an element defined in a SWC file.");
+            showMessageCallback.accept(message);
+            return null;
+        }
+        if (resolved instanceof IPackageDefinition)
+        {
+            MessageParamsImpl message = new MessageParamsImpl();
+            message.setType(MessageType.Info);
+            message.setMessage("You cannot rename a package.");
+            showMessageCallback.accept(message);
+            return null;
+        }
+        IDefinition parentDefinition = resolved.getParent();
+        if (parentDefinition != null && parentDefinition instanceof IPackageDefinition)
+        {
+            MessageParamsImpl message = new MessageParamsImpl();
+            message.setType(MessageType.Info);
+            message.setMessage("You cannot rename this element.");
+            showMessageCallback.accept(message);
+            return null;
+        }
+        Map<String, List<TextEditImpl>> changes = new HashMap<>();
         for (ICompilationUnit compilationUnit : compilationUnits)
         {
             if (compilationUnit instanceof SWCCompilationUnit)
@@ -1286,7 +1333,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             ArrayList<IIdentifierNode> identifiers = new ArrayList<>();
             findIdentifiers(ast, resolved, identifiers);
-            ArrayList<TextEdit> textEdits = new ArrayList<>();
+            ArrayList<TextEditImpl> textEdits = new ArrayList<>();
             for (IIdentifierNode identifierNode : identifiers)
             {
                 TextEditImpl textEdit = new TextEditImpl();
@@ -1304,10 +1351,16 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 textEdit.setRange(range);
                 textEdits.add(textEdit);
             }
-            TextEditImpl[] editsArray = textEdits.toArray(new TextEditImpl[textEdits.size()]);
-            changes.put(compilationUnit.getAbsoluteFilename(), editsArray);
+            if (textEdits.size() == 0)
+            {
+                continue;
+            }
+            URI uri = Paths.get(compilationUnit.getAbsoluteFilename()).toUri();
+            changes.put(uri.toString(), textEdits);
         }
-        //result.setChanges(changes);
+        WorkspaceEditImpl result = new WorkspaceEditImpl();
+        result.setChanges(changes);
+        return result;
     }
 
     private void findIdentifiers(IASNode node, IDefinition definition, List<IIdentifierNode> result)
