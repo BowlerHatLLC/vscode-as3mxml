@@ -170,6 +170,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private IFlexProject currentProject;
     private IWorkspace currentWorkspace;
     private ASConfigOptions currentOptions;
+    private int currentOffset = -1;
     private LanguageServerFileSpecGetter fileSpecGetter;
     private Consumer<PublishDiagnosticsParams> publishDiagnostics = p ->
     {
@@ -202,6 +203,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return CompletableFuture.completedFuture(new CompletionListImpl());
         }
         IASNode parentNode = offsetNode.getParent();
+        IASNode nodeAtPreviousOffset = null;
+        if (parentNode != null)
+        {
+            nodeAtPreviousOffset = parentNode.getContainingNode(currentOffset - 1);
+        }
 
         CompletionListImpl result = new CompletionListImpl();
         result.setIncomplete(false);
@@ -297,6 +303,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     return CompletableFuture.completedFuture(result);
                 }
             }
+        }
+        if (nodeAtPreviousOffset != null
+                && nodeAtPreviousOffset instanceof IImportNode)
+        {
+            autoCompleteImport("", result);
+            return CompletableFuture.completedFuture(result);
         }
 
         //member access
@@ -1070,6 +1082,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 if (definition instanceof ITypeDefinition)
                 {
                     String qualifiedName = definition.getQualifiedName();
+                    if (qualifiedName.equals(definition.getBaseName()))
+                    {
+                        //this definition is top-level. no import required.
+                        continue;
+                    }
                     if (qualifiedName.startsWith(importName))
                     {
                         int index = importName.lastIndexOf(".");
@@ -1873,6 +1890,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private IASNode getOffsetNode(TextDocumentIdentifier textDocument, Position position)
     {
+        currentOffset = -1;
         URI uri = URI.create(textDocument.getUri());
         Optional<Path> optionalPath = getFilePath(uri);
         if (!optionalPath.isPresent())
@@ -1915,15 +1933,15 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return null;
         }
 
-        int offset = lineAndCharacterToOffset(new StringReader(code),
+        currentOffset = lineAndCharacterToOffset(new StringReader(code),
                 position.getLine(),
                 position.getCharacter());
-        if (offset == -1)
+        if (currentOffset == -1)
         {
             System.err.println("Could not find code at position " + position.getLine() + ":" + position.getCharacter());
             return null;
         }
-        return ast.getContainingNode(offset);
+        return ast.getContainingNode(currentOffset);
     }
 
     private void appendInterfaceNamesToDetail(StringBuilder detailBuilder, IInterfaceDefinition[] interfaceDefinitions)
