@@ -71,6 +71,7 @@ import org.apache.flex.compiler.projects.IFlexProject;
 import org.apache.flex.compiler.scopes.IASScope;
 import org.apache.flex.compiler.targets.ITarget;
 import org.apache.flex.compiler.targets.ITargetSettings;
+import org.apache.flex.compiler.tree.ASTNodeID;
 import org.apache.flex.compiler.tree.as.IASNode;
 import org.apache.flex.compiler.tree.as.IContainerNode;
 import org.apache.flex.compiler.tree.as.IDefinitionNode;
@@ -79,6 +80,7 @@ import org.apache.flex.compiler.tree.as.IFunctionCallNode;
 import org.apache.flex.compiler.tree.as.IFunctionNode;
 import org.apache.flex.compiler.tree.as.IIdentifierNode;
 import org.apache.flex.compiler.tree.as.IImportNode;
+import org.apache.flex.compiler.tree.as.IKeywordNode;
 import org.apache.flex.compiler.tree.as.IMemberAccessExpressionNode;
 import org.apache.flex.compiler.tree.as.INamespaceDecorationNode;
 import org.apache.flex.compiler.tree.as.IScopedDefinitionNode;
@@ -271,6 +273,25 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 autoCompleteTypes(result);
                 return CompletableFuture.completedFuture(result);
             }
+        }
+        //new keyword types
+        if (parentNode != null
+                && parentNode instanceof IFunctionCallNode)
+        {
+            IFunctionCallNode functionCallNode = (IFunctionCallNode) parentNode;
+            if (functionCallNode.getNameNode() == offsetNode
+                    && functionCallNode.isNewExpression())
+            {
+                autoCompleteTypes(result);
+                return CompletableFuture.completedFuture(result);
+            }
+        }
+        if (nodeAtPreviousOffset != null
+                && nodeAtPreviousOffset instanceof IKeywordNode
+                && nodeAtPreviousOffset.getNodeID() == ASTNodeID.KeywordNewID)
+        {
+            autoCompleteTypes(result);
+            return CompletableFuture.completedFuture(result);
         }
 
         //import (must be before member access)
