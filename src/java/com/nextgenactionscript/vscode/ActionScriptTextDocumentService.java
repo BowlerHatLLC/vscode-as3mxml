@@ -33,6 +33,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
@@ -49,6 +50,7 @@ import org.apache.flex.compiler.definitions.IConstantDefinition;
 import org.apache.flex.compiler.definitions.IDefinition;
 import org.apache.flex.compiler.definitions.IFunctionDefinition;
 import org.apache.flex.compiler.definitions.IInterfaceDefinition;
+import org.apache.flex.compiler.definitions.INamespaceDefinition;
 import org.apache.flex.compiler.definitions.IPackageDefinition;
 import org.apache.flex.compiler.definitions.IParameterDefinition;
 import org.apache.flex.compiler.definitions.ITypeDefinition;
@@ -60,6 +62,7 @@ import org.apache.flex.compiler.internal.parsing.as.RepairingTokenBuffer;
 import org.apache.flex.compiler.internal.parsing.as.StreamingASTokenizer;
 import org.apache.flex.compiler.internal.projects.CompilerProject;
 import org.apache.flex.compiler.internal.projects.FlexJSProject;
+import org.apache.flex.compiler.internal.scopes.ASScope;
 import org.apache.flex.compiler.internal.scopes.TypeScope;
 import org.apache.flex.compiler.internal.tree.as.FileNode;
 import org.apache.flex.compiler.internal.tree.as.FullNameNode;
@@ -1087,18 +1090,21 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private void autoCompleteMemberAccess(IMemberAccessExpressionNode node, CompletionListImpl result)
     {
+        ASScope scope = (ASScope) node.getContainingScope().getScope();
         IExpressionNode leftOperand = node.getLeftOperandNode();
         IDefinition leftDefinition = leftOperand.resolve(currentProject);
         if (leftDefinition != null && leftDefinition instanceof ITypeDefinition)
         {
             ITypeDefinition typeDefinition = (ITypeDefinition) leftDefinition;
-            addDefinitionsInTypeScopeToAutoComplete(typeDefinition, true, result);
+            TypeScope typeScope = (TypeScope) typeDefinition.getContainedScope();
+            addDefinitionsInTypeScopeToAutoComplete(typeScope, scope, true, result);
             return;
         }
         ITypeDefinition leftType = leftOperand.resolveType(currentProject);
         if (leftType != null)
         {
-            addDefinitionsInTypeScopeToAutoComplete(leftType, false, result);
+            TypeScope typeScope = (TypeScope) leftType.getContainedScope();
+            addDefinitionsInTypeScopeToAutoComplete(typeScope, scope, false, result);
             return;
         }
     }
@@ -1172,51 +1178,29 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
     }
 
-    private void addDefinitionsInTypeScopeToAutoComplete(ITypeDefinition typeDefinition, boolean isStatic, CompletionListImpl result)
+    private void addDefinitionsInTypeScopeToAutoComplete(TypeScope typeScope, ASScope otherScope, boolean isStatic, CompletionListImpl result)
     {
-        IASScope scope = typeDefinition.getContainedScope();
-        if (scope != null)
+        ArrayList<IDefinition> memberAccessDefinitions = new ArrayList<>();
+        Set<INamespaceDefinition> namespaceSet = otherScope.getNamespaceSet(currentProject);
+        typeScope.getAllPropertiesForMemberAccess((CompilerProject) currentProject, memberAccessDefinitions, namespaceSet);
+        for (IDefinition localDefinition : memberAccessDefinitions)
         {
-            for (IDefinition localDefinition : scope.getAllLocalDefinitions())
+            if (isStatic)
             {
-                if (localDefinition.isImplicit())
-                {
-                    //skip things like super and this
-                    continue;
-                }
-                if (isStatic && !localDefinition.isStatic())
+                if (!localDefinition.isStatic())
                 {
                     continue;
                 }
-                if (!isStatic && localDefinition.isStatic())
+                if (localDefinition.getParent() != typeScope.getContainingDefinition())
                 {
                     continue;
                 }
-                addDefinitionAutoComplete(localDefinition, result);
             }
-        }
-        if (isStatic)
-        {
-            //nothing from the base class or interfaces matter
-            return;
-        }
-        if (typeDefinition instanceof IClassDefinition)
-        {
-            IClassDefinition classDefinition = (IClassDefinition) typeDefinition;
-            IClassDefinition baseClassDefinition = classDefinition.resolveBaseClass(currentProject);
-            if (baseClassDefinition != null)
+            if (!isStatic && localDefinition.isStatic())
             {
-                addDefinitionsInTypeScopeToAutoComplete(baseClassDefinition, isStatic, result);
+                continue;
             }
-        }
-        else if (typeDefinition instanceof IInterfaceDefinition)
-        {
-            IInterfaceDefinition interfaceDefinition = (IInterfaceDefinition) typeDefinition;
-            IInterfaceDefinition[] interfaceDefinitions = interfaceDefinition.resolveExtendedInterfaces(currentProject);
-            for (IInterfaceDefinition extendedInterfaceDefinition : interfaceDefinitions)
-            {
-                addDefinitionsInTypeScopeToAutoComplete(extendedInterfaceDefinition, isStatic, result);
-            }
+            addDefinitionAutoComplete(localDefinition, result);
         }
     }
 
