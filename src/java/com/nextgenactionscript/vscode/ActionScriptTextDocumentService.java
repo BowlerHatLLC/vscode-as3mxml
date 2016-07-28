@@ -695,52 +695,74 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             switch (code)
             {
+                case "1120": //AccessUndefinedPropertyProblem
+                {
+                    createCodeActionsForImport(diagnostic, commands);
+                    break;
+                }
                 case "1046": //UnknownTypeProblem
                 {
-                    String message = diagnostic.getMessage();
-                    int start = message.lastIndexOf(" ") + 1;
-                    int end = message.length() - 1;
-                    String typeString = message.substring(start, end);
-                    ArrayList<String> types = new ArrayList<>();
-                    for (ICompilationUnit unit : compilationUnits)
-                    {
-                        try
-                        {
-                            Collection<IDefinition> definitions = unit.getFileScopeRequest().get().getExternallyVisibleDefinitions();
-                            if (definitions == null)
-                            {
-                                continue;
-                            }
-                            for (IDefinition definition : definitions)
-                            {
-                                if (definition instanceof ITypeDefinition)
-                                {
-                                    ITypeDefinition typeDefinition = (ITypeDefinition) definition;
-                                    if (typeDefinition.getBaseName().equals(typeString))
-                                    {
-                                        types.add(typeDefinition.getQualifiedName());
-                                    }
-                                }
-                            }
-                        }
-                        catch (Exception e)
-                        {
-                            //safe to ignore
-                        }
-                    }
-                    for (String qualifiedName : types)
-                    {
-                        CommandImpl command = new CommandImpl();
-                        command.setCommand("nextgenas.addImport");
-                        command.setTitle("Import " + qualifiedName);
-                        command.setArguments(Collections.singletonList(qualifiedName));
-                        commands.add(command);
-                    }
+                    createCodeActionsForImport(diagnostic, commands);
+                    break;
+                }
+                case "1180": //CallUndefinedMethodProblem
+                {
+                    createCodeActionsForImport(diagnostic, commands);
                     break;
                 }
             }
         }
         return CompletableFuture.completedFuture(commands);
+    }
+
+    private void createCodeActionsForImport(Diagnostic diagnostic, List<CommandImpl> commands)
+    {
+        String message = diagnostic.getMessage();
+        int start = message.lastIndexOf(" ") + 1;
+        int end = message.length() - 1;
+        String typeString = message.substring(start, end);
+
+        ArrayList<String> types = new ArrayList<>();
+        for (ICompilationUnit unit : compilationUnits)
+        {
+            try
+            {
+                Collection<IDefinition> definitions = unit.getFileScopeRequest().get().getExternallyVisibleDefinitions();
+                if (definitions == null)
+                {
+                    continue;
+                }
+                for (IDefinition definition : definitions)
+                {
+                    if (definition instanceof ITypeDefinition)
+                    {
+                        ITypeDefinition typeDefinition = (ITypeDefinition) definition;
+                        String baseName = typeDefinition.getBaseName();
+                        if (typeDefinition.getQualifiedName().equals(baseName))
+                        {
+                            //this definition is top-level. no import required.
+                            continue;
+                        }
+                        if (baseName.equals(typeString))
+                        {
+                            types.add(typeDefinition.getQualifiedName());
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                //safe to ignore
+            }
+        }
+        for (String qualifiedName : types)
+        {
+            CommandImpl command = new CommandImpl();
+            command.setCommand("nextgenas.addImport");
+            command.setTitle("Import " + qualifiedName);
+            command.setArguments(Collections.singletonList(qualifiedName));
+            commands.add(command);
+        }
     }
 
     @Override
