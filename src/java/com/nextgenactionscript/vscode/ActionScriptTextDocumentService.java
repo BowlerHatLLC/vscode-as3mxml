@@ -73,6 +73,7 @@ import org.apache.flex.compiler.targets.ITarget;
 import org.apache.flex.compiler.targets.ITargetSettings;
 import org.apache.flex.compiler.tree.ASTNodeID;
 import org.apache.flex.compiler.tree.as.IASNode;
+import org.apache.flex.compiler.tree.as.IBinaryOperatorNode;
 import org.apache.flex.compiler.tree.as.IContainerNode;
 import org.apache.flex.compiler.tree.as.IDefinitionNode;
 import org.apache.flex.compiler.tree.as.IExpressionNode;
@@ -289,6 +290,25 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         if (nodeAtPreviousOffset != null
                 && nodeAtPreviousOffset instanceof IKeywordNode
                 && nodeAtPreviousOffset.getNodeID() == ASTNodeID.KeywordNewID)
+        {
+            autoCompleteTypes(result);
+            return CompletableFuture.completedFuture(result);
+        }
+        //as keyword types
+        if (parentNode != null
+                && parentNode instanceof IBinaryOperatorNode
+                && parentNode.getNodeID() == ASTNodeID.Op_AsID)
+        {
+            IBinaryOperatorNode binaryOperatorNode = (IBinaryOperatorNode) parentNode;
+            if (binaryOperatorNode.getRightOperandNode() == offsetNode)
+            {
+                autoCompleteTypes(result);
+                return CompletableFuture.completedFuture(result);
+            }
+        }
+        if (nodeAtPreviousOffset != null
+                && nodeAtPreviousOffset instanceof IBinaryOperatorNode
+                && nodeAtPreviousOffset.getNodeID() == ASTNodeID.Op_AsID)
         {
             autoCompleteTypes(result);
             return CompletableFuture.completedFuture(result);
