@@ -7,7 +7,7 @@
   "homepage": "http://nextgenactionscript.com/vscode/",
   "repository": {
     "type": "git",
-    "url": "https://github.com/BowlerHatLLC/vscode-nextgenas"
+    "url": "https://github.com/BowlerHatLLC/vscode-nextgenas.git"
   },
   "bugs": {
     "url": "https://github.com/BowlerHatLLC/vscode-nextgenas/issues"
