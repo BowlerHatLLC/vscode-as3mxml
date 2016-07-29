@@ -4,12 +4,21 @@
   "description": "Visual Studio Code extension for transpiling ActionScript with Apache FlexJS",
   "version": "0.1.0",
   "publisher": "bowlerhatllc",
+  "homepage": "http://nextgenactionscript.com/vscode/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BowlerHatLLC/vscode-nextgenas"
+  },
+  "bugs": {
+    "url": "https://github.com/BowlerHatLLC/vscode-nextgenas/issues"
+  },
   "license": "Apache-2.0",
+  "private": true,
   "categories": [
     "Languages",
     "Debuggers"
   ],
-  "main": "out/extension",
+  "main": "target/extension",
   "files": [
     "target/NextGenAS_vscode.jar",
     "target/lib",
@@ -18,6 +27,7 @@
     "LICENSE",
     "README.md"
   ],
+  "icon": "nextgenas.png",
   "scripts": {
     "postinstall": "node ./node_modules/vscode/bin/install",
     "vscode:prepublish": "npm run compile",

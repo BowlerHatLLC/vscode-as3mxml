@@ -1,0 +1,13 @@
+.vscode/**/*
+typings/**/*
+src/**/*
+lib/**/*
+*.iml
+*.vsix
+.gitignore
+tsconfig.json
+typings.d.ts
+manifest.mf
+build.xml
+ivy.xml
+ivysettings.xml

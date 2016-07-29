@@ -1,5 +1,4 @@
 lib/
-out/
 target/
 .metadata/
 .idea/
@@ -14,3 +13,4 @@ Thumbs.db
 *.p12
 *.lnk
 *.iml
+*.vsix
