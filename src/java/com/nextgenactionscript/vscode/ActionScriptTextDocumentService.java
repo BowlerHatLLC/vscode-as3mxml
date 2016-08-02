@@ -49,10 +49,12 @@ import org.apache.flex.compiler.definitions.IClassDefinition;
 import org.apache.flex.compiler.definitions.IConstantDefinition;
 import org.apache.flex.compiler.definitions.IDefinition;
 import org.apache.flex.compiler.definitions.IFunctionDefinition;
+import org.apache.flex.compiler.definitions.IGetterDefinition;
 import org.apache.flex.compiler.definitions.IInterfaceDefinition;
 import org.apache.flex.compiler.definitions.INamespaceDefinition;
 import org.apache.flex.compiler.definitions.IPackageDefinition;
 import org.apache.flex.compiler.definitions.IParameterDefinition;
+import org.apache.flex.compiler.definitions.ISetterDefinition;
 import org.apache.flex.compiler.definitions.ITypeDefinition;
 import org.apache.flex.compiler.definitions.IVariableDefinition;
 import org.apache.flex.compiler.internal.driver.js.goog.JSGoogConfiguration;
@@ -1207,6 +1209,22 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         typeScope.getAllPropertiesForMemberAccess((CompilerProject) currentProject, memberAccessDefinitions, namespaceSet);
         for (IDefinition localDefinition : memberAccessDefinitions)
         {
+            //overrides would add unnecessary duplicates to the list
+            if (localDefinition.isOverride())
+            {
+                continue;
+            }
+            if (localDefinition instanceof ISetterDefinition)
+            {
+                ISetterDefinition setter = (ISetterDefinition) localDefinition;
+                IGetterDefinition getter = setter.resolveGetter(currentProject);
+                if (getter != null)
+                {
+                    //skip the setter if there's also a getter because it would
+                    //add a duplicate entry
+                    continue;
+                }
+            }
             if (isStatic)
             {
                 if (!localDefinition.isStatic())
