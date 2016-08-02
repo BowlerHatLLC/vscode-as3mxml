@@ -1813,7 +1813,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return currentProject;
         }
         CompilerOptions compilerOptions = currentOptions.compilerOptions;
-        JSGoogConfiguration configuration = new JSGoogConfiguration();
         Configurator configurator = new Configurator(JSGoogConfiguration.class);
         configurator.setToken("configname", currentOptions.config);
         if (currentOptions.files != null)
