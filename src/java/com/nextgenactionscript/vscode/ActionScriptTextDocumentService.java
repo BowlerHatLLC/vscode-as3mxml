@@ -1027,7 +1027,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                         Path filePath = workspaceRoot.resolve(pathString);
                         sourcePath.add(filePath.toFile());
                     }
-                    compilerOptions.libraryPath = sourcePath;
+                    compilerOptions.sourcePath = sourcePath;
                 }
                 if (jsonCompilerOptions.has("warnings"))
                 {
