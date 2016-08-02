@@ -1595,7 +1595,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     {
         URI uri = path.toUri();
         PublishDiagnosticsParamsImpl publish = new PublishDiagnosticsParamsImpl();
-        publish.setDiagnostics(new ArrayList<>());
+        ArrayList<DiagnosticImpl> diagnostics = new ArrayList<>();
+        publish.setDiagnostics(diagnostics);
         publish.setUri(uri.toString());
 
         String code = sourceByPath.get(path);
@@ -1621,12 +1622,54 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         catch (Exception e)
         {
-            return;
+            parser = null;
+            System.err.println("Failed to parse file (" + path.toString() + "): " + e);
+            e.printStackTrace();
         }
-        for (ICompilerProblem problem : parser.getSyntaxProblems())
+        //if an error occurred above, parser will be null
+        if (parser != null)
         {
-            addCompilerProblem(problem, publish);
+            for (ICompilerProblem problem : parser.getSyntaxProblems())
+            {
+                addCompilerProblem(problem, publish);
+            }
         }
+
+        DiagnosticImpl diagnostic = new DiagnosticImpl();
+        diagnostic.setSeverity(DiagnosticSeverity.Information);
+
+        File asconfigFile = getASConfigFile();
+        if (parser == null)
+        {
+            //something terrible happened, and this is the best we can do
+            diagnostic.setMessage("A fatal error occurred while checking for simple syntax problems.");
+        }
+        else if (currentOptions == null)
+        {
+            if (asconfigFile == null)
+            {
+                diagnostic.setMessage("Cannot find asconfig.json. Error checking disabled, except for simple syntax problems.");
+            }
+            else
+            {
+                //we found asconfig.json, but something went wrong while
+                //attempting to parse it
+                diagnostic.setMessage("Failed to parse asconfig.json. Error checking disabled, except for simple syntax problems.");
+            }
+        }
+        else
+        {
+            //we loaded and parsed asconfig.json, so something went wrong while
+            //checking for errors.
+            diagnostic.setMessage("A fatal error occurred while checking for errors. Error checking disabled, except for simple syntax problems.");
+        }
+
+        RangeImpl range = new RangeImpl();
+        range.setStart(new PositionImpl());
+        range.setEnd(new PositionImpl());
+        diagnostic.setRange(range);
+        diagnostics.add(diagnostic);
+
         publishDiagnostics.accept(publish);
     }
 
