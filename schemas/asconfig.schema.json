@@ -89,7 +89,7 @@
 				"external-library-path":
 				{
 					"type": "array",
-					"description": "Specifies a list of SWC files or directories to exclude from linking when compiling a SWF file. This option provides compile-time link checking for external components that are dynamically linked.",
+					"description": "Specifies a list of SWC files, or directories containing SWC files, to exclude from linking in the generated output. This option provides compile-time link checking for external components that are dynamically linked.",
 					"items":
 					{
 						"type": "string"
