@@ -1209,9 +1209,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         typeScope.getAllPropertiesForMemberAccess((CompilerProject) currentProject, memberAccessDefinitions, namespaceSet);
         for (IDefinition localDefinition : memberAccessDefinitions)
         {
-            //overrides would add unnecessary duplicates to the list
             if (localDefinition.isOverride())
             {
+                //overrides would add unnecessary duplicates to the list
                 continue;
             }
             if (localDefinition instanceof ISetterDefinition)
@@ -1229,15 +1229,21 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             {
                 if (!localDefinition.isStatic())
                 {
+                    //if we want static members, and the definition isn't
+                    //static, skip it
                     continue;
                 }
                 if (localDefinition.getParent() != typeScope.getContainingDefinition())
                 {
+                    //if we want static members, then members from base classes
+                    //aren't available with member access
                     continue;
                 }
             }
             if (!isStatic && localDefinition.isStatic())
             {
+                //if we want non-static members, and the definition is static,
+                //skip it!
                 continue;
             }
             addDefinitionAutoComplete(localDefinition, result);
