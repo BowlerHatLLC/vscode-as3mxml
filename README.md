@@ -20,7 +20,7 @@ This extension is still in development. A preview build will be available soon.
 
 ## Minimum Requirements
 
-* Visual Studio Code 1.3
+* Visual Studio Code 1.4
 * Java 8 Runtime
 * Apache FlexJS 0.7 Nightly
 
