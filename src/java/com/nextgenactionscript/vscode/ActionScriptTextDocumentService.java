@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -170,7 +171,7 @@ import org.json.JSONTokener;
 public class ActionScriptTextDocumentService implements TextDocumentService
 {
     private Path workspaceRoot;
-    private boolean asconfigFileChanged = true;
+    private boolean forceWorkspaceChange = true;
     private Map<Path, String> sourceByPath = new HashMap<>();
     private Collection<ICompilationUnit> compilationUnits;
     private ArrayList<IInvisibleCompilationUnit> invisibleUnits = new ArrayList<>();
@@ -180,6 +181,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private ASConfigOptions currentOptions;
     private int currentOffset = -1;
     private LanguageServerFileSpecGetter fileSpecGetter;
+    private HashSet<URI> newFilesWithErrors = new HashSet<>();
+    private HashSet<URI> oldFilesWithErrors = new HashSet<>();
     private Consumer<PublishDiagnosticsParams> publishDiagnostics = p ->
     {
     };
@@ -880,12 +883,19 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     {
         TextDocumentIdentifier document = params.getTextDocument();
         URI uri = URI.create(document.getUri());
-        Optional<Path> path = getFilePath(uri);
+        Optional<Path> optionalPath = getFilePath(uri);
 
-        if (path.isPresent())
+        if (optionalPath.isPresent())
         {
-            // Remove from source cache
-            sourceByPath.remove(path.get());
+            Path path = optionalPath.get();
+            sourceByPath.remove(path);
+            File file = new File(path.toString());
+            if(!file.exists())
+            {
+                //if a file was deleted, we don't want its compilation unit to
+                //stay in memory, so let's start fresh
+                forceWorkspaceChange = true;
+            }
         }
     }
 
@@ -910,10 +920,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             File file = path.toFile();
             if (file.getName().equals("asconfig.json"))
             {
-                asconfigFileChanged = true;
+                //compiler settings may have changed, which means we should
+                //start fresh
+                forceWorkspaceChange = true;
             }
         }
-        if (asconfigFileChanged)
+        if (forceWorkspaceChange)
         {
             Path path = getMainCompilationUnitPath();
             if (path != null)
@@ -946,13 +958,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private void loadASConfigFile()
     {
-        if (!asconfigFileChanged && currentOptions != null)
+        if (!forceWorkspaceChange && currentOptions != null)
         {
             //the options are fully up-to-date
             return;
         }
         currentOptions = null;
-        asconfigFileChanged = true;
+        forceWorkspaceChange = true;
         File asconfigFile = getASConfigFile();
         if (asconfigFile == null)
         {
@@ -1622,6 +1634,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         ArrayList<DiagnosticImpl> diagnostics = new ArrayList<>();
         publish.setDiagnostics(diagnostics);
         publish.setUri(uri.toString());
+        trackFileWithErrors(uri);
 
         String code = sourceByPath.get(path);
         StringReader reader = new StringReader(code);
@@ -1694,6 +1707,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         diagnostic.setRange(range);
         diagnostics.add(diagnostic);
 
+        cleanUpStaleErrors();
         publishDiagnostics.accept(publish);
     }
 
@@ -1752,13 +1766,20 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             currentWorkspace.fileChanged(fileSpecGetter.getFileSpecification(path.toAbsolutePath().toString()));
         }
+        //we're going to start with the files passed into the compiler
         String[] files = currentOptions.files;
         for (int i = files.length - 1; i >= 0; i--)
         {
             String file = files[i];
+            //a previous file may have created a compilation unit for the
+            //current file, so use that, if available
             ICompilationUnit existingUnit = findCompilationUnit(file);
             if (existingUnit != null)
             {
+                if (file.equals(absolutePath))
+                {
+                    currentUnit = existingUnit;
+                }
                 continue;
             }
             IInvisibleCompilationUnit unit = currentProject.createInvisibleCompilationUnit(file, fileSpecGetter);
@@ -1776,6 +1797,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         compilationUnits = currentProject.getCompilationUnits();
         if (currentUnit == null)
         {
+            //search the existing compilation units for the file, if it hasn't
+            //been found yet
             for (ICompilationUnit unit : compilationUnits)
             {
                 if (unit.getAbsoluteFilename().equals(absolutePath))
@@ -1786,6 +1809,18 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
         }
 
+        if(currentUnit == null)
+        {
+            //if all else fails, create the compilation unit manually
+            IInvisibleCompilationUnit unit = currentProject.createInvisibleCompilationUnit(absolutePath, fileSpecGetter);
+            if (unit == null)
+            {
+                System.err.println("Could not create compilation unit for file: " + absolutePath);
+                return null;
+            }
+            invisibleUnits.add(unit);
+            currentUnit = unit;
+        }
         return currentUnit;
     }
 
@@ -1815,9 +1850,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             compilationUnits = null;
             return null;
         }
-        if (asconfigFileChanged)
+        if (forceWorkspaceChange)
         {
-            asconfigFileChanged = false;
+            forceWorkspaceChange = false;
 
             //start fresh if the asconfig.json file changed
             currentWorkspace = null;
@@ -1900,6 +1935,29 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         project.setTargetSettings(targetSettings);
         return project;
     }
+    
+    private void cleanUpStaleErrors() 
+    {
+        //if any files have been removed, they will still appear in this set, so
+        //clear the errors so that they don't persist
+        for(URI uri : oldFilesWithErrors)
+        {
+            PublishDiagnosticsParamsImpl publish = new PublishDiagnosticsParamsImpl();
+            publish.setDiagnostics(new ArrayList<>());
+            publish.setUri(uri.toString());
+            publishDiagnostics.accept(publish);
+        }
+        oldFilesWithErrors.clear();
+        HashSet<URI> temp = newFilesWithErrors;
+        newFilesWithErrors = oldFilesWithErrors;
+        oldFilesWithErrors = temp;
+    }
+
+    private void trackFileWithErrors(URI uri)
+    {
+        newFilesWithErrors.add(uri);
+        oldFilesWithErrors.remove(uri);
+    }
 
     private void checkFilePathForProblems(Path path)
     {
@@ -1926,13 +1984,16 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         if (fatalProblems != null && fatalProblems.size() > 0)
         {
+            URI uri = path.toUri();
             PublishDiagnosticsParamsImpl publish = new PublishDiagnosticsParamsImpl();
             publish.setDiagnostics(new ArrayList<>());
-            publish.setUri(path.toUri().toString());
+            publish.setUri(uri.toString());
+            trackFileWithErrors(uri);
             for (ICompilerProblem problem : fatalProblems)
             {
                 addCompilerProblem(problem, publish);
             }
+            cleanUpStaleErrors();
             publishDiagnostics.accept(publish);
             return true;
         }
@@ -1964,6 +2025,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 publish.setDiagnostics(new ArrayList<>());
                 publish.setUri(uri.toString());
                 files.put(uri, publish);
+                trackFileWithErrors(uri);
                 ArrayList<ICompilerProblem> problems = new ArrayList<>();
                 try
                 {
@@ -1989,9 +2051,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         catch (Exception e)
         {
-            System.err.println("test: " + e);
+            System.err.println("Exception during build: " + e);
             return false;
         }
+        cleanUpStaleErrors();
         files.values().forEach(publishDiagnostics::accept);
         return true;
     }
