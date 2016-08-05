@@ -50,6 +50,12 @@
     "workspaceContains:asconfig.json"
   ],
   "contributes": {
+    "commands": [
+      {
+        "command": "nextgenas.createASConfigTaskRunner",
+        "title": "Tasks: Configure Task Runner (ActionScript - asconfig.json)"
+      }
+    ],
     "languages":
     [
       {
