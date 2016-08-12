@@ -890,7 +890,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             Path path = optionalPath.get();
             sourceByPath.remove(path);
             File file = new File(path.toString());
-            if(!file.exists())
+            if (!file.exists())
             {
                 //if a file was deleted, we don't want its compilation unit to
                 //stay in memory, so let's start fresh
@@ -1218,6 +1218,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     {
         ArrayList<IDefinition> memberAccessDefinitions = new ArrayList<>();
         Set<INamespaceDefinition> namespaceSet = otherScope.getNamespaceSet(currentProject);
+        if (typeScope.getContainingDefinition() instanceof IInterfaceDefinition)
+        {
+            //interfaces have a special namespace that isn't actually the same
+            //as public, but should be treated the same way
+            namespaceSet.addAll(typeScope.getNamespaceSet(currentProject));
+        }
         typeScope.getAllPropertiesForMemberAccess((CompilerProject) currentProject, memberAccessDefinitions, namespaceSet);
         for (IDefinition localDefinition : memberAccessDefinitions)
         {
@@ -1809,7 +1815,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
         }
 
-        if(currentUnit == null)
+        if (currentUnit == null)
         {
             //if all else fails, create the compilation unit manually
             IInvisibleCompilationUnit unit = currentProject.createInvisibleCompilationUnit(absolutePath, fileSpecGetter);
@@ -1935,12 +1941,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         project.setTargetSettings(targetSettings);
         return project;
     }
-    
-    private void cleanUpStaleErrors() 
+
+    private void cleanUpStaleErrors()
     {
         //if any files have been removed, they will still appear in this set, so
         //clear the errors so that they don't persist
-        for(URI uri : oldFilesWithErrors)
+        for (URI uri : oldFilesWithErrors)
         {
             PublishDiagnosticsParamsImpl publish = new PublishDiagnosticsParamsImpl();
             publish.setDiagnostics(new ArrayList<>());
