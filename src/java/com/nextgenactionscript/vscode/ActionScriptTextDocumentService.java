@@ -306,7 +306,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         if (parentNode != null
                 && parentNode instanceof IBinaryOperatorNode
                 && (parentNode.getNodeID() == ASTNodeID.Op_AsID
-                    || parentNode.getNodeID() == ASTNodeID.Op_IsID))
+                || parentNode.getNodeID() == ASTNodeID.Op_IsID))
         {
             IBinaryOperatorNode binaryOperatorNode = (IBinaryOperatorNode) parentNode;
             if (binaryOperatorNode.getRightOperandNode() == offsetNode)
@@ -318,7 +318,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         if (nodeAtPreviousOffset != null
                 && nodeAtPreviousOffset instanceof IBinaryOperatorNode
                 && (nodeAtPreviousOffset.getNodeID() == ASTNodeID.Op_AsID
-                    || nodeAtPreviousOffset.getNodeID() == ASTNodeID.Op_IsID))
+                || nodeAtPreviousOffset.getNodeID() == ASTNodeID.Op_IsID))
         {
             autoCompleteTypes(result);
             return CompletableFuture.completedFuture(result);
@@ -2147,6 +2147,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         if (definition instanceof IClassDefinition)
         {
             IClassDefinition classDefinition = (IClassDefinition) definition;
+            if (classDefinition.isDynamic())
+            {
+                detailBuilder.append(IASKeywordConstants.DYNAMIC);
+                detailBuilder.append(" ");
+            }
             detailBuilder.append(IASKeywordConstants.CLASS);
             detailBuilder.append(" ");
             detailBuilder.append(classDefinition.getQualifiedName());
