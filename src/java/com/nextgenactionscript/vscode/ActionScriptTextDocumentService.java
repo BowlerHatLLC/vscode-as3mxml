@@ -305,7 +305,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         //as keyword types
         if (parentNode != null
                 && parentNode instanceof IBinaryOperatorNode
-                && parentNode.getNodeID() == ASTNodeID.Op_AsID)
+                && (parentNode.getNodeID() == ASTNodeID.Op_AsID
+                    || parentNode.getNodeID() == ASTNodeID.Op_IsID))
         {
             IBinaryOperatorNode binaryOperatorNode = (IBinaryOperatorNode) parentNode;
             if (binaryOperatorNode.getRightOperandNode() == offsetNode)
@@ -316,7 +317,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         if (nodeAtPreviousOffset != null
                 && nodeAtPreviousOffset instanceof IBinaryOperatorNode
-                && nodeAtPreviousOffset.getNodeID() == ASTNodeID.Op_AsID)
+                && (nodeAtPreviousOffset.getNodeID() == ASTNodeID.Op_AsID
+                    || nodeAtPreviousOffset.getNodeID() == ASTNodeID.Op_IsID))
         {
             autoCompleteTypes(result);
             return CompletableFuture.completedFuture(result);
