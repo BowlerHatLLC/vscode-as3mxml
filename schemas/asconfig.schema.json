@@ -95,6 +95,15 @@
 						"type": "string"
 					}
 				},
+				"keep-as3-metadata":
+				{
+					"type": "array",
+					"description": "Specifies custom metadata that you want to keep.",
+					"items":
+					{
+						"type": "string"
+					}
+				},
 				"library-path":
 				{
 					"type": "array",
