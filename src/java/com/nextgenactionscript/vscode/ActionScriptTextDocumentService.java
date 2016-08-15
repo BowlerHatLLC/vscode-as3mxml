@@ -848,6 +848,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             String text = document.getText();
             sourceByPath.put(path, text);
 
+            //this should help with new files that didn't exist before in the
+            //workspace
+            forceWorkspaceChange = true;
             checkFilePathForProblems(path);
         }
     }
