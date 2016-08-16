@@ -2044,6 +2044,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 }
                 catch (Exception e)
                 {
+                    System.err.println("Exception during waitForBuildFinish(): " + e);
+                    e.printStackTrace();
                     return false;
                 }
                 for (ICompilerProblem problem : problems)
@@ -2063,6 +2065,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         catch (Exception e)
         {
             System.err.println("Exception during build: " + e);
+            e.printStackTrace();
             return false;
         }
         cleanUpStaleErrors();
