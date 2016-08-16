@@ -2159,7 +2159,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             detailBuilder.append(" ");
             detailBuilder.append(classDefinition.getQualifiedName());
             IClassDefinition baseClassDefinition = classDefinition.resolveBaseClass(currentProject);
-            if (baseClassDefinition != null)
+            if (baseClassDefinition != null && !baseClassDefinition.getQualifiedName().equals("Object"))
             {
                 detailBuilder.append(" ");
                 detailBuilder.append(IASKeywordConstants.EXTENDS);
