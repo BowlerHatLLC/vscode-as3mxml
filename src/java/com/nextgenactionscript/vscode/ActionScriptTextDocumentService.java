@@ -171,6 +171,7 @@ import org.json.JSONTokener;
 public class ActionScriptTextDocumentService implements TextDocumentService
 {
     private Path workspaceRoot;
+    private String lastDocumentURI;
     private boolean forceWorkspaceChange = true;
     private Map<Path, String> sourceByPath = new HashMap<>();
     private Collection<ICompilationUnit> compilationUnits;
@@ -848,9 +849,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             String text = document.getText();
             sourceByPath.put(path, text);
 
-            //this should help with new files that didn't exist before in the
-            //workspace
-            forceWorkspaceChange = true;
             checkFilePathForProblems(path);
         }
     }
@@ -879,6 +877,15 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     sourceByPath.put(path, newText);
                 }
             }
+            String newURI = document.getUri();
+            if (lastDocumentURI != null && !lastDocumentURI.equals(newURI))
+            {
+                //if we've switched to this file, and there were new files added
+                //to the project, they may not show up unless we tell the
+                //compiler to start fresh
+                forceWorkspaceChange = true;
+            }
+            lastDocumentURI = newURI;
             checkFilePathForProblems(path);
         }
     }
