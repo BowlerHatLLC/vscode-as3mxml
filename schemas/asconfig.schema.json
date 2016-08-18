@@ -98,7 +98,7 @@
 				"include-classes":
 				{
 					"type": "array",
-					"description": "(Library projects only) Specifies classes to include in the SWC file. You provide the class name (for instance, com.example.MyClass) rather than the file name (for instance, com/exampleMyClass.as) to the file for this option.",
+					"description": "(Library projects only) Specifies classes to include in the SWC file. You provide the class name (for instance, com.example.MyClass) rather than the file name (for instance, com/example/MyClass.as) to the file for this option.",
 					"items":
 					{
 						"type": "string"
