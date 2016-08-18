@@ -1787,30 +1787,33 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         //we're going to start with the files passed into the compiler
         String[] files = currentOptions.files;
-        for (int i = files.length - 1; i >= 0; i--)
+        if(files != null)
         {
-            String file = files[i];
-            //a previous file may have created a compilation unit for the
-            //current file, so use that, if available
-            ICompilationUnit existingUnit = findCompilationUnit(file);
-            if (existingUnit != null)
+            for (int i = files.length - 1; i >= 0; i--)
             {
+                String file = files[i];
+                //a previous file may have created a compilation unit for the
+                //current file, so use that, if available
+                ICompilationUnit existingUnit = findCompilationUnit(file);
+                if (existingUnit != null)
+                {
+                    if (file.equals(absolutePath))
+                    {
+                        currentUnit = existingUnit;
+                    }
+                    continue;
+                }
+                IInvisibleCompilationUnit unit = currentProject.createInvisibleCompilationUnit(file, fileSpecGetter);
+                if (unit == null)
+                {
+                    System.err.println("Could not create compilation unit for file: " + file);
+                    continue;
+                }
+                invisibleUnits.add(unit);
                 if (file.equals(absolutePath))
                 {
-                    currentUnit = existingUnit;
+                    currentUnit = unit;
                 }
-                continue;
-            }
-            IInvisibleCompilationUnit unit = currentProject.createInvisibleCompilationUnit(file, fileSpecGetter);
-            if (unit == null)
-            {
-                System.err.println("Could not create compilation unit for file: " + file);
-                continue;
-            }
-            invisibleUnits.add(unit);
-            if (file.equals(absolutePath))
-            {
-                currentUnit = unit;
             }
         }
         compilationUnits = currentProject.getCompilationUnits();
