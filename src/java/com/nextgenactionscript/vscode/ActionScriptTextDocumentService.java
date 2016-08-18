@@ -1120,6 +1120,21 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             e.printStackTrace();
             return;
         }
+        //in a library project, the files field will be treated the same as the
+        //include-sources compiler option
+        if (type == ProjectType.LIB && files != null)
+        {
+            if (compilerOptions.includeSources == null)
+            {
+                compilerOptions.includeSources = new ArrayList<>();
+            }
+            for (int i = 0, count = files.length; i < count; i++)
+            {
+                String filePath = files[i];
+                compilerOptions.includeSources.add(new File(filePath));
+            }
+            files = null;
+        }
         ASConfigOptions options = new ASConfigOptions();
         options.type = type;
         options.config = config;
