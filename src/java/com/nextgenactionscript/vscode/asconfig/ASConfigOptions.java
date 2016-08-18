@@ -19,6 +19,11 @@ import java.util.Arrays;
 
 public class ASConfigOptions
 {
+    public static final String TYPE = "type";
+    public static final String CONFIG = "config";
+    public static final String FILES = "files";
+    public static final String COMPILER_OPTIONS = "compilerOptions";
+
     public ProjectType type;
     public String config;
     public String[] files;

@@ -59,6 +59,7 @@ import org.apache.flex.compiler.definitions.ISetterDefinition;
 import org.apache.flex.compiler.definitions.ITypeDefinition;
 import org.apache.flex.compiler.definitions.IVariableDefinition;
 import org.apache.flex.compiler.internal.driver.js.goog.JSGoogConfiguration;
+import org.apache.flex.compiler.internal.mxml.MXMLNamespaceMapping;
 import org.apache.flex.compiler.internal.parsing.as.ASParser;
 import org.apache.flex.compiler.internal.parsing.as.ASToken;
 import org.apache.flex.compiler.internal.parsing.as.RepairingTokenBuffer;
@@ -993,15 +994,15 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             String contents = FileUtils.readFileToString(asconfigFile);
             JSONObject json = new JSONObject(contents);
             schema.validate(json);
-            if (json.has("type")) //optional, defaults to "app"
+            if (json.has(ASConfigOptions.TYPE)) //optional, defaults to "app"
             {
-                String typeString = json.getString("type");
+                String typeString = json.getString(ASConfigOptions.TYPE);
                 type = ProjectType.fromToken(typeString);
             }
-            config = json.getString("config");
-            if (json.has("files")) //optional
+            config = json.getString(ASConfigOptions.CONFIG);
+            if (json.has(ASConfigOptions.FILES)) //optional
             {
-                JSONArray jsonFiles = json.getJSONArray("files");
+                JSONArray jsonFiles = json.getJSONArray(ASConfigOptions.FILES);
                 int fileCount = jsonFiles.length();
                 files = new String[fileCount];
                 for (int i = 0; i < fileCount; i++)
@@ -1011,16 +1012,16 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     files[i] = filePath.toString();
                 }
             }
-            if (json.has("compilerOptions")) //optional
+            if (json.has(ASConfigOptions.COMPILER_OPTIONS)) //optional
             {
-                JSONObject jsonCompilerOptions = json.getJSONObject("compilerOptions");
-                if (jsonCompilerOptions.has("debug"))
+                JSONObject jsonCompilerOptions = json.getJSONObject(ASConfigOptions.COMPILER_OPTIONS);
+                if (jsonCompilerOptions.has(CompilerOptions.DEBUG))
                 {
-                    compilerOptions.debug = jsonCompilerOptions.getBoolean("debug");
+                    compilerOptions.debug = jsonCompilerOptions.getBoolean(CompilerOptions.DEBUG);
                 }
-                if (jsonCompilerOptions.has("external-library-path"))
+                if (jsonCompilerOptions.has(CompilerOptions.EXTERNAL_LIBRARY_PATH))
                 {
-                    JSONArray jsonExternalLibraryPath = jsonCompilerOptions.getJSONArray("external-library-path");
+                    JSONArray jsonExternalLibraryPath = jsonCompilerOptions.getJSONArray(CompilerOptions.EXTERNAL_LIBRARY_PATH);
                     ArrayList<File> externalLibraryPath = new ArrayList<>();
                     for (int i = 0, count = jsonExternalLibraryPath.length(); i < count; i++)
                     {
@@ -1030,9 +1031,57 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     }
                     compilerOptions.externalLibraryPath = externalLibraryPath;
                 }
-                if (jsonCompilerOptions.has("library-path"))
+                if (jsonCompilerOptions.has(CompilerOptions.INCLUDE_CLASSES))
                 {
-                    JSONArray jsonLibraryPath = jsonCompilerOptions.getJSONArray("library-path");
+                    JSONArray jsonIncludeClasses = jsonCompilerOptions.getJSONArray(CompilerOptions.INCLUDE_CLASSES);
+                    ArrayList<String> includeClasses = new ArrayList<>();
+                    for (int i = 0, count = jsonIncludeClasses.length(); i < count; i++)
+                    {
+                        String qualifiedName = jsonIncludeClasses.getString(i);
+                        includeClasses.add(qualifiedName);
+                    }
+                    compilerOptions.includeClasses = includeClasses;
+                }
+                if (jsonCompilerOptions.has(CompilerOptions.INCLUDE_NAMESPACES))
+                {
+                    JSONArray jsonIncludeNamespaces = jsonCompilerOptions.getJSONArray(CompilerOptions.INCLUDE_NAMESPACES);
+                    ArrayList<String> includeNamespaces = new ArrayList<>();
+                    for (int i = 0, count = jsonIncludeNamespaces.length(); i < count; i++)
+                    {
+                        String namespaceURI = jsonIncludeNamespaces.getString(i);
+                        includeNamespaces.add(namespaceURI);
+                    }
+                    compilerOptions.includeNamespaces = includeNamespaces;
+                }
+                if (jsonCompilerOptions.has(CompilerOptions.INCLUDE_SOURCES))
+                {
+                    JSONArray jsonIncludeSources = jsonCompilerOptions.getJSONArray(CompilerOptions.INCLUDE_SOURCES);
+                    ArrayList<File> includeSources = new ArrayList<>();
+                    for (int i = 0, count = jsonIncludeSources.length(); i < count; i++)
+                    {
+                        String pathString = jsonIncludeSources.getString(i);
+                        Path filePath = workspaceRoot.resolve(pathString);
+                        includeSources.add(filePath.toFile());
+                    }
+                    compilerOptions.includeSources = includeSources;
+                }
+                if (jsonCompilerOptions.has(CompilerOptions.NAMESPACE))
+                {
+                    JSONArray jsonLibraryPath = jsonCompilerOptions.getJSONArray(CompilerOptions.NAMESPACE);
+                    ArrayList<MXMLNamespaceMapping> namespaceMappings = new ArrayList<>();
+                    for (int i = 0, count = jsonLibraryPath.length(); i < count; i++)
+                    {
+                        JSONObject jsonNamespace = jsonLibraryPath.getJSONObject(i);
+                        String uri = jsonNamespace.getString(CompilerOptions.NAMESPACE_URI);
+                        String manifest = jsonNamespace.getString(CompilerOptions.NAMESPACE_MANIFEST);
+                        MXMLNamespaceMapping mapping = new MXMLNamespaceMapping(uri, manifest);
+                        namespaceMappings.add(mapping);
+                    }
+                    compilerOptions.namespaceMappings = namespaceMappings;
+                }
+                if (jsonCompilerOptions.has(CompilerOptions.LIBRARY_PATH))
+                {
+                    JSONArray jsonLibraryPath = jsonCompilerOptions.getJSONArray(CompilerOptions.LIBRARY_PATH);
                     ArrayList<File> libraryPath = new ArrayList<>();
                     for (int i = 0, count = jsonLibraryPath.length(); i < count; i++)
                     {
@@ -1042,10 +1091,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     }
                     compilerOptions.libraryPath = libraryPath;
                 }
-                //skipping sourceMap
-                if (jsonCompilerOptions.has("source-path"))
+                if (jsonCompilerOptions.has(CompilerOptions.SOURCE_PATH))
                 {
-                    JSONArray jsonSourcePath = jsonCompilerOptions.getJSONArray("source-path");
+                    JSONArray jsonSourcePath = jsonCompilerOptions.getJSONArray(CompilerOptions.SOURCE_PATH);
                     ArrayList<File> sourcePath = new ArrayList<>();
                     for (int i = 0, count = jsonSourcePath.length(); i < count; i++)
                     {
@@ -1055,9 +1103,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     }
                     compilerOptions.sourcePath = sourcePath;
                 }
-                if (jsonCompilerOptions.has("warnings"))
+                if (jsonCompilerOptions.has(CompilerOptions.WARNINGS))
                 {
-                    compilerOptions.warnings = jsonCompilerOptions.getBoolean("warnings");
+                    compilerOptions.warnings = jsonCompilerOptions.getBoolean(CompilerOptions.WARNINGS);
                 }
             }
         }
@@ -1787,7 +1835,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         //we're going to start with the files passed into the compiler
         String[] files = currentOptions.files;
-        if(files != null)
+        if (files != null)
         {
             for (int i = files.length - 1; i >= 0; i--)
             {
@@ -1896,23 +1944,15 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         CompilerOptions compilerOptions = currentOptions.compilerOptions;
         Configurator configurator = new Configurator(JSGoogConfiguration.class);
         configurator.setToken("configname", currentOptions.config);
-        if (currentOptions.files != null)
+        ProjectType type = currentOptions.type;
+        String[] files = currentOptions.files;
+        if (type.equals(ProjectType.LIB))
         {
-            if (currentOptions.type.equals(ProjectType.LIB))
-            {
-                ArrayList<File> files = new ArrayList<>();
-                for (String filePath : currentOptions.files)
-                {
-                    File file = new File(filePath);
-                    files.add(file);
-                }
-                configurator.setIncludeSources(files);
-                configurator.setConfiguration(null, ICompilerSettingsConstants.INCLUDE_CLASSES_VAR, false);
-            }
-            else //app
-            {
-                configurator.setConfiguration(currentOptions.files, ICompilerSettingsConstants.FILE_SPECS_VAR);
-            }
+            configurator.setConfiguration(null, ICompilerSettingsConstants.INCLUDE_CLASSES_VAR, false);
+        }
+        else // app
+        {
+            configurator.setConfiguration(files, ICompilerSettingsConstants.FILE_SPECS_VAR);
         }
         //this needs to be set before applyToProject() so that it's in the
         //configuration buffer before addExternalLibraryPath() is called
@@ -1935,6 +1975,25 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         if (compilerOptions.externalLibraryPath != null)
         {
             configurator.addExternalLibraryPath(compilerOptions.externalLibraryPath);
+        }
+        if (compilerOptions.namespaceMappings != null)
+        {
+            configurator.setNamespaceMappings(compilerOptions.namespaceMappings);
+        }
+        if (currentOptions.type.equals(ProjectType.LIB))
+        {
+            if (compilerOptions.includeClasses != null)
+            {
+                configurator.setIncludeClasses(compilerOptions.includeClasses);
+            }
+            if (compilerOptions.includeNamespaces != null)
+            {
+                configurator.setIncludeNamespaces(compilerOptions.includeNamespaces);
+            }
+            if (compilerOptions.includeSources != null)
+            {
+                configurator.setIncludeSources(compilerOptions.includeSources);
+            }
         }
         configurator.enableDebugging(compilerOptions.debug, null);
         configurator.showActionScriptWarnings(compilerOptions.warnings);

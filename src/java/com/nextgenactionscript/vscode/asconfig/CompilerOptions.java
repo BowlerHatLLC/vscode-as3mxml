@@ -19,11 +19,29 @@ import java.io.File;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.flex.compiler.internal.mxml.MXMLNamespaceMapping;
+
 public class CompilerOptions
 {
-    public List<File> sourcePath;
-    public Collection<File> libraryPath;
-    public Collection<File> externalLibraryPath;
-    public boolean warnings = true;
+    public static final String DEBUG = "debug";
+    public static final String EXTERNAL_LIBRARY_PATH = "external-library-path";
+    public static final String INCLUDE_CLASSES = "include-classes";
+    public static final String INCLUDE_NAMESPACES = "include-namespaces";
+    public static final String INCLUDE_SOURCES = "include-sources";
+    public static final String LIBRARY_PATH = "library-path";
+    public static final String NAMESPACE = "namespace";
+    public static final String NAMESPACE_URI = "uri";
+    public static final String NAMESPACE_MANIFEST = "manifest";
+    public static final String SOURCE_PATH = "source-path";
+    public static final String WARNINGS = "warnings";
+
     public boolean debug = true;
+    public Collection<File> externalLibraryPath;
+    public Collection<String> includeClasses;
+    public Collection<String> includeNamespaces;
+    public Collection<File> includeSources;
+    public Collection<File> libraryPath;
+    public List<MXMLNamespaceMapping> namespaceMappings;
+    public List<File> sourcePath;
+    public boolean warnings = true;
 }

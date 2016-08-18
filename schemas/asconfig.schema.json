@@ -95,6 +95,33 @@
 						"type": "string"
 					}
 				},
+				"include-classes":
+				{
+					"type": "array",
+					"description": "(Library projects only) Specifies classes to include in the SWC file. You provide the class name (for instance, com.example.MyClass) rather than the file name (for instance, com/exampleMyClass.as) to the file for this option.",
+					"items":
+					{
+						"type": "string"
+					}
+				},
+				"include-namespaces":
+				{
+					"type": "array",
+					"description": "(Library projects only) Specifies namespace-style components in the SWC file. You specify a list of URIs to include in the SWC file. The uri argument must already be defined with the namespace option.",
+					"items":
+					{
+						"type": "string"
+					}
+				},
+				"include-sources":
+				{
+					"type": "array",
+					"description": "(Library projects only) Specifies classes or directories to add to the SWC file. When specifying classes, you specify the path to the class file (for instance, com/example/MyClass.as) rather than the class name itself (for instance, com.example.MyClass).",
+					"items":
+					{
+						"type": "string"
+					}
+				},
 				"keep-as3-metadata":
 				{
 					"type": "array",
@@ -135,6 +162,33 @@
 					{
 						"type": "string",
 						"pattern": "^[a-z]{2}([-_][A-Z]{2}){0,1}$"
+					}
+				},
+				"namespace":
+				{
+					"type": "array",
+					"description": "Specifies MXML namespaces. Each namespace must include a URI and the location of the manifest file that defines the contents of the namespace.",
+					"items":
+					{
+						"type": "object",
+						"properties":
+						{
+							"uri":
+							{
+								"type": "string",
+								"description": "The namespace URI."
+							},
+							"manifest":
+							{
+								"type": "string",
+								"description": "The location of the manifest file."
+							}
+						},
+						"required":
+						[
+							"uri",
+							"manifest"
+						]
 					}
 				},
 				"omit-trace-statements":
