@@ -1752,11 +1752,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return null;
         }
-        if (currentOptions.files.length == 0)
+        String[] files = currentOptions.files;
+        if (files == null || files.length == 0)
         {
             return null;
         }
-        String lastFilePath = currentOptions.files[currentOptions.files.length - 1];
+        String lastFilePath = files[files.length - 1];
         return Paths.get(lastFilePath);
     }
 
