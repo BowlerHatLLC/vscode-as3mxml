@@ -1188,10 +1188,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     && currentScope instanceof TypeScope;
             for (IDefinition localDefinition : currentScope.getAllLocalDefinitions())
             {
-                if (localDefinition.isImplicit())
-                {
-                    continue;
-                }
                 if (localDefinition.getBaseName().length() == 0)
                 {
                     continue;
