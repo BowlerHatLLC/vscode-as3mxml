@@ -436,7 +436,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             IDefinition definition = identifierNode.resolve(currentUnit.getProject());
             if (definition == null)
             {
-                return null;
+                //note: keywords won't resolve to anything
+                return CompletableFuture.completedFuture(LsapiFactories.emptyHover());
             }
             HoverImpl result = new HoverImpl();
             String detail = getDefinitionDetail(definition);
