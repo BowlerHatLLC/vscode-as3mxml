@@ -1156,6 +1156,18 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private void autoCompleteScope(IScopedNode node, CompletionListImpl result)
     {
+        //include classes that are imported
+        ArrayList<IImportNode> importNodes = new ArrayList<>();
+        node.getAllImportNodes(importNodes);
+        for (IImportNode importNode : importNodes)
+        {
+            IDefinition importDefinition = importNode.resolveImport(currentProject);
+            if (importDefinition != null)
+            {
+                addDefinitionAutoComplete(importDefinition, result);
+            }
+        }
+        //include all members and local things that are in scope
         IScopedNode currentNode = node;
         while (currentNode != null)
         {
