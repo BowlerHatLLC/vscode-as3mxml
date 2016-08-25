@@ -81,6 +81,7 @@ import org.apache.flex.compiler.targets.ITargetSettings;
 import org.apache.flex.compiler.tree.ASTNodeID;
 import org.apache.flex.compiler.tree.as.IASNode;
 import org.apache.flex.compiler.tree.as.IBinaryOperatorNode;
+import org.apache.flex.compiler.tree.as.IClassNode;
 import org.apache.flex.compiler.tree.as.IContainerNode;
 import org.apache.flex.compiler.tree.as.IDefinitionNode;
 import org.apache.flex.compiler.tree.as.IExpressionNode;
@@ -88,6 +89,7 @@ import org.apache.flex.compiler.tree.as.IFunctionCallNode;
 import org.apache.flex.compiler.tree.as.IFunctionNode;
 import org.apache.flex.compiler.tree.as.IIdentifierNode;
 import org.apache.flex.compiler.tree.as.IImportNode;
+import org.apache.flex.compiler.tree.as.IInterfaceNode;
 import org.apache.flex.compiler.tree.as.IKeywordNode;
 import org.apache.flex.compiler.tree.as.IMemberAccessExpressionNode;
 import org.apache.flex.compiler.tree.as.INamespaceDecorationNode;
@@ -303,7 +305,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             autoCompleteTypes(result);
             return CompletableFuture.completedFuture(result);
         }
-        //as keyword types
+        //as and is keyword types
         if (parentNode != null
                 && parentNode instanceof IBinaryOperatorNode
                 && (parentNode.getNodeID() == ASTNodeID.Op_AsID
@@ -320,6 +322,33 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 && nodeAtPreviousOffset instanceof IBinaryOperatorNode
                 && (nodeAtPreviousOffset.getNodeID() == ASTNodeID.Op_AsID
                 || nodeAtPreviousOffset.getNodeID() == ASTNodeID.Op_IsID))
+        {
+            autoCompleteTypes(result);
+            return CompletableFuture.completedFuture(result);
+        }
+        //class extends keyword
+        if (offsetNode instanceof IClassNode
+                && nodeAtPreviousOffset != null
+                && nodeAtPreviousOffset instanceof IKeywordNode
+                && nodeAtPreviousOffset.getNodeID() == ASTNodeID.KeywordExtendsID)
+        {
+            autoCompleteTypes(result);
+            return CompletableFuture.completedFuture(result);
+        }
+        //class implements keyword
+        if (offsetNode instanceof IClassNode
+                && nodeAtPreviousOffset != null
+                && nodeAtPreviousOffset instanceof IKeywordNode
+                && nodeAtPreviousOffset.getNodeID() == ASTNodeID.KeywordImplementsID)
+        {
+            autoCompleteTypes(result);
+            return CompletableFuture.completedFuture(result);
+        }
+        //interface extends keyword
+        if (offsetNode instanceof IInterfaceNode
+                && nodeAtPreviousOffset != null
+                && nodeAtPreviousOffset instanceof IKeywordNode
+                && nodeAtPreviousOffset.getNodeID() == ASTNodeID.KeywordExtendsID)
         {
             autoCompleteTypes(result);
             return CompletableFuture.completedFuture(result);
