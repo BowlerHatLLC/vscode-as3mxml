@@ -171,9 +171,8 @@ import org.json.JSONTokener;
 
 public class ActionScriptTextDocumentService implements TextDocumentService
 {
+    private Boolean asconfigChanged = true;
     private Path workspaceRoot;
-    private String lastDocumentURI;
-    private boolean forceWorkspaceChange = true;
     private Map<Path, String> sourceByPath = new HashMap<>();
     private Collection<ICompilationUnit> compilationUnits;
     private ArrayList<IInvisibleCompilationUnit> invisibleUnits = new ArrayList<>();
@@ -874,19 +873,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 {
                     String existingText = sourceByPath.get(path);
                     String newText = patch(existingText, change);
-
                     sourceByPath.put(path, newText);
                 }
             }
-            String newURI = document.getUri();
-            if (lastDocumentURI != null && !lastDocumentURI.equals(newURI))
-            {
-                //if we've switched to this file, and there were new files added
-                //to the project, they may not show up unless we tell the
-                //compiler to start fresh
-                forceWorkspaceChange = true;
-            }
-            lastDocumentURI = newURI;
             checkFilePathForProblems(path);
         }
     }
@@ -902,13 +891,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             Path path = optionalPath.get();
             sourceByPath.remove(path);
-            File file = new File(path.toString());
-            if (!file.exists())
-            {
-                //if a file was deleted, we don't want its compilation unit to
-                //stay in memory, so let's start fresh
-                forceWorkspaceChange = true;
-            }
         }
     }
 
@@ -935,10 +917,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             {
                 //compiler settings may have changed, which means we should
                 //start fresh
-                forceWorkspaceChange = true;
+                asconfigChanged = true;
             }
         }
-        if (forceWorkspaceChange)
+        if (asconfigChanged)
         {
             Path path = getMainCompilationUnitPath();
             if (path != null)
@@ -971,18 +953,18 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private void loadASConfigFile()
     {
-        if (!forceWorkspaceChange && currentOptions != null)
+        if (!asconfigChanged && currentOptions != null)
         {
             //the options are fully up-to-date
             return;
         }
         currentOptions = null;
-        forceWorkspaceChange = true;
         File asconfigFile = getASConfigFile();
         if (asconfigFile == null)
         {
             return;
         }
+        asconfigChanged = false;
         ProjectType type = ProjectType.APP;
         String config = null;
         String[] files = null;
@@ -1927,23 +1909,15 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     {
         clearInvisibleCompilationUnits();
         loadASConfigFile();
+        //we need to reset everything when we recompile because files could have
+        //been added or deleted, and we don't have a way to detect those changes
+        currentWorkspace = null;
+        currentProject = null;
+        fileSpecGetter = null;
+        compilationUnits = null;
         if (currentOptions == null)
         {
-            currentWorkspace = null;
-            currentProject = null;
-            fileSpecGetter = null;
-            compilationUnits = null;
             return null;
-        }
-        if (forceWorkspaceChange)
-        {
-            forceWorkspaceChange = false;
-
-            //start fresh if the asconfig.json file changed
-            currentWorkspace = null;
-            currentProject = null;
-            fileSpecGetter = null;
-            compilationUnits = null;
         }
         FlexJSProject project = null;
         if (currentWorkspace == null)
