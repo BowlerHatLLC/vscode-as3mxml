@@ -1127,6 +1127,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private void autoCompleteTypes(CompletionListImpl result)
     {
+        autoCompleteDefinitions(result, true, null);
+    }
+
+    private void autoCompleteDefinitions(CompletionListImpl result, boolean typesOnly, String packageName)
+    {
         for (ICompilationUnit unit : compilationUnits)
         {
             Collection<IDefinition> definitions = null;
@@ -1141,22 +1146,29 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             for (IDefinition definition : definitions)
             {
-                if (definition instanceof ITypeDefinition)
+                if (!typesOnly || definition instanceof ITypeDefinition)
                 {
-                    ITypeDefinition typeDefinition = (ITypeDefinition) definition;
-                    addDefinitionAutoComplete(typeDefinition, result);
+                    if (packageName == null || definition.getPackageName().equals(packageName))
+                    {
+                        addDefinitionAutoComplete(definition, result);
+                    }
                 }
             }
         }
-        CompletionItemImpl item = new CompletionItemImpl();
-        item.setKind(CompletionItemKind.Class);
-        item.setLabel("void");
-        result.getItems().add(item);
+        if (packageName == null || packageName.equals(""))
+        {
+            CompletionItemImpl item = new CompletionItemImpl();
+            item.setKind(CompletionItemKind.Class);
+            item.setLabel("void");
+            result.getItems().add(item);
+        }
     }
 
     private void autoCompleteScope(IScopedNode node, CompletionListImpl result)
     {
-        //include classes that are imported
+        //include definitions in the top-level package
+        autoCompleteDefinitions(result, false, "");
+        //include types that are imported
         ArrayList<IImportNode> importNodes = new ArrayList<>();
         node.getAllImportNodes(importNodes);
         for (IImportNode importNode : importNodes)
