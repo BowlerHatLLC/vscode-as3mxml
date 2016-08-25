@@ -470,6 +470,20 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             {
                 functionDefinition = (IFunctionDefinition) definition;
             }
+            else if (nameNode instanceof IIdentifierNode)
+            {
+                //special case for super()
+                IIdentifierNode identifierNode = (IIdentifierNode) nameNode;
+                if (identifierNode.getName().equals("super"))
+                {
+                    ITypeDefinition typeDefinition = nameNode.resolveType(currentProject);
+                    if (typeDefinition instanceof IClassDefinition)
+                    {
+                        IClassDefinition classDefinition = (IClassDefinition) typeDefinition;
+                        functionDefinition = classDefinitionToConstructor(classDefinition);
+                    }
+                }
+            }
         }
         if (functionDefinition != null)
         {
@@ -2465,6 +2479,24 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 }
             }
         }
+    }
+
+    private IFunctionDefinition classDefinitionToConstructor(IClassDefinition definition)
+    {
+        IASScope scope = definition.getContainedScope();
+        Collection<IDefinition> definitions = scope.getAllLocalDefinitions();
+        for (IDefinition localDefinition : definitions)
+        {
+            if (localDefinition instanceof IFunctionDefinition)
+            {
+                IFunctionDefinition functionDefinition = (IFunctionDefinition) localDefinition;
+                if (functionDefinition.isConstructor())
+                {
+                    return functionDefinition;
+                }
+            }
+        }
+        return null;
     }
 
     private void scopeToSymbols(IASScope scope, List<SymbolInformationImpl> result)
