@@ -17,9 +17,69 @@ import * as assert from "assert";
 import * as path from "path";
 import * as vscode from "vscode";
 
+function openAndEditDocument(uri: vscode.Uri, callback: (editor: vscode.TextEditor) => PromiseLike<void>): PromiseLike<void>
+{
+	return vscode.workspace.openTextDocument(uri)
+			.then((document: vscode.TextDocument) =>
+				{
+					return vscode.window.showTextDocument(document)
+						.then(callback, (err) =>
+						{
+							assert.fail("Failed to show text document: " + uri);
+						});
+				}, (err) =>
+				{
+					assert.fail("Failed to open text document: " + uri);
+				});
+}
+
+function createRange(startLine: number, startCharacter:number,
+	endLine?: number, endCharacter? : number): vscode.Range
+{
+	if(endLine === undefined)
+	{
+		endLine = startLine;
+	}
+	if(endCharacter === undefined)
+	{
+		endCharacter = startCharacter;
+	}
+	return new vscode.Range(
+		new vscode.Position(startLine, startCharacter),
+		new vscode.Position(endLine, endCharacter))
+}
+
+function findSymbol(symbols: vscode.SymbolInformation[], symbolToFind: vscode.SymbolInformation): boolean
+{
+	return symbols.some((symbol: vscode.SymbolInformation) =>
+	{
+		if(symbol.name !== symbolToFind.name)
+		{
+			return false;
+		}
+		if(symbol.kind !== symbolToFind.kind)
+		{
+			return false;
+		}
+		if(symbol.location.uri.path !== symbolToFind.location.uri.path)
+		{
+			return false;
+		}
+		if(symbol.location.range.start.line !== symbolToFind.location.range.start.line)
+		{
+			return false;
+		}
+		if(symbol.location.range.start.character !== symbolToFind.location.range.start.character)
+		{
+			return false;
+		}
+		return true;
+	});
+}
+
 suite("NextGenAS extension", () =>
 {
-	test("test vscode.extensions.getExtension", (done) =>
+	test("vscode.extensions.getExtension() and isActive", (done) =>
 	{
 		let extensionName = "bowlerhatllc.vscode-nextgenas";
 		let extension = vscode.extensions.getExtension(extensionName);
@@ -31,13 +91,16 @@ suite("NextGenAS extension", () =>
 			done();
 		}, 1000);
 	});
-	test("test vscode.executeDocumentSymbolProvider", (done) =>
+});
+
+suite("document symbol provider", () =>
+{
+	test("vscode.executeDocumentSymbolProvider not empty", (done) =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Main.as"));
-		return vscode.workspace.openTextDocument(uri)
-		.then((document: vscode.TextDocument) =>
-			{
-				return vscode.commands.executeCommand("vscode.executeDocumentSymbolProvider", uri)
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDocumentSymbolProvider", uri)
 				.then((symbols: vscode.SymbolInformation[]) =>
 					{
 						assert.notEqual(symbols.length, 0, "No symbols found in text document: " + uri);
@@ -45,10 +108,265 @@ suite("NextGenAS extension", () =>
 					{
 						assert.fail("Failed to execute document symbol provider: " + uri);
 					});
-				
-			}, (err) =>
-			{
-				assert.fail("Failed to open text document: " + uri);
-			}).then(() => done(), done);
+		}).then(() => done(), done);
+	});
+	test("vscode.executeDocumentSymbolProvider includes class", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Main.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDocumentSymbolProvider", uri)
+				.then((symbols: vscode.SymbolInformation[]) =>
+					{
+						let classQualifiedName = "Main";
+						assert.ok(findSymbol(symbols, new vscode.SymbolInformation(
+							classQualifiedName,
+							vscode.SymbolKind.Class,
+							createRange(2, 1),
+							uri)),
+							"vscode.executeDocumentSymbolProvider failed to provide symbol for class: " + classQualifiedName);
+					}, (err) =>
+					{
+						assert.fail("Failed to execute document symbol provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeDocumentSymbolProvider includes member variable", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Main.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDocumentSymbolProvider", uri)
+				.then((symbols: vscode.SymbolInformation[]) =>
+					{
+						let memberVarName = "memberVar";
+						assert.ok(findSymbol(symbols, new vscode.SymbolInformation(
+							memberVarName,
+							vscode.SymbolKind.Variable,
+							createRange(16, 2),
+							uri)),
+							"vscode.executeDocumentSymbolProvider failed to provide symbol for member variable: " + memberVarName);
+					}, (err) =>
+					{
+						assert.fail("Failed to execute document symbol provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeDocumentSymbolProvider includes member function", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Main.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDocumentSymbolProvider", uri)
+				.then((symbols: vscode.SymbolInformation[]) =>
+					{
+						let memberFunctionName = "memberFunction";
+						assert.ok(findSymbol(symbols, new vscode.SymbolInformation(
+							memberFunctionName,
+							vscode.SymbolKind.Function,
+							createRange(18, 2),
+							uri)),
+							"vscode.executeDocumentSymbolProvider failed to provide symbol for member function: " + memberFunctionName);
+					}, (err) =>
+					{
+						assert.fail("Failed to execute document symbol provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeDocumentSymbolProvider includes static variable", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Main.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDocumentSymbolProvider", uri)
+				.then((symbols: vscode.SymbolInformation[]) =>
+					{
+						let staticVarName = "staticVar";
+						assert.ok(findSymbol(symbols, new vscode.SymbolInformation(
+							staticVarName,
+							vscode.SymbolKind.Variable,
+							createRange(4, 2),
+							uri)),
+							"vscode.executeDocumentSymbolProvider failed to provide symbol for static variable: " + staticVarName);
+					}, (err) =>
+					{
+						assert.fail("Failed to execute document symbol provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeDocumentSymbolProvider includes static constant", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Main.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDocumentSymbolProvider", uri)
+				.then((symbols: vscode.SymbolInformation[]) =>
+					{
+						let staticConstName = "STATIC_CONST";
+						assert.ok(findSymbol(symbols, new vscode.SymbolInformation(
+							staticConstName,
+							vscode.SymbolKind.Constant,
+							createRange(5, 2),
+							uri)),
+							"vscode.executeDocumentSymbolProvider failed to provide symbol for static constant: " + staticConstName);
+					}, (err) =>
+					{
+						assert.fail("Failed to execute document symbol provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeDocumentSymbolProvider includes static function", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Main.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDocumentSymbolProvider", uri)
+				.then((symbols: vscode.SymbolInformation[]) =>
+					{
+						let staticFunctionName = "staticFunction";
+						assert.ok(findSymbol(symbols, new vscode.SymbolInformation(
+							staticFunctionName,
+							vscode.SymbolKind.Function,
+							createRange(7, 2),
+							uri)),
+							"vscode.executeDocumentSymbolProvider failed to provide symbol for static function: " + staticFunctionName);
+					}, (err) =>
+					{
+						assert.fail("Failed to execute document symbol provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeDocumentSymbolProvider includes internal class", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Main.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDocumentSymbolProvider", uri)
+				.then((symbols: vscode.SymbolInformation[]) =>
+					{
+						let internalClassQualifiedName = "MainInternalClass";
+						assert.ok(findSymbol(symbols, new vscode.SymbolInformation(
+							internalClassQualifiedName,
+							vscode.SymbolKind.Class,
+							createRange(24, 0),
+							uri)),
+							"vscode.executeDocumentSymbolProvider failed to provide symbol for internal class: " + internalClassQualifiedName);
+					}, (err) =>
+					{
+						assert.fail("Failed to execute document symbol provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+});
+
+suite("workspace symbol provider", () =>
+{
+	test("vscode.executeWorkspaceSymbolProvider includes internal class", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Main.as"));
+		let query = "MainInternalClass";
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeWorkspaceSymbolProvider", query)
+				.then((symbols: vscode.SymbolInformation[]) =>
+					{
+						assert.ok(findSymbol(symbols, new vscode.SymbolInformation(
+							query,
+							vscode.SymbolKind.Class,
+							createRange(24, 0),
+							uri)),
+							"vscode.executeWorkspaceSymbolProvider did not provide internal class");
+							
+					}, (err) =>
+					{
+						assert.fail("Failed to execute workspace symbol provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeWorkspaceSymbolProvider includes class in unreferenced file", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Main.as"));
+		let query = "Unreferenced";
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			let qualifiedClassName = "com.example.UnreferencedClass";
+			let classUri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "UnreferencedClass.as"));
+			return vscode.commands.executeCommand("vscode.executeWorkspaceSymbolProvider", query)
+				.then((symbols: vscode.SymbolInformation[]) =>
+					{
+						assert.strictEqual(symbols.length, 3, "Incorrect number of unreferenced symbols found in workspace with query: " + query);
+					}, (err) =>
+					{
+						assert.fail("Failed to execute workspace symbol provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeWorkspaceSymbolProvider includes class in unreferenced file", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Main.as"));
+		let query = "Unreferenced";
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			let qualifiedClassName = "com.example.UnreferencedClass";
+			let classUri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "UnreferencedClass.as"));
+			return vscode.commands.executeCommand("vscode.executeWorkspaceSymbolProvider", query)
+				.then((symbols: vscode.SymbolInformation[]) =>
+					{
+						assert.strictEqual(symbols.length, 3, "Incorrect number of symbols found in workspace with query: " + query);
+						
+						assert.ok(findSymbol(symbols, new vscode.SymbolInformation(qualifiedClassName,
+							vscode.SymbolKind.Class,
+							createRange(2, 1),
+							classUri)),
+							"vscode.executeWorkspaceSymbolProvider failed to provide symbol for class in unreferenced file with query: " + query);
+					}, (err) =>
+					{
+						assert.fail("Failed to execute workspace symbol provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeWorkspaceSymbolProvider includes class in unreferenced file", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Main.as"));
+		let query = "Unreferenced";
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			let qualifiedClassName = "com.example.UnreferencedClass";
+			let classUri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "UnreferencedClass.as"));
+			return vscode.commands.executeCommand("vscode.executeWorkspaceSymbolProvider", query)
+				.then((symbols: vscode.SymbolInformation[]) =>
+					{
+						assert.ok(findSymbol(symbols, new vscode.SymbolInformation(qualifiedClassName,
+							vscode.SymbolKind.Constructor,
+							createRange(4, 2),
+							classUri)),
+							"vscode.executeWorkspaceSymbolProvider failed to provide symbol for constructor in unreferenced file with query: " + query);
+					}, (err) =>
+					{
+						assert.fail("Failed to execute workspace symbol provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeWorkspaceSymbolProvider includes class in unreferenced file", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Main.as"));
+		let query = "Unreferenced";
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			let qualifiedInterfaceName = "com.example.core.UnreferencedInterface";
+			let interfaceUri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "core", "UnreferencedInterface.as"));
+			return vscode.commands.executeCommand("vscode.executeWorkspaceSymbolProvider", query)
+				.then((symbols: vscode.SymbolInformation[]) =>
+					{
+						assert.ok(findSymbol(symbols, new vscode.SymbolInformation(qualifiedInterfaceName,
+							vscode.SymbolKind.Interface,
+							createRange(2, 1),
+							interfaceUri)),
+							"vscode.executeWorkspaceSymbolProvider failed to provide symbol for interface in unreferenced file with query: " + query);
+					}, (err) =>
+					{
+						assert.fail("Failed to execute workspace symbol provider: " + uri);
+					});
+		}).then(() => done(), done);
 	});
 });

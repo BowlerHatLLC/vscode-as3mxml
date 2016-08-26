@@ -19,6 +19,7 @@ testRunner.configure(
 {
 	ui: "tdd",
 	useColors: true,
+	timeout: 3000
 });
 
 module.exports = testRunner;
