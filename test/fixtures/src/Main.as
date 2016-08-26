@@ -24,4 +24,5 @@ package
 
 class MainInternalClass
 {
+	private var internalClassMemberVar:Number;
 }
