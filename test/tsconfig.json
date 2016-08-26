@@ -3,12 +3,8 @@
 	{
 		"module": "commonjs",
 		"target": "es5",
-		"outDir": "target",
+		"outDir": "../target/test",
 		"noLib": true,
 		"sourceMap": true
-	},
-	"exclude": [
-		"node_modules",
-		"test"
-	]
+	}
 }

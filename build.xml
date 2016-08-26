@@ -3,6 +3,7 @@
 	<property name="jar.content.output" value="target/classes"/>
 	<target name="build-debug" description="Builds extension for debugging" depends="-prepare-debug,-clean,-dependencies,-build-java,-build-ts"/>
 	<target name="build" description="Builds extension" depends="-clean,-dependencies,-build-java,-build-ts"/>
+	<target name="build-tests" description="Builds tests" depends="build,-build-tests"/>
 	<target name="-clean">
 		<delete dir="target"/>
 	</target>
@@ -48,6 +49,12 @@
 		<exec executable="node_modules/typescript/bin/tsc">
 			<arg value="-p"/>
 			<arg value="."/>
+		</exec>
+	</target>
+	<target name="-build-tests">
+		<exec executable="node_modules/typescript/bin/tsc">
+			<arg value="-p"/>
+			<arg value="test"/>
 		</exec>
 	</target>
 </project>

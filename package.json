@@ -30,9 +30,10 @@
   "icon": "nextgenas.png",
   "scripts": {
     "postinstall": "node ./node_modules/vscode/bin/install",
-    "vscode:prepublish": "npm run compile",
-    "compile": "ant",
-    "compile-debug": "ant build-debug"
+    "vscode:prepublish": "npm run build",
+    "build": "ant build",
+    "build-debug": "ant build-debug",
+    "build-tests": "ant build-tests"
   },
   "engines": {
     "vscode": "^1.4.0"

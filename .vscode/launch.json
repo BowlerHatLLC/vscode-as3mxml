@@ -13,6 +13,21 @@
 			"sourceMaps": true,
 			"outDir": "${workspaceRoot}/target",
 			"preLaunchTask": "build-debug"
+		},
+		{
+			"name": "Launch Tests",
+			"type": "extensionHost",
+			"request": "launch",
+			"runtimeExecutable": "${execPath}",
+			"args": [
+				"${workspaceRoot}/test/fixtures",
+				"--extensionDevelopmentPath=${workspaceRoot}",
+				"--extensionTestsPath=${workspaceRoot}/target/test"
+			],
+			"stopOnEntry": false,
+			"sourceMaps": true,
+			"outDir": "${workspaceRoot}/target/test",
+			"preLaunchTask": "build-tests"
 		}
 	]
 }

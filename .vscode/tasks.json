@@ -16,16 +16,16 @@
 			"args": ["update"]
 		},
 		{
-			"taskName": "test",
-			"args": ["run", "test"]
-		},
-		{
 			"taskName": "build",
-			"args": ["run", "compile"]
+			"args": ["run", "build"]
 		},
 		{
 			"taskName": "build-debug",
-			"args": ["run", "compile-debug"]
+			"args": ["run", "build-debug"]
+		},
+		{
+			"taskName": "build-tests",
+			"args": ["run", "build-tests"]
 		}
 	]
 }
