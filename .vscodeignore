@@ -2,6 +2,7 @@
 typings/**/*
 src/**/*
 lib/**/*
+test/**/*
 *.iml
 *.vsix
 .gitignore
