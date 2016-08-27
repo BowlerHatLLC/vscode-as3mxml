@@ -26,9 +26,7 @@ This extension is still in development. A preview build will be available soon.
 
 ## asconfig.json
 
-Add a file named `asconfig.json` to the root of your project to enable the NextGenAS extension.
-
-More detailed documentation will be available soon. Here is a sample file:
+Add a file named [`asconfig.json`](https://github.com/BowlerHatLLC/vscode-nextgenas/wiki/asconfig.json) to the root of your project to enable the NextGenAS extension. A sample `asconfig.json` appears below:
 
 	{
 		"config": "js",
