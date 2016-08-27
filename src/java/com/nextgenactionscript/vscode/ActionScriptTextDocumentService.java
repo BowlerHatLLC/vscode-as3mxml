@@ -85,6 +85,7 @@ import org.apache.flex.compiler.tree.as.IClassNode;
 import org.apache.flex.compiler.tree.as.IContainerNode;
 import org.apache.flex.compiler.tree.as.IDefinitionNode;
 import org.apache.flex.compiler.tree.as.IExpressionNode;
+import org.apache.flex.compiler.tree.as.IFileNode;
 import org.apache.flex.compiler.tree.as.IFunctionCallNode;
 import org.apache.flex.compiler.tree.as.IFunctionNode;
 import org.apache.flex.compiler.tree.as.IIdentifierNode;
@@ -1925,21 +1926,25 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 }
             }
         }
+        //always do this before returning!
         compilationUnits = currentProject.getCompilationUnits();
-        if (currentUnit == null)
+        if (currentUnit != null)
         {
-            //search the existing compilation units for the file, if it hasn't
-            //been found yet
-            for (ICompilationUnit unit : compilationUnits)
+            return currentUnit;
+        }
+
+        //first, search the existing compilation units for the file because it
+        //might already be created
+        for (ICompilationUnit unit : compilationUnits)
+        {
+            if (unit.getAbsoluteFilename().equals(absolutePath))
             {
-                if (unit.getAbsoluteFilename().equals(absolutePath))
-                {
-                    currentUnit = unit;
-                    break;
-                }
+                currentUnit = unit;
+                break;
             }
         }
 
+        //if we still haven't found it, create it manually
         if (currentUnit == null)
         {
             //if all else fails, create the compilation unit manually
@@ -1951,6 +1956,22 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             invisibleUnits.add(unit);
             currentUnit = unit;
+        }
+        //for some reason, function nodes may not be populated if the
+        //compilation unit isn't one of the main files, so force it to populate
+        IASNode ast = null;
+        try
+        {
+            ast = currentUnit.getSyntaxTreeRequest().get().getAST();
+        }
+        catch (InterruptedException e)
+        {
+            System.err.println("Interrupted while getting AST");
+        }
+        if (ast instanceof IFileNode)
+        {
+            IFileNode fileNode = (IFileNode) ast;
+            fileNode.populateFunctionNodes();
         }
         return currentUnit;
     }
