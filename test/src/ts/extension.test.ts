@@ -580,3 +580,234 @@ suite("workspace symbol provider", () =>
 		}).then(() => done(), done);
 	});
 });
+
+suite("signature help provider", () =>
+{
+	test("vscode.executeSignatureHelpProvider provides help for local function", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "SignatureHelp.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeSignatureHelpProvider",
+				uri, new vscode.Position(19, 17), "(")
+				.then((signatureHelp: vscode.SignatureHelp) =>
+					{
+						assert.strictEqual(signatureHelp.signatures.length, 1,
+							"Signature help not provided for local function");
+						assert.strictEqual(signatureHelp.activeSignature, 0,
+							"Active signature incorrect for local function");
+						assert.strictEqual(signatureHelp.activeParameter, 0,
+							"Active parameter incorrect for local function");
+					}, (err) =>
+					{
+						assert.fail("Failed to execute workspace symbol provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeSignatureHelpProvider provides help for member function", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "SignatureHelp.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeSignatureHelpProvider",
+				uri, new vscode.Position(20, 18), "(")
+				.then((signatureHelp: vscode.SignatureHelp) =>
+					{
+						assert.strictEqual(signatureHelp.signatures.length, 1,
+							"Signature help not provided for member function");
+						assert.strictEqual(signatureHelp.activeSignature, 0,
+							"Active signature incorrect for member function");
+						assert.strictEqual(signatureHelp.activeParameter, 0,
+							"Active parameter incorrect for member function");
+					}, (err) =>
+					{
+						assert.fail("Failed to execute workspace symbol provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeSignatureHelpProvider provides help for member function with member access operator", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "SignatureHelp.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeSignatureHelpProvider",
+				uri, new vscode.Position(21, 23), "(")
+				.then((signatureHelp: vscode.SignatureHelp) =>
+					{
+						assert.strictEqual(signatureHelp.signatures.length, 1,
+							"Signature help not provided for member function with member access operator");
+						assert.strictEqual(signatureHelp.activeSignature, 0,
+							"Active signature incorrect for member function with member access operator");
+						assert.strictEqual(signatureHelp.activeParameter, 0,
+							"Active parameter incorrect for member function with member access operator");
+					}, (err) =>
+					{
+						assert.fail("Failed to execute workspace symbol provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeSignatureHelpProvider provides help for static function", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "SignatureHelp.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeSignatureHelpProvider",
+				uri, new vscode.Position(22, 18), "(")
+				.then((signatureHelp: vscode.SignatureHelp) =>
+					{
+						assert.strictEqual(signatureHelp.signatures.length, 1,
+							"Signature help not provided for static function");
+						assert.strictEqual(signatureHelp.activeSignature, 0,
+							"Active signature incorrect for static function");
+						assert.strictEqual(signatureHelp.activeParameter, 0,
+							"Active parameter incorrect for static function");
+					}, (err) =>
+					{
+						assert.fail("Failed to execute workspace symbol provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeSignatureHelpProvider provides help for static function with member access operator", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "SignatureHelp.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeSignatureHelpProvider",
+				uri, new vscode.Position(23, 32), "(")
+				.then((signatureHelp: vscode.SignatureHelp) =>
+					{
+						assert.strictEqual(signatureHelp.signatures.length, 1,
+							"Signature help not provided for static function with member access operator");
+						assert.strictEqual(signatureHelp.activeSignature, 0,
+							"Active signature incorrect for static function with member access operator");
+						assert.strictEqual(signatureHelp.activeParameter, 0,
+							"Active parameter incorrect for static function with member access operator");
+					}, (err) =>
+					{
+						assert.fail("Failed to execute workspace symbol provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeSignatureHelpProvider provides help for package function", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "SignatureHelp.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeSignatureHelpProvider",
+				uri, new vscode.Position(24, 19), "(")
+				.then((signatureHelp: vscode.SignatureHelp) =>
+					{
+						assert.strictEqual(signatureHelp.signatures.length, 1,
+							"Signature help not provided for package function");
+						assert.strictEqual(signatureHelp.activeSignature, 0,
+							"Active signature incorrect for package function");
+						assert.strictEqual(signatureHelp.activeParameter, 0,
+							"Active parameter incorrect for package function");
+					}, (err) =>
+					{
+						assert.fail("Failed to execute workspace symbol provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeSignatureHelpProvider provides help for internal function", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "SignatureHelp.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeSignatureHelpProvider",
+				uri, new vscode.Position(25, 31), "(")
+				.then((signatureHelp: vscode.SignatureHelp) =>
+					{
+						assert.strictEqual(signatureHelp.signatures.length, 1,
+							"Signature help not provided for internal function");
+						assert.strictEqual(signatureHelp.activeSignature, 0,
+							"Active signature incorrect for internal function");
+						assert.strictEqual(signatureHelp.activeParameter, 0,
+							"Active parameter incorrect for internal function");
+					}, (err) =>
+					{
+						assert.fail("Failed to execute workspace symbol provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeSignatureHelpProvider provides help for internal function", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "SignatureHelp.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeSignatureHelpProvider",
+				uri, new vscode.Position(26, 20), "(")
+				.then((signatureHelp: vscode.SignatureHelp) =>
+					{
+						assert.strictEqual(signatureHelp.signatures.length, 1,
+							"Signature help not provided for internal function");
+						assert.strictEqual(signatureHelp.activeSignature, 0,
+							"Active signature incorrect for internal function");
+						assert.strictEqual(signatureHelp.activeParameter, 0,
+							"Active parameter incorrect for internal function");
+					}, (err) =>
+					{
+						assert.fail("Failed to execute workspace symbol provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeSignatureHelpProvider provides help for super constructor", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "SignatureHelp.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeSignatureHelpProvider",
+				uri, new vscode.Position(27, 9), "(")
+				.then((signatureHelp: vscode.SignatureHelp) =>
+					{
+						assert.strictEqual(signatureHelp.signatures.length, 1,
+							"Signature help not provided for super constructor");
+						assert.strictEqual(signatureHelp.activeSignature, 0,
+							"Active signature incorrect for super constructor");
+						assert.strictEqual(signatureHelp.activeParameter, 0,
+							"Active parameter incorrect for super constructor");
+					}, (err) =>
+					{
+						assert.fail("Failed to execute workspace symbol provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeSignatureHelpProvider provides help for super member method", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "SignatureHelp.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeSignatureHelpProvider",
+				uri, new vscode.Position(28, 27), "(")
+				.then((signatureHelp: vscode.SignatureHelp) =>
+					{
+						assert.strictEqual(signatureHelp.signatures.length, 1,
+							"Signature help not provided for super member method");
+						assert.strictEqual(signatureHelp.activeSignature, 0,
+							"Active signature incorrect for super member method");
+						assert.strictEqual(signatureHelp.activeParameter, 0,
+							"Active parameter incorrect for super member method");
+					}, (err) =>
+					{
+						assert.fail("Failed to execute workspace symbol provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeSignatureHelpProvider must not provide help for private super member method", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "SignatureHelp.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeSignatureHelpProvider",
+				uri, new vscode.Position(29, 34), "(")
+				.then((signatureHelp: vscode.SignatureHelp) =>
+					{
+						assert.strictEqual(signatureHelp.signatures.length, 0,
+							"Signature help incorrectly provided for private super member method");
+					}, (err) =>
+					{
+						assert.fail("Failed to execute workspace symbol provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+});
