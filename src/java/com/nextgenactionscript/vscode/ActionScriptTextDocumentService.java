@@ -58,6 +58,7 @@ import org.apache.flex.compiler.definitions.IParameterDefinition;
 import org.apache.flex.compiler.definitions.ISetterDefinition;
 import org.apache.flex.compiler.definitions.ITypeDefinition;
 import org.apache.flex.compiler.definitions.IVariableDefinition;
+import org.apache.flex.compiler.definitions.metadata.IMetaTag;
 import org.apache.flex.compiler.internal.driver.js.goog.JSGoogConfiguration;
 import org.apache.flex.compiler.internal.mxml.MXMLNamespaceMapping;
 import org.apache.flex.compiler.internal.parsing.as.ASParser;
@@ -1338,6 +1339,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private void addDefinitionsInTypeScopeToAutoComplete(TypeScope typeScope, ASScope otherScope, boolean isStatic, CompletionListImpl result)
     {
+        IMetaTag[] excludeMetaTags = typeScope.getDefinition().getMetaTagsByName(IASLanguageConstants.EXCLUDE_META_TAG);
         ArrayList<IDefinition> memberAccessDefinitions = new ArrayList<>();
         Set<INamespaceDefinition> namespaceSet = otherScope.getNamespaceSet(currentProject);
         if (typeScope.getContainingDefinition() instanceof IInterfaceDefinition)
@@ -1353,6 +1355,23 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             {
                 //overrides would add unnecessary duplicates to the list
                 continue;
+            }
+            if (excludeMetaTags != null && excludeMetaTags.length > 0)
+            {
+                boolean exclude = false;
+                for (IMetaTag excludeMetaTag : excludeMetaTags)
+                {
+                    String excludeName = excludeMetaTag.getAttributeValue(IASLanguageConstants.EXCLUDE_META_TAG_NAME);
+                    if (excludeName.equals(localDefinition.getBaseName()))
+                    {
+                        exclude = true;
+                        break;
+                    }
+                }
+                if (exclude)
+                {
+                    continue;
+                }
             }
             if (localDefinition instanceof ISetterDefinition)
             {
