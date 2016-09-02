@@ -417,7 +417,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 && parentNode instanceof IMemberAccessExpressionNode)
         {
             IMemberAccessExpressionNode memberAccessNode = (IMemberAccessExpressionNode) parentNode;
-            if (offsetNode == memberAccessNode.getRightOperandNode())
+            if (offsetNode == memberAccessNode.getRightOperandNode()
+                    || offsetNode == memberAccessNode.getLeftOperandNode())
             {
                 autoCompleteMemberAccess(memberAccessNode, result);
                 return CompletableFuture.completedFuture(result);
