@@ -625,7 +625,7 @@ suite("signature help provider", () =>
 					});
 		}).then(() => done(), done);
 	});
-	test("vscode.executeSignatureHelpProvider provides help for member function with member access operator", (done) =>
+	test("vscode.executeSignatureHelpProvider provides help for member function with member access operator on this", (done) =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "SignatureHelp.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
@@ -635,11 +635,11 @@ suite("signature help provider", () =>
 				.then((signatureHelp: vscode.SignatureHelp) =>
 					{
 						assert.strictEqual(signatureHelp.signatures.length, 1,
-							"Signature help not provided for member function with member access operator");
+							"Signature help not provided for member function with member access operator on this");
 						assert.strictEqual(signatureHelp.activeSignature, 0,
-							"Active signature incorrect for member function with member access operator");
+							"Active signature incorrect for member function with member access operator on this");
 						assert.strictEqual(signatureHelp.activeParameter, 0,
-							"Active parameter incorrect for member function with member access operator");
+							"Active parameter incorrect for member function with member access operator on this");
 					}, (err) =>
 					{
 						assert.fail("Failed to execute workspace symbol provider: " + uri);
@@ -667,7 +667,7 @@ suite("signature help provider", () =>
 					});
 		}).then(() => done(), done);
 	});
-	test("vscode.executeSignatureHelpProvider provides help for static function with member access operator", (done) =>
+	test("vscode.executeSignatureHelpProvider provides help for static function with member access operator on class", (done) =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "SignatureHelp.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
@@ -677,11 +677,11 @@ suite("signature help provider", () =>
 				.then((signatureHelp: vscode.SignatureHelp) =>
 					{
 						assert.strictEqual(signatureHelp.signatures.length, 1,
-							"Signature help not provided for static function with member access operator");
+							"Signature help not provided for static function with member access operator on class");
 						assert.strictEqual(signatureHelp.activeSignature, 0,
-							"Active signature incorrect for static function with member access operator");
+							"Active signature incorrect for static function with member access operator on class");
 						assert.strictEqual(signatureHelp.activeParameter, 0,
-							"Active parameter incorrect for static function with member access operator");
+							"Active parameter incorrect for static function with member access operator on class");
 					}, (err) =>
 					{
 						assert.fail("Failed to execute workspace symbol provider: " + uri);
@@ -807,6 +807,911 @@ suite("signature help provider", () =>
 					}, (err) =>
 					{
 						assert.fail("Failed to execute workspace symbol provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+});
+
+suite("definition provider", () =>
+{
+	test("vscode.executeDefinitionProvider finds definition of local variable", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let position = new vscode.Position(90, 5);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDefinitionProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 1,
+							"vscode.executeDefinitionProvider failed to provide location of local variable definition: " + uri);
+						let location = locations[0];
+						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for local variable definition");
+						assert.strictEqual(location.range.start.line, 42, "vscode.executeDefinitionProvider provided incorrect line for local variable definition");
+						assert.strictEqual(location.range.start.character, 7, "vscode.executeDefinitionProvider provided incorrect character for local variable definition");
+					}, (err) =>
+					{
+						assert.fail("Failed to execute definition provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeDefinitionProvider finds definition of local function", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let position = new vscode.Position(92, 5);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDefinitionProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 1,
+							"vscode.executeDefinitionProvider failed to provide location of local function definition: " + uri);
+						let location = locations[0];
+						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for local function definition");
+						assert.strictEqual(location.range.start.line, 43, "vscode.executeDefinitionProvider provided incorrect line for local function definition");
+						assert.strictEqual(location.range.start.character, 12, "vscode.executeDefinitionProvider provided incorrect character for local function definition");
+					}, (err) =>
+					{
+						assert.fail("Failed to execute definition provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeDefinitionProvider finds definition of member variable", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let position = new vscode.Position(54, 5);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDefinitionProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 1,
+							"vscode.executeDefinitionProvider failed to provide location of member variable definition: " + uri);
+						let location = locations[0];
+						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for member variable definition");
+						assert.strictEqual(location.range.start.line, 14, "vscode.executeDefinitionProvider provided incorrect line for member variable definition");
+						assert.strictEqual(location.range.start.character, 14, "vscode.executeDefinitionProvider provided incorrect character for member variable definition");
+					}, (err) =>
+					{
+						assert.fail("Failed to execute definition provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeDefinitionProvider finds definition of member variable with member access operator on this", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let position = new vscode.Position(55, 10);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDefinitionProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 1,
+							"vscode.executeDefinitionProvider failed to provide location of member variable definition with member access operator on this: " + uri);
+						let location = locations[0];
+						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for member variable definition with member access operator on this");
+						assert.strictEqual(location.range.start.line, 14, "vscode.executeDefinitionProvider provided incorrect line for member variable definition with member access operator on this");
+						assert.strictEqual(location.range.start.character, 14, "vscode.executeDefinitionProvider provided incorrect character for member variable definition with member access operator on this");
+					}, (err) =>
+					{
+						assert.fail("Failed to execute definition provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeDefinitionProvider finds definition of member function", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let position = new vscode.Position(45, 5);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDefinitionProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 1,
+							"vscode.executeDefinitionProvider failed to provide location of member function definition: " + uri);
+						let location = locations[0];
+						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for member function definition");
+						assert.strictEqual(location.range.start.line, 16, "vscode.executeDefinitionProvider provided incorrect line for member function definition");
+						assert.strictEqual(location.range.start.character, 19, "vscode.executeDefinitionProvider provided incorrect character for member function definition");
+					}, (err) =>
+					{
+						assert.fail("Failed to execute definition provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeDefinitionProvider finds definition of member function with member access operator on this", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let position = new vscode.Position(46, 10);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDefinitionProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 1,
+							"vscode.executeDefinitionProvider failed to provide location of member function definition with member access operator on this: " + uri);
+						let location = locations[0];
+						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for member function definition with member access operator on this");
+						assert.strictEqual(location.range.start.line, 16, "vscode.executeDefinitionProvider provided incorrect line for member function definition with member access operator on this");
+						assert.strictEqual(location.range.start.character, 19, "vscode.executeDefinitionProvider provided incorrect character for member function definition with member access operator on this");
+					}, (err) =>
+					{
+						assert.fail("Failed to execute definition provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeDefinitionProvider finds definition of member property", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let position = new vscode.Position(57, 5);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDefinitionProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 1,
+							"vscode.executeDefinitionProvider failed to provide location of member property definition: " + uri);
+						let location = locations[0];
+						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for member property definition");
+						assert.strictEqual(location.range.start.line, 20, "vscode.executeDefinitionProvider provided incorrect line for member property definition");
+						assert.strictEqual(location.range.start.character, 22, "vscode.executeDefinitionProvider provided incorrect character for member property definition");
+					}, (err) =>
+					{
+						assert.fail("Failed to execute definition provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeDefinitionProvider finds definition of member property with member access operator on this", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let position = new vscode.Position(58, 10);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDefinitionProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 1,
+							"vscode.executeDefinitionProvider failed to provide location of member property definition with member access operator on this: " + uri);
+						let location = locations[0];
+						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for member property definition with member access operator on this");
+						assert.strictEqual(location.range.start.line, 20, "vscode.executeDefinitionProvider provided incorrect line for member property definition with member access operator on this");
+						assert.strictEqual(location.range.start.character, 22, "vscode.executeDefinitionProvider provided incorrect character for member property definition with member access operator on this");
+					}, (err) =>
+					{
+						assert.fail("Failed to execute definition provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeDefinitionProvider finds definition of static variable", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let position = new vscode.Position(51, 5);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDefinitionProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 1,
+							"vscode.executeDefinitionProvider failed to provide location of static variable definition: " + uri);
+						let location = locations[0];
+						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for static variable definition");
+						assert.strictEqual(location.range.start.line, 8, "vscode.executeDefinitionProvider provided incorrect line for static variable definition");
+						assert.strictEqual(location.range.start.character, 20, "vscode.executeDefinitionProvider provided incorrect character for static variable definition");
+					}, (err) =>
+					{
+						assert.fail("Failed to execute definition provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeDefinitionProvider finds definition of static variable with member access operator on class", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let position = new vscode.Position(52, 17);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDefinitionProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 1,
+							"vscode.executeDefinitionProvider failed to provide location of static variable definition with member access operator on class: " + uri);
+						let location = locations[0];
+						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for static variable definition with member access operator on class");
+						assert.strictEqual(location.range.start.line, 8, "vscode.executeDefinitionProvider provided incorrect line for static variable definition with member access operator on class");
+						assert.strictEqual(location.range.start.character, 20, "vscode.executeDefinitionProvider provided incorrect character for static variable definition with member access operator on class");
+					}, (err) =>
+					{
+						assert.fail("Failed to execute definition provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeDefinitionProvider finds definition of static function", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let position = new vscode.Position(48, 5);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDefinitionProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 1,
+							"vscode.executeDefinitionProvider failed to provide location of static function definition: " + uri);
+						let location = locations[0];
+						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for static function definition");
+						assert.strictEqual(location.range.start.line, 10, "vscode.executeDefinitionProvider provided incorrect line for static function definition");
+						assert.strictEqual(location.range.start.character, 26, "vscode.executeDefinitionProvider provided incorrect character for static function definition");
+					}, (err) =>
+					{
+						assert.fail("Failed to execute definition provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeDefinitionProvider finds definition of static function with member access operator on class", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let position = new vscode.Position(49, 17);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDefinitionProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 1,
+							"vscode.executeDefinitionProvider failed to provide location of static function definition with member access operator on class: " + uri);
+						let location = locations[0];
+						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for static function definition with member access operator on class");
+						assert.strictEqual(location.range.start.line, 10, "vscode.executeDefinitionProvider provided incorrect line for static function definition with member access operator on class");
+						assert.strictEqual(location.range.start.character, 26, "vscode.executeDefinitionProvider provided incorrect character for static function definition with member access operator on class");
+					}, (err) =>
+					{
+						assert.fail("Failed to execute definition provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeDefinitionProvider finds definition of static property", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let position = new vscode.Position(60, 5);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDefinitionProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 1,
+							"vscode.executeDefinitionProvider failed to provide location of static property definition: " + uri);
+						let location = locations[0];
+						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for static property definition");
+						assert.strictEqual(location.range.start.line, 29, "vscode.executeDefinitionProvider provided incorrect line for static property definition");
+						assert.strictEqual(location.range.start.character, 29, "vscode.executeDefinitionProvider provided incorrect character for static property definition");
+					}, (err) =>
+					{
+						assert.fail("Failed to execute definition provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeDefinitionProvider finds definition of static property with member access operator on class", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let position = new vscode.Position(61, 17);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDefinitionProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 1,
+							"vscode.executeDefinitionProvider failed to provide location of static property definition with member access operator on class: " + uri);
+						let location = locations[0];
+						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for static property definition with member access operator on class");
+						assert.strictEqual(location.range.start.line, 29, "vscode.executeDefinitionProvider provided incorrect line for static property definition with member access operator on class");
+						assert.strictEqual(location.range.start.character, 29, "vscode.executeDefinitionProvider provided incorrect character for static property definition with member access operator on class");
+					}, (err) =>
+					{
+						assert.fail("Failed to execute definition provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeDefinitionProvider finds definition of package function", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "packageFunction.as"));
+		let position = new vscode.Position(84, 5);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDefinitionProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 1,
+							"vscode.executeDefinitionProvider failed to provide location of package function definition: " + uri);
+						let location = locations[0];
+						assert.strictEqual(location.uri.path, definitionURI.path, "vscode.executeDefinitionProvider provided incorrect uri for package function definition");
+						assert.strictEqual(location.range.start.line, 2, "vscode.executeDefinitionProvider provided incorrect line for package function definition");
+						assert.strictEqual(location.range.start.character, 17, "vscode.executeDefinitionProvider provided incorrect character for package function definition");
+					}, (err) =>
+					{
+						assert.fail("Failed to execute definition provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeDefinitionProvider finds definition of fully-qualified package function", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "packageFunction.as"));
+		let position = new vscode.Position(85, 17);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDefinitionProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 1,
+							"vscode.executeDefinitionProvider failed to provide location of fully-qualified package function definition: " + uri);
+						let location = locations[0];
+						assert.strictEqual(location.uri.path, definitionURI.path, "vscode.executeDefinitionProvider provided incorrect uri for fully-qualified package function definition");
+						assert.strictEqual(location.range.start.line, 2, "vscode.executeDefinitionProvider provided incorrect line for fully-qualified package function definition");
+						assert.strictEqual(location.range.start.character, 17, "vscode.executeDefinitionProvider provided incorrect character for fully-qualified package function definition");
+					}, (err) =>
+					{
+						assert.fail("Failed to execute definition provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeDefinitionProvider finds definition of package variable", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "packageVar.as"));
+		let position = new vscode.Position(87, 5);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDefinitionProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 1,
+							"vscode.executeDefinitionProvider failed to provide location of package variable definition: " + uri);
+						let location = locations[0];
+						assert.strictEqual(location.uri.path, definitionURI.path, "vscode.executeDefinitionProvider provided incorrect uri for package variable definition");
+						assert.strictEqual(location.range.start.line, 2, "vscode.executeDefinitionProvider provided incorrect line for package variable definition");
+						assert.strictEqual(location.range.start.character, 12, "vscode.executeDefinitionProvider provided incorrect character for package variable definition");
+					}, (err) =>
+					{
+						assert.fail("Failed to execute definition provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeDefinitionProvider finds definition of fully-qualified package variable", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "packageVar.as"));
+		let position = new vscode.Position(88, 17);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDefinitionProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 1,
+							"vscode.executeDefinitionProvider failed to provide location of fully-qualified package variable definition: " + uri);
+						let location = locations[0];
+						assert.strictEqual(location.uri.path, definitionURI.path, "vscode.executeDefinitionProvider provided incorrect uri for fully-qualified package variable definition");
+						assert.strictEqual(location.range.start.line, 2, "vscode.executeDefinitionProvider provided incorrect line for fully-qualified package variable definition");
+						assert.strictEqual(location.range.start.character, 12, "vscode.executeDefinitionProvider provided incorrect character for fully-qualified package variable definition");
+					}, (err) =>
+					{
+						assert.fail("Failed to execute definition provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeDefinitionProvider finds definition of super static variable", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
+		let position = new vscode.Position(74, 5);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDefinitionProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 1,
+							"vscode.executeDefinitionProvider failed to provide location of super static variable definition: " + uri);
+						let location = locations[0];
+						assert.strictEqual(location.uri.path, definitionURI.path, "vscode.executeDefinitionProvider provided incorrect uri for super static variable definition");
+						assert.strictEqual(location.range.start.line, 4, "vscode.executeDefinitionProvider provided incorrect line for super static variable definition");
+						assert.strictEqual(location.range.start.character, 20, "vscode.executeDefinitionProvider provided incorrect character for super static variable definition");
+					}, (err) =>
+					{
+						assert.fail("Failed to execute definition provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeDefinitionProvider finds definition of super static variable with member access operator on superclass", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
+		let position = new vscode.Position(75, 22);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDefinitionProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 1,
+							"vscode.executeDefinitionProvider failed to provide location of super static variable definition with member access operator on superclass: " + uri);
+						let location = locations[0];
+						assert.strictEqual(location.uri.path, definitionURI.path, "vscode.executeDefinitionProvider provided incorrect uri for super static variable definition with member access operator on superclass");
+						assert.strictEqual(location.range.start.line, 4, "vscode.executeDefinitionProvider provided incorrect line for super static variable definition with member access operator on superclass");
+						assert.strictEqual(location.range.start.character, 20, "vscode.executeDefinitionProvider provided incorrect character for super static variable definition with member access operator on superclass");
+					}, (err) =>
+					{
+						assert.fail("Failed to execute definition provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeDefinitionProvider finds definition of super static property", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
+		let position = new vscode.Position(81, 5);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDefinitionProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 1,
+							"vscode.executeDefinitionProvider failed to provide location of super static property definition: " + uri);
+						let location = locations[0];
+						assert.strictEqual(location.uri.path, definitionURI.path, "vscode.executeDefinitionProvider provided incorrect uri for super static property definition");
+						assert.strictEqual(location.range.start.line, 6, "vscode.executeDefinitionProvider provided incorrect line for super static property definition");
+						assert.strictEqual(location.range.start.character, 29, "vscode.executeDefinitionProvider provided incorrect character for super static property definition");
+					}, (err) =>
+					{
+						assert.fail("Failed to execute definition provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeDefinitionProvider finds definition of super static property with member access operator on superclass", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
+		let position = new vscode.Position(82, 22);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDefinitionProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 1,
+							"vscode.executeDefinitionProvider failed to provide location of super static property definition with member access operator on superclass: " + uri);
+						let location = locations[0];
+						assert.strictEqual(location.uri.path, definitionURI.path, "vscode.executeDefinitionProvider provided incorrect uri for super static property definition with member access operator on superclass");
+						assert.strictEqual(location.range.start.line, 6, "vscode.executeDefinitionProvider provided incorrect line for super static property definition with member access operator on superclass");
+						assert.strictEqual(location.range.start.character, 29, "vscode.executeDefinitionProvider provided incorrect character for super static property definition with member access operator on superclass");
+					}, (err) =>
+					{
+						assert.fail("Failed to execute definition provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeDefinitionProvider finds definition of super static function", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
+		let position = new vscode.Position(67, 5);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDefinitionProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 1,
+							"vscode.executeDefinitionProvider failed to provide location of super static function definition: " + uri);
+						let location = locations[0];
+						assert.strictEqual(location.uri.path, definitionURI.path, "vscode.executeDefinitionProvider provided incorrect uri for super static function definition");
+						assert.strictEqual(location.range.start.line, 15, "vscode.executeDefinitionProvider provided incorrect line for super static function definition");
+						assert.strictEqual(location.range.start.character, 28, "vscode.executeDefinitionProvider provided incorrect character for super static function definition");
+					}, (err) =>
+					{
+						assert.fail("Failed to execute definition provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeDefinitionProvider finds definition of super static function with member access operator on superclass", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
+		let position = new vscode.Position(68, 22);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDefinitionProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 1,
+							"vscode.executeDefinitionProvider failed to provide location of super static function definition with member access operator on superclass: " + uri);
+						let location = locations[0];
+						assert.strictEqual(location.uri.path, definitionURI.path, "vscode.executeDefinitionProvider provided incorrect uri for super static function definition with member access operator on superclass");
+						assert.strictEqual(location.range.start.line, 15, "vscode.executeDefinitionProvider provided incorrect line for super static function definition with member access operator on superclass");
+						assert.strictEqual(location.range.start.character, 28, "vscode.executeDefinitionProvider provided incorrect character for super static function definition with member access operator on superclass");
+					}, (err) =>
+					{
+						assert.fail("Failed to execute definition provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeDefinitionProvider finds definition of super member function", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
+		let position = new vscode.Position(63, 5);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDefinitionProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 1,
+							"vscode.executeDefinitionProvider failed to provide location of super member function definition: " + uri);
+						let location = locations[0];
+						assert.strictEqual(location.uri.path, definitionURI.path, "vscode.executeDefinitionProvider provided incorrect uri for super member function definition");
+						assert.strictEqual(location.range.start.line, 30, "vscode.executeDefinitionProvider provided incorrect line for super member function definition");
+						assert.strictEqual(location.range.start.character, 21, "vscode.executeDefinitionProvider provided incorrect character for super member function definition");
+					}, (err) =>
+					{
+						assert.fail("Failed to execute definition provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeDefinitionProvider finds definition of super member function with member access operator on this", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
+		let position = new vscode.Position(64, 10);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDefinitionProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 1,
+							"vscode.executeDefinitionProvider failed to provide location of super member function definition with member access operator on this: " + uri);
+						let location = locations[0];
+						assert.strictEqual(location.uri.path, definitionURI.path, "vscode.executeDefinitionProvider provided incorrect uri for super member function definition with member access operator on this");
+						assert.strictEqual(location.range.start.line, 30, "vscode.executeDefinitionProvider provided incorrect line for super member function definition with member access operator on this");
+						assert.strictEqual(location.range.start.character, 21, "vscode.executeDefinitionProvider provided incorrect character for super member function definition with member access operator on this");
+					}, (err) =>
+					{
+						assert.fail("Failed to execute definition provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeDefinitionProvider finds definition of super member function with member access operator on super", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
+		let position = new vscode.Position(65, 11);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDefinitionProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 1,
+							"vscode.executeDefinitionProvider failed to provide location of super member function definition with member access operator on super: " + uri);
+						let location = locations[0];
+						assert.strictEqual(location.uri.path, definitionURI.path, "vscode.executeDefinitionProvider provided incorrect uri for super member function definition with member access operator on super");
+						assert.strictEqual(location.range.start.line, 30, "vscode.executeDefinitionProvider provided incorrect line for super member function definition with member access operator on super");
+						assert.strictEqual(location.range.start.character, 21, "vscode.executeDefinitionProvider provided incorrect character for super member function definition with member access operator on super");
+					}, (err) =>
+					{
+						assert.fail("Failed to execute definition provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeDefinitionProvider finds definition of super member variable", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
+		let position = new vscode.Position(70, 5);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDefinitionProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 1,
+							"vscode.executeDefinitionProvider failed to provide location of super member variable definition: " + uri);
+						let location = locations[0];
+						assert.strictEqual(location.uri.path, definitionURI.path, "vscode.executeDefinitionProvider provided incorrect uri for super member variable definition");
+						assert.strictEqual(location.range.start.line, 19, "vscode.executeDefinitionProvider provided incorrect line for super member variable definition");
+						assert.strictEqual(location.range.start.character, 13, "vscode.executeDefinitionProvider provided incorrect character for super member variable definition");
+					}, (err) =>
+					{
+						assert.fail("Failed to execute definition provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeDefinitionProvider finds definition of super member variable with member access operator on this", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
+		let position = new vscode.Position(71, 10);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDefinitionProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 1,
+							"vscode.executeDefinitionProvider failed to provide location of super member variable definition with member access operator on this: " + uri);
+						let location = locations[0];
+						assert.strictEqual(location.uri.path, definitionURI.path, "vscode.executeDefinitionProvider provided incorrect uri for super member variable definition with member access operator on this");
+						assert.strictEqual(location.range.start.line, 19, "vscode.executeDefinitionProvider provided incorrect line for super member variable definition with member access operator on this");
+						assert.strictEqual(location.range.start.character, 13, "vscode.executeDefinitionProvider provided incorrect character for super member variable definition with member access operator on this");
+					}, (err) =>
+					{
+						assert.fail("Failed to execute definition provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeDefinitionProvider finds definition of super member variable with member access operator on super", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
+		let position = new vscode.Position(72, 11);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDefinitionProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 1,
+							"vscode.executeDefinitionProvider failed to provide location of super member variable definition with member access operator on super: " + uri);
+						let location = locations[0];
+						assert.strictEqual(location.uri.path, definitionURI.path, "vscode.executeDefinitionProvider provided incorrect uri for super member variable definition with member access operator on super");
+						assert.strictEqual(location.range.start.line, 19, "vscode.executeDefinitionProvider provided incorrect line for super member variable definition with member access operator on super");
+						assert.strictEqual(location.range.start.character, 13, "vscode.executeDefinitionProvider provided incorrect character for super member variable definition with member access operator on super");
+					}, (err) =>
+					{
+						assert.fail("Failed to execute definition provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeDefinitionProvider finds definition of super member property", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
+		let position = new vscode.Position(77, 5);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDefinitionProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 1,
+							"vscode.executeDefinitionProvider failed to provide location of super member property definition: " + uri);
+						let location = locations[0];
+						assert.strictEqual(location.uri.path, definitionURI.path, "vscode.executeDefinitionProvider provided incorrect uri for super member property definition");
+						assert.strictEqual(location.range.start.line, 21, "vscode.executeDefinitionProvider provided incorrect line for super member property definition");
+						assert.strictEqual(location.range.start.character, 22, "vscode.executeDefinitionProvider provided incorrect character for super member property definition");
+					}, (err) =>
+					{
+						assert.fail("Failed to execute definition provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeDefinitionProvider finds definition of super member property with member access operator on this", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
+		let position = new vscode.Position(78, 10);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDefinitionProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 1,
+							"vscode.executeDefinitionProvider failed to provide location of super member property definition with member access operator on this: " + uri);
+						let location = locations[0];
+						assert.strictEqual(location.uri.path, definitionURI.path, "vscode.executeDefinitionProvider provided incorrect uri for super member property definition with member access operator on this");
+						assert.strictEqual(location.range.start.line, 21, "vscode.executeDefinitionProvider provided incorrect line for super member property definition with member access operator on this");
+						assert.strictEqual(location.range.start.character, 22, "vscode.executeDefinitionProvider provided incorrect character for super member property definition with member access operator on this");
+					}, (err) =>
+					{
+						assert.fail("Failed to execute definition provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeDefinitionProvider finds definition of super member property with member access operator on super", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
+		let position = new vscode.Position(79, 11);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDefinitionProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 1,
+							"vscode.executeDefinitionProvider failed to provide location of super member property definition with member access operator on super: " + uri);
+						let location = locations[0];
+						assert.strictEqual(location.uri.path, definitionURI.path, "vscode.executeDefinitionProvider provided incorrect uri for super member property definition with member access operator on super");
+						assert.strictEqual(location.range.start.line, 21, "vscode.executeDefinitionProvider provided incorrect line for super member property definition with member access operator on super");
+						assert.strictEqual(location.range.start.character, 22, "vscode.executeDefinitionProvider provided incorrect character for super member property definition with member access operator on super");
+					}, (err) =>
+					{
+						assert.fail("Failed to execute definition provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeDefinitionProvider finds definition of file-internal variable", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let position = new vscode.Position(94, 5);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDefinitionProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 1,
+							"vscode.executeDefinitionProvider failed to provide location of file-internal variable definition: " + uri);
+						let location = locations[0];
+						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for file-internal variable definition");
+						assert.strictEqual(location.range.start.line, 111, "vscode.executeDefinitionProvider provided incorrect line for file-internal variable definition");
+						assert.strictEqual(location.range.start.character, 4, "vscode.executeDefinitionProvider provided incorrect character for file-internal variable definition");
+					}, (err) =>
+					{
+						assert.fail("Failed to execute definition provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeDefinitionProvider finds definition of file-internal function", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let position = new vscode.Position(95, 5);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDefinitionProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 1,
+							"vscode.executeDefinitionProvider failed to provide location of file-internal function definition: " + uri);
+						let location = locations[0];
+						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for file-internal function definition");
+						assert.strictEqual(location.range.start.line, 110, "vscode.executeDefinitionProvider provided incorrect line for file-internal function definition");
+						assert.strictEqual(location.range.start.character, 9, "vscode.executeDefinitionProvider provided incorrect character for file-internal function definition");
+					}, (err) =>
+					{
+						assert.fail("Failed to execute definition provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeDefinitionProvider finds definition of file-internal class", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let position = new vscode.Position(97, 37);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDefinitionProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 1,
+							"vscode.executeDefinitionProvider failed to provide location of file-internal class definition: " + uri);
+						let location = locations[0];
+						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for file-internal class definition");
+						assert.strictEqual(location.range.start.line, 113, "vscode.executeDefinitionProvider provided incorrect line for file-internal class definition");
+						assert.strictEqual(location.range.start.character, 6, "vscode.executeDefinitionProvider provided incorrect character for file-internal class definition");
+					}, (err) =>
+					{
+						assert.fail("Failed to execute definition provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeDefinitionProvider finds definition of file-internal member function", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let position = new vscode.Position(99, 33);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDefinitionProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 1,
+							"vscode.executeDefinitionProvider failed to provide location of file-internal member function definition: " + uri);
+						let location = locations[0];
+						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for file-internal member function definition");
+						assert.strictEqual(location.range.start.line, 141, "vscode.executeDefinitionProvider provided incorrect line for file-internal member function definition");
+						assert.strictEqual(location.range.start.character, 17, "vscode.executeDefinitionProvider provided incorrect character for file-internal member function definition");
+					}, (err) =>
+					{
+						assert.fail("Failed to execute definition provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeDefinitionProvider finds definition of file-internal member variable", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let position = new vscode.Position(100, 33);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDefinitionProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 1,
+							"vscode.executeDefinitionProvider failed to provide location of file-internal member variable definition: " + uri);
+						let location = locations[0];
+						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for file-internal member variable definition");
+						assert.strictEqual(location.range.start.line, 130, "vscode.executeDefinitionProvider provided incorrect line for file-internal member variable definition");
+						assert.strictEqual(location.range.start.character, 12, "vscode.executeDefinitionProvider provided incorrect character for file-internal member variable definition");
+					}, (err) =>
+					{
+						assert.fail("Failed to execute definition provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeDefinitionProvider finds definition of file-internal member property", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let position = new vscode.Position(101, 33);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDefinitionProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 1,
+							"vscode.executeDefinitionProvider failed to provide location of file-internal member property definition: " + uri);
+						let location = locations[0];
+						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for file-internal member property definition");
+						assert.strictEqual(location.range.start.line, 132, "vscode.executeDefinitionProvider provided incorrect line for file-internal member property definition");
+						assert.strictEqual(location.range.start.character, 21, "vscode.executeDefinitionProvider provided incorrect character for file-internal member property definition");
+					}, (err) =>
+					{
+						assert.fail("Failed to execute definition provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeDefinitionProvider finds definition of file-internal static property", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let position = new vscode.Position(105, 25);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDefinitionProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 1,
+							"vscode.executeDefinitionProvider failed to provide location of file-internal static property definition: " + uri);
+						let location = locations[0];
+						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for file-internal static property definition");
+						assert.strictEqual(location.range.start.line, 117, "vscode.executeDefinitionProvider provided incorrect line for file-internal static property definition");
+						assert.strictEqual(location.range.start.character, 28, "vscode.executeDefinitionProvider provided incorrect character for file-internal static property definition");
+					}, (err) =>
+					{
+						assert.fail("Failed to execute definition provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeDefinitionProvider finds definition of file-internal static variable", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let position = new vscode.Position(104, 25);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDefinitionProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 1,
+							"vscode.executeDefinitionProvider failed to provide location of file-internal static variable definition: " + uri);
+						let location = locations[0];
+						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for file-internal static variable definition");
+						assert.strictEqual(location.range.start.line, 115, "vscode.executeDefinitionProvider provided incorrect line for file-internal static variable definition");
+						assert.strictEqual(location.range.start.character, 19, "vscode.executeDefinitionProvider provided incorrect character for file-internal static variable definition");
+					}, (err) =>
+					{
+						assert.fail("Failed to execute definition provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeDefinitionProvider finds definition of file-internal static function", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let position = new vscode.Position(103, 25);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDefinitionProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 1,
+							"vscode.executeDefinitionProvider failed to provide location of file-internal static function definition: " + uri);
+						let location = locations[0];
+						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for file-internal static function definition");
+						assert.strictEqual(location.range.start.line, 126, "vscode.executeDefinitionProvider provided incorrect line for file-internal static function definition");
+						assert.strictEqual(location.range.start.character, 24, "vscode.executeDefinitionProvider provided incorrect character for file-internal static function definition");
+					}, (err) =>
+					{
+						assert.fail("Failed to execute definition provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
