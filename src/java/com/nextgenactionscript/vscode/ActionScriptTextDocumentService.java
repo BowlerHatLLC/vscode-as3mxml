@@ -427,6 +427,24 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 return CompletableFuture.completedFuture(result);
             }
         }
+        if (nodeAtPreviousOffset != null
+                && nodeAtPreviousOffset instanceof IMemberAccessExpressionNode)
+        {
+            //depending on the left operand, if a . is typed, the member access
+            //may end up being the previous node instead of the parent or offset
+            //node, so check if the right operand is empty
+            IMemberAccessExpressionNode memberAccessNode = (IMemberAccessExpressionNode) nodeAtPreviousOffset;
+            IExpressionNode rightOperandNode = memberAccessNode.getRightOperandNode();
+            if (rightOperandNode instanceof IIdentifierNode)
+            {
+                IIdentifierNode identifierNode = (IIdentifierNode) rightOperandNode;
+                if (identifierNode.getName().equals(""))
+                {
+                    autoCompleteMemberAccess(memberAccessNode, result);
+                    return CompletableFuture.completedFuture(result);
+                }
+            }
+        }
 
         //local scope
         do
