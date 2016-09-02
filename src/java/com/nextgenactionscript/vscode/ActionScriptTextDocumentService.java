@@ -417,6 +417,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 && parentNode instanceof IMemberAccessExpressionNode)
         {
             IMemberAccessExpressionNode memberAccessNode = (IMemberAccessExpressionNode) parentNode;
+            //you would expect that the offset node could only be the right
+            //operand, but it's actually possible for it to be the left operand,
+            //even if the . has been typed!
             if (offsetNode == memberAccessNode.getRightOperandNode()
                     || offsetNode == memberAccessNode.getLeftOperandNode())
             {
