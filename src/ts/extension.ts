@@ -329,6 +329,21 @@ function startClient()
 		},
 		errorHandler: new CustomErrorHandler("NextGen ActionScript")
 	};
+	vscode.languages.setLanguageConfiguration("nextgenas",
+	{
+		"onEnterRules":
+		[
+			{
+				beforeText: /^\s*\/\*\*(?!\/)([^\*]|\*(?!\/))*$/,
+				afterText: /^\s*\*\/$/,
+				action:
+				{
+					indentAction: vscode.IndentAction.IndentOutdent,
+					appendText: " * "
+				}
+			},
+		]
+	});
 	let client = new LanguageClient("nextgenas", "NextGen ActionScript Language Server", createLanguageServer, clientOptions);
 	let disposable = client.start();
 	savedContext.subscriptions.push(disposable);
