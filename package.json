@@ -1,7 +1,7 @@
 {
   "name": "vscode-nextgenas",
   "displayName": "NextGen ActionScript",
-  "description": "Visual Studio Code extension for transpiling ActionScript with Apache FlexJS",
+  "description": "ActionScript language extension for Visual Studio Code",
   "version": "0.1.0",
   "publisher": "bowlerhatllc",
   "homepage": "http://nextgenactionscript.com/vscode/",
