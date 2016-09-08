@@ -22,7 +22,7 @@ This extension is still in development. A preview build will be available soon.
 
 * Visual Studio Code 1.4
 * Java 8 Runtime
-* Apache FlexJS 0.7 Nightly
+* Apache FlexJS 0.7
 
 ## asconfig.json
 
