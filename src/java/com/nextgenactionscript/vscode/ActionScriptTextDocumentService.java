@@ -780,6 +780,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     createCodeActionsForImport(diagnostic, commands);
                     break;
                 }
+                case "1178": //InaccessiblePropertyReferenceProblem
+                {
+                    createCodeActionsForImport(diagnostic, commands);
+                    break;
+                }
                 case "1180": //CallUndefinedMethodProblem
                 {
                     createCodeActionsForImport(diagnostic, commands);
