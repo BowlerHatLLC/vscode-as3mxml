@@ -679,8 +679,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     public CompletableFuture<List<? extends SymbolInformation>> workspaceSymbol(WorkspaceSymbolParams params)
     {
-        ICompilationUnit mainUnit = getMainCompilationUnit();
-        if (mainUnit == null)
+        if (compilationUnits == null)
         {
             return CompletableFuture.completedFuture(Collections.emptyList());
         }
@@ -1920,16 +1919,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         String lastFilePath = files[files.length - 1];
         return Paths.get(lastFilePath);
-    }
-
-    private ICompilationUnit getMainCompilationUnit()
-    {
-        Path path = getMainCompilationUnitPath();
-        if (path == null)
-        {
-            return null;
-        }
-        return getCompilationUnit(path, false, false);
     }
 
     private ICompilationUnit getCompilationUnit(Path path, boolean fileChanged, boolean quick)
