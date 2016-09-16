@@ -720,7 +720,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return CompletableFuture.completedFuture(Collections.emptyList());
         }
         Path path = optionalPath.get();
-        ICompilationUnit unit = getCompilationUnit(path, false);
+        ICompilationUnit unit = getCompilationUnit(path, false, true);
         if (unit == null)
         {
             //we couldn't find a compilation unit with the specified path
@@ -917,7 +917,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             String text = document.getText();
             sourceByPath.put(path, text);
 
-            checkFilePathForProblems(path);
+            checkFilePathForProblems(path, false);
         }
     }
 
@@ -944,7 +944,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     sourceByPath.put(path, newText);
                 }
             }
-            checkFilePathForProblems(path);
+            //we do a quick check of the current file on change for better
+            //performance while typing. we'll do a full check when we save the
+            //file later
+            checkFilePathForProblems(path, true);
         }
     }
 
@@ -965,8 +968,15 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     @Override
     public void didSave(DidSaveTextDocumentParams params)
     {
-        //as long as we're checking on change, we shouldn't need to do anything
-        //on save
+        TextDocumentIdentifier document = params.getTextDocument();
+        URI uri = URI.create(document.getUri());
+        Optional<Path> optionalPath = getFilePath(uri);
+
+        if (optionalPath.isPresent())
+        {
+            Path path = optionalPath.get();
+            checkFilePathForProblems(path, false);
+        }
     }
 
     public void didChangeWatchedFiles(DidChangeWatchedFilesParams params)
@@ -993,7 +1003,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             Path path = getMainCompilationUnitPath();
             if (path != null)
             {
-                checkFilePathForProblems(path);
+                checkFilePathForProblems(path, false);
             }
         }
     }
@@ -1919,14 +1929,14 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return null;
         }
-        return getCompilationUnit(path, false);
+        return getCompilationUnit(path, false, false);
     }
 
-    private ICompilationUnit getCompilationUnit(Path path, boolean fileChanged)
+    private ICompilationUnit getCompilationUnit(Path path, boolean fileChanged, boolean quick)
     {
         String absolutePath = path.toAbsolutePath().toString();
         currentUnit = null;
-        currentProject = getProject();
+        currentProject = getProject(quick);
         if (currentProject == null)
         {
             return null;
@@ -2031,16 +2041,20 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         invisibleUnits.clear();
     }
 
-    private IFlexProject getProject()
+    private IFlexProject getProject(boolean quick)
     {
         clearInvisibleCompilationUnits();
         loadASConfigFile();
-        //we need to reset everything when we recompile because files could have
-        //been added or deleted, and we don't have a way to detect those changes
-        currentWorkspace = null;
-        currentProject = null;
-        fileSpecGetter = null;
-        compilationUnits = null;
+        if (!quick || currentOptions == null)
+        {
+            //when doing a non-quick check for errors, we need to reset
+            //everything because files could have been added or deleted, and we
+            //don't have a way to detect those changes in the language server
+            currentWorkspace = null;
+            currentProject = null;
+            fileSpecGetter = null;
+            compilationUnits = null;
+        }
         if (currentOptions == null)
         {
             return null;
@@ -2155,19 +2169,19 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         oldFilesWithErrors.remove(uri);
     }
 
-    private void checkFilePathForProblems(Path path)
+    private void checkFilePathForProblems(Path path, Boolean quick)
     {
         currentUnit = null;
         compilationUnits = null;
-        if (!checkCompilationUnitForProblems(path))
+        if (!checkFilePathForAllProblems(path, quick))
         {
             checkFilePathForSyntaxProblems(path);
         }
     }
 
-    private boolean checkCompilationUnitForProblems(Path path)
+    private boolean checkFilePathForAllProblems(Path path, Boolean quick)
     {
-        ICompilationUnit mainUnit = getCompilationUnit(path, true);
+        ICompilationUnit mainUnit = getCompilationUnit(path, true, quick);
         if (mainUnit == null)
         {
             return false;
@@ -2209,42 +2223,35 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         Map<URI, PublishDiagnosticsParamsImpl> files = new HashMap<>();
         try
         {
-            for (ICompilationUnit unit : compilationUnits)
+            if (quick)
             {
-                if (unit instanceof SWCCompilationUnit)
+                PublishDiagnosticsParamsImpl params = checkCompilationUnitForAllProblems(mainUnit);
+                if (params == null)
                 {
-                    //compiled compilation units won't have problems
-                    continue;
-                }
-                URI uri = Paths.get(unit.getAbsoluteFilename()).toUri();
-                PublishDiagnosticsParamsImpl publish = new PublishDiagnosticsParamsImpl();
-                publish.setDiagnostics(new ArrayList<>());
-                publish.setUri(uri.toString());
-                files.put(uri, publish);
-                trackFileWithErrors(uri);
-                ArrayList<ICompilerProblem> problems = new ArrayList<>();
-                try
-                {
-                    unit.waitForBuildFinish(problems, ITarget.TargetType.SWF);
-                }
-                catch (Exception e)
-                {
-                    System.err.println("Exception during waitForBuildFinish(): " + e);
-                    e.printStackTrace();
                     return false;
                 }
-                for (ICompilerProblem problem : problems)
+                URI uri = Paths.get(mainUnit.getAbsoluteFilename()).toUri();
+                files.put(uri, params);
+            }
+            else
+            {
+                for (ICompilationUnit unit : compilationUnits)
                 {
-                    String sourcePath = problem.getSourcePath();
-                    if (sourcePath == null)
+                    if (unit instanceof SWCCompilationUnit)
                     {
-                        //if the problem is not associated with a file, we'll skip it
-                        System.err.println("Internal ActionScript compiler problem:");
-                        System.err.println(problem);
+                        //compiled compilation units won't have problems
                         continue;
                     }
-                    addCompilerProblem(problem, publish);
+                    PublishDiagnosticsParamsImpl params = checkCompilationUnitForAllProblems(unit);
+                    if (params == null)
+                    {
+                        return false;
+                    }
+                    URI uri = Paths.get(unit.getAbsoluteFilename()).toUri();
+                    files.put(uri, params);
                 }
+                //only clean up stale errors on a full check
+                cleanUpStaleErrors();
             }
         }
         catch (Exception e)
@@ -2253,9 +2260,41 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             e.printStackTrace();
             return false;
         }
-        cleanUpStaleErrors();
         files.values().forEach(publishDiagnostics::accept);
         return true;
+    }
+
+    private PublishDiagnosticsParamsImpl checkCompilationUnitForAllProblems(ICompilationUnit unit)
+    {
+        URI uri = Paths.get(unit.getAbsoluteFilename()).toUri();
+        PublishDiagnosticsParamsImpl publish = new PublishDiagnosticsParamsImpl();
+        publish.setDiagnostics(new ArrayList<>());
+        publish.setUri(uri.toString());
+        trackFileWithErrors(uri);
+        ArrayList<ICompilerProblem> problems = new ArrayList<>();
+        try
+        {
+            unit.waitForBuildFinish(problems, ITarget.TargetType.SWF);
+        }
+        catch (Exception e)
+        {
+            System.err.println("Exception during waitForBuildFinish(): " + e);
+            e.printStackTrace();
+            return null;
+        }
+        for (ICompilerProblem problem : problems)
+        {
+            String sourcePath = problem.getSourcePath();
+            if (sourcePath == null)
+            {
+                //if the problem is not associated with a file, we'll skip it
+                System.err.println("Internal ActionScript compiler problem:");
+                System.err.println(problem);
+                continue;
+            }
+            addCompilerProblem(problem, publish);
+        }
+        return publish;
     }
 
     private IASNode getOffsetNode(TextDocumentPositionParams position)
@@ -2286,7 +2325,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return null;
         }
 
-        ICompilationUnit unit = getCompilationUnit(path, false);
+        ICompilationUnit unit = getCompilationUnit(path, false, true);
         if (unit == null)
         {
             return null;
