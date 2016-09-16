@@ -1259,12 +1259,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     {
         //include definitions in the top-level package
         autoCompleteDefinitions(result, false, "");
+        //include definitions in the same package
         String packageName = node.getPackageName();
         if(packageName.length() > 0)
         {
             autoCompleteDefinitions(result, false, packageName);
         }
-        //include types that are imported
+        //include definitions that are imported from other packages
         ArrayList<IImportNode> importNodes = new ArrayList<>();
         node.getAllImportNodes(importNodes);
         for (IImportNode importNode : importNodes)
