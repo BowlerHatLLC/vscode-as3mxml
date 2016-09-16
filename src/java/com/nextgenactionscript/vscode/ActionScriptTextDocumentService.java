@@ -999,10 +999,24 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         if (asconfigChanged)
         {
-            Path path = getMainCompilationUnitPath();
-            if (path != null)
+            if (currentOptions != null && currentOptions.type.equals(ProjectType.LIB))
             {
-                checkFilePathForProblems(path, false);
+                Set<Path> filePaths = this.sourceByPath.keySet();
+                if (filePaths.size() > 0)
+                {
+                    //it doesn't matter which file we pick here because we're
+                    //doing a full build
+                    Path path = filePaths.iterator().next();
+                    checkFilePathForProblems(path, false);
+                }
+            }
+            else //app
+            {
+                Path path = getMainCompilationUnitPath();
+                if (path != null)
+                {
+                    checkFilePathForProblems(path, false);
+                }
             }
         }
     }
