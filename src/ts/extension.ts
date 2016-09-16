@@ -59,7 +59,8 @@ export function activate(context: vscode.ExtensionContext)
 	});
 	vscode.commands.registerCommand("nextgenas.createASConfigTaskRunner", () =>
 	{
-		let tasksPath = path.resolve(vscode.workspace.rootPath, ".vscode/tasks.json");
+		let vscodePath = path.resolve(vscode.workspace.rootPath, ".vscode/");
+		let tasksPath = path.resolve(vscodePath, "tasks.json");
 		vscode.workspace.openTextDocument(tasksPath).then((document: vscode.TextDocument) =>
 		{
 			//if it already exists, just open it. do nothing else.
@@ -69,6 +70,12 @@ export function activate(context: vscode.ExtensionContext)
 		() =>
 		{
 			let tasks = "{\n\t// See https://go.microsoft.com/fwlink/?LinkId=733558\n\t// for the documentation about the tasks.json format\n\t\"version\": \"0.1.0\",\n\t\"command\": \"asconfigc\",\n\t\"isShellCommand\": true,\n\t\"args\": [\n\t\t//\"--flexHome=path/to/sdk\"\n\t],\n\t\"showOutput\": \"always\"\n}";
+			if(!fs.existsSync(vscodePath))
+			{
+				//on Windows, if the directory isn't created first, writing the
+				//file will fail
+				fs.mkdirSync(vscodePath);
+			}
 			fs.writeFileSync(tasksPath, tasks,
 			{
 				encoding: "utf8"
@@ -78,7 +85,7 @@ export function activate(context: vscode.ExtensionContext)
 				vscode.window.showTextDocument(document);
 			}, () =>
 			{
-
+				vscode.window.showErrorMessage("Failed to create tasks.json for asconfigc.");
 			});
 		});
 	});
