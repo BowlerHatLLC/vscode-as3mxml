@@ -38,7 +38,7 @@ export function isValidSDK(absolutePath: string)
 
 export function findSDK(): string
 {
-	let sdkPath = <string> vscode.workspace.getConfiguration("nextgenas").get("flexjssdk");;
+	let sdkPath = <string> vscode.workspace.getConfiguration("nextgenas").get("flexjssdk");
 	if(isValidSDK(sdkPath))
 	{
 		return sdkPath;
@@ -69,11 +69,22 @@ export function findSDK(): string
 		for(let i = 0; i < pathCount; i++)
 		{
 			let currentPath = paths[i];
-			let asjscPath = path.join(currentPath, "asjsc");
+			//first check if this directory contains the NPM version for Windows
+			let asjscPath = path.join(currentPath, "asjsc.cmd");
 			if(fs.existsSync(asjscPath))
 			{
-				//this may not be the actual file if Apache FlexJS was
-				//installed with NPM
+				sdkPath = path.join(path.dirname(asjscPath), "node_modules", "flexjs");
+				if(isValidSDK(sdkPath))
+				{
+					return sdkPath;
+				}
+			}
+			asjscPath = path.join(currentPath, "asjsc");
+			if(fs.existsSync(asjscPath))
+			{
+				//this may a symbolic link rather than the actual file, such as
+				//when Apache FlexJS is installed with NPM on Mac, so get the
+				//real path.
 				asjscPath = fs.realpathSync(asjscPath);
 				sdkPath = path.join(path.dirname(asjscPath), "..", "..");
 				if(isValidSDK(sdkPath))
