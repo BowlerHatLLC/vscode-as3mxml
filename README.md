@@ -51,3 +51,5 @@ Want to see more ActionScript tools and utilities like this Visual Studio Code e
 Special thanks to the following sponsors for their generous support:
 
 * [YETi CGI](http://yeticgi.com/)
+
+* [Moonshine IDE](http://moonshine-ide.com/)
