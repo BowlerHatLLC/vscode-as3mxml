@@ -59,6 +59,7 @@ import org.apache.flex.compiler.definitions.ISetterDefinition;
 import org.apache.flex.compiler.definitions.ITypeDefinition;
 import org.apache.flex.compiler.definitions.IVariableDefinition;
 import org.apache.flex.compiler.definitions.metadata.IMetaTag;
+import org.apache.flex.compiler.filespecs.IFileSpecification;
 import org.apache.flex.compiler.internal.driver.js.goog.JSGoogConfiguration;
 import org.apache.flex.compiler.internal.mxml.MXMLNamespaceMapping;
 import org.apache.flex.compiler.internal.parsing.as.ASParser;
@@ -130,6 +131,7 @@ import io.typefox.lsapi.DocumentHighlightImpl;
 import io.typefox.lsapi.DocumentOnTypeFormattingParams;
 import io.typefox.lsapi.DocumentRangeFormattingParams;
 import io.typefox.lsapi.DocumentSymbolParams;
+import io.typefox.lsapi.FileChangeType;
 import io.typefox.lsapi.FileEvent;
 import io.typefox.lsapi.Hover;
 import io.typefox.lsapi.HoverImpl;
@@ -719,7 +721,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return CompletableFuture.completedFuture(Collections.emptyList());
         }
         Path path = optionalPath.get();
-        ICompilationUnit unit = getCompilationUnit(path, false, true);
+        ICompilationUnit unit = getCompilationUnit(path);
         if (unit == null)
         {
             //we couldn't find a compilation unit with the specified path
@@ -921,6 +923,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             String text = document.getText();
             sourceByPath.put(path, text);
 
+            //we need to check for problems when opening a new file because it
+            //may not have been in the workspace before.
             checkFilePathForProblems(path, false);
         }
     }
@@ -948,6 +952,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     sourceByPath.put(path, newText);
                 }
             }
+            if (currentWorkspace != null)
+            {
+                IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(path.toAbsolutePath().toString());
+                currentWorkspace.fileChanged(fileSpec);
+            }
             //we do a quick check of the current file on change for better
             //performance while typing. we'll do a full check when we save the
             //file later
@@ -972,19 +981,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     @Override
     public void didSave(DidSaveTextDocumentParams params)
     {
-        TextDocumentIdentifier document = params.getTextDocument();
-        URI uri = URI.create(document.getUri());
-        Optional<Path> optionalPath = getFilePath(uri);
-
-        if (optionalPath.isPresent())
-        {
-            Path path = optionalPath.get();
-            checkFilePathForProblems(path, false);
-        }
+        //as long as we're checking on change, we shouldn't need to do anything
+        //on save
     }
 
     public void didChangeWatchedFiles(DidChangeWatchedFilesParams params)
     {
+        boolean needsFullCheck = false;
         for (FileEvent event : params.getChanges())
         {
             URI uri = URI.create(event.getUri());
@@ -1000,9 +1003,30 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 //compiler settings may have changed, which means we should
                 //start fresh
                 asconfigChanged = true;
+                needsFullCheck = true;
+            }
+            else if (file.getName().endsWith(".as") && currentWorkspace != null)
+            {
+                if (event.getType().equals(FileChangeType.Deleted))
+                {
+                    IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(file.getAbsolutePath());
+                    currentWorkspace.fileRemoved(fileSpec);
+                    needsFullCheck = true;
+                }
+                else if (event.getType().equals(FileChangeType.Created))
+                {
+                    IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(file.getAbsolutePath());
+                    currentWorkspace.fileAdded(fileSpec);
+                }
+                else if (event.getType().equals(FileChangeType.Changed))
+                {
+                    IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(file.getAbsolutePath());
+                    currentWorkspace.fileChanged(fileSpec);
+                    checkFilePathForProblems(path, false);
+                }
             }
         }
-        if (asconfigChanged)
+        if (needsFullCheck)
         {
             if (currentOptions != null && currentOptions.type.equals(ProjectType.LIB))
             {
@@ -1054,7 +1078,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             //the options are fully up-to-date
             return;
         }
+        //if the configuration changed, start fresh with a whole new workspace
         currentOptions = null;
+        currentWorkspace = null;
+        currentProject = null;
+        fileSpecGetter = null;
+        compilationUnits = null;
         File asconfigFile = getASConfigFile();
         if (asconfigFile == null)
         {
@@ -1266,7 +1295,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         autoCompleteDefinitions(result, false, "");
         //include definitions in the same package
         String packageName = node.getPackageName();
-        if(packageName.length() > 0)
+        if (packageName.length() > 0)
         {
             autoCompleteDefinitions(result, false, packageName);
         }
@@ -1946,20 +1975,16 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return Paths.get(lastFilePath);
     }
 
-    private ICompilationUnit getCompilationUnit(Path path, boolean fileChanged, boolean quick)
+    private ICompilationUnit getCompilationUnit(Path path)
     {
         String absolutePath = path.toAbsolutePath().toString();
         currentUnit = null;
-        currentProject = getProject(quick);
+        currentProject = getProject();
         if (currentProject == null)
         {
             return null;
         }
         currentWorkspace = currentProject.getWorkspace();
-        if (fileChanged)
-        {
-            currentWorkspace.fileChanged(fileSpecGetter.getFileSpecification(path.toAbsolutePath().toString()));
-        }
         //we're going to start with the files passed into the compiler
         String[] files = currentOptions.files;
         if (files != null)
@@ -2043,32 +2068,21 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private void clearInvisibleCompilationUnits()
     {
+        //invisible units may exist for new files that haven't been saved, so
+        //they don't exist on the file system. the first compilation unit
+        //created will be invisible too, at least to start out.
+        //if needed, we'll recreate invisible compilation units later.
         for (IInvisibleCompilationUnit unit : invisibleUnits)
         {
-            //it's not enough to simply call remove() on the unit, we also need
-            //to remove the file spec from the workspace. otherwise, an
-            //exception will be thrown when calling fileChanged()
-            currentWorkspace.fileRemoved(fileSpecGetter.getFileSpecification(unit.getAbsoluteFilename()));
-            //...we also need to do it before calling remove() for some reason
             unit.remove();
         }
         invisibleUnits.clear();
     }
 
-    private IFlexProject getProject(boolean quick)
+    private IFlexProject getProject()
     {
         clearInvisibleCompilationUnits();
         loadASConfigFile();
-        if (!quick || currentOptions == null)
-        {
-            //when doing a non-quick check for errors, we need to reset
-            //everything because files could have been added or deleted, and we
-            //don't have a way to detect those changes in the language server
-            currentWorkspace = null;
-            currentProject = null;
-            fileSpecGetter = null;
-            compilationUnits = null;
-        }
         if (currentOptions == null)
         {
             return null;
@@ -2186,7 +2200,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private void checkFilePathForProblems(Path path, Boolean quick)
     {
         currentUnit = null;
-        compilationUnits = null;
         if (!checkFilePathForAllProblems(path, quick))
         {
             checkFilePathForSyntaxProblems(path);
@@ -2195,7 +2208,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private boolean checkFilePathForAllProblems(Path path, Boolean quick)
     {
-        ICompilationUnit mainUnit = getCompilationUnit(path, true, quick);
+        ICompilationUnit mainUnit = getCompilationUnit(path);
         if (mainUnit == null)
         {
             return false;
@@ -2339,7 +2352,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return null;
         }
 
-        ICompilationUnit unit = getCompilationUnit(path, false, true);
+        ICompilationUnit unit = getCompilationUnit(path);
         if (unit == null)
         {
             return null;
@@ -2351,13 +2364,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         catch (InterruptedException e)
         {
-            System.err.println("Interrupted while getting AST");
+            System.err.println("Interrupted while getting AST: " + path.toAbsolutePath().toString());
             return null;
         }
         if (ast == null)
         {
             //we couldn't find the root node for this file
-            System.err.println("Could not find AST");
+            System.err.println("Could not find AST: " + path.toAbsolutePath().toString());
             return null;
         }
 
@@ -2366,7 +2379,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 position.getCharacter());
         if (currentOffset == -1)
         {
-            System.err.println("Could not find code at position " + position.getLine() + ":" + position.getCharacter());
+            System.err.println("Could not find code at position " + position.getLine() + ":" + position.getCharacter() + " in file " + path.toAbsolutePath().toString());
             return null;
         }
         return ast.getContainingNode(currentOffset);
