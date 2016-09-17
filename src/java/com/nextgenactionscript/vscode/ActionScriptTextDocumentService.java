@@ -1252,11 +1252,17 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private void autoCompleteTypes(CompletionListImpl result)
     {
-        autoCompleteDefinitions(result, true, null);
+        autoCompleteDefinitions(result, true, null, null);
     }
 
-    private void autoCompleteDefinitions(CompletionListImpl result, boolean typesOnly, String packageName)
+    private void autoCompleteDefinitions(CompletionListImpl result, boolean typesOnly,
+                                         String packageName, IDefinition definitionToSkip)
     {
+        String skipQualifiedName = null;
+        if (definitionToSkip != null)
+        {
+            skipQualifiedName = definitionToSkip.getQualifiedName();
+        }
         for (ICompilationUnit unit : compilationUnits)
         {
             Collection<IDefinition> definitions = null;
@@ -1275,6 +1281,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 {
                     if (packageName == null || definition.getPackageName().equals(packageName))
                     {
+                        if (skipQualifiedName != null
+                                && skipQualifiedName.equals(definition.getQualifiedName()))
+                        {
+                            continue;
+                        }
                         addDefinitionAutoComplete(definition, result);
                     }
                 }
@@ -1291,13 +1302,15 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private void autoCompleteScope(IScopedNode node, CompletionListImpl result)
     {
+        IASScope scope = node.getScope();
+        IDefinition definitionToSkip = scope.getDefinition();
         //include definitions in the top-level package
-        autoCompleteDefinitions(result, false, "");
+        autoCompleteDefinitions(result, false, "", definitionToSkip);
         //include definitions in the same package
         String packageName = node.getPackageName();
         if (packageName.length() > 0)
         {
-            autoCompleteDefinitions(result, false, packageName);
+            autoCompleteDefinitions(result, false, packageName, definitionToSkip);
         }
         //include definitions that are imported from other packages
         ArrayList<IImportNode> importNodes = new ArrayList<>();
