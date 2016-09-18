@@ -14,13 +14,14 @@
 * **Rename Symbol** for class members and local variables.
 * **Debug** ActionScript transpiled to JavaScript in Node.js or Google Chrome (browser debugging requires [Debugger for Chrome](https://marketplace.visualstudio.com/items?itemName=msjsdiag.debugger-for-chrome) extension).
 
-## Installation
+## Help and Support
 
-This extension is still in development. A preview build will be available soon.
+* [Documentation](https://github.com/BowlerHatLLC/vscode-nextgenas/wiki)
+* [Issue Tracker](https://github.com/BowlerHatLLC/vscode-nextgenas/issues)
 
 ## Minimum Requirements
 
-* Visual Studio Code 1.4
+* Visual Studio Code 1.5
 * Java 8 Runtime
 * Apache FlexJS 0.7
 
