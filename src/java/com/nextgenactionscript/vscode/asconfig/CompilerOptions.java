@@ -21,6 +21,12 @@ import java.util.List;
 
 import org.apache.flex.compiler.internal.mxml.MXMLNamespaceMapping;
 
+/**
+ * Defines constants for the fields from the "compilerOptions" field of an
+ * asconfig.json file, and stores the parsed values for those fields. Not all
+ * available fields are used by the language server, so this should not be
+ * considered a complete list.
+ */
 public class CompilerOptions
 {
     public static final String DEBUG = "debug";

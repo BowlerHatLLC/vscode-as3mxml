@@ -17,6 +17,10 @@ package com.nextgenactionscript.vscode.asconfig;
 
 import java.util.Arrays;
 
+/**
+ * Defines constants for all top-level fields of an asconfig.json file, and
+ * stores the parsed values for those fields. 
+ */
 public class ASConfigOptions
 {
     public static final String TYPE = "type";

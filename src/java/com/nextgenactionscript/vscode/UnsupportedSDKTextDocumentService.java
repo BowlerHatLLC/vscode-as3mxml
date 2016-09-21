@@ -49,6 +49,11 @@ import io.typefox.lsapi.TextEdit;
 import io.typefox.lsapi.WorkspaceEdit;
 import io.typefox.lsapi.services.TextDocumentService;
 
+/**
+ * Used when the supplied version of the Apache FlexJS compiler is not valid.
+ * Does nothing except inform the user that they need to switch to a supported
+ * version of Apache FlexJS.
+ */
 public class UnsupportedSDKTextDocumentService implements TextDocumentService
 {
     private ActionScriptLanguageServer server;

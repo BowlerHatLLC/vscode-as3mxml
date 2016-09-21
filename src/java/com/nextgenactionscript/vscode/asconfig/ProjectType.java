@@ -15,6 +15,9 @@ limitations under the License.
 */
 package com.nextgenactionscript.vscode.asconfig;
 
+/**
+ * Possible values for the "type" field in an asconfig.json file.
+ */
 public enum ProjectType
 {
     APP("app"),

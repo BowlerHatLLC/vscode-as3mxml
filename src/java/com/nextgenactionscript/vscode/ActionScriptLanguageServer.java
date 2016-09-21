@@ -46,6 +46,10 @@ import io.typefox.lsapi.services.TextDocumentService;
 import io.typefox.lsapi.services.WindowService;
 import io.typefox.lsapi.services.WorkspaceService;
 
+/**
+ * Tells Visual Studio Code about the language server's capabilities, and
+ * determines if the specified version of the Apache FlexJS SDK is valid.
+ */
 public class ActionScriptLanguageServer implements LanguageServer
 {
     private Consumer<MessageParams> showMessageCallback = m ->
@@ -106,6 +110,9 @@ public class ActionScriptLanguageServer implements LanguageServer
         System.setProperty("flexlib", flexlibDirectoryPath);
     }
 
+    /**
+     * Tells Visual Studio Code about the language server's capabilities.
+     */
     @Override
     public CompletableFuture<InitializeResult> initialize(InitializeParams params)
     {
@@ -150,15 +157,18 @@ public class ActionScriptLanguageServer implements LanguageServer
     @Override
     public void shutdown()
     {
-
+        //not used at this time
     }
 
     @Override
     public void exit()
     {
-
+        //not used at this time
     }
 
+    /**
+     * Provides a way to communicate with the user and Visual Studio Code.
+     */
     @Override
     public WindowService getWindowService()
     {
@@ -168,6 +178,8 @@ public class ActionScriptLanguageServer implements LanguageServer
             public void onShowMessage(Consumer<MessageParams> callback)
             {
                 showMessageCallback = callback;
+                //pass the callback to the text document service, in case it
+                //needs to show a message
                 if (textDocumentService instanceof ActionScriptTextDocumentService)
                 {
                     ActionScriptTextDocumentService actionScriptService = (ActionScriptTextDocumentService) textDocumentService;
@@ -178,16 +190,20 @@ public class ActionScriptLanguageServer implements LanguageServer
             @Override
             public void onShowMessageRequest(Consumer<ShowMessageRequestParams> callback)
             {
+                //not used at this time
             }
 
             @Override
             public void onLogMessage(Consumer<MessageParams> callback)
             {
-
+                //not used at this time
             }
         };
     }
 
+    /**
+     * Requests from Visual Studio Code that are at the workspace level.
+     */
     @Override
     public WorkspaceService getWorkspaceService()
     {
@@ -196,6 +212,9 @@ public class ActionScriptLanguageServer implements LanguageServer
             @Override
             public CompletableFuture<List<? extends SymbolInformation>> symbol(WorkspaceSymbolParams params)
             {
+                //delegate to the ActionScriptTextDocumentService, since that's
+                //where the compiler is running, and the compiler is needed to
+                //find workspace symbols
                 if (textDocumentService instanceof ActionScriptTextDocumentService)
                 {
                     ActionScriptTextDocumentService actionScriptService = (ActionScriptTextDocumentService) textDocumentService;
@@ -207,12 +226,18 @@ public class ActionScriptLanguageServer implements LanguageServer
             @Override
             public void didChangeConfiguraton(DidChangeConfigurationParams params)
             {
-
+                //inside the extension's entry point, this is handled already
+                //it actually restarts the language server because the language
+                //server may need to be loaded with a different version of the
+                //Apache FlexJS SDK
             }
 
             @Override
             public void didChangeWatchedFiles(DidChangeWatchedFilesParams params)
             {
+                //delegate to the ActionScriptTextDocumentService, since that's
+                //where the compiler is running, and the compiler may need to
+                //know about file changes
                 if (textDocumentService instanceof ActionScriptTextDocumentService)
                 {
                     ActionScriptTextDocumentService service = (ActionScriptTextDocumentService) textDocumentService;
@@ -222,6 +247,10 @@ public class ActionScriptLanguageServer implements LanguageServer
         };
     }
 
+    /**
+     * Requests from Visual Studio Code that are at the document level. Things
+     * like API completion, function signature help, find references.
+     */
     @Override
     public TextDocumentService getTextDocumentService()
     {
@@ -229,26 +258,43 @@ public class ActionScriptLanguageServer implements LanguageServer
         {
             if (hasValidSDK)
             {
+                //this is where all the real magic happens!
                 textDocumentService = new ActionScriptTextDocumentService();
             }
             else
             {
+                //this version of TextDocumentService does nothing except inform
+                //the user that they need to switch to a supported version of
+                //the Apache FlexJS SDK.
                 textDocumentService = new UnsupportedSDKTextDocumentService(this);
             }
         }
         return textDocumentService;
     }
 
+    /**
+     * Displays a dismissable message bar across the top of Visual Studio Code
+     * that can be an error, warning, or informational.
+     */
     public void showMessage(MessageParamsImpl message)
     {
         showMessageCallback.accept(message);
     }
 
+    /**
+     * Using a Java class from the Apache FlexJS compiler, we can check the
+     * version of the SDK.
+     */
     public String getFlexJSVersion()
     {
         return IASNode.class.getPackage().getImplementationVersion();
     }
 
+    /**
+     * Using a Java class from the Apache FlexJS compiler, we can check where
+     * its JAR file is located on the file system, and then we can find the
+     * frameworks directory.
+     */
     private String findFlexLibDirectoryPath()
     {
         try

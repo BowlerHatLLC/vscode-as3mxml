@@ -26,8 +26,12 @@ import org.apache.flex.compiler.internal.filespecs.StringFileSpecification;
 import org.apache.flex.compiler.workspaces.IWorkspace;
 
 /**
- * If a file is open in the editor, use the open file instead of the real file
- * that may not have the latest changes saved.
+ * Returns instances of IFileSpecification to be used by the Apache FlexJS
+ * compiler to get the contents of files. If a file is open, and it is being
+ * edited (possibly with changes not saved to the file system), returns a
+ * StringFileSpecification. StringFileSpecification stores the code in a String.
+ * If a file is not open, and it's simply coming from the file system, returns a
+ * FileSpecification. FileSpecification reads the actual file.
  */
 public class LanguageServerFileSpecGetter implements IFileSpecificationGetter
 {

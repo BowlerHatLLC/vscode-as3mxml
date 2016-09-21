@@ -19,8 +19,22 @@ import java.net.Socket;
 
 import io.typefox.lsapi.services.json.LanguageServerToJsonAdapter;
 
+/**
+ * Contains the entry point for the JAR.
+ */
 public class Main
 {
+    /**
+     * The main entry point when the JAR is run. Opens a socket to communicate
+     * with Visual Studio Code using the port specified with the
+     * -Dnextgeas.vscode.port command line option. Then, instantiates the
+     * ActionScriptLanguageServer, and passes it to an instance of the
+     * LanguageServerToJsonAdapter class provided by the typefox/ls-api library,
+     * which handles all of the language server protocol communication.
+     * 
+     * LanguageServerToJsonAdapter calls methods on ActionScriptLanguageServer
+     * as requests come in from VSCode.
+     */
     public static void main(String[] args)
     {
         String port = System.getProperty("nextgeas.vscode.port");

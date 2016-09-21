@@ -175,6 +175,12 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
+/**
+ * Handles requests from Visual Studio Code that are at the document level,
+ * including things like API completion, function signature help, and find all
+ * references. Calls APIs on the Apache FlexJS compiler to get data for the
+ * responses to return to VSCode.
+ */
 public class ActionScriptTextDocumentService implements TextDocumentService
 {
     private Boolean asconfigChanged = true;
@@ -909,6 +915,15 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return null;
     }
 
+    /**
+     * Called whan a file is opened for editing in Visual Studio Code. We store
+     * the file's contents in a String since any changes that have been made to
+     * it may not have been saved yet. This method will not be called again if
+     * the user simply switches to a different tab for another file and then
+     * switched back to this one, without every closing it completely. In
+     * other words, the language server does not usually know which file is
+     * currently visible to the user in VSCode.
+     */
     @Override
     public void didOpen(DidOpenTextDocumentParams params)
     {
@@ -929,6 +944,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
     }
 
+    /**
+     * Called when a change is made to a file open for editing in Visual Studio
+     * Code. Receives incremental changes that need to be applied to the
+     * in-memory String that we store for this file.
+     */
     @Override
     public void didChange(DidChangeTextDocumentParams params)
     {
@@ -964,6 +984,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
     }
 
+    /**
+     * Called when a file is closed in Visual Studio Code. We should no longer
+     * store the file as a String, and we can load the contents from the file
+     * system.
+     */
     @Override
     public void didClose(DidCloseTextDocumentParams params)
     {
@@ -978,6 +1003,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
     }
 
+    /**
+     * Called when a file being edited is saved.
+     */
     @Override
     public void didSave(DidSaveTextDocumentParams params)
     {
@@ -985,6 +1013,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         //on save
     }
 
+    /**
+     * Called when certain files in the workspace are added, removed, or
+     * changed, even if they are not considered open for editing. This includes
+     * the asconfig.json file that holds compiler configuration settings, and
+     * any ActionScript file in the workspace.
+     */
     public void didChangeWatchedFiles(DidChangeWatchedFilesParams params)
     {
         boolean needsFullCheck = false;
@@ -1050,6 +1084,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
     }
 
+    /**
+     * Receives a callback to inform Visual Studio Code about "problems" (like
+     * compiler errors or warnings) that need to be displayed to the user for
+     * a specific file.
+     */
     @Override
     public void onPublishDiagnostics(Consumer<PublishDiagnosticsParams> callback)
     {
