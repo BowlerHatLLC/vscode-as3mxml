@@ -22,7 +22,7 @@
 		"files":
 		{
 			"type": "array",
-			"description": "The specified files, and all of their dependencies, will be included when the IDE checks for errors.",
+			"description": "The specified files will be included, including all of their dependencies. For an application, this field will typically contain the main class only.",
 			"items":
 			{
 				"type": "string"
