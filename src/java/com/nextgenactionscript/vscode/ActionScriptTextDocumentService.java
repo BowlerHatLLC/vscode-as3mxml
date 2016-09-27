@@ -1356,7 +1356,17 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         node.getAllImportNodes(importNodes);
         for (IImportNode importNode : importNodes)
         {
-            IDefinition importDefinition = importNode.resolveImport(currentProject);
+            IDefinition importDefinition = null;
+            try
+            {
+                //this can throw a null pointer exception when parsing MXML, for
+                //some reason
+                importDefinition = importNode.resolveImport(currentProject);
+            }
+            catch (Exception e)
+            {
+                //do nothing
+            }
             if (importDefinition != null)
             {
                 addDefinitionAutoComplete(importDefinition, result);
