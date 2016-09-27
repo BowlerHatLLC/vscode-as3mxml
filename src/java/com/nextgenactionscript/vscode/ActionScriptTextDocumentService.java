@@ -2363,14 +2363,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         for (ICompilerProblem problem : problems)
         {
-            String sourcePath = problem.getSourcePath();
-            if (sourcePath == null)
-            {
-                //if the problem is not associated with a file, we'll skip it
-                System.err.println("Internal ActionScript compiler problem:");
-                System.err.println(problem);
-                continue;
-            }
             addCompilerProblem(problem, publish);
         }
         return publish;
