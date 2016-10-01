@@ -99,6 +99,8 @@ import org.apache.flex.compiler.tree.as.INamespaceDecorationNode;
 import org.apache.flex.compiler.tree.as.IScopedDefinitionNode;
 import org.apache.flex.compiler.tree.as.IScopedNode;
 import org.apache.flex.compiler.tree.as.IVariableNode;
+import org.apache.flex.compiler.tree.mxml.IMXMLClassReferenceNode;
+import org.apache.flex.compiler.tree.mxml.IMXMLSpecifierNode;
 import org.apache.flex.compiler.units.ICompilationUnit;
 import org.apache.flex.compiler.units.IInvisibleCompilationUnit;
 import org.apache.flex.compiler.workspaces.IWorkspace;
@@ -488,27 +490,38 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return CompletableFuture.completedFuture(LsapiFactories.emptyHover());
         }
 
+        IDefinition definition = null;
+        if (offsetNode instanceof IMXMLClassReferenceNode)
+        {
+            IMXMLClassReferenceNode mxmlNode = (IMXMLClassReferenceNode) offsetNode;
+            definition = mxmlNode.getClassReference(currentProject);
+        }
+        if (offsetNode instanceof IMXMLSpecifierNode)
+        {
+            IMXMLSpecifierNode mxmlNode = (IMXMLSpecifierNode) offsetNode;
+            definition = mxmlNode.getDefinition();
+        }
+
         //INamespaceDecorationNode extends IIdentifierNode, but we don't want
         //any hover information for it.
         if (offsetNode instanceof IIdentifierNode
                 && !(offsetNode instanceof INamespaceDecorationNode))
         {
             IIdentifierNode identifierNode = (IIdentifierNode) offsetNode;
-            IDefinition definition = identifierNode.resolve(currentUnit.getProject());
-            if (definition == null)
-            {
-                //note: keywords won't resolve to anything
-                return CompletableFuture.completedFuture(LsapiFactories.emptyHover());
-            }
-            HoverImpl result = new HoverImpl();
-            String detail = getDefinitionDetail(definition);
-            List<MarkedStringImpl> contents = new ArrayList<>();
-            contents.add(markedString(detail));
-            result.setContents(contents);
-            return CompletableFuture.completedFuture(result);
+            definition = identifierNode.resolve(currentUnit.getProject());
         }
 
-        return CompletableFuture.completedFuture(LsapiFactories.emptyHover());
+        if (definition == null)
+        {
+            return CompletableFuture.completedFuture(LsapiFactories.emptyHover());
+        }
+
+        HoverImpl result = new HoverImpl();
+        String detail = getDefinitionDetail(definition);
+        List<MarkedStringImpl> contents = new ArrayList<>();
+        contents.add(markedString(detail));
+        result.setContents(contents);
+        return CompletableFuture.completedFuture(result);
     }
 
     @Override
@@ -608,15 +621,36 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return CompletableFuture.completedFuture(Collections.emptyList());
         }
 
-        if (offsetNode instanceof IIdentifierNode)
+        IDefinition definition = null;
+
+        //mxml elements
+        if (offsetNode instanceof IMXMLClassReferenceNode)
         {
-            List<Location> result = new ArrayList<>();
-            IIdentifierNode expressionNode = (IIdentifierNode) offsetNode;
-            resolveExpression(expressionNode, result);
-            return CompletableFuture.completedFuture(result);
+            IMXMLClassReferenceNode mxmlNode = (IMXMLClassReferenceNode) offsetNode;
+            definition = mxmlNode.getClassReference(currentProject);
         }
 
-        return CompletableFuture.completedFuture(Collections.emptyList());
+        //mxml properties
+        if (offsetNode instanceof IMXMLSpecifierNode)
+        {
+            IMXMLSpecifierNode mxmlNode = (IMXMLSpecifierNode) offsetNode;
+            definition = mxmlNode.getDefinition();
+        }
+
+        //actionscript identifiers
+        if (offsetNode instanceof IIdentifierNode)
+        {
+            IIdentifierNode expressionNode = (IIdentifierNode) offsetNode;
+            definition = expressionNode.resolve(currentProject);
+        }
+
+        if (definition == null)
+        {
+            return CompletableFuture.completedFuture(Collections.emptyList());
+        }
+        List<Location> result = new ArrayList<>();
+        resolveDefinition(definition, result);
+        return CompletableFuture.completedFuture(result);
     }
 
     @Override
@@ -1594,28 +1628,23 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         result.getItems().add(item);
     }
 
-    private void resolveExpression(IExpressionNode node, List<Location> result)
+    private void resolveDefinition(IDefinition definition, List<Location> result)
     {
-        IDefinition resolved = node.resolve(currentProject);
-        if (resolved == null)
-        {
-            return;
-        }
-        String sourcePath = resolved.getSourcePath();
+        String sourcePath = definition.getSourcePath();
         if (sourcePath == null)
         {
             //if it's in a SWC or something, the source path might be null
             return;
         }
-        Path resolvedPath = Paths.get(resolved.getSourcePath());
+        Path resolvedPath = Paths.get(definition.getSourcePath());
         LocationImpl location = new LocationImpl();
         location.setUri(resolvedPath.toUri().toString());
         PositionImpl start = new PositionImpl();
-        start.setLine(resolved.getNameLine());
-        start.setCharacter(resolved.getNameColumn());
+        start.setLine(definition.getNameLine());
+        start.setCharacter(definition.getNameColumn());
         PositionImpl end = new PositionImpl();
-        end.setLine(resolved.getNameLine());
-        end.setCharacter(resolved.getNameColumn() + resolved.getNameEnd() - resolved.getNameStart());
+        end.setLine(definition.getNameLine());
+        end.setCharacter(definition.getNameColumn() + definition.getNameEnd() - definition.getNameStart());
         RangeImpl range = new RangeImpl();
         range.setStart(start);
         range.setEnd(end);
