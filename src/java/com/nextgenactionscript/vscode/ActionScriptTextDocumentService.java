@@ -2746,10 +2746,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         Collection<IDefinition> definitions = scope.getAllLocalDefinitions();
         for (IDefinition definition : definitions)
         {
-            if (definition.isImplicit())
-            {
-                continue;
-            }
             if (definition instanceof IPackageDefinition)
             {
                 IPackageDefinition packageDefinition = (IPackageDefinition) definition;
@@ -2759,8 +2755,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             else if (definition instanceof ITypeDefinition)
             {
                 ITypeDefinition typeDefinition = (ITypeDefinition) definition;
-                if (typeDefinition.getBaseName().startsWith(query) ||
-                        typeDefinition.getQualifiedName().startsWith(query))
+                if (!definition.isImplicit()
+                        && (typeDefinition.getBaseName().startsWith(query)
+                        || typeDefinition.getQualifiedName().startsWith(query)))
                 {
                     SymbolInformationImpl symbol = definitionToSymbol(typeDefinition);
                     result.add(symbol);
@@ -2770,9 +2767,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             else if (definition instanceof IFunctionDefinition)
             {
+                if (definition.isImplicit())
+                {
+                    continue;
+                }
                 IFunctionDefinition functionDefinition = (IFunctionDefinition) definition;
-                if (functionDefinition.getBaseName().startsWith(query) ||
-                        functionDefinition.getQualifiedName().startsWith(query))
+                if (functionDefinition.getBaseName().startsWith(query)
+                        || functionDefinition.getQualifiedName().startsWith(query))
                 {
                     SymbolInformationImpl symbol = definitionToSymbol(functionDefinition);
                     result.add(symbol);
@@ -2782,9 +2783,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             else if (definition instanceof IVariableDefinition)
             {
+                if (definition.isImplicit())
+                {
+                    continue;
+                }
                 IVariableDefinition variableDefinition = (IVariableDefinition) definition;
-                if (variableDefinition.getBaseName().startsWith(query) ||
-                        variableDefinition.getQualifiedName().startsWith(query))
+                if (variableDefinition.getBaseName().startsWith(query)
+                        || variableDefinition.getQualifiedName().startsWith(query))
                 {
                     SymbolInformationImpl symbol = definitionToSymbol(variableDefinition);
                     result.add(symbol);
@@ -2816,10 +2821,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         Collection<IDefinition> definitions = scope.getAllLocalDefinitions();
         for (IDefinition definition : definitions)
         {
-            if (definition.isImplicit())
-            {
-                continue;
-            }
             if (definition instanceof IPackageDefinition)
             {
                 IPackageDefinition packageDefinition = (IPackageDefinition) definition;
@@ -2829,13 +2830,21 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             else if (definition instanceof ITypeDefinition)
             {
                 ITypeDefinition typeDefinition = (ITypeDefinition) definition;
-                SymbolInformationImpl symbol = definitionToSymbol(typeDefinition);
-                result.add(symbol);
+                if (!definition.isImplicit())
+                {
+                    SymbolInformationImpl typeSymbol = definitionToSymbol(typeDefinition);
+                    result.add(typeSymbol);
+                }
                 IASScope typeScope = typeDefinition.getContainedScope();
                 scopeToSymbols(typeScope, result);
             }
-            else if (definition instanceof IFunctionDefinition || definition instanceof IVariableDefinition)
+            else if (definition instanceof IFunctionDefinition
+                    || definition instanceof IVariableDefinition)
             {
+                if (definition.isImplicit())
+                {
+                    continue;
+                }
                 SymbolInformationImpl localSymbol = definitionToSymbol(definition);
                 result.add(localSymbol);
             }
@@ -2879,20 +2888,83 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         symbol.setName(definition.getQualifiedName());
         LocationImpl location = new LocationImpl();
-        Path definitionPath = Paths.get(definition.getSourcePath());
+        String sourcePath = definition.getSourcePath();
+        if (sourcePath == null)
+        {
+            //I'm not sure why getSourcePath() can sometimes return null, but
+            //getContainingFilePath() seems to work as a fallback -JT
+            sourcePath = definition.getContainingFilePath();
+        }
+        Path definitionPath = Paths.get(sourcePath);
         location.setUri(definitionPath.toUri().toString());
         PositionImpl start = new PositionImpl();
-        start.setLine(definition.getLine());
-        start.setCharacter(definition.getColumn());
         PositionImpl end = new PositionImpl();
-        end.setLine(definition.getLine());
-        end.setCharacter(definition.getColumn());
+        int line = definition.getLine();
+        int column = definition.getColumn();
+        if (line < 0 || column < 0)
+        {
+            //this is not ideal, but MXML variable definitions may not have a
+            //node associated with them, so we need to figure this out from the
+            //offset instead of a pre-calculated line and column -JT
+            String code = sourceByPath.get(Paths.get(sourcePath));
+            offsetToLineAndCharacter(new StringReader(code), definition.getNameStart(), start);
+            end.setLine(start.getLine());
+            end.setCharacter(start.getCharacter());
+        }
+        else
+        {
+            start.setLine(line);
+            start.setCharacter(column);
+            end.setLine(line);
+            end.setCharacter(column);
+        }
         RangeImpl range = new RangeImpl();
         range.setStart(start);
         range.setEnd(end);
         location.setRange(range);
         symbol.setLocation(location);
         return symbol;
+    }
+
+    private static void offsetToLineAndCharacter(Reader in, int targetOffset, PositionImpl result)
+    {
+        try
+        {
+            int offset = 0;
+            int line = 0;
+            int character = 0;
+
+            while (offset < targetOffset)
+            {
+                int next = in.read();
+
+                if (next < 0)
+                {
+                    result.setLine(line);
+                    result.setCharacter(line);
+                    return;
+                }
+                else
+                {
+                    offset++;
+                    character++;
+
+                    if (next == '\n')
+                    {
+                        line++;
+                        character = 0;
+                    }
+                }
+            }
+
+            result.setLine(line);
+            result.setCharacter(character);
+        }
+        catch (IOException e)
+        {
+            result.setLine(-1);
+            result.setCharacter(-1);
+        }
     }
 
     private static int lineAndCharacterToOffset(Reader in, int targetLine, int targetCharacter)
