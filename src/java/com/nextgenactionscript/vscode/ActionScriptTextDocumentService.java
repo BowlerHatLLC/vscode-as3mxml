@@ -219,6 +219,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         workspaceRoot = value;
     }
 
+    /**
+     * Returns a list of all items to display in the completion list at a
+     * specific position in a document. Called automatically by VSCode as the
+     * user types, and may not necessarily be triggered only on "." or ":".
+     */
     @Override
     public CompletableFuture<CompletionList> completion(TextDocumentPositionParams position)
     {
@@ -474,12 +479,20 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return CompletableFuture.completedFuture(result);
     }
 
+    /**
+     * This function is never called. We resolve completion items immediately
+     * in completion() instead of requiring a separate step.
+     */
     @Override
     public CompletableFuture<CompletionItem> resolveCompletionItem(CompletionItem unresolved)
     {
         return CompletableFuture.completedFuture(new CompletionItemImpl());
     }
 
+    /**
+     * Returns information to display in a tooltip when the mouse hovers over
+     * something in a text document.
+     */
     @Override
     public CompletableFuture<Hover> hover(TextDocumentPositionParams position)
     {
@@ -526,6 +539,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return CompletableFuture.completedFuture(result);
     }
 
+    /**
+     * Displays a function's parameters, including which one is currently
+     * active. Called automatically by VSCode any time that the user types "(",
+     * so be sure to check that a function call is actually happening at the
+     * current position.
+     */
     @Override
     public CompletableFuture<SignatureHelp> signatureHelp(TextDocumentPositionParams position)
     {
@@ -613,6 +632,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return CompletableFuture.completedFuture(LsapiFactories.emptySignatureHelp());
     }
 
+    /**
+     * Finds where the definition referenced at the current position in a text
+     * document is defined.
+     */
     @Override
     public CompletableFuture<List<? extends Location>> definition(TextDocumentPositionParams position)
     {
@@ -650,6 +673,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
         if (definition == null)
         {
+            //VSCode may call definition() when there isn't necessarily a
+            //definition referenced at the current position.
             return CompletableFuture.completedFuture(Collections.emptyList());
         }
         List<Location> result = new ArrayList<>();
@@ -657,6 +682,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return CompletableFuture.completedFuture(result);
     }
 
+    /**
+     * Finds all references of the definition referenced at the current position
+     * in a text document. Does not necessarily get called where a definition is
+     * defined, but may be at one of the references.
+     */
     @Override
     public CompletableFuture<List<? extends Location>> references(ReferenceParams params)
     {
@@ -714,19 +744,28 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return CompletableFuture.completedFuture(result);
         }
 
+        //VSCode may call definition() when there isn't necessarily a
+        //definition referenced at the current position.
         return CompletableFuture.completedFuture(Collections.emptyList());
     }
 
+    /**
+     * This feature is implemented at this time.
+     */
     @Override
     public CompletableFuture<DocumentHighlight> documentHighlight(TextDocumentPositionParams position)
     {
         return CompletableFuture.completedFuture(new DocumentHighlightImpl());
     }
 
+    /**
+     * Searches by name for a symbol in the workspace.
+     */
     public CompletableFuture<List<? extends SymbolInformation>> workspaceSymbol(WorkspaceSymbolParams params)
     {
         if (compilationUnits == null)
         {
+            //if we haven't successfully compiled the project, we can't do this
             return CompletableFuture.completedFuture(Collections.emptyList());
         }
         List<SymbolInformationImpl> result = new ArrayList<>();
@@ -754,6 +793,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return CompletableFuture.completedFuture(result);
     }
 
+    /**
+     * Searches by name for a symbol in a specific document (not the whole
+     * workspace)
+     */
     @Override
     public CompletableFuture<List<? extends SymbolInformation>> documentSymbol(DocumentSymbolParams params)
     {
@@ -789,6 +832,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return CompletableFuture.completedFuture(result);
     }
 
+    /**
+     * Can be used to "quick fix" an error or warning.
+     */
     @Override
     public CompletableFuture<List<? extends Command>> codeAction(CodeActionParams params)
     {
@@ -818,21 +864,25 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             {
                 case "1120": //AccessUndefinedPropertyProblem
                 {
+                    //see if there's anything we can import
                     createCodeActionsForImport(diagnostic, commands);
                     break;
                 }
                 case "1046": //UnknownTypeProblem
                 {
+                    //see if there's anything we can import
                     createCodeActionsForImport(diagnostic, commands);
                     break;
                 }
                 case "1178": //InaccessiblePropertyReferenceProblem
                 {
+                    //see if there's anything we can import
                     createCodeActionsForImport(diagnostic, commands);
                     break;
                 }
                 case "1180": //CallUndefinedMethodProblem
                 {
+                    //see if there's anything we can import
                     createCodeActionsForImport(diagnostic, commands);
                     break;
                 }
@@ -891,36 +941,54 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
     }
 
+    /**
+     * This feature is implemented at this time.
+     */
     @Override
     public CompletableFuture<List<? extends CodeLens>> codeLens(CodeLensParams params)
     {
         return CompletableFuture.completedFuture(Collections.emptyList());
     }
 
+    /**
+     * This feature is implemented at this time.
+     */
     @Override
     public CompletableFuture<CodeLens> resolveCodeLens(CodeLens unresolved)
     {
         return CompletableFuture.completedFuture(new CodeLensImpl());
     }
 
+    /**
+     * This feature is implemented at this time.
+     */
     @Override
     public CompletableFuture<List<? extends TextEdit>> formatting(DocumentFormattingParams params)
     {
         return CompletableFuture.completedFuture(Collections.emptyList());
     }
 
+    /**
+     * This feature is implemented at this time.
+     */
     @Override
     public CompletableFuture<List<? extends TextEdit>> rangeFormatting(DocumentRangeFormattingParams params)
     {
         return CompletableFuture.completedFuture(Collections.emptyList());
     }
 
+    /**
+     * This feature is implemented at this time.
+     */
     @Override
     public CompletableFuture<List<? extends TextEdit>> onTypeFormatting(DocumentOnTypeFormattingParams params)
     {
         return CompletableFuture.completedFuture(Collections.emptyList());
     }
 
+    /**
+     * Renames a symbol at the specified document position.
+     */
     @Override
     public CompletableFuture<WorkspaceEdit> rename(RenameParams params)
     {
