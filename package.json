@@ -84,6 +84,11 @@
 				"language": "nextgenas",
 				"scopeName": "source.actionscript.3",
 				"path": "./syntaxes/AS3.tmLanguage"
+			},
+			{
+				"language": "xml",
+				"scopeName": "text.mxml",
+				"path": "./syntaxes/MXML.tmLanguage"
 			}
     ],
     "jsonValidation": [

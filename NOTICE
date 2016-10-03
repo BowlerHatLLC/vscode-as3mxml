@@ -2,5 +2,7 @@ NextGen ActionScript extension for Visual Studio Code
 Copyright 2016 Bowler Hat LLC
 
 syntaxes/AS3.tmLanguage
+syntaxes/MXML.tmLanguage
 Copyright (C) 2012 Calvin Wylie <calvin.wylie@gmail.com>
-https://github.com/calvinwylie/sublimetext-actionscript-3/blob/master/Support/AS3.tmLanguage
+https://github.com/calvinwylie/sublimetext-actionscript-3/blob/2b647c95f5cb395677fe8761fd75850382dbcdaf/Support/AS3.tmLanguage
+https://github.com/calvinwylie/sublimetext-actionscript-3/blob/2b647c95f5cb395677fe8761fd75850382dbcdaf/Support/MXML.tmLanguage

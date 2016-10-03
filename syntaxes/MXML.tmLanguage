@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>fileTypes</key>
+	<array>
+		<string>mxml</string>
+	</array>
+	<key>name</key>
+	<string>MXML</string>
+	<key>patterns</key>
+	<array>
+		<dict>
+			<key>begin</key>
+			<string>(?=&lt;!\[CDATA\[)</string>
+			<key>end</key>
+			<string>(?&lt;=\]\]&gt;)</string>
+			<key>name</key>
+			<string>meta.cdata.mxml</string>
+			<key>patterns</key>
+			<array>
+				<dict>
+					<key>include</key>
+					<string>source.actionscript.3</string>
+				</dict>
+			</array>
+		</dict>
+		<dict>
+			<key>include</key>
+			<string>text.xml</string>
+		</dict>
+	</array>
+	<key>scopeName</key>
+	<string>text.mxml</string>
+</dict>
+</plist>
