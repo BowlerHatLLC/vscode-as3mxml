@@ -496,7 +496,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             IMXMLClassReferenceNode mxmlNode = (IMXMLClassReferenceNode) offsetNode;
             definition = mxmlNode.getClassReference(currentProject);
         }
-        if (offsetNode instanceof IMXMLSpecifierNode)
+        if (definition == null
+                && offsetNode instanceof IMXMLSpecifierNode)
         {
             IMXMLSpecifierNode mxmlNode = (IMXMLSpecifierNode) offsetNode;
             definition = mxmlNode.getDefinition();
@@ -504,7 +505,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
         //INamespaceDecorationNode extends IIdentifierNode, but we don't want
         //any hover information for it.
-        if (offsetNode instanceof IIdentifierNode
+        if (definition == null
+                && offsetNode instanceof IIdentifierNode
                 && !(offsetNode instanceof INamespaceDecorationNode))
         {
             IIdentifierNode identifierNode = (IIdentifierNode) offsetNode;
@@ -631,14 +633,16 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
 
         //mxml properties
-        if (offsetNode instanceof IMXMLSpecifierNode)
+        if (definition == null
+                && offsetNode instanceof IMXMLSpecifierNode)
         {
             IMXMLSpecifierNode mxmlNode = (IMXMLSpecifierNode) offsetNode;
             definition = mxmlNode.getDefinition();
         }
 
         //actionscript identifiers
-        if (offsetNode instanceof IIdentifierNode)
+        if (definition == null
+                && offsetNode instanceof IIdentifierNode)
         {
             IIdentifierNode expressionNode = (IIdentifierNode) offsetNode;
             definition = expressionNode.resolve(currentProject);
