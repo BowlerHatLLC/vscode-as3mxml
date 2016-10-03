@@ -325,7 +325,11 @@ function startClient()
 
 	let clientOptions: LanguageClientOptions =
 	{
-		documentSelector: ["nextgenas"],
+		documentSelector:
+		[
+			"nextgenas",
+			"xml"
+		],
 		synchronize:
 		{
 			//the server will be notified when these files change
@@ -333,6 +337,7 @@ function startClient()
 			[
 				vscode.workspace.createFileSystemWatcher("**/asconfig.json"),
 				vscode.workspace.createFileSystemWatcher("**/*.as"),
+				vscode.workspace.createFileSystemWatcher("**/*.mxml"),
 			]
 		},
 		errorHandler: new CustomErrorHandler("NextGen ActionScript")

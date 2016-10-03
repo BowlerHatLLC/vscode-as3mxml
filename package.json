@@ -69,6 +69,14 @@
           "as"
         ],
         "configuration": "./nextgenas.configuration.json"
+      },
+      {
+        "id": "xml",
+        "extensions": [ ".mxml" ],
+        "aliases": [
+          "MXML",
+          "mxml"
+        ]
       }
     ],
 		"grammars": [
