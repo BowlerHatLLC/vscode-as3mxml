@@ -100,6 +100,7 @@ import org.apache.flex.compiler.tree.as.IScopedDefinitionNode;
 import org.apache.flex.compiler.tree.as.IScopedNode;
 import org.apache.flex.compiler.tree.as.IVariableNode;
 import org.apache.flex.compiler.tree.mxml.IMXMLClassReferenceNode;
+import org.apache.flex.compiler.tree.mxml.IMXMLInstanceNode;
 import org.apache.flex.compiler.tree.mxml.IMXMLSpecifierNode;
 import org.apache.flex.compiler.units.ICompilationUnit;
 import org.apache.flex.compiler.units.IInvisibleCompilationUnit;
@@ -243,6 +244,16 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         CompletionListImpl result = new CompletionListImpl();
         result.setIncomplete(false);
         result.setItems(new ArrayList<>());
+
+        if (offsetNode instanceof IMXMLInstanceNode)
+        {
+            IMXMLInstanceNode mxmlNode = (IMXMLInstanceNode) offsetNode;
+            IClassDefinition classDefinition = mxmlNode.getClassReference(currentProject);
+            TypeScope typeScope = (TypeScope) classDefinition.getContainedScope();
+            ASScope scope = (ASScope) mxmlNode.getContainingScope().getScope();
+            addDefinitionsInTypeScopeToAutoComplete(typeScope, scope, false, true, result);
+            return CompletableFuture.completedFuture(result);
+        }
 
         //variable types
         if (offsetNode instanceof IVariableNode)
@@ -1509,14 +1520,14 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             ITypeDefinition typeDefinition = (ITypeDefinition) leftDefinition;
             TypeScope typeScope = (TypeScope) typeDefinition.getContainedScope();
-            addDefinitionsInTypeScopeToAutoComplete(typeScope, scope, true, result);
+            addDefinitionsInTypeScopeToAutoComplete(typeScope, scope, true, false, result);
             return;
         }
         ITypeDefinition leftType = leftOperand.resolveType(currentProject);
         if (leftType != null)
         {
             TypeScope typeScope = (TypeScope) leftType.getContainedScope();
-            addDefinitionsInTypeScopeToAutoComplete(typeScope, scope, false, result);
+            addDefinitionsInTypeScopeToAutoComplete(typeScope, scope, false, false, result);
             return;
         }
     }
@@ -1590,7 +1601,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
     }
 
-    private void addDefinitionsInTypeScopeToAutoComplete(TypeScope typeScope, ASScope otherScope, boolean isStatic, CompletionListImpl result)
+    private void addDefinitionsInTypeScopeToAutoComplete(TypeScope typeScope, ASScope otherScope, boolean isStatic, boolean forMXML, CompletionListImpl result)
     {
         IMetaTag[] excludeMetaTags = typeScope.getDefinition().getMetaTagsByName(IASLanguageConstants.EXCLUDE_META_TAG);
         ArrayList<IDefinition> memberAccessDefinitions = new ArrayList<>();
@@ -1626,15 +1637,33 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     continue;
                 }
             }
-            if (localDefinition instanceof ISetterDefinition)
+            //there are some things that we need to skip in MXML
+            if (forMXML)
             {
-                ISetterDefinition setter = (ISetterDefinition) localDefinition;
-                IGetterDefinition getter = setter.resolveGetter(currentProject);
-                if (getter != null)
+                if (localDefinition instanceof IGetterDefinition)
                 {
-                    //skip the setter if there's also a getter because it would
-                    //add a duplicate entry
+                    //no getters because we can only set
                     continue;
+                }
+                else if (localDefinition instanceof IFunctionDefinition &&
+                        !(localDefinition instanceof ISetterDefinition))
+                {
+                    //no calling functions, unless they're setters
+                    continue;
+                }
+            }
+            else //actionscript
+            {
+                if (localDefinition instanceof ISetterDefinition)
+                {
+                    ISetterDefinition setter = (ISetterDefinition) localDefinition;
+                    IGetterDefinition getter = setter.resolveGetter(currentProject);
+                    if (getter != null)
+                    {
+                        //skip the setter if there's also a getter because it
+                        //would add a duplicate entry
+                        continue;
+                    }
                 }
             }
             if (isStatic)
