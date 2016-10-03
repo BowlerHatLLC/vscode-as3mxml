@@ -100,6 +100,7 @@ import org.apache.flex.compiler.tree.as.IScopedDefinitionNode;
 import org.apache.flex.compiler.tree.as.IScopedNode;
 import org.apache.flex.compiler.tree.as.IVariableNode;
 import org.apache.flex.compiler.tree.mxml.IMXMLClassReferenceNode;
+import org.apache.flex.compiler.tree.mxml.IMXMLDocumentNode;
 import org.apache.flex.compiler.tree.mxml.IMXMLInstanceNode;
 import org.apache.flex.compiler.tree.mxml.IMXMLSpecifierNode;
 import org.apache.flex.compiler.units.ICompilationUnit;
@@ -244,6 +245,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         CompletionListImpl result = new CompletionListImpl();
         result.setIncomplete(false);
         result.setItems(new ArrayList<>());
+        
+        if (offsetNode instanceof IMXMLDocumentNode)
+        {
+            autoCompleteTypes(result);
+            return CompletableFuture.completedFuture(result);
+        }
 
         if (offsetNode instanceof IMXMLInstanceNode)
         {
