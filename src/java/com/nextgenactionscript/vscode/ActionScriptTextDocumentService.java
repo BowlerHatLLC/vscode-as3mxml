@@ -245,7 +245,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         CompletionListImpl result = new CompletionListImpl();
         result.setIncomplete(false);
         result.setItems(new ArrayList<>());
-        
+
         if (offsetNode instanceof IMXMLDocumentNode)
         {
             autoCompleteTypes(result);
@@ -1471,7 +1471,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         autoCompleteDefinitions(result, false, "", definitionToSkip);
         //include definitions in the same package
         String packageName = node.getPackageName();
-        if (packageName.length() > 0)
+        if (packageName != null && packageName.length() > 0)
         {
             autoCompleteDefinitions(result, false, packageName, definitionToSkip);
         }
