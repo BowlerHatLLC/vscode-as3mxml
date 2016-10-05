@@ -270,6 +270,11 @@
 					"description": "In a SWF project, includes line numbers in the generated output, but results in a larger SWF file. When a run-time error occurs, the stacktrace shows line numbers. The default value is false." 
 				}
 			}
+		},
+		"additionalOptions":
+		{
+			"type": "string",
+			"description": "Additional options to send to the compiler, formatted as command line arguments. Useful for testing new options that are not yet supported by the compilerOptions field of asconfig.json."
 		}
 	},
 	"required":
