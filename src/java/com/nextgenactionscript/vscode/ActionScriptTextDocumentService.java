@@ -116,17 +116,12 @@ import com.nextgenactionscript.vscode.asconfig.CompilerOptions;
 import com.nextgenactionscript.vscode.asconfig.ProjectType;
 import io.typefox.lsapi.CodeActionParams;
 import io.typefox.lsapi.CodeLens;
-import io.typefox.lsapi.CodeLensImpl;
 import io.typefox.lsapi.CodeLensParams;
 import io.typefox.lsapi.Command;
-import io.typefox.lsapi.CommandImpl;
 import io.typefox.lsapi.CompletionItem;
-import io.typefox.lsapi.CompletionItemImpl;
 import io.typefox.lsapi.CompletionItemKind;
 import io.typefox.lsapi.CompletionList;
-import io.typefox.lsapi.CompletionListImpl;
 import io.typefox.lsapi.Diagnostic;
-import io.typefox.lsapi.DiagnosticImpl;
 import io.typefox.lsapi.DiagnosticSeverity;
 import io.typefox.lsapi.DidChangeTextDocumentParams;
 import io.typefox.lsapi.DidChangeWatchedFilesParams;
@@ -135,47 +130,51 @@ import io.typefox.lsapi.DidOpenTextDocumentParams;
 import io.typefox.lsapi.DidSaveTextDocumentParams;
 import io.typefox.lsapi.DocumentFormattingParams;
 import io.typefox.lsapi.DocumentHighlight;
-import io.typefox.lsapi.DocumentHighlightImpl;
 import io.typefox.lsapi.DocumentOnTypeFormattingParams;
 import io.typefox.lsapi.DocumentRangeFormattingParams;
 import io.typefox.lsapi.DocumentSymbolParams;
 import io.typefox.lsapi.FileChangeType;
 import io.typefox.lsapi.FileEvent;
 import io.typefox.lsapi.Hover;
-import io.typefox.lsapi.HoverImpl;
 import io.typefox.lsapi.Location;
-import io.typefox.lsapi.LocationImpl;
-import io.typefox.lsapi.MarkedStringImpl;
 import io.typefox.lsapi.MessageParams;
-import io.typefox.lsapi.MessageParamsImpl;
 import io.typefox.lsapi.MessageType;
-import io.typefox.lsapi.ParameterInformationImpl;
 import io.typefox.lsapi.Position;
-import io.typefox.lsapi.PositionImpl;
 import io.typefox.lsapi.PublishDiagnosticsParams;
-import io.typefox.lsapi.PublishDiagnosticsParamsImpl;
 import io.typefox.lsapi.Range;
-import io.typefox.lsapi.RangeImpl;
 import io.typefox.lsapi.ReferenceParams;
 import io.typefox.lsapi.RenameParams;
 import io.typefox.lsapi.SignatureHelp;
-import io.typefox.lsapi.SignatureHelpImpl;
-import io.typefox.lsapi.SignatureInformationImpl;
 import io.typefox.lsapi.SymbolInformation;
-import io.typefox.lsapi.SymbolInformationImpl;
 import io.typefox.lsapi.SymbolKind;
 import io.typefox.lsapi.TextDocumentContentChangeEvent;
 import io.typefox.lsapi.TextDocumentIdentifier;
 import io.typefox.lsapi.TextDocumentItem;
 import io.typefox.lsapi.TextDocumentPositionParams;
 import io.typefox.lsapi.TextEdit;
-import io.typefox.lsapi.TextEditImpl;
 import io.typefox.lsapi.VersionedTextDocumentIdentifier;
 import io.typefox.lsapi.WorkspaceEdit;
-import io.typefox.lsapi.WorkspaceEditImpl;
 import io.typefox.lsapi.WorkspaceSymbolParams;
+import io.typefox.lsapi.impl.CodeLensImpl;
+import io.typefox.lsapi.impl.CommandImpl;
+import io.typefox.lsapi.impl.CompletionItemImpl;
+import io.typefox.lsapi.impl.CompletionListImpl;
+import io.typefox.lsapi.impl.DiagnosticImpl;
+import io.typefox.lsapi.impl.DocumentHighlightImpl;
+import io.typefox.lsapi.impl.HoverImpl;
+import io.typefox.lsapi.impl.LocationImpl;
+import io.typefox.lsapi.impl.MarkedStringImpl;
+import io.typefox.lsapi.impl.MessageParamsImpl;
+import io.typefox.lsapi.impl.ParameterInformationImpl;
+import io.typefox.lsapi.impl.PositionImpl;
+import io.typefox.lsapi.impl.PublishDiagnosticsParamsImpl;
+import io.typefox.lsapi.impl.RangeImpl;
+import io.typefox.lsapi.impl.SignatureHelpImpl;
+import io.typefox.lsapi.impl.SignatureInformationImpl;
+import io.typefox.lsapi.impl.SymbolInformationImpl;
+import io.typefox.lsapi.impl.TextEditImpl;
+import io.typefox.lsapi.impl.WorkspaceEditImpl;
 import io.typefox.lsapi.services.TextDocumentService;
-import io.typefox.lsapi.util.LsapiFactories;
 import org.everit.json.schema.Schema;
 import org.everit.json.schema.ValidationException;
 import org.everit.json.schema.loader.SchemaLoader;
@@ -540,7 +539,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         if (offsetNode == null)
         {
             //we couldn't find a node at the specified location
-            return CompletableFuture.completedFuture(LsapiFactories.emptyHover());
+            return CompletableFuture.completedFuture(new HoverImpl());
         }
 
         IDefinition definition = null;
@@ -568,7 +567,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
         if (definition == null)
         {
-            return CompletableFuture.completedFuture(LsapiFactories.emptyHover());
+            return CompletableFuture.completedFuture(new HoverImpl());
         }
 
         HoverImpl result = new HoverImpl();
@@ -592,7 +591,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         if (offsetNode == null)
         {
             //we couldn't find a node at the specified location
-            return CompletableFuture.completedFuture(LsapiFactories.emptySignatureHelp());
+            return CompletableFuture.completedFuture(new SignatureHelpImpl());
         }
 
         IFunctionCallNode functionCallNode = getAncestorFunctionCallNode(offsetNode);
@@ -669,7 +668,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             return CompletableFuture.completedFuture(result);
         }
-        return CompletableFuture.completedFuture(LsapiFactories.emptySignatureHelp());
+        return CompletableFuture.completedFuture(new SignatureHelpImpl());
     }
 
     /**

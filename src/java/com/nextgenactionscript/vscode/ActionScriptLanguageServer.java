@@ -27,20 +27,20 @@ import java.util.function.Consumer;
 
 import org.apache.flex.compiler.tree.as.IASNode;
 
-import io.typefox.lsapi.CompletionOptionsImpl;
 import io.typefox.lsapi.DidChangeConfigurationParams;
 import io.typefox.lsapi.DidChangeWatchedFilesParams;
 import io.typefox.lsapi.InitializeParams;
 import io.typefox.lsapi.InitializeResult;
-import io.typefox.lsapi.InitializeResultImpl;
 import io.typefox.lsapi.MessageParams;
-import io.typefox.lsapi.MessageParamsImpl;
-import io.typefox.lsapi.ServerCapabilitiesImpl;
 import io.typefox.lsapi.ShowMessageRequestParams;
-import io.typefox.lsapi.SignatureHelpOptionsImpl;
 import io.typefox.lsapi.SymbolInformation;
 import io.typefox.lsapi.TextDocumentSyncKind;
 import io.typefox.lsapi.WorkspaceSymbolParams;
+import io.typefox.lsapi.impl.CompletionOptionsImpl;
+import io.typefox.lsapi.impl.InitializeResultImpl;
+import io.typefox.lsapi.impl.MessageParamsImpl;
+import io.typefox.lsapi.impl.ServerCapabilitiesImpl;
+import io.typefox.lsapi.impl.SignatureHelpOptionsImpl;
 import io.typefox.lsapi.services.LanguageServer;
 import io.typefox.lsapi.services.TextDocumentService;
 import io.typefox.lsapi.services.WindowService;
@@ -131,7 +131,7 @@ public class ActionScriptLanguageServer implements LanguageServer
             serverCapabilities.setTextDocumentSync(TextDocumentSyncKind.Incremental);
 
             CompletionOptionsImpl completionOptions = new CompletionOptionsImpl();
-            completionOptions.setTriggerCharacters(Arrays.asList(".", ":", " "));
+            completionOptions.setTriggerCharacters(Arrays.asList(".", ":", " ", "<"));
             serverCapabilities.setCompletionProvider(completionOptions);
             serverCapabilities.setDefinitionProvider(true);
             serverCapabilities.setDocumentSymbolProvider(true);
@@ -162,6 +162,12 @@ public class ActionScriptLanguageServer implements LanguageServer
 
     @Override
     public void exit()
+    {
+        //not used at this time
+    }
+
+    @Override
+    public void onTelemetryEvent(Consumer<Object> var1)
     {
         //not used at this time
     }
