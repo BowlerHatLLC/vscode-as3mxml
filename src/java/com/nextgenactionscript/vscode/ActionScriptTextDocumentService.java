@@ -230,320 +230,14 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     @Override
     public CompletableFuture<CompletionList> completion(TextDocumentPositionParams position)
     {
-        IASNode offsetNode = getOffsetNode(position);
-        if (offsetNode == null)
+        IMXMLTagData offsetTag = getOffsetMXMLTag(position);
+        //if we're inside an <fx:Script> tag, we want ActionScript completion,
+        //so that's why we call isMXMLTagValidForCompletion()
+        if (offsetTag != null && isMXMLTagValidForCompletion(offsetTag))
         {
-            //we couldn't find a node at the specified location
-            return CompletableFuture.completedFuture(new CompletionListImpl());
+            return mxmlCompletion(position, offsetTag);
         }
-        IASNode parentNode = offsetNode.getParent();
-        IASNode nodeAtPreviousOffset = null;
-        if (parentNode != null)
-        {
-            nodeAtPreviousOffset = parentNode.getContainingNode(currentOffset - 1);
-        }
-
-        CompletionListImpl result = new CompletionListImpl();
-        result.setIncomplete(false);
-        result.setItems(new ArrayList<>());
-
-        if (offsetNode instanceof IMXMLNode)
-        {
-            String propertyElementPrefix = null;
-            IMXMLTagData offsetTag = getOffsetMXMLTag(position);
-            if (offsetTag != null)
-            {
-                boolean isAttribute = offsetTag.isOffsetInAttributeList(currentOffset);
-                if (!isAttribute)
-                {
-                    String prefix = offsetTag.getPrefix();
-                    if (prefix.length() > 0)
-                    {
-                        propertyElementPrefix = prefix + ":";
-                    }
-                }
-
-                IDefinition offsetDefinition = currentProject.resolveXMLNameToDefinition(offsetTag.getXMLName(), offsetTag.getMXMLDialect());
-                if (offsetDefinition != null)
-                {
-                    if (offsetDefinition instanceof IClassDefinition
-                            && !offsetTag.isCloseTag())
-                    {
-                        IClassDefinition classDefinition = (IClassDefinition) offsetDefinition;
-                        TypeScope typeScope = (TypeScope) classDefinition.getContainedScope();
-                        ASScope scope = (ASScope) offsetNode.getContainingScope().getScope();
-                        addDefinitionsInTypeScopeToAutoComplete(typeScope, scope, false, true, propertyElementPrefix, result);
-                        String defaultPropertyName = classDefinition.getDefaultPropertyName(currentProject);
-                        if (defaultPropertyName != null && !isAttribute)
-                        {
-                            //if [DefaultProperty] is set, then we can instantiate
-                            //types as child elements
-                            //but we don't want to do that when in an attribute
-                            autoCompleteTypes(result);
-                        }
-                        return CompletableFuture.completedFuture(result);
-                    }
-                    System.err.println("Unknown definition for MXML completion: " + offsetDefinition.getClass());
-                    return CompletableFuture.completedFuture(result);
-                }
-
-                IMXMLTagData parentTag = offsetTag.getParentTag();
-                IDefinition parentDefinition = currentProject.resolveXMLNameToDefinition(parentTag.getXMLName(), parentTag.getMXMLDialect());
-                if (parentDefinition != null &&
-                        parentDefinition instanceof IClassDefinition)
-                {
-                    IClassDefinition classDefinition = (IClassDefinition) parentDefinition;
-                    offsetDefinition = currentProject.resolveSpecifier(classDefinition, offsetTag.getShortName());
-                    if (offsetDefinition != null)
-                    {
-                        if (offsetDefinition instanceof IVariableDefinition && !isAttribute)
-                        {
-                            autoCompleteTypes(result);
-                            return CompletableFuture.completedFuture(result);
-                        }
-                        System.err.println("Unknown definition for MXML completion: " + offsetDefinition.getClass());
-                        return CompletableFuture.completedFuture(result);
-                    }
-                }
-            }
-
-            //don't fall through to ActionScript completion
-            return CompletableFuture.completedFuture(result);
-        }
-
-        //variable types
-        if (offsetNode instanceof IVariableNode)
-        {
-            IVariableNode variableNode = (IVariableNode) offsetNode;
-            IExpressionNode nameExpression = variableNode.getNameExpressionNode();
-            IExpressionNode typeNode = variableNode.getVariableTypeNode();
-            int line = position.getPosition().getLine();
-            int column = position.getPosition().getCharacter();
-            if (line >= nameExpression.getEndLine() && line <= typeNode.getLine())
-            {
-                if ((line != nameExpression.getEndLine() && line != typeNode.getLine())
-                        || (line == nameExpression.getEndLine() && column > nameExpression.getEndColumn())
-                        || (line == typeNode.getLine() && column <= typeNode.getColumn()))
-                {
-                    autoCompleteTypes(result);
-                }
-                return CompletableFuture.completedFuture(result);
-            }
-        }
-        if (parentNode != null
-                && parentNode instanceof IVariableNode)
-        {
-            IVariableNode variableNode = (IVariableNode) parentNode;
-            if (offsetNode == variableNode.getVariableTypeNode())
-            {
-                autoCompleteTypes(result);
-                return CompletableFuture.completedFuture(result);
-            }
-        }
-        //function return types
-        if (offsetNode instanceof IFunctionNode)
-        {
-            IFunctionNode functionNode = (IFunctionNode) offsetNode;
-            IContainerNode parameters = functionNode.getParametersContainerNode();
-            IExpressionNode typeNode = functionNode.getReturnTypeNode();
-            if (typeNode != null)
-            {
-                int line = position.getPosition().getLine();
-                int column = position.getPosition().getCharacter();
-                if (line >= parameters.getEndLine()
-                        && column > parameters.getEndColumn()
-                        && line <= typeNode.getLine()
-                        && column <= typeNode.getColumn())
-                {
-                    autoCompleteTypes(result);
-                    return CompletableFuture.completedFuture(result);
-                }
-            }
-        }
-        if (parentNode != null
-                && parentNode instanceof IFunctionNode)
-        {
-            IFunctionNode functionNode = (IFunctionNode) parentNode;
-            if (offsetNode == functionNode.getReturnTypeNode())
-            {
-                autoCompleteTypes(result);
-                return CompletableFuture.completedFuture(result);
-            }
-        }
-        //new keyword types
-        if (parentNode != null
-                && parentNode instanceof IFunctionCallNode)
-        {
-            IFunctionCallNode functionCallNode = (IFunctionCallNode) parentNode;
-            if (functionCallNode.getNameNode() == offsetNode
-                    && functionCallNode.isNewExpression())
-            {
-                autoCompleteTypes(result);
-                return CompletableFuture.completedFuture(result);
-            }
-        }
-        if (nodeAtPreviousOffset != null
-                && nodeAtPreviousOffset instanceof IKeywordNode
-                && nodeAtPreviousOffset.getNodeID() == ASTNodeID.KeywordNewID)
-        {
-            autoCompleteTypes(result);
-            return CompletableFuture.completedFuture(result);
-        }
-        //as and is keyword types
-        if (parentNode != null
-                && parentNode instanceof IBinaryOperatorNode
-                && (parentNode.getNodeID() == ASTNodeID.Op_AsID
-                || parentNode.getNodeID() == ASTNodeID.Op_IsID))
-        {
-            IBinaryOperatorNode binaryOperatorNode = (IBinaryOperatorNode) parentNode;
-            if (binaryOperatorNode.getRightOperandNode() == offsetNode)
-            {
-                autoCompleteTypes(result);
-                return CompletableFuture.completedFuture(result);
-            }
-        }
-        if (nodeAtPreviousOffset != null
-                && nodeAtPreviousOffset instanceof IBinaryOperatorNode
-                && (nodeAtPreviousOffset.getNodeID() == ASTNodeID.Op_AsID
-                || nodeAtPreviousOffset.getNodeID() == ASTNodeID.Op_IsID))
-        {
-            autoCompleteTypes(result);
-            return CompletableFuture.completedFuture(result);
-        }
-        //class extends keyword
-        if (offsetNode instanceof IClassNode
-                && nodeAtPreviousOffset != null
-                && nodeAtPreviousOffset instanceof IKeywordNode
-                && nodeAtPreviousOffset.getNodeID() == ASTNodeID.KeywordExtendsID)
-        {
-            autoCompleteTypes(result);
-            return CompletableFuture.completedFuture(result);
-        }
-        //class implements keyword
-        if (offsetNode instanceof IClassNode
-                && nodeAtPreviousOffset != null
-                && nodeAtPreviousOffset instanceof IKeywordNode
-                && nodeAtPreviousOffset.getNodeID() == ASTNodeID.KeywordImplementsID)
-        {
-            autoCompleteTypes(result);
-            return CompletableFuture.completedFuture(result);
-        }
-        //interface extends keyword
-        if (offsetNode instanceof IInterfaceNode
-                && nodeAtPreviousOffset != null
-                && nodeAtPreviousOffset instanceof IKeywordNode
-                && nodeAtPreviousOffset.getNodeID() == ASTNodeID.KeywordExtendsID)
-        {
-            autoCompleteTypes(result);
-            return CompletableFuture.completedFuture(result);
-        }
-
-        //import (must be before member access)
-        if (parentNode != null
-                && parentNode instanceof IImportNode)
-        {
-            IImportNode importNode = (IImportNode) parentNode;
-            IExpressionNode nameNode = importNode.getImportNameNode();
-            if (offsetNode == nameNode)
-            {
-                String importName = importNode.getImportName();
-                importName = importName.substring(0, position.getPosition().getCharacter() - nameNode.getColumn());
-                autoCompleteImport(importName, result);
-                return CompletableFuture.completedFuture(result);
-            }
-        }
-        if (parentNode != null
-                && parentNode instanceof FullNameNode)
-        {
-            IASNode gpNode = parentNode.getParent();
-            if (gpNode != null && gpNode instanceof IImportNode)
-            {
-                IImportNode importNode = (IImportNode) gpNode;
-                IExpressionNode nameNode = importNode.getImportNameNode();
-                if (parentNode == nameNode)
-                {
-                    String importName = importNode.getImportName();
-                    importName = importName.substring(0, position.getPosition().getCharacter() - nameNode.getColumn());
-                    autoCompleteImport(importName, result);
-                    return CompletableFuture.completedFuture(result);
-                }
-            }
-        }
-        if (nodeAtPreviousOffset != null
-                && nodeAtPreviousOffset instanceof IImportNode)
-        {
-            autoCompleteImport("", result);
-            return CompletableFuture.completedFuture(result);
-        }
-
-        //member access
-        if (offsetNode instanceof IMemberAccessExpressionNode)
-        {
-            IMemberAccessExpressionNode memberAccessNode = (IMemberAccessExpressionNode) offsetNode;
-            IExpressionNode leftOperand = memberAccessNode.getLeftOperandNode();
-            IExpressionNode rightOperand = memberAccessNode.getRightOperandNode();
-            int line = position.getPosition().getLine();
-            int column = position.getPosition().getCharacter();
-            if (line >= leftOperand.getEndLine() && line <= rightOperand.getLine())
-            {
-                if ((line != leftOperand.getEndLine() && line != rightOperand.getLine())
-                        || (line == leftOperand.getEndLine() && column > leftOperand.getEndColumn())
-                        || (line == rightOperand.getLine() && column <= rightOperand.getColumn()))
-                {
-                    autoCompleteMemberAccess(memberAccessNode, result);
-                    return CompletableFuture.completedFuture(result);
-                }
-            }
-        }
-        if (parentNode != null
-                && parentNode instanceof IMemberAccessExpressionNode)
-        {
-            IMemberAccessExpressionNode memberAccessNode = (IMemberAccessExpressionNode) parentNode;
-            //you would expect that the offset node could only be the right
-            //operand, but it's actually possible for it to be the left operand,
-            //even if the . has been typed!
-            if (offsetNode == memberAccessNode.getRightOperandNode()
-                    || offsetNode == memberAccessNode.getLeftOperandNode())
-            {
-                autoCompleteMemberAccess(memberAccessNode, result);
-                return CompletableFuture.completedFuture(result);
-            }
-        }
-        if (nodeAtPreviousOffset != null
-                && nodeAtPreviousOffset instanceof IMemberAccessExpressionNode)
-        {
-            //depending on the left operand, if a . is typed, the member access
-            //may end up being the previous node instead of the parent or offset
-            //node, so check if the right operand is empty
-            IMemberAccessExpressionNode memberAccessNode = (IMemberAccessExpressionNode) nodeAtPreviousOffset;
-            IExpressionNode rightOperandNode = memberAccessNode.getRightOperandNode();
-            if (rightOperandNode instanceof IIdentifierNode)
-            {
-                IIdentifierNode identifierNode = (IIdentifierNode) rightOperandNode;
-                if (identifierNode.getName().equals(""))
-                {
-                    autoCompleteMemberAccess(memberAccessNode, result);
-                    return CompletableFuture.completedFuture(result);
-                }
-            }
-        }
-
-        //local scope
-        do
-        {
-            //just keep traversing up until we get a scoped node or run out of
-            //nodes to check
-            if (offsetNode instanceof IScopedNode)
-            {
-                IScopedNode scopedNode = (IScopedNode) offsetNode;
-                autoCompleteScope(scopedNode, result);
-                return CompletableFuture.completedFuture(result);
-            }
-            offsetNode = offsetNode.getParent();
-        }
-        while (offsetNode != null);
-
-        return CompletableFuture.completedFuture(result);
+        return actionScriptCompletion(position);
     }
 
     /**
@@ -1430,6 +1124,341 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         options.files = files;
         options.compilerOptions = compilerOptions;
         currentOptions = options;
+    }
+
+    private CompletableFuture<CompletionList> actionScriptCompletion(TextDocumentPositionParams position)
+    {
+        CompletionListImpl result = new CompletionListImpl();
+        result.setIncomplete(false);
+        result.setItems(new ArrayList<>());
+        
+        //ActionScript completion
+        IASNode offsetNode = getOffsetNode(position);
+        if (offsetNode == null)
+        {
+            //we couldn't find a node at the specified location
+            return CompletableFuture.completedFuture(new CompletionListImpl());
+        }
+        IASNode parentNode = offsetNode.getParent();
+        IASNode nodeAtPreviousOffset = null;
+        if (parentNode != null)
+        {
+            nodeAtPreviousOffset = parentNode.getContainingNode(currentOffset - 1);
+        }
+
+        //variable types
+        if (offsetNode instanceof IVariableNode)
+        {
+            IVariableNode variableNode = (IVariableNode) offsetNode;
+            IExpressionNode nameExpression = variableNode.getNameExpressionNode();
+            IExpressionNode typeNode = variableNode.getVariableTypeNode();
+            int line = position.getPosition().getLine();
+            int column = position.getPosition().getCharacter();
+            if (line >= nameExpression.getEndLine() && line <= typeNode.getLine())
+            {
+                if ((line != nameExpression.getEndLine() && line != typeNode.getLine())
+                        || (line == nameExpression.getEndLine() && column > nameExpression.getEndColumn())
+                        || (line == typeNode.getLine() && column <= typeNode.getColumn()))
+                {
+                    autoCompleteTypes(result);
+                }
+                return CompletableFuture.completedFuture(result);
+            }
+        }
+        if (parentNode != null
+                && parentNode instanceof IVariableNode)
+        {
+            IVariableNode variableNode = (IVariableNode) parentNode;
+            if (offsetNode == variableNode.getVariableTypeNode())
+            {
+                autoCompleteTypes(result);
+                return CompletableFuture.completedFuture(result);
+            }
+        }
+        //function return types
+        if (offsetNode instanceof IFunctionNode)
+        {
+            IFunctionNode functionNode = (IFunctionNode) offsetNode;
+            IContainerNode parameters = functionNode.getParametersContainerNode();
+            IExpressionNode typeNode = functionNode.getReturnTypeNode();
+            if (typeNode != null)
+            {
+                int line = position.getPosition().getLine();
+                int column = position.getPosition().getCharacter();
+                if (line >= parameters.getEndLine()
+                        && column > parameters.getEndColumn()
+                        && line <= typeNode.getLine()
+                        && column <= typeNode.getColumn())
+                {
+                    autoCompleteTypes(result);
+                    return CompletableFuture.completedFuture(result);
+                }
+            }
+        }
+        if (parentNode != null
+                && parentNode instanceof IFunctionNode)
+        {
+            IFunctionNode functionNode = (IFunctionNode) parentNode;
+            if (offsetNode == functionNode.getReturnTypeNode())
+            {
+                autoCompleteTypes(result);
+                return CompletableFuture.completedFuture(result);
+            }
+        }
+        //new keyword types
+        if (parentNode != null
+                && parentNode instanceof IFunctionCallNode)
+        {
+            IFunctionCallNode functionCallNode = (IFunctionCallNode) parentNode;
+            if (functionCallNode.getNameNode() == offsetNode
+                    && functionCallNode.isNewExpression())
+            {
+                autoCompleteTypes(result);
+                return CompletableFuture.completedFuture(result);
+            }
+        }
+        if (nodeAtPreviousOffset != null
+                && nodeAtPreviousOffset instanceof IKeywordNode
+                && nodeAtPreviousOffset.getNodeID() == ASTNodeID.KeywordNewID)
+        {
+            autoCompleteTypes(result);
+            return CompletableFuture.completedFuture(result);
+        }
+        //as and is keyword types
+        if (parentNode != null
+                && parentNode instanceof IBinaryOperatorNode
+                && (parentNode.getNodeID() == ASTNodeID.Op_AsID
+                || parentNode.getNodeID() == ASTNodeID.Op_IsID))
+        {
+            IBinaryOperatorNode binaryOperatorNode = (IBinaryOperatorNode) parentNode;
+            if (binaryOperatorNode.getRightOperandNode() == offsetNode)
+            {
+                autoCompleteTypes(result);
+                return CompletableFuture.completedFuture(result);
+            }
+        }
+        if (nodeAtPreviousOffset != null
+                && nodeAtPreviousOffset instanceof IBinaryOperatorNode
+                && (nodeAtPreviousOffset.getNodeID() == ASTNodeID.Op_AsID
+                || nodeAtPreviousOffset.getNodeID() == ASTNodeID.Op_IsID))
+        {
+            autoCompleteTypes(result);
+            return CompletableFuture.completedFuture(result);
+        }
+        //class extends keyword
+        if (offsetNode instanceof IClassNode
+                && nodeAtPreviousOffset != null
+                && nodeAtPreviousOffset instanceof IKeywordNode
+                && nodeAtPreviousOffset.getNodeID() == ASTNodeID.KeywordExtendsID)
+        {
+            autoCompleteTypes(result);
+            return CompletableFuture.completedFuture(result);
+        }
+        //class implements keyword
+        if (offsetNode instanceof IClassNode
+                && nodeAtPreviousOffset != null
+                && nodeAtPreviousOffset instanceof IKeywordNode
+                && nodeAtPreviousOffset.getNodeID() == ASTNodeID.KeywordImplementsID)
+        {
+            autoCompleteTypes(result);
+            return CompletableFuture.completedFuture(result);
+        }
+        //interface extends keyword
+        if (offsetNode instanceof IInterfaceNode
+                && nodeAtPreviousOffset != null
+                && nodeAtPreviousOffset instanceof IKeywordNode
+                && nodeAtPreviousOffset.getNodeID() == ASTNodeID.KeywordExtendsID)
+        {
+            autoCompleteTypes(result);
+            return CompletableFuture.completedFuture(result);
+        }
+
+        //import (must be before member access)
+        if (parentNode != null
+                && parentNode instanceof IImportNode)
+        {
+            IImportNode importNode = (IImportNode) parentNode;
+            IExpressionNode nameNode = importNode.getImportNameNode();
+            if (offsetNode == nameNode)
+            {
+                String importName = importNode.getImportName();
+                importName = importName.substring(0, position.getPosition().getCharacter() - nameNode.getColumn());
+                autoCompleteImport(importName, result);
+                return CompletableFuture.completedFuture(result);
+            }
+        }
+        if (parentNode != null
+                && parentNode instanceof FullNameNode)
+        {
+            IASNode gpNode = parentNode.getParent();
+            if (gpNode != null && gpNode instanceof IImportNode)
+            {
+                IImportNode importNode = (IImportNode) gpNode;
+                IExpressionNode nameNode = importNode.getImportNameNode();
+                if (parentNode == nameNode)
+                {
+                    String importName = importNode.getImportName();
+                    importName = importName.substring(0, position.getPosition().getCharacter() - nameNode.getColumn());
+                    autoCompleteImport(importName, result);
+                    return CompletableFuture.completedFuture(result);
+                }
+            }
+        }
+        if (nodeAtPreviousOffset != null
+                && nodeAtPreviousOffset instanceof IImportNode)
+        {
+            autoCompleteImport("", result);
+            return CompletableFuture.completedFuture(result);
+        }
+
+        //member access
+        if (offsetNode instanceof IMemberAccessExpressionNode)
+        {
+            IMemberAccessExpressionNode memberAccessNode = (IMemberAccessExpressionNode) offsetNode;
+            IExpressionNode leftOperand = memberAccessNode.getLeftOperandNode();
+            IExpressionNode rightOperand = memberAccessNode.getRightOperandNode();
+            int line = position.getPosition().getLine();
+            int column = position.getPosition().getCharacter();
+            if (line >= leftOperand.getEndLine() && line <= rightOperand.getLine())
+            {
+                if ((line != leftOperand.getEndLine() && line != rightOperand.getLine())
+                        || (line == leftOperand.getEndLine() && column > leftOperand.getEndColumn())
+                        || (line == rightOperand.getLine() && column <= rightOperand.getColumn()))
+                {
+                    autoCompleteMemberAccess(memberAccessNode, result);
+                    return CompletableFuture.completedFuture(result);
+                }
+            }
+        }
+        if (parentNode != null
+                && parentNode instanceof IMemberAccessExpressionNode)
+        {
+            IMemberAccessExpressionNode memberAccessNode = (IMemberAccessExpressionNode) parentNode;
+            //you would expect that the offset node could only be the right
+            //operand, but it's actually possible for it to be the left operand,
+            //even if the . has been typed!
+            if (offsetNode == memberAccessNode.getRightOperandNode()
+                    || offsetNode == memberAccessNode.getLeftOperandNode())
+            {
+                autoCompleteMemberAccess(memberAccessNode, result);
+                return CompletableFuture.completedFuture(result);
+            }
+        }
+        if (nodeAtPreviousOffset != null
+                && nodeAtPreviousOffset instanceof IMemberAccessExpressionNode)
+        {
+            //depending on the left operand, if a . is typed, the member access
+            //may end up being the previous node instead of the parent or offset
+            //node, so check if the right operand is empty
+            IMemberAccessExpressionNode memberAccessNode = (IMemberAccessExpressionNode) nodeAtPreviousOffset;
+            IExpressionNode rightOperandNode = memberAccessNode.getRightOperandNode();
+            if (rightOperandNode instanceof IIdentifierNode)
+            {
+                IIdentifierNode identifierNode = (IIdentifierNode) rightOperandNode;
+                if (identifierNode.getName().equals(""))
+                {
+                    autoCompleteMemberAccess(memberAccessNode, result);
+                    return CompletableFuture.completedFuture(result);
+                }
+            }
+        }
+
+        //local scope
+        do
+        {
+            //just keep traversing up until we get a scoped node or run out of
+            //nodes to check
+            if (offsetNode instanceof IScopedNode)
+            {
+                IScopedNode scopedNode = (IScopedNode) offsetNode;
+                autoCompleteScope(scopedNode, result);
+                return CompletableFuture.completedFuture(result);
+            }
+            offsetNode = offsetNode.getParent();
+        }
+        while (offsetNode != null);
+
+        return CompletableFuture.completedFuture(result);
+    }
+    
+    private CompletableFuture<CompletionList> mxmlCompletion(TextDocumentPositionParams position, IMXMLTagData offsetTag)
+    {
+        CompletionListImpl result = new CompletionListImpl();
+        result.setIncomplete(false);
+        result.setItems(new ArrayList<>());
+
+        String propertyElementPrefix = null;
+        if (offsetTag != null)
+        {
+            boolean isAttribute = offsetTag.isOffsetInAttributeList(currentOffset);
+            if (!isAttribute)
+            {
+                String prefix = offsetTag.getPrefix();
+                if (prefix.length() > 0)
+                {
+                    propertyElementPrefix = prefix + ":";
+                }
+            }
+
+            IDefinition offsetDefinition = currentProject.resolveXMLNameToDefinition(offsetTag.getXMLName(), offsetTag.getMXMLDialect());
+            if (offsetDefinition != null)
+            {
+                if (offsetDefinition instanceof IClassDefinition
+                        && !offsetTag.isCloseTag())
+                {
+                    ICompilationUnit unit = getCompilationUnit(getPathFromLsapiURI(position.getTextDocument().getUri()));
+                    IASScope[] scopes;
+                    try
+                    {
+                        scopes = unit.getFileScopeRequest().get().getScopes();
+                    }
+                    catch(Exception e)
+                    {
+                        return CompletableFuture.completedFuture(result);
+                    }
+                    if(scopes != null && scopes.length > 0)
+                    {
+                        IClassDefinition classDefinition = (IClassDefinition) offsetDefinition;
+                        TypeScope typeScope = (TypeScope) classDefinition.getContainedScope();
+                        ASScope scope = (ASScope) scopes[0];
+                        addDefinitionsInTypeScopeToAutoComplete(typeScope, scope, false, true, propertyElementPrefix, result);
+                        String defaultPropertyName = classDefinition.getDefaultPropertyName(currentProject);
+                        if (defaultPropertyName != null && !isAttribute)
+                        {
+                            //if [DefaultProperty] is set, then we can instantiate
+                            //types as child elements
+                            //but we don't want to do that when in an attribute
+                            autoCompleteTypes(result);
+                        }
+                        return CompletableFuture.completedFuture(result);
+                    }
+                }
+                System.err.println("Unknown definition for MXML completion: " + offsetDefinition.getClass());
+                return CompletableFuture.completedFuture(result);
+            }
+
+            IMXMLTagData parentTag = offsetTag.getParentTag();
+            IDefinition parentDefinition = currentProject.resolveXMLNameToDefinition(parentTag.getXMLName(), parentTag.getMXMLDialect());
+            if (parentDefinition != null &&
+                    parentDefinition instanceof IClassDefinition)
+            {
+                IClassDefinition classDefinition = (IClassDefinition) parentDefinition;
+                offsetDefinition = currentProject.resolveSpecifier(classDefinition, offsetTag.getShortName());
+                if (offsetDefinition != null)
+                {
+                    if (offsetDefinition instanceof IVariableDefinition && !isAttribute)
+                    {
+                        autoCompleteTypes(result);
+                        return CompletableFuture.completedFuture(result);
+                    }
+                    System.err.println("Unknown definition for MXML completion: " + offsetDefinition.getClass());
+                    return CompletableFuture.completedFuture(result);
+                }
+            }
+        }
+
+        //don't fall through to ActionScript completion
+        return CompletableFuture.completedFuture(result);
     }
 
     private void autoCompleteTypes(CompletionListImpl result)
@@ -2558,6 +2587,15 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return null;
         }
         return optionalPath.get();
+    }
+
+    private boolean isMXMLTagValidForCompletion(IMXMLTagData tag)
+    {
+        if(tag.getXMLName().equals(tag.getMXMLDialect().resolveScript()))
+        {
+            return false;
+        }
+        return true;
     }
 
     private IMXMLTagData getOffsetMXMLTag(TextDocumentPositionParams position)
