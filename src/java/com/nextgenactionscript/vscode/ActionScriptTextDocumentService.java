@@ -266,15 +266,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 }
             }
 
-            if (offsetNode instanceof IMXMLDocumentNode)
+            if (offsetNode instanceof IMXMLClassReferenceNode)
             {
-                autoCompleteTypes(result);
-                return CompletableFuture.completedFuture(result);
-            }
-
-            if (offsetNode instanceof IMXMLInstanceNode)
-            {
-                IMXMLInstanceNode mxmlNode = (IMXMLInstanceNode) offsetNode;
+                IMXMLClassReferenceNode mxmlNode = (IMXMLClassReferenceNode) offsetNode;
                 IClassDefinition classDefinition = mxmlNode.getClassReference(currentProject);
                 TypeScope typeScope = (TypeScope) classDefinition.getContainedScope();
                 ASScope scope = (ASScope) mxmlNode.getContainingScope().getScope();
