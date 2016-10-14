@@ -61,6 +61,7 @@ import org.apache.flex.compiler.definitions.IVariableDefinition;
 import org.apache.flex.compiler.definitions.metadata.IMetaTag;
 import org.apache.flex.compiler.filespecs.IFileSpecification;
 import org.apache.flex.compiler.internal.driver.js.goog.JSGoogConfiguration;
+import org.apache.flex.compiler.internal.mxml.MXMLData;
 import org.apache.flex.compiler.internal.mxml.MXMLNamespaceMapping;
 import org.apache.flex.compiler.internal.parsing.as.ASParser;
 import org.apache.flex.compiler.internal.parsing.as.ASToken;
@@ -75,8 +76,8 @@ import org.apache.flex.compiler.internal.tree.as.FileNode;
 import org.apache.flex.compiler.internal.tree.as.FullNameNode;
 import org.apache.flex.compiler.internal.units.SWCCompilationUnit;
 import org.apache.flex.compiler.internal.workspaces.Workspace;
-import org.apache.flex.compiler.mxml.IMXMLData;
 import org.apache.flex.compiler.mxml.IMXMLDataManager;
+import org.apache.flex.compiler.mxml.IMXMLTagAttributeData;
 import org.apache.flex.compiler.mxml.IMXMLTagData;
 import org.apache.flex.compiler.problems.CompilerProblemSeverity;
 import org.apache.flex.compiler.problems.ICompilerProblem;
@@ -102,9 +103,6 @@ import org.apache.flex.compiler.tree.as.INamespaceDecorationNode;
 import org.apache.flex.compiler.tree.as.IScopedDefinitionNode;
 import org.apache.flex.compiler.tree.as.IScopedNode;
 import org.apache.flex.compiler.tree.as.IVariableNode;
-import org.apache.flex.compiler.tree.mxml.IMXMLClassReferenceNode;
-import org.apache.flex.compiler.tree.mxml.IMXMLNode;
-import org.apache.flex.compiler.tree.mxml.IMXMLSpecifierNode;
 import org.apache.flex.compiler.units.ICompilationUnit;
 import org.apache.flex.compiler.units.IInvisibleCompilationUnit;
 import org.apache.flex.compiler.workspaces.IWorkspace;
@@ -257,44 +255,14 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     @Override
     public CompletableFuture<Hover> hover(TextDocumentPositionParams position)
     {
-        IASNode offsetNode = getOffsetNode(position);
-        if (offsetNode == null)
+        IMXMLTagData offsetTag = getOffsetMXMLTag(position);
+        //if we're inside an <fx:Script> tag, we want ActionScript completion,
+        //so that's why we call isMXMLTagValidForCompletion()
+        if (offsetTag != null && isMXMLTagValidForCompletion(offsetTag))
         {
-            //we couldn't find a node at the specified location
-            return CompletableFuture.completedFuture(new HoverImpl());
+            return mxmlHover(position, offsetTag);
         }
-
-        IDefinition definition = null;
-        if (offsetNode instanceof IMXMLNode)
-        {
-            IMXMLNode mxmlNode = (IMXMLNode) offsetNode;
-            IMXMLTagData offsetTag = getOffsetMXMLTag(position);
-            definition = getDefinitionFromMXMLTag(mxmlNode, offsetTag);
-        }
-        else
-        {
-            //INamespaceDecorationNode extends IIdentifierNode, but we don't want
-            //any hover information for it.
-            if (definition == null
-                    && offsetNode instanceof IIdentifierNode
-                    && !(offsetNode instanceof INamespaceDecorationNode))
-            {
-                IIdentifierNode identifierNode = (IIdentifierNode) offsetNode;
-                definition = identifierNode.resolve(currentUnit.getProject());
-            }
-        }
-
-        if (definition == null)
-        {
-            return CompletableFuture.completedFuture(new HoverImpl());
-        }
-
-        HoverImpl result = new HoverImpl();
-        String detail = getDefinitionDetail(definition);
-        List<MarkedStringImpl> contents = new ArrayList<>();
-        contents.add(markedString(detail));
-        result.setContents(contents);
-        return CompletableFuture.completedFuture(result);
+        return actionScriptHover(position);
     }
 
     /**
@@ -397,40 +365,14 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     @Override
     public CompletableFuture<List<? extends Location>> definition(TextDocumentPositionParams position)
     {
-        IASNode offsetNode = getOffsetNode(position);
-        if (offsetNode == null)
+        IMXMLTagData offsetTag = getOffsetMXMLTag(position);
+        //if we're inside an <fx:Script> tag, we want ActionScript completion,
+        //so that's why we call isMXMLTagValidForCompletion()
+        if (offsetTag != null && isMXMLTagValidForCompletion(offsetTag))
         {
-            //we couldn't find a node at the specified location
-            return CompletableFuture.completedFuture(Collections.emptyList());
+            return mxmlDefinition(position, offsetTag);
         }
-
-        IDefinition definition = null;
-        if (offsetNode instanceof IMXMLNode)
-        {
-            IMXMLNode mxmlNode = (IMXMLNode) offsetNode;
-            IMXMLTagData offsetTag = getOffsetMXMLTag(position);
-            definition = getDefinitionFromMXMLTag(mxmlNode, offsetTag);
-        }
-        else
-        {
-            //actionscript identifiers
-            if (definition == null
-                    && offsetNode instanceof IIdentifierNode)
-            {
-                IIdentifierNode expressionNode = (IIdentifierNode) offsetNode;
-                definition = expressionNode.resolve(currentProject);
-            }
-        }
-
-        if (definition == null)
-        {
-            //VSCode may call definition() when there isn't necessarily a
-            //definition referenced at the current position.
-            return CompletableFuture.completedFuture(Collections.emptyList());
-        }
-        List<Location> result = new ArrayList<>();
-        resolveDefinition(definition, result);
-        return CompletableFuture.completedFuture(result);
+        return actionScriptDefinition(position);
     }
 
     /**
@@ -1131,7 +1073,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         CompletionListImpl result = new CompletionListImpl();
         result.setIncomplete(false);
         result.setItems(new ArrayList<>());
-        
+
         //ActionScript completion
         IASNode offsetNode = getOffsetNode(position);
         if (offsetNode == null)
@@ -1380,7 +1322,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
         return CompletableFuture.completedFuture(result);
     }
-    
+
     private CompletableFuture<CompletionList> mxmlCompletion(TextDocumentPositionParams position, IMXMLTagData offsetTag)
     {
         CompletionListImpl result = new CompletionListImpl();
@@ -1388,76 +1330,149 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         result.setItems(new ArrayList<>());
 
         String propertyElementPrefix = null;
-        if (offsetTag != null)
+        boolean isAttribute = offsetTag.isOffsetInAttributeList(currentOffset);
+        if (!isAttribute)
         {
-            boolean isAttribute = offsetTag.isOffsetInAttributeList(currentOffset);
-            if (!isAttribute)
+            String prefix = offsetTag.getPrefix();
+            if (prefix.length() > 0)
             {
-                String prefix = offsetTag.getPrefix();
-                if (prefix.length() > 0)
-                {
-                    propertyElementPrefix = prefix + ":";
-                }
-            }
-
-            IDefinition offsetDefinition = currentProject.resolveXMLNameToDefinition(offsetTag.getXMLName(), offsetTag.getMXMLDialect());
-            if (offsetDefinition != null)
-            {
-                if (offsetDefinition instanceof IClassDefinition
-                        && !offsetTag.isCloseTag())
-                {
-                    ICompilationUnit unit = getCompilationUnit(getPathFromLsapiURI(position.getTextDocument().getUri()));
-                    IASScope[] scopes;
-                    try
-                    {
-                        scopes = unit.getFileScopeRequest().get().getScopes();
-                    }
-                    catch(Exception e)
-                    {
-                        return CompletableFuture.completedFuture(result);
-                    }
-                    if(scopes != null && scopes.length > 0)
-                    {
-                        IClassDefinition classDefinition = (IClassDefinition) offsetDefinition;
-                        TypeScope typeScope = (TypeScope) classDefinition.getContainedScope();
-                        ASScope scope = (ASScope) scopes[0];
-                        addDefinitionsInTypeScopeToAutoComplete(typeScope, scope, false, true, propertyElementPrefix, result);
-                        String defaultPropertyName = classDefinition.getDefaultPropertyName(currentProject);
-                        if (defaultPropertyName != null && !isAttribute)
-                        {
-                            //if [DefaultProperty] is set, then we can instantiate
-                            //types as child elements
-                            //but we don't want to do that when in an attribute
-                            autoCompleteTypes(result);
-                        }
-                        return CompletableFuture.completedFuture(result);
-                    }
-                }
-                System.err.println("Unknown definition for MXML completion: " + offsetDefinition.getClass());
-                return CompletableFuture.completedFuture(result);
-            }
-
-            IMXMLTagData parentTag = offsetTag.getParentTag();
-            IDefinition parentDefinition = currentProject.resolveXMLNameToDefinition(parentTag.getXMLName(), parentTag.getMXMLDialect());
-            if (parentDefinition != null &&
-                    parentDefinition instanceof IClassDefinition)
-            {
-                IClassDefinition classDefinition = (IClassDefinition) parentDefinition;
-                offsetDefinition = currentProject.resolveSpecifier(classDefinition, offsetTag.getShortName());
-                if (offsetDefinition != null)
-                {
-                    if (offsetDefinition instanceof IVariableDefinition && !isAttribute)
-                    {
-                        autoCompleteTypes(result);
-                        return CompletableFuture.completedFuture(result);
-                    }
-                    System.err.println("Unknown definition for MXML completion: " + offsetDefinition.getClass());
-                    return CompletableFuture.completedFuture(result);
-                }
+                propertyElementPrefix = prefix + ":";
             }
         }
 
-        //don't fall through to ActionScript completion
+        IDefinition offsetDefinition = getDefinitionForMXMLTag(offsetTag);
+        if (offsetDefinition == null)
+        {
+            return CompletableFuture.completedFuture(result);
+        }
+        if (offsetDefinition instanceof IClassDefinition
+                && !offsetTag.isCloseTag())
+        {
+            ICompilationUnit unit = getCompilationUnit(getPathFromLsapiURI(position.getTextDocument().getUri()));
+            IASScope[] scopes;
+            try
+            {
+                scopes = unit.getFileScopeRequest().get().getScopes();
+            }
+            catch (Exception e)
+            {
+                return CompletableFuture.completedFuture(result);
+            }
+            if (scopes != null && scopes.length > 0)
+            {
+                IClassDefinition classDefinition = (IClassDefinition) offsetDefinition;
+                TypeScope typeScope = (TypeScope) classDefinition.getContainedScope();
+                ASScope scope = (ASScope) scopes[0];
+                addDefinitionsInTypeScopeToAutoComplete(typeScope, scope, false, true, propertyElementPrefix, result);
+                String defaultPropertyName = classDefinition.getDefaultPropertyName(currentProject);
+                if (defaultPropertyName != null && !isAttribute)
+                {
+                    //if [DefaultProperty] is set, then we can instantiate
+                    //types as child elements
+                    //but we don't want to do that when in an attribute
+                    autoCompleteTypes(result);
+                }
+                return CompletableFuture.completedFuture(result);
+            }
+        }
+        if (offsetDefinition instanceof IVariableDefinition && !isAttribute)
+        {
+            autoCompleteTypes(result);
+            return CompletableFuture.completedFuture(result);
+        }
+        System.err.println("Unknown definition for MXML completion: " + offsetDefinition.getClass());
+        return CompletableFuture.completedFuture(result);
+    }
+
+    public CompletableFuture<Hover> actionScriptHover(TextDocumentPositionParams position)
+    {
+        IDefinition definition = null;
+        IASNode offsetNode = getOffsetNode(position);
+        if (offsetNode == null)
+        {
+            //we couldn't find a node at the specified location
+            return CompletableFuture.completedFuture(new HoverImpl());
+        }
+
+        //INamespaceDecorationNode extends IIdentifierNode, but we don't want
+        //any hover information for it.
+        if (definition == null
+                && offsetNode instanceof IIdentifierNode
+                && !(offsetNode instanceof INamespaceDecorationNode))
+        {
+            IIdentifierNode identifierNode = (IIdentifierNode) offsetNode;
+            definition = identifierNode.resolve(currentUnit.getProject());
+        }
+
+        if (definition == null)
+        {
+            return CompletableFuture.completedFuture(new HoverImpl());
+        }
+
+        HoverImpl result = new HoverImpl();
+        String detail = getDefinitionDetail(definition);
+        List<MarkedStringImpl> contents = new ArrayList<>();
+        contents.add(markedString(detail));
+        result.setContents(contents);
+        return CompletableFuture.completedFuture(result);
+    }
+
+    public CompletableFuture<Hover> mxmlHover(TextDocumentPositionParams position, IMXMLTagData offsetTag)
+    {
+        IDefinition definition = getDefinitionForMXMLTagAtOffset(offsetTag, currentOffset);
+        if (definition == null)
+        {
+            return CompletableFuture.completedFuture(new HoverImpl());
+        }
+
+        HoverImpl result = new HoverImpl();
+        String detail = getDefinitionDetail(definition);
+        List<MarkedStringImpl> contents = new ArrayList<>();
+        contents.add(markedString(detail));
+        result.setContents(contents);
+        return CompletableFuture.completedFuture(result);
+    }
+
+    public CompletableFuture<List<? extends Location>> actionScriptDefinition(TextDocumentPositionParams position)
+    {
+        IASNode offsetNode = getOffsetNode(position);
+        if (offsetNode == null)
+        {
+            //we couldn't find a node at the specified location
+            return CompletableFuture.completedFuture(Collections.emptyList());
+        }
+
+        IDefinition definition = null;
+
+        if (offsetNode instanceof IIdentifierNode)
+        {
+            IIdentifierNode expressionNode = (IIdentifierNode) offsetNode;
+            definition = expressionNode.resolve(currentProject);
+        }
+
+        if (definition == null)
+        {
+            //VSCode may call definition() when there isn't necessarily a
+            //definition referenced at the current position.
+            return CompletableFuture.completedFuture(Collections.emptyList());
+        }
+        List<Location> result = new ArrayList<>();
+        resolveDefinition(definition, result);
+        return CompletableFuture.completedFuture(result);
+    }
+
+    public CompletableFuture<List<? extends Location>> mxmlDefinition(TextDocumentPositionParams position, IMXMLTagData offsetTag)
+    {
+        IDefinition definition = getDefinitionForMXMLTagAtOffset(offsetTag, currentOffset);
+        if (definition == null)
+        {
+            //VSCode may call definition() when there isn't necessarily a
+            //definition referenced at the current position.
+            return CompletableFuture.completedFuture(Collections.emptyList());
+        }
+
+        List<Location> result = new ArrayList<>();
+        resolveDefinition(definition, result);
         return CompletableFuture.completedFuture(result);
     }
 
@@ -2591,7 +2606,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private boolean isMXMLTagValidForCompletion(IMXMLTagData tag)
     {
-        if(tag.getXMLName().equals(tag.getMXMLDialect().resolveScript()))
+        if (tag.getXMLName().equals(tag.getMXMLDialect().resolveScript()))
         {
             return false;
         }
@@ -2624,7 +2639,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
 
         IMXMLDataManager mxmlDataManager = currentWorkspace.getMXMLDataManager();
-        IMXMLData mxmlData = mxmlDataManager.get(fileSpecGetter.getFileSpecification(path.toAbsolutePath().toString()));
+        MXMLData mxmlData = (MXMLData) mxmlDataManager.get(fileSpecGetter.getFileSpecification(path.toAbsolutePath().toString()));
         if (mxmlData == null)
         {
             return null;
@@ -2705,30 +2720,60 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return ast.getContainingNode(currentOffset);
     }
 
-    private IDefinition getDefinitionFromMXMLTag(IMXMLNode node, IMXMLTagData tagData)
+    private IDefinition getDefinitionForMXMLTagAtOffset(IMXMLTagData tag, int offset)
     {
-        if (tagData == null)
+        if (tag.isOffsetInAttributeList(offset))
+        {
+            return getDefinitionForMXMLTagAttribute(tag, offset);
+        }
+        return getDefinitionForMXMLTag(tag);
+    }
+
+    private IDefinition getDefinitionForMXMLTagAttribute(IMXMLTagData tag, int offset)
+    {
+        IMXMLTagAttributeData[] attributes = tag.getAttributeDatas();
+        for (IMXMLTagAttributeData attributeData : attributes)
+        {
+            if (attributeData.getAbsoluteStart() <= offset
+                    && attributeData.getValueStart() > offset)
+            {
+                IDefinition tagDefinition = getDefinitionForMXMLTag(tag);
+                if (tagDefinition != null
+                        && tagDefinition instanceof IClassDefinition)
+                {
+                    IClassDefinition classDefinition = (IClassDefinition) tagDefinition;
+                    return currentProject.resolveSpecifier(classDefinition, attributeData.getShortName());
+                }
+                break;
+            }
+        }
+        return null;
+    }
+
+    private IDefinition getDefinitionForMXMLTag(IMXMLTagData tag)
+    {
+        if (tag == null)
         {
             return null;
         }
-        boolean isAttribute = tagData.isOffsetInAttributeList(currentOffset);
 
-        //mxml elements
-        if (node instanceof IMXMLClassReferenceNode
-                && !isAttribute)
+        IDefinition offsetDefinition = currentProject.resolveXMLNameToDefinition(tag.getXMLName(), tag.getMXMLDialect());
+        if (offsetDefinition != null)
         {
-            IMXMLClassReferenceNode mxmlNode = (IMXMLClassReferenceNode) node;
-            return mxmlNode.getClassReference(currentProject);
+            return offsetDefinition;
         }
-
-        //mxml properties
-        if (node instanceof IMXMLSpecifierNode)
+        IMXMLTagData parentTag = tag.getParentTag();
+        if (parentTag == null)
         {
-            IMXMLSpecifierNode mxmlNode = (IMXMLSpecifierNode) node;
-            return mxmlNode.getDefinition();
+            return null;
         }
-
-        return null;
+        IDefinition parentDefinition = currentProject.resolveXMLNameToDefinition(parentTag.getXMLName(), parentTag.getMXMLDialect());
+        if (parentDefinition == null || !(parentDefinition instanceof IClassDefinition))
+        {
+            return null;
+        }
+        IClassDefinition classDefinition = (IClassDefinition) parentDefinition;
+        return currentProject.resolveSpecifier(classDefinition, tag.getShortName());
     }
 
     private void appendInterfaceNamesToDetail(StringBuilder detailBuilder, IInterfaceDefinition[] interfaceDefinitions)
