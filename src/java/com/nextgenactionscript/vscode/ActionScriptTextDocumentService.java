@@ -280,6 +280,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     }
                     return CompletableFuture.completedFuture(result);
                 }
+
+                if (offsetNode instanceof IMXMLSpecifierNode && !isAttribute)
+                {
+                    autoCompleteTypes(result);
+                    return CompletableFuture.completedFuture(result);
+                }
             }
 
             //don't fall through to ActionScript completion
