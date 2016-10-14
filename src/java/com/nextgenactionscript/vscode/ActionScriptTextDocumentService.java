@@ -281,6 +281,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     return CompletableFuture.completedFuture(result);
                 }
             }
+
+            //don't fall through to ActionScript completion
+            return CompletableFuture.completedFuture(result);
         }
 
         //variable types
