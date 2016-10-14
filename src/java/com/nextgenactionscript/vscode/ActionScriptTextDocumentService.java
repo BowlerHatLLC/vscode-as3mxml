@@ -262,21 +262,24 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                         propertyElementPrefix = prefix + ":";
                     }
                 }
-            }
 
-            if (offsetNode instanceof IMXMLClassReferenceNode)
-            {
-                IMXMLClassReferenceNode mxmlNode = (IMXMLClassReferenceNode) offsetNode;
-                IClassDefinition classDefinition = mxmlNode.getClassReference(currentProject);
-                TypeScope typeScope = (TypeScope) classDefinition.getContainedScope();
-                ASScope scope = (ASScope) mxmlNode.getContainingScope().getScope();
-                addDefinitionsInTypeScopeToAutoComplete(typeScope, scope, false, true, propertyElementPrefix, result);
-                String defaultPropertyName = classDefinition.getDefaultPropertyName(currentProject);
-                if (defaultPropertyName != null)
+                if (offsetNode instanceof IMXMLClassReferenceNode)
                 {
-                    autoCompleteTypes(result);
+                    IMXMLClassReferenceNode mxmlNode = (IMXMLClassReferenceNode) offsetNode;
+                    IClassDefinition classDefinition = mxmlNode.getClassReference(currentProject);
+                    TypeScope typeScope = (TypeScope) classDefinition.getContainedScope();
+                    ASScope scope = (ASScope) mxmlNode.getContainingScope().getScope();
+                    addDefinitionsInTypeScopeToAutoComplete(typeScope, scope, false, true, propertyElementPrefix, result);
+                    String defaultPropertyName = classDefinition.getDefaultPropertyName(currentProject);
+                    if (defaultPropertyName != null && !isAttribute)
+                    {
+                        //if [DefaultProperty] is set, then we can instantiate
+                        //types as child elements
+                        //but we don't want to do that when in an attribute
+                        autoCompleteTypes(result);
+                    }
+                    return CompletableFuture.completedFuture(result);
                 }
-                return CompletableFuture.completedFuture(result);
             }
         }
 
