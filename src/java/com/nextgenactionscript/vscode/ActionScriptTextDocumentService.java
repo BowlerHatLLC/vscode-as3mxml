@@ -80,7 +80,6 @@ import org.apache.flex.compiler.mxml.IMXMLDataManager;
 import org.apache.flex.compiler.mxml.IMXMLTagData;
 import org.apache.flex.compiler.problems.CompilerProblemSeverity;
 import org.apache.flex.compiler.problems.ICompilerProblem;
-import org.apache.flex.compiler.projects.IFlexProject;
 import org.apache.flex.compiler.scopes.IASScope;
 import org.apache.flex.compiler.targets.ITarget;
 import org.apache.flex.compiler.targets.ITargetSettings;
@@ -295,7 +294,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 {
                     IClassDefinition classDefinition = (IClassDefinition) parentDefinition;
                     offsetDefinition = currentProject.resolveSpecifier(classDefinition, offsetTag.getShortName());
-                    if(offsetDefinition != null)
+                    if (offsetDefinition != null)
                     {
                         if (offsetDefinition instanceof IVariableDefinition && !isAttribute)
                         {
@@ -859,13 +858,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     public CompletableFuture<List<? extends SymbolInformation>> documentSymbol(DocumentSymbolParams params)
     {
         TextDocumentIdentifier textDocument = params.getTextDocument();
-        URI uri = URI.create(textDocument.getUri());
-        Optional<Path> optionalPath = getFilePath(uri);
-        if (!optionalPath.isPresent())
+        Path path = getPathFromLsapiURI(textDocument.getUri());
+        if (path == null)
         {
             return CompletableFuture.completedFuture(Collections.emptyList());
         }
-        Path path = optionalPath.get();
         ICompilationUnit unit = getCompilationUnit(path);
         if (unit == null)
         {
@@ -897,15 +894,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     public CompletableFuture<List<? extends Command>> codeAction(CodeActionParams params)
     {
         List<? extends Diagnostic> diagnostics = params.getContext().getDiagnostics();
-        TextDocumentIdentifier document = params.getTextDocument();
-        URI uri = URI.create(document.getUri());
-        Optional<Path> optionalPath = getFilePath(uri);
-        if (!optionalPath.isPresent())
-        {
-            return CompletableFuture.completedFuture(Collections.emptyList());
-        }
-        Path path = optionalPath.get();
-        if (!sourceByPath.containsKey(path))
+        TextDocumentIdentifier textDocument = params.getTextDocument();
+        Path path = getPathFromLsapiURI(textDocument.getUri());
+        if (path == null || !sourceByPath.containsKey(path))
         {
             return CompletableFuture.completedFuture(Collections.emptyList());
         }
@@ -1091,15 +1082,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     @Override
     public void didOpen(DidOpenTextDocumentParams params)
     {
-        TextDocumentItem document = params.getTextDocument();
-        URI uri = URI.create(document.getUri());
-        Optional<Path> optionalPath = getFilePath(uri);
-
-        if (optionalPath.isPresent())
+        TextDocumentItem textDocument = params.getTextDocument();
+        Path path = getPathFromLsapiURI(textDocument.getUri());
+        if (path != null)
         {
-            Path path = optionalPath.get();
-
-            String text = document.getText();
+            String text = textDocument.getText();
             sourceByPath.put(path, text);
 
             //we need to check for problems when opening a new file because it
@@ -1116,13 +1103,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     @Override
     public void didChange(DidChangeTextDocumentParams params)
     {
-        VersionedTextDocumentIdentifier document = params.getTextDocument();
-        URI uri = URI.create(document.getUri());
-        Optional<Path> optionalPath = getFilePath(uri);
-
-        if (optionalPath.isPresent())
+        VersionedTextDocumentIdentifier textDocument = params.getTextDocument();
+        Path path = getPathFromLsapiURI(textDocument.getUri());
+        if (path != null)
         {
-            Path path = optionalPath.get();
             for (TextDocumentContentChangeEvent change : params.getContentChanges())
             {
                 if (change.getRange() == null)
@@ -1156,13 +1140,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     @Override
     public void didClose(DidCloseTextDocumentParams params)
     {
-        TextDocumentIdentifier document = params.getTextDocument();
-        URI uri = URI.create(document.getUri());
-        Optional<Path> optionalPath = getFilePath(uri);
-
-        if (optionalPath.isPresent())
+        TextDocumentIdentifier textDocument = params.getTextDocument();
+        Path path = getPathFromLsapiURI(textDocument.getUri());
+        if (path != null)
         {
-            Path path = optionalPath.get();
             sourceByPath.remove(path);
         }
     }
@@ -1188,13 +1169,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         boolean needsFullCheck = false;
         for (FileEvent event : params.getChanges())
         {
-            URI uri = URI.create(event.getUri());
-            Optional<Path> optionalPath = getFilePath(uri);
-            if (!optionalPath.isPresent())
+            Path path = getPathFromLsapiURI(event.getUri());
+            if (path == null)
             {
                 continue;
             }
-            Path path = optionalPath.get();
             File file = path.toFile();
             if (file.getName().equals("asconfig.json"))
             {
@@ -2569,6 +2548,18 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return publish;
     }
 
+    private Path getPathFromLsapiURI(String apiURI)
+    {
+        URI uri = URI.create(apiURI);
+        Optional<Path> optionalPath = getFilePath(uri);
+        if (!optionalPath.isPresent())
+        {
+            System.err.println("Could not find URI " + uri);
+            return null;
+        }
+        return optionalPath.get();
+    }
+
     private IMXMLTagData getOffsetMXMLTag(TextDocumentPositionParams position)
     {
         return getOffsetMXMLTag(position.getTextDocument(), position.getPosition());
@@ -2577,14 +2568,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private IMXMLTagData getOffsetMXMLTag(TextDocumentIdentifier textDocument, Position position)
     {
         currentOffset = -1;
-        URI uri = URI.create(textDocument.getUri());
-        Optional<Path> optionalPath = getFilePath(uri);
-        if (!optionalPath.isPresent())
+        Path path = getPathFromLsapiURI(textDocument.getUri());
+        if (path == null)
         {
-            System.err.println("Could not find URI " + uri);
             return null;
         }
-        Path path = optionalPath.get();
         String code;
         if (sourceByPath.containsKey(path))
         {
@@ -2629,14 +2617,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private IASNode getOffsetNode(TextDocumentIdentifier textDocument, Position position)
     {
         currentOffset = -1;
-        URI uri = URI.create(textDocument.getUri());
-        Optional<Path> optionalPath = getFilePath(uri);
-        if (!optionalPath.isPresent())
+        Path path = getPathFromLsapiURI(textDocument.getUri());
+        if (path == null)
         {
-            System.err.println("Could not find URI " + uri);
             return null;
         }
-        Path path = optionalPath.get();
         String code;
         if (sourceByPath.containsKey(path))
         {
