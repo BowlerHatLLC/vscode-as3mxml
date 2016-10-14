@@ -2608,6 +2608,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     {
         if (tag.getXMLName().equals(tag.getMXMLDialect().resolveScript()))
         {
+            //inside an <fx:Script> tag
             return false;
         }
         return true;
@@ -2729,23 +2730,47 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return getDefinitionForMXMLTag(tag);
     }
 
-    private IDefinition getDefinitionForMXMLTagAttribute(IMXMLTagData tag, int offset)
+    private IMXMLTagAttributeData getMXMLTagAttributeAtOffset(IMXMLTagData tag, int offset)
     {
         IMXMLTagAttributeData[] attributes = tag.getAttributeDatas();
         for (IMXMLTagAttributeData attributeData : attributes)
         {
-            if (attributeData.getAbsoluteStart() <= offset
-                    && attributeData.getValueStart() > offset)
+            if (offset >= attributeData.getAbsoluteStart()
+                    && offset < attributeData.getAbsoluteEnd())
             {
-                IDefinition tagDefinition = getDefinitionForMXMLTag(tag);
-                if (tagDefinition != null
-                        && tagDefinition instanceof IClassDefinition)
-                {
-                    IClassDefinition classDefinition = (IClassDefinition) tagDefinition;
-                    return currentProject.resolveSpecifier(classDefinition, attributeData.getShortName());
-                }
-                break;
+                return attributeData;
             }
+        }
+        return null;
+    }
+
+    private IMXMLTagAttributeData getMXMLTagAttributeWithValueAtOffset(IMXMLTagData tag, int offset)
+    {
+        IMXMLTagAttributeData[] attributes = tag.getAttributeDatas();
+        for (IMXMLTagAttributeData attributeData : attributes)
+        {
+            if (offset >= attributeData.getValueStart()
+                    && offset < attributeData.getValueEnd())
+            {
+                return attributeData;
+            }
+        }
+        return null;
+    }
+
+    private IDefinition getDefinitionForMXMLTagAttribute(IMXMLTagData tag, int offset)
+    {
+        IMXMLTagAttributeData attributeData = getMXMLTagAttributeAtOffset(tag, offset);
+        if (attributeData == null)
+        {
+            return null;
+        }
+        IDefinition tagDefinition = getDefinitionForMXMLTag(tag);
+        if (tagDefinition != null
+                && tagDefinition instanceof IClassDefinition)
+        {
+            IClassDefinition classDefinition = (IClassDefinition) tagDefinition;
+            return currentProject.resolveSpecifier(classDefinition, attributeData.getShortName());
         }
         return null;
     }
