@@ -103,8 +103,6 @@ import org.apache.flex.compiler.tree.as.IScopedDefinitionNode;
 import org.apache.flex.compiler.tree.as.IScopedNode;
 import org.apache.flex.compiler.tree.as.IVariableNode;
 import org.apache.flex.compiler.tree.mxml.IMXMLClassReferenceNode;
-import org.apache.flex.compiler.tree.mxml.IMXMLDocumentNode;
-import org.apache.flex.compiler.tree.mxml.IMXMLInstanceNode;
 import org.apache.flex.compiler.tree.mxml.IMXMLNode;
 import org.apache.flex.compiler.tree.mxml.IMXMLSpecifierNode;
 import org.apache.flex.compiler.units.ICompilationUnit;
@@ -542,26 +540,23 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
 
         IDefinition definition = null;
-        if (offsetNode instanceof IMXMLClassReferenceNode)
+        if (offsetNode instanceof IMXMLNode)
         {
-            IMXMLClassReferenceNode mxmlNode = (IMXMLClassReferenceNode) offsetNode;
-            definition = mxmlNode.getClassReference(currentProject);
+            IMXMLNode mxmlNode = (IMXMLNode) offsetNode;
+            IMXMLTagData offsetTag = getOffsetMXMLTag(position);
+            definition = getDefinitionFromMXMLTag(mxmlNode, offsetTag);
         }
-        if (definition == null
-                && offsetNode instanceof IMXMLSpecifierNode)
+        else
         {
-            IMXMLSpecifierNode mxmlNode = (IMXMLSpecifierNode) offsetNode;
-            definition = mxmlNode.getDefinition();
-        }
-
-        //INamespaceDecorationNode extends IIdentifierNode, but we don't want
-        //any hover information for it.
-        if (definition == null
-                && offsetNode instanceof IIdentifierNode
-                && !(offsetNode instanceof INamespaceDecorationNode))
-        {
-            IIdentifierNode identifierNode = (IIdentifierNode) offsetNode;
-            definition = identifierNode.resolve(currentUnit.getProject());
+            //INamespaceDecorationNode extends IIdentifierNode, but we don't want
+            //any hover information for it.
+            if (definition == null
+                    && offsetNode instanceof IIdentifierNode
+                    && !(offsetNode instanceof INamespaceDecorationNode))
+            {
+                IIdentifierNode identifierNode = (IIdentifierNode) offsetNode;
+                definition = identifierNode.resolve(currentUnit.getProject());
+            }
         }
 
         if (definition == null)
@@ -685,28 +680,21 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
 
         IDefinition definition = null;
-
-        //mxml elements
-        if (offsetNode instanceof IMXMLClassReferenceNode)
+        if (offsetNode instanceof IMXMLNode)
         {
-            IMXMLClassReferenceNode mxmlNode = (IMXMLClassReferenceNode) offsetNode;
-            definition = mxmlNode.getClassReference(currentProject);
+            IMXMLNode mxmlNode = (IMXMLNode) offsetNode;
+            IMXMLTagData offsetTag = getOffsetMXMLTag(position);
+            definition = getDefinitionFromMXMLTag(mxmlNode, offsetTag);
         }
-
-        //mxml properties
-        if (definition == null
-                && offsetNode instanceof IMXMLSpecifierNode)
+        else
         {
-            IMXMLSpecifierNode mxmlNode = (IMXMLSpecifierNode) offsetNode;
-            definition = mxmlNode.getDefinition();
-        }
-
-        //actionscript identifiers
-        if (definition == null
-                && offsetNode instanceof IIdentifierNode)
-        {
-            IIdentifierNode expressionNode = (IIdentifierNode) offsetNode;
-            definition = expressionNode.resolve(currentProject);
+            //actionscript identifiers
+            if (definition == null
+                    && offsetNode instanceof IIdentifierNode)
+            {
+                IIdentifierNode expressionNode = (IIdentifierNode) offsetNode;
+                definition = expressionNode.resolve(currentProject);
+            }
         }
 
         if (definition == null)
@@ -2660,6 +2648,32 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return null;
         }
         return ast.getContainingNode(currentOffset);
+    }
+
+    private IDefinition getDefinitionFromMXMLTag(IMXMLNode node, IMXMLTagData tagData)
+    {
+        if (tagData == null)
+        {
+            return null;
+        }
+        boolean isAttribute = tagData.isOffsetInAttributeList(currentOffset);
+
+        //mxml elements
+        if (node instanceof IMXMLClassReferenceNode
+                && !isAttribute)
+        {
+            IMXMLClassReferenceNode mxmlNode = (IMXMLClassReferenceNode) node;
+            return mxmlNode.getClassReference(currentProject);
+        }
+
+        //mxml properties
+        if (node instanceof IMXMLSpecifierNode)
+        {
+            IMXMLSpecifierNode mxmlNode = (IMXMLSpecifierNode) node;
+            return mxmlNode.getDefinition();
+        }
+
+        return null;
     }
 
     private void appendInterfaceNamesToDetail(StringBuilder detailBuilder, IInterfaceDefinition[] interfaceDefinitions)
