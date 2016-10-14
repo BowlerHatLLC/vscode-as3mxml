@@ -68,6 +68,7 @@ import org.apache.flex.compiler.internal.parsing.as.RepairingTokenBuffer;
 import org.apache.flex.compiler.internal.parsing.as.StreamingASTokenizer;
 import org.apache.flex.compiler.internal.projects.CompilerProject;
 import org.apache.flex.compiler.internal.projects.FlexJSProject;
+import org.apache.flex.compiler.internal.projects.FlexProject;
 import org.apache.flex.compiler.internal.scopes.ASScope;
 import org.apache.flex.compiler.internal.scopes.TypeScope;
 import org.apache.flex.compiler.internal.tree.as.FileNode;
@@ -194,7 +195,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private Collection<ICompilationUnit> compilationUnits;
     private ArrayList<IInvisibleCompilationUnit> invisibleUnits = new ArrayList<>();
     private ICompilationUnit currentUnit;
-    private IFlexProject currentProject;
+    private FlexProject currentProject;
     private IWorkspace currentWorkspace;
     private ASConfigOptions currentOptions;
     private int currentOffset = -1;
@@ -263,28 +264,47 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     }
                 }
 
-                if (offsetNode instanceof IMXMLClassReferenceNode && !offsetTag.isCloseTag())
+                IDefinition offsetDefinition = currentProject.resolveXMLNameToDefinition(offsetTag.getXMLName(), offsetTag.getMXMLDialect());
+                if (offsetDefinition != null)
                 {
-                    IMXMLClassReferenceNode mxmlNode = (IMXMLClassReferenceNode) offsetNode;
-                    IClassDefinition classDefinition = mxmlNode.getClassReference(currentProject);
-                    TypeScope typeScope = (TypeScope) classDefinition.getContainedScope();
-                    ASScope scope = (ASScope) mxmlNode.getContainingScope().getScope();
-                    addDefinitionsInTypeScopeToAutoComplete(typeScope, scope, false, true, propertyElementPrefix, result);
-                    String defaultPropertyName = classDefinition.getDefaultPropertyName(currentProject);
-                    if (defaultPropertyName != null && !isAttribute)
+                    if (offsetDefinition instanceof IClassDefinition
+                            && !offsetTag.isCloseTag())
                     {
-                        //if [DefaultProperty] is set, then we can instantiate
-                        //types as child elements
-                        //but we don't want to do that when in an attribute
-                        autoCompleteTypes(result);
+                        IClassDefinition classDefinition = (IClassDefinition) offsetDefinition;
+                        TypeScope typeScope = (TypeScope) classDefinition.getContainedScope();
+                        ASScope scope = (ASScope) offsetNode.getContainingScope().getScope();
+                        addDefinitionsInTypeScopeToAutoComplete(typeScope, scope, false, true, propertyElementPrefix, result);
+                        String defaultPropertyName = classDefinition.getDefaultPropertyName(currentProject);
+                        if (defaultPropertyName != null && !isAttribute)
+                        {
+                            //if [DefaultProperty] is set, then we can instantiate
+                            //types as child elements
+                            //but we don't want to do that when in an attribute
+                            autoCompleteTypes(result);
+                        }
+                        return CompletableFuture.completedFuture(result);
                     }
+                    System.err.println("Unknown definition for MXML completion: " + offsetDefinition.getClass());
                     return CompletableFuture.completedFuture(result);
                 }
 
-                if (offsetNode instanceof IMXMLSpecifierNode && !isAttribute)
+                IMXMLTagData parentTag = offsetTag.getParentTag();
+                IDefinition parentDefinition = currentProject.resolveXMLNameToDefinition(parentTag.getXMLName(), parentTag.getMXMLDialect());
+                if (parentDefinition != null &&
+                        parentDefinition instanceof IClassDefinition)
                 {
-                    autoCompleteTypes(result);
-                    return CompletableFuture.completedFuture(result);
+                    IClassDefinition classDefinition = (IClassDefinition) parentDefinition;
+                    offsetDefinition = currentProject.resolveSpecifier(classDefinition, offsetTag.getShortName());
+                    if(offsetDefinition != null)
+                    {
+                        if (offsetDefinition instanceof IVariableDefinition && !isAttribute)
+                        {
+                            autoCompleteTypes(result);
+                            return CompletableFuture.completedFuture(result);
+                        }
+                        System.err.println("Unknown definition for MXML completion: " + offsetDefinition.getClass());
+                        return CompletableFuture.completedFuture(result);
+                    }
                 }
             }
 
@@ -2312,7 +2332,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         invisibleUnits.clear();
     }
 
-    private IFlexProject getProject()
+    private FlexProject getProject()
     {
         clearInvisibleCompilationUnits();
         loadASConfigFile();
