@@ -263,7 +263,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     }
                 }
 
-                if (offsetNode instanceof IMXMLClassReferenceNode)
+                if (offsetNode instanceof IMXMLClassReferenceNode && !offsetTag.isCloseTag())
                 {
                     IMXMLClassReferenceNode mxmlNode = (IMXMLClassReferenceNode) offsetNode;
                     IClassDefinition classDefinition = mxmlNode.getClassReference(currentProject);
