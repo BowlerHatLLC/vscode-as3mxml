@@ -279,6 +279,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 TypeScope typeScope = (TypeScope) classDefinition.getContainedScope();
                 ASScope scope = (ASScope) mxmlNode.getContainingScope().getScope();
                 addDefinitionsInTypeScopeToAutoComplete(typeScope, scope, false, true, propertyElementPrefix, result);
+                String defaultPropertyName = classDefinition.getDefaultPropertyName(currentProject);
+                if (defaultPropertyName != null)
+                {
+                    autoCompleteTypes(result);
+                }
                 return CompletableFuture.completedFuture(result);
             }
         }
