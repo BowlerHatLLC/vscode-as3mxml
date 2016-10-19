@@ -1419,10 +1419,30 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     public CompletableFuture<Hover> mxmlHover(TextDocumentPositionParams position, IMXMLTagData offsetTag)
     {
-        IDefinition definition = getDefinitionForMXMLTagAtOffset(offsetTag, currentOffset);
+        IDefinition definition = getDefinitionForMXMLAtOffset(offsetTag, currentOffset);
         if (definition == null)
         {
             return CompletableFuture.completedFuture(new HoverImpl(Collections.emptyList(), null));
+        }
+
+        if (isInsideTagPrefix(offsetTag, currentOffset))
+        {
+            //inside the prefix
+            String prefix = offsetTag.getPrefix();
+            HoverImpl result = new HoverImpl();
+            List<MarkedStringImpl> contents = new ArrayList<>();
+            String detail = null;
+            if (prefix.length() > 0)
+            {
+                detail = "xmlns:" + prefix + "=\"" + offsetTag.getURI() + "\"";
+            }
+            else
+            {
+                detail = "xmlns=\"" + offsetTag.getURI() + "\"";
+            }
+            contents.add(mxmlMarkedString(detail));
+            result.setContents(contents);
+            return CompletableFuture.completedFuture(result);
         }
 
         HoverImpl result = new HoverImpl();
@@ -1463,11 +1483,17 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     public CompletableFuture<List<? extends Location>> mxmlDefinition(TextDocumentPositionParams position, IMXMLTagData offsetTag)
     {
-        IDefinition definition = getDefinitionForMXMLTagAtOffset(offsetTag, currentOffset);
+        IDefinition definition = getDefinitionForMXMLAtOffset(offsetTag, currentOffset);
         if (definition == null)
         {
             //VSCode may call definition() when there isn't necessarily a
             //definition referenced at the current position.
+            return CompletableFuture.completedFuture(Collections.emptyList());
+        }
+
+        if (isInsideTagPrefix(offsetTag, currentOffset))
+        {
+            //ignore the tag's prefix
             return CompletableFuture.completedFuture(Collections.emptyList());
         }
 
@@ -1882,6 +1908,16 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         MarkedStringImpl result = new MarkedStringImpl();
 
         result.setLanguage("nextgenas");
+        result.setValue(value);
+
+        return result;
+    }
+
+    private MarkedStringImpl mxmlMarkedString(String value)
+    {
+        MarkedStringImpl result = new MarkedStringImpl();
+
+        result.setLanguage("mxml");
         result.setValue(value);
 
         return result;
@@ -2721,7 +2757,22 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return ast.getContainingNode(currentOffset);
     }
 
-    private IDefinition getDefinitionForMXMLTagAtOffset(IMXMLTagData tag, int offset)
+    private boolean isInsideTagPrefix(IMXMLTagData tag, int offset)
+    {
+        //next, check that we're after the prefix
+        //one extra for bracket
+        int maxOffset = tag.getAbsoluteStart() + 1;
+        String prefix = tag.getPrefix();
+        int prefixLength = prefix.length();
+        if (prefixLength > 0)
+        {
+            //one extra for colon
+            maxOffset += prefixLength + 1;
+        }
+        return offset > tag.getAbsoluteStart() && offset < maxOffset;
+    }
+
+    private IDefinition getDefinitionForMXMLAtOffset(IMXMLTagData tag, int offset)
     {
         if (tag.isOffsetInAttributeList(offset))
         {
