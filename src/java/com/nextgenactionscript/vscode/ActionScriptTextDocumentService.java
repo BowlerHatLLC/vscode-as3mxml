@@ -1846,12 +1846,16 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         String definitionPath = definition.getSourcePath();
         if (definitionPath == null)
         {
+            //if the definition is in an MXML file, getSourcePath() may return
+            //null, but getContainingFilePath() will return something
             definitionPath = definition.getContainingFilePath();
             if (definition == null)
             {
                 //if everything is null, there's nothing to do
                 return;
             }
+            //however, getContainingFilePath() also works for SWCs, so only
+            //allow the files we support
             if (!definitionPath.endsWith(".as")
                     && !definitionPath.endsWith(".mxml"))
             {
@@ -1868,6 +1872,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         int nameColumn = definition.getNameColumn();
         if (nameLine == -1 || nameColumn == -1)
         {
+            //getNameLine() and getNameColumn() will both return -1 for a
+            //variable definition created by an MXML tag with an id.
+            //so we need to figure them out from the offset instead.
             int nameOffset = definition.getNameStart();
             if (nameOffset == -1)
             {
@@ -1877,11 +1884,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             Reader reader = null;
             if (sourceByPath.containsKey(resolvedPath))
             {
+                //if the file is open, use the edited code
                 String code = sourceByPath.get(resolvedPath);
                 reader = new StringReader(code);
             }
-            else //file is not open
+            else
             {
+                //if the file is not open, read it from the file system
                 try
                 {
                     reader = new FileReader(definitionPath);
@@ -1893,7 +1902,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             if (reader == null)
             {
-                //we can't get the code
+                //we can't get the code at all
                 return;
             }
 
