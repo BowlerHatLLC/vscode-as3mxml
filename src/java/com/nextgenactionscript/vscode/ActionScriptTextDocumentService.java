@@ -17,6 +17,8 @@ package com.nextgenactionscript.vscode;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
@@ -1841,21 +1843,75 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private void resolveDefinition(IDefinition definition, List<Location> result)
     {
-        String sourcePath = definition.getSourcePath();
-        if (sourcePath == null)
+        String definitionPath = definition.getSourcePath();
+        if (definitionPath == null)
         {
-            //if it's in a SWC or something, the source path might be null
-            return;
+            definitionPath = definition.getContainingFilePath();
+            if (definition == null)
+            {
+                //if everything is null, there's nothing to do
+                return;
+            }
+            if (!definitionPath.endsWith(".as")
+                    && !definitionPath.endsWith(".mxml"))
+            {
+                //if it's in a SWC or something, we don't know how to resolve
+                return;
+            }
         }
-        Path resolvedPath = Paths.get(definition.getSourcePath());
+
+        Path resolvedPath = Paths.get(definitionPath);
         LocationImpl location = new LocationImpl();
         location.setUri(resolvedPath.toUri().toString());
         PositionImpl start = new PositionImpl();
-        start.setLine(definition.getNameLine());
-        start.setCharacter(definition.getNameColumn());
+        int nameLine = definition.getNameLine();
+        int nameColumn = definition.getNameColumn();
+        if (nameLine == -1 || nameColumn == -1)
+        {
+            int nameOffset = definition.getNameStart();
+            if (nameOffset == -1)
+            {
+                //we can't find the name, so give up
+                return;
+            }
+            Reader reader = null;
+            if (sourceByPath.containsKey(resolvedPath))
+            {
+                String code = sourceByPath.get(resolvedPath);
+                reader = new StringReader(code);
+            }
+            else //file is not open
+            {
+                try
+                {
+                    reader = new FileReader(definitionPath);
+                }
+                catch (FileNotFoundException e)
+                {
+                    //do nothing
+                }
+            }
+            if (reader == null)
+            {
+                //we can't get the code
+                return;
+            }
+
+            PositionImpl position = new PositionImpl();
+            offsetToLineAndCharacter(reader, nameOffset, position);
+            nameLine = position.getLine();
+            nameColumn = position.getCharacter();
+        }
+        if (nameLine == -1 || nameColumn == -1)
+        {
+            //we can't find the name, so give up
+            return;
+        }
+        start.setLine(nameLine);
+        start.setCharacter(nameColumn);
         PositionImpl end = new PositionImpl();
-        end.setLine(definition.getNameLine());
-        end.setCharacter(definition.getNameColumn() + definition.getNameEnd() - definition.getNameStart());
+        end.setLine(nameLine);
+        end.setCharacter(nameColumn + definition.getNameEnd() - definition.getNameStart());
         RangeImpl range = new RangeImpl();
         range.setStart(start);
         range.setEnd(end);
