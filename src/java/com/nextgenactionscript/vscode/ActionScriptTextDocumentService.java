@@ -278,7 +278,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         if (offsetNode == null)
         {
             //we couldn't find a node at the specified location
-            return CompletableFuture.completedFuture(new SignatureHelpImpl());
+            return CompletableFuture.completedFuture(new SignatureHelpImpl(Collections.emptyList(), -1, -1));
         }
 
         IFunctionCallNode functionCallNode = getAncestorFunctionCallNode(offsetNode);
@@ -355,7 +355,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             return CompletableFuture.completedFuture(result);
         }
-        return CompletableFuture.completedFuture(new SignatureHelpImpl());
+        return CompletableFuture.completedFuture(new SignatureHelpImpl(Collections.emptyList(), -1, -1));
     }
 
     /**
@@ -1391,7 +1391,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         if (offsetNode == null)
         {
             //we couldn't find a node at the specified location
-            return CompletableFuture.completedFuture(new HoverImpl());
+            return CompletableFuture.completedFuture(new HoverImpl(Collections.emptyList(), null));
         }
 
         //INamespaceDecorationNode extends IIdentifierNode, but we don't want
@@ -1406,7 +1406,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
         if (definition == null)
         {
-            return CompletableFuture.completedFuture(new HoverImpl());
+            return CompletableFuture.completedFuture(new HoverImpl(Collections.emptyList(), null));
         }
 
         HoverImpl result = new HoverImpl();
@@ -1422,7 +1422,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         IDefinition definition = getDefinitionForMXMLTagAtOffset(offsetTag, currentOffset);
         if (definition == null)
         {
-            return CompletableFuture.completedFuture(new HoverImpl());
+            return CompletableFuture.completedFuture(new HoverImpl(Collections.emptyList(), null));
         }
 
         HoverImpl result = new HoverImpl();
