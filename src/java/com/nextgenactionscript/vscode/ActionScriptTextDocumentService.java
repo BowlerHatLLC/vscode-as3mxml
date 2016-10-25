@@ -946,6 +946,23 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 {
                     compilerOptions.debug = jsonCompilerOptions.getBoolean(CompilerOptions.DEBUG);
                 }
+                if (jsonCompilerOptions.has(CompilerOptions.DEFINE))
+                {
+                    HashMap<String, String> defines = new HashMap<>();
+                    JSONArray jsonDefine = jsonCompilerOptions.getJSONArray(CompilerOptions.DEFINE);
+                    for (int i = 0, count = jsonDefine.length(); i < count; i++)
+                    {
+                        JSONObject jsonNamespace = jsonDefine.getJSONObject(i);
+                        String name = jsonNamespace.getString(CompilerOptions.DEFINE_NAME);
+                        Object value = jsonNamespace.get(CompilerOptions.DEFINE_VALUE);
+                        if (value instanceof String)
+                        {
+                            value = "\"" + value + "\"";
+                        }
+                        defines.put(name, value.toString());
+                    }
+                    compilerOptions.defines = defines;
+                }
                 if (jsonCompilerOptions.has(CompilerOptions.EXTERNAL_LIBRARY_PATH))
                 {
                     JSONArray jsonExternalLibraryPath = jsonCompilerOptions.getJSONArray(CompilerOptions.EXTERNAL_LIBRARY_PATH);
@@ -2513,6 +2530,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         if (compilerOptions.namespaceMappings != null)
         {
             configurator.setNamespaceMappings(compilerOptions.namespaceMappings);
+        }
+        if (compilerOptions.defines != null)
+        {
+            configurator.setDefineDirectives(compilerOptions.defines);
         }
         if (currentOptions.type.equals(ProjectType.LIB))
         {

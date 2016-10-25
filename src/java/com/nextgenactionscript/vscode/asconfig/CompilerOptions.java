@@ -18,6 +18,7 @@ package com.nextgenactionscript.vscode.asconfig;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.flex.compiler.internal.mxml.MXMLNamespaceMapping;
 
@@ -30,6 +31,9 @@ import org.apache.flex.compiler.internal.mxml.MXMLNamespaceMapping;
 public class CompilerOptions
 {
     public static final String DEBUG = "debug";
+    public static final String DEFINE = "define";
+    public static final String DEFINE_NAME = "name";
+    public static final String DEFINE_VALUE = "value";
     public static final String EXTERNAL_LIBRARY_PATH = "external-library-path";
     public static final String INCLUDE_CLASSES = "include-classes";
     public static final String INCLUDE_NAMESPACES = "include-namespaces";
@@ -47,6 +51,7 @@ public class CompilerOptions
     public Collection<String> includeNamespaces;
     public Collection<File> includeSources;
     public Collection<File> libraryPath;
+    public Map<String,String> defines;
     public List<MXMLNamespaceMapping> namespaceMappings;
     public List<File> sourcePath;
     public boolean warnings = true;

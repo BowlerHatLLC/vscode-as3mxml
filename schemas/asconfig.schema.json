@@ -81,6 +81,37 @@
 						"height"
 					]
 				},
+				"define":
+				{
+					"type": "array",
+					"description": "Defines a global constant at compile time.",
+					"items":
+					{
+						"type": "object",
+						"properties":
+						{
+							"name":
+							{
+								"type": "string",
+								"description": "The name of the constant."
+							},
+							"value":
+							{
+								"type": [
+									"string",
+									"boolean",
+									"number"
+								],
+								"description": "The value of the constant."
+							}
+						},
+						"required":
+						[
+							"name",
+							"value"
+						]
+					}
+				},
 				"dump-config":
 				{
 					"type": "string",
