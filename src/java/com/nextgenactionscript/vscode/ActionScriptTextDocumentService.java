@@ -29,6 +29,7 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -913,6 +914,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         ProjectType type = ProjectType.APP;
         String config = null;
         String[] files = null;
+        String additionalOptions = null;
         CompilerOptions compilerOptions = new CompilerOptions();
         try (InputStream schemaInputStream = getClass().getResourceAsStream("/schemas/asconfig.schema.json"))
         {
@@ -1052,6 +1054,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     compilerOptions.warnings = jsonCompilerOptions.getBoolean(CompilerOptions.WARNINGS);
                 }
             }
+            //these options are formatted as if sent in through the command line
+            if (json.has(ASConfigOptions.ADDITIONAL_OPTIONS)) //optional
+            {
+                additionalOptions = json.getString(ASConfigOptions.ADDITIONAL_OPTIONS);
+            }
         }
         catch (ValidationException e)
         {
@@ -1084,6 +1091,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         options.config = config;
         options.files = files;
         options.compilerOptions = compilerOptions;
+        options.additionalOptions = additionalOptions;
         currentOptions = options;
     }
 
@@ -1898,25 +1906,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 //we can't find the name, so give up
                 return;
             }
-            Reader reader = null;
-            if (sourceByPath.containsKey(resolvedPath))
-            {
-                //if the file is open, use the edited code
-                String code = sourceByPath.get(resolvedPath);
-                reader = new StringReader(code);
-            }
-            else
-            {
-                //if the file is not open, read it from the file system
-                try
-                {
-                    reader = new FileReader(definitionPath);
-                }
-                catch (FileNotFoundException e)
-                {
-                    //do nothing
-                }
-            }
+            Reader reader = getReaderForPath(resolvedPath);
             if (reader == null)
             {
                 //we can't get the code at all
@@ -2262,8 +2252,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         publish.setUri(uri.toString());
         trackFileWithErrors(uri);
 
-        String code = sourceByPath.get(path);
-        StringReader reader = new StringReader(code);
+        Reader reader = getReaderForPath(path);
+        if (reader == null)
+        {
+            //we can't get the code at all
+            System.err.println("Cannot create Reader for path: " + path.toAbsolutePath().toString());
+            return;
+        }
         StreamingASTokenizer tokenizer = StreamingASTokenizer.createForRepairingASTokenizer(reader, uri.toString(), null);
         ASToken[] tokens = tokenizer.getTokens(reader);
         if (tokenizer.hasTokenizationProblems())
@@ -2497,13 +2492,23 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         configurator.setToken("configname", currentOptions.config);
         ProjectType type = currentOptions.type;
         String[] files = currentOptions.files;
+        String additionalOptions = currentOptions.additionalOptions;
+        ArrayList<String> combinedOptions = new ArrayList<>();
+        if (additionalOptions != null)
+        {
+            String[] splitOptions = additionalOptions.split("\\s+");
+            combinedOptions.addAll(Arrays.asList(splitOptions));
+        }
         if (type.equals(ProjectType.LIB))
         {
-            configurator.setConfiguration(null, ICompilerSettingsConstants.INCLUDE_CLASSES_VAR, false);
+            configurator.setConfiguration(combinedOptions.toArray(new String[combinedOptions.size()]),
+                    ICompilerSettingsConstants.INCLUDE_CLASSES_VAR, false);
         }
         else // app
         {
-            configurator.setConfiguration(files, ICompilerSettingsConstants.FILE_SPECS_VAR);
+            combinedOptions.addAll(Arrays.asList(files));
+            configurator.setConfiguration(combinedOptions.toArray(new String[combinedOptions.size()]),
+                    ICompilerSettingsConstants.FILE_SPECS_VAR);
         }
         //this needs to be set before applyToProject() so that it's in the
         //configuration buffer before addExternalLibraryPath() is called
@@ -2712,6 +2717,30 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             addCompilerProblem(problem, publish);
         }
         return publish;
+    }
+
+    private Reader getReaderForPath(Path path)
+    {
+        Reader reader = null;
+        if (sourceByPath.containsKey(path))
+        {
+            //if the file is open, use the edited code
+            String code = sourceByPath.get(path);
+            reader = new StringReader(code);
+        }
+        else
+        {
+            //if the file is not open, read it from the file system
+            try
+            {
+                reader = new FileReader(path.toAbsolutePath().toString());
+            }
+            catch (FileNotFoundException e)
+            {
+                //do nothing
+            }
+        }
+        return reader;
     }
 
     private Path getPathFromLsapiURI(String apiURI)
