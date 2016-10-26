@@ -17,7 +17,17 @@
 	<target name="-build-java">
 		<property name="debug.java" value="false"/>
 		<mkdir dir="${jar.content.output}"/>
-		<javac srcdir="src/java" destdir="${jar.content.output}" debug="${debug.java}" includeAntRuntime="false">
+		<javac srcdir="src/java" destdir="${jar.content.output}"
+			target="1.5" source="1.5"
+			debug="${debug.java}" includeAntRuntime="false">
+			<include name="**/CheckJavaVersion.java"/>
+		</javac>
+		<jar manifest="manifest-check-java-version.mf" basedir="${jar.content.output}" destfile="target/CheckJavaVersion.jar"/>
+		<delete dir="${jar.content.output}"/>
+		<mkdir dir="${jar.content.output}"/>
+		<javac srcdir="src/java" destdir="${jar.content.output}"
+			target="1.8" source="1.8"
+			debug="${debug.java}" includeAntRuntime="false">
 			<classpath>
 				<fileset dir="lib">
 					<include name="**/*.jar"/>

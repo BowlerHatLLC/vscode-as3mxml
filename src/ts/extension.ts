@@ -24,8 +24,8 @@ import {LanguageClient, LanguageClientOptions, SettingMonitor,
 	ServerOptions, StreamInfo, ErrorHandler, ErrorAction, CloseAction} from "vscode-languageclient";
 import { Message } from "vscode-jsonrpc";
 
-const MISSING_SDK_ERROR = "Could not locate Apache FlexJS SDK. Configure nextgenas.flexjssdk, add to $PATH, or set $FLEX_HOME.";
-const MISSING_JAVA_ERROR = "Could not locate java in $JAVA_HOME or $PATH";
+const MISSING_SDK_ERROR = "Could not locate valid Apache FlexJS SDK. Configure nextgenas.flexjssdk, add to $PATH, or set $FLEX_HOME.";
+const MISSING_JAVA_ERROR = "Could not locate valid Java executable. Configure nextgenas.java, add to $PATH or set $JAVA_HOME.";
 let savedChild: child_process.ChildProcess;
 let savedContext: vscode.ExtensionContext;
 let flexHome: string;
@@ -33,17 +33,35 @@ let javaExecutablePath: string;
 let killed = false;
 portfinder.basePort = 55282;
 
+function isValidJava(javaPath: string): boolean
+{
+	if(!fs.existsSync(javaPath))
+	{
+		return false;
+	}
+	let args =
+	[
+		"-jar",
+		path.join(savedContext.extensionPath, "target", "CheckJavaVersion.jar")
+	];
+	let result = child_process.spawnSync(javaPath, args);
+	console.log(javaPath, result.status);
+	return result.status === 0;
+}
+
 export function activate(context: vscode.ExtensionContext)
 {
 	savedContext = context;
 	flexHome = findSDK();
-	javaExecutablePath = findJava();
+	javaExecutablePath = findJava(isValidJava);
 	vscode.workspace.onDidChangeConfiguration((event) =>
 	{
 		let newFlexHome = findSDK();
-		if(flexHome != newFlexHome)
+		let newJavaExecutablePath = findJava(isValidJava);
+		if(flexHome != newFlexHome || javaExecutablePath != newJavaExecutablePath)
 		{
 			flexHome = newFlexHome;
+			javaExecutablePath = newJavaExecutablePath;
 			if(savedChild)
 			{
 				killed = true;

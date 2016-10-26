@@ -17,7 +17,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vscode from "vscode";
 
-export function isValidSDK(absolutePath: string)
+export function isValidSDK(absolutePath: string): boolean
 {
 	if(!absolutePath)
 	{
@@ -39,9 +39,15 @@ export function isValidSDK(absolutePath: string)
 export function findSDK(): string
 {
 	let sdkPath = <string> vscode.workspace.getConfiguration("nextgenas").get("flexjssdk");
-	if(isValidSDK(sdkPath))
+	if(sdkPath)
 	{
-		return sdkPath;
+		if(isValidSDK(sdkPath))
+		{
+			return sdkPath;
+		}
+		//if the user specified an SDK in the settings, no fallback
+		//otherwise, it could be confusing
+		return null;
 	}
 	try
 	{
@@ -97,8 +103,20 @@ export function findSDK(): string
 	return null;
 }
 
-export function findJava(): string
+export function findJava(validate: (path: string) => boolean): string
 {
+	let configJavaPath = <string> vscode.workspace.getConfiguration("nextgenas").get("java");
+	if(configJavaPath)
+	{
+		if(validate(configJavaPath))
+		{
+			return configJavaPath;
+		}
+		//if the user specified java in the settings, no fallback
+		//otherwise, it could be confusing
+		return null;
+	}
+
 	var executableFile:String = "java";
 	if(process["platform"] === "win32")
 	{
@@ -109,7 +127,7 @@ export function findJava(): string
 	{
 		let javaHome = <string> process.env.JAVA_HOME;
 		let javaPath = path.join(javaHome, "bin", executableFile);
-		if(fs.existsSync(javaPath))
+		if(validate(javaPath))
 		{
 			return javaPath;
 		}
@@ -123,7 +141,7 @@ export function findJava(): string
 		for(let i = 0; i < pathCount; i++)
 		{
 			let javaPath = path.join(paths[i], executableFile);
-			if(fs.existsSync(javaPath))
+			if(validate(javaPath))
 			{
 				return javaPath;
 			}
