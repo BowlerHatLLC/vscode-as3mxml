@@ -46,7 +46,6 @@ function isValidJava(javaPath: string): boolean
 		path.join(savedContext.extensionPath, "target", "CheckJavaVersion.jar")
 	];
 	let result = child_process.spawnSync(javaPath, args);
-	console.log(javaPath, result.status);
 	return result.status === 0;
 }
 
