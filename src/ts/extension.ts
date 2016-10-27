@@ -26,6 +26,7 @@ import { Message } from "vscode-jsonrpc";
 
 const MISSING_SDK_ERROR = "Could not locate valid Apache FlexJS SDK. Configure nextgenas.flexjssdk, add to $PATH, or set $FLEX_HOME.";
 const MISSING_JAVA_ERROR = "Could not locate valid Java executable. Configure nextgenas.java, add to $PATH or set $JAVA_HOME.";
+const MISSING_WORKSPACE_ROOT_ERROR = "Open a folder and create a file named asconfig.json to enable all ActionScript and MXML language features.";
 let savedChild: child_process.ChildProcess;
 let savedContext: vscode.ExtensionContext;
 let flexHome: string;
@@ -338,6 +339,20 @@ function startClient()
 	if(!javaExecutablePath)
 	{ 
 		vscode.window.showErrorMessage(MISSING_JAVA_ERROR);
+		return;
+	}
+	if(!vscode.workspace.rootPath)
+	{
+		vscode.window.showInformationMessage(MISSING_WORKSPACE_ROOT_ERROR,
+			{ title: "Help", href: "https://github.com/BowlerHatLLC/vscode-nextgenas/wiki" }
+		).then((value) =>
+		{
+			if(value && value.href)
+			{
+				let uri = vscode.Uri.parse(value.href);
+				vscode.commands.executeCommand("vscode.open", uri);
+			}
+		});
 		return;
 	}
 
