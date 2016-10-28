@@ -2790,6 +2790,15 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return null;
         }
 
+        //need to ensure that the compilation unit exists, even though we don't
+        //use it directly
+        ICompilationUnit unit = getCompilationUnit(path);
+        if (unit == null)
+        {
+            //no need to log this case because it can happen for reasons that
+            //should have been logged already
+            return null;
+        }
         IMXMLDataManager mxmlDataManager = currentWorkspace.getMXMLDataManager();
         MXMLData mxmlData = (MXMLData) mxmlDataManager.get(fileSpecGetter.getFileSpecification(path.toAbsolutePath().toString()));
         if (mxmlData == null)
@@ -2842,6 +2851,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         ICompilationUnit unit = getCompilationUnit(path);
         if (unit == null)
         {
+            //no need to log this case because it can happen for reasons that
+            //should have been logged already
             return null;
         }
         IASNode ast = null;
