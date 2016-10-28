@@ -191,6 +191,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 {
     private static final String MXML_EXTENSION = ".mxml";
     private static final String AS_EXTENSION = ".as";
+    private static final String SWC_EXTENSION = ".swc";
+    private static final String ASCONFIG_JSON = "asconfig.json";
 
     private Boolean asconfigChanged = true;
     private Path workspaceRoot;
@@ -301,7 +303,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             {
                 //special case for super()
                 IIdentifierNode identifierNode = (IIdentifierNode) nameNode;
-                if (identifierNode.getName().equals("super"))
+                if (identifierNode.getName().equals(IASKeywordConstants.SUPER))
                 {
                     ITypeDefinition typeDefinition = nameNode.resolveType(currentProject);
                     if (typeDefinition instanceof IClassDefinition)
@@ -817,7 +819,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 continue;
             }
             File file = path.toFile();
-            if (file.getName().equals("asconfig.json"))
+            if (file.getName().equals(ASCONFIG_JSON))
             {
                 //compiler settings may have changed, which means we should
                 //start fresh
@@ -886,7 +888,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return null;
         }
-        Path asconfigPath = workspaceRoot.resolve("asconfig.json");
+        Path asconfigPath = workspaceRoot.resolve(ASCONFIG_JSON);
         File asconfigFile = new File(asconfigPath.toUri());
         if (!asconfigFile.exists())
         {
@@ -1577,7 +1579,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             CompletionItemImpl item = new CompletionItemImpl();
             item.setKind(CompletionItemKind.Class);
-            item.setLabel("void");
+            item.setLabel(IASKeywordConstants.VOID);
             result.getItems().add(item);
         }
     }
@@ -2009,7 +2011,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             showMessageCallback.accept(message);
             return null;
         }
-        if (resolved.getContainingFilePath().endsWith(".swc"))
+        if (resolved.getContainingFilePath().endsWith(SWC_EXTENSION))
         {
             MessageParamsImpl message = new MessageParamsImpl();
             message.setType(MessageType.Info);
@@ -3015,7 +3017,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             detailBuilder.append(" ");
             detailBuilder.append(classDefinition.getQualifiedName());
             IClassDefinition baseClassDefinition = classDefinition.resolveBaseClass(currentProject);
-            if (baseClassDefinition != null && !baseClassDefinition.getQualifiedName().equals("Object"))
+            if (baseClassDefinition != null && !baseClassDefinition.getQualifiedName().equals(IASLanguageConstants.Object))
             {
                 detailBuilder.append(" ");
                 detailBuilder.append(IASKeywordConstants.EXTENDS);
