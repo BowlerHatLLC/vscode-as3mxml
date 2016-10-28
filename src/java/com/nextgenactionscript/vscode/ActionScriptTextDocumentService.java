@@ -189,6 +189,9 @@ import org.json.JSONTokener;
  */
 public class ActionScriptTextDocumentService implements TextDocumentService
 {
+    private static final String MXML_EXTENSION = ".mxml";
+    private static final String AS_EXTENSION = ".as";
+
     private Boolean asconfigChanged = true;
     private Path workspaceRoot;
     private Map<Path, String> sourceByPath = new HashMap<>();
@@ -821,7 +824,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 asconfigChanged = true;
                 needsFullCheck = true;
             }
-            else if (file.getName().endsWith(".as") && currentWorkspace != null)
+            else if (file.getName().endsWith(AS_EXTENSION) && currentWorkspace != null)
             {
                 if (event.getType().equals(FileChangeType.Deleted))
                 {
@@ -1881,8 +1884,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             //however, getContainingFilePath() also works for SWCs, so only
             //allow the files we support
-            if (!definitionPath.endsWith(".as")
-                    && !definitionPath.endsWith(".mxml"))
+            if (!definitionPath.endsWith(AS_EXTENSION)
+                    && !definitionPath.endsWith(MXML_EXTENSION))
             {
                 //if it's in a SWC or something, we don't know how to resolve
                 return;
@@ -2772,8 +2775,14 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private IMXMLTagData getOffsetMXMLTag(TextDocumentIdentifier textDocument, Position position)
     {
+        String uri = textDocument.getUri();
+        if (!uri.endsWith(MXML_EXTENSION))
+        {
+            // don't try to parse ActionScript files as MXML
+            return null;
+        }
         currentOffset = -1;
-        Path path = getPathFromLsapiURI(textDocument.getUri());
+        Path path = getPathFromLsapiURI(uri);
         if (path == null)
         {
             return null;
