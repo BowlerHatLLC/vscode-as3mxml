@@ -819,14 +819,16 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 continue;
             }
             File file = path.toFile();
-            if (file.getName().equals(ASCONFIG_JSON))
+            String fileName = file.getName();
+            if (fileName.equals(ASCONFIG_JSON))
             {
                 //compiler settings may have changed, which means we should
                 //start fresh
                 asconfigChanged = true;
                 needsFullCheck = true;
             }
-            else if (file.getName().endsWith(AS_EXTENSION) && currentWorkspace != null)
+            else if ((fileName.endsWith(AS_EXTENSION) || fileName.endsWith(MXML_EXTENSION))
+                    && currentWorkspace != null)
             {
                 if (event.getType().equals(FileChangeType.Deleted))
                 {
