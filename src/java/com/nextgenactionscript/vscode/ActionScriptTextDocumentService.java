@@ -1371,7 +1371,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return CompletableFuture.completedFuture(result);
     }
 
-    public CompletableFuture<Hover> actionScriptHover(TextDocumentPositionParams position)
+    private CompletableFuture<Hover> actionScriptHover(TextDocumentPositionParams position)
     {
         IDefinition definition = null;
         IASNode offsetNode = getOffsetNode(position);
@@ -1404,7 +1404,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return CompletableFuture.completedFuture(result);
     }
 
-    public CompletableFuture<Hover> mxmlHover(TextDocumentPositionParams position, IMXMLTagData offsetTag)
+    private CompletableFuture<Hover> mxmlHover(TextDocumentPositionParams position, IMXMLTagData offsetTag)
     {
         IDefinition definition = getDefinitionForMXMLAtOffset(offsetTag, currentOffset);
         if (definition == null)
@@ -1440,7 +1440,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return CompletableFuture.completedFuture(result);
     }
 
-    public CompletableFuture<List<? extends Location>> actionScriptDefinition(TextDocumentPositionParams position)
+    private CompletableFuture<List<? extends Location>> actionScriptDefinition(TextDocumentPositionParams position)
     {
         IASNode offsetNode = getOffsetNode(position);
         if (offsetNode == null)
@@ -1468,7 +1468,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return CompletableFuture.completedFuture(result);
     }
 
-    public CompletableFuture<List<? extends Location>> mxmlDefinition(TextDocumentPositionParams position, IMXMLTagData offsetTag)
+    private CompletableFuture<List<? extends Location>> mxmlDefinition(TextDocumentPositionParams position, IMXMLTagData offsetTag)
     {
         IDefinition definition = getDefinitionForMXMLAtOffset(offsetTag, currentOffset);
         if (definition == null)
@@ -1489,7 +1489,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return CompletableFuture.completedFuture(result);
     }
 
-    public CompletableFuture<List<? extends Location>> actionScriptReferences(ReferenceParams params)
+    private CompletableFuture<List<? extends Location>> actionScriptReferences(ReferenceParams params)
     {
         IASNode offsetNode = getOffsetNode(params.getTextDocument(), params.getPosition());
         if (offsetNode == null)
@@ -1516,7 +1516,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return CompletableFuture.completedFuture(Collections.emptyList());
     }
 
-    public CompletableFuture<List<? extends Location>> mxmlReferences(ReferenceParams params, IMXMLTagData offsetTag)
+    private CompletableFuture<List<? extends Location>> mxmlReferences(ReferenceParams params, IMXMLTagData offsetTag)
     {
         IDefinition definition = getDefinitionForMXMLAtOffset(offsetTag, currentOffset);
         if (definition != null)
