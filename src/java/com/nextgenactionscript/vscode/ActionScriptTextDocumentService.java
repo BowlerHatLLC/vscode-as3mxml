@@ -391,63 +391,16 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     @Override
     public CompletableFuture<List<? extends Location>> references(ReferenceParams params)
     {
-        IASNode offsetNode = getOffsetNode(params.getTextDocument(), params.getPosition());
-        if (offsetNode == null)
+        TextDocumentIdentifier textDocument = params.getTextDocument();
+        Position position = params.getPosition();
+        IMXMLTagData offsetTag = getOffsetMXMLTag(params);
+        //if we're inside an <fx:Script> tag, we want ActionScript completion,
+        //so that's why we call isMXMLTagValidForCompletion()
+        if (offsetTag != null && isMXMLTagValidForCompletion(offsetTag))
         {
-            //we couldn't find a node at the specified location
-            return CompletableFuture.completedFuture(Collections.emptyList());
+            return mxmlReferences(params, offsetTag);
         }
-
-        if (offsetNode instanceof IIdentifierNode)
-        {
-            IIdentifierNode identifierNode = (IIdentifierNode) offsetNode;
-            IDefinition resolved = identifierNode.resolve(currentProject);
-            if (resolved == null)
-            {
-                return CompletableFuture.completedFuture(Collections.emptyList());
-            }
-            List<Location> result = new ArrayList<>();
-            for (ICompilationUnit compilationUnit : compilationUnits)
-            {
-                if (compilationUnit instanceof SWCCompilationUnit)
-                {
-                    continue;
-                }
-                IASNode ast;
-                try
-                {
-                    ast = compilationUnit.getSyntaxTreeRequest().get().getAST();
-                }
-                catch (Exception e)
-                {
-                    continue;
-                }
-                ArrayList<IIdentifierNode> identifiers = new ArrayList<>();
-                findIdentifiers(ast, resolved, identifiers);
-                for (IIdentifierNode otherNode : identifiers)
-                {
-                    Path otherNodePath = Paths.get(otherNode.getSourcePath());
-                    LocationImpl location = new LocationImpl();
-                    location.setUri(otherNodePath.toUri().toString());
-                    PositionImpl start = new PositionImpl();
-                    start.setLine(otherNode.getLine());
-                    start.setCharacter(otherNode.getColumn());
-                    PositionImpl end = new PositionImpl();
-                    end.setLine(otherNode.getEndLine());
-                    end.setCharacter(otherNode.getEndColumn());
-                    RangeImpl range = new RangeImpl();
-                    range.setStart(start);
-                    range.setEnd(end);
-                    location.setRange(range);
-                    result.add(location);
-                }
-            }
-            return CompletableFuture.completedFuture(result);
-        }
-
-        //VSCode may call definition() when there isn't necessarily a
-        //definition referenced at the current position.
-        return CompletableFuture.completedFuture(Collections.emptyList());
+        return actionScriptReferences(params);
     }
 
     /**
@@ -1534,6 +1487,149 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         List<Location> result = new ArrayList<>();
         resolveDefinition(definition, result);
         return CompletableFuture.completedFuture(result);
+    }
+
+    public CompletableFuture<List<? extends Location>> actionScriptReferences(ReferenceParams params)
+    {
+        IASNode offsetNode = getOffsetNode(params.getTextDocument(), params.getPosition());
+        if (offsetNode == null)
+        {
+            //we couldn't find a node at the specified location
+            return CompletableFuture.completedFuture(Collections.emptyList());
+        }
+
+        if (offsetNode instanceof IIdentifierNode)
+        {
+            IIdentifierNode identifierNode = (IIdentifierNode) offsetNode;
+            IDefinition resolved = identifierNode.resolve(currentProject);
+            if (resolved == null)
+            {
+                return CompletableFuture.completedFuture(Collections.emptyList());
+            }
+            List<Location> result = new ArrayList<>();
+            referencesForDefinition(resolved, result);
+            return CompletableFuture.completedFuture(result);
+        }
+
+        //VSCode may call definition() when there isn't necessarily a
+        //definition referenced at the current position.
+        return CompletableFuture.completedFuture(Collections.emptyList());
+    }
+
+    public CompletableFuture<List<? extends Location>> mxmlReferences(ReferenceParams params, IMXMLTagData offsetTag)
+    {
+        IDefinition definition = getDefinitionForMXMLAtOffset(offsetTag, currentOffset);
+        if (definition != null)
+        {
+            if (isInsideTagPrefix(offsetTag, currentOffset))
+            {
+                //ignore the tag's prefix
+                return CompletableFuture.completedFuture(Collections.emptyList());
+            }
+            ArrayList<Location> result = new ArrayList<>();
+            referencesForDefinition(definition, result);
+            return CompletableFuture.completedFuture(result);
+        }
+
+        //finally, check if we're looking for references to a tag's id
+        IMXMLTagAttributeData attributeData = getMXMLTagAttributeWithValueAtOffset(offsetTag, currentOffset);
+        if (attributeData == null || !attributeData.getName().equals("id"))
+        {
+            //VSCode may call definition() when there isn't necessarily a
+            //definition referenced at the current position.
+            return CompletableFuture.completedFuture(Collections.emptyList());
+        }
+        Path path = getPathFromLsapiURI(params.getTextDocument().getUri());
+        if (path == null)
+        {
+            //this probably shouldn't happen, but check just to be safe
+            return CompletableFuture.completedFuture(Collections.emptyList());
+        }
+        ICompilationUnit unit = getCompilationUnit(path);
+        Collection<IDefinition> definitions = null;
+        try
+        {
+            definitions = unit.getFileScopeRequest().get().getExternallyVisibleDefinitions();
+        }
+        catch (Exception e)
+        {
+            //safe to ignore
+        }
+        if (definitions == null || definitions.size() == 0)
+        {
+            return CompletableFuture.completedFuture(Collections.emptyList());
+        }
+        IClassDefinition classDefinition = null;
+        for (IDefinition currentDefinition : definitions)
+        {
+            if (currentDefinition instanceof IClassDefinition)
+            {
+                classDefinition = (IClassDefinition) currentDefinition;
+                break;
+            }
+        }
+        if (classDefinition == null)
+        {
+            //this probably shouldn't happen, but check just to be safe
+            return CompletableFuture.completedFuture(Collections.emptyList());
+        }
+        IASScope scope = classDefinition.getContainedScope();
+        for (IDefinition currentDefinition : scope.getAllLocalDefinitions())
+        {
+            if (currentDefinition.getBaseName().equals(attributeData.getRawValue()))
+            {
+                definition = currentDefinition;
+                break;
+            }
+        }
+        if (definition == null)
+        {
+            //VSCode may call definition() when there isn't necessarily a
+            //definition referenced at the current position.
+            return CompletableFuture.completedFuture(Collections.emptyList());
+        }
+        ArrayList<Location> result = new ArrayList<>();
+        referencesForDefinition(definition, result);
+        return CompletableFuture.completedFuture(result);
+    }
+
+    private void referencesForDefinition(IDefinition definition, List<Location> result)
+    {
+        for (ICompilationUnit compilationUnit : compilationUnits)
+        {
+            if (compilationUnit instanceof SWCCompilationUnit)
+            {
+                continue;
+            }
+            IASNode ast;
+            try
+            {
+                ast = compilationUnit.getSyntaxTreeRequest().get().getAST();
+            }
+            catch (Exception e)
+            {
+                continue;
+            }
+            ArrayList<IIdentifierNode> identifiers = new ArrayList<>();
+            findIdentifiers(ast, definition, identifiers);
+            for (IIdentifierNode otherNode : identifiers)
+            {
+                Path otherNodePath = Paths.get(otherNode.getSourcePath());
+                LocationImpl location = new LocationImpl();
+                location.setUri(otherNodePath.toUri().toString());
+                PositionImpl start = new PositionImpl();
+                start.setLine(otherNode.getLine());
+                start.setCharacter(otherNode.getColumn());
+                PositionImpl end = new PositionImpl();
+                end.setLine(otherNode.getEndLine());
+                end.setCharacter(otherNode.getEndColumn());
+                RangeImpl range = new RangeImpl();
+                range.setStart(start);
+                range.setEnd(end);
+                location.setRange(range);
+                result.add(location);
+            }
+        }
     }
 
     private void autoCompleteTypes(CompletionListImpl result)
