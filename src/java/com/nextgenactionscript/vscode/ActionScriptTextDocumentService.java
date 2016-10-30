@@ -48,6 +48,7 @@ import org.apache.flex.compiler.config.Configurator;
 import org.apache.flex.compiler.config.ICompilerSettingsConstants;
 import org.apache.flex.compiler.constants.IASKeywordConstants;
 import org.apache.flex.compiler.constants.IASLanguageConstants;
+import org.apache.flex.compiler.constants.IMetaAttributeConstants;
 import org.apache.flex.compiler.definitions.IAccessorDefinition;
 import org.apache.flex.compiler.definitions.IClassDefinition;
 import org.apache.flex.compiler.definitions.IConstantDefinition;
@@ -1332,6 +1333,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 TypeScope typeScope = (TypeScope) classDefinition.getContainedScope();
                 ASScope scope = (ASScope) scopes[0];
                 addDefinitionsInTypeScopeToAutoComplete(typeScope, scope, false, true, propertyElementPrefix, result);
+                addStyleMetadataToAutoComplete(typeScope, result);
+                addEventMetadataToAutoComplete(typeScope, result);
                 String defaultPropertyName = classDefinition.getDefaultPropertyName(currentProject);
                 if (defaultPropertyName != null && !isAttribute)
                 {
@@ -2018,6 +2021,82 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             addDefinitionAutoComplete(localDefinition, prefix, result);
         }
+    }
+
+    private void addEventMetadataToAutoComplete(TypeScope typeScope, CompletionListImpl result)
+    {
+        ArrayList<String> eventNames = new ArrayList<>();
+        IDefinition definition = typeScope.getDefinition();
+        do
+        {
+            IMetaTag[] eventMetaTags = definition.getMetaTagsByName(IMetaAttributeConstants.ATTRIBUTE_EVENT);
+            for (IMetaTag eventMetaTag : eventMetaTags)
+            {
+                String eventName = eventMetaTag.getAttributeValue(IMetaAttributeConstants.NAME_EVENT_NAME);
+                if (eventNames.contains(eventName))
+                {
+                    //avoid duplicates!
+                    continue;
+                }
+                eventNames.add(eventName);
+                CompletionItemImpl item = new CompletionItemImpl();
+                item.setKind(CompletionItemKind.Field);
+                item.setLabel(eventName);
+                StringBuilder detailBuilder = new StringBuilder();
+                detailBuilder.append("(event) ");
+                detailBuilder.append(definition.getQualifiedName());
+                item.setDetail(detailBuilder.toString());
+                result.getItems().add(item);
+            }
+            if (definition instanceof IClassDefinition)
+            {
+                IClassDefinition classDefinition = (IClassDefinition) definition;
+                definition = classDefinition.resolveBaseClass(currentProject);
+            }
+            else
+            {
+                definition = null;
+            }
+        }
+        while (definition != null);
+    }
+
+    private void addStyleMetadataToAutoComplete(TypeScope typeScope, CompletionListImpl result)
+    {
+        ArrayList<String> styleNames = new ArrayList<>();
+        IDefinition definition = typeScope.getDefinition();
+        do
+        {
+            IMetaTag[] styleMetaTags = typeScope.getDefinition().getMetaTagsByName(IMetaAttributeConstants.ATTRIBUTE_STYLE);
+            for (IMetaTag styleMetaTag : styleMetaTags)
+            {
+                String styleName = styleMetaTag.getAttributeValue(IMetaAttributeConstants.NAME_STYLE_NAME);
+                if (styleNames.contains(styleName))
+                {
+                    //avoid duplicates!
+                    continue;
+                }
+                styleNames.add(styleName);
+                CompletionItemImpl item = new CompletionItemImpl();
+                item.setKind(CompletionItemKind.Field);
+                item.setLabel(styleName);
+                StringBuilder detailBuilder = new StringBuilder();
+                detailBuilder.append("(style) ");
+                detailBuilder.append(definition.getQualifiedName());
+                item.setDetail(detailBuilder.toString());
+                result.getItems().add(item);
+            }
+            if (definition instanceof IClassDefinition)
+            {
+                IClassDefinition classDefinition = (IClassDefinition) definition;
+                definition = classDefinition.resolveBaseClass(currentProject);
+            }
+            else
+            {
+                definition = null;
+            }
+        }
+        while (definition != null);
     }
 
     private void addDefinitionAutoComplete(IDefinition definition, CompletionListImpl result)
