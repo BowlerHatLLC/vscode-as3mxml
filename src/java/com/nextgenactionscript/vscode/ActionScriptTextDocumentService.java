@@ -1935,7 +1935,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private void addDefinitionsInTypeScopeToAutoComplete(TypeScope typeScope, ASScope otherScope, boolean isStatic, boolean forMXML, String prefix, CompletionListImpl result)
     {
-        IMetaTag[] excludeMetaTags = typeScope.getDefinition().getMetaTagsByName(IASLanguageConstants.EXCLUDE_META_TAG);
+        IMetaTag[] excludeMetaTags = typeScope.getDefinition().getMetaTagsByName(IMetaAttributeConstants.ATTRIBUTE_EXCLUDE);
         ArrayList<IDefinition> memberAccessDefinitions = new ArrayList<>();
         Set<INamespaceDefinition> namespaceSet = otherScope.getNamespaceSet(currentProject);
         if (typeScope.getContainingDefinition() instanceof IInterfaceDefinition)
@@ -1957,7 +1957,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 boolean exclude = false;
                 for (IMetaTag excludeMetaTag : excludeMetaTags)
                 {
-                    String excludeName = excludeMetaTag.getAttributeValue(IASLanguageConstants.EXCLUDE_META_TAG_NAME);
+                    String excludeName = excludeMetaTag.getAttributeValue(IMetaAttributeConstants.NAME_EXCLUDE_NAME);
                     if (excludeName.equals(localDefinition.getBaseName()))
                     {
                         exclude = true;
