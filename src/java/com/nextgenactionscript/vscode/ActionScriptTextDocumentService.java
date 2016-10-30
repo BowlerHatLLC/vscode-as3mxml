@@ -642,7 +642,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         if (offsetNode == null)
         {
             //we couldn't find a node at the specified location
-            return null;
+            return CompletableFuture.completedFuture(new WorkspaceEditImpl(new HashMap<>()));
         }
 
         if (offsetNode instanceof IDefinitionNode)
@@ -664,7 +664,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         message.setMessage("You cannot rename this element.");
         showMessageCallback.accept(message);
 
-        return null;
+        return CompletableFuture.completedFuture(new WorkspaceEditImpl(new HashMap<>()));
     }
 
     /**
@@ -2147,6 +2147,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private WorkspaceEditImpl renameExpression(IExpressionNode node, String newName)
     {
+        WorkspaceEditImpl result = new WorkspaceEditImpl();
+        Map<String, List<TextEditImpl>> changes = new HashMap<>();
+        result.setChanges(changes);
         IDefinition resolved = node.resolve(currentProject);
         if (resolved == null)
         {
@@ -2154,7 +2157,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             message.setType(MessageType.Info);
             message.setMessage("You cannot rename this element.");
             showMessageCallback.accept(message);
-            return null;
+            return result;
         }
         if (resolved.getContainingFilePath().endsWith(SWC_EXTENSION))
         {
@@ -2162,7 +2165,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             message.setType(MessageType.Info);
             message.setMessage("You cannot rename an element defined in a SWC file.");
             showMessageCallback.accept(message);
-            return null;
+            return result;
         }
         if (resolved instanceof IPackageDefinition)
         {
@@ -2170,7 +2173,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             message.setType(MessageType.Info);
             message.setMessage("You cannot rename a package.");
             showMessageCallback.accept(message);
-            return null;
+            return result;
         }
         IDefinition parentDefinition = resolved.getParent();
         if (parentDefinition != null && parentDefinition instanceof IPackageDefinition)
@@ -2179,9 +2182,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             message.setType(MessageType.Info);
             message.setMessage("You cannot rename this element.");
             showMessageCallback.accept(message);
-            return null;
+            return result;
         }
-        Map<String, List<TextEditImpl>> changes = new HashMap<>();
         for (ICompilationUnit compilationUnit : compilationUnits)
         {
             if (compilationUnit instanceof SWCCompilationUnit)
@@ -2224,8 +2226,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             URI uri = Paths.get(compilationUnit.getAbsoluteFilename()).toUri();
             changes.put(uri.toString(), textEdits);
         }
-        WorkspaceEditImpl result = new WorkspaceEditImpl();
-        result.setChanges(changes);
         return result;
     }
 
