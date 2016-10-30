@@ -264,7 +264,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     public CompletableFuture<Hover> hover(TextDocumentPositionParams position)
     {
         IMXMLTagData offsetTag = getOffsetMXMLTag(position);
-        //if we're inside an <fx:Script> tag, we want ActionScript completion,
+        //if we're inside an <fx:Script> tag, we want ActionScript hover,
         //so that's why we call isMXMLTagValidForCompletion()
         if (offsetTag != null && isMXMLTagValidForCompletion(offsetTag))
         {
@@ -374,7 +374,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     public CompletableFuture<List<? extends Location>> definition(TextDocumentPositionParams position)
     {
         IMXMLTagData offsetTag = getOffsetMXMLTag(position);
-        //if we're inside an <fx:Script> tag, we want ActionScript completion,
+        //if we're inside an <fx:Script> tag, we want ActionScript lookup,
         //so that's why we call isMXMLTagValidForCompletion()
         if (offsetTag != null && isMXMLTagValidForCompletion(offsetTag))
         {
@@ -394,7 +394,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         TextDocumentIdentifier textDocument = params.getTextDocument();
         Position position = params.getPosition();
         IMXMLTagData offsetTag = getOffsetMXMLTag(params);
-        //if we're inside an <fx:Script> tag, we want ActionScript completion,
+        //if we're inside an <fx:Script> tag, we want ActionScript lookup,
         //so that's why we call isMXMLTagValidForCompletion()
         if (offsetTag != null && isMXMLTagValidForCompletion(offsetTag))
         {
