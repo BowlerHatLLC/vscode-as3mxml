@@ -638,33 +638,14 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     @Override
     public CompletableFuture<WorkspaceEdit> rename(RenameParams params)
     {
-        IASNode offsetNode = getOffsetNode(params.getTextDocument(), params.getPosition());
-        if (offsetNode == null)
+        IMXMLTagData offsetTag = getOffsetMXMLTag(params.getTextDocument(), params.getPosition());
+        //if we're inside an <fx:Script> tag, we want ActionScript rename,
+        //so that's why we call isMXMLTagValidForCompletion()
+        if (offsetTag != null && isMXMLTagValidForCompletion(offsetTag))
         {
-            //we couldn't find a node at the specified location
-            return CompletableFuture.completedFuture(new WorkspaceEditImpl(new HashMap<>()));
+            return mxmlRename(params, offsetTag);
         }
-
-        if (offsetNode instanceof IDefinitionNode)
-        {
-            IDefinitionNode definitionNode = (IDefinitionNode) offsetNode;
-            IExpressionNode expressionNode = definitionNode.getNameExpressionNode();
-            WorkspaceEditImpl result = renameExpression(expressionNode, params.getNewName());
-            return CompletableFuture.completedFuture(result);
-        }
-        if (offsetNode instanceof IIdentifierNode)
-        {
-            IIdentifierNode expressionNode = (IIdentifierNode) offsetNode;
-            WorkspaceEditImpl result = renameExpression(expressionNode, params.getNewName());
-            return CompletableFuture.completedFuture(result);
-        }
-
-        MessageParamsImpl message = new MessageParamsImpl();
-        message.setType(MessageType.Info);
-        message.setMessage("You cannot rename this element.");
-        showMessageCallback.accept(message);
-
-        return CompletableFuture.completedFuture(new WorkspaceEditImpl(new HashMap<>()));
+        return actionScriptRename(params);
     }
 
     /**
@@ -1593,6 +1574,63 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return CompletableFuture.completedFuture(result);
     }
 
+    private CompletableFuture<WorkspaceEdit> actionScriptRename(RenameParams params)
+    {
+        IASNode offsetNode = getOffsetNode(params.getTextDocument(), params.getPosition());
+        if (offsetNode == null)
+        {
+            //we couldn't find a node at the specified location
+            return CompletableFuture.completedFuture(new WorkspaceEditImpl(new HashMap<>()));
+        }
+
+        IDefinition definition = null;
+
+        if (offsetNode instanceof IDefinitionNode)
+        {
+            IDefinitionNode definitionNode = (IDefinitionNode) offsetNode;
+            IExpressionNode expressionNode = definitionNode.getNameExpressionNode();
+            definition = expressionNode.resolve(currentProject);
+        }
+        else if (offsetNode instanceof IIdentifierNode)
+        {
+            IIdentifierNode identifierNode = (IIdentifierNode) offsetNode;
+            definition = identifierNode.resolve(currentProject);
+        }
+
+        if (definition == null)
+        {
+            MessageParamsImpl message = new MessageParamsImpl();
+            message.setType(MessageType.Info);
+            message.setMessage("You cannot rename this element.");
+            showMessageCallback.accept(message);
+            return CompletableFuture.completedFuture(new WorkspaceEditImpl(new HashMap<>()));
+        }
+
+        WorkspaceEditImpl result = renameDefinition(definition, params.getNewName());
+        return CompletableFuture.completedFuture(result);
+    }
+
+    private CompletableFuture<WorkspaceEdit> mxmlRename(RenameParams params, IMXMLTagData offsetTag)
+    {
+        IDefinition definition = getDefinitionForMXMLAtOffset(offsetTag, currentOffset);
+        if (definition != null)
+        {
+            if (isInsideTagPrefix(offsetTag, currentOffset))
+            {
+                //ignore the tag's prefix
+                return CompletableFuture.completedFuture(new WorkspaceEditImpl(new HashMap<>()));
+            }
+            WorkspaceEditImpl result = renameDefinition(definition, params.getNewName());
+            return CompletableFuture.completedFuture(result);
+        }
+
+        MessageParamsImpl message = new MessageParamsImpl();
+        message.setType(MessageType.Info);
+        message.setMessage("You cannot rename this element.");
+        showMessageCallback.accept(message);
+        return CompletableFuture.completedFuture(new WorkspaceEditImpl(new HashMap<>()));
+    }
+
     private void referencesForDefinition(IDefinition definition, List<Location> result)
     {
         for (ICompilationUnit compilationUnit : compilationUnits)
@@ -1644,12 +1682,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
     }
 
-    private LocationImpl sourceLocationToLocationImpl(ISourceLocation sourceLocation)
+    private RangeImpl sourceLocationToRangeImpl(ISourceLocation sourceLocation)
     {
-        Path sourceLocationPath = Paths.get(sourceLocation.getSourcePath());
-        LocationImpl location = new LocationImpl();
-        location.setUri(sourceLocationPath.toUri().toString());
-
         int line = sourceLocation.getLine();
         int column = sourceLocation.getColumn();
         if (line == -1 || column == -1)
@@ -1675,7 +1709,24 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         RangeImpl range = new RangeImpl();
         range.setStart(start);
         range.setEnd(end);
+
+        return range;
+    }
+
+    private LocationImpl sourceLocationToLocationImpl(ISourceLocation sourceLocation)
+    {
+        Path sourceLocationPath = Paths.get(sourceLocation.getSourcePath());
+        LocationImpl location = new LocationImpl();
+        location.setUri(sourceLocationPath.toUri().toString());
+
+        RangeImpl range = sourceLocationToRangeImpl(sourceLocation);
+        if (range == null)
+        {
+            //this is probably generated by the compiler somehow
+            return null;
+        }
         location.setRange(range);
+
         return location;
     }
 
@@ -2145,21 +2196,20 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return result;
     }
 
-    private WorkspaceEditImpl renameExpression(IExpressionNode node, String newName)
+    private WorkspaceEditImpl renameDefinition(IDefinition definition, String newName)
     {
-        WorkspaceEditImpl result = new WorkspaceEditImpl();
-        Map<String, List<TextEditImpl>> changes = new HashMap<>();
-        result.setChanges(changes);
-        IDefinition resolved = node.resolve(currentProject);
-        if (resolved == null)
+        if (definition == null)
         {
             MessageParamsImpl message = new MessageParamsImpl();
             message.setType(MessageType.Info);
             message.setMessage("You cannot rename this element.");
             showMessageCallback.accept(message);
-            return result;
+            return new WorkspaceEditImpl(new HashMap<>());
         }
-        if (resolved.getContainingFilePath().endsWith(SWC_EXTENSION))
+        WorkspaceEditImpl result = new WorkspaceEditImpl();
+        Map<String, List<TextEditImpl>> changes = new HashMap<>();
+        result.setChanges(changes);
+        if (definition.getContainingFilePath().endsWith(SWC_EXTENSION))
         {
             MessageParamsImpl message = new MessageParamsImpl();
             message.setType(MessageType.Info);
@@ -2167,7 +2217,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             showMessageCallback.accept(message);
             return result;
         }
-        if (resolved instanceof IPackageDefinition)
+        if (definition instanceof IPackageDefinition)
         {
             MessageParamsImpl message = new MessageParamsImpl();
             message.setType(MessageType.Info);
@@ -2175,7 +2225,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             showMessageCallback.accept(message);
             return result;
         }
-        IDefinition parentDefinition = resolved.getParent();
+        IDefinition parentDefinition = definition.getParent();
         if (parentDefinition != null && parentDefinition instanceof IPackageDefinition)
         {
             MessageParamsImpl message = new MessageParamsImpl();
@@ -2190,34 +2240,59 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             {
                 continue;
             }
-            IASNode ast;
+            ArrayList<TextEditImpl> textEdits = new ArrayList<>();
+            if (compilationUnit.getAbsoluteFilename().endsWith(MXML_EXTENSION))
+            {
+                IMXMLDataManager mxmlDataManager = currentWorkspace.getMXMLDataManager();
+                MXMLData mxmlData = (MXMLData) mxmlDataManager.get(fileSpecGetter.getFileSpecification(compilationUnit.getAbsoluteFilename()));
+                IMXMLTagData rootTag = mxmlData.getRootTag();
+                if (rootTag != null)
+                {
+                    ArrayList<ISourceLocation> units = new ArrayList<>();
+                    findMXMLUnits(mxmlData.getRootTag(), definition, units);
+                    for (ISourceLocation otherUnit : units)
+                    {
+                        TextEditImpl textEdit = new TextEditImpl();
+                        textEdit.setNewText(newName);
+
+                        RangeImpl range = sourceLocationToRangeImpl(otherUnit);
+                        if (range == null)
+                        {
+                            continue;
+                        }
+                        textEdit.setRange(range);
+
+                        textEdits.add(textEdit);
+                    }
+                }
+            }
+            IASNode ast = null;
             try
             {
                 ast = compilationUnit.getSyntaxTreeRequest().get().getAST();
             }
             catch (Exception e)
             {
-                continue;
+                //safe to ignore
             }
-            ArrayList<IIdentifierNode> identifiers = new ArrayList<>();
-            findIdentifiers(ast, resolved, identifiers);
-            ArrayList<TextEditImpl> textEdits = new ArrayList<>();
-            for (IIdentifierNode identifierNode : identifiers)
+            if (ast != null)
             {
-                TextEditImpl textEdit = new TextEditImpl();
-                textEdit.setNewText(newName);
+                ArrayList<IIdentifierNode> identifiers = new ArrayList<>();
+                findIdentifiers(ast, definition, identifiers);
+                for (IIdentifierNode identifierNode : identifiers)
+                {
+                    TextEditImpl textEdit = new TextEditImpl();
+                    textEdit.setNewText(newName);
 
-                PositionImpl start = new PositionImpl();
-                start.setLine(identifierNode.getLine());
-                start.setCharacter(identifierNode.getColumn());
-                PositionImpl end = new PositionImpl();
-                end.setLine(identifierNode.getEndLine());
-                end.setCharacter(identifierNode.getEndColumn());
-                RangeImpl range = new RangeImpl();
-                range.setStart(start);
-                range.setEnd(end);
-                textEdit.setRange(range);
-                textEdits.add(textEdit);
+                    RangeImpl range = sourceLocationToRangeImpl(identifierNode);
+                    if (range == null)
+                    {
+                        continue;
+                    }
+                    textEdit.setRange(range);
+
+                    textEdits.add(textEdit);
+                }
             }
             if (textEdits.size() == 0)
             {
