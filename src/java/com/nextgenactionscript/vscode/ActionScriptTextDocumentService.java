@@ -395,8 +395,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     @Override
     public CompletableFuture<List<? extends Location>> references(ReferenceParams params)
     {
-        TextDocumentIdentifier textDocument = params.getTextDocument();
-        Position position = params.getPosition();
         IMXMLTagData offsetTag = getOffsetMXMLTag(params);
         //if we're inside an <fx:Script> tag, we want ActionScript lookup,
         //so that's why we call isMXMLTagValidForCompletion()
@@ -1478,7 +1476,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private CompletableFuture<List<? extends Location>> actionScriptReferences(ReferenceParams params)
     {
-        IASNode offsetNode = getOffsetNode(params.getTextDocument(), params.getPosition());
+        IASNode offsetNode = getOffsetNode(params);
         if (offsetNode == null)
         {
             //we couldn't find a node at the specified location
