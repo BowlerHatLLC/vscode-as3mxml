@@ -23,15 +23,20 @@ export function isValidSDK(absolutePath: string): boolean
 	{
 		return false;
 	}
-	let sdkDescriptionPath = path.join(absolutePath, "flex-sdk-description.xml");	
-	if(!fs.existsSync(sdkDescriptionPath) || fs.statSync(sdkDescriptionPath).isDirectory())
+	//the following files are required to consider this a valid SDK
+	let filePaths =
+	[
+		path.join(absolutePath, "flex-sdk-description.xml"),
+		path.join(absolutePath, "js", "bin", "asjsc"),
+		path.join(absolutePath, "lib", "compiler.jar")
+	]
+	for(let i = 0, count = filePaths.length; i < count; i++)
 	{
-		return false;
-	}
-	let asjscPath = path.join(absolutePath, "js", "bin", "asjsc");
-	if(!fs.existsSync(asjscPath) || fs.statSync(asjscPath).isDirectory())
-	{
-		return false;
+		let filePath = filePaths[i];	
+		if(!fs.existsSync(filePath) || fs.statSync(filePath).isDirectory())
+		{
+			return false;
+		}
 	}
 	return true;
 }
