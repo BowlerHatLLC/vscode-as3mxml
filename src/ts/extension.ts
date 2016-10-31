@@ -24,6 +24,7 @@ import {LanguageClient, LanguageClientOptions, SettingMonitor,
 	ServerOptions, StreamInfo, ErrorHandler, ErrorAction, CloseAction} from "vscode-languageclient";
 import { Message } from "vscode-jsonrpc";
 
+const INVALID_SDK_ERROR = "nextgenas.flexjssdk in settings does not point to a valid Apache FlexJS SDK. You may need to reinstall the SDK.";
 const MISSING_SDK_ERROR = "Could not locate valid Apache FlexJS SDK. Configure nextgenas.flexjssdk, add to $PATH, or set $FLEX_HOME.";
 const MISSING_JAVA_ERROR = "Could not locate valid Java executable. Configure nextgenas.java, add to $PATH or set $JAVA_HOME.";
 const MISSING_WORKSPACE_ROOT_ERROR = "Open a folder and create a file named asconfig.json to enable all ActionScript and MXML language features.";
@@ -178,6 +179,19 @@ function childErrorListener(error)
 	console.error(error);
 }
 
+function showSDKError()
+{
+	let sdkPath = <string> vscode.workspace.getConfiguration("nextgenas").get("flexjssdk");
+	if(sdkPath)
+	{
+		vscode.window.showErrorMessage(INVALID_SDK_ERROR);
+	}
+	else
+	{
+		vscode.window.showErrorMessage(MISSING_SDK_ERROR);
+	}
+}
+
 class CustomErrorHandler implements ErrorHandler
 {
 	private restarts: number[];
@@ -207,7 +221,7 @@ class CustomErrorHandler implements ErrorHandler
 		if(!flexHome)
 		{
 			//if we can't find the SDK, we can't start the process
-			vscode.window.showErrorMessage(MISSING_SDK_ERROR);
+			showSDKError();
 			return CloseAction.DoNotRestart;
 		}
 		if(!javaExecutablePath)
@@ -249,7 +263,15 @@ function createLanguageServer(): Promise<StreamInfo>
 		//immediately reject if flexjs or java cannot be found
 		if(!flexHome)
 		{
-			reject(MISSING_SDK_ERROR);
+			let sdkPath = <string> vscode.workspace.getConfiguration("nextgenas").get("flexjssdk");
+			if(sdkPath)
+			{
+				reject(INVALID_SDK_ERROR);
+			}
+			else
+			{
+				reject(MISSING_SDK_ERROR);
+			}
 			return;
 		}
 		if(!javaExecutablePath)
@@ -334,7 +356,7 @@ function startClient()
 	}
 	if(!flexHome)
 	{
-		vscode.window.showErrorMessage(MISSING_SDK_ERROR);
+		showSDKError();
 		return;
 	}
 	if(!javaExecutablePath)
