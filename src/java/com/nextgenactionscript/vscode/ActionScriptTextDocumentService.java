@@ -83,6 +83,7 @@ import org.apache.flex.compiler.internal.tree.as.FullNameNode;
 import org.apache.flex.compiler.internal.units.SWCCompilationUnit;
 import org.apache.flex.compiler.internal.workspaces.Workspace;
 import org.apache.flex.compiler.mxml.IMXMLDataManager;
+import org.apache.flex.compiler.mxml.IMXMLLanguageConstants;
 import org.apache.flex.compiler.mxml.IMXMLTagAttributeData;
 import org.apache.flex.compiler.mxml.IMXMLTagData;
 import org.apache.flex.compiler.problems.CompilerProblemSeverity;
@@ -1519,7 +1520,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
         //finally, check if we're looking for references to a tag's id
         IMXMLTagAttributeData attributeData = getMXMLTagAttributeWithValueAtOffset(offsetTag, currentOffset);
-        if (attributeData == null || !attributeData.getName().equals("id"))
+        if (attributeData == null || !attributeData.getName().equals(IMXMLLanguageConstants.ATTRIBUTE_ID))
         {
             //VSCode may call definition() when there isn't necessarily a
             //definition referenced at the current position.
