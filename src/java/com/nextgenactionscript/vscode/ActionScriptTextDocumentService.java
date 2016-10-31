@@ -1309,6 +1309,14 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 propertyElementPrefix = prefix + ":";
             }
         }
+        
+        //inside <fx:Declarations>
+        if(offsetTag.getShortName().equals(IMXMLLanguageConstants.DECLARATIONS)
+                && offsetTag.getURI().equals(IMXMLLanguageConstants.NAMESPACE_MXML_2009))
+        {
+            autoCompleteTypes(result);
+            return CompletableFuture.completedFuture(result);
+        }
 
         IDefinition offsetDefinition = getDefinitionForMXMLTag(offsetTag);
         if (offsetDefinition == null)
