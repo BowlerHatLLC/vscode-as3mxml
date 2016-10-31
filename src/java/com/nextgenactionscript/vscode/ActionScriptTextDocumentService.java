@@ -44,6 +44,8 @@ import java.util.function.Consumer;
 import org.apache.commons.io.FileUtils;
 import org.apache.flex.compiler.clients.problems.CompilerProblemCategorizer;
 import org.apache.flex.compiler.common.ISourceLocation;
+import org.apache.flex.compiler.common.PrefixMap;
+import org.apache.flex.compiler.common.XMLName;
 import org.apache.flex.compiler.config.Configurator;
 import org.apache.flex.compiler.config.ICompilerSettingsConstants;
 import org.apache.flex.compiler.constants.IASKeywordConstants;
@@ -113,6 +115,8 @@ import org.apache.flex.compiler.tree.as.IVariableNode;
 import org.apache.flex.compiler.units.ICompilationUnit;
 import org.apache.flex.compiler.units.IInvisibleCompilationUnit;
 import org.apache.flex.compiler.workspaces.IWorkspace;
+import org.apache.flex.swc.ISWC;
+import org.apache.flex.swc.ISWCFileEntry;
 
 import com.nextgenactionscript.vscode.asconfig.ASConfigOptions;
 import com.nextgenactionscript.vscode.asconfig.CompilerOptions;
@@ -1309,12 +1313,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 propertyElementPrefix = prefix + ":";
             }
         }
-        
+
         //inside <fx:Declarations>
-        if(offsetTag.getShortName().equals(IMXMLLanguageConstants.DECLARATIONS)
+        if (offsetTag.getShortName().equals(IMXMLLanguageConstants.DECLARATIONS)
                 && offsetTag.getURI().equals(IMXMLLanguageConstants.NAMESPACE_MXML_2009))
         {
-            autoCompleteTypes(result);
+            autoCompleteTypes(result, true);
             return CompletableFuture.completedFuture(result);
         }
 
@@ -1350,14 +1354,14 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     //if [DefaultProperty] is set, then we can instantiate
                     //types as child elements
                     //but we don't want to do that when in an attribute
-                    autoCompleteTypes(result);
+                    autoCompleteTypes(result, true);
                 }
                 return CompletableFuture.completedFuture(result);
             }
         }
         if (offsetDefinition instanceof IVariableDefinition && !isAttribute)
         {
-            autoCompleteTypes(result);
+            autoCompleteTypes(result, true);
             return CompletableFuture.completedFuture(result);
         }
         System.err.println("Unknown definition for MXML completion: " + offsetDefinition.getClass());
@@ -1744,11 +1748,17 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private void autoCompleteTypes(CompletionListImpl result)
     {
-        autoCompleteDefinitions(result, true, null, null);
+        autoCompleteDefinitions(result, false, true, null, null);
     }
 
-    private void autoCompleteDefinitions(CompletionListImpl result, boolean typesOnly,
-                                         String packageName, IDefinition definitionToSkip)
+    private void autoCompleteTypes(CompletionListImpl result, boolean forMXML)
+    {
+        autoCompleteDefinitions(result, forMXML, true, null, null);
+    }
+
+    private void autoCompleteDefinitions(CompletionListImpl result, boolean forMXML,
+                                         boolean typesOnly, String packageName,
+                                         IDefinition definitionToSkip)
     {
         String skipQualifiedName = null;
         if (definitionToSkip != null)
@@ -1769,7 +1779,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             for (IDefinition definition : definitions)
             {
-                if (!typesOnly || definition instanceof ITypeDefinition)
+                boolean isType = definition instanceof ITypeDefinition;
+                if (!typesOnly || isType)
                 {
                     if (packageName == null || definition.getPackageName().equals(packageName))
                     {
@@ -1778,7 +1789,15 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                         {
                             continue;
                         }
-                        addDefinitionAutoComplete(definition, result);
+                        if (forMXML && isType)
+                        {
+                            ITypeDefinition typeDefinition = (ITypeDefinition) definition;
+                            addMXMLTypeDefinitionAutoComplete(typeDefinition, result);
+                        }
+                        else
+                        {
+                            addDefinitionAutoComplete(definition, result);
+                        }
                     }
                 }
             }
@@ -1797,12 +1816,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         IASScope scope = node.getScope();
         IDefinition definitionToSkip = scope.getDefinition();
         //include definitions in the top-level package
-        autoCompleteDefinitions(result, false, "", definitionToSkip);
+        autoCompleteDefinitions(result, false, false, "", definitionToSkip);
         //include definitions in the same package
         String packageName = node.getPackageName();
         if (packageName != null && packageName.length() > 0)
         {
-            autoCompleteDefinitions(result, false, packageName, definitionToSkip);
+            autoCompleteDefinitions(result, false, false, packageName, definitionToSkip);
         }
         //include definitions that are imported from other packages
         ArrayList<IImportNode> importNodes = new ArrayList<>();
@@ -2094,6 +2113,71 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             definition = classDefinition.resolveBaseClass(currentProject);
         }
+    }
+
+    private void addMXMLTypeDefinitionAutoComplete(ITypeDefinition definition, CompletionListImpl result)
+    {
+        IMXMLDataManager mxmlDataManager = currentWorkspace.getMXMLDataManager();
+        MXMLData mxmlData = (MXMLData) mxmlDataManager.get(fileSpecGetter.getFileSpecification(currentUnit.getAbsoluteFilename()));
+        PrefixMap prefixMap = mxmlData.getRootTagPrefixMap();
+
+        //first, try to use one of the existing prefixes in the document
+        Collection<XMLName> tagNames = currentProject.getTagNamesForClass(definition.getQualifiedName());
+        String fallbackNamespace = null;
+        for (XMLName tagName : tagNames)
+        {
+            String tagNamespace = tagName.getXMLNamespace();
+            //getTagNamesForClass() returns the 2006 namespace, even if that's
+            //not what we're using in this file
+            if (tagNamespace.equals(IMXMLLanguageConstants.NAMESPACE_MXML_2006))
+            {
+                //use the language namespace of the root tag instead
+                tagNamespace = mxmlData.getRootTag().getMXMLDialect().getLanguageNamespace();
+            }
+            String[] prefixes = prefixMap.getPrefixesForNamespace(tagNamespace);
+            if (prefixes.length > 0)
+            {
+                //if the namespace is already defined on the root tag, use the
+                //existing prefix.
+                String prefix = prefixes[0] + ":";
+                addDefinitionAutoComplete(definition, prefix, result);
+                return;
+            }
+            if (fallbackNamespace == null)
+            {
+                fallbackNamespace = tagNamespace;
+            }
+        }
+
+        if (fallbackNamespace != null)
+        {
+            //this type is in a namespace
+            //let's try to figure out a nice prefix to use
+            String prefix = null;
+            for (ISWC swc : currentProject.getLibraries())
+            {
+                if (swc.getSWCFile().getAbsolutePath().equals(definition.getContainingFilePath()))
+                {
+                    //design.xml is an optional file that contains a suggested
+                    //namespace for the namespaces the SWC contains
+                    ISWCFileEntry fileInSWC = swc.getFile("design.xml");
+                    if (fileInSWC != null)
+                    {
+
+                    }
+                }
+            }
+            if (prefix == null)
+            {
+                //if all else fails, fall back to a generic namespace
+                prefix = "ns1:";
+            }
+            addDefinitionAutoComplete(definition, prefix, result);
+            return;
+        }
+
+        //this type is not in a namespace
+        addDefinitionAutoComplete(definition, null, result);
     }
 
     private void addDefinitionAutoComplete(IDefinition definition, CompletionListImpl result)
