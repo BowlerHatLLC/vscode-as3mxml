@@ -76,7 +76,8 @@
         "aliases": [
           "MXML",
           "mxml"
-        ]
+        ],
+        "configuration": "./nextgenas.configuration.json"
       }
     ],
 		"grammars": [
