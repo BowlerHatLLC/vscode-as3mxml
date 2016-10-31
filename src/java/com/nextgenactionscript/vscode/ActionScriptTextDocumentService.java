@@ -53,6 +53,7 @@ import org.apache.flex.compiler.definitions.IAccessorDefinition;
 import org.apache.flex.compiler.definitions.IClassDefinition;
 import org.apache.flex.compiler.definitions.IConstantDefinition;
 import org.apache.flex.compiler.definitions.IDefinition;
+import org.apache.flex.compiler.definitions.IEventDefinition;
 import org.apache.flex.compiler.definitions.IFunctionDefinition;
 import org.apache.flex.compiler.definitions.IGetterDefinition;
 import org.apache.flex.compiler.definitions.IInterfaceDefinition;
@@ -60,6 +61,7 @@ import org.apache.flex.compiler.definitions.INamespaceDefinition;
 import org.apache.flex.compiler.definitions.IPackageDefinition;
 import org.apache.flex.compiler.definitions.IParameterDefinition;
 import org.apache.flex.compiler.definitions.ISetterDefinition;
+import org.apache.flex.compiler.definitions.IStyleDefinition;
 import org.apache.flex.compiler.definitions.ITypeDefinition;
 import org.apache.flex.compiler.definitions.IVariableDefinition;
 import org.apache.flex.compiler.definitions.metadata.IMetaTag;
@@ -2027,8 +2029,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     {
         ArrayList<String> eventNames = new ArrayList<>();
         IDefinition definition = typeScope.getDefinition();
-        do
+        while (definition instanceof IClassDefinition)
         {
+            IClassDefinition classDefinition = (IClassDefinition) definition;
             IMetaTag[] eventMetaTags = definition.getMetaTagsByName(IMetaAttributeConstants.ATTRIBUTE_EVENT);
             for (IMetaTag eventMetaTag : eventMetaTags)
             {
@@ -2039,34 +2042,28 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     continue;
                 }
                 eventNames.add(eventName);
+                IDefinition eventDefinition = currentProject.resolveSpecifier(classDefinition, eventName);
+                if (eventDefinition == null)
+                {
+                    continue;
+                }
                 CompletionItemImpl item = new CompletionItemImpl();
                 item.setKind(CompletionItemKind.Field);
                 item.setLabel(eventName);
-                StringBuilder detailBuilder = new StringBuilder();
-                detailBuilder.append("(event) ");
-                detailBuilder.append(definition.getQualifiedName());
-                item.setDetail(detailBuilder.toString());
+                item.setDetail(getDefinitionDetail(eventDefinition));
                 result.getItems().add(item);
             }
-            if (definition instanceof IClassDefinition)
-            {
-                IClassDefinition classDefinition = (IClassDefinition) definition;
-                definition = classDefinition.resolveBaseClass(currentProject);
-            }
-            else
-            {
-                definition = null;
-            }
+            definition = classDefinition.resolveBaseClass(currentProject);
         }
-        while (definition != null);
     }
 
     private void addStyleMetadataToAutoComplete(TypeScope typeScope, CompletionListImpl result)
     {
         ArrayList<String> styleNames = new ArrayList<>();
         IDefinition definition = typeScope.getDefinition();
-        do
+        while (definition instanceof IClassDefinition)
         {
+            IClassDefinition classDefinition = (IClassDefinition) definition;
             IMetaTag[] styleMetaTags = typeScope.getDefinition().getMetaTagsByName(IMetaAttributeConstants.ATTRIBUTE_STYLE);
             for (IMetaTag styleMetaTag : styleMetaTags)
             {
@@ -2077,26 +2074,19 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     continue;
                 }
                 styleNames.add(styleName);
+                IDefinition styleDefinition = currentProject.resolveSpecifier(classDefinition, styleName);
+                if (styleDefinition == null)
+                {
+                    continue;
+                }
                 CompletionItemImpl item = new CompletionItemImpl();
                 item.setKind(CompletionItemKind.Field);
                 item.setLabel(styleName);
-                StringBuilder detailBuilder = new StringBuilder();
-                detailBuilder.append("(style) ");
-                detailBuilder.append(definition.getQualifiedName());
-                item.setDetail(detailBuilder.toString());
+                item.setDetail(getDefinitionDetail(styleDefinition));
                 result.getItems().add(item);
             }
-            if (definition instanceof IClassDefinition)
-            {
-                IClassDefinition classDefinition = (IClassDefinition) definition;
-                definition = classDefinition.resolveBaseClass(currentProject);
-            }
-            else
-            {
-                definition = null;
-            }
+            definition = classDefinition.resolveBaseClass(currentProject);
         }
-        while (definition != null);
     }
 
     private void addDefinitionAutoComplete(IDefinition definition, CompletionListImpl result)
@@ -3459,6 +3449,48 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 detailBuilder.append(" ");
             }
             detailBuilder.append(getSignatureLabel(functionDefinition));
+        }
+        else if (definition instanceof IEventDefinition)
+        {
+            IEventDefinition eventDefinition = (IEventDefinition) definition;
+            detailBuilder.append("(event) ");
+            detailBuilder.append("[");
+            detailBuilder.append(IMetaAttributeConstants.ATTRIBUTE_EVENT);
+            detailBuilder.append("(");
+            detailBuilder.append(IMetaAttributeConstants.NAME_EVENT_NAME);
+            detailBuilder.append("=");
+            detailBuilder.append("\"");
+            detailBuilder.append(eventDefinition.getBaseName());
+            detailBuilder.append("\"");
+            detailBuilder.append(",");
+            detailBuilder.append(IMetaAttributeConstants.NAME_EVENT_TYPE);
+            detailBuilder.append("=");
+            detailBuilder.append("\"");
+            detailBuilder.append(eventDefinition.getTypeAsDisplayString());
+            detailBuilder.append("\"");
+            detailBuilder.append(")");
+            detailBuilder.append("]");
+        }
+        else if (definition instanceof IStyleDefinition)
+        {
+            IStyleDefinition styleDefinition = (IStyleDefinition) definition;
+            detailBuilder.append("(style) ");
+            detailBuilder.append("[");
+            detailBuilder.append(IMetaAttributeConstants.ATTRIBUTE_STYLE);
+            detailBuilder.append("(");
+            detailBuilder.append(IMetaAttributeConstants.NAME_STYLE_NAME);
+            detailBuilder.append("=");
+            detailBuilder.append("\"");
+            detailBuilder.append(styleDefinition.getBaseName());
+            detailBuilder.append("\"");
+            detailBuilder.append(",");
+            detailBuilder.append(IMetaAttributeConstants.NAME_STYLE_TYPE);
+            detailBuilder.append("=");
+            detailBuilder.append("\"");
+            detailBuilder.append(styleDefinition.getTypeAsDisplayString());
+            detailBuilder.append("\"");
+            detailBuilder.append(")");
+            detailBuilder.append("]");
         }
         return detailBuilder.toString();
     }
