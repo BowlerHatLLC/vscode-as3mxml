@@ -48,7 +48,8 @@
   },
   "activationEvents": [
     "onLanguage:nextgenas",
-    "workspaceContains:asconfig.json"
+    "workspaceContains:asconfig.json",
+    "onCommand:nextgenas.createASConfigTaskRunner"
   ],
   "contributes": {
     "commands": [
