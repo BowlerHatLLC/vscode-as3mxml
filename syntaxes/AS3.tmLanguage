@@ -300,6 +300,23 @@
 			<array>
 				<dict>
 					<key>begin</key>
+					<string>/\*\*</string>
+					<key>end</key>
+					<string>\*/</string>
+					<key>name</key>
+					<string>comment.block.documentation.actionscript.3</string>
+					<key>patterns</key>
+					<array>
+						<dict>
+							<key>match</key>
+							<string>@(copy|default|eventType|example|exampleText|includeExample|inheritDoc|internal|param|private|return|see|since|throws)\b</string>
+							<key>name</key>
+							<string>keyword.other.documentation.actionscript.3.asdoc</string>
+						</dict>
+					</array>
+				</dict>
+				<dict>
+					<key>begin</key>
 					<string>/\*</string>
 					<key>end</key>
 					<string>\*/</string>
