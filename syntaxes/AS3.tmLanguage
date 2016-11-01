@@ -358,6 +358,13 @@
 				</dict>
 			</array>
 		</dict>
+		<key>escapes</key>
+		<dict>
+			<key>match</key>
+			<string>\\(x\h{2}|[0-2][0-7]{,2}|3[0-6][0-7]|37[0-7]?|[4-7][0-7]?|.)</string>
+			<key>name</key>
+			<string>constant.character.escape.actionscript.3</string>
+		</dict>
 		<key>extends</key>
 		<dict>
 			<key>captures</key>
@@ -1004,6 +1011,13 @@
 					<string>"</string>
 					<key>name</key>
 					<string>string.quoted.double.actionscript.3</string>
+					<key>patterns</key>
+					<array>
+						<dict>
+							<key>include</key>
+							<string>#escapes</string>
+						</dict>
+					</array>
 				</dict>
 				<dict>
 					<key>begin</key>
@@ -1012,6 +1026,13 @@
 					<string>'</string>
 					<key>name</key>
 					<string>string.quoted.single.actionscript.3</string>
+					<key>patterns</key>
+					<array>
+						<dict>
+							<key>include</key>
+							<string>#escapes</string>
+						</dict>
+					</array>
 				</dict>
 			</array>
 		</dict>
