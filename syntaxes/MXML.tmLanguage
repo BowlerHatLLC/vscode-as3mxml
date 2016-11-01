@@ -12,16 +12,39 @@
 	<array>
 		<dict>
 			<key>begin</key>
-			<string>(?=&lt;!\[CDATA\[)</string>
+			<string>(?=&lt;fx:Script&gt;)</string>
 			<key>end</key>
-			<string>(?&lt;=\]\]&gt;)</string>
+			<string>(?&lt;=&lt;\/fx:Script&gt;)</string>
 			<key>name</key>
-			<string>meta.cdata.mxml</string>
+			<string>meta.script.mxml</string>
 			<key>patterns</key>
 			<array>
 				<dict>
-					<key>include</key>
-					<string>source.actionscript.3</string>
+					<key>match</key>
+					<string>&lt;fx:Script&gt;</string>
+					<key>name</key>
+					<string>entity.name.tag.xml</string>
+				</dict>
+				<dict>
+					<key>match</key>
+					<string>&lt;\/fx:Script&gt;</string>
+					<key>name</key>
+					<string>entity.name.tag.xml</string>
+				</dict>
+				<dict>
+					<key>begin</key>
+					<string>(?=&lt;!\[CDATA\[)</string>
+					<key>end</key>
+					<string>(?&lt;=\]\]&gt;)</string>
+					<key>name</key>
+					<string>meta.cdata.mxml</string>
+					<key>patterns</key>
+					<array>
+						<dict>
+							<key>include</key>
+							<string>source.actionscript.3</string>
+						</dict>
+					</array>
 				</dict>
 			</array>
 		</dict>
