@@ -50,6 +50,21 @@ function isValidJava(javaPath: string): boolean
 	return result.status === 0;
 }
 
+function killJavaProcess()
+{
+	if(!savedChild)
+	{
+		return;
+	}
+	killed = true;
+	//we are killing the process on purpose, so we don't care
+	//about these events anymore
+	savedChild.removeListener("exit", childExitListener);
+	savedChild.removeListener("error", childErrorListener);
+	savedChild.kill();
+	savedChild = null;
+}
+
 export function activate(context: vscode.ExtensionContext)
 {
 	savedContext = context;
@@ -63,16 +78,7 @@ export function activate(context: vscode.ExtensionContext)
 		{
 			flexHome = newFlexHome;
 			javaExecutablePath = newJavaExecutablePath;
-			if(savedChild)
-			{
-				killed = true;
-				//we are killing the process on purpose, so we don't care
-				//about these events anymore
-				savedChild.removeListener("exit", childExitListener);
-				savedChild.removeListener("error", childErrorListener);
-				savedChild.kill();
-				savedChild = null;
-			}
+			killJavaProcess();
 			startClient();
 		}
 	});
@@ -160,6 +166,7 @@ export function activate(context: vscode.ExtensionContext)
 export function deactivate()
 {
 	 savedContext = null;
+	 killJavaProcess();
 }
 
 function childExitListener(code)
