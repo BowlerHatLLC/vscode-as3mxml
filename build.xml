@@ -16,6 +16,8 @@
 	</target>
 	<target name="-build-java">
 		<property name="debug.java" value="false"/>
+
+		<echo message="Building CheckJavaVersion.jar"/>
 		<mkdir dir="${jar.content.output}"/>
 		<javac srcdir="src/java" destdir="${jar.content.output}"
 			target="1.5" source="1.5"
@@ -24,6 +26,23 @@
 		</javac>
 		<jar manifest="manifest-check-java-version.mf" basedir="${jar.content.output}" destfile="target/CheckJavaVersion.jar"/>
 		<delete dir="${jar.content.output}"/>
+
+		<echo message="Building CheckFlexJSVersion.jar"/>
+		<mkdir dir="${jar.content.output}"/>
+		<javac srcdir="src/java" destdir="${jar.content.output}"
+			target="1.5" source="1.5"
+			debug="${debug.java}" includeAntRuntime="false">
+			<include name="**/CheckFlexJSVersion.java"/>
+			<classpath>
+				<fileset dir="lib">
+					<include name="**/*.jar"/>
+				</fileset>
+			</classpath>
+		</javac>
+		<jar manifest="manifest-check-flexjs-version.mf" basedir="${jar.content.output}" destfile="target/CheckFlexJSVersion.jar"/>
+		<delete dir="${jar.content.output}"/>
+		
+		<echo message="Building NextGenAS_vscode.jar"/>
 		<mkdir dir="${jar.content.output}"/>
 		<javac srcdir="src/java" destdir="${jar.content.output}"
 			target="1.8" source="1.8"

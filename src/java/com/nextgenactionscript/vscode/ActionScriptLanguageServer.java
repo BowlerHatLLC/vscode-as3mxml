@@ -52,62 +52,20 @@ import io.typefox.lsapi.services.WorkspaceService;
  */
 public class ActionScriptLanguageServer implements LanguageServer
 {
+    /**
+     * Displays a dismissable message bar across the top of Visual Studio Code
+     * that can be an error, warning, or informational.
+     */
     private Consumer<MessageParams> showMessageCallback = m ->
     {
     };
-    private boolean hasValidSDK = false;
 
-    public boolean getHasValidSDK()
-    {
-        return hasValidSDK;
-    }
-
-    private TextDocumentService textDocumentService;
+    private ActionScriptTextDocumentService textDocumentService;
 
     public ActionScriptLanguageServer()
     {
-        hasValidSDK = false;
-        try
-        {
-            String version = getFlexJSVersion();
-            //remove things like -SNAPSHOT and split the numeric parts
-            String[] versionParts = version.split("-")[0].split("\\.");
-            int major = 0;
-            int minor = 0;
-            int revision = 0;
-            if (versionParts.length >= 3)
-            {
-                major = Integer.parseInt(versionParts[0]);
-                minor = Integer.parseInt(versionParts[1]);
-                revision = Integer.parseInt(versionParts[2]);
-            }
-            //minimum major version
-            if (major > 0)
-            {
-                hasValidSDK = true;
-            }
-            else if (major == 0)
-            {
-                //minimum minor version
-                if (minor >= 7)
-                {
-                    hasValidSDK = true;
-                }
-            }
-        }
-        catch (Exception e)
-        {
-            hasValidSDK = false;
-        }
-
-        String flexlibDirectoryPath = findFlexLibDirectoryPath();
-        if (flexlibDirectoryPath == null)
-        {
-            hasValidSDK = false;
-        }
-
         //I'm not really sure why the compiler needs this, but it does
-        System.setProperty("flexlib", flexlibDirectoryPath);
+        System.setProperty("flexlib", findFlexLibDirectoryPath());
     }
 
     /**
@@ -116,39 +74,30 @@ public class ActionScriptLanguageServer implements LanguageServer
     @Override
     public CompletableFuture<InitializeResult> initialize(InitializeParams params)
     {
-        if (textDocumentService instanceof ActionScriptTextDocumentService)
-        {
-            ActionScriptTextDocumentService service = (ActionScriptTextDocumentService) textDocumentService;
-            Path workspaceRoot = Paths.get(params.getRootPath()).toAbsolutePath().normalize();
-            service.setWorkspaceRoot(workspaceRoot);
-        }
+        Path workspaceRoot = Paths.get(params.getRootPath()).toAbsolutePath().normalize();
+        textDocumentService.setWorkspaceRoot(workspaceRoot);
 
         InitializeResultImpl result = new InitializeResultImpl();
+
         ServerCapabilitiesImpl serverCapabilities = new ServerCapabilitiesImpl();
+        serverCapabilities.setTextDocumentSync(TextDocumentSyncKind.Incremental);
 
-        if (hasValidSDK)
-        {
-            serverCapabilities.setTextDocumentSync(TextDocumentSyncKind.Incremental);
+        CompletionOptionsImpl completionOptions = new CompletionOptionsImpl();
+        completionOptions.setTriggerCharacters(Arrays.asList(".", ":", " ", "<"));
+        serverCapabilities.setCompletionProvider(completionOptions);
 
-            CompletionOptionsImpl completionOptions = new CompletionOptionsImpl();
-            completionOptions.setTriggerCharacters(Arrays.asList(".", ":", " ", "<"));
-            serverCapabilities.setCompletionProvider(completionOptions);
-            serverCapabilities.setDefinitionProvider(true);
-            serverCapabilities.setDocumentSymbolProvider(true);
-            serverCapabilities.setWorkspaceSymbolProvider(true);
-            serverCapabilities.setHoverProvider(true);
-            serverCapabilities.setReferencesProvider(true);
-            serverCapabilities.setCodeActionProvider(true);
-            serverCapabilities.setRenameProvider(true);
+        serverCapabilities.setDefinitionProvider(true);
+        serverCapabilities.setDocumentSymbolProvider(true);
+        serverCapabilities.setWorkspaceSymbolProvider(true);
+        serverCapabilities.setHoverProvider(true);
+        serverCapabilities.setReferencesProvider(true);
+        serverCapabilities.setCodeActionProvider(true);
+        serverCapabilities.setRenameProvider(true);
 
-            SignatureHelpOptionsImpl signatureHelpOptions = new SignatureHelpOptionsImpl();
-            signatureHelpOptions.setTriggerCharacters(Arrays.asList("(", ","));
-            serverCapabilities.setSignatureHelpProvider(signatureHelpOptions);
-        }
-        else
-        {
-            serverCapabilities.setTextDocumentSync(TextDocumentSyncKind.None);
-        }
+        SignatureHelpOptionsImpl signatureHelpOptions = new SignatureHelpOptionsImpl();
+        signatureHelpOptions.setTriggerCharacters(Arrays.asList("(", ","));
+        serverCapabilities.setSignatureHelpProvider(signatureHelpOptions);
+
         result.setCapabilities(serverCapabilities);
 
         return CompletableFuture.completedFuture(result);
@@ -186,11 +135,7 @@ public class ActionScriptLanguageServer implements LanguageServer
                 showMessageCallback = callback;
                 //pass the callback to the text document service, in case it
                 //needs to show a message
-                if (textDocumentService instanceof ActionScriptTextDocumentService)
-                {
-                    ActionScriptTextDocumentService actionScriptService = (ActionScriptTextDocumentService) textDocumentService;
-                    actionScriptService.showMessageCallback = callback;
-                }
+                textDocumentService.showMessageCallback = callback;
             }
 
             @Override
@@ -221,12 +166,7 @@ public class ActionScriptLanguageServer implements LanguageServer
                 //delegate to the ActionScriptTextDocumentService, since that's
                 //where the compiler is running, and the compiler is needed to
                 //find workspace symbols
-                if (textDocumentService instanceof ActionScriptTextDocumentService)
-                {
-                    ActionScriptTextDocumentService actionScriptService = (ActionScriptTextDocumentService) textDocumentService;
-                    return actionScriptService.workspaceSymbol(params);
-                }
-                return CompletableFuture.completedFuture(Collections.emptyList());
+                return textDocumentService.workspaceSymbol(params);
             }
 
             @Override
@@ -244,11 +184,7 @@ public class ActionScriptLanguageServer implements LanguageServer
                 //delegate to the ActionScriptTextDocumentService, since that's
                 //where the compiler is running, and the compiler may need to
                 //know about file changes
-                if (textDocumentService instanceof ActionScriptTextDocumentService)
-                {
-                    ActionScriptTextDocumentService service = (ActionScriptTextDocumentService) textDocumentService;
-                    service.didChangeWatchedFiles(params);
-                }
+                textDocumentService.didChangeWatchedFiles(params);
             }
         };
     }
@@ -262,38 +198,9 @@ public class ActionScriptLanguageServer implements LanguageServer
     {
         if (textDocumentService == null)
         {
-            if (hasValidSDK)
-            {
-                //this is where all the real magic happens!
-                textDocumentService = new ActionScriptTextDocumentService();
-            }
-            else
-            {
-                //this version of TextDocumentService does nothing except inform
-                //the user that they need to switch to a supported version of
-                //the Apache FlexJS SDK.
-                textDocumentService = new UnsupportedSDKTextDocumentService(this);
-            }
+            textDocumentService = new ActionScriptTextDocumentService();
         }
         return textDocumentService;
-    }
-
-    /**
-     * Displays a dismissable message bar across the top of Visual Studio Code
-     * that can be an error, warning, or informational.
-     */
-    public void showMessage(MessageParamsImpl message)
-    {
-        showMessageCallback.accept(message);
-    }
-
-    /**
-     * Using a Java class from the Apache FlexJS compiler, we can check the
-     * version of the SDK.
-     */
-    public String getFlexJSVersion()
-    {
-        return IASNode.class.getPackage().getImplementationVersion();
     }
 
     /**

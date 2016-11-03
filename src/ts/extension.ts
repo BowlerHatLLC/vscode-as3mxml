@@ -24,9 +24,9 @@ import {LanguageClient, LanguageClientOptions, SettingMonitor,
 	ServerOptions, StreamInfo, ErrorHandler, ErrorAction, CloseAction} from "vscode-languageclient";
 import { Message } from "vscode-jsonrpc";
 
-const INVALID_SDK_ERROR = "nextgenas.flexjssdk in settings does not point to a valid Apache FlexJS SDK. You may need to reinstall the SDK.";
-const MISSING_SDK_ERROR = "Could not locate valid Apache FlexJS SDK. Configure nextgenas.flexjssdk, add to $PATH, or set $FLEX_HOME.";
-const MISSING_JAVA_ERROR = "Could not locate valid Java executable. Configure nextgenas.java, add to $PATH or set $JAVA_HOME.";
+const INVALID_SDK_ERROR = "nextgenas.flexjssdk in settings does not point to a valid SDK. Requires Apache FlexJS 0.7.0 or newer.";
+const MISSING_SDK_ERROR = "Could not locate valid SDK. Requires Apache FlexJS 0.7.0 or newer. Configure nextgenas.flexjssdk, add to $PATH, or set $FLEX_HOME.";
+const MISSING_JAVA_ERROR = "Could not locate valid Java executable. Configure nextgenas.java, add to $PATH, or set $JAVA_HOME.";
 const MISSING_WORKSPACE_ROOT_ERROR = "Open a folder and create a file named asconfig.json to enable all ActionScript and MXML language features.";
 let savedChild: child_process.ChildProcess;
 let savedContext: vscode.ExtensionContext;
@@ -34,8 +34,13 @@ let flexHome: string;
 let javaExecutablePath: string;
 let killed = false;
 portfinder.basePort = 55282;
+let cpDelimiter = ":";
+if(process.platform === "win32")
+{
+	cpDelimiter = ";";
+}
 
-function isValidJava(javaPath: string): boolean
+function isValidJavaVersion(javaPath: string): boolean
 {
 	if(!fs.existsSync(javaPath))
 	{
@@ -47,6 +52,24 @@ function isValidJava(javaPath: string): boolean
 		path.join(savedContext.extensionPath, "target", "CheckJavaVersion.jar")
 	];
 	let result = child_process.spawnSync(javaPath, args);
+	return result.status === 0;
+}
+
+function isValidSDKVersion(sdkPath: string): boolean
+{
+	if(!javaExecutablePath || !fs.existsSync(sdkPath) || !fs.statSync(sdkPath).isDirectory())
+	{
+		return false;
+	}
+	let args =
+	[
+		"-cp",
+		path.resolve(sdkPath, "lib", "compiler.jar") + cpDelimiter +
+		path.resolve(sdkPath, "js", "lib", "jsc.jar") + cpDelimiter +
+		path.resolve(savedContext.extensionPath, "target", "CheckFlexJSVersion.jar"),
+		"com.nextgenactionscript.vscode.CheckFlexJSVersion",
+	];
+	let result = child_process.spawnSync(javaExecutablePath, args);
 	return result.status === 0;
 }
 
@@ -68,18 +91,29 @@ function killJavaProcess()
 export function activate(context: vscode.ExtensionContext)
 {
 	savedContext = context;
-	flexHome = findSDK();
-	javaExecutablePath = findJava(isValidJava);
+	javaExecutablePath = findJava(isValidJavaVersion);
+	flexHome = findSDK(isValidSDKVersion);
 	vscode.workspace.onDidChangeConfiguration((event) =>
 	{
-		let newFlexHome = findSDK();
-		let newJavaExecutablePath = findJava(isValidJava);
+		let newJavaExecutablePath = findJava(isValidJavaVersion);
+		let newFlexHome = findSDK(isValidSDKVersion);
 		if(flexHome != newFlexHome || javaExecutablePath != newJavaExecutablePath)
 		{
 			flexHome = newFlexHome;
 			javaExecutablePath = newJavaExecutablePath;
 			killJavaProcess();
-			startClient();
+			if(process.argv.indexOf("--type=extensionHost") !== -1)
+			{
+				//when debugging, wait a moment to free up the port
+				setTimeout(() =>
+				{
+					startClient();
+				}, 500);
+			}
+			else
+			{
+				startClient();
+			}
 		}
 	});
 	vscode.commands.registerCommand("nextgenas.createASConfigTaskRunner", () =>
@@ -288,11 +322,6 @@ function createLanguageServer(): Promise<StreamInfo>
 		}
 		portfinder.getPort((err, port) =>
 		{
-			let cpDelimiter = ":";
-			if(process.platform === "win32")
-			{
-				cpDelimiter = ";";
-			}
 			let args =
 			[
 				"-cp",

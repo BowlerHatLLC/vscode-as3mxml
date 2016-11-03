@@ -15,6 +15,10 @@ limitations under the License.
 */
 package com.nextgenactionscript.vscode;
 
+/**
+ * Checks that the Java version is capable of running the NextGenAS language
+ * server.
+ */
 public class CheckJavaVersion
 {
     public static final int GOOD_VERSION = 0;
