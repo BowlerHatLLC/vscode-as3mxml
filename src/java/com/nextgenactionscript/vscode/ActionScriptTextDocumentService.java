@@ -1082,6 +1082,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             nodeAtPreviousOffset = parentNode.getContainingNode(currentOffset - 1);
         }
 
+        if (isInComment(position))
+        {
+            //if we're inside a comment, no completion!
+            return CompletableFuture.completedFuture(new CompletionListImpl());
+        }
+
         //variable types
         if (offsetNode instanceof IVariableNode)
         {
@@ -3695,6 +3701,33 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             labelBuilder.append(functionDefinition.getReturnTypeAsDisplayString());
         }
         return labelBuilder.toString();
+    }
+
+    private boolean isInComment(TextDocumentPositionParams params)
+    {
+        TextDocumentIdentifier textDocument = params.getTextDocument();
+        Path path = getPathFromLsapiURI(textDocument.getUri());
+        if (path == null || !sourceByPath.containsKey(path))
+        {
+            return false;
+        }
+        String code = sourceByPath.get(path);
+        int startComment = code.lastIndexOf("/*", currentOffset);
+        if (startComment >= 0)
+        {
+            int endComment = code.indexOf("*/", startComment);
+            if (endComment > currentOffset)
+            {
+                return true;
+            }
+        }
+        int startLine = code.lastIndexOf("\n");
+        if (startLine == -1)
+        {
+            return false;
+        }
+        startComment = code.indexOf("//", startLine);
+        return currentOffset > startComment;
     }
 
     private void querySymbolsInScope(String query, IASScope scope, List<SymbolInformationImpl> result)
