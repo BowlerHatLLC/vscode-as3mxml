@@ -3717,7 +3717,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return false;
         }
         String code = sourceByPath.get(path);
-        int startComment = code.lastIndexOf("/*", currentOffset);
+        int startComment = code.lastIndexOf("/*", currentOffset - 1);
         if (startComment >= 0)
         {
             int endComment = code.indexOf("*/", startComment);
@@ -3726,10 +3726,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 return true;
             }
         }
-        int startLine = code.lastIndexOf("\n");
+        int startLine = code.lastIndexOf('\n', currentOffset - 1);
         if (startLine == -1)
         {
-            return false;
+            //we're on the first line
+            startLine = 0;
         }
         startComment = code.indexOf("//", startLine);
         return currentOffset > startComment;
@@ -3744,7 +3745,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return false;
         }
         String code = sourceByPath.get(path);
-        int startComment = code.lastIndexOf("<!--", currentOffset);
+        int startComment = code.lastIndexOf("<!--", currentOffset - 1);
         if (startComment == -1)
         {
             return false;
