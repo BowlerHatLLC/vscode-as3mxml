@@ -50,6 +50,7 @@ import org.apache.flex.compiler.config.Configurator;
 import org.apache.flex.compiler.config.ICompilerSettingsConstants;
 import org.apache.flex.compiler.constants.IASKeywordConstants;
 import org.apache.flex.compiler.constants.IASLanguageConstants;
+import org.apache.flex.compiler.constants.IMXMLCoreConstants;
 import org.apache.flex.compiler.constants.IMetaAttributeConstants;
 import org.apache.flex.compiler.definitions.IAccessorDefinition;
 import org.apache.flex.compiler.definitions.IClassDefinition;
@@ -115,12 +116,11 @@ import org.apache.flex.compiler.tree.as.IVariableNode;
 import org.apache.flex.compiler.units.ICompilationUnit;
 import org.apache.flex.compiler.units.IInvisibleCompilationUnit;
 import org.apache.flex.compiler.workspaces.IWorkspace;
-import org.apache.flex.swc.ISWC;
-import org.apache.flex.swc.ISWCFileEntry;
 
 import com.nextgenactionscript.vscode.asconfig.ASConfigOptions;
 import com.nextgenactionscript.vscode.asconfig.CompilerOptions;
 import com.nextgenactionscript.vscode.asconfig.ProjectType;
+import com.nextgenactionscript.vscode.mxml.IMXMLLibraryConstants;
 import io.typefox.lsapi.CodeActionParams;
 import io.typefox.lsapi.CodeLens;
 import io.typefox.lsapi.CodeLensParams;
@@ -201,6 +201,26 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private static final String AS_EXTENSION = ".as";
     private static final String SWC_EXTENSION = ".swc";
     private static final String ASCONFIG_JSON = "asconfig.json";
+    private static final String DEFAULT_NS_PREFIX = "ns";
+    private static final String DOT_STAR = ".*";
+
+    private static final HashMap<String, String> NAMESPACE_TO_PREFIX = new HashMap<>();
+
+    {
+        //MXML language
+        NAMESPACE_TO_PREFIX.put(IMXMLLanguageConstants.NAMESPACE_MXML_2006, "mx");
+        NAMESPACE_TO_PREFIX.put(IMXMLLanguageConstants.NAMESPACE_MXML_2009, "fx");
+
+        //Flex
+        NAMESPACE_TO_PREFIX.put(IMXMLLibraryConstants.MX, "mx");
+        NAMESPACE_TO_PREFIX.put(IMXMLLibraryConstants.SPARK, "s");
+
+        //FlexJS
+        NAMESPACE_TO_PREFIX.put(IMXMLLibraryConstants.BASIC, "js");
+
+        //Feathers
+        NAMESPACE_TO_PREFIX.put(IMXMLLibraryConstants.FEATHERS, "f");
+    }
 
     private Boolean asconfigChanged = true;
     private Path workspaceRoot;
@@ -1310,7 +1330,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             String prefix = offsetTag.getPrefix();
             if (prefix.length() > 0)
             {
-                propertyElementPrefix = prefix + ":";
+                propertyElementPrefix = prefix + IMXMLCoreConstants.colon;
             }
         }
 
@@ -2139,7 +2159,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             {
                 //if the namespace is already defined on the root tag, use the
                 //existing prefix.
-                String prefix = prefixes[0] + ":";
+                String prefix = prefixes[0] + IMXMLCoreConstants.colon;
                 addDefinitionAutoComplete(definition, prefix, result);
                 return;
             }
@@ -2154,30 +2174,61 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             //this type is in a namespace
             //let's try to figure out a nice prefix to use
             String prefix = null;
-            for (ISWC swc : currentProject.getLibraries())
-            {
-                if (swc.getSWCFile().getAbsolutePath().equals(definition.getContainingFilePath()))
-                {
-                    //design.xml is an optional file that contains a suggested
-                    //namespace for the namespaces the SWC contains
-                    ISWCFileEntry fileInSWC = swc.getFile("design.xml");
-                    if (fileInSWC != null)
-                    {
 
-                    }
+            //first, we'll check if the namespace comes from a known library
+            //with a common prefix
+            if (NAMESPACE_TO_PREFIX.containsKey(fallbackNamespace))
+            {
+                prefix = NAMESPACE_TO_PREFIX.get(fallbackNamespace);
+                if (prefixMap.containsPrefix(prefix))
+                {
+                    //the prefix already exists, so we can't use it
+                    prefix = null;
+                }
+                else
+                {
+                    prefix += IMXMLCoreConstants.colon;
                 }
             }
+            //if we can't find a known library, we'll generate a prefix
             if (prefix == null)
             {
-                //if all else fails, fall back to a generic namespace
-                prefix = "ns1:";
+                prefix = getNumberedNamespacePrefix(DEFAULT_NS_PREFIX, prefixMap) + IMXMLCoreConstants.colon;
             }
             addDefinitionAutoComplete(definition, prefix, result);
             return;
         }
 
-        //this type is not in a namespace
-        addDefinitionAutoComplete(definition, null, result);
+        //try to find a prefix based on the package name
+        String[] prefixes = prefixMap.getPrefixesForNamespace(definition.getPackageName() + DOT_STAR);
+        if (prefixes.length > 0)
+        {
+            //use an existing prefix, if possible
+            String prefix = prefixes[0] + IMXMLCoreConstants.colon;
+            addDefinitionAutoComplete(definition, prefix, result);
+            return;
+        }
+        //finally, our last option is to generate a prefix
+        String prefix = getNumberedNamespacePrefix(DEFAULT_NS_PREFIX, prefixMap) + IMXMLCoreConstants.colon;
+        addDefinitionAutoComplete(definition, prefix, result);
+    }
+
+    private String getNumberedNamespacePrefix(String prefixPrefix, PrefixMap prefixMap)
+    {
+        //if all else fails, fall back to a generic namespace
+        int count = 1;
+        String prefix = null;
+        do
+        {
+            prefix = prefixPrefix + count;
+            if (prefixMap.containsPrefix(prefix))
+            {
+                prefix = null;
+            }
+            count++;
+        }
+        while (prefix == null);
+        return prefix;
     }
 
     private void addDefinitionAutoComplete(IDefinition definition, CompletionListImpl result)
