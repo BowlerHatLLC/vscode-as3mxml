@@ -18,11 +18,11 @@ import * as child_process from "child_process";
 import * as fs from "fs";
 import * as net from "net";
 import * as path from "path";
-import * as portfinder from "portfinder";
 import * as vscode from "vscode";
 import {LanguageClient, LanguageClientOptions, SettingMonitor,
 	ServerOptions, StreamInfo, ErrorHandler, ErrorAction, CloseAction} from "vscode-languageclient";
 import { Message } from "vscode-jsonrpc";
+import portfinder = require("portfinder");
 
 const INVALID_SDK_ERROR = "nextgenas.flexjssdk in settings does not point to a valid SDK. Requires Apache FlexJS 0.7.0 or newer.";
 const MISSING_SDK_ERROR = "Could not locate valid SDK. Requires Apache FlexJS 0.7.0 or newer. Configure nextgenas.flexjssdk, add to $PATH, or set $FLEX_HOME.";
