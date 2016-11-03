@@ -36,7 +36,7 @@
     "build-tests": "ant build-tests"
   },
   "engines": {
-    "vscode": "^1.4.0"
+    "vscode": "^1.7.0"
   },
   "devDependencies": {
     "typescript": "^1.8.10",
