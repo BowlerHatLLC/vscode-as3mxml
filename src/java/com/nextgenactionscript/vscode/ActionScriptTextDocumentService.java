@@ -1082,7 +1082,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             nodeAtPreviousOffset = parentNode.getContainingNode(currentOffset - 1);
         }
 
-        if (isInComment(position))
+        if (isInActionScriptComment(position))
         {
             //if we're inside a comment, no completion!
             return CompletableFuture.completedFuture(new CompletionListImpl());
@@ -1325,6 +1325,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private CompletableFuture<CompletionList> mxmlCompletion(TextDocumentPositionParams position, IMXMLTagData offsetTag)
     {
+        if(isInXMLComment(position))
+        {
+            //if we're inside a comment, no completion!
+            return CompletableFuture.completedFuture(new CompletionListImpl());
+        }
         CompletionListImpl result = new CompletionListImpl();
         result.setIncomplete(false);
         result.setItems(new ArrayList<>());
@@ -3703,7 +3708,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return labelBuilder.toString();
     }
 
-    private boolean isInComment(TextDocumentPositionParams params)
+    private boolean isInActionScriptComment(TextDocumentPositionParams params)
     {
         TextDocumentIdentifier textDocument = params.getTextDocument();
         Path path = getPathFromLsapiURI(textDocument.getUri());
@@ -3728,6 +3733,24 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         startComment = code.indexOf("//", startLine);
         return currentOffset > startComment;
+    }
+
+    private boolean isInXMLComment(TextDocumentPositionParams params)
+    {
+        TextDocumentIdentifier textDocument = params.getTextDocument();
+        Path path = getPathFromLsapiURI(textDocument.getUri());
+        if (path == null || !sourceByPath.containsKey(path))
+        {
+            return false;
+        }
+        String code = sourceByPath.get(path);
+        int startComment = code.lastIndexOf("<!--", currentOffset);
+        if (startComment == -1)
+        {
+            return false;
+        }
+        int endComment = code.indexOf("-->", startComment);
+        return endComment > currentOffset;
     }
 
     private void querySymbolsInScope(String query, IASScope scope, List<SymbolInformationImpl> result)
