@@ -28,6 +28,8 @@ const INVALID_SDK_ERROR = "nextgenas.flexjssdk in settings does not point to a v
 const MISSING_SDK_ERROR = "Could not locate valid SDK. Requires Apache FlexJS 0.7.0 or newer. Configure nextgenas.flexjssdk, add to $PATH, or set $FLEX_HOME.";
 const MISSING_JAVA_ERROR = "Could not locate valid Java executable. Configure nextgenas.java, add to $PATH, or set $JAVA_HOME.";
 const MISSING_WORKSPACE_ROOT_ERROR = "Open a folder and create a file named asconfig.json to enable all ActionScript language features.";
+const RESTART_MESSAGE = "To apply new settings for NextGen ActionScript, please restart Visual Studio Code.";
+const RESTART_BUTTON_LABEL = "Restart Now";
 let savedChild: child_process.ChildProcess;
 let savedContext: vscode.ExtensionContext;
 let flexHome: string;
@@ -99,21 +101,13 @@ export function activate(context: vscode.ExtensionContext)
 		let newFlexHome = findSDK(isValidSDKVersion);
 		if(flexHome != newFlexHome || javaExecutablePath != newJavaExecutablePath)
 		{
-			flexHome = newFlexHome;
-			javaExecutablePath = newJavaExecutablePath;
-			killJavaProcess();
-			if(process.argv.indexOf("--type=extensionHost") !== -1)
+			vscode.window.showWarningMessage(RESTART_MESSAGE, RESTART_BUTTON_LABEL).then((action) =>
 			{
-				//when debugging, wait a moment to free up the port
-				setTimeout(() =>
+				if(action === RESTART_BUTTON_LABEL)
 				{
-					startClient();
-				}, 500);
-			}
-			else
-			{
-				startClient();
-			}
+					vscode.commands.executeCommand("workbench.action.reloadWindow");
+				}
+			});
 		}
 	});
 	vscode.commands.registerCommand("nextgenas.createASConfigTaskRunner", () =>
