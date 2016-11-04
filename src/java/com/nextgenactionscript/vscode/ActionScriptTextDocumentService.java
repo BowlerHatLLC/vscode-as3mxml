@@ -3733,7 +3733,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             startLine = 0;
         }
         startComment = code.indexOf("//", startLine);
-        return currentOffset > startComment;
+        return startComment != -1 && currentOffset > startComment;
     }
 
     private boolean isInXMLComment(TextDocumentPositionParams params)
