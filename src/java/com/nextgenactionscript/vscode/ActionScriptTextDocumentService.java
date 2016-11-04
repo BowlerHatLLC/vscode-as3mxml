@@ -229,6 +229,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             nodeAtPreviousOffset = parentNode.getContainingNode(currentOffset - 1);
         }
 
+        if (isInActionScriptComment(position))
+        {
+            //if we're inside a comment, no completion!
+            return CompletableFuture.completedFuture(new CompletionListImpl());
+        }
+
         CompletionListImpl result = new CompletionListImpl();
         result.setIncomplete(false);
         result.setItems(new ArrayList<>());
@@ -2652,6 +2658,41 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             labelBuilder.append(functionDefinition.getReturnTypeAsDisplayString());
         }
         return labelBuilder.toString();
+    }
+
+    private boolean isInActionScriptComment(TextDocumentPositionParams params)
+    {
+        TextDocumentIdentifier textDocument = params.getTextDocument();
+
+        URI uri = URI.create(textDocument.getUri());
+        Optional<Path> optionalPath = getFilePath(uri);
+        if (!optionalPath.isPresent())
+        {
+            return false;
+        }
+        Path path = optionalPath.get();
+        if (path == null || !sourceByPath.containsKey(path))
+        {
+            return false;
+        }
+        String code = sourceByPath.get(path);
+        int startComment = code.lastIndexOf("/*", currentOffset - 1);
+        if (startComment >= 0)
+        {
+            int endComment = code.indexOf("*/", startComment);
+            if (endComment > currentOffset)
+            {
+                return true;
+            }
+        }
+        int startLine = code.lastIndexOf('\n', currentOffset - 1);
+        if (startLine == -1)
+        {
+            //we're on the first line
+            startLine = 0;
+        }
+        startComment = code.indexOf("//", startLine);
+        return currentOffset > startComment;
     }
 
     private void querySymbolsInScope(String query, IASScope scope, List<SymbolInformationImpl> result)
