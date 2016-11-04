@@ -25,11 +25,11 @@ function openAndEditDocument(uri: vscode.Uri, callback: (editor: vscode.TextEdit
 				return vscode.window.showTextDocument(document)
 					.then(callback, (err) =>
 					{
-						assert.fail("Failed to show text document: " + uri);
+						assert(false, "Failed to show text document: " + uri);
 					});
 			}, (err) =>
 			{
-				assert.fail("Failed to open text document: " + uri);
+				assert(false, "Failed to open text document: " + uri);
 			});
 }
 
@@ -107,7 +107,7 @@ suite("document symbol provider", () =>
 							"vscode.executeDocumentSymbolProvider failed to provide symbols in text document: " + uri);
 					}, (err) =>
 					{
-						assert.fail("Failed to execute document symbol provider: " + uri);
+						assert(false, "Failed to execute document symbol provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -128,7 +128,7 @@ suite("document symbol provider", () =>
 							"vscode.executeDocumentSymbolProvider failed to provide symbol for class: " + classQualifiedName);
 					}, (err) =>
 					{
-						assert.fail("Failed to execute document symbol provider: " + uri);
+						assert(false, "Failed to execute document symbol provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -149,7 +149,7 @@ suite("document symbol provider", () =>
 							"vscode.executeDocumentSymbolProvider failed to provide symbol for constructor: " + classQualifiedName);
 					}, (err) =>
 					{
-						assert.fail("Failed to execute document symbol provider: " + uri);
+						assert(false, "Failed to execute document symbol provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -170,7 +170,7 @@ suite("document symbol provider", () =>
 							"vscode.executeDocumentSymbolProvider failed to provide symbol for member variable: " + memberVarName);
 					}, (err) =>
 					{
-						assert.fail("Failed to execute document symbol provider: " + uri);
+						assert(false, "Failed to execute document symbol provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -191,7 +191,7 @@ suite("document symbol provider", () =>
 							"vscode.executeDocumentSymbolProvider failed to provide symbol for member function: " + memberFunctionName);
 					}, (err) =>
 					{
-						assert.fail("Failed to execute document symbol provider: " + uri);
+						assert(false, "Failed to execute document symbol provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -212,7 +212,7 @@ suite("document symbol provider", () =>
 							"vscode.executeDocumentSymbolProvider failed to provide symbol for static variable: " + staticVarName);
 					}, (err) =>
 					{
-						assert.fail("Failed to execute document symbol provider: " + uri);
+						assert(false, "Failed to execute document symbol provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -233,7 +233,7 @@ suite("document symbol provider", () =>
 							"vscode.executeDocumentSymbolProvider failed to provide symbol for static constant: " + staticConstName);
 					}, (err) =>
 					{
-						assert.fail("Failed to execute document symbol provider: " + uri);
+						assert(false, "Failed to execute document symbol provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -254,7 +254,7 @@ suite("document symbol provider", () =>
 							"vscode.executeDocumentSymbolProvider failed to provide symbol for static function: " + staticFunctionName);
 					}, (err) =>
 					{
-						assert.fail("Failed to execute document symbol provider: " + uri);
+						assert(false, "Failed to execute document symbol provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -275,7 +275,7 @@ suite("document symbol provider", () =>
 							"vscode.executeDocumentSymbolProvider failed to provide symbol for internal class: " + internalClassQualifiedName);
 					}, (err) =>
 					{
-						assert.fail("Failed to execute document symbol provider: " + uri);
+						assert(false, "Failed to execute document symbol provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -296,7 +296,7 @@ suite("document symbol provider", () =>
 							"vscode.executeDocumentSymbolProvider failed to provide symbol for member variable in internal class: " + memberVarName);
 					}, (err) =>
 					{
-						assert.fail("Failed to execute document symbol provider: " + uri);
+						assert(false, "Failed to execute document symbol provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -321,7 +321,7 @@ suite("workspace symbol provider", () =>
 							"vscode.executeWorkspaceSymbolProvider failed to provide symbol for class: " + query);
 					}, (err) =>
 					{
-						assert.fail("Failed to execute workspace symbol provider: " + uri);
+						assert(false, "Failed to execute workspace symbol provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -342,7 +342,7 @@ suite("workspace symbol provider", () =>
 							"vscode.executeWorkspaceSymbolProvider failed to provide symbol for constructor: " + query);
 					}, (err) =>
 					{
-						assert.fail("Failed to execute workspace symbol provider: " + uri);
+						assert(false, "Failed to execute workspace symbol provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -363,7 +363,7 @@ suite("workspace symbol provider", () =>
 							"vscode.executeWorkspaceSymbolProvider failed to provide symbol for member variable: " + query);
 					}, (err) =>
 					{
-						assert.fail("Failed to execute workspace symbol provider: " + uri);
+						assert(false, "Failed to execute workspace symbol provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -384,7 +384,7 @@ suite("workspace symbol provider", () =>
 							"vscode.executeWorkspaceSymbolProvider failed to provide symbol for member function: " + query);
 					}, (err) =>
 					{
-						assert.fail("Failed to execute workspace symbol provider: " + uri);
+						assert(false, "Failed to execute workspace symbol provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -405,7 +405,7 @@ suite("workspace symbol provider", () =>
 							"vscode.executeWorkspaceSymbolProvider failed to provide symbol for static variable: " + query);
 					}, (err) =>
 					{
-						assert.fail("Failed to execute workspace symbol provider: " + uri);
+						assert(false, "Failed to execute workspace symbol provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -426,7 +426,7 @@ suite("workspace symbol provider", () =>
 							"vscode.executeWorkspaceSymbolProvider failed to provide symbol for static constant: " + query);
 					}, (err) =>
 					{
-						assert.fail("Failed to execute workspace symbol provider: " + uri);
+						assert(false, "Failed to execute workspace symbol provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -447,7 +447,7 @@ suite("workspace symbol provider", () =>
 							"vscode.executeWorkspaceSymbolProvider failed to provide symbol for static function: " + query);
 					}, (err) =>
 					{
-						assert.fail("Failed to execute workspace symbol provider: " + uri);
+						assert(false, "Failed to execute workspace symbol provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -469,7 +469,7 @@ suite("workspace symbol provider", () =>
 							
 					}, (err) =>
 					{
-						assert.fail("Failed to execute workspace symbol provider: " + uri);
+						assert(false, "Failed to execute workspace symbol provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -490,7 +490,7 @@ suite("workspace symbol provider", () =>
 							"vscode.executeWorkspaceSymbolProvider failed to provide symbol for member variable in internal class: " + query);
 					}, (err) =>
 					{
-						assert.fail("Failed to execute workspace symbol provider: " + uri);
+						assert(false, "Failed to execute workspace symbol provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -509,7 +509,7 @@ suite("workspace symbol provider", () =>
 							"vscode.executeWorkspaceSymbolProvider failed to provide unreferenced symbols for query: " + query);
 					}, (err) =>
 					{
-						assert.fail("Failed to execute workspace symbol provider: " + uri);
+						assert(false, "Failed to execute workspace symbol provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -531,7 +531,7 @@ suite("workspace symbol provider", () =>
 							"vscode.executeWorkspaceSymbolProvider failed to provide symbol for class in unreferenced file with query: " + query);
 					}, (err) =>
 					{
-						assert.fail("Failed to execute workspace symbol provider: " + uri);
+						assert(false, "Failed to execute workspace symbol provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -553,7 +553,7 @@ suite("workspace symbol provider", () =>
 							"vscode.executeWorkspaceSymbolProvider failed to provide symbol for constructor in unreferenced file with query: " + query);
 					}, (err) =>
 					{
-						assert.fail("Failed to execute workspace symbol provider: " + uri);
+						assert(false, "Failed to execute workspace symbol provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -575,7 +575,7 @@ suite("workspace symbol provider", () =>
 							"vscode.executeWorkspaceSymbolProvider failed to provide symbol for interface in unreferenced file with query: " + query);
 					}, (err) =>
 					{
-						assert.fail("Failed to execute workspace symbol provider: " + uri);
+						assert(false, "Failed to execute workspace symbol provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -600,7 +600,7 @@ suite("signature help provider", () =>
 							"Active parameter incorrect for local function");
 					}, (err) =>
 					{
-						assert.fail("Failed to execute workspace symbol provider: " + uri);
+						assert(false, "Failed to execute workspace symbol provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -621,7 +621,7 @@ suite("signature help provider", () =>
 							"Active parameter incorrect for member function");
 					}, (err) =>
 					{
-						assert.fail("Failed to execute workspace symbol provider: " + uri);
+						assert(false, "Failed to execute workspace symbol provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -642,7 +642,7 @@ suite("signature help provider", () =>
 							"Active parameter incorrect for member function with member access operator on this");
 					}, (err) =>
 					{
-						assert.fail("Failed to execute workspace symbol provider: " + uri);
+						assert(false, "Failed to execute workspace symbol provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -663,7 +663,7 @@ suite("signature help provider", () =>
 							"Active parameter incorrect for static function");
 					}, (err) =>
 					{
-						assert.fail("Failed to execute workspace symbol provider: " + uri);
+						assert(false, "Failed to execute workspace symbol provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -684,7 +684,7 @@ suite("signature help provider", () =>
 							"Active parameter incorrect for static function with member access operator on class");
 					}, (err) =>
 					{
-						assert.fail("Failed to execute workspace symbol provider: " + uri);
+						assert(false, "Failed to execute workspace symbol provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -705,7 +705,7 @@ suite("signature help provider", () =>
 							"Active parameter incorrect for package function");
 					}, (err) =>
 					{
-						assert.fail("Failed to execute workspace symbol provider: " + uri);
+						assert(false, "Failed to execute workspace symbol provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -726,7 +726,7 @@ suite("signature help provider", () =>
 							"Active parameter incorrect for internal function");
 					}, (err) =>
 					{
-						assert.fail("Failed to execute workspace symbol provider: " + uri);
+						assert(false, "Failed to execute workspace symbol provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -747,7 +747,7 @@ suite("signature help provider", () =>
 							"Active parameter incorrect for internal function");
 					}, (err) =>
 					{
-						assert.fail("Failed to execute workspace symbol provider: " + uri);
+						assert(false, "Failed to execute workspace symbol provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -768,7 +768,7 @@ suite("signature help provider", () =>
 							"Active parameter incorrect for super constructor");
 					}, (err) =>
 					{
-						assert.fail("Failed to execute workspace symbol provider: " + uri);
+						assert(false, "Failed to execute workspace symbol provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -789,7 +789,7 @@ suite("signature help provider", () =>
 							"Active parameter incorrect for super member method");
 					}, (err) =>
 					{
-						assert.fail("Failed to execute workspace symbol provider: " + uri);
+						assert(false, "Failed to execute workspace symbol provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -806,7 +806,7 @@ suite("signature help provider", () =>
 							"Signature help incorrectly provided for private super member method");
 					}, (err) =>
 					{
-						assert.fail("Failed to execute workspace symbol provider: " + uri);
+						assert(false, "Failed to execute workspace symbol provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -831,7 +831,7 @@ suite("definition provider", () =>
 						assert.strictEqual(location.range.start.character, 7, "vscode.executeDefinitionProvider provided incorrect character for local variable definition");
 					}, (err) =>
 					{
-						assert.fail("Failed to execute definition provider: " + uri);
+						assert(false, "Failed to execute definition provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -852,7 +852,7 @@ suite("definition provider", () =>
 						assert.strictEqual(location.range.start.character, 12, "vscode.executeDefinitionProvider provided incorrect character for local function definition");
 					}, (err) =>
 					{
-						assert.fail("Failed to execute definition provider: " + uri);
+						assert(false, "Failed to execute definition provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -873,7 +873,7 @@ suite("definition provider", () =>
 						assert.strictEqual(location.range.start.character, 14, "vscode.executeDefinitionProvider provided incorrect character for member variable definition");
 					}, (err) =>
 					{
-						assert.fail("Failed to execute definition provider: " + uri);
+						assert(false, "Failed to execute definition provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -894,7 +894,7 @@ suite("definition provider", () =>
 						assert.strictEqual(location.range.start.character, 14, "vscode.executeDefinitionProvider provided incorrect character for member variable definition with member access operator on this");
 					}, (err) =>
 					{
-						assert.fail("Failed to execute definition provider: " + uri);
+						assert(false, "Failed to execute definition provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -915,7 +915,7 @@ suite("definition provider", () =>
 						assert.strictEqual(location.range.start.character, 19, "vscode.executeDefinitionProvider provided incorrect character for member function definition");
 					}, (err) =>
 					{
-						assert.fail("Failed to execute definition provider: " + uri);
+						assert(false, "Failed to execute definition provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -936,7 +936,7 @@ suite("definition provider", () =>
 						assert.strictEqual(location.range.start.character, 19, "vscode.executeDefinitionProvider provided incorrect character for member function definition with member access operator on this");
 					}, (err) =>
 					{
-						assert.fail("Failed to execute definition provider: " + uri);
+						assert(false, "Failed to execute definition provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -957,7 +957,7 @@ suite("definition provider", () =>
 						assert.strictEqual(location.range.start.character, 22, "vscode.executeDefinitionProvider provided incorrect character for member property definition");
 					}, (err) =>
 					{
-						assert.fail("Failed to execute definition provider: " + uri);
+						assert(false, "Failed to execute definition provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -978,7 +978,7 @@ suite("definition provider", () =>
 						assert.strictEqual(location.range.start.character, 22, "vscode.executeDefinitionProvider provided incorrect character for member property definition with member access operator on this");
 					}, (err) =>
 					{
-						assert.fail("Failed to execute definition provider: " + uri);
+						assert(false, "Failed to execute definition provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -999,7 +999,7 @@ suite("definition provider", () =>
 						assert.strictEqual(location.range.start.character, 20, "vscode.executeDefinitionProvider provided incorrect character for static variable definition");
 					}, (err) =>
 					{
-						assert.fail("Failed to execute definition provider: " + uri);
+						assert(false, "Failed to execute definition provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -1020,7 +1020,7 @@ suite("definition provider", () =>
 						assert.strictEqual(location.range.start.character, 20, "vscode.executeDefinitionProvider provided incorrect character for static variable definition with member access operator on class");
 					}, (err) =>
 					{
-						assert.fail("Failed to execute definition provider: " + uri);
+						assert(false, "Failed to execute definition provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -1041,7 +1041,7 @@ suite("definition provider", () =>
 						assert.strictEqual(location.range.start.character, 26, "vscode.executeDefinitionProvider provided incorrect character for static function definition");
 					}, (err) =>
 					{
-						assert.fail("Failed to execute definition provider: " + uri);
+						assert(false, "Failed to execute definition provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -1062,7 +1062,7 @@ suite("definition provider", () =>
 						assert.strictEqual(location.range.start.character, 26, "vscode.executeDefinitionProvider provided incorrect character for static function definition with member access operator on class");
 					}, (err) =>
 					{
-						assert.fail("Failed to execute definition provider: " + uri);
+						assert(false, "Failed to execute definition provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -1083,7 +1083,7 @@ suite("definition provider", () =>
 						assert.strictEqual(location.range.start.character, 29, "vscode.executeDefinitionProvider provided incorrect character for static property definition");
 					}, (err) =>
 					{
-						assert.fail("Failed to execute definition provider: " + uri);
+						assert(false, "Failed to execute definition provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -1104,7 +1104,7 @@ suite("definition provider", () =>
 						assert.strictEqual(location.range.start.character, 29, "vscode.executeDefinitionProvider provided incorrect character for static property definition with member access operator on class");
 					}, (err) =>
 					{
-						assert.fail("Failed to execute definition provider: " + uri);
+						assert(false, "Failed to execute definition provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -1126,7 +1126,7 @@ suite("definition provider", () =>
 						assert.strictEqual(location.range.start.character, 17, "vscode.executeDefinitionProvider provided incorrect character for package function definition");
 					}, (err) =>
 					{
-						assert.fail("Failed to execute definition provider: " + uri);
+						assert(false, "Failed to execute definition provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -1148,7 +1148,7 @@ suite("definition provider", () =>
 						assert.strictEqual(location.range.start.character, 17, "vscode.executeDefinitionProvider provided incorrect character for fully-qualified package function definition");
 					}, (err) =>
 					{
-						assert.fail("Failed to execute definition provider: " + uri);
+						assert(false, "Failed to execute definition provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -1170,7 +1170,7 @@ suite("definition provider", () =>
 						assert.strictEqual(location.range.start.character, 12, "vscode.executeDefinitionProvider provided incorrect character for package variable definition");
 					}, (err) =>
 					{
-						assert.fail("Failed to execute definition provider: " + uri);
+						assert(false, "Failed to execute definition provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -1192,7 +1192,7 @@ suite("definition provider", () =>
 						assert.strictEqual(location.range.start.character, 12, "vscode.executeDefinitionProvider provided incorrect character for fully-qualified package variable definition");
 					}, (err) =>
 					{
-						assert.fail("Failed to execute definition provider: " + uri);
+						assert(false, "Failed to execute definition provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -1214,7 +1214,7 @@ suite("definition provider", () =>
 						assert.strictEqual(location.range.start.character, 20, "vscode.executeDefinitionProvider provided incorrect character for super static variable definition");
 					}, (err) =>
 					{
-						assert.fail("Failed to execute definition provider: " + uri);
+						assert(false, "Failed to execute definition provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -1236,7 +1236,7 @@ suite("definition provider", () =>
 						assert.strictEqual(location.range.start.character, 20, "vscode.executeDefinitionProvider provided incorrect character for super static variable definition with member access operator on superclass");
 					}, (err) =>
 					{
-						assert.fail("Failed to execute definition provider: " + uri);
+						assert(false, "Failed to execute definition provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -1258,7 +1258,7 @@ suite("definition provider", () =>
 						assert.strictEqual(location.range.start.character, 29, "vscode.executeDefinitionProvider provided incorrect character for super static property definition");
 					}, (err) =>
 					{
-						assert.fail("Failed to execute definition provider: " + uri);
+						assert(false, "Failed to execute definition provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -1280,7 +1280,7 @@ suite("definition provider", () =>
 						assert.strictEqual(location.range.start.character, 29, "vscode.executeDefinitionProvider provided incorrect character for super static property definition with member access operator on superclass");
 					}, (err) =>
 					{
-						assert.fail("Failed to execute definition provider: " + uri);
+						assert(false, "Failed to execute definition provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -1302,7 +1302,7 @@ suite("definition provider", () =>
 						assert.strictEqual(location.range.start.character, 28, "vscode.executeDefinitionProvider provided incorrect character for super static function definition");
 					}, (err) =>
 					{
-						assert.fail("Failed to execute definition provider: " + uri);
+						assert(false, "Failed to execute definition provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -1324,7 +1324,7 @@ suite("definition provider", () =>
 						assert.strictEqual(location.range.start.character, 28, "vscode.executeDefinitionProvider provided incorrect character for super static function definition with member access operator on superclass");
 					}, (err) =>
 					{
-						assert.fail("Failed to execute definition provider: " + uri);
+						assert(false, "Failed to execute definition provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -1346,7 +1346,7 @@ suite("definition provider", () =>
 						assert.strictEqual(location.range.start.character, 21, "vscode.executeDefinitionProvider provided incorrect character for super member function definition");
 					}, (err) =>
 					{
-						assert.fail("Failed to execute definition provider: " + uri);
+						assert(false, "Failed to execute definition provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -1368,7 +1368,7 @@ suite("definition provider", () =>
 						assert.strictEqual(location.range.start.character, 21, "vscode.executeDefinitionProvider provided incorrect character for super member function definition with member access operator on this");
 					}, (err) =>
 					{
-						assert.fail("Failed to execute definition provider: " + uri);
+						assert(false, "Failed to execute definition provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -1390,7 +1390,7 @@ suite("definition provider", () =>
 						assert.strictEqual(location.range.start.character, 21, "vscode.executeDefinitionProvider provided incorrect character for super member function definition with member access operator on super");
 					}, (err) =>
 					{
-						assert.fail("Failed to execute definition provider: " + uri);
+						assert(false, "Failed to execute definition provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -1412,7 +1412,7 @@ suite("definition provider", () =>
 						assert.strictEqual(location.range.start.character, 13, "vscode.executeDefinitionProvider provided incorrect character for super member variable definition");
 					}, (err) =>
 					{
-						assert.fail("Failed to execute definition provider: " + uri);
+						assert(false, "Failed to execute definition provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -1434,7 +1434,7 @@ suite("definition provider", () =>
 						assert.strictEqual(location.range.start.character, 13, "vscode.executeDefinitionProvider provided incorrect character for super member variable definition with member access operator on this");
 					}, (err) =>
 					{
-						assert.fail("Failed to execute definition provider: " + uri);
+						assert(false, "Failed to execute definition provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -1456,7 +1456,7 @@ suite("definition provider", () =>
 						assert.strictEqual(location.range.start.character, 13, "vscode.executeDefinitionProvider provided incorrect character for super member variable definition with member access operator on super");
 					}, (err) =>
 					{
-						assert.fail("Failed to execute definition provider: " + uri);
+						assert(false, "Failed to execute definition provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -1478,7 +1478,7 @@ suite("definition provider", () =>
 						assert.strictEqual(location.range.start.character, 22, "vscode.executeDefinitionProvider provided incorrect character for super member property definition");
 					}, (err) =>
 					{
-						assert.fail("Failed to execute definition provider: " + uri);
+						assert(false, "Failed to execute definition provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -1500,7 +1500,7 @@ suite("definition provider", () =>
 						assert.strictEqual(location.range.start.character, 22, "vscode.executeDefinitionProvider provided incorrect character for super member property definition with member access operator on this");
 					}, (err) =>
 					{
-						assert.fail("Failed to execute definition provider: " + uri);
+						assert(false, "Failed to execute definition provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -1522,7 +1522,7 @@ suite("definition provider", () =>
 						assert.strictEqual(location.range.start.character, 22, "vscode.executeDefinitionProvider provided incorrect character for super member property definition with member access operator on super");
 					}, (err) =>
 					{
-						assert.fail("Failed to execute definition provider: " + uri);
+						assert(false, "Failed to execute definition provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -1543,7 +1543,7 @@ suite("definition provider", () =>
 						assert.strictEqual(location.range.start.character, 4, "vscode.executeDefinitionProvider provided incorrect character for file-internal variable definition");
 					}, (err) =>
 					{
-						assert.fail("Failed to execute definition provider: " + uri);
+						assert(false, "Failed to execute definition provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -1564,7 +1564,7 @@ suite("definition provider", () =>
 						assert.strictEqual(location.range.start.character, 9, "vscode.executeDefinitionProvider provided incorrect character for file-internal function definition");
 					}, (err) =>
 					{
-						assert.fail("Failed to execute definition provider: " + uri);
+						assert(false, "Failed to execute definition provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -1585,7 +1585,7 @@ suite("definition provider", () =>
 						assert.strictEqual(location.range.start.character, 6, "vscode.executeDefinitionProvider provided incorrect character for file-internal class definition");
 					}, (err) =>
 					{
-						assert.fail("Failed to execute definition provider: " + uri);
+						assert(false, "Failed to execute definition provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -1606,7 +1606,7 @@ suite("definition provider", () =>
 						assert.strictEqual(location.range.start.character, 17, "vscode.executeDefinitionProvider provided incorrect character for file-internal member function definition");
 					}, (err) =>
 					{
-						assert.fail("Failed to execute definition provider: " + uri);
+						assert(false, "Failed to execute definition provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -1627,7 +1627,7 @@ suite("definition provider", () =>
 						assert.strictEqual(location.range.start.character, 12, "vscode.executeDefinitionProvider provided incorrect character for file-internal member variable definition");
 					}, (err) =>
 					{
-						assert.fail("Failed to execute definition provider: " + uri);
+						assert(false, "Failed to execute definition provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -1648,7 +1648,7 @@ suite("definition provider", () =>
 						assert.strictEqual(location.range.start.character, 21, "vscode.executeDefinitionProvider provided incorrect character for file-internal member property definition");
 					}, (err) =>
 					{
-						assert.fail("Failed to execute definition provider: " + uri);
+						assert(false, "Failed to execute definition provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -1669,7 +1669,7 @@ suite("definition provider", () =>
 						assert.strictEqual(location.range.start.character, 28, "vscode.executeDefinitionProvider provided incorrect character for file-internal static property definition");
 					}, (err) =>
 					{
-						assert.fail("Failed to execute definition provider: " + uri);
+						assert(false, "Failed to execute definition provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -1690,7 +1690,7 @@ suite("definition provider", () =>
 						assert.strictEqual(location.range.start.character, 19, "vscode.executeDefinitionProvider provided incorrect character for file-internal static variable definition");
 					}, (err) =>
 					{
-						assert.fail("Failed to execute definition provider: " + uri);
+						assert(false, "Failed to execute definition provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});
@@ -1711,7 +1711,7 @@ suite("definition provider", () =>
 						assert.strictEqual(location.range.start.character, 24, "vscode.executeDefinitionProvider provided incorrect character for file-internal static function definition");
 					}, (err) =>
 					{
-						assert.fail("Failed to execute definition provider: " + uri);
+						assert(false, "Failed to execute definition provider: " + uri);
 					});
 		}).then(() => done(), done);
 	});

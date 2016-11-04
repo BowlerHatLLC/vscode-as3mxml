@@ -36,15 +36,18 @@
     "build-tests": "ant build-tests"
   },
   "engines": {
-    "vscode": "^1.4.0"
+    "vscode": "^1.7.0"
   },
   "devDependencies": {
-    "typescript": "^1.8.10",
-    "vscode": "^0.11.14"
+    "@types/mocha": "^2.2.32",
+    "@types/node": "^6.0.46",
+    "mocha": "^3.1.2",
+    "typescript": "^2.0.6",
+    "vscode": "^1.0.3"
   },
   "dependencies": {
     "portfinder": "^1.0.3",
-    "vscode-languageclient": "^2.3.0"
+    "vscode-languageclient": "^2.6.0"
   },
   "activationEvents": [
     "onLanguage:nextgenas",
@@ -62,7 +65,9 @@
     [
       {
         "id": "nextgenas",
-        "extensions": [ ".as" ],
+        "extensions": [
+          ".as"
+        ],
         "aliases": [
           "NextGen ActionScript",
           "NextGenAS",
@@ -72,27 +77,30 @@
         "configuration": "./nextgenas.configuration.json"
       }
     ],
-		"grammars": [
-			{
-				"language": "nextgenas",
-				"scopeName": "source.actionscript.3",
-				"path": "./syntaxes/AS3.tmLanguage"
-			}
+    "grammars": [
+      {
+        "language": "nextgenas",
+        "scopeName": "source.actionscript.3",
+        "path": "./syntaxes/AS3.tmLanguage"
+      }
     ],
     "jsonValidation": [
-      {
-        "fileMatch": "asconfig.json",
-        "url": "./schemas/asconfig.schema.json"
-      }
+    {
+      "fileMatch": "asconfig.json",
+      "url": "./schemas/asconfig.schema.json"
+    }
     ],
     "configuration": {
       "type": "object",
       "description": "NextGen ActionScript configuration",
       "properties": {
         "nextgenas.flexjssdk": {
-          "type": ["string", "null"],
+          "type": [
+            "string",
+            "null"
+          ],
           "default": null,
-          "description": "Specifies the folder path of Apache FlexJS SDK."            
+          "description": "Specifies the folder path of Apache FlexJS SDK."
         }
       }
     },
@@ -113,16 +121,16 @@
               "program": "${workspaceRoot}/bin/js-debug/index.js",
               "stopOnEntry": false,
               "args": [],
-			        "cwd": "${workspaceRoot}/bin/js-debug",
-			        "preLaunchTask": null,
-			        "runtimeExecutable": null,
-			        "runtimeArgs": [
+              "cwd": "${workspaceRoot}/bin/js-debug",
+              "preLaunchTask": null,
+              "runtimeExecutable": null,
+              "runtimeArgs": [
                 "--nolazy"
               ],
               "env": {
                 "NODE_ENV": "development"
               },
-              "externalConsole": false,
+              "console": "internalConsole",
               "sourceMaps": true,
               "outDir": "${workspaceRoot}/bin/js-debug"
             }

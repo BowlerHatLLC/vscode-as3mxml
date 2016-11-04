@@ -18,11 +18,11 @@ import * as child_process from "child_process";
 import * as fs from "fs";
 import * as net from "net";
 import * as path from "path";
-import * as portfinder from "portfinder";
 import * as vscode from "vscode";
 import {LanguageClient, LanguageClientOptions, SettingMonitor,
 	ServerOptions, StreamInfo, ErrorHandler, ErrorAction, CloseAction} from "vscode-languageclient";
 import { Message } from "vscode-jsonrpc";
+import portfinder = require("portfinder");
 
 const MISSING_SDK_ERROR = "Could not locate Apache FlexJS SDK. Configure nextgenas.flexjssdk, add to $PATH, or set $FLEX_HOME.";
 const MISSING_JAVA_ERROR = "Could not locate java in $JAVA_HOME or $PATH";

@@ -36,8 +36,6 @@ import io.typefox.lsapi.DocumentRangeFormattingParams;
 import io.typefox.lsapi.DocumentSymbolParams;
 import io.typefox.lsapi.Hover;
 import io.typefox.lsapi.Location;
-import io.typefox.lsapi.MessageParams;
-import io.typefox.lsapi.MessageParamsImpl;
 import io.typefox.lsapi.MessageType;
 import io.typefox.lsapi.PublishDiagnosticsParams;
 import io.typefox.lsapi.ReferenceParams;
@@ -47,6 +45,7 @@ import io.typefox.lsapi.SymbolInformation;
 import io.typefox.lsapi.TextDocumentPositionParams;
 import io.typefox.lsapi.TextEdit;
 import io.typefox.lsapi.WorkspaceEdit;
+import io.typefox.lsapi.impl.MessageParamsImpl;
 import io.typefox.lsapi.services.TextDocumentService;
 
 public class UnsupportedSDKTextDocumentService implements TextDocumentService
