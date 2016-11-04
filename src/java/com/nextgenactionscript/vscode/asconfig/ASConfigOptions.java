@@ -23,11 +23,13 @@ public class ASConfigOptions
     public static final String CONFIG = "config";
     public static final String FILES = "files";
     public static final String COMPILER_OPTIONS = "compilerOptions";
+    public static final String ADDITIONAL_OPTIONS = "additionalOptions";
 
     public ProjectType type;
     public String config;
     public String[] files;
     public CompilerOptions compilerOptions;
+    public String additionalOptions;
 
     public boolean equals(ASConfigOptions other)
     {

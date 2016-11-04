@@ -27,6 +27,7 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -1092,6 +1093,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         ProjectType type = ProjectType.APP;
         String config = null;
         String[] files = null;
+        String additionalOptions = null;
         CompilerOptions compilerOptions = new CompilerOptions();
         try (InputStream schemaInputStream = getClass().getResourceAsStream("/schemas/asconfig.schema.json"))
         {
@@ -1231,6 +1233,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     compilerOptions.warnings = jsonCompilerOptions.getBoolean(CompilerOptions.WARNINGS);
                 }
             }
+            //these options are formatted as if sent in through the command line
+            if (json.has(ASConfigOptions.ADDITIONAL_OPTIONS)) //optional
+            {
+                additionalOptions = json.getString(ASConfigOptions.ADDITIONAL_OPTIONS);
+            }
         }
         catch (ValidationException e)
         {
@@ -1263,6 +1270,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         options.config = config;
         options.files = files;
         options.compilerOptions = compilerOptions;
+        options.additionalOptions = additionalOptions;
         currentOptions = options;
     }
 
@@ -2132,13 +2140,23 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         configurator.setToken("configname", currentOptions.config);
         ProjectType type = currentOptions.type;
         String[] files = currentOptions.files;
+        String additionalOptions = currentOptions.additionalOptions;
+        ArrayList<String> combinedOptions = new ArrayList<>();
+        if (additionalOptions != null)
+        {
+            String[] splitOptions = additionalOptions.split("\\s+");
+            combinedOptions.addAll(Arrays.asList(splitOptions));
+        }
         if (type.equals(ProjectType.LIB))
         {
-            configurator.setConfiguration(null, ICompilerSettingsConstants.INCLUDE_CLASSES_VAR, false);
+            configurator.setConfiguration(combinedOptions.toArray(new String[combinedOptions.size()]),
+                    ICompilerSettingsConstants.INCLUDE_CLASSES_VAR, false);
         }
         else // app
         {
-            configurator.setConfiguration(files, ICompilerSettingsConstants.FILE_SPECS_VAR);
+            combinedOptions.addAll(Arrays.asList(files));
+            configurator.setConfiguration(combinedOptions.toArray(new String[combinedOptions.size()]),
+                    ICompilerSettingsConstants.FILE_SPECS_VAR);
         }
         //this needs to be set before applyToProject() so that it's in the
         //configuration buffer before addExternalLibraryPath() is called
