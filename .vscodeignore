@@ -8,7 +8,7 @@ test/**/*
 .gitignore
 tsconfig.json
 typings.d.ts
-manifest.mf
+manifest*.mf
 build.xml
 ivy.xml
 ivysettings.xml
