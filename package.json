@@ -21,6 +21,8 @@
   "main": "target/extension",
   "files": [
     "target/NextGenAS_vscode.jar",
+    "target/CheckJavaVersion.jar",
+    "target/CheckFlexJSVersion.jar",
     "target/lib",
     "out",
     "NOTICE",
