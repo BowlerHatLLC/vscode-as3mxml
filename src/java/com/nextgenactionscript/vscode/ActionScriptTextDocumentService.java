@@ -1307,7 +1307,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         autoCompleteDefinitions(result, false, "", definitionToSkip);
         //include definitions in the same package
         String packageName = node.getPackageName();
-        if (packageName.length() > 0)
+        if (packageName != null && packageName.length() > 0)
         {
             autoCompleteDefinitions(result, false, packageName, definitionToSkip);
         }
