@@ -101,6 +101,14 @@
           ],
           "default": null,
           "description": "Specifies the folder path of Apache FlexJS SDK."
+        },
+        "nextgenas.java": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null,
+          "description": "Specifies the path to the java exectuable."
         }
       }
     },

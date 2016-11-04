@@ -51,97 +51,43 @@ public class ActionScriptLanguageServer implements LanguageServer
     private Consumer<MessageParams> showMessageCallback = m ->
     {
     };
-    private boolean hasValidSDK = false;
 
-    public boolean getHasValidSDK()
-    {
-        return hasValidSDK;
-    }
-
-    private TextDocumentService textDocumentService;
+    private ActionScriptTextDocumentService textDocumentService;
 
     public ActionScriptLanguageServer()
     {
-        hasValidSDK = false;
-        try
-        {
-            String version = getFlexJSVersion();
-            //remove things like -SNAPSHOT and split the numeric parts
-            String[] versionParts = version.split("-")[0].split("\\.");
-            int major = 0;
-            int minor = 0;
-            int revision = 0;
-            if (versionParts.length >= 3)
-            {
-                major = Integer.parseInt(versionParts[0]);
-                minor = Integer.parseInt(versionParts[1]);
-                revision = Integer.parseInt(versionParts[2]);
-            }
-            //minimum major version
-            if (major > 0)
-            {
-                hasValidSDK = true;
-            }
-            else if (major == 0)
-            {
-                //minimum minor version
-                if (minor >= 7)
-                {
-                    hasValidSDK = true;
-                }
-            }
-        }
-        catch (Exception e)
-        {
-            hasValidSDK = false;
-        }
-
-        String flexlibDirectoryPath = findFlexLibDirectoryPath();
-        if (flexlibDirectoryPath == null)
-        {
-            hasValidSDK = false;
-        }
-
         //I'm not really sure why the compiler needs this, but it does
-        System.setProperty("flexlib", flexlibDirectoryPath);
+        System.setProperty("flexlib", findFlexLibDirectoryPath());
     }
 
     @Override
     public CompletableFuture<InitializeResult> initialize(InitializeParams params)
     {
-        if (textDocumentService instanceof ActionScriptTextDocumentService)
-        {
-            ActionScriptTextDocumentService service = (ActionScriptTextDocumentService) textDocumentService;
-            Path workspaceRoot = Paths.get(params.getRootPath()).toAbsolutePath().normalize();
-            service.setWorkspaceRoot(workspaceRoot);
-        }
+        ActionScriptTextDocumentService service = textDocumentService;
+        Path workspaceRoot = Paths.get(params.getRootPath()).toAbsolutePath().normalize();
+        service.setWorkspaceRoot(workspaceRoot);
 
         InitializeResultImpl result = new InitializeResultImpl();
         ServerCapabilitiesImpl serverCapabilities = new ServerCapabilitiesImpl();
 
-        if (hasValidSDK)
-        {
-            serverCapabilities.setTextDocumentSync(TextDocumentSyncKind.Incremental);
+        serverCapabilities.setTextDocumentSync(TextDocumentSyncKind.Incremental);
 
-            CompletionOptionsImpl completionOptions = new CompletionOptionsImpl();
-            completionOptions.setTriggerCharacters(Arrays.asList(".", ":", " "));
-            serverCapabilities.setCompletionProvider(completionOptions);
-            serverCapabilities.setDefinitionProvider(true);
-            serverCapabilities.setDocumentSymbolProvider(true);
-            serverCapabilities.setWorkspaceSymbolProvider(true);
-            serverCapabilities.setHoverProvider(true);
-            serverCapabilities.setReferencesProvider(true);
-            serverCapabilities.setCodeActionProvider(true);
-            serverCapabilities.setRenameProvider(true);
+        CompletionOptionsImpl completionOptions = new CompletionOptionsImpl();
+        completionOptions.setTriggerCharacters(Arrays.asList(".", ":", " "));
+        serverCapabilities.setCompletionProvider(completionOptions);
 
-            SignatureHelpOptionsImpl signatureHelpOptions = new SignatureHelpOptionsImpl();
-            signatureHelpOptions.setTriggerCharacters(Arrays.asList("(", ","));
-            serverCapabilities.setSignatureHelpProvider(signatureHelpOptions);
-        }
-        else
-        {
-            serverCapabilities.setTextDocumentSync(TextDocumentSyncKind.None);
-        }
+        serverCapabilities.setDefinitionProvider(true);
+        serverCapabilities.setDocumentSymbolProvider(true);
+        serverCapabilities.setWorkspaceSymbolProvider(true);
+        serverCapabilities.setHoverProvider(true);
+        serverCapabilities.setReferencesProvider(true);
+        serverCapabilities.setCodeActionProvider(true);
+        serverCapabilities.setRenameProvider(true);
+
+        SignatureHelpOptionsImpl signatureHelpOptions = new SignatureHelpOptionsImpl();
+        signatureHelpOptions.setTriggerCharacters(Arrays.asList("(", ","));
+        serverCapabilities.setSignatureHelpProvider(signatureHelpOptions);
+
         result.setCapabilities(serverCapabilities);
 
         return CompletableFuture.completedFuture(result);
@@ -174,11 +120,7 @@ public class ActionScriptLanguageServer implements LanguageServer
             public void onShowMessage(Consumer<MessageParams> callback)
             {
                 showMessageCallback = callback;
-                if (textDocumentService instanceof ActionScriptTextDocumentService)
-                {
-                    ActionScriptTextDocumentService actionScriptService = (ActionScriptTextDocumentService) textDocumentService;
-                    actionScriptService.showMessageCallback = callback;
-                }
+                textDocumentService.showMessageCallback = callback;
             }
 
             @Override
@@ -202,12 +144,7 @@ public class ActionScriptLanguageServer implements LanguageServer
             @Override
             public CompletableFuture<List<? extends SymbolInformation>> symbol(WorkspaceSymbolParams params)
             {
-                if (textDocumentService instanceof ActionScriptTextDocumentService)
-                {
-                    ActionScriptTextDocumentService actionScriptService = (ActionScriptTextDocumentService) textDocumentService;
-                    return actionScriptService.workspaceSymbol(params);
-                }
-                return CompletableFuture.completedFuture(Collections.emptyList());
+                return textDocumentService.workspaceSymbol(params);
             }
 
             @Override
@@ -219,11 +156,7 @@ public class ActionScriptLanguageServer implements LanguageServer
             @Override
             public void didChangeWatchedFiles(DidChangeWatchedFilesParams params)
             {
-                if (textDocumentService instanceof ActionScriptTextDocumentService)
-                {
-                    ActionScriptTextDocumentService service = (ActionScriptTextDocumentService) textDocumentService;
-                    service.didChangeWatchedFiles(params);
-                }
+                textDocumentService.didChangeWatchedFiles(params);
             }
         };
     }
@@ -233,26 +166,9 @@ public class ActionScriptLanguageServer implements LanguageServer
     {
         if (textDocumentService == null)
         {
-            if (hasValidSDK)
-            {
-                textDocumentService = new ActionScriptTextDocumentService();
-            }
-            else
-            {
-                textDocumentService = new UnsupportedSDKTextDocumentService(this);
-            }
+            textDocumentService = new ActionScriptTextDocumentService();
         }
         return textDocumentService;
-    }
-
-    public void showMessage(MessageParamsImpl message)
-    {
-        showMessageCallback.accept(message);
-    }
-
-    public String getFlexJSVersion()
-    {
-        return IASNode.class.getPackage().getImplementationVersion();
     }
 
     private String findFlexLibDirectoryPath()

@@ -17,36 +17,51 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vscode from "vscode";
 
-export function isValidSDK(absolutePath: string)
+export function isValidSDK(absolutePath: string, validateVersion?: (path: string) => boolean): boolean
 {
 	if(!absolutePath)
 	{
 		return false;
 	}
-	let sdkDescriptionPath = path.join(absolutePath, "flex-sdk-description.xml");	
-	if(!fs.existsSync(sdkDescriptionPath) || fs.statSync(sdkDescriptionPath).isDirectory())
+	//the following files are required to consider this a valid SDK
+	let filePaths =
+	[
+		path.join(absolutePath, "flex-sdk-description.xml"),
+		path.join(absolutePath, "js", "bin", "asjsc"),
+		path.join(absolutePath, "lib", "compiler.jar")
+	]
+	for(let i = 0, count = filePaths.length; i < count; i++)
 	{
-		return false;
+		let filePath = filePaths[i];	
+		if(!fs.existsSync(filePath) || fs.statSync(filePath).isDirectory())
+		{
+			return false;
+		}
 	}
-	let asjscPath = path.join(absolutePath, "js", "bin", "asjsc");
-	if(!fs.existsSync(asjscPath) || fs.statSync(asjscPath).isDirectory())
+	if(validateVersion && !validateVersion(absolutePath))
 	{
 		return false;
 	}
 	return true;
 }
 
-export function findSDK(): string
+export function findSDK(validateVersion?: (path: string) => boolean): string
 {
 	let sdkPath = <string> vscode.workspace.getConfiguration("nextgenas").get("flexjssdk");
-	if(isValidSDK(sdkPath))
+	if(sdkPath)
 	{
-		return sdkPath;
+		if(isValidSDK(sdkPath, validateVersion))
+		{
+			return sdkPath;
+		}
+		//if the user specified an SDK in the settings, no fallback
+		//otherwise, it could be confusing
+		return null;
 	}
 	try
 	{
 		sdkPath = require.resolve("flexjs");
-		if(isValidSDK(sdkPath))
+		if(isValidSDK(sdkPath, validateVersion))
 		{
 			return sdkPath;
 		}
@@ -55,7 +70,7 @@ export function findSDK(): string
 	if("FLEX_HOME" in process.env)
 	{
 		sdkPath = <string> process.env.FLEX_HOME;
-		if(isValidSDK(sdkPath))
+		if(isValidSDK(sdkPath, validateVersion))
 		{
 			return sdkPath;
 		}
@@ -74,7 +89,7 @@ export function findSDK(): string
 			if(fs.existsSync(asjscPath))
 			{
 				sdkPath = path.join(path.dirname(asjscPath), "node_modules", "flexjs");
-				if(isValidSDK(sdkPath))
+				if(isValidSDK(sdkPath, validateVersion))
 				{
 					return sdkPath;
 				}
@@ -87,7 +102,7 @@ export function findSDK(): string
 				//real path.
 				asjscPath = fs.realpathSync(asjscPath);
 				sdkPath = path.join(path.dirname(asjscPath), "..", "..");
-				if(isValidSDK(sdkPath))
+				if(isValidSDK(sdkPath, validateVersion))
 				{
 					return sdkPath;
 				}
@@ -97,8 +112,20 @@ export function findSDK(): string
 	return null;
 }
 
-export function findJava(): string
+export function findJava(validate: (path: string) => boolean): string
 {
+	let configJavaPath = <string> vscode.workspace.getConfiguration("nextgenas").get("java");
+	if(configJavaPath)
+	{
+		if(validate(configJavaPath))
+		{
+			return configJavaPath;
+		}
+		//if the user specified java in the settings, no fallback
+		//otherwise, it could be confusing
+		return null;
+	}
+
 	var executableFile:String = "java";
 	if(process["platform"] === "win32")
 	{
@@ -109,7 +136,7 @@ export function findJava(): string
 	{
 		let javaHome = <string> process.env.JAVA_HOME;
 		let javaPath = path.join(javaHome, "bin", executableFile);
-		if(fs.existsSync(javaPath))
+		if(validate(javaPath))
 		{
 			return javaPath;
 		}
@@ -123,7 +150,7 @@ export function findJava(): string
 		for(let i = 0; i < pathCount; i++)
 		{
 			let javaPath = path.join(paths[i], executableFile);
-			if(fs.existsSync(javaPath))
+			if(validate(javaPath))
 			{
 				return javaPath;
 			}
