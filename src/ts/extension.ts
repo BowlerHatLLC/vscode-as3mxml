@@ -259,16 +259,16 @@ class CustomErrorHandler implements ErrorHandler
 			killed = false;
 			return CloseAction.DoNotRestart;
 		}
-		if(!flexHome)
-		{
-			//if we can't find the SDK, we can't start the process
-			showSDKError();
-			return CloseAction.DoNotRestart;
-		}
 		if(!javaExecutablePath)
 		{
 			//if we can't find java, we can't restart the process
 			vscode.window.showErrorMessage(MISSING_JAVA_ERROR);
+			return CloseAction.DoNotRestart;
+		}
+		if(!flexHome)
+		{
+			//if we can't find the SDK, we can't start the process
+			showSDKError();
 			return CloseAction.DoNotRestart;
 		}
 
@@ -302,6 +302,11 @@ function createLanguageServer(): Promise<StreamInfo>
 	return new Promise((resolve, reject) =>
 	{
 		//immediately reject if flexjs or java cannot be found
+		if(!javaExecutablePath)
+		{ 
+			reject(MISSING_JAVA_ERROR);
+			return;
+		}
 		if(!flexHome)
 		{
 			let sdkPath = <string> vscode.workspace.getConfiguration("nextgenas").get("flexjssdk");
@@ -313,11 +318,6 @@ function createLanguageServer(): Promise<StreamInfo>
 			{
 				reject(MISSING_SDK_ERROR);
 			}
-			return;
-		}
-		if(!javaExecutablePath)
-		{ 
-			reject(MISSING_JAVA_ERROR);
 			return;
 		}
 		portfinder.getPort((err, port) =>
@@ -388,14 +388,14 @@ function startClient()
 		//something very bad happened!
 		return;
 	}
-	if(!flexHome)
-	{
-		showSDKError();
-		return;
-	}
 	if(!javaExecutablePath)
 	{ 
 		vscode.window.showErrorMessage(MISSING_JAVA_ERROR);
+		return;
+	}
+	if(!flexHome)
+	{
+		showSDKError();
 		return;
 	}
 	if(!vscode.workspace.rootPath)
