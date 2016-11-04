@@ -2694,7 +2694,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             startLine = 0;
         }
         startComment = code.indexOf("//", startLine);
-        return currentOffset > startComment;
+        return startComment >= 0 && currentOffset > startComment;
     }
 
     private void querySymbolsInScope(String query, IASScope scope, List<SymbolInformationImpl> result)
