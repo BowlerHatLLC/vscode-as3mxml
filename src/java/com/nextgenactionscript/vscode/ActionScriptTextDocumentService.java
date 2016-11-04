@@ -17,6 +17,8 @@ package com.nextgenactionscript.vscode;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
@@ -1905,8 +1907,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         publish.setUri(uri.toString());
         trackFileWithErrors(uri);
 
-        String code = sourceByPath.get(path);
-        StringReader reader = new StringReader(code);
+        Reader reader = getReaderForPath(path);
         StreamingASTokenizer tokenizer = StreamingASTokenizer.createForRepairingASTokenizer(reader, uri.toString(), null);
         ASToken[] tokens = tokenizer.getTokens(reader);
         if (tokenizer.hasTokenizationProblems())
@@ -2365,6 +2366,30 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             addCompilerProblem(problem, publish);
         }
         return publish;
+    }
+
+    private Reader getReaderForPath(Path path)
+    {
+        Reader reader = null;
+        if (sourceByPath.containsKey(path))
+        {
+            //if the file is open, use the edited code
+            String code = sourceByPath.get(path);
+            reader = new StringReader(code);
+        }
+        else
+        {
+            //if the file is not open, read it from the file system
+            try
+            {
+                reader = new FileReader(path.toAbsolutePath().toString());
+            }
+            catch (FileNotFoundException e)
+            {
+                //do nothing
+            }
+        }
+        return reader;
     }
 
     private IASNode getOffsetNode(TextDocumentPositionParams position)
