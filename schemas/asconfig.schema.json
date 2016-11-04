@@ -22,7 +22,7 @@
 		"files":
 		{
 			"type": "array",
-			"description": "The specified files, and all of their dependencies, will be included when the IDE checks for errors.",
+			"description": "The specified files will be included, including all of their dependencies. For an application, this field will typically contain the main class only.",
 			"items":
 			{
 				"type": "string"
@@ -80,6 +80,37 @@
 						"width",
 						"height"
 					]
+				},
+				"define":
+				{
+					"type": "array",
+					"description": "Defines a global constant at compile time.",
+					"items":
+					{
+						"type": "object",
+						"properties":
+						{
+							"name":
+							{
+								"type": "string",
+								"description": "The name of the constant."
+							},
+							"value":
+							{
+								"type": [
+									"string",
+									"boolean",
+									"number"
+								],
+								"description": "The value of the constant."
+							}
+						},
+						"required":
+						[
+							"name",
+							"value"
+						]
+					}
 				},
 				"dump-config":
 				{
@@ -270,6 +301,11 @@
 					"description": "In a SWF project, includes line numbers in the generated output, but results in a larger SWF file. When a run-time error occurs, the stacktrace shows line numbers. The default value is false." 
 				}
 			}
+		},
+		"additionalOptions":
+		{
+			"type": "string",
+			"description": "Additional options to send to the compiler, formatted as command line arguments. Useful for testing new options that are not yet supported by the compilerOptions field of asconfig.json."
 		}
 	},
 	"required":
