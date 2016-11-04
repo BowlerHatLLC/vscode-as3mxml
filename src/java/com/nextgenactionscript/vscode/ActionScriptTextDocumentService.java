@@ -2062,19 +2062,20 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         //always do this before returning!
         compilationUnits = currentProject.getCompilationUnits();
-        if (currentUnit != null)
-        {
-            return currentUnit;
-        }
 
-        //first, search the existing compilation units for the file because it
-        //might already be created
-        for (ICompilationUnit unit : compilationUnits)
+
+        //if we didn't find the unit already, search the complete set of units
+        if (currentUnit == null)
         {
-            if (unit.getAbsoluteFilename().equals(absolutePath))
+            //first, search the existing compilation units for the file because it
+            //might already be created
+            for (ICompilationUnit unit : compilationUnits)
             {
-                currentUnit = unit;
-                break;
+                if (unit.getAbsoluteFilename().equals(absolutePath))
+                {
+                    currentUnit = unit;
+                    break;
+                }
             }
         }
 
@@ -2091,8 +2092,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             invisibleUnits.add(unit);
             currentUnit = unit;
         }
-        //for some reason, function nodes may not be populated if the
-        //compilation unit isn't one of the main files, so force it to populate
+
+        //for some reason, function nodes may not always be populated, but we
+        //can force them to be populated
         IASNode ast = null;
         try
         {
