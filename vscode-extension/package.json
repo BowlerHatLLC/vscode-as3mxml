@@ -18,24 +18,12 @@
     "Languages",
     "Debuggers"
   ],
-  "main": "target/extension",
-  "files": [
-    "target/NextGenAS_vscode.jar",
-    "target/CheckJavaVersion.jar",
-    "target/CheckFlexJSVersion.jar",
-    "target/lib",
-    "out",
-    "NOTICE",
-    "LICENSE",
-    "README.md"
-  ],
+  "main": "extension",
   "icon": "nextgenas.png",
   "scripts": {
     "postinstall": "node ./node_modules/vscode/bin/install",
-    "vscode:prepublish": "npm run build",
-    "build": "ant build",
-    "build-debug": "ant build-debug",
-    "build-tests": "ant build-tests"
+    "build": "mvn clean package",
+    "build-debug": "mvn package"
   },
   "engines": {
     "vscode": "^1.7.0"

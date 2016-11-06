@@ -51,7 +51,7 @@ function isValidJavaVersion(javaPath: string): boolean
 	let args =
 	[
 		"-jar",
-		path.join(savedContext.extensionPath, "target", "CheckJavaVersion.jar")
+		path.join(savedContext.extensionPath, "bin", "check-java-version.jar")
 	];
 	let result = child_process.spawnSync(javaPath, args);
 	return result.status === 0;
@@ -68,7 +68,7 @@ function isValidSDKVersion(sdkPath: string): boolean
 		"-cp",
 		path.resolve(sdkPath, "lib", "compiler.jar") + cpDelimiter +
 		path.resolve(sdkPath, "js", "lib", "jsc.jar") + cpDelimiter +
-		path.resolve(savedContext.extensionPath, "target", "CheckFlexJSVersion.jar"),
+		path.resolve(savedContext.extensionPath, "bin", "check-flexjs-version.jar"),
 		"com.nextgenactionscript.vscode.CheckFlexJSVersion",
 	];
 	let result = child_process.spawnSync(javaExecutablePath, args);
@@ -322,8 +322,7 @@ function createLanguageServer(): Promise<StreamInfo>
 			[
 				"-cp",
 				//the following jars are included with the language server
-				path.resolve(savedContext.extensionPath, "target", "*") + cpDelimiter +
-				path.resolve(savedContext.extensionPath, "target", "lib", "*") + cpDelimiter +
+				path.resolve(savedContext.extensionPath, "bin", "*") + cpDelimiter +
 				//the following jars come from apache flexjs
 				path.resolve(flexHome, "lib", "compiler.jar") + cpDelimiter +
 				path.resolve(flexHome, "js", "lib", "jsc.jar"),
