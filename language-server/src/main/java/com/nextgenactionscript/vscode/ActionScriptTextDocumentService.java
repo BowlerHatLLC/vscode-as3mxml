@@ -2297,7 +2297,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             //if the definition is in an MXML file, getSourcePath() may return
             //null, but getContainingFilePath() will return something
             definitionPath = definition.getContainingFilePath();
-            if (definition == null)
+            if (definitionPath == null)
             {
                 //if everything is null, there's nothing to do
                 return;
