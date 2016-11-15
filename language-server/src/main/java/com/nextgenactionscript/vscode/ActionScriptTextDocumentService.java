@@ -1325,7 +1325,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private CompletableFuture<CompletionList> mxmlCompletion(TextDocumentPositionParams position, IMXMLTagData offsetTag)
     {
-        if(isInXMLComment(position))
+        if (isInXMLComment(position))
         {
             //if we're inside a comment, no completion!
             return CompletableFuture.completedFuture(new CompletionListImpl());
@@ -1334,14 +1334,86 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         result.setIncomplete(false);
         result.setItems(new ArrayList<>());
 
-        String propertyElementPrefix = null;
+        IMXMLTagData parentTag = offsetTag.getParentTag();
+
         boolean isAttribute = offsetTag.isOffsetInAttributeList(currentOffset);
-        if (!isAttribute)
+        boolean isChildOfOffsetTag = false;
+        if (!isAttribute && !offsetTag.isCloseTag())
         {
-            String prefix = offsetTag.getPrefix();
-            if (prefix.length() > 0)
+            IMXMLTagData firstChild = offsetTag.getFirstChild(true);
+            if (firstChild != null && currentOffset > firstChild.getAbsoluteStart())
             {
-                propertyElementPrefix = prefix + IMXMLCoreConstants.colon;
+                isChildOfOffsetTag = true;
+            }
+        }
+
+        if (offsetTag.getShortName().length() == 0 && offsetTag.getPrefix().length() != 0)
+        {
+            //this tag's short name is empty, but we have a prefix like <fx:
+            if (!isAttribute && !isChildOfOffsetTag)
+            {
+                IDefinition parentDefinition = null;
+                if (parentTag != null)
+                {
+                    parentDefinition = getDefinitionForMXMLTag(parentTag);
+                }
+                if (parentDefinition != null)
+                {
+                    String offsetPrefix = offsetTag.getPrefix();
+                    if (parentDefinition instanceof IClassDefinition)
+                    {
+                        IClassDefinition classDefinition = (IClassDefinition) parentDefinition;
+                        if (parentTag.getPrefix().equals(offsetPrefix))
+                        {
+                            //only add members if the prefix is the same as the
+                            //parent tag. members can't have different prefixes.
+                            addMembersForMXMLTypeToAutoComplete(classDefinition, offsetTag, false, result);
+                        }
+                        String defaultPropertyName = classDefinition.getDefaultPropertyName(currentProject);
+                        if (defaultPropertyName != null && !isAttribute)
+                        {
+                            //only add types if the class defines [DefaultProperty]
+                            //metadata
+                            autoCompleteTypesForMXMLFromExistingTag(result, offsetTag);
+                        }
+                    }
+                    else
+                    {
+                        //this is something like a property, so matching the
+                        //prefix is not required
+                        autoCompleteTypesForMXMLFromExistingTag(result, offsetTag);
+                    }
+                }
+            }
+            return CompletableFuture.completedFuture(result);
+        }
+        if (offsetTag.getPrefix().length() == 0 && offsetTag.getShortName().length() > 0)
+        {
+            //this tag's short name is already partially completed, but there's
+            //no prefix
+            IDefinition parentDefinition = null;
+            if (parentTag != null)
+            {
+                parentDefinition = getDefinitionForMXMLTag(parentTag);
+            }
+            if (parentDefinition != null)
+            {
+                if (parentDefinition instanceof IClassDefinition)
+                {
+                    IClassDefinition classDefinition = (IClassDefinition) parentDefinition;
+                    addMembersForMXMLTypeToAutoComplete(classDefinition, parentTag, true, result);
+                    String defaultPropertyName = classDefinition.getDefaultPropertyName(currentProject);
+                    if (defaultPropertyName != null && !isAttribute)
+                    {
+                        //only add types if the class defines [DefaultProperty]
+                        //metadata
+                        autoCompleteTypesForMXMLFromExistingTag(result, offsetTag);
+                    }
+                }
+                else
+                {
+                    autoCompleteTypesForMXMLFromExistingTag(result, offsetTag);
+                }
             }
         }
 
@@ -1349,7 +1421,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         if (offsetTag.getShortName().equals(IMXMLLanguageConstants.DECLARATIONS)
                 && offsetTag.getURI().equals(IMXMLLanguageConstants.NAMESPACE_MXML_2009))
         {
-            autoCompleteTypes(result, true);
+            if (isChildOfOffsetTag)
+            {
+                autoCompleteTypesForMXML(result);
+            }
             return CompletableFuture.completedFuture(result);
         }
 
@@ -1358,41 +1433,23 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return CompletableFuture.completedFuture(result);
         }
-        if (offsetDefinition instanceof IClassDefinition
-                && !offsetTag.isCloseTag())
+        if (offsetDefinition instanceof IClassDefinition)
         {
-            ICompilationUnit unit = getCompilationUnit(getPathFromLsapiURI(position.getTextDocument().getUri()));
-            IASScope[] scopes;
-            try
+            IClassDefinition classDefinition = (IClassDefinition) offsetDefinition;
+            addMembersForMXMLTypeToAutoComplete(classDefinition, offsetTag, !isAttribute, result);
+            String defaultPropertyName = classDefinition.getDefaultPropertyName(currentProject);
+            if (defaultPropertyName != null && !isAttribute)
             {
-                scopes = unit.getFileScopeRequest().get().getScopes();
+                //if [DefaultProperty] is set, then we can instantiate
+                //types as child elements
+                //but we don't want to do that when in an attribute
+                autoCompleteTypesForMXML(result);
             }
-            catch (Exception e)
-            {
-                return CompletableFuture.completedFuture(result);
-            }
-            if (scopes != null && scopes.length > 0)
-            {
-                IClassDefinition classDefinition = (IClassDefinition) offsetDefinition;
-                TypeScope typeScope = (TypeScope) classDefinition.getContainedScope();
-                ASScope scope = (ASScope) scopes[0];
-                addDefinitionsInTypeScopeToAutoComplete(typeScope, scope, false, true, propertyElementPrefix, result);
-                addStyleMetadataToAutoComplete(typeScope, result);
-                addEventMetadataToAutoComplete(typeScope, result);
-                String defaultPropertyName = classDefinition.getDefaultPropertyName(currentProject);
-                if (defaultPropertyName != null && !isAttribute)
-                {
-                    //if [DefaultProperty] is set, then we can instantiate
-                    //types as child elements
-                    //but we don't want to do that when in an attribute
-                    autoCompleteTypes(result, true);
-                }
-                return CompletableFuture.completedFuture(result);
-            }
+            return CompletableFuture.completedFuture(result);
         }
         if (offsetDefinition instanceof IVariableDefinition && !isAttribute)
         {
-            autoCompleteTypes(result, true);
+            autoCompleteTypesForMXML(result);
             return CompletableFuture.completedFuture(result);
         }
         System.err.println("Unknown definition for MXML completion: " + offsetDefinition.getClass());
@@ -1782,9 +1839,106 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         autoCompleteDefinitions(result, false, true, null, null);
     }
 
-    private void autoCompleteTypes(CompletionListImpl result, boolean forMXML)
+    private void autoCompleteTypesForMXML(CompletionListImpl result)
     {
-        autoCompleteDefinitions(result, forMXML, true, null, null);
+        autoCompleteDefinitions(result, true, true, null, null);
+    }
+
+    private String getMXMLPrefixForDefinition(IDefinition definition, MXMLData mxmlData)
+    {
+        PrefixMap prefixMap = mxmlData.getRootTagPrefixMap();
+        Collection<XMLName> tagNames = currentProject.getTagNamesForClass(definition.getQualifiedName());
+        for (XMLName tagName : tagNames)
+        {
+            String tagNamespace = tagName.getXMLNamespace();
+            //getTagNamesForClass() returns the 2006 namespace, even if that's
+            //not what we're using in this file
+            if (tagNamespace.equals(IMXMLLanguageConstants.NAMESPACE_MXML_2006))
+            {
+                //use the language namespace of the root tag instead
+                tagNamespace = mxmlData.getRootTag().getMXMLDialect().getLanguageNamespace();
+            }
+            String[] prefixes = prefixMap.getPrefixesForNamespace(tagNamespace);
+            if (prefixes.length > 0)
+            {
+                return prefixes[0];
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Using an existing tag, that may already have a prefix or short name,
+     * populate the completion list.
+     */
+    private void autoCompleteTypesForMXMLFromExistingTag(CompletionListImpl result, IMXMLTagData offsetTag)
+    {
+        IMXMLDataManager mxmlDataManager = currentWorkspace.getMXMLDataManager();
+        MXMLData mxmlData = (MXMLData) mxmlDataManager.get(fileSpecGetter.getFileSpecification(currentUnit.getAbsoluteFilename()));
+        String tagStartName = offsetTag.getShortName();
+        String tagPrefix = offsetTag.getPrefix();
+        PrefixMap prefixMap = mxmlData.getRootTagPrefixMap();
+
+        for (ICompilationUnit unit : compilationUnits)
+        {
+            Collection<IDefinition> definitions = null;
+            try
+            {
+                definitions = unit.getFileScopeRequest().get().getExternallyVisibleDefinitions();
+            }
+            catch (Exception e)
+            {
+                //safe to ignore
+                continue;
+            }
+            for (IDefinition definition : definitions)
+            {
+                if (!(definition instanceof ITypeDefinition))
+                {
+                    continue;
+                }
+
+                String definitionBaseName = definition.getBaseName();
+                if (tagStartName.length() > 0 && definitionBaseName.startsWith(tagStartName))
+                {
+                    if (tagPrefix.length() > 0)
+                    {
+                        addDefinitionAutoComplete(definition, result);
+                    }
+                    else
+                    {
+                        addDefinitionAutoComplete(definition,
+                                getMXMLPrefixForDefinition(definition, mxmlData) + IMXMLCoreConstants.colon,
+                                result);
+                    }
+                }
+                else if (tagPrefix.length() > 0)
+                {
+                    Collection<XMLName> tagNames = currentProject.getTagNamesForClass(definition.getQualifiedName());
+                    for (XMLName tagName : tagNames)
+                    {
+                        String tagNamespace = tagName.getXMLNamespace();
+                        //getTagNamesForClass() returns the 2006 namespace, even if that's
+                        //not what we're using in this file
+                        if (tagNamespace.equals(IMXMLLanguageConstants.NAMESPACE_MXML_2006))
+                        {
+                            //use the language namespace of the root tag instead
+                            tagNamespace = mxmlData.getRootTag().getMXMLDialect().getLanguageNamespace();
+                        }
+                        String[] prefixes = prefixMap.getPrefixesForNamespace(tagNamespace);
+                        for (String otherPrefix : prefixes)
+                        {
+                            if (tagPrefix.equals(otherPrefix))
+                            {
+                                addDefinitionAutoComplete(definition,
+                                        tagPrefix + IMXMLCoreConstants.colon,
+                                        result);
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private void autoCompleteDefinitions(CompletionListImpl result, boolean forMXML,
@@ -1987,6 +2141,41 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
     }
 
+    private void addMembersForMXMLTypeToAutoComplete(IClassDefinition definition, IMXMLTagData offsetTag, boolean includePrefix, CompletionListImpl result)
+    {
+        ICompilationUnit unit = getCompilationUnit(Paths.get(offsetTag.getSourcePath()));
+        if (unit == null)
+        {
+            return;
+        }
+        IASScope[] scopes;
+        try
+        {
+            scopes = unit.getFileScopeRequest().get().getScopes();
+        }
+        catch (Exception e)
+        {
+            return;
+        }
+        if (scopes != null && scopes.length > 0)
+        {
+            String propertyElementPrefix = null;
+            if (includePrefix)
+            {
+                String prefix = offsetTag.getPrefix();
+                if (prefix.length() > 0)
+                {
+                    propertyElementPrefix = prefix + IMXMLCoreConstants.colon;
+                }
+            }
+            TypeScope typeScope = (TypeScope) definition.getContainedScope();
+            ASScope scope = (ASScope) scopes[0];
+            addDefinitionsInTypeScopeToAutoComplete(typeScope, scope, false, true, propertyElementPrefix, result);
+            addStyleMetadataToAutoComplete(typeScope, result);
+            addEventMetadataToAutoComplete(typeScope, result);
+        }
+    }
+
     private void addDefinitionsInTypeScopeToAutoComplete(TypeScope typeScope, ASScope otherScope, boolean isStatic, CompletionListImpl result)
     {
         addDefinitionsInTypeScopeToAutoComplete(typeScope, otherScope, isStatic, false, null, result);
@@ -2154,30 +2343,17 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
         //first, try to use one of the existing prefixes in the document
         Collection<XMLName> tagNames = currentProject.getTagNamesForClass(definition.getQualifiedName());
-        String fallbackNamespace = null;
-        for (XMLName tagName : tagNames)
+        String discoveredPrefix = getMXMLPrefixForDefinition(definition, mxmlData);
+        if (discoveredPrefix != null)
         {
-            String tagNamespace = tagName.getXMLNamespace();
-            //getTagNamesForClass() returns the 2006 namespace, even if that's
-            //not what we're using in this file
-            if (tagNamespace.equals(IMXMLLanguageConstants.NAMESPACE_MXML_2006))
-            {
-                //use the language namespace of the root tag instead
-                tagNamespace = mxmlData.getRootTag().getMXMLDialect().getLanguageNamespace();
-            }
-            String[] prefixes = prefixMap.getPrefixesForNamespace(tagNamespace);
-            if (prefixes.length > 0)
-            {
-                //if the namespace is already defined on the root tag, use the
-                //existing prefix.
-                String prefix = prefixes[0] + IMXMLCoreConstants.colon;
-                addDefinitionAutoComplete(definition, prefix, result);
-                return;
-            }
-            if (fallbackNamespace == null)
-            {
-                fallbackNamespace = tagNamespace;
-            }
+            addDefinitionAutoComplete(definition, discoveredPrefix + IMXMLCoreConstants.colon, result);
+            return;
+        }
+        String fallbackNamespace = null;
+        if (tagNames.size() > 0 && fallbackNamespace == null)
+        {
+            XMLName tagName = tagNames.iterator().next();
+            fallbackNamespace = tagName.getXMLNamespace();
         }
 
         if (fallbackNamespace != null)
