@@ -1347,50 +1347,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
         }
 
-        if (offsetTag.getShortName().length() == 0 && offsetTag.getPrefix().length() != 0)
+        String offsetShortName = offsetTag.getShortName();
+        String offsetPrefix = offsetTag.getPrefix();
+        if ((offsetShortName.length() == 0 && offsetPrefix.length() != 0)
+                || (offsetShortName.length() != 0 && offsetPrefix.length() == 0 ))
         {
-            //this tag's short name is empty, but we have a prefix like <fx:
-            if (!isAttribute && !isChildOfOffsetTag)
-            {
-                IDefinition parentDefinition = null;
-                if (parentTag != null)
-                {
-                    parentDefinition = getDefinitionForMXMLTag(parentTag);
-                }
-                if (parentDefinition != null)
-                {
-                    String offsetPrefix = offsetTag.getPrefix();
-                    if (parentDefinition instanceof IClassDefinition)
-                    {
-                        IClassDefinition classDefinition = (IClassDefinition) parentDefinition;
-                        if (parentTag.getPrefix().equals(offsetPrefix))
-                        {
-                            //only add members if the prefix is the same as the
-                            //parent tag. members can't have different prefixes.
-                            addMembersForMXMLTypeToAutoComplete(classDefinition, offsetTag, false, result);
-                        }
-                        String defaultPropertyName = classDefinition.getDefaultPropertyName(currentProject);
-                        if (defaultPropertyName != null && !isAttribute)
-                        {
-                            //only add types if the class defines [DefaultProperty]
-                            //metadata
-                            autoCompleteTypesForMXMLFromExistingTag(result, offsetTag);
-                        }
-                    }
-                    else
-                    {
-                        //this is something like a property, so matching the
-                        //prefix is not required
-                        autoCompleteTypesForMXMLFromExistingTag(result, offsetTag);
-                    }
-                }
-            }
-            return CompletableFuture.completedFuture(result);
-        }
-        if (offsetTag.getPrefix().length() == 0 && offsetTag.getShortName().length() > 0)
-        {
-            //this tag's short name is already partially completed, but there's
-            //no prefix
             IDefinition parentDefinition = null;
             if (parentTag != null)
             {
@@ -1401,20 +1362,31 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 if (parentDefinition instanceof IClassDefinition)
                 {
                     IClassDefinition classDefinition = (IClassDefinition) parentDefinition;
-                    addMembersForMXMLTypeToAutoComplete(classDefinition, parentTag, true, result);
-                    String defaultPropertyName = classDefinition.getDefaultPropertyName(currentProject);
-                    if (defaultPropertyName != null && !isAttribute)
+                    if (offsetPrefix.length() == 0 || parentTag.getPrefix().equals(offsetPrefix))
                     {
-                        //only add types if the class defines [DefaultProperty]
-                        //metadata
-                        autoCompleteTypesForMXMLFromExistingTag(result, offsetTag);
+                        //only add members if the prefix is the same as the
+                        //parent tag. members can't have different prefixes.
+                        addMembersForMXMLTypeToAutoComplete(classDefinition, parentTag, offsetPrefix.length() == 0, result);
+                    }
+                    if(!isAttribute)
+                    {
+                        String defaultPropertyName = classDefinition.getDefaultPropertyName(currentProject);
+                        if (defaultPropertyName != null)
+                        {
+                            //only add types if the class defines [DefaultProperty]
+                            //metadata
+                            autoCompleteTypesForMXMLFromExistingTag(result, offsetTag);
+                        }
                     }
                 }
                 else
                 {
+                    //this is something like a property, so matching the
+                    //prefix is not required
                     autoCompleteTypesForMXMLFromExistingTag(result, offsetTag);
                 }
             }
+            return CompletableFuture.completedFuture(result);
         }
 
         //inside <fx:Declarations>
@@ -1875,7 +1847,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     {
         IMXMLDataManager mxmlDataManager = currentWorkspace.getMXMLDataManager();
         MXMLData mxmlData = (MXMLData) mxmlDataManager.get(fileSpecGetter.getFileSpecification(currentUnit.getAbsoluteFilename()));
-        String tagStartName = offsetTag.getShortName();
+        String tagStartShortName = offsetTag.getShortName();
         String tagPrefix = offsetTag.getPrefix();
         PrefixMap prefixMap = mxmlData.getRootTagPrefixMap();
 
@@ -1898,43 +1870,41 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     continue;
                 }
 
-                String definitionBaseName = definition.getBaseName();
-                if (tagStartName.length() > 0 && definitionBaseName.startsWith(tagStartName))
+                //first check that the tag either doesn't have a short name yet
+                //or that the definition's base name matches the short name 
+                if (tagStartShortName.length() == 0 || definition.getBaseName().startsWith(tagStartShortName))
                 {
+                    //if a prefix already exists, make sure the definition is
+                    //in a namespace with that prefix
                     if (tagPrefix.length() > 0)
                     {
-                        addDefinitionAutoComplete(definition, result);
+                        Collection<XMLName> tagNames = currentProject.getTagNamesForClass(definition.getQualifiedName());
+                        for (XMLName tagName : tagNames)
+                        {
+                            String tagNamespace = tagName.getXMLNamespace();
+                            //getTagNamesForClass() returns the 2006 namespace, even if that's
+                            //not what we're using in this file
+                            if (tagNamespace.equals(IMXMLLanguageConstants.NAMESPACE_MXML_2006))
+                            {
+                                //use the language namespace of the root tag instead
+                                tagNamespace = mxmlData.getRootTag().getMXMLDialect().getLanguageNamespace();
+                            }
+                            String[] prefixes = prefixMap.getPrefixesForNamespace(tagNamespace);
+                            for (String otherPrefix : prefixes)
+                            {
+                                if (tagPrefix.equals(otherPrefix))
+                                {
+                                    addDefinitionAutoComplete(definition, result);
+                                }
+                            }
+                        }
                     }
                     else
                     {
+                        //no prefix, so complete the definition with a prefix
                         addDefinitionAutoComplete(definition,
                                 getMXMLPrefixForDefinition(definition, mxmlData) + IMXMLCoreConstants.colon,
                                 result);
-                    }
-                }
-                else if (tagPrefix.length() > 0)
-                {
-                    Collection<XMLName> tagNames = currentProject.getTagNamesForClass(definition.getQualifiedName());
-                    for (XMLName tagName : tagNames)
-                    {
-                        String tagNamespace = tagName.getXMLNamespace();
-                        //getTagNamesForClass() returns the 2006 namespace, even if that's
-                        //not what we're using in this file
-                        if (tagNamespace.equals(IMXMLLanguageConstants.NAMESPACE_MXML_2006))
-                        {
-                            //use the language namespace of the root tag instead
-                            tagNamespace = mxmlData.getRootTag().getMXMLDialect().getLanguageNamespace();
-                        }
-                        String[] prefixes = prefixMap.getPrefixesForNamespace(tagNamespace);
-                        for (String otherPrefix : prefixes)
-                        {
-                            if (tagPrefix.equals(otherPrefix))
-                            {
-                                addDefinitionAutoComplete(definition,
-                                        tagPrefix + IMXMLCoreConstants.colon,
-                                        result);
-                            }
-                        }
                     }
                 }
             }
