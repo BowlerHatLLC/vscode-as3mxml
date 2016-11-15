@@ -7,11 +7,11 @@
 			"request": "launch",
 			"runtimeExecutable": "${execPath}",
 			"args": [
-				"--extensionDevelopmentPath=${workspaceRoot}/target/vscode-nextgenas-bin/vscode-nextgenas"
+				"--extensionDevelopmentPath=${workspaceRoot}/distribution/target/vscode-nextgenas/vscode-nextgenas"
 			],
 			"stopOnEntry": false,
 			"sourceMaps": true,
-			"outDir": "${workspaceRoot}/target/vscode-nextgenas-bin/vscode-nextgenas",
+			"outDir": "${workspaceRoot}/distribution/target/vscode-nextgenas/vscode-nextgenas",
 			"preLaunchTask": "build-debug"
 		},
 		{
@@ -21,7 +21,7 @@
 			"runtimeExecutable": "${execPath}",
 			"args": [
 				"${workspaceRoot}/vscode-extension/src/test/fixtures",
-				"--extensionDevelopmentPath=${workspaceRoot}/target/vscode-nextgenas-bin/vscode-nextgenas",
+				"--extensionDevelopmentPath=${workspaceRoot}/distribution/target/vscode-nextgenas/vscode-nextgenas",
 				"--extensionTestsPath=${workspaceRoot}/vscode-extension/target/test"
 			],
 			"stopOnEntry": false,

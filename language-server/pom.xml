@@ -34,7 +34,7 @@ limitations under the License.
     <finalName>${project.artifactId}</finalName>
     <resources>
       <resource>
-        <directory>../src/assembly</directory>
+        <directory>../distribution/src/assembly</directory>
         <includes>
           <include>schemas/asconfig.schema.json</include>
         </includes>

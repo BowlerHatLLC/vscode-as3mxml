@@ -1,7 +1,7 @@
 <assembly xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.3"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.3 http://maven.apache.org/xsd/assembly-1.1.3.xsd">
-  <id>bin</id>
+  <id>debug</id>
   <formats>
     <format>dir</format>
   </formats>
@@ -26,21 +26,21 @@
       </includes>
     </fileSet>
     <fileSet>
-      <directory>check-flexjs-version/target</directory>
+      <directory>../check-flexjs-version/target</directory>
       <outputDirectory>bin</outputDirectory>
       <includes>
         <include>*.jar</include>
       </includes>
     </fileSet>
     <fileSet>
-      <directory>check-java-version/target</directory>
+      <directory>../check-java-version/target</directory>
       <outputDirectory>bin</outputDirectory>
       <includes>
         <include>*.jar</include>
       </includes>
     </fileSet>
     <fileSet>
-      <directory>language-server/target</directory>
+      <directory>../language-server/target</directory>
       <outputDirectory>bin</outputDirectory>
       <includes>
         <include>language-server.jar</include>
@@ -52,7 +52,7 @@
       </includes>
     </fileSet>
     <fileSet>
-      <directory>vscode-extension</directory>
+      <directory>../vscode-extension</directory>
       <outputDirectory>.</outputDirectory>
       <includes>
         <include>package.json</include>
@@ -60,7 +60,7 @@
       </includes>
     </fileSet>
     <fileSet>
-      <directory>vscode-extension/target</directory>
+      <directory>../vscode-extension/target</directory>
       <outputDirectory>.</outputDirectory>
       <includes>
         <include>extension.js</include>
