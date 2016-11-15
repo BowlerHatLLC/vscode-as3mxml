@@ -1347,51 +1347,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
         }
 
-        String offsetShortName = offsetTag.getShortName();
-        String offsetPrefix = offsetTag.getPrefix();
-        if ((offsetShortName.length() == 0 && offsetPrefix.length() != 0)
-                || (offsetShortName.length() != 0 && offsetPrefix.length() == 0 ))
-        {
-            IDefinition parentDefinition = null;
-            if (parentTag != null)
-            {
-                parentDefinition = getDefinitionForMXMLTag(parentTag);
-            }
-            if (parentDefinition != null)
-            {
-                if (parentDefinition instanceof IClassDefinition)
-                {
-                    IClassDefinition classDefinition = (IClassDefinition) parentDefinition;
-                    if (offsetPrefix.length() == 0 || parentTag.getPrefix().equals(offsetPrefix))
-                    {
-                        //only add members if the prefix is the same as the
-                        //parent tag. members can't have different prefixes.
-                        addMembersForMXMLTypeToAutoComplete(classDefinition, parentTag, offsetPrefix.length() == 0, result);
-                    }
-                    if(!isAttribute)
-                    {
-                        String defaultPropertyName = classDefinition.getDefaultPropertyName(currentProject);
-                        if (defaultPropertyName != null)
-                        {
-                            //only add types if the class defines [DefaultProperty]
-                            //metadata
-                            autoCompleteTypesForMXMLFromExistingTag(result, offsetTag);
-                        }
-                    }
-                }
-                else
-                {
-                    //this is something like a property, so matching the
-                    //prefix is not required
-                    autoCompleteTypesForMXMLFromExistingTag(result, offsetTag);
-                }
-            }
-            return CompletableFuture.completedFuture(result);
-        }
-
         //inside <fx:Declarations>
-        if (offsetTag.getShortName().equals(IMXMLLanguageConstants.DECLARATIONS)
-                && offsetTag.getURI().equals(IMXMLLanguageConstants.NAMESPACE_MXML_2009))
+        if (isDeclarationsTag(offsetTag))
         {
             if (isChildOfOffsetTag)
             {
@@ -1403,6 +1360,49 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         IDefinition offsetDefinition = getDefinitionForMXMLTag(offsetTag);
         if (offsetDefinition == null)
         {
+            IDefinition parentDefinition = null;
+            if (parentTag != null)
+            {
+                parentDefinition = getDefinitionForMXMLTag(parentTag);
+            }
+            if (parentDefinition != null)
+            {
+                if (parentDefinition instanceof IClassDefinition)
+                {
+                    IClassDefinition classDefinition = (IClassDefinition) parentDefinition;
+                    String offsetPrefix = offsetTag.getPrefix();
+                    if (offsetPrefix.length() == 0 || parentTag.getPrefix().equals(offsetPrefix))
+                    {
+                        //only add members if the prefix is the same as the
+                        //parent tag. members can't have different prefixes.
+                        //also allow members when we don't have a prefix.
+                        addMembersForMXMLTypeToAutoComplete(classDefinition, parentTag, offsetPrefix.length() == 0, result);
+                    }
+                    if (!isAttribute)
+                    {
+                        //tags can't appear in attributes, so skip types
+                        String defaultPropertyName = classDefinition.getDefaultPropertyName(currentProject);
+                        if (defaultPropertyName != null)
+                        {
+                            //only add types if the class defines [DefaultProperty]
+                            //metadata
+                            autoCompleteTypesForMXMLFromExistingTag(result, offsetTag);
+                        }
+                    }
+                }
+                else
+                {
+                    //the parent is something like a property, so matching the
+                    //prefix is not required
+                    autoCompleteTypesForMXMLFromExistingTag(result, offsetTag);
+                }
+                return CompletableFuture.completedFuture(result);
+            }
+            else if (isDeclarationsTag(parentTag))
+            {
+                autoCompleteTypesForMXMLFromExistingTag(result, offsetTag);
+                return CompletableFuture.completedFuture(result);
+            }
             return CompletableFuture.completedFuture(result);
         }
         if (offsetDefinition instanceof IClassDefinition)
@@ -1806,16 +1806,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return location;
     }
 
-    private void autoCompleteTypes(CompletionListImpl result)
-    {
-        autoCompleteDefinitions(result, false, true, null, null);
-    }
-
-    private void autoCompleteTypesForMXML(CompletionListImpl result)
-    {
-        autoCompleteDefinitions(result, true, true, null, null);
-    }
-
     private String getMXMLPrefixForDefinition(IDefinition definition, MXMLData mxmlData)
     {
         PrefixMap prefixMap = mxmlData.getRootTagPrefixMap();
@@ -1837,6 +1827,16 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
         }
         return null;
+    }
+
+    private void autoCompleteTypes(CompletionListImpl result)
+    {
+        autoCompleteDefinitions(result, false, true, null, null);
+    }
+
+    private void autoCompleteTypesForMXML(CompletionListImpl result)
+    {
+        autoCompleteDefinitions(result, true, true, null, null);
     }
 
     /**
@@ -1902,8 +1902,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     else
                     {
                         //no prefix, so complete the definition with a prefix
+                        String prefix = getMXMLPrefixForDefinition(definition, mxmlData);
+                        if (prefix == null)
+                        {
+                            prefix = getNumberedNamespacePrefix(DEFAULT_NS_PREFIX, prefixMap);
+                        }
                         addDefinitionAutoComplete(definition,
-                                getMXMLPrefixForDefinition(definition, mxmlData) + IMXMLCoreConstants.colon,
+                                prefix + IMXMLCoreConstants.colon,
                                 result);
                     }
                 }
@@ -3898,6 +3903,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         int endComment = code.indexOf("-->", startComment);
         return endComment > currentOffset;
+    }
+
+    private boolean isDeclarationsTag(IMXMLTagData tag)
+    {
+        return tag != null && tag.getShortName().equals(IMXMLLanguageConstants.DECLARATIONS)
+                && tag.getURI().equals(IMXMLLanguageConstants.NAMESPACE_MXML_2009);
     }
 
     private void querySymbolsInScope(String query, IASScope scope, List<SymbolInformationImpl> result)
