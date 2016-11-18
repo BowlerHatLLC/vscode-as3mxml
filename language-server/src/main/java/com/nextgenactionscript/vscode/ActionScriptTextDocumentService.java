@@ -204,6 +204,22 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private static final String DEFAULT_NS_PREFIX = "ns";
     private static final String DOT_STAR = ".*";
 
+    private static final String[] LANGUAGE_TYPE_NAMES =
+            {
+                    IMXMLLanguageConstants.ARRAY,
+                    IMXMLLanguageConstants.BOOLEAN,
+                    IMXMLLanguageConstants.CLASS,
+                    IMXMLLanguageConstants.DATE,
+                    IMXMLLanguageConstants.FUNCTION,
+                    IMXMLLanguageConstants.INT,
+                    IMXMLLanguageConstants.NUMBER,
+                    IMXMLLanguageConstants.OBJECT,
+                    IMXMLLanguageConstants.STRING,
+                    IMXMLLanguageConstants.XML,
+                    IMXMLLanguageConstants.XML_LIST,
+                    IMXMLLanguageConstants.UINT
+            };
+
     private static final HashMap<String, String> NAMESPACE_TO_PREFIX = new HashMap<>();
 
     {
@@ -3601,6 +3617,16 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         if (offsetDefinition != null)
         {
             return offsetDefinition;
+        }
+        if (tag.getXMLName().getXMLNamespace().equals(tag.getMXMLDialect().getLanguageNamespace()))
+        {
+            for (String typeName : LANGUAGE_TYPE_NAMES)
+            {
+                if (tag.getShortName().equals(typeName))
+                {
+                    return currentProject.resolveQNameToDefinition(typeName);
+                }
+            }
         }
         IMXMLTagData parentTag = tag.getParentTag();
         if (parentTag == null)
