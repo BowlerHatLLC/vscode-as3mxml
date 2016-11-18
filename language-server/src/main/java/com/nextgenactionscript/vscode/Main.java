@@ -24,6 +24,9 @@ import io.typefox.lsapi.services.json.LanguageServerToJsonAdapter;
  */
 public class Main
 {
+    private static final int MISSING_PORT = 100;
+    private static final int SERVER_CONNECT_ERROR = 101;
+
     /**
      * The main entry point when the JAR is run. Opens a socket to communicate
      * with Visual Studio Code using the port specified with the
@@ -41,7 +44,7 @@ public class Main
         if (port == null)
         {
             System.err.println("Error: System property nextgeas.vscode.port is required.");
-            System.exit(1);
+            System.exit(MISSING_PORT);
         }
         try
         {
@@ -64,7 +67,7 @@ public class Main
         catch (Throwable t)
         {
             System.err.println("Error: " + t.toString());
-            System.exit(1);
+            System.exit(SERVER_CONNECT_ERROR);
         }
     }
 }
