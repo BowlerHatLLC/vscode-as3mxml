@@ -38,6 +38,7 @@ public class LanguageServerFileSpecGetter implements IFileSpecificationGetter
 {
     private static final String SCRIPT_START = "<fx:Script>";
     private static final String SCRIPT_END = "</fx:Script>";
+    private static final String MXML_FILE_EXTENSION = ".mxml";
 
     public LanguageServerFileSpecGetter(IWorkspace workspace, Map<Path, String> sourceByPath)
     {
@@ -64,8 +65,11 @@ public class LanguageServerFileSpecGetter implements IFileSpecificationGetter
         if (sourceByPath.containsKey(path))
         {
             String code = sourceByPath.get(path);
-            code = fixUnclosedXMLComment(code);
-            code = fixUnclosedScriptCDATA(code);
+            if (path.endsWith(MXML_FILE_EXTENSION))
+            {
+                code = fixUnclosedXMLComment(code);
+                code = fixUnclosedScriptCDATA(code);
+            }
             return new StringFileSpecification(filePath, code);
         }
         return new FileSpecification(filePath);
