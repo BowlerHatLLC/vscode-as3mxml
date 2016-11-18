@@ -20,6 +20,7 @@ import java.nio.file.Paths;
 import java.util.Map;
 
 import org.apache.flex.compiler.common.IFileSpecificationGetter;
+import org.apache.flex.compiler.constants.IMXMLCoreConstants;
 import org.apache.flex.compiler.filespecs.FileSpecification;
 import org.apache.flex.compiler.filespecs.IFileSpecification;
 import org.apache.flex.compiler.internal.filespecs.StringFileSpecification;
@@ -35,6 +36,9 @@ import org.apache.flex.compiler.workspaces.IWorkspace;
  */
 public class LanguageServerFileSpecGetter implements IFileSpecificationGetter
 {
+    private static final String SCRIPT_START = "<fx:Script>";
+    private static final String SCRIPT_END = "</fx:Script>";
+
     public LanguageServerFileSpecGetter(IWorkspace workspace, Map<Path, String> sourceByPath)
     {
         this.workspace = workspace;
@@ -60,8 +64,66 @@ public class LanguageServerFileSpecGetter implements IFileSpecificationGetter
         if (sourceByPath.containsKey(path))
         {
             String code = sourceByPath.get(path);
+            code = fixUnclosedXMLComment(code);
+            code = fixUnclosedScriptCDATA(code);
             return new StringFileSpecification(filePath, code);
         }
         return new FileSpecification(filePath);
+    }
+
+    /**
+     * If an XML comment is not closed, the compiler will get into an infinite
+     * loop!
+     */
+    private String fixUnclosedXMLComment(String code)
+    {
+        int startComment = code.lastIndexOf(IMXMLCoreConstants.commentStart);
+        if (startComment == -1)
+        {
+            return code;
+        }
+        int endComment = code.indexOf(IMXMLCoreConstants.commentEnd, startComment);
+        if (endComment == -1)
+        {
+            return code + IMXMLCoreConstants.commentEnd;
+        }
+        return code;
+    }
+
+    /**
+     * If a <![CDATA[ inside <fx:Script></fx:Script> is not closed, the compiler
+     * will get into an infinite loop!
+     */
+    private String fixUnclosedScriptCDATA(String code)
+    {
+        int startIndex = 0;
+        do
+        {
+            int startScript = code.indexOf(SCRIPT_START, startIndex);
+            if (startScript == -1)
+            {
+                return code;
+            }
+            int endScript = code.indexOf(SCRIPT_END, startScript);
+            if (endScript == -1)
+            {
+                endScript = code.length();
+            }
+            int startCDATA = code.indexOf(IMXMLCoreConstants.cDataStart, startScript);
+            if (startCDATA != -1)
+            {
+                int endCDATA = code.lastIndexOf(IMXMLCoreConstants.cDataEnd, endScript);
+                System.out.print("startCDATA: " + startCDATA + "endCDATA: " + endCDATA);
+                if (endCDATA < startCDATA)
+                {
+                    code = code.substring(0, endScript) + IMXMLCoreConstants.cDataEnd + code.substring(endScript);
+                    endScript += IMXMLCoreConstants.cDataEnd.length();
+                    System.out.println("========");
+                    System.out.println(code);
+                }
+            }
+            startIndex = endScript;
+        }
+        while (true);
     }
 }
