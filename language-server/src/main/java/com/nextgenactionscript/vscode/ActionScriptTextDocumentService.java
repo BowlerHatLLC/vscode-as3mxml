@@ -287,6 +287,16 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return mxmlCompletion(position, offsetTag);
         }
+        if (offsetTag == null && position.getTextDocument().getUri().endsWith(MXML_EXTENSION))
+        {
+            //it's possible for the offset tag to be null in an MXML file, but
+            //we don't want to trigger ActionScript completion.
+            //for some reason, the offset tag will be null if completion is
+            //triggered at the asterisk:
+            //<fx:Declarations>*
+            
+            return CompletableFuture.completedFuture(new CompletionListImpl());
+        }
         return actionScriptCompletion(position);
     }
 
