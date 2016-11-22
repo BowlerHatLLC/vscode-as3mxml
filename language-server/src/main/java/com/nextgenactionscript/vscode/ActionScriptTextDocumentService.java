@@ -1435,7 +1435,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             return CompletableFuture.completedFuture(result);
         }
-        if (offsetDefinition instanceof IVariableDefinition)
+        if (offsetDefinition instanceof IVariableDefinition
+                || offsetDefinition instanceof IEventDefinition
+                || offsetDefinition instanceof IStyleDefinition)
         {
             if(!isAttribute)
             {
