@@ -3946,8 +3946,21 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private boolean isDeclarationsTag(IMXMLTagData tag)
     {
-        return tag != null && tag.getShortName().equals(IMXMLLanguageConstants.DECLARATIONS)
-                && tag.getURI().equals(IMXMLLanguageConstants.NAMESPACE_MXML_2009);
+        if (tag == null)
+        {
+            return false;
+        }
+        String shortName = tag.getShortName();
+        if (shortName == null || !shortName.equals(IMXMLLanguageConstants.DECLARATIONS))
+        {
+            return false;
+        }
+        String uri = tag.getURI();
+        if (uri == null || !uri.equals(IMXMLLanguageConstants.NAMESPACE_MXML_2009))
+        {
+            return false;
+        }
+        return true;
     }
 
     private void querySymbolsInScope(String query, IASScope scope, List<SymbolInformationImpl> result)
