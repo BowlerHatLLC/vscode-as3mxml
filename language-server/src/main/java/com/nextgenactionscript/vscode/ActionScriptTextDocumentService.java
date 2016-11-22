@@ -1439,7 +1439,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 || offsetDefinition instanceof IEventDefinition
                 || offsetDefinition instanceof IStyleDefinition)
         {
-            if(!isAttribute)
+            if (!isAttribute)
             {
                 autoCompleteTypesForMXML(result);
             }
@@ -2167,8 +2167,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             TypeScope typeScope = (TypeScope) definition.getContainedScope();
             ASScope scope = (ASScope) scopes[0];
             addDefinitionsInTypeScopeToAutoComplete(typeScope, scope, false, true, propertyElementPrefix, result);
-            addStyleMetadataToAutoComplete(typeScope, result);
-            addEventMetadataToAutoComplete(typeScope, result);
+            addStyleMetadataToAutoComplete(typeScope, propertyElementPrefix, result);
+            addEventMetadataToAutoComplete(typeScope, propertyElementPrefix, result);
         }
     }
 
@@ -2267,7 +2267,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
     }
 
-    private void addEventMetadataToAutoComplete(TypeScope typeScope, CompletionListImpl result)
+    private void addEventMetadataToAutoComplete(TypeScope typeScope, String prefix, CompletionListImpl result)
     {
         ArrayList<String> eventNames = new ArrayList<>();
         IDefinition definition = typeScope.getDefinition();
@@ -2292,6 +2292,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 CompletionItemImpl item = new CompletionItemImpl();
                 item.setKind(CompletionItemKind.Field);
                 item.setLabel(eventName);
+                if (prefix != null)
+                {
+                    item.setInsertText(prefix + eventName);
+                }
                 item.setDetail(getDefinitionDetail(eventDefinition));
                 result.getItems().add(item);
             }
@@ -2299,7 +2303,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
     }
 
-    private void addStyleMetadataToAutoComplete(TypeScope typeScope, CompletionListImpl result)
+    private void addStyleMetadataToAutoComplete(TypeScope typeScope, String prefix, CompletionListImpl result)
     {
         ArrayList<String> styleNames = new ArrayList<>();
         IDefinition definition = typeScope.getDefinition();
@@ -2324,6 +2328,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 CompletionItemImpl item = new CompletionItemImpl();
                 item.setKind(CompletionItemKind.Field);
                 item.setLabel(styleName);
+                if (prefix != null)
+                {
+                    item.setInsertText(prefix + styleName);
+                }
                 item.setDetail(getDefinitionDetail(styleDefinition));
                 result.getItems().add(item);
             }
