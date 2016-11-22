@@ -1435,9 +1435,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             return CompletableFuture.completedFuture(result);
         }
-        if (offsetDefinition instanceof IVariableDefinition && !isAttribute)
+        if (offsetDefinition instanceof IVariableDefinition)
         {
-            autoCompleteTypesForMXML(result);
+            if(!isAttribute)
+            {
+                autoCompleteTypesForMXML(result);
+            }
             return CompletableFuture.completedFuture(result);
         }
         System.err.println("Unknown definition for MXML completion: " + offsetDefinition.getClass());
