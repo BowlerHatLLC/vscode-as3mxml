@@ -294,8 +294,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             //for some reason, the offset tag will be null if completion is
             //triggered at the asterisk:
             //<fx:Declarations>*
-            
-            return CompletableFuture.completedFuture(new CompletionListImpl());
+            CompletionListImpl result = new CompletionListImpl();
+            result.setIncomplete(false);
+            result.setItems(new ArrayList<>());
+            return CompletableFuture.completedFuture(result);
         }
         return actionScriptCompletion(position);
     }
@@ -1351,14 +1353,14 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private CompletableFuture<CompletionList> mxmlCompletion(TextDocumentPositionParams position, IMXMLTagData offsetTag)
     {
-        if (isInXMLComment(position))
-        {
-            //if we're inside a comment, no completion!
-            return CompletableFuture.completedFuture(new CompletionListImpl());
-        }
         CompletionListImpl result = new CompletionListImpl();
         result.setIncomplete(false);
         result.setItems(new ArrayList<>());
+        if (isInXMLComment(position))
+        {
+            //if we're inside a comment, no completion!
+            return CompletableFuture.completedFuture(result);
+        }
 
         IMXMLTagData parentTag = offsetTag.getParentTag();
 
