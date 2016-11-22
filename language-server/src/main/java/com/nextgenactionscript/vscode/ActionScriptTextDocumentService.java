@@ -1353,20 +1353,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         IMXMLTagData parentTag = offsetTag.getParentTag();
 
         boolean isAttribute = offsetTag.isOffsetInAttributeList(currentOffset);
-        boolean isChildOfOffsetTag = false;
-        if (!isAttribute && !offsetTag.isCloseTag())
-        {
-            IMXMLTagData firstChild = offsetTag.getFirstChild(true);
-            if (firstChild != null && currentOffset > firstChild.getAbsoluteStart())
-            {
-                isChildOfOffsetTag = true;
-            }
-        }
 
         //inside <fx:Declarations>
         if (isDeclarationsTag(offsetTag))
         {
-            if (isChildOfOffsetTag)
+            if (!isAttribute)
             {
                 autoCompleteTypesForMXML(result);
             }
