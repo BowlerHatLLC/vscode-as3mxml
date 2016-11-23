@@ -1716,3 +1716,1455 @@ suite("definition provider", () =>
 		}).then(() => done(), done);
 	});
 });
+
+suite("hover provider", () =>
+{
+	test("vscode.executeHoverProvider displays hover for local variable", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let position = new vscode.Position(90, 5);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeHoverProvider", uri, position)
+				.then((hovers: vscode.Hover[]) =>
+					{
+						assert.strictEqual(hovers.length, 1,
+							"vscode.executeHoverProvider failed to provide hover for local variable reference: " + uri);
+						let hover = hovers[0];
+						let contents = hover.contents;
+						assert.strictEqual(contents.length, 1,
+							"vscode.executeHoverProvider failed to provide hover contents for local variable reference: " + uri);
+						let content = contents[0];
+						let contentValue: string;
+						if(content instanceof String)
+						{
+							contentValue = content;
+						}
+						else
+						{
+							contentValue = content.value;
+						}
+						assert.strictEqual(contentValue.indexOf("localVar:String") >= 0, true, "vscode.executeHoverProvider provided incorrect hover for local variable reference");
+						assert.strictEqual(hover.range.start.line, 90, "vscode.executeHoverProvider provided incorrect line for local variable reference");
+						assert.strictEqual(hover.range.start.character, 3, "vscode.executeHoverProvider provided incorrect character for local variable reference");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute hover provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeHoverProvider displays hover of local function", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let position = new vscode.Position(92, 5);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeHoverProvider", uri, position)
+				.then((hovers: vscode.Hover[]) =>
+					{
+						assert.strictEqual(hovers.length, 1,
+							"vscode.executeHoverProvider failed to provide hover for local function reference: " + uri);
+						let hover = hovers[0];
+						let contents = hover.contents;
+						assert.strictEqual(contents.length, 1,
+							"vscode.executeHoverProvider failed to provide hover contents for local function reference: " + uri);
+						let content = contents[0];
+						let contentValue: string;
+						if(content instanceof String)
+						{
+							contentValue = content;
+						}
+						else
+						{
+							contentValue = content.value;
+						}
+						assert.strictEqual(contentValue.indexOf("localFunction():void") >= 0, true, "vscode.executeHoverProvider provided incorrect hover for local function reference");
+						assert.strictEqual(hover.range.start.line, 92, "vscode.executeDefinitionProvider provided incorrect line for local function reference");
+						assert.strictEqual(hover.range.start.character, 3, "vscode.executeDefinitionProvider provided incorrect character for local function reference");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute hover provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeHoverProvider displays hover of member variable", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let position = new vscode.Position(54, 5);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeHoverProvider", uri, position)
+				.then((hovers: vscode.Hover[]) =>
+					{
+						assert.strictEqual(hovers.length, 1,
+							"vscode.executeHoverProvider failed to provide hover for member variable reference: " + uri);
+						let hover = hovers[0];
+						let contents = hover.contents;
+						assert.strictEqual(contents.length, 1,
+							"vscode.executeHoverProvider failed to provide hover contents for member variable reference: " + uri);
+						let content = contents[0];
+						let contentValue: string;
+						if(content instanceof String)
+						{
+							contentValue = content;
+						}
+						else
+						{
+							contentValue = content.value;
+						}
+						assert.strictEqual(contentValue.indexOf("memberVar:Boolean") >= 0, true, "vscode.executeHoverProvider provided incorrect hover for member variable reference");
+						assert.strictEqual(hover.range.start.line, 54, "vscode.executeHoverProvider provided incorrect line for member variable reference");
+						assert.strictEqual(hover.range.start.character, 3, "vscode.executeHoverProvider provided incorrect character for member variable reference");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute hover provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+
+	test("vscode.executeHoverProvider displays hover of member variable with member access operator on this", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let position = new vscode.Position(55, 10);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeHoverProvider", uri, position)
+				.then((hovers: vscode.Hover[]) =>
+					{
+						assert.strictEqual(hovers.length, 1,
+							"vscode.executeHoverProvider failed to provide hover for member variable reference with member access operator on this: " + uri);
+						let hover = hovers[0];
+						let contents = hover.contents;
+						assert.strictEqual(contents.length, 1,
+							"vscode.executeHoverProvider failed to provide hover contents for member variable reference with member access operator on this: " + uri);
+						let content = contents[0];
+						let contentValue: string;
+						if(content instanceof String)
+						{
+							contentValue = content;
+						}
+						else
+						{
+							contentValue = content.value;
+						}
+						assert.strictEqual(contentValue.indexOf("memberVar:Boolean") >= 0, true, "vscode.executeHoverProvider provided incorrect hover for member variable reference with member access operator on this");
+						assert.strictEqual(hover.range.start.line, 55, "vscode.executeHoverProvider provided incorrect line for member variable reference with member access operator on this");
+						assert.strictEqual(hover.range.start.character, 8, "vscode.executeHoverProvider provided incorrect character for member variable reference with member access operator on this");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute hover provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeHoverProvider displays hover of member function", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let position = new vscode.Position(45, 5);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeHoverProvider", uri, position)
+				.then((hovers: vscode.Hover[]) =>
+					{
+						assert.strictEqual(hovers.length, 1,
+							"vscode.executeHoverProvider failed to provide hover for member function reference: " + uri);
+						let hover = hovers[0];
+						let contents = hover.contents;
+						assert.strictEqual(contents.length, 1,
+							"vscode.executeHoverProvider failed to provide hover contents for member function reference: " + uri);
+						let content = contents[0];
+						let contentValue: string;
+						if(content instanceof String)
+						{
+							contentValue = content;
+						}
+						else
+						{
+							contentValue = content.value;
+						}
+						assert.strictEqual(contentValue.indexOf("memberFunction():void") >= 0, true, "vscode.executeHoverProvider provided incorrect hover for member function reference");
+						assert.strictEqual(hover.range.start.line, 45, "vscode.executeHoverProvider provided incorrect line for member function reference");
+						assert.strictEqual(hover.range.start.character, 3, "vscode.executeHoverProvider provided incorrect character for member function reference");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute hover provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeHoverProvider displays hover of member function with member access operator on this", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let position = new vscode.Position(46, 10);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeHoverProvider", uri, position)
+				.then((hovers: vscode.Hover[]) =>
+					{
+						assert.strictEqual(hovers.length, 1,
+							"vscode.executeHoverProvider failed to provide hover for member function reference with member access operator on this: " + uri);
+						let hover = hovers[0];
+						let contents = hover.contents;
+						assert.strictEqual(contents.length, 1,
+							"vscode.executeHoverProvider failed to provide hover contents for member function reference with member access operator on this: " + uri);
+						let content = contents[0];
+						let contentValue: string;
+						if(content instanceof String)
+						{
+							contentValue = content;
+						}
+						else
+						{
+							contentValue = content.value;
+						}
+						assert.strictEqual(contentValue.indexOf("memberFunction():void") >= 0, true, "vscode.executeHoverProvider provided incorrect hover for member function reference with member access operator on this");
+						assert.strictEqual(hover.range.start.line, 46, "vscode.executeHoverProvider provided incorrect line for member function reference with member access operator on this");
+						assert.strictEqual(hover.range.start.character, 8, "vscode.executeHoverProvider provided incorrect character for member function reference with member access operator on this");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute hover provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeHoverProvider displays hover of member property", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let position = new vscode.Position(57, 5);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeHoverProvider", uri, position)
+				.then((hovers: vscode.Hover[]) =>
+					{
+						assert.strictEqual(hovers.length, 1,
+							"vscode.executeHoverProvider failed to provide hover for member property reference: " + uri);
+						let hover = hovers[0];
+						let contents = hover.contents;
+						assert.strictEqual(contents.length, 1,
+							"vscode.executeHoverProvider failed to provide hover contents for member property reference: " + uri);
+						let content = contents[0];
+						let contentValue: string;
+						if(content instanceof String)
+						{
+							contentValue = content;
+						}
+						else
+						{
+							contentValue = content.value;
+						}
+						assert.strictEqual(contentValue.indexOf("memberProperty:Boolean") >= 0, true, "vscode.executeHoverProvider provided incorrect hover for member property reference");
+						assert.strictEqual(hover.range.start.line, 57, "vscode.executeHoverProvider provided incorrect line for member property reference");
+						assert.strictEqual(hover.range.start.character, 3, "vscode.executeHoverProvider provided incorrect character for member property reference");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute hover provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeHoverProvider displays hover of member property with member access operator on this", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let position = new vscode.Position(58, 10);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeHoverProvider", uri, position)
+				.then((hovers: vscode.Hover[]) =>
+					{
+						assert.strictEqual(hovers.length, 1,
+							"vscode.executeHoverProvider failed to provide hover for member property reference with member access operator on this: " + uri);
+						let hover = hovers[0];
+						let contents = hover.contents;
+						assert.strictEqual(contents.length, 1,
+							"vscode.executeHoverProvider failed to provide hover contents for member property reference with member access operator on this: " + uri);
+						let content = contents[0];
+						let contentValue: string;
+						if(content instanceof String)
+						{
+							contentValue = content;
+						}
+						else
+						{
+							contentValue = content.value;
+						}
+						assert.strictEqual(contentValue.indexOf("memberProperty:Boolean") >= 0, true, "vscode.executeHoverProvider provided incorrect hover for member property reference with member access operator on this");
+						assert.strictEqual(hover.range.start.line, 58, "vscode.executeHoverProvider provided incorrect line for member property reference with member access operator on this");
+						assert.strictEqual(hover.range.start.character, 8, "vscode.executeHoverProvider provided incorrect character for member property reference with member access operator on this");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute hover provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeHoverProvider displays hover of static variable", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let position = new vscode.Position(51, 5);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeHoverProvider", uri, position)
+				.then((hovers: vscode.Hover[]) =>
+					{
+						assert.strictEqual(hovers.length, 1,
+							"vscode.executeHoverProvider failed to provide hover for static variable reference: " + uri);
+						let hover = hovers[0];
+						let contents = hover.contents;
+						assert.strictEqual(contents.length, 1,
+							"vscode.executeHoverProvider failed to provide hover contents for static variable reference: " + uri);
+						let content = contents[0];
+						let contentValue: string;
+						if(content instanceof String)
+						{
+							contentValue = content;
+						}
+						else
+						{
+							contentValue = content.value;
+						}
+						assert.strictEqual(contentValue.indexOf("staticVar:Number") >= 0, true, "vscode.executeHoverProvider provided incorrect hover for static variable reference");
+						assert.strictEqual(hover.range.start.line, 51, "vscode.executeHoverProvider provided incorrect line for static variable reference");
+						assert.strictEqual(hover.range.start.character, 3, "vscode.executeHoverProvider provided incorrect character for static variable reference");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute hover provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeHoverProvider displays hover of static variable with member access operator on class", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let position = new vscode.Position(52, 17);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeHoverProvider", uri, position)
+				.then((hovers: vscode.Hover[]) =>
+					{
+						assert.strictEqual(hovers.length, 1,
+							"vscode.executeHoverProvider failed to provide hover for static variable reference with member access operator on class: " + uri);
+						let hover = hovers[0];
+						let contents = hover.contents;
+						assert.strictEqual(contents.length, 1,
+							"vscode.executeHoverProvider failed to provide hover contents for static variable reference with member access operator on class: " + uri);
+						let content = contents[0];
+						let contentValue: string;
+						if(content instanceof String)
+						{
+							contentValue = content;
+						}
+						else
+						{
+							contentValue = content.value;
+						}
+						assert.strictEqual(contentValue.indexOf("staticVar:Number") >= 0, true, "vscode.executeHoverProvider provided incorrect hover for static variable reference with member access operator on class");
+						assert.strictEqual(hover.range.start.line, 52, "vscode.executeHoverProvider provided incorrect line for static variable reference with member access operator on class");
+						assert.strictEqual(hover.range.start.character, 15, "vscode.executeHoverProvider provided incorrect character for static variable reference with member access operator on class");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute hover provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeHoverProvider displays hover of static function", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let position = new vscode.Position(48, 5);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeHoverProvider", uri, position)
+				.then((hovers: vscode.Hover[]) =>
+					{
+						assert.strictEqual(hovers.length, 1,
+							"vscode.executeHoverProvider failed to provide hover for static function reference: " + uri);
+						let hover = hovers[0];
+						let contents = hover.contents;
+						assert.strictEqual(contents.length, 1,
+							"vscode.executeHoverProvider failed to provide hover contents for static function reference: " + uri);
+						let content = contents[0];
+						let contentValue: string;
+						if(content instanceof String)
+						{
+							contentValue = content;
+						}
+						else
+						{
+							contentValue = content.value;
+						}
+						assert.strictEqual(contentValue.indexOf("staticFunction():void") >= 0, true, "vscode.executeHoverProvider provided incorrect hover for static function reference");
+						assert.strictEqual(hover.range.start.line, 48, "vscode.executeHoverProvider provided incorrect line for static function reference");
+						assert.strictEqual(hover.range.start.character, 3, "vscode.executeHoverProvider provided incorrect character for static function reference");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute hover provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeHoverProvider displays hover of static function with member access operator on class", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let position = new vscode.Position(49, 17);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeHoverProvider", uri, position)
+				.then((hovers: vscode.Hover[]) =>
+					{
+						assert.strictEqual(hovers.length, 1,
+							"vscode.executeHoverProvider failed to provide hover for static function reference with member access operator on class: " + uri);
+						let hover = hovers[0];
+						let contents = hover.contents;
+						assert.strictEqual(contents.length, 1,
+							"vscode.executeHoverProvider failed to provide hover contents for static function reference with member access operator on class: " + uri);
+						let content = contents[0];
+						let contentValue: string;
+						if(content instanceof String)
+						{
+							contentValue = content;
+						}
+						else
+						{
+							contentValue = content.value;
+						}
+						assert.strictEqual(contentValue.indexOf("staticFunction():void") >= 0, true, "vscode.executeHoverProvider provided incorrect hover for static function reference with member access operator on class");
+						assert.strictEqual(hover.range.start.line, 49, "vscode.executeHoverProvider provided incorrect line for static function reference with member access operator on class");
+						assert.strictEqual(hover.range.start.character, 15, "vscode.executeHoverProvider provided incorrect character for static function reference with member access operator on class");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute hover provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeHoverProvider displays hover of static property", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let position = new vscode.Position(60, 5);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeHoverProvider", uri, position)
+				.then((hovers: vscode.Hover[]) =>
+					{
+						assert.strictEqual(hovers.length, 1,
+							"vscode.executeHoverProvider failed to provide hover for static property reference: " + uri);
+						let hover = hovers[0];
+						let contents = hover.contents;
+						assert.strictEqual(contents.length, 1,
+							"vscode.executeHoverProvider failed to provide hover contents for static property reference: " + uri);
+						let content = contents[0];
+						let contentValue: string;
+						if(content instanceof String)
+						{
+							contentValue = content;
+						}
+						else
+						{
+							contentValue = content.value;
+						}
+						assert.strictEqual(contentValue.indexOf("staticProperty:Boolean") >= 0, true, "vscode.executeHoverProvider provided incorrect hover for static property reference");
+						assert.strictEqual(hover.range.start.line, 60, "vscode.executeHoverProvider provided incorrect line for static property reference");
+						assert.strictEqual(hover.range.start.character, 3, "vscode.executeHoverProvider provided incorrect character for static property reference");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute hover provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeHoverProvider displays hover of static property with member access operator on class", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let position = new vscode.Position(61, 17);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeHoverProvider", uri, position)
+				.then((hovers: vscode.Hover[]) =>
+					{
+						assert.strictEqual(hovers.length, 1,
+							"vscode.executeHoverProvider failed to provide hover for static property reference with member access operator on class: " + uri);
+						let hover = hovers[0];
+						let contents = hover.contents;
+						assert.strictEqual(contents.length, 1,
+							"vscode.executeHoverProvider failed to provide hover contents for static property reference with member access operator on class: " + uri);
+						let content = contents[0];
+						let contentValue: string;
+						if(content instanceof String)
+						{
+							contentValue = content;
+						}
+						else
+						{
+							contentValue = content.value;
+						}
+						assert.strictEqual(contentValue.indexOf("staticProperty:Boolean") >= 0, true, "vscode.executeHoverProvider provided incorrect hover for static property reference with member access operator on class");
+						assert.strictEqual(hover.range.start.line, 61, "vscode.executeHoverProvider provided incorrect line for static property reference with member access operator on class");
+						assert.strictEqual(hover.range.start.character, 15, "vscode.executeHoverProvider provided incorrect character for static property reference with member access operator on class");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute hover provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeHoverProvider displays hover of package function", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "packageFunction.as"));
+		let position = new vscode.Position(84, 5);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeHoverProvider", uri, position)
+				.then((hovers: vscode.Hover[]) =>
+					{
+						assert.strictEqual(hovers.length, 1,
+							"vscode.executeHoverProvider failed to provide hover for package function reference: " + uri);
+						let hover = hovers[0];
+						let contents = hover.contents;
+						assert.strictEqual(contents.length, 1,
+							"vscode.executeHoverProvider failed to provide hover contents for package function reference: " + uri);
+						let content = contents[0];
+						let contentValue: string;
+						if(content instanceof String)
+						{
+							contentValue = content;
+						}
+						else
+						{
+							contentValue = content.value;
+						}
+						assert.strictEqual(contentValue.indexOf("packageFunction(one:String, two:Number = 3, ...rest:Array):Boolean") >= 0, true, "vscode.executeHoverProvider provided incorrect hover for package function reference");
+						assert.strictEqual(hover.range.start.line, 84, "vscode.executeHoverProvider provided incorrect line for package function reference");
+						assert.strictEqual(hover.range.start.character, 3, "vscode.executeHoverProvider provided incorrect character for package function reference");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute hover provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeHoverProvider displays hover of fully-qualified package function", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "packageFunction.as"));
+		let position = new vscode.Position(85, 17);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeHoverProvider", uri, position)
+				.then((hovers: vscode.Hover[]) =>
+					{
+						assert.strictEqual(hovers.length, 1,
+							"vscode.executeHoverProvider failed to provide hover for fully-qualified package function reference: " + uri);
+						let hover = hovers[0];
+						let contents = hover.contents;
+						assert.strictEqual(contents.length, 1,
+							"vscode.executeHoverProvider failed to provide hover contents for fully-qualified package function reference: " + uri);
+						let content = contents[0];
+						let contentValue: string;
+						if(content instanceof String)
+						{
+							contentValue = content;
+						}
+						else
+						{
+							contentValue = content.value;
+						}
+						assert.strictEqual(contentValue.indexOf("packageFunction(one:String, two:Number = 3, ...rest:Array):Boolean") >= 0, true, "vscode.executeHoverProvider provided incorrect hover for fully-qualified package function reference");
+						assert.strictEqual(hover.range.start.line, 85, "vscode.executeHoverProvider provided incorrect line for fully-qualified package function reference");
+						assert.strictEqual(hover.range.start.character, 15, "vscode.executeHoverProvider provided incorrect character for fully-qualified package function reference");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute hover provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeHoverProvider displays hover of package variable", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "packageVar.as"));
+		let position = new vscode.Position(87, 5);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeHoverProvider", uri, position)
+				.then((hovers: vscode.Hover[]) =>
+					{
+						assert.strictEqual(hovers.length, 1,
+							"vscode.executeHoverProvider failed to provide hover for package variable reference: " + uri);
+						let hover = hovers[0];
+						let contents = hover.contents;
+						assert.strictEqual(contents.length, 1,
+							"vscode.executeHoverProvider failed to provide hover contents for package variable reference: " + uri);
+						let content = contents[0];
+						let contentValue: string;
+						if(content instanceof String)
+						{
+							contentValue = content;
+						}
+						else
+						{
+							contentValue = content.value;
+						}
+						assert.strictEqual(contentValue.indexOf("packageVar:Number") >= 0, true, "vscode.executeHoverProvider provided incorrect hover for package variable reference");
+						assert.strictEqual(hover.range.start.line, 87, "vscode.executeHoverProvider provided incorrect line for package variable reference");
+						assert.strictEqual(hover.range.start.character, 3, "vscode.executeHoverProvider provided incorrect character for package variable reference");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute hover provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeHoverProvider displays hover of fully-qualified package variable", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "packageVar.as"));
+		let position = new vscode.Position(88, 17);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeHoverProvider", uri, position)
+				.then((hovers: vscode.Hover[]) =>
+					{
+						assert.strictEqual(hovers.length, 1,
+							"vscode.executeHoverProvider failed to provide hover for fully-qualified package variable reference: " + uri);
+						let hover = hovers[0];
+						let contents = hover.contents;
+						assert.strictEqual(contents.length, 1,
+							"vscode.executeHoverProvider failed to provide hover contents for fully-qualified package variable reference: " + uri);
+						let content = contents[0];
+						let contentValue: string;
+						if(content instanceof String)
+						{
+							contentValue = content;
+						}
+						else
+						{
+							contentValue = content.value;
+						}
+						assert.strictEqual(contentValue.indexOf("packageVar:Number") >= 0, true, "vscode.executeHoverProvider provided incorrect hover for fully-qualified package variable reference");
+						assert.strictEqual(hover.range.start.line, 88, "vscode.executeHoverProvider provided incorrect line for fully-qualified package variable reference");
+						assert.strictEqual(hover.range.start.character, 15, "vscode.executeHoverProvider provided incorrect character for fully-qualified package variable reference");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute hover provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeHoverProvider displays hover of super static variable", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
+		let position = new vscode.Position(74, 5);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeHoverProvider", uri, position)
+				.then((hovers: vscode.Hover[]) =>
+					{
+						assert.strictEqual(hovers.length, 1,
+							"vscode.executeHoverProvider failed to provide hover for super static variable reference: " + uri);
+						let hover = hovers[0];
+						let contents = hover.contents;
+						assert.strictEqual(contents.length, 1,
+							"vscode.executeHoverProvider failed to provide hover contents for super static variable reference: " + uri);
+						let content = contents[0];
+						let contentValue: string;
+						if(content instanceof String)
+						{
+							contentValue = content;
+						}
+						else
+						{
+							contentValue = content.value;
+						}
+						assert.strictEqual(contentValue.indexOf("superStaticVar:Boolean") >= 0, true, "vscode.executeHoverProvider provided incorrect hover for super static variable reference");
+						assert.strictEqual(hover.range.start.line, 74, "vscode.executeHoverProvider provided incorrect line for super static variable reference");
+						assert.strictEqual(hover.range.start.character, 3, "vscode.executeHoverProvider provided incorrect character for super static variable reference");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute hover provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeHoverProvider displays hover of super static variable with member access operator on superclass", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
+		let position = new vscode.Position(75, 22);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeHoverProvider", uri, position)
+				.then((hovers: vscode.Hover[]) =>
+					{
+						assert.strictEqual(hovers.length, 1,
+							"vscode.executeHoverProvider failed to provide hover for super static variable reference with member access operator on superclass: " + uri);
+						let hover = hovers[0];
+						let contents = hover.contents;
+						assert.strictEqual(contents.length, 1,
+							"vscode.executeHoverProvider failed to provide hover contents for super static variable reference with member access operator on superclass: " + uri);
+						let content = contents[0];
+						let contentValue: string;
+						if(content instanceof String)
+						{
+							contentValue = content;
+						}
+						else
+						{
+							contentValue = content.value;
+						}
+						assert.strictEqual(contentValue.indexOf("superStaticVar:Boolean") >= 0, true, "vscode.executeHoverProvider provided incorrect hover for super static variable reference with member access operator on superclass");
+						assert.strictEqual(hover.range.start.line, 75, "vscode.executeHoverProvider provided incorrect line for super static variable reference with member access operator on superclass");
+						assert.strictEqual(hover.range.start.character, 20, "vscode.executeHoverProvider provided incorrect character for super static variable reference with member access operator on superclass");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute hover provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeHoverProvider displays hover of super static property", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
+		let position = new vscode.Position(81, 5);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeHoverProvider", uri, position)
+				.then((hovers: vscode.Hover[]) =>
+					{
+						assert.strictEqual(hovers.length, 1,
+							"vscode.executeHoverProvider failed to provide hover for super static property reference: " + uri);
+						let hover = hovers[0];
+						let contents = hover.contents;
+						assert.strictEqual(contents.length, 1,
+							"vscode.executeHoverProvider failed to provide hover contents for super static property reference: " + uri);
+						let content = contents[0];
+						let contentValue: string;
+						if(content instanceof String)
+						{
+							contentValue = content;
+						}
+						else
+						{
+							contentValue = content.value;
+						}
+						assert.strictEqual(contentValue.indexOf("superStaticProperty:Boolean") >= 0, true, "vscode.executeHoverProvider provided incorrect hover for super static property reference");
+						assert.strictEqual(hover.range.start.line, 81, "vscode.executeHoverProvider provided incorrect line for super static property reference");
+						assert.strictEqual(hover.range.start.character, 3, "vscode.executeHoverProvider provided incorrect character for super static property reference");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute hover provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeHoverProvider displays hover of super static property with member access operator on superclass", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
+		let position = new vscode.Position(82, 22);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeHoverProvider", uri, position)
+				.then((hovers: vscode.Hover[]) =>
+					{
+						assert.strictEqual(hovers.length, 1,
+							"vscode.executeHoverProvider failed to provide hover for super static property reference with member access operator on superclass: " + uri);
+						let hover = hovers[0];
+						let contents = hover.contents;
+						assert.strictEqual(contents.length, 1,
+							"vscode.executeHoverProvider failed to provide hover contents for super static property reference with member access operator on superclass: " + uri);
+						let content = contents[0];
+						let contentValue: string;
+						if(content instanceof String)
+						{
+							contentValue = content;
+						}
+						else
+						{
+							contentValue = content.value;
+						}
+						assert.strictEqual(contentValue.indexOf("superStaticProperty:Boolean") >= 0, true, "vscode.executeHoverProvider provided incorrect hover for super static property reference with member access operator on superclass");
+						assert.strictEqual(hover.range.start.line, 82, "vscode.executeHoverProvider provided incorrect line for super static property reference with member access operator on superclass");
+						assert.strictEqual(hover.range.start.character, 20, "vscode.executeHoverProvider provided incorrect character for super static property reference with member access operator on superclass");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute hover provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeHoverProvider displays hover of super static function", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
+		let position = new vscode.Position(67, 5);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeHoverProvider", uri, position)
+				.then((hovers: vscode.Hover[]) =>
+					{
+						assert.strictEqual(hovers.length, 1,
+							"vscode.executeHoverProvider failed to provide hover for super static function reference: " + uri);
+						let hover = hovers[0];
+						let contents = hover.contents;
+						assert.strictEqual(contents.length, 1,
+							"vscode.executeHoverProvider failed to provide hover contents for super static function reference: " + uri);
+						let content = contents[0];
+						let contentValue: string;
+						if(content instanceof String)
+						{
+							contentValue = content;
+						}
+						else
+						{
+							contentValue = content.value;
+						}
+						assert.strictEqual(contentValue.indexOf("superStaticFunction():void") >= 0, true, "vscode.executeHoverProvider provided incorrect hover for super static function reference");
+						assert.strictEqual(hover.range.start.line, 67, "vscode.executeHoverProvider provided incorrect line for super static function reference");
+						assert.strictEqual(hover.range.start.character, 3, "vscode.executeHoverProvider provided incorrect character for super static function reference");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute hover provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeHoverProvider displays hover of super static function with member access operator on superclass", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
+		let position = new vscode.Position(68, 22);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeHoverProvider", uri, position)
+				.then((hovers: vscode.Hover[]) =>
+					{
+						assert.strictEqual(hovers.length, 1,
+							"vscode.executeHoverProvider failed to provide hover for super static function reference with member access operator on superclass: " + uri);
+						let hover = hovers[0];
+						let contents = hover.contents;
+						assert.strictEqual(contents.length, 1,
+							"vscode.executeHoverProvider failed to provide hover contents for super static function reference with member access operator on superclass: " + uri);
+						let content = contents[0];
+						let contentValue: string;
+						if(content instanceof String)
+						{
+							contentValue = content;
+						}
+						else
+						{
+							contentValue = content.value;
+						}
+						assert.strictEqual(contentValue.indexOf("superStaticFunction():void") >= 0, true, "vscode.executeHoverProvider provided incorrect hover for super static function reference with member access operator on superclass");
+						assert.strictEqual(hover.range.start.line, 68, "vscode.executeHoverProvider provided incorrect line for super static function reference with member access operator on superclass");
+						assert.strictEqual(hover.range.start.character, 20, "vscode.executeHoverProvider provided incorrect character for super static function reference with member access operator on superclass");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute hover provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeHoverProvider displays hover of super member function", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
+		let position = new vscode.Position(63, 5);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeHoverProvider", uri, position)
+				.then((hovers: vscode.Hover[]) =>
+					{
+						assert.strictEqual(hovers.length, 1,
+							"vscode.executeHoverProvider failed to provide hover for super member function reference: " + uri);
+						let hover = hovers[0];
+						let contents = hover.contents;
+						assert.strictEqual(contents.length, 1,
+							"vscode.executeHoverProvider failed to provide hover contents for super member function reference: " + uri);
+						let content = contents[0];
+						let contentValue: string;
+						if(content instanceof String)
+						{
+							contentValue = content;
+						}
+						else
+						{
+							contentValue = content.value;
+						}
+						assert.strictEqual(contentValue.indexOf("superMemberFunction():void") >= 0, true, "vscode.executeHoverProvider provided incorrect hover for super member function reference");
+						assert.strictEqual(hover.range.start.line, 63, "vscode.executeHoverProvider provided incorrect line for super member function reference");
+						assert.strictEqual(hover.range.start.character, 3, "vscode.executeHoverProvider provided incorrect character for super member function reference");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute hover provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeHoverProvider displays hover of super member function with member access operator on this", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
+		let position = new vscode.Position(64, 10);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeHoverProvider", uri, position)
+				.then((hovers: vscode.Hover[]) =>
+					{
+						assert.strictEqual(hovers.length, 1,
+							"vscode.executeHoverProvider failed to provide hover for super member function reference with member access operator on this: " + uri);
+						let hover = hovers[0];
+						let contents = hover.contents;
+						assert.strictEqual(contents.length, 1,
+							"vscode.executeHoverProvider failed to provide hover contents for super member function reference with member access operator on this: " + uri);
+						let content = contents[0];
+						let contentValue: string;
+						if(content instanceof String)
+						{
+							contentValue = content;
+						}
+						else
+						{
+							contentValue = content.value;
+						}
+						assert.strictEqual(contentValue.indexOf("superMemberFunction():void") >= 0, true, "vscode.executeHoverProvider provided incorrect hover for super member function reference with member access operator on this");
+						assert.strictEqual(hover.range.start.line, 64, "vscode.executeHoverProvider provided incorrect line for super member function reference with member access operator on this");
+						assert.strictEqual(hover.range.start.character, 8, "vscode.executeHoverProvider provided incorrect character for super member function reference with member access operator on this");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute hover provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeHoverProvider displays hover of super member function with member access operator on super", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
+		let position = new vscode.Position(65, 11);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeHoverProvider", uri, position)
+				.then((hovers: vscode.Hover[]) =>
+					{
+						assert.strictEqual(hovers.length, 1,
+							"vscode.executeHoverProvider failed to provide hover for super member function reference with member access operator on super: " + uri);
+						let hover = hovers[0];
+						let contents = hover.contents;
+						assert.strictEqual(contents.length, 1,
+							"vscode.executeHoverProvider failed to provide hover contents for super member function reference with member access operator on super: " + uri);
+						let content = contents[0];
+						let contentValue: string;
+						if(content instanceof String)
+						{
+							contentValue = content;
+						}
+						else
+						{
+							contentValue = content.value;
+						}
+						assert.strictEqual(contentValue.indexOf("superMemberFunction():void") >= 0, true, "vscode.executeHoverProvider provided incorrect hover for super member function reference with member access operator on super");
+						assert.strictEqual(hover.range.start.line, 65, "vscode.executeHoverProvider provided incorrect line for super member function reference with member access operator on super");
+						assert.strictEqual(hover.range.start.character, 9, "vscode.executeHoverProvider provided incorrect character for super member function reference with member access operator on super");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute hover provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeHoverProvider displays hover of super member variable", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
+		let position = new vscode.Position(70, 5);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeHoverProvider", uri, position)
+				.then((hovers: vscode.Hover[]) =>
+					{
+						assert.strictEqual(hovers.length, 1,
+							"vscode.executeHoverProvider failed to provide hover for super member variable reference: " + uri);
+						let hover = hovers[0];
+						let contents = hover.contents;
+						assert.strictEqual(contents.length, 1,
+							"vscode.executeHoverProvider failed to provide hover contents for super member variable reference: " + uri);
+						let content = contents[0];
+						let contentValue: string;
+						if(content instanceof String)
+						{
+							contentValue = content;
+						}
+						else
+						{
+							contentValue = content.value;
+						}
+						assert.strictEqual(contentValue.indexOf("superMemberVar:String") >= 0, true, "vscode.executeHoverProvider provided incorrect hover for super member variable reference");
+						assert.strictEqual(hover.range.start.line, 70, "vscode.executeHoverProvider provided incorrect line for super member variable reference");
+						assert.strictEqual(hover.range.start.character, 3, "vscode.executeHoverProvider provided incorrect character for super member variable reference");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute hover provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeHoverProvider displays hover of super member variable with member access operator on this", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
+		let position = new vscode.Position(71, 10);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeHoverProvider", uri, position)
+				.then((hovers: vscode.Hover[]) =>
+					{
+						assert.strictEqual(hovers.length, 1,
+							"vscode.executeHoverProvider failed to provide hover for super member variable reference with member access operator on this: " + uri);
+						let hover = hovers[0];
+						let contents = hover.contents;
+						assert.strictEqual(contents.length, 1,
+							"vscode.executeHoverProvider failed to provide hover contents for super member variable reference with member access operator on this: " + uri);
+						let content = contents[0];
+						let contentValue: string;
+						if(content instanceof String)
+						{
+							contentValue = content;
+						}
+						else
+						{
+							contentValue = content.value;
+						}
+						assert.strictEqual(contentValue.indexOf("superMemberVar:String") >= 0, true, "vscode.executeHoverProvider provided incorrect hover for super member variable reference with member access operator on this");
+						assert.strictEqual(hover.range.start.line, 71, "vscode.executeHoverProvider provided incorrect line for super member variable reference with member access operator on this");
+						assert.strictEqual(hover.range.start.character, 8, "vscode.executeHoverProvider provided incorrect character for super member variable reference with member access operator on this");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute hover provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeHoverProvider displays hover of super member variable with member access operator on super", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
+		let position = new vscode.Position(72, 11);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeHoverProvider", uri, position)
+				.then((hovers: vscode.Hover[]) =>
+					{
+						assert.strictEqual(hovers.length, 1,
+							"vscode.executeHoverProvider failed to provide hover for super member variable reference with member access operator on super: " + uri);
+						let hover = hovers[0];
+						let contents = hover.contents;
+						assert.strictEqual(contents.length, 1,
+							"vscode.executeHoverProvider failed to provide hover contents for super member variable reference with member access operator on super: " + uri);
+						let content = contents[0];
+						let contentValue: string;
+						if(content instanceof String)
+						{
+							contentValue = content;
+						}
+						else
+						{
+							contentValue = content.value;
+						}
+						assert.strictEqual(contentValue.indexOf("superMemberVar:String") >= 0, true, "vscode.executeHoverProvider provided incorrect hover for super member variable reference with member access operator on super");
+						assert.strictEqual(hover.range.start.line, 72, "vscode.executeHoverProvider provided incorrect line for super member variable reference with member access operator on super");
+						assert.strictEqual(hover.range.start.character, 9, "vscode.executeHoverProvider provided incorrect character for super member variable reference with member access operator on super");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute hover provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeHoverProvider displays hover of super member property", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
+		let position = new vscode.Position(77, 5);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeHoverProvider", uri, position)
+				.then((hovers: vscode.Hover[]) =>
+					{
+						assert.strictEqual(hovers.length, 1,
+							"vscode.executeHoverProvider failed to provide hover for super member property reference: " + uri);
+						let hover = hovers[0];
+						let contents = hover.contents;
+						assert.strictEqual(contents.length, 1,
+							"vscode.executeHoverProvider failed to provide hover contents for super member property reference: " + uri);
+						let content = contents[0];
+						let contentValue: string;
+						if(content instanceof String)
+						{
+							contentValue = content;
+						}
+						else
+						{
+							contentValue = content.value;
+						}
+						assert.strictEqual(contentValue.indexOf("superMemberProperty:Boolean") >= 0, true, "vscode.executeHoverProvider provided incorrect hover for super member property reference");
+						assert.strictEqual(hover.range.start.line, 77, "vscode.executeHoverProvider provided incorrect line for super member property reference");
+						assert.strictEqual(hover.range.start.character, 3, "vscode.executeHoverProvider provided incorrect character for super member property reference");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute hover provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeHoverProvider displays hover of super member property with member access operator on this", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
+		let position = new vscode.Position(78, 10);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeHoverProvider", uri, position)
+				.then((hovers: vscode.Hover[]) =>
+					{
+						assert.strictEqual(hovers.length, 1,
+							"vscode.executeHoverProvider failed to provide hover for super member property reference with member access operator on this: " + uri);
+						let hover = hovers[0];
+						let contents = hover.contents;
+						assert.strictEqual(contents.length, 1,
+							"vscode.executeHoverProvider failed to provide hover contents for super member property reference with member access operator on this: " + uri);
+						let content = contents[0];
+						let contentValue: string;
+						if(content instanceof String)
+						{
+							contentValue = content;
+						}
+						else
+						{
+							contentValue = content.value;
+						}
+						assert.strictEqual(contentValue.indexOf("superMemberProperty:Boolean") >= 0, true, "vscode.executeHoverProvider provided incorrect hover for super member property reference with member access operator on this");
+						assert.strictEqual(hover.range.start.line, 78, "vscode.executeHoverProvider provided incorrect line for super member property reference with member access operator on this");
+						assert.strictEqual(hover.range.start.character, 8, "vscode.executeHoverProvider provided incorrect character for super member property reference with member access operator on this");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute hover provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeHoverProvider displays hover of super member property with member access operator on super", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
+		let position = new vscode.Position(79, 11);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeHoverProvider", uri, position)
+				.then((hovers: vscode.Hover[]) =>
+					{
+						assert.strictEqual(hovers.length, 1,
+							"vscode.executeHoverProvider failed to provide hover for super member property reference with member access operator on super: " + uri);
+						let hover = hovers[0];
+						let contents = hover.contents;
+						assert.strictEqual(contents.length, 1,
+							"vscode.executeHoverProvider failed to provide hover contents for super member property reference with member access operator on super: " + uri);
+						let content = contents[0];
+						let contentValue: string;
+						if(content instanceof String)
+						{
+							contentValue = content;
+						}
+						else
+						{
+							contentValue = content.value;
+						}
+						assert.strictEqual(contentValue.indexOf("superMemberProperty:Boolean") >= 0, true, "vscode.executeHoverProvider provided incorrect hover for super member property reference with member access operator on super");
+						assert.strictEqual(hover.range.start.line, 79, "vscode.executeHoverProvider provided incorrect line for super member property reference with member access operator on super");
+						assert.strictEqual(hover.range.start.character, 9, "vscode.executeHoverProvider provided incorrect character for super member property reference with member access operator on super");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute hover provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeHoverProvider displays hover of file-internal variable", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let position = new vscode.Position(94, 5);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeHoverProvider", uri, position)
+				.then((hovers: vscode.Hover[]) =>
+					{
+						assert.strictEqual(hovers.length, 1,
+							"vscode.executeHoverProvider failed to provide hover for file-internal variable reference: " + uri);
+						let hover = hovers[0];
+						let contents = hover.contents;
+						assert.strictEqual(contents.length, 1,
+							"vscode.executeHoverProvider failed to provide hover contents for file-internal variable reference: " + uri);
+						let content = contents[0];
+						let contentValue: string;
+						if(content instanceof String)
+						{
+							contentValue = content;
+						}
+						else
+						{
+							contentValue = content.value;
+						}
+						assert.strictEqual(contentValue.indexOf("internalVar:Number") >= 0, true, "vscode.executeHoverProvider provided incorrect hover for file-internal variable reference");
+						assert.strictEqual(hover.range.start.line, 94, "vscode.executeHoverProvider provided incorrect line for file-internal variable reference");
+						assert.strictEqual(hover.range.start.character, 3, "vscode.executeHoverProvider provided incorrect character for file-internal variable reference");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute hover provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeHoverProvider displays hover of file-internal function", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let position = new vscode.Position(95, 5);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeHoverProvider", uri, position)
+				.then((hovers: vscode.Hover[]) =>
+					{
+						assert.strictEqual(hovers.length, 1,
+							"vscode.executeHoverProvider failed to provide hover for file-internal function reference: " + uri);
+						let hover = hovers[0];
+						let contents = hover.contents;
+						assert.strictEqual(contents.length, 1,
+							"vscode.executeHoverProvider failed to provide hover contents for file-internal function reference: " + uri);
+						let content = contents[0];
+						let contentValue: string;
+						if(content instanceof String)
+						{
+							contentValue = content;
+						}
+						else
+						{
+							contentValue = content.value;
+						}
+						assert.strictEqual(contentValue.indexOf("internalFunction():void") >= 0, true, "vscode.executeHoverProvider provided incorrect hover for file-internal function reference");
+						assert.strictEqual(hover.range.start.line, 95, "vscode.executeHoverProvider provided incorrect line for file-internal function reference");
+						assert.strictEqual(hover.range.start.character, 3, "vscode.executeHoverProvider provided incorrect character for file-internal function reference");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute hover provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeHoverProvider displays hover of file-internal class", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let position = new vscode.Position(97, 37);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeHoverProvider", uri, position)
+				.then((hovers: vscode.Hover[]) =>
+					{
+						assert.strictEqual(hovers.length, 1,
+							"vscode.executeHoverProvider failed to provide hover for file-internal class reference: " + uri);
+						let hover = hovers[0];
+						let contents = hover.contents;
+						assert.strictEqual(contents.length, 1,
+							"vscode.executeHoverProvider failed to provide hover contents for file-internal class reference: " + uri);
+						let content = contents[0];
+						let contentValue: string;
+						if(content instanceof String)
+						{
+							contentValue = content;
+						}
+						else
+						{
+							contentValue = content.value;
+						}
+						assert.strictEqual(contentValue.indexOf("class InternalDefinitions") >= 0, true, "vscode.executeHoverProvider provided incorrect hover for file-internal class reference");
+						assert.strictEqual(hover.range.start.line, 97, "vscode.executeHoverProvider provided incorrect line for file-internal class reference");
+						assert.strictEqual(hover.range.start.character, 35, "vscode.executeHoverProvider provided incorrect character for file-internal class reference");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute hover provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeHoverProvider displays hover of file-internal member function", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let position = new vscode.Position(99, 33);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeHoverProvider", uri, position)
+				.then((hovers: vscode.Hover[]) =>
+					{
+						assert.strictEqual(hovers.length, 1,
+							"vscode.executeHoverProvider failed to provide hover for file-internal member function reference: " + uri);
+						let hover = hovers[0];
+						let contents = hover.contents;
+						assert.strictEqual(contents.length, 1,
+							"vscode.executeHoverProvider failed to provide hover contents for file-internal member function reference: " + uri);
+						let content = contents[0];
+						let contentValue: string;
+						if(content instanceof String)
+						{
+							contentValue = content;
+						}
+						else
+						{
+							contentValue = content.value;
+						}
+						assert.strictEqual(contentValue.indexOf("internalMemberFunction():void") >= 0, true, "vscode.executeHoverProvider provided incorrect hover for file-internal member function reference");
+						assert.strictEqual(hover.range.start.line, 99, "vscode.executeHoverProvider provided incorrect line for file-internal member function reference");
+						assert.strictEqual(hover.range.start.character, 31, "vscode.executeHoverProvider provided incorrect character for file-internal member function reference");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute hover provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeHoverProvider displays hover of file-internal member variable", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let position = new vscode.Position(100, 33);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeHoverProvider", uri, position)
+				.then((hovers: vscode.Hover[]) =>
+					{
+						assert.strictEqual(hovers.length, 1,
+							"vscode.executeHoverProvider failed to provide hover for file-internal member variable reference: " + uri);
+						let hover = hovers[0];
+						let contents = hover.contents;
+						assert.strictEqual(contents.length, 1,
+							"vscode.executeHoverProvider failed to provide hover contents for file-internal member variable reference: " + uri);
+						let content = contents[0];
+						let contentValue: string;
+						if(content instanceof String)
+						{
+							contentValue = content;
+						}
+						else
+						{
+							contentValue = content.value;
+						}
+						assert.strictEqual(contentValue.indexOf("internalMemberVar:String") >= 0, true, "vscode.executeHoverProvider provided incorrect hover for file-internal member variable reference");
+						assert.strictEqual(hover.range.start.line, 100, "vscode.executeHoverProvider provided incorrect line for file-internal member variable reference");
+						assert.strictEqual(hover.range.start.character, 31, "vscode.executeHoverProvider provided incorrect character for file-internal member variable reference");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute hover provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeHoverProvider displays hover of file-internal member property", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let position = new vscode.Position(101, 33);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeHoverProvider", uri, position)
+				.then((hovers: vscode.Hover[]) =>
+					{
+						assert.strictEqual(hovers.length, 1,
+							"vscode.executeHoverProvider failed to provide hover for file-internal member property reference: " + uri);
+						let hover = hovers[0];
+						let contents = hover.contents;
+						assert.strictEqual(contents.length, 1,
+							"vscode.executeHoverProvider failed to provide hover contents for file-internal member property reference: " + uri);
+						let content = contents[0];
+						let contentValue: string;
+						if(content instanceof String)
+						{
+							contentValue = content;
+						}
+						else
+						{
+							contentValue = content.value;
+						}
+						assert.strictEqual(contentValue.indexOf("internalMemberProperty:Boolean") >= 0, true, "vscode.executeHoverProvider provided incorrect hover for file-internal member property reference");
+						assert.strictEqual(hover.range.start.line, 101, "vscode.executeHoverProvider provided incorrect line for file-internal member property reference");
+						assert.strictEqual(hover.range.start.character, 31, "vscode.executeHoverProvider provided incorrect character for file-internal member property reference");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute hover provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeHoverProvider displays hover of file-internal static property", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let position = new vscode.Position(105, 25);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeHoverProvider", uri, position)
+				.then((hovers: vscode.Hover[]) =>
+					{
+						assert.strictEqual(hovers.length, 1,
+							"vscode.executeHoverProvider failed to provide hover for file-internal static property reference: " + uri);
+						let hover = hovers[0];
+						let contents = hover.contents;
+						assert.strictEqual(contents.length, 1,
+							"vscode.executeHoverProvider failed to provide hover contents for file-internal static property reference: " + uri);
+						let content = contents[0];
+						let contentValue: string;
+						if(content instanceof String)
+						{
+							contentValue = content;
+						}
+						else
+						{
+							contentValue = content.value;
+						}
+						assert.strictEqual(contentValue.indexOf("internalStaticProperty:Boolean") >= 0, true, "vscode.executeHoverProvider provided incorrect hover for file-internal static property reference");
+						assert.strictEqual(hover.range.start.line, 105, "vscode.executeHoverProvider provided incorrect line for file-internal static property reference");
+						assert.strictEqual(hover.range.start.character, 23, "vscode.executeHoverProvider provided incorrect character for file-internal static property reference");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute hover provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeHoverProvider displays hover of file-internal static variable", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let position = new vscode.Position(104, 25);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeHoverProvider", uri, position)
+				.then((hovers: vscode.Hover[]) =>
+					{
+						assert.strictEqual(hovers.length, 1,
+							"vscode.executeHoverProvider failed to provide hover for file-internal static variable reference: " + uri);
+						let hover = hovers[0];
+						let contents = hover.contents;
+						assert.strictEqual(contents.length, 1,
+							"vscode.executeHoverProvider failed to provide hover contents for file-internal static variable reference: " + uri);
+						let content = contents[0];
+						let contentValue: string;
+						if(content instanceof String)
+						{
+							contentValue = content;
+						}
+						else
+						{
+							contentValue = content.value;
+						}
+						assert.strictEqual(contentValue.indexOf("internalStaticVar:Boolean") >= 0, true, "vscode.executeHoverProvider provided incorrect hover for file-internal static variable reference");
+						assert.strictEqual(hover.range.start.line, 104, "vscode.executeHoverProvider provided incorrect line for file-internal static variable reference");
+						assert.strictEqual(hover.range.start.character, 23, "vscode.executeHoverProvider provided incorrect character for file-internal static variable reference");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute hover provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeHoverProvider displays hover of file-internal static function", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let position = new vscode.Position(103, 25);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeHoverProvider", uri, position)
+				.then((hovers: vscode.Hover[]) =>
+					{
+						assert.strictEqual(hovers.length, 1,
+							"vscode.executeHoverProvider failed to provide hover for file-internal static function reference: " + uri);
+						let hover = hovers[0];
+						let contents = hover.contents;
+						assert.strictEqual(contents.length, 1,
+							"vscode.executeHoverProvider failed to provide hover contents for file-internal static function reference: " + uri);
+						let content = contents[0];
+						let contentValue: string;
+						if(content instanceof String)
+						{
+							contentValue = content;
+						}
+						else
+						{
+							contentValue = content.value;
+						}
+						assert.strictEqual(contentValue.indexOf("internalStaticFunction():void") >= 0, true, "vscode.executeHoverProvider provided incorrect hover for file-internal static function reference");
+						assert.strictEqual(hover.range.start.line, 103, "vscode.executeHoverProvider provided incorrect line for file-internal static function reference");
+						assert.strictEqual(hover.range.start.character, 23, "vscode.executeHoverProvider provided incorrect character for file-internal static function reference");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute hover provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+});
