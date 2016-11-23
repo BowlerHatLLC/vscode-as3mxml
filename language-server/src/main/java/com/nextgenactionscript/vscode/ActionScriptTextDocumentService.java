@@ -89,6 +89,7 @@ import org.apache.flex.compiler.mxml.IMXMLDataManager;
 import org.apache.flex.compiler.mxml.IMXMLLanguageConstants;
 import org.apache.flex.compiler.mxml.IMXMLTagAttributeData;
 import org.apache.flex.compiler.mxml.IMXMLTagData;
+import org.apache.flex.compiler.mxml.IMXMLUnitData;
 import org.apache.flex.compiler.problems.CompilerProblemSeverity;
 import org.apache.flex.compiler.problems.ICompilerProblem;
 import org.apache.flex.compiler.scopes.IASScope;
@@ -1364,7 +1365,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
         IMXMLTagData parentTag = offsetTag.getParentTag();
 
-        boolean isAttribute = offsetTag.isOffsetInAttributeList(currentOffset);
+        //for some reason, the attributes list includes the >, but that's not
+        //what we want here, so check if currentOffset isn't the end of the tag!
+        boolean isAttribute = offsetTag.isOffsetInAttributeList(currentOffset)
+                && currentOffset < offsetTag.getAbsoluteEnd();
 
         //inside <fx:Declarations>
         if (isDeclarationsTag(offsetTag))
@@ -3485,12 +3489,16 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return null;
         }
 
-        IMXMLTagData tagData = mxmlData.findTagOrSurroundingTagContainingOffset(currentOffset);
-        if (tagData != null)
+        IMXMLUnitData unitData = mxmlData.findContainmentReferenceUnit(currentOffset);
+        while (unitData != null)
         {
-            return tagData;
+            if (unitData instanceof IMXMLTagData)
+            {
+                return (IMXMLTagData) unitData;
+            }
+            unitData = unitData.getParentUnitData();
         }
-        return mxmlData.findTagOrSurroundingTagContainingOffset(currentOffset - 1);
+        return null;
     }
 
     private IASNode getOffsetNode(TextDocumentPositionParams position)
