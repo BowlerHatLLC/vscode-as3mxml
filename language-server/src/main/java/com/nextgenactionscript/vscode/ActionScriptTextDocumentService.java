@@ -2314,6 +2314,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     {
         ArrayList<String> styleNames = new ArrayList<>();
         IDefinition definition = typeScope.getDefinition();
+        List<CompletionItemImpl> items = result.getItems();
         while (definition instanceof IClassDefinition)
         {
             IClassDefinition classDefinition = (IClassDefinition) definition;
@@ -2332,6 +2333,22 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 {
                     continue;
                 }
+                boolean foundExisting = false;
+                for (CompletionItemImpl item : items)
+                {
+                    if (item.getLabel().equals(styleName))
+                    {
+                        //we want to avoid adding a duplicate item with the same
+                        //name. if there's a conflict, the compiler will know
+                        //how to handle it.
+                        foundExisting = true;
+                        break;
+                    }
+                }
+                if (foundExisting)
+                {
+                    break;
+                }
                 CompletionItemImpl item = new CompletionItemImpl();
                 item.setKind(CompletionItemKind.Field);
                 item.setLabel(styleName);
@@ -2340,7 +2357,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     item.setInsertText(prefix + styleName);
                 }
                 item.setDetail(getDefinitionDetail(styleDefinition));
-                result.getItems().add(item);
+                items.add(item);
             }
             definition = classDefinition.resolveBaseClass(currentProject);
         }
