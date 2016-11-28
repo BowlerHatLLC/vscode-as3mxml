@@ -41,6 +41,7 @@
   },
   "activationEvents": [
     "onLanguage:nextgenas",
+    "onLanguage:xml",
     "workspaceContains:asconfig.json",
     "onCommand:nextgenas.createASConfigTaskRunner"
   ],
