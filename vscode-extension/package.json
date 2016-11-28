@@ -106,7 +106,15 @@
             "null"
           ],
           "default": null,
-          "description": "Specifies the folder path of the Apache FlexJS SDK."
+          "description": "Specifies the folder path of the Apache FlexJS SDK used for code intelligence. If nextgenas.frameworksdk is not specified, the framework in this SDK will also be loaded."
+        },
+        "nextgenas.frameworksdk": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null,
+          "description": "Specifies the folder path of an ActionScript SDK to load a different framework than the one in the Apache FlexJS SDK."
         },
         "nextgenas.java": {
           "type": [

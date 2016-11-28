@@ -34,6 +34,7 @@ let savedChild: child_process.ChildProcess;
 let savedContext: vscode.ExtensionContext;
 let flexHome: string;
 let javaExecutablePath: string;
+let frameworkSDKHome: string;
 let killed = false;
 portfinder.basePort = 55282;
 let cpDelimiter = ":";
@@ -95,11 +96,15 @@ export function activate(context: vscode.ExtensionContext)
 	savedContext = context;
 	javaExecutablePath = findJava(isValidJavaVersion);
 	flexHome = findSDK(isValidSDKVersion);
+	frameworkSDKHome = <string> vscode.workspace.getConfiguration("nextgenas").get("frameworksdk");
 	vscode.workspace.onDidChangeConfiguration((event) =>
 	{
 		let newJavaExecutablePath = findJava(isValidJavaVersion);
 		let newFlexHome = findSDK(isValidSDKVersion);
-		if(flexHome != newFlexHome || javaExecutablePath != newJavaExecutablePath)
+		let newFrameworkSDKHome = vscode.workspace.getConfiguration("nextgenas").get("frameworksdk");
+		if(flexHome != newFlexHome ||
+			javaExecutablePath != newJavaExecutablePath ||
+			frameworkSDKHome != newFrameworkSDKHome)
 		{
 			//on Windows, the language server doesn't restart very gracefully,
 			//so force a restart. 
@@ -330,6 +335,10 @@ function createLanguageServer(): Promise<StreamInfo>
 				"-Dnextgeas.vscode.port=" + port,
 				"com.nextgenactionscript.vscode.Main",
 			];
+			if(frameworkSDKHome)
+			{
+				args.unshift("-Dflexlib=" + path.join(frameworkSDKHome, "frameworks"));
+			}
 			if(process.argv.indexOf("--type=extensionHost") !== -1)
 			{
 				//remote java debugging

@@ -52,6 +52,9 @@ import io.typefox.lsapi.services.WorkspaceService;
  */
 public class ActionScriptLanguageServer implements LanguageServer
 {
+    private static final String FLEXLIB = "flexlib";
+    private static final String FRAMEWORKS_RELATIVE_PATH = "../frameworks";
+
     /**
      * Displays a dismissable message bar across the top of Visual Studio Code
      * that can be an error, warning, or informational.
@@ -60,12 +63,16 @@ public class ActionScriptLanguageServer implements LanguageServer
     {
     };
 
+    private WorkspaceService workspaceService;
     private ActionScriptTextDocumentService textDocumentService;
+    private WindowService windowService;
 
     public ActionScriptLanguageServer()
     {
-        //I'm not really sure why the compiler needs this, but it does
-        System.setProperty("flexlib", findFlexLibDirectoryPath());
+        if (System.getProperty(FLEXLIB) == null)
+        {
+            System.setProperty(FLEXLIB, findFlexLibDirectoryPath());
+        }
     }
 
     /**
@@ -127,29 +134,33 @@ public class ActionScriptLanguageServer implements LanguageServer
     @Override
     public WindowService getWindowService()
     {
-        return new WindowService()
+        if(windowService == null)
         {
-            @Override
-            public void onShowMessage(Consumer<MessageParams> callback)
+            windowService = new WindowService()
             {
-                showMessageCallback = callback;
-                //pass the callback to the text document service, in case it
-                //needs to show a message
-                textDocumentService.showMessageCallback = callback;
-            }
+                @Override
+                public void onShowMessage(Consumer<MessageParams> callback)
+                {
+                    showMessageCallback = callback;
+                    //pass the callback to the text document service, in case it
+                    //needs to show a message
+                    textDocumentService.showMessageCallback = callback;
+                }
 
-            @Override
-            public void onShowMessageRequest(Consumer<ShowMessageRequestParams> callback)
-            {
-                //not used at this time
-            }
+                @Override
+                public void onShowMessageRequest(Consumer<ShowMessageRequestParams> callback)
+                {
+                    //not used at this time
+                }
 
-            @Override
-            public void onLogMessage(Consumer<MessageParams> callback)
-            {
-                //not used at this time
-            }
-        };
+                @Override
+                public void onLogMessage(Consumer<MessageParams> callback)
+                {
+                    //not used at this time
+                }
+            };
+        }
+        return windowService;
     }
 
     /**
@@ -158,35 +169,39 @@ public class ActionScriptLanguageServer implements LanguageServer
     @Override
     public WorkspaceService getWorkspaceService()
     {
-        return new WorkspaceService()
+        if(workspaceService == null)
         {
-            @Override
-            public CompletableFuture<List<? extends SymbolInformation>> symbol(WorkspaceSymbolParams params)
+            workspaceService = new WorkspaceService()
             {
-                //delegate to the ActionScriptTextDocumentService, since that's
-                //where the compiler is running, and the compiler is needed to
-                //find workspace symbols
-                return textDocumentService.workspaceSymbol(params);
-            }
+                @Override
+                public CompletableFuture<List<? extends SymbolInformation>> symbol(WorkspaceSymbolParams params)
+                {
+                    //delegate to the ActionScriptTextDocumentService, since that's
+                    //where the compiler is running, and the compiler is needed to
+                    //find workspace symbols
+                    return textDocumentService.workspaceSymbol(params);
+                }
 
-            @Override
-            public void didChangeConfiguraton(DidChangeConfigurationParams params)
-            {
-                //inside the extension's entry point, this is handled already
-                //it actually restarts the language server because the language
-                //server may need to be loaded with a different version of the
-                //Apache FlexJS SDK
-            }
+                @Override
+                public void didChangeConfiguraton(DidChangeConfigurationParams params)
+                {
+                    //inside the extension's entry point, this is handled already
+                    //it actually restarts the language server because the language
+                    //server may need to be loaded with a different version of the
+                    //Apache FlexJS SDK
+                }
 
-            @Override
-            public void didChangeWatchedFiles(DidChangeWatchedFilesParams params)
-            {
-                //delegate to the ActionScriptTextDocumentService, since that's
-                //where the compiler is running, and the compiler may need to
-                //know about file changes
-                textDocumentService.didChangeWatchedFiles(params);
-            }
-        };
+                @Override
+                public void didChangeWatchedFiles(DidChangeWatchedFilesParams params)
+                {
+                    //delegate to the ActionScriptTextDocumentService, since that's
+                    //where the compiler is running, and the compiler may need to
+                    //know about file changes
+                    textDocumentService.didChangeWatchedFiles(params);
+                }
+            };
+        }
+        return workspaceService;
     }
 
     /**
@@ -213,7 +228,7 @@ public class ActionScriptLanguageServer implements LanguageServer
         try
         {
             URI uri = IASNode.class.getProtectionDomain().getCodeSource().getLocation().toURI();
-            String path = Paths.get(uri.resolve("../frameworks")).toString();
+            String path = Paths.get(uri.resolve(FRAMEWORKS_RELATIVE_PATH)).toString();
             File file = new File(path);
             if (file.exists() && file.isDirectory())
             {
