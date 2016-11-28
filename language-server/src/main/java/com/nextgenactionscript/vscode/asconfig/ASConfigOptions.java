@@ -40,6 +40,7 @@ public class ASConfigOptions
         return other.type.equals(type)
                 && other.config.equals(config)
                 && Arrays.equals(other.files, files)
-                && other.compilerOptions.equals(compilerOptions);
+                && other.compilerOptions.equals(compilerOptions)
+                && other.additionalOptions.equals(additionalOptions);
     }
 }
