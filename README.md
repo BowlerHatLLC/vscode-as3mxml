@@ -1,47 +1,30 @@
 # NextGen ActionScript extension for Visual Studio Code
 
-## Features
+This README file is intended for contributors to the extension. If you simply want to install the latest stable version of the extension, please visit the [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=bowlerhatllc.vscode-nextgenas).
 
-* **Syntax Highlighting** for ActionScript files.
-* **IntelliSense** provides autocompletion for imports, types, and member access.
-* **Signature Help** shows a list of parameters when calling functions.
-* **Errors and Warnings** are updated in real time as you type.
-* **Hover** over a symbol to see more details such as types, namespaces, and more.
-* **Goto Definition** with a `Ctrl+Click` on any usage of a symbol.
-* **Find All References** for any symbol in the project.
-* **Goto Symbol** lists all symbols in the current file with `Ctrl+Shift+O`.
-* **Open Symbol by Name** with `Ctrl+T` and type the name of any symbol in the project.
-* **Rename Symbol** for class members and local variables.
-* **Debug** ActionScript transpiled to JavaScript in Node.js or Google Chrome (browser debugging requires [Debugger for Chrome](https://marketplace.visualstudio.com/items?itemName=msjsdiag.debugger-for-chrome) extension).
+## Modules
 
-## Help and Support
+This project is divided into several modules.
 
-* [Documentation](https://github.com/BowlerHatLLC/vscode-nextgenas/wiki)
-* [Issue Tracker](https://github.com/BowlerHatLLC/vscode-nextgenas/issues)
+1. **language-server** provides ActionScript and MXML code intelligence for Visual Studio Code or another editor that supports the Language Server Protocol. It integrates with the compiler from Apache FlexJS and is written in Java.
 
-## Minimum Requirements
+1. **check-java-version** creates an executable JAR file that will verify that the current version of Java meets the minimum requirements for the language server.
 
-* Visual Studio Code 1.7
-* Java 8 Runtime
-* Apache FlexJS 0.7
+1. **check-flexjs-version** creates an executable JAR file that will verify that the current version of Apache FlexJS meets the minimum requirements for the language server.
 
-## asconfig.json
+1. **vscode-extension** initializes the Java language-server process from inside Visual Studio Code and handles a few features that the Language Server Protocol does not support.
 
-Add a file named [`asconfig.json`](https://github.com/BowlerHatLLC/vscode-nextgenas/wiki/asconfig.json) to the root of your project to enable the NextGenAS extension. A sample `asconfig.json` appears below:
+1. **distribution** packages everything together to create the final extension that is compatible with Visual Studio Code.
 
-	{
-		"config": "js",
-		"compilerOptions": {
-			"debug": true,
-			"library-path": [
-				"libs"
-			],
-		},
-		"files":
-		[
-			"src/Main.as"
-		]
-	}
+## Build instructions
+
+Requires [Apache Maven](https://maven.apache.org/). Run the following command in the root directory to build the extension:
+
+```
+mvn clean package
+```
+
+The extension will be generated in `distribution/target/vscode-nextgenas/vscode-nextgenas`. This directory may be run inside Visual Studio Code's extension host. Additionally, a `vsix` file will be generated that may be installed in Visual Studio Code.
 
 ## Support this project
 

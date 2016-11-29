@@ -7,11 +7,10 @@
   </formats>
   <fileSets>
     <fileSet>
+      <directory>..</directory>
       <includes>
-        <include>README*</include>
-        <include>CHANGELOG*</include>
-        <include>LICENSE*</include>
-        <include>NOTICE*</include>
+        <include>LICENSE</include>
+        <include>NOTICE</include>
       </includes>
     </fileSet>
     <fileSet>
@@ -19,6 +18,8 @@
       <outputDirectory>.</outputDirectory>
       <includes>
         <include>.vscodeignore</include>
+        <include>README*</include>
+        <include>CHANGELOG*</include>
         <include>nextgenas.configuration.json</include>
         <include>nextgenas.png</include>
         <include>schemas/*</include>
