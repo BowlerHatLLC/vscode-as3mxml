@@ -1430,6 +1430,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         if (offsetDefinition instanceof IClassDefinition)
         {
+            IMXMLTagAttributeData attribute = getMXMLTagAttributeWithValueAtOffset(offsetTag, currentOffset);
+            if (attribute != null)
+            {
+                return mxmlAttributeCompletion(offsetTag, result);
+            }
+
             IClassDefinition classDefinition = (IClassDefinition) offsetDefinition;
             addMembersForMXMLTypeToAutoComplete(classDefinition, offsetTag, !isAttribute, result);
             String defaultPropertyName = classDefinition.getDefaultPropertyName(currentProject);
@@ -1453,6 +1459,29 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return CompletableFuture.completedFuture(result);
         }
         System.err.println("Unknown definition for MXML completion: " + offsetDefinition.getClass());
+        return CompletableFuture.completedFuture(result);
+    }
+
+    private CompletableFuture<CompletionList> mxmlAttributeCompletion(IMXMLTagData offsetTag, CompletionListImpl result)
+    {
+        List<CompletionItemImpl> items = result.getItems();
+        IDefinition attributeDefinition = getDefinitionForMXMLTagAttribute(offsetTag, currentOffset, true);
+        if (attributeDefinition instanceof IVariableDefinition)
+        {
+            IVariableDefinition variableDefinition = (IVariableDefinition) attributeDefinition;
+            if (variableDefinition.getTypeAsDisplayString().equals(IASLanguageConstants.Boolean))
+            {
+                CompletionItemImpl falseItem = new CompletionItemImpl();
+                falseItem.setKind(CompletionItemKind.Value);
+                falseItem.setLabel(IASLanguageConstants.FALSE);
+                items.add(falseItem);
+                CompletionItemImpl trueItem = new CompletionItemImpl();
+                trueItem.setKind(CompletionItemKind.Value);
+                trueItem.setLabel(IASLanguageConstants.TRUE);
+                items.add(trueItem);
+                return CompletableFuture.completedFuture(result);
+            }
+        }
         return CompletableFuture.completedFuture(result);
     }
 
@@ -1491,7 +1520,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private CompletableFuture<Hover> mxmlHover(TextDocumentPositionParams position, IMXMLTagData offsetTag)
     {
-        IDefinition definition = getDefinitionForMXMLAtOffset(offsetTag, currentOffset);
+        IDefinition definition = getDefinitionForMXMLNameAtOffset(offsetTag, currentOffset);
         if (definition == null)
         {
             return CompletableFuture.completedFuture(new HoverImpl(Collections.emptyList(), null));
@@ -1555,7 +1584,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private CompletableFuture<List<? extends Location>> mxmlDefinition(TextDocumentPositionParams position, IMXMLTagData offsetTag)
     {
-        IDefinition definition = getDefinitionForMXMLAtOffset(offsetTag, currentOffset);
+        IDefinition definition = getDefinitionForMXMLNameAtOffset(offsetTag, currentOffset);
         if (definition == null)
         {
             //VSCode may call definition() when there isn't necessarily a
@@ -1603,7 +1632,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private CompletableFuture<List<? extends Location>> mxmlReferences(ReferenceParams params, IMXMLTagData offsetTag)
     {
-        IDefinition definition = getDefinitionForMXMLAtOffset(offsetTag, currentOffset);
+        IDefinition definition = getDefinitionForMXMLNameAtOffset(offsetTag, currentOffset);
         if (definition != null)
         {
             if (isInsideTagPrefix(offsetTag, currentOffset))
@@ -1716,7 +1745,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private CompletableFuture<WorkspaceEdit> mxmlRename(RenameParams params, IMXMLTagData offsetTag)
     {
-        IDefinition definition = getDefinitionForMXMLAtOffset(offsetTag, currentOffset);
+        IDefinition definition = getDefinitionForMXMLNameAtOffset(offsetTag, currentOffset);
         if (definition != null)
         {
             if (isInsideTagPrefix(offsetTag, currentOffset))
@@ -3593,16 +3622,30 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return offset > tag.getAbsoluteStart() && offset < maxOffset;
     }
 
-    private IDefinition getDefinitionForMXMLAtOffset(IMXMLTagData tag, int offset)
+    private IDefinition getDefinitionForMXMLNameAtOffset(IMXMLTagData tag, int offset)
     {
         if (tag.isOffsetInAttributeList(offset))
         {
-            return getDefinitionForMXMLTagAttribute(tag, offset);
+            return getDefinitionForMXMLTagAttribute(tag, offset, false);
         }
         return getDefinitionForMXMLTag(tag);
     }
 
     private IMXMLTagAttributeData getMXMLTagAttributeAtOffset(IMXMLTagData tag, int offset)
+    {
+        IMXMLTagAttributeData[] attributes = tag.getAttributeDatas();
+        for (IMXMLTagAttributeData attributeData : attributes)
+        {
+            if (offset >= attributeData.getAbsoluteStart()
+                    && offset <= attributeData.getValueEnd())
+            {
+                return attributeData;
+            }
+        }
+        return null;
+    }
+
+    private IMXMLTagAttributeData getMXMLTagAttributeWithNameAtOffset(IMXMLTagData tag, int offset)
     {
         IMXMLTagAttributeData[] attributes = tag.getAttributeDatas();
         for (IMXMLTagAttributeData attributeData : attributes)
@@ -3622,7 +3665,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         for (IMXMLTagAttributeData attributeData : attributes)
         {
             if (offset >= attributeData.getValueStart()
-                    && offset < attributeData.getValueEnd())
+                    && offset <= attributeData.getValueEnd())
             {
                 return attributeData;
             }
@@ -3630,9 +3673,17 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return null;
     }
 
-    private IDefinition getDefinitionForMXMLTagAttribute(IMXMLTagData tag, int offset)
+    private IDefinition getDefinitionForMXMLTagAttribute(IMXMLTagData tag, int offset, boolean includeValue)
     {
-        IMXMLTagAttributeData attributeData = getMXMLTagAttributeAtOffset(tag, offset);
+        IMXMLTagAttributeData attributeData = null;
+        if (includeValue)
+        {
+            attributeData = getMXMLTagAttributeAtOffset(tag, offset);
+        }
+        else
+        {
+            attributeData = getMXMLTagAttributeWithNameAtOffset(tag, offset);
+        }
         if (attributeData == null)
         {
             return null;
