@@ -1,3 +1,10 @@
+## 0.2.0
+
+* Added support for MXML.
+* Added `nextgenas.frameworksdk` setting to load a framework inside a different SDK from Apache FlexJS. For instance, this will allow you to use the Feathers SDK or the original Apache Flex SDK.
+* Migrated build script to Apache Maven to make it easier for contributors to get started.
+
+
 ## 0.1.1
 
 * Added support for `define` compiler option in `asconfig.json`.
