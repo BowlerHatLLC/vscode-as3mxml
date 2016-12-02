@@ -74,7 +74,8 @@
         "aliases": [
           "MXML",
           "mxml"
-        ]
+        ],
+        "configuration": "./mxml.configuration.json"
       }
     ],
     "grammars": [
