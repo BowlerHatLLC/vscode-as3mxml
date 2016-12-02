@@ -716,7 +716,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     public void didOpen(DidOpenTextDocumentParams params)
     {
         TextDocumentItem textDocument = params.getTextDocument();
-        Path path = getPathFromLsapiURI(textDocument.getUri());
+        String textDocumentUri = textDocument.getUri();
+        if (!textDocumentUri.endsWith(AS_EXTENSION)
+                && !textDocumentUri.endsWith(MXML_EXTENSION))
+        {
+            return;
+        }
+        Path path = getPathFromLsapiURI(textDocumentUri);
         if (path != null)
         {
             String text = textDocument.getText();
@@ -737,7 +743,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     public void didChange(DidChangeTextDocumentParams params)
     {
         VersionedTextDocumentIdentifier textDocument = params.getTextDocument();
-        Path path = getPathFromLsapiURI(textDocument.getUri());
+        String textDocumentUri = textDocument.getUri();
+        if (!textDocumentUri.endsWith(AS_EXTENSION)
+                && !textDocumentUri.endsWith(MXML_EXTENSION))
+        {
+            return;
+        }
+        Path path = getPathFromLsapiURI(textDocumentUri);
         if (path != null)
         {
             for (TextDocumentContentChangeEvent change : params.getContentChanges())
@@ -774,7 +786,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     public void didClose(DidCloseTextDocumentParams params)
     {
         TextDocumentIdentifier textDocument = params.getTextDocument();
-        Path path = getPathFromLsapiURI(textDocument.getUri());
+        String textDocumentUri = textDocument.getUri();
+        if (!textDocumentUri.endsWith(AS_EXTENSION)
+                && !textDocumentUri.endsWith(MXML_EXTENSION))
+        {
+            return;
+        }
+        Path path = getPathFromLsapiURI(textDocumentUri);
         if (path != null)
         {
             sourceByPath.remove(path);
