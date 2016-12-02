@@ -339,15 +339,13 @@ function createLanguageServer(): Promise<StreamInfo>
 			{
 				args.unshift("-Dflexlib=" + path.join(frameworkSDKHome, "frameworks"));
 			}
-			if(process.argv.indexOf("--type=extensionHost") !== -1)
-			{
-				//remote java debugging
-				args.unshift("-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005");
 
-				//failed assertions in the compiler will crash the extension,
-				//so this should not be enabled by default, even for debugging
-				//args.unshift("-ea");
-			}
+			//remote java debugging
+			//args.unshift("-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005");
+
+			//failed assertions in the compiler will crash the extension,
+			//so this should not be enabled by default, even for debugging
+			//args.unshift("-ea");
 			
 			let server = net.createServer(socket =>
 			{
