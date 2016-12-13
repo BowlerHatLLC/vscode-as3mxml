@@ -203,6 +203,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private static final String SWC_EXTENSION = ".swc";
     private static final String ASCONFIG_JSON = "asconfig.json";
     private static final String DEFAULT_NS_PREFIX = "ns";
+    private static final String STAR = "*";
     private static final String DOT_STAR = ".*";
 
     private static final String[] LANGUAGE_TYPE_NAMES =
@@ -1901,6 +1902,22 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 return prefixes[0];
             }
         }
+        //try to find a prefix based on the package name
+        String packageNamespace = null;
+        String packageName = definition.getPackageName();
+        if (packageName.length() > 0)
+        {
+            packageNamespace = packageName + DOT_STAR;
+        }
+        else
+        {
+            packageNamespace = STAR;
+        }
+        String[] prefixes = prefixMap.getPrefixesForNamespace(packageNamespace);
+        if (prefixes.length > 0)
+        {
+            return prefixes[0];
+        }
         return null;
     }
 
@@ -2461,15 +2478,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return;
         }
 
-        //try to find a prefix based on the package name
-        String[] prefixes = prefixMap.getPrefixesForNamespace(definition.getPackageName() + DOT_STAR);
-        if (prefixes.length > 0)
-        {
-            //use an existing prefix, if possible
-            String prefix = prefixes[0] + IMXMLCoreConstants.colon;
-            addDefinitionAutoComplete(definition, prefix, result);
-            return;
-        }
         //finally, our last option is to generate a prefix
         String prefix = getNumberedNamespacePrefix(DEFAULT_NS_PREFIX, prefixMap) + IMXMLCoreConstants.colon;
         addDefinitionAutoComplete(definition, prefix, result);
