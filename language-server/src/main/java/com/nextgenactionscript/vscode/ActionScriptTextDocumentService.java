@@ -2031,6 +2031,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             for (IDefinition definition : definitions)
             {
+                if (definition.isGeneratedEmbedClass())
+                {
+                    //don't show these classes in completion
+                    continue;
+                }
                 boolean isType = definition instanceof ITypeDefinition;
                 if (!typesOnly || isType)
                 {
