@@ -2116,6 +2116,17 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 }
                 if (!staticOnly || localDefinition.isStatic())
                 {
+                    if (localDefinition instanceof ISetterDefinition)
+                    {
+                        ISetterDefinition setter = (ISetterDefinition) localDefinition;
+                        IGetterDefinition getter = setter.resolveGetter(currentProject);
+                        if (getter != null)
+                        {
+                            //skip the setter if there's also a getter because
+                            //it would add a duplicate entry
+                            continue;
+                        }
+                    }
                     addDefinitionAutoComplete(localDefinition, result);
                 }
             }
