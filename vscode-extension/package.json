@@ -2,7 +2,7 @@
   "name": "vscode-nextgenas",
   "displayName": "NextGen ActionScript",
   "description": "ActionScript and MXML language extension for Visual Studio Code",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "publisher": "bowlerhatllc",
   "homepage": "http://nextgenactionscript.com/vscode/",
   "repository": {

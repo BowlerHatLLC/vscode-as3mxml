@@ -1,9 +1,18 @@
+## 0.2.1
+
+* Fixed issue where opening a second workspace with a NextGenAS project would result in an error.
+* Fixed issue where completion would incorrectly show generated classes from `[Embed]` metadata.
+* Fixed issue where completion of local scope would include duplicate entries for getters and setters.
+* Fixed issue where using MXML namespace * for the top-level package would not be recognized by completion.
+* Fixed issue where extension would check for errors in XML files that don't contain MXML.
+* Fixed issue where auto-closing pairs like [], {}, and () would not work inside MXML `<fx:Script>` elements.
+* Fixed issue where toggle comment keyboard shortcuts worked incorrectly inside MXML `<fx:Script>` elements.
+
 ## 0.2.0
 
 * Added support for MXML.
 * Added `nextgenas.frameworksdk` setting to load a framework inside a different SDK from Apache FlexJS. For instance, this will allow you to use the Feathers SDK or the original Apache Flex SDK.
 * Migrated build script to Apache Maven to make it easier for contributors to get started.
-
 
 ## 0.1.1
 
