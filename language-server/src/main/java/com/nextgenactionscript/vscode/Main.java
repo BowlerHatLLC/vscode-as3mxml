@@ -64,9 +64,9 @@ public class Main
 
             jsonServer.join();
         }
-        catch (Throwable t)
+        catch (Exception e)
         {
-            System.err.println("Error: " + t.toString());
+            e.printStackTrace();
             System.exit(SERVER_CONNECT_ERROR);
         }
     }
