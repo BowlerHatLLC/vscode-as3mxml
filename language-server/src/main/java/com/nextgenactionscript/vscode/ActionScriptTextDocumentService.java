@@ -3237,6 +3237,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             currentWorkspace = new Workspace();
             project = new FlexJSProject((Workspace) currentWorkspace);
+            project.setProblems(new ArrayList<ICompilerProblem>());
             fileSpecGetter = new LanguageServerFileSpecGetter(currentWorkspace, sourceByPath);
         }
         else
