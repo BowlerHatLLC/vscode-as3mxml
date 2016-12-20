@@ -81,15 +81,9 @@ limitations under the License.
       <scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>io.typefox.lsapi</groupId>
-      <artifactId>io.typefox.lsapi</artifactId>
-      <version>0.3.0</version>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
-      <groupId>io.typefox.lsapi</groupId>
-      <artifactId>io.typefox.lsapi.services</artifactId>
-      <version>0.3.0</version>
+      <groupId>org.eclipse.lsp4j</groupId>
+      <artifactId>org.eclipse.lsp4j</artifactId>
+      <version>0.1.0.M4</version>
       <scope>compile</scope>
     </dependency>
     <dependency>

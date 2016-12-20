@@ -39,7 +39,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Consumer;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.flex.compiler.clients.problems.CompilerProblemCategorizer;
@@ -122,67 +121,51 @@ import com.nextgenactionscript.vscode.asconfig.ASConfigOptions;
 import com.nextgenactionscript.vscode.asconfig.CompilerOptions;
 import com.nextgenactionscript.vscode.asconfig.ProjectType;
 import com.nextgenactionscript.vscode.mxml.IMXMLLibraryConstants;
-import io.typefox.lsapi.CodeActionParams;
-import io.typefox.lsapi.CodeLens;
-import io.typefox.lsapi.CodeLensParams;
-import io.typefox.lsapi.Command;
-import io.typefox.lsapi.CompletionItem;
-import io.typefox.lsapi.CompletionItemKind;
-import io.typefox.lsapi.CompletionList;
-import io.typefox.lsapi.Diagnostic;
-import io.typefox.lsapi.DiagnosticSeverity;
-import io.typefox.lsapi.DidChangeTextDocumentParams;
-import io.typefox.lsapi.DidChangeWatchedFilesParams;
-import io.typefox.lsapi.DidCloseTextDocumentParams;
-import io.typefox.lsapi.DidOpenTextDocumentParams;
-import io.typefox.lsapi.DidSaveTextDocumentParams;
-import io.typefox.lsapi.DocumentFormattingParams;
-import io.typefox.lsapi.DocumentHighlight;
-import io.typefox.lsapi.DocumentOnTypeFormattingParams;
-import io.typefox.lsapi.DocumentRangeFormattingParams;
-import io.typefox.lsapi.DocumentSymbolParams;
-import io.typefox.lsapi.FileChangeType;
-import io.typefox.lsapi.FileEvent;
-import io.typefox.lsapi.Hover;
-import io.typefox.lsapi.Location;
-import io.typefox.lsapi.MessageParams;
-import io.typefox.lsapi.MessageType;
-import io.typefox.lsapi.Position;
-import io.typefox.lsapi.PublishDiagnosticsParams;
-import io.typefox.lsapi.Range;
-import io.typefox.lsapi.ReferenceParams;
-import io.typefox.lsapi.RenameParams;
-import io.typefox.lsapi.SignatureHelp;
-import io.typefox.lsapi.SymbolInformation;
-import io.typefox.lsapi.SymbolKind;
-import io.typefox.lsapi.TextDocumentContentChangeEvent;
-import io.typefox.lsapi.TextDocumentIdentifier;
-import io.typefox.lsapi.TextDocumentItem;
-import io.typefox.lsapi.TextDocumentPositionParams;
-import io.typefox.lsapi.TextEdit;
-import io.typefox.lsapi.VersionedTextDocumentIdentifier;
-import io.typefox.lsapi.WorkspaceEdit;
-import io.typefox.lsapi.WorkspaceSymbolParams;
-import io.typefox.lsapi.impl.CodeLensImpl;
-import io.typefox.lsapi.impl.CommandImpl;
-import io.typefox.lsapi.impl.CompletionItemImpl;
-import io.typefox.lsapi.impl.CompletionListImpl;
-import io.typefox.lsapi.impl.DiagnosticImpl;
-import io.typefox.lsapi.impl.DocumentHighlightImpl;
-import io.typefox.lsapi.impl.HoverImpl;
-import io.typefox.lsapi.impl.LocationImpl;
-import io.typefox.lsapi.impl.MarkedStringImpl;
-import io.typefox.lsapi.impl.MessageParamsImpl;
-import io.typefox.lsapi.impl.ParameterInformationImpl;
-import io.typefox.lsapi.impl.PositionImpl;
-import io.typefox.lsapi.impl.PublishDiagnosticsParamsImpl;
-import io.typefox.lsapi.impl.RangeImpl;
-import io.typefox.lsapi.impl.SignatureHelpImpl;
-import io.typefox.lsapi.impl.SignatureInformationImpl;
-import io.typefox.lsapi.impl.SymbolInformationImpl;
-import io.typefox.lsapi.impl.TextEditImpl;
-import io.typefox.lsapi.impl.WorkspaceEditImpl;
-import io.typefox.lsapi.services.TextDocumentService;
+import org.eclipse.lsp4j.CodeActionParams;
+import org.eclipse.lsp4j.CodeLens;
+import org.eclipse.lsp4j.CodeLensParams;
+import org.eclipse.lsp4j.Command;
+import org.eclipse.lsp4j.CompletionItem;
+import org.eclipse.lsp4j.CompletionItemKind;
+import org.eclipse.lsp4j.CompletionList;
+import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.DiagnosticSeverity;
+import org.eclipse.lsp4j.DidChangeTextDocumentParams;
+import org.eclipse.lsp4j.DidChangeWatchedFilesParams;
+import org.eclipse.lsp4j.DidCloseTextDocumentParams;
+import org.eclipse.lsp4j.DidOpenTextDocumentParams;
+import org.eclipse.lsp4j.DidSaveTextDocumentParams;
+import org.eclipse.lsp4j.DocumentFormattingParams;
+import org.eclipse.lsp4j.DocumentHighlight;
+import org.eclipse.lsp4j.DocumentOnTypeFormattingParams;
+import org.eclipse.lsp4j.DocumentRangeFormattingParams;
+import org.eclipse.lsp4j.DocumentSymbolParams;
+import org.eclipse.lsp4j.FileChangeType;
+import org.eclipse.lsp4j.FileEvent;
+import org.eclipse.lsp4j.Hover;
+import org.eclipse.lsp4j.Location;
+import org.eclipse.lsp4j.MessageParams;
+import org.eclipse.lsp4j.MessageType;
+import org.eclipse.lsp4j.ParameterInformation;
+import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.PublishDiagnosticsParams;
+import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.ReferenceParams;
+import org.eclipse.lsp4j.RenameParams;
+import org.eclipse.lsp4j.SignatureHelp;
+import org.eclipse.lsp4j.SignatureInformation;
+import org.eclipse.lsp4j.SymbolInformation;
+import org.eclipse.lsp4j.SymbolKind;
+import org.eclipse.lsp4j.TextDocumentContentChangeEvent;
+import org.eclipse.lsp4j.TextDocumentIdentifier;
+import org.eclipse.lsp4j.TextDocumentItem;
+import org.eclipse.lsp4j.TextDocumentPositionParams;
+import org.eclipse.lsp4j.TextEdit;
+import org.eclipse.lsp4j.VersionedTextDocumentIdentifier;
+import org.eclipse.lsp4j.WorkspaceEdit;
+import org.eclipse.lsp4j.WorkspaceSymbolParams;
+import org.eclipse.lsp4j.services.LanguageClient;
+import org.eclipse.lsp4j.services.TextDocumentService;
 import org.everit.json.schema.Schema;
 import org.everit.json.schema.ValidationException;
 import org.everit.json.schema.loader.SchemaLoader;
@@ -240,6 +223,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         NAMESPACE_TO_PREFIX.put(IMXMLLibraryConstants.FEATHERS, "f");
     }
 
+    private LanguageClient languageClient;
     private Boolean asconfigChanged = true;
     private Path workspaceRoot;
     private Map<Path, String> sourceByPath = new HashMap<>();
@@ -253,12 +237,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private LanguageServerFileSpecGetter fileSpecGetter;
     private HashSet<URI> newFilesWithErrors = new HashSet<>();
     private HashSet<URI> oldFilesWithErrors = new HashSet<>();
-    private Consumer<PublishDiagnosticsParams> publishDiagnostics = p ->
-    {
-    };
-    public Consumer<MessageParams> showMessageCallback = m ->
-    {
-    };
 
     public ActionScriptTextDocumentService()
     {
@@ -272,6 +250,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     public void setWorkspaceRoot(Path value)
     {
         workspaceRoot = value;
+    }
+
+    public void setLanguageClient(LanguageClient value)
+    {
+        languageClient = value;
     }
 
     /**
@@ -296,8 +279,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             //for some reason, the offset tag will be null if completion is
             //triggered at the asterisk:
             //<fx:Declarations>*
-            CompletionListImpl result = new CompletionListImpl();
-            result.setIncomplete(false);
+            CompletionList result = new CompletionList();
+            result.setIsIncomplete(false);
             result.setItems(new ArrayList<>());
             return CompletableFuture.completedFuture(result);
         }
@@ -311,7 +294,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     @Override
     public CompletableFuture<CompletionItem> resolveCompletionItem(CompletionItem unresolved)
     {
-        return CompletableFuture.completedFuture(new CompletionItemImpl());
+        return CompletableFuture.completedFuture(new CompletionItem());
     }
 
     /**
@@ -344,7 +327,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         if (offsetNode == null)
         {
             //we couldn't find a node at the specified location
-            return CompletableFuture.completedFuture(new SignatureHelpImpl(Collections.emptyList(), -1, -1));
+            return CompletableFuture.completedFuture(new SignatureHelp(Collections.emptyList(), -1, -1));
         }
 
         IFunctionCallNode functionCallNode = getAncestorFunctionCallNode(offsetNode);
@@ -374,16 +357,16 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         if (functionDefinition != null)
         {
-            SignatureHelpImpl result = new SignatureHelpImpl();
-            List<SignatureInformationImpl> signatures = new ArrayList<>();
+            SignatureHelp result = new SignatureHelp();
+            List<SignatureInformation> signatures = new ArrayList<>();
 
-            SignatureInformationImpl signatureInfo = new SignatureInformationImpl();
+            SignatureInformation signatureInfo = new SignatureInformation();
             signatureInfo.setLabel(getSignatureLabel(functionDefinition));
 
-            List<ParameterInformationImpl> parameters = new ArrayList<>();
+            List<ParameterInformation> parameters = new ArrayList<>();
             for (IParameterDefinition param : functionDefinition.getParameters())
             {
-                ParameterInformationImpl paramInfo = new ParameterInformationImpl();
+                ParameterInformation paramInfo = new ParameterInformation();
                 paramInfo.setLabel(param.getBaseName());
                 parameters.add(paramInfo);
             }
@@ -421,7 +404,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             return CompletableFuture.completedFuture(result);
         }
-        return CompletableFuture.completedFuture(new SignatureHelpImpl(Collections.emptyList(), -1, -1));
+        return CompletableFuture.completedFuture(new SignatureHelp(Collections.emptyList(), -1, -1));
     }
 
     /**
@@ -463,9 +446,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
      * This feature is implemented at this time.
      */
     @Override
-    public CompletableFuture<DocumentHighlight> documentHighlight(TextDocumentPositionParams position)
+    public CompletableFuture<List<? extends DocumentHighlight>> documentHighlight(TextDocumentPositionParams position)
     {
-        return CompletableFuture.completedFuture(new DocumentHighlightImpl());
+        return CompletableFuture.completedFuture(Collections.emptyList());
     }
 
     /**
@@ -478,7 +461,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             //if we haven't successfully compiled the project, we can't do this
             return CompletableFuture.completedFuture(Collections.emptyList());
         }
-        List<SymbolInformationImpl> result = new ArrayList<>();
+        List<SymbolInformation> result = new ArrayList<>();
         String query = params.getQuery();
         for (ICompilationUnit unit : compilationUnits)
         {
@@ -511,7 +494,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     public CompletableFuture<List<? extends SymbolInformation>> documentSymbol(DocumentSymbolParams params)
     {
         TextDocumentIdentifier textDocument = params.getTextDocument();
-        Path path = getPathFromLsapiURI(textDocument.getUri());
+        Path path = getPathFromLanguageServerURI(textDocument.getUri());
         if (path == null)
         {
             return CompletableFuture.completedFuture(Collections.emptyList());
@@ -532,7 +515,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return CompletableFuture.completedFuture(Collections.emptyList());
         }
-        List<SymbolInformationImpl> result = new ArrayList<>();
+        List<SymbolInformation> result = new ArrayList<>();
         for (IASScope scope : scopes)
         {
             scopeToSymbols(scope, result);
@@ -548,12 +531,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     {
         List<? extends Diagnostic> diagnostics = params.getContext().getDiagnostics();
         TextDocumentIdentifier textDocument = params.getTextDocument();
-        Path path = getPathFromLsapiURI(textDocument.getUri());
+        Path path = getPathFromLanguageServerURI(textDocument.getUri());
         if (path == null || !sourceByPath.containsKey(path))
         {
             return CompletableFuture.completedFuture(Collections.emptyList());
         }
-        ArrayList<CommandImpl> commands = new ArrayList<>();
+        ArrayList<Command> commands = new ArrayList<>();
         for (Diagnostic diagnostic : diagnostics)
         {
             //I don't know why this can be null
@@ -593,7 +576,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return CompletableFuture.completedFuture(commands);
     }
 
-    private void createCodeActionsForImport(Diagnostic diagnostic, List<CommandImpl> commands)
+    private void createCodeActionsForImport(Diagnostic diagnostic, List<Command> commands)
     {
         String message = diagnostic.getMessage();
         int start = message.lastIndexOf(" ") + 1;
@@ -635,7 +618,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         for (String qualifiedName : types)
         {
-            CommandImpl command = new CommandImpl();
+            Command command = new Command();
             command.setCommand("nextgenas.addImport");
             command.setTitle("Import " + qualifiedName);
             command.setArguments(Collections.singletonList(qualifiedName));
@@ -658,7 +641,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     @Override
     public CompletableFuture<CodeLens> resolveCodeLens(CodeLens unresolved)
     {
-        return CompletableFuture.completedFuture(new CodeLensImpl());
+        return CompletableFuture.completedFuture(new CodeLens());
     }
 
     /**
@@ -723,7 +706,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return;
         }
-        Path path = getPathFromLsapiURI(textDocumentUri);
+        Path path = getPathFromLanguageServerURI(textDocumentUri);
         if (path != null)
         {
             String text = textDocument.getText();
@@ -750,7 +733,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return;
         }
-        Path path = getPathFromLsapiURI(textDocumentUri);
+        Path path = getPathFromLanguageServerURI(textDocumentUri);
         if (path != null)
         {
             for (TextDocumentContentChangeEvent change : params.getContentChanges())
@@ -793,7 +776,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return;
         }
-        Path path = getPathFromLsapiURI(textDocumentUri);
+        Path path = getPathFromLanguageServerURI(textDocumentUri);
         if (path != null)
         {
             sourceByPath.remove(path);
@@ -821,7 +804,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         boolean needsFullCheck = false;
         for (FileEvent event : params.getChanges())
         {
-            Path path = getPathFromLsapiURI(event.getUri());
+            Path path = getPathFromLanguageServerURI(event.getUri());
             if (path == null)
             {
                 continue;
@@ -879,17 +862,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 }
             }
         }
-    }
-
-    /**
-     * Receives a callback to inform Visual Studio Code about "problems" (like
-     * compiler errors or warnings) that need to be displayed to the user for
-     * a specific file.
-     */
-    @Override
-    public void onPublishDiagnostics(Consumer<PublishDiagnosticsParams> callback)
-    {
-        publishDiagnostics = callback;
     }
 
     private File getASConfigFile()
@@ -1112,8 +1084,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private CompletableFuture<CompletionList> actionScriptCompletion(TextDocumentPositionParams position)
     {
-        CompletionListImpl result = new CompletionListImpl();
-        result.setIncomplete(false);
+        CompletionList result = new CompletionList();
+        result.setIsIncomplete(false);
         result.setItems(new ArrayList<>());
 
         //ActionScript completion
@@ -1121,7 +1093,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         if (offsetNode == null)
         {
             //we couldn't find a node at the specified location
-            return CompletableFuture.completedFuture(new CompletionListImpl());
+            return CompletableFuture.completedFuture(new CompletionList());
         }
         IASNode parentNode = offsetNode.getParent();
         IASNode nodeAtPreviousOffset = null;
@@ -1133,7 +1105,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         if (isInActionScriptComment(position))
         {
             //if we're inside a comment, no completion!
-            return CompletableFuture.completedFuture(new CompletionListImpl());
+            return CompletableFuture.completedFuture(new CompletionList());
         }
 
         //variable types
@@ -1373,8 +1345,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private CompletableFuture<CompletionList> mxmlCompletion(TextDocumentPositionParams position, IMXMLTagData offsetTag)
     {
-        CompletionListImpl result = new CompletionListImpl();
-        result.setIncomplete(false);
+        CompletionList result = new CompletionList();
+        result.setIsIncomplete(false);
         result.setItems(new ArrayList<>());
         if (isInXMLComment(position))
         {
@@ -1481,20 +1453,20 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return CompletableFuture.completedFuture(result);
     }
 
-    private CompletableFuture<CompletionList> mxmlAttributeCompletion(IMXMLTagData offsetTag, CompletionListImpl result)
+    private CompletableFuture<CompletionList> mxmlAttributeCompletion(IMXMLTagData offsetTag, CompletionList result)
     {
-        List<CompletionItemImpl> items = result.getItems();
+        List<CompletionItem> items = result.getItems();
         IDefinition attributeDefinition = getDefinitionForMXMLTagAttribute(offsetTag, currentOffset, true);
         if (attributeDefinition instanceof IVariableDefinition)
         {
             IVariableDefinition variableDefinition = (IVariableDefinition) attributeDefinition;
             if (variableDefinition.getTypeAsDisplayString().equals(IASLanguageConstants.Boolean))
             {
-                CompletionItemImpl falseItem = new CompletionItemImpl();
+                CompletionItem falseItem = new CompletionItem();
                 falseItem.setKind(CompletionItemKind.Value);
                 falseItem.setLabel(IASLanguageConstants.FALSE);
                 items.add(falseItem);
-                CompletionItemImpl trueItem = new CompletionItemImpl();
+                CompletionItem trueItem = new CompletionItem();
                 trueItem.setKind(CompletionItemKind.Value);
                 trueItem.setLabel(IASLanguageConstants.TRUE);
                 items.add(trueItem);
@@ -1511,7 +1483,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         if (offsetNode == null)
         {
             //we couldn't find a node at the specified location
-            return CompletableFuture.completedFuture(new HoverImpl(Collections.emptyList(), null));
+            return CompletableFuture.completedFuture(new Hover(Collections.emptyList(), null));
         }
 
         //INamespaceDecorationNode extends IIdentifierNode, but we don't want
@@ -1526,13 +1498,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
         if (definition == null)
         {
-            return CompletableFuture.completedFuture(new HoverImpl(Collections.emptyList(), null));
+            return CompletableFuture.completedFuture(new Hover(Collections.emptyList(), null));
         }
 
-        HoverImpl result = new HoverImpl();
+        Hover result = new Hover();
         String detail = getDefinitionDetail(definition);
-        List<MarkedStringImpl> contents = new ArrayList<>();
-        contents.add(markedString(detail));
+        List<String> contents = new ArrayList<>();
+        contents.add(detail);
         result.setContents(contents);
         return CompletableFuture.completedFuture(result);
     }
@@ -1542,15 +1514,15 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         IDefinition definition = getDefinitionForMXMLNameAtOffset(offsetTag, currentOffset);
         if (definition == null)
         {
-            return CompletableFuture.completedFuture(new HoverImpl(Collections.emptyList(), null));
+            return CompletableFuture.completedFuture(new Hover(Collections.emptyList(), null));
         }
 
         if (isInsideTagPrefix(offsetTag, currentOffset))
         {
             //inside the prefix
             String prefix = offsetTag.getPrefix();
-            HoverImpl result = new HoverImpl();
-            List<MarkedStringImpl> contents = new ArrayList<>();
+            Hover result = new Hover();
+            List<String> contents = new ArrayList<>();
             String detail = null;
             if (prefix.length() > 0)
             {
@@ -1560,15 +1532,15 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             {
                 detail = "xmlns=\"" + offsetTag.getURI() + "\"";
             }
-            contents.add(mxmlMarkedString(detail));
+            contents.add(detail);
             result.setContents(contents);
             return CompletableFuture.completedFuture(result);
         }
 
-        HoverImpl result = new HoverImpl();
+        Hover result = new Hover();
         String detail = getDefinitionDetail(definition);
-        List<MarkedStringImpl> contents = new ArrayList<>();
-        contents.add(markedString(detail));
+        List<String> contents = new ArrayList<>();
+        contents.add(detail);
         result.setContents(contents);
         return CompletableFuture.completedFuture(result);
     }
@@ -1672,7 +1644,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             //definition referenced at the current position.
             return CompletableFuture.completedFuture(Collections.emptyList());
         }
-        Path path = getPathFromLsapiURI(params.getTextDocument().getUri());
+        Path path = getPathFromLanguageServerURI(params.getTextDocument().getUri());
         if (path == null)
         {
             //this probably shouldn't happen, but check just to be safe
@@ -1732,7 +1704,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         if (offsetNode == null)
         {
             //we couldn't find a node at the specified location
-            return CompletableFuture.completedFuture(new WorkspaceEditImpl(new HashMap<>()));
+            return CompletableFuture.completedFuture(new WorkspaceEdit(new HashMap<>()));
         }
 
         IDefinition definition = null;
@@ -1751,14 +1723,17 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
         if (definition == null)
         {
-            MessageParamsImpl message = new MessageParamsImpl();
-            message.setType(MessageType.Info);
-            message.setMessage("You cannot rename this element.");
-            showMessageCallback.accept(message);
-            return CompletableFuture.completedFuture(new WorkspaceEditImpl(new HashMap<>()));
+            if (languageClient != null)
+            {
+                MessageParams message = new MessageParams();
+                message.setType(MessageType.Info);
+                message.setMessage("You cannot rename this element.");
+                languageClient.showMessage(message);
+            }
+            return CompletableFuture.completedFuture(new WorkspaceEdit(new HashMap<>()));
         }
 
-        WorkspaceEditImpl result = renameDefinition(definition, params.getNewName());
+        WorkspaceEdit result = renameDefinition(definition, params.getNewName());
         return CompletableFuture.completedFuture(result);
     }
 
@@ -1770,17 +1745,20 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             if (isInsideTagPrefix(offsetTag, currentOffset))
             {
                 //ignore the tag's prefix
-                return CompletableFuture.completedFuture(new WorkspaceEditImpl(new HashMap<>()));
+                return CompletableFuture.completedFuture(new WorkspaceEdit(new HashMap<>()));
             }
-            WorkspaceEditImpl result = renameDefinition(definition, params.getNewName());
+            WorkspaceEdit result = renameDefinition(definition, params.getNewName());
             return CompletableFuture.completedFuture(result);
         }
 
-        MessageParamsImpl message = new MessageParamsImpl();
-        message.setType(MessageType.Info);
-        message.setMessage("You cannot rename this element.");
-        showMessageCallback.accept(message);
-        return CompletableFuture.completedFuture(new WorkspaceEditImpl(new HashMap<>()));
+        if (languageClient != null)
+        {
+            MessageParams message = new MessageParams();
+            message.setType(MessageType.Info);
+            message.setMessage("You cannot rename this element.");
+            languageClient.showMessage(message);
+        }
+        return CompletableFuture.completedFuture(new WorkspaceEdit(new HashMap<>()));
     }
 
     private void referencesForDefinition(IDefinition definition, List<Location> result)
@@ -1802,7 +1780,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     findMXMLUnits(mxmlData.getRootTag(), definition, units);
                     for (ISourceLocation otherUnit : units)
                     {
-                        LocationImpl location = sourceLocationToLocationImpl(otherUnit);
+                        Location location = sourceLocationToLocation(otherUnit);
                         if (location == null)
                         {
                             continue;
@@ -1824,7 +1802,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             findIdentifiers(ast, definition, identifiers);
             for (IIdentifierNode otherNode : identifiers)
             {
-                LocationImpl location = sourceLocationToLocationImpl(otherNode);
+                Location location = sourceLocationToLocation(otherNode);
                 if (location == null)
                 {
                     continue;
@@ -1834,7 +1812,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
     }
 
-    private RangeImpl sourceLocationToRangeImpl(ISourceLocation sourceLocation)
+    private Range sourceLocationToRange(ISourceLocation sourceLocation)
     {
         int line = sourceLocation.getLine();
         int column = sourceLocation.getColumn();
@@ -1843,7 +1821,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             //this is probably generated by the compiler somehow
             return null;
         }
-        PositionImpl start = new PositionImpl();
+        Position start = new Position();
         start.setLine(line);
         start.setCharacter(column);
 
@@ -1854,24 +1832,24 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             endLine = line;
             endColumn = column;
         }
-        PositionImpl end = new PositionImpl();
+        Position end = new Position();
         end.setLine(endLine);
         end.setCharacter(endColumn);
 
-        RangeImpl range = new RangeImpl();
+        Range range = new Range();
         range.setStart(start);
         range.setEnd(end);
 
         return range;
     }
 
-    private LocationImpl sourceLocationToLocationImpl(ISourceLocation sourceLocation)
+    private Location sourceLocationToLocation(ISourceLocation sourceLocation)
     {
         Path sourceLocationPath = Paths.get(sourceLocation.getSourcePath());
-        LocationImpl location = new LocationImpl();
+        Location location = new Location();
         location.setUri(sourceLocationPath.toUri().toString());
 
-        RangeImpl range = sourceLocationToRangeImpl(sourceLocation);
+        Range range = sourceLocationToRange(sourceLocation);
         if (range == null)
         {
             //this is probably generated by the compiler somehow
@@ -1921,12 +1899,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return null;
     }
 
-    private void autoCompleteTypes(CompletionListImpl result)
+    private void autoCompleteTypes(CompletionList result)
     {
         autoCompleteDefinitions(result, false, true, null, null);
     }
 
-    private void autoCompleteTypesForMXML(CompletionListImpl result)
+    private void autoCompleteTypesForMXML(CompletionList result)
     {
         autoCompleteDefinitions(result, true, true, null, null);
     }
@@ -1935,7 +1913,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
      * Using an existing tag, that may already have a prefix or short name,
      * populate the completion list.
      */
-    private void autoCompleteTypesForMXMLFromExistingTag(CompletionListImpl result, IMXMLTagData offsetTag)
+    private void autoCompleteTypesForMXMLFromExistingTag(CompletionList result, IMXMLTagData offsetTag)
     {
         IMXMLDataManager mxmlDataManager = currentWorkspace.getMXMLDataManager();
         MXMLData mxmlData = (MXMLData) mxmlDataManager.get(fileSpecGetter.getFileSpecification(currentUnit.getAbsoluteFilename()));
@@ -2008,7 +1986,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
     }
 
-    private void autoCompleteDefinitions(CompletionListImpl result, boolean forMXML,
+    private void autoCompleteDefinitions(CompletionList result, boolean forMXML,
                                          boolean typesOnly, String packageName,
                                          IDefinition definitionToSkip)
     {
@@ -2061,14 +2039,14 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         if (packageName == null || packageName.equals(""))
         {
-            CompletionItemImpl item = new CompletionItemImpl();
+            CompletionItem item = new CompletionItem();
             item.setKind(CompletionItemKind.Class);
             item.setLabel(IASKeywordConstants.VOID);
             result.getItems().add(item);
         }
     }
 
-    private void autoCompleteScope(IScopedNode node, CompletionListImpl result)
+    private void autoCompleteScope(IScopedNode node, CompletionList result)
     {
         IASScope scope = node.getScope();
         IDefinition definitionToSkip = scope.getDefinition();
@@ -2134,7 +2112,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
     }
 
-    private void autoCompleteMemberAccess(IMemberAccessExpressionNode node, CompletionListImpl result)
+    private void autoCompleteMemberAccess(IMemberAccessExpressionNode node, CompletionList result)
     {
         ASScope scope = (ASScope) node.getContainingScope().getScope();
         IExpressionNode leftOperand = node.getLeftOperandNode();
@@ -2155,9 +2133,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
     }
 
-    private void autoCompleteImport(String importName, CompletionListImpl result)
+    private void autoCompleteImport(String importName, CompletionList result)
     {
-        List<CompletionItemImpl> items = result.getItems();
+        List<CompletionItem> items = result.getItems();
         for (ICompilationUnit unit : compilationUnits)
         {
             Collection<IDefinition> definitions = null;
@@ -2192,7 +2170,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                         {
                             qualifiedName = qualifiedName.substring(0, index);
                         }
-                        CompletionItemImpl item = new CompletionItemImpl();
+                        CompletionItem item = new CompletionItem();
                         item.setLabel(qualifiedName);
                         if (definition.getBaseName().equals(qualifiedName))
                         {
@@ -2224,7 +2202,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
     }
 
-    private void addMembersForMXMLTypeToAutoComplete(IClassDefinition definition, IMXMLTagData offsetTag, boolean includePrefix, CompletionListImpl result)
+    private void addMembersForMXMLTypeToAutoComplete(IClassDefinition definition, IMXMLTagData offsetTag, boolean includePrefix, CompletionList result)
     {
         ICompilationUnit unit = getCompilationUnit(Paths.get(offsetTag.getSourcePath()));
         if (unit == null)
@@ -2259,12 +2237,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
     }
 
-    private void addDefinitionsInTypeScopeToAutoComplete(TypeScope typeScope, ASScope otherScope, boolean isStatic, CompletionListImpl result)
+    private void addDefinitionsInTypeScopeToAutoComplete(TypeScope typeScope, ASScope otherScope, boolean isStatic, CompletionList result)
     {
         addDefinitionsInTypeScopeToAutoComplete(typeScope, otherScope, isStatic, false, null, result);
     }
 
-    private void addDefinitionsInTypeScopeToAutoComplete(TypeScope typeScope, ASScope otherScope, boolean isStatic, boolean forMXML, String prefix, CompletionListImpl result)
+    private void addDefinitionsInTypeScopeToAutoComplete(TypeScope typeScope, ASScope otherScope, boolean isStatic, boolean forMXML, String prefix, CompletionList result)
     {
         IMetaTag[] excludeMetaTags = typeScope.getDefinition().getMetaTagsByName(IMetaAttributeConstants.ATTRIBUTE_EXCLUDE);
         ArrayList<IDefinition> memberAccessDefinitions = new ArrayList<>();
@@ -2354,7 +2332,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
     }
 
-    private void addEventMetadataToAutoComplete(TypeScope typeScope, String prefix, CompletionListImpl result)
+    private void addEventMetadataToAutoComplete(TypeScope typeScope, String prefix, CompletionList result)
     {
         ArrayList<String> eventNames = new ArrayList<>();
         IDefinition definition = typeScope.getDefinition();
@@ -2376,7 +2354,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 {
                     continue;
                 }
-                CompletionItemImpl item = new CompletionItemImpl();
+                CompletionItem item = new CompletionItem();
                 item.setKind(CompletionItemKind.Field);
                 item.setLabel(eventName);
                 if (prefix != null)
@@ -2390,11 +2368,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
     }
 
-    private void addStyleMetadataToAutoComplete(TypeScope typeScope, String prefix, CompletionListImpl result)
+    private void addStyleMetadataToAutoComplete(TypeScope typeScope, String prefix, CompletionList result)
     {
         ArrayList<String> styleNames = new ArrayList<>();
         IDefinition definition = typeScope.getDefinition();
-        List<CompletionItemImpl> items = result.getItems();
+        List<CompletionItem> items = result.getItems();
         while (definition instanceof IClassDefinition)
         {
             IClassDefinition classDefinition = (IClassDefinition) definition;
@@ -2414,7 +2392,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     continue;
                 }
                 boolean foundExisting = false;
-                for (CompletionItemImpl item : items)
+                for (CompletionItem item : items)
                 {
                     if (item.getLabel().equals(styleName))
                     {
@@ -2429,7 +2407,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 {
                     break;
                 }
-                CompletionItemImpl item = new CompletionItemImpl();
+                CompletionItem item = new CompletionItem();
                 item.setKind(CompletionItemKind.Field);
                 item.setLabel(styleName);
                 if (prefix != null)
@@ -2443,7 +2421,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
     }
 
-    private void addMXMLTypeDefinitionAutoComplete(ITypeDefinition definition, CompletionListImpl result)
+    private void addMXMLTypeDefinitionAutoComplete(ITypeDefinition definition, CompletionList result)
     {
         IMXMLDataManager mxmlDataManager = currentWorkspace.getMXMLDataManager();
         MXMLData mxmlData = (MXMLData) mxmlDataManager.get(fileSpecGetter.getFileSpecification(currentUnit.getAbsoluteFilename()));
@@ -2517,14 +2495,14 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return prefix;
     }
 
-    private void addDefinitionAutoComplete(IDefinition definition, CompletionListImpl result)
+    private void addDefinitionAutoComplete(IDefinition definition, CompletionList result)
     {
         addDefinitionAutoComplete(definition, null, result);
     }
 
-    private void addDefinitionAutoComplete(IDefinition definition, String prefix, CompletionListImpl result)
+    private void addDefinitionAutoComplete(IDefinition definition, String prefix, CompletionList result)
     {
-        CompletionItemImpl item = new CompletionItemImpl();
+        CompletionItem item = new CompletionItem();
         if (definition instanceof IClassDefinition)
         {
             item.setKind(CompletionItemKind.Class);
@@ -2556,9 +2534,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         result.getItems().add(item);
     }
 
-    private void addKeywordAutoComplete(String keyword, CompletionListImpl result)
+    private void addKeywordAutoComplete(String keyword, CompletionList result)
     {
-        CompletionItemImpl item = new CompletionItemImpl();
+        CompletionItem item = new CompletionItem();
         item.setKind(CompletionItemKind.Keyword);
         item.setLabel(keyword);
         result.getItems().add(item);
@@ -2588,9 +2566,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
 
         Path resolvedPath = Paths.get(definitionPath);
-        LocationImpl location = new LocationImpl();
+        Location location = new Location();
         location.setUri(resolvedPath.toUri().toString());
-        PositionImpl start = new PositionImpl();
+        Position start = new Position();
         int nameLine = definition.getNameLine();
         int nameColumn = definition.getNameColumn();
         if (nameLine == -1 || nameColumn == -1)
@@ -2611,7 +2589,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 return;
             }
 
-            PositionImpl position = new PositionImpl();
+            Position position = new Position();
             offsetToLineAndCharacter(reader, nameOffset, position);
             nameLine = position.getLine();
             nameColumn = position.getCharacter();
@@ -2623,10 +2601,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         start.setLine(nameLine);
         start.setCharacter(nameColumn);
-        PositionImpl end = new PositionImpl();
+        Position end = new Position();
         end.setLine(nameLine);
         end.setCharacter(nameColumn + definition.getNameEnd() - definition.getNameStart());
-        RangeImpl range = new RangeImpl();
+        Range range = new Range();
         range.setStart(start);
         range.setEnd(end);
         location.setRange(range);
@@ -2673,62 +2651,54 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return null;
     }
 
-    private MarkedStringImpl markedString(String value)
-    {
-        MarkedStringImpl result = new MarkedStringImpl();
-
-        result.setLanguage("nextgenas");
-        result.setValue(value);
-
-        return result;
-    }
-
-    private MarkedStringImpl mxmlMarkedString(String value)
-    {
-        MarkedStringImpl result = new MarkedStringImpl();
-
-        result.setLanguage("mxml");
-        result.setValue(value);
-
-        return result;
-    }
-
-    private WorkspaceEditImpl renameDefinition(IDefinition definition, String newName)
+    private WorkspaceEdit renameDefinition(IDefinition definition, String newName)
     {
         if (definition == null)
         {
-            MessageParamsImpl message = new MessageParamsImpl();
-            message.setType(MessageType.Info);
-            message.setMessage("You cannot rename this element.");
-            showMessageCallback.accept(message);
-            return new WorkspaceEditImpl(new HashMap<>());
+            if (languageClient != null)
+            {
+                MessageParams message = new MessageParams();
+                message.setType(MessageType.Info);
+                message.setMessage("You cannot rename this element.");
+                languageClient.showMessage(message);
+            }
+            return new WorkspaceEdit(new HashMap<>());
         }
-        WorkspaceEditImpl result = new WorkspaceEditImpl();
-        Map<String, List<TextEditImpl>> changes = new HashMap<>();
+        WorkspaceEdit result = new WorkspaceEdit();
+        Map<String, List<TextEdit>> changes = new HashMap<>();
         result.setChanges(changes);
         if (definition.getContainingFilePath().endsWith(SWC_EXTENSION))
         {
-            MessageParamsImpl message = new MessageParamsImpl();
-            message.setType(MessageType.Info);
-            message.setMessage("You cannot rename an element defined in a SWC file.");
-            showMessageCallback.accept(message);
+            if (languageClient != null)
+            {
+                MessageParams message = new MessageParams();
+                message.setType(MessageType.Info);
+                message.setMessage("You cannot rename an element defined in a SWC file.");
+                languageClient.showMessage(message);
+            }
             return result;
         }
         if (definition instanceof IPackageDefinition)
         {
-            MessageParamsImpl message = new MessageParamsImpl();
-            message.setType(MessageType.Info);
-            message.setMessage("You cannot rename a package.");
-            showMessageCallback.accept(message);
+            if (languageClient != null)
+            {
+                MessageParams message = new MessageParams();
+                message.setType(MessageType.Info);
+                message.setMessage("You cannot rename a package.");
+                languageClient.showMessage(message);
+            }
             return result;
         }
         IDefinition parentDefinition = definition.getParent();
         if (parentDefinition != null && parentDefinition instanceof IPackageDefinition)
         {
-            MessageParamsImpl message = new MessageParamsImpl();
-            message.setType(MessageType.Info);
-            message.setMessage("You cannot rename this element.");
-            showMessageCallback.accept(message);
+            if (languageClient != null)
+            {
+                MessageParams message = new MessageParams();
+                message.setType(MessageType.Info);
+                message.setMessage("You cannot rename this element.");
+                languageClient.showMessage(message);
+            }
             return result;
         }
         for (ICompilationUnit compilationUnit : compilationUnits)
@@ -2737,7 +2707,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             {
                 continue;
             }
-            ArrayList<TextEditImpl> textEdits = new ArrayList<>();
+            ArrayList<TextEdit> textEdits = new ArrayList<>();
             if (compilationUnit.getAbsoluteFilename().endsWith(MXML_EXTENSION))
             {
                 IMXMLDataManager mxmlDataManager = currentWorkspace.getMXMLDataManager();
@@ -2749,10 +2719,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     findMXMLUnits(mxmlData.getRootTag(), definition, units);
                     for (ISourceLocation otherUnit : units)
                     {
-                        TextEditImpl textEdit = new TextEditImpl();
+                        TextEdit textEdit = new TextEdit();
                         textEdit.setNewText(newName);
 
-                        RangeImpl range = sourceLocationToRangeImpl(otherUnit);
+                        Range range = sourceLocationToRange(otherUnit);
                         if (range == null)
                         {
                             continue;
@@ -2778,10 +2748,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 findIdentifiers(ast, definition, identifiers);
                 for (IIdentifierNode identifierNode : identifiers)
                 {
-                    TextEditImpl textEdit = new TextEditImpl();
+                    TextEdit textEdit = new TextEdit();
                     textEdit.setNewText(newName);
 
-                    RangeImpl range = sourceLocationToRangeImpl(identifierNode);
+                    Range range = sourceLocationToRange(identifierNode);
                     if (range == null)
                     {
                         continue;
@@ -2934,7 +2904,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
     }
 
-    private RangeImpl getSourceLocationRange(ISourceLocation problem)
+    private Range getSourceLocationRange(ISourceLocation problem)
     {
         int line = problem.getLine();
         if (line < 0)
@@ -2956,15 +2926,15 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             endColumn = column;
         }
-        PositionImpl start = new PositionImpl();
+        Position start = new Position();
         start.setLine(line);
         start.setCharacter(column);
 
-        PositionImpl end = new PositionImpl();
+        Position end = new Position();
         end.setLine(endLine);
         end.setCharacter(endColumn);
 
-        RangeImpl range = new RangeImpl();
+        Range range = new Range();
         range.setStart(start);
         range.setEnd(end);
 
@@ -2973,12 +2943,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private void addCompilerProblem(ICompilerProblem problem, PublishDiagnosticsParams publish)
     {
-        DiagnosticImpl diagnostic = new DiagnosticImpl();
+        Diagnostic diagnostic = new Diagnostic();
 
         DiagnosticSeverity severity = getCompilerProblemSeverity(problem);
         diagnostic.setSeverity(severity);
 
-        RangeImpl range = getSourceLocationRange(problem);
+        Range range = getSourceLocationRange(problem);
         diagnostic.setRange(range);
 
         diagnostic.setMessage(problem.toString());
@@ -3001,8 +2971,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private void checkFilePathForSyntaxProblems(Path path)
     {
         URI uri = path.toUri();
-        PublishDiagnosticsParamsImpl publish = new PublishDiagnosticsParamsImpl();
-        ArrayList<DiagnosticImpl> diagnostics = new ArrayList<>();
+        PublishDiagnosticsParams publish = new PublishDiagnosticsParams();
+        ArrayList<Diagnostic> diagnostics = new ArrayList<>();
         publish.setDiagnostics(diagnostics);
         publish.setUri(uri.toString());
         trackFileWithErrors(uri);
@@ -3048,7 +3018,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
         }
 
-        DiagnosticImpl diagnostic = new DiagnosticImpl();
+        Diagnostic diagnostic = new Diagnostic();
         diagnostic.setSeverity(DiagnosticSeverity.Information);
 
         File asconfigFile = getASConfigFile();
@@ -3077,14 +3047,17 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             diagnostic.setMessage("A fatal error occurred while checking for errors. Error checking disabled, except for simple syntax problems.");
         }
 
-        RangeImpl range = new RangeImpl();
-        range.setStart(new PositionImpl());
-        range.setEnd(new PositionImpl());
+        Range range = new Range();
+        range.setStart(new Position());
+        range.setEnd(new Position());
         diagnostic.setRange(range);
         diagnostics.add(diagnostic);
 
         cleanUpStaleErrors();
-        publishDiagnostics.accept(publish);
+        if (languageClient != null)
+        {
+            languageClient.publishDiagnostics(publish);
+        }
     }
 
     private ICompilationUnit findCompilationUnit(String absoluteFileName)
@@ -3340,10 +3313,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         //clear the errors so that they don't persist
         for (URI uri : oldFilesWithErrors)
         {
-            PublishDiagnosticsParamsImpl publish = new PublishDiagnosticsParamsImpl();
+            PublishDiagnosticsParams publish = new PublishDiagnosticsParams();
             publish.setDiagnostics(new ArrayList<>());
             publish.setUri(uri.toString());
-            publishDiagnostics.accept(publish);
+            if (languageClient != null)
+            {
+                languageClient.publishDiagnostics(publish);
+            }
         }
         oldFilesWithErrors.clear();
         HashSet<URI> temp = newFilesWithErrors;
@@ -3382,7 +3358,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         if (fatalProblems != null && fatalProblems.size() > 0)
         {
             URI uri = path.toUri();
-            PublishDiagnosticsParamsImpl publish = new PublishDiagnosticsParamsImpl();
+            PublishDiagnosticsParams publish = new PublishDiagnosticsParams();
             publish.setDiagnostics(new ArrayList<>());
             publish.setUri(uri.toString());
             trackFileWithErrors(uri);
@@ -3391,7 +3367,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 addCompilerProblem(problem, publish);
             }
             cleanUpStaleErrors();
-            publishDiagnostics.accept(publish);
+            if (languageClient != null)
+            {
+                languageClient.publishDiagnostics(publish);
+            }
             return true;
         }
         IASNode ast = null;
@@ -3407,12 +3386,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return false;
         }
-        Map<URI, PublishDiagnosticsParamsImpl> files = new HashMap<>();
+        Map<URI, PublishDiagnosticsParams> files = new HashMap<>();
         try
         {
             if (quick)
             {
-                PublishDiagnosticsParamsImpl params = checkCompilationUnitForAllProblems(mainUnit);
+                PublishDiagnosticsParams params = checkCompilationUnitForAllProblems(mainUnit);
                 if (params == null)
                 {
                     return false;
@@ -3429,7 +3408,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                         //compiled compilation units won't have problems
                         continue;
                     }
-                    PublishDiagnosticsParamsImpl params = checkCompilationUnitForAllProblems(unit);
+                    PublishDiagnosticsParams params = checkCompilationUnitForAllProblems(unit);
                     if (params == null)
                     {
                         return false;
@@ -3447,14 +3426,17 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             e.printStackTrace();
             return false;
         }
-        files.values().forEach(publishDiagnostics::accept);
+        if (languageClient != null)
+        {
+            files.values().forEach(languageClient::publishDiagnostics);
+        }
         return true;
     }
 
-    private PublishDiagnosticsParamsImpl checkCompilationUnitForAllProblems(ICompilationUnit unit)
+    private PublishDiagnosticsParams checkCompilationUnitForAllProblems(ICompilationUnit unit)
     {
         URI uri = Paths.get(unit.getAbsoluteFilename()).toUri();
-        PublishDiagnosticsParamsImpl publish = new PublishDiagnosticsParamsImpl();
+        PublishDiagnosticsParams publish = new PublishDiagnosticsParams();
         publish.setDiagnostics(new ArrayList<>());
         publish.setUri(uri.toString());
         trackFileWithErrors(uri);
@@ -3500,7 +3482,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return reader;
     }
 
-    private Path getPathFromLsapiURI(String apiURI)
+    private Path getPathFromLanguageServerURI(String apiURI)
     {
         URI uri = URI.create(apiURI);
         Optional<Path> optionalPath = getFilePath(uri);
@@ -3536,7 +3518,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return null;
         }
         currentOffset = -1;
-        Path path = getPathFromLsapiURI(uri);
+        Path path = getPathFromLanguageServerURI(uri);
         if (path == null)
         {
             return null;
@@ -3598,7 +3580,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private IASNode getOffsetNode(TextDocumentIdentifier textDocument, Position position)
     {
         currentOffset = -1;
-        Path path = getPathFromLsapiURI(textDocument.getUri());
+        Path path = getPathFromLanguageServerURI(textDocument.getUri());
         if (path == null)
         {
             return null;
@@ -4023,7 +4005,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private boolean isInActionScriptComment(TextDocumentPositionParams params)
     {
         TextDocumentIdentifier textDocument = params.getTextDocument();
-        Path path = getPathFromLsapiURI(textDocument.getUri());
+        Path path = getPathFromLanguageServerURI(textDocument.getUri());
         if (path == null || !sourceByPath.containsKey(path))
         {
             return false;
@@ -4051,7 +4033,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private boolean isInXMLComment(TextDocumentPositionParams params)
     {
         TextDocumentIdentifier textDocument = params.getTextDocument();
-        Path path = getPathFromLsapiURI(textDocument.getUri());
+        Path path = getPathFromLanguageServerURI(textDocument.getUri());
         if (path == null || !sourceByPath.containsKey(path))
         {
             return false;
@@ -4085,7 +4067,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return true;
     }
 
-    private void querySymbolsInScope(String query, IASScope scope, List<SymbolInformationImpl> result)
+    private void querySymbolsInScope(String query, IASScope scope, List<SymbolInformation> result)
     {
         Collection<IDefinition> definitions = scope.getAllLocalDefinitions();
         for (IDefinition definition : definitions)
@@ -4103,7 +4085,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                         && (typeDefinition.getBaseName().startsWith(query)
                         || typeDefinition.getQualifiedName().startsWith(query)))
                 {
-                    SymbolInformationImpl symbol = definitionToSymbol(typeDefinition);
+                    SymbolInformation symbol = definitionToSymbol(typeDefinition);
                     result.add(symbol);
                 }
                 IASScope typeScope = typeDefinition.getContainedScope();
@@ -4119,7 +4101,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 if (functionDefinition.getBaseName().startsWith(query)
                         || functionDefinition.getQualifiedName().startsWith(query))
                 {
-                    SymbolInformationImpl symbol = definitionToSymbol(functionDefinition);
+                    SymbolInformation symbol = definitionToSymbol(functionDefinition);
                     result.add(symbol);
                 }
                 IASScope functionScope = functionDefinition.getContainedScope();
@@ -4135,7 +4117,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 if (variableDefinition.getBaseName().startsWith(query)
                         || variableDefinition.getQualifiedName().startsWith(query))
                 {
-                    SymbolInformationImpl symbol = definitionToSymbol(variableDefinition);
+                    SymbolInformation symbol = definitionToSymbol(variableDefinition);
                     result.add(symbol);
                 }
             }
@@ -4160,7 +4142,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return null;
     }
 
-    private void scopeToSymbols(IASScope scope, List<SymbolInformationImpl> result)
+    private void scopeToSymbols(IASScope scope, List<SymbolInformation> result)
     {
         Collection<IDefinition> definitions = scope.getAllLocalDefinitions();
         for (IDefinition definition : definitions)
@@ -4176,7 +4158,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 ITypeDefinition typeDefinition = (ITypeDefinition) definition;
                 if (!definition.isImplicit())
                 {
-                    SymbolInformationImpl typeSymbol = definitionToSymbol(typeDefinition);
+                    SymbolInformation typeSymbol = definitionToSymbol(typeDefinition);
                     result.add(typeSymbol);
                 }
                 IASScope typeScope = typeDefinition.getContainedScope();
@@ -4189,15 +4171,15 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 {
                     continue;
                 }
-                SymbolInformationImpl localSymbol = definitionToSymbol(definition);
+                SymbolInformation localSymbol = definitionToSymbol(definition);
                 result.add(localSymbol);
             }
         }
     }
 
-    private SymbolInformationImpl definitionToSymbol(IDefinition definition)
+    private SymbolInformation definitionToSymbol(IDefinition definition)
     {
-        SymbolInformationImpl symbol = new SymbolInformationImpl();
+        SymbolInformation symbol = new SymbolInformation();
         if (definition instanceof IClassDefinition)
         {
             symbol.setKind(SymbolKind.Class);
@@ -4231,7 +4213,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             symbol.setKind(SymbolKind.Variable);
         }
         symbol.setName(definition.getQualifiedName());
-        LocationImpl location = new LocationImpl();
+        Location location = new Location();
         String sourcePath = definition.getSourcePath();
         if (sourcePath == null)
         {
@@ -4241,8 +4223,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         Path definitionPath = Paths.get(sourcePath);
         location.setUri(definitionPath.toUri().toString());
-        PositionImpl start = new PositionImpl();
-        PositionImpl end = new PositionImpl();
+        Position start = new Position();
+        Position end = new Position();
         int line = definition.getLine();
         int column = definition.getColumn();
         if (line < 0 || column < 0)
@@ -4262,7 +4244,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             end.setLine(line);
             end.setCharacter(column);
         }
-        RangeImpl range = new RangeImpl();
+        Range range = new Range();
         range.setStart(start);
         range.setEnd(end);
         location.setRange(range);
@@ -4270,7 +4252,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return symbol;
     }
 
-    private static void offsetToLineAndCharacter(Reader in, int targetOffset, PositionImpl result)
+    private static void offsetToLineAndCharacter(Reader in, int targetOffset, Position result)
     {
         try
         {

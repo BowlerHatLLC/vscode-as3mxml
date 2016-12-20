@@ -17,7 +17,9 @@ package com.nextgenactionscript.vscode;
 
 import java.net.Socket;
 
-import io.typefox.lsapi.services.json.LanguageServerToJsonAdapter;
+import org.eclipse.lsp4j.jsonrpc.Launcher;
+import org.eclipse.lsp4j.launch.LSPLauncher;
+import org.eclipse.lsp4j.services.LanguageClient;
 
 /**
  * Contains the entry point for the JAR.
@@ -31,12 +33,10 @@ public class Main
      * The main entry point when the JAR is run. Opens a socket to communicate
      * with Visual Studio Code using the port specified with the
      * -Dnextgeas.vscode.port command line option. Then, instantiates the
-     * ActionScriptLanguageServer, and passes it to an instance of the
-     * LanguageServerToJsonAdapter class provided by the typefox/ls-api library,
+     * ActionScriptLanguageServer, and passes it to the LSP4J library,
      * which handles all of the language server protocol communication.
-     * 
-     * LanguageServerToJsonAdapter calls methods on ActionScriptLanguageServer
-     * as requests come in from VSCode.
+     * LSP4J calls methods on ActionScriptLanguageServer as requests come in
+     * from the text editor.
      */
     public static void main(String[] args)
     {
@@ -51,18 +51,9 @@ public class Main
             Socket socket = new Socket("localhost", Integer.parseInt(port));
 
             ActionScriptLanguageServer server = new ActionScriptLanguageServer();
-
-            LanguageServerToJsonAdapter jsonServer = new LanguageServerToJsonAdapter(server);
-            jsonServer.connect(socket.getInputStream(), socket.getOutputStream());
-            jsonServer.getProtocol().addErrorListener((message, error) -> {
-                System.err.println(message);
-                if (error != null)
-                {
-                    error.printStackTrace();
-                }
-            });
-
-            jsonServer.join();
+            Launcher<LanguageClient> launcher = LSPLauncher.createServerLauncher(server, socket.getInputStream(), socket.getOutputStream());
+            server.connect(launcher.getRemoteProxy());
+            launcher.startListening();
         }
         catch (Exception e)
         {

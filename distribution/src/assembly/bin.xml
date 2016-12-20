@@ -46,7 +46,7 @@
       <outputDirectory>bin</outputDirectory>
       <includes>
         <include>language-server.jar</include>
-        <include>io.typefox.lsapi*.jar</include>
+        <include>org.eclipse.lsp4j*.jar</include>
         <include>org.eclipse.xtend*.jar</include>
         <include>org.eclipse.xtext*.jar</include>
         <include>org.everit.json*.jar</include>

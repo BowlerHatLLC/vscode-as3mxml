@@ -20,55 +20,44 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Consumer;
 
 import org.apache.flex.compiler.tree.as.IASNode;
 
-import io.typefox.lsapi.DidChangeConfigurationParams;
-import io.typefox.lsapi.DidChangeWatchedFilesParams;
-import io.typefox.lsapi.InitializeParams;
-import io.typefox.lsapi.InitializeResult;
-import io.typefox.lsapi.MessageParams;
-import io.typefox.lsapi.ShowMessageRequestParams;
-import io.typefox.lsapi.SymbolInformation;
-import io.typefox.lsapi.TextDocumentSyncKind;
-import io.typefox.lsapi.WorkspaceSymbolParams;
-import io.typefox.lsapi.impl.CompletionOptionsImpl;
-import io.typefox.lsapi.impl.InitializeResultImpl;
-import io.typefox.lsapi.impl.MessageParamsImpl;
-import io.typefox.lsapi.impl.ServerCapabilitiesImpl;
-import io.typefox.lsapi.impl.SignatureHelpOptionsImpl;
-import io.typefox.lsapi.services.LanguageServer;
-import io.typefox.lsapi.services.TextDocumentService;
-import io.typefox.lsapi.services.WindowService;
-import io.typefox.lsapi.services.WorkspaceService;
+import org.eclipse.lsp4j.CompletionOptions;
+import org.eclipse.lsp4j.DidChangeConfigurationParams;
+import org.eclipse.lsp4j.DidChangeWatchedFilesParams;
+import org.eclipse.lsp4j.InitializeParams;
+import org.eclipse.lsp4j.InitializeResult;
+import org.eclipse.lsp4j.ServerCapabilities;
+import org.eclipse.lsp4j.SignatureHelpOptions;
+import org.eclipse.lsp4j.SymbolInformation;
+import org.eclipse.lsp4j.TextDocumentSyncKind;
+import org.eclipse.lsp4j.WorkspaceSymbolParams;
+import org.eclipse.lsp4j.services.LanguageClient;
+import org.eclipse.lsp4j.services.LanguageClientAware;
+import org.eclipse.lsp4j.services.LanguageServer;
+import org.eclipse.lsp4j.services.TextDocumentService;
+import org.eclipse.lsp4j.services.WorkspaceService;
 
 /**
- * Tells Visual Studio Code about the language server's capabilities, and
- * determines if the specified version of the Apache FlexJS SDK is valid.
+ * Tells Visual Studio Code about the language server's capabilities, and sets
+ * up the language server's services.
  */
-public class ActionScriptLanguageServer implements LanguageServer
+public class ActionScriptLanguageServer implements LanguageServer, LanguageClientAware
 {
     private static final String FLEXLIB = "flexlib";
     private static final String FRAMEWORKS_RELATIVE_PATH = "../frameworks";
 
-    /**
-     * Displays a dismissable message bar across the top of Visual Studio Code
-     * that can be an error, warning, or informational.
-     */
-    private Consumer<MessageParams> showMessageCallback = m ->
-    {
-    };
-
     private WorkspaceService workspaceService;
     private ActionScriptTextDocumentService textDocumentService;
-    private WindowService windowService;
+    private LanguageClient languageClient;
 
     public ActionScriptLanguageServer()
     {
+        //the flexlib system property may be configured in the command line
+        //options, but if it isn't, use the framework included with FlexJS
         if (System.getProperty(FLEXLIB) == null)
         {
             System.setProperty(FLEXLIB, findFlexLibDirectoryPath());
@@ -84,26 +73,30 @@ public class ActionScriptLanguageServer implements LanguageServer
         Path workspaceRoot = Paths.get(params.getRootPath()).toAbsolutePath().normalize();
         textDocumentService.setWorkspaceRoot(workspaceRoot);
 
-        InitializeResultImpl result = new InitializeResultImpl();
+        InitializeResult result = new InitializeResult();
 
-        ServerCapabilitiesImpl serverCapabilities = new ServerCapabilitiesImpl();
+        ServerCapabilities serverCapabilities = new ServerCapabilities();
         serverCapabilities.setTextDocumentSync(TextDocumentSyncKind.Incremental);
 
-        CompletionOptionsImpl completionOptions = new CompletionOptionsImpl();
+        serverCapabilities.setCodeActionProvider(true);
+
+        CompletionOptions completionOptions = new CompletionOptions();
         completionOptions.setTriggerCharacters(Arrays.asList(".", ":", " ", "<"));
         serverCapabilities.setCompletionProvider(completionOptions);
 
         serverCapabilities.setDefinitionProvider(true);
         serverCapabilities.setDocumentSymbolProvider(true);
-        serverCapabilities.setWorkspaceSymbolProvider(true);
+        serverCapabilities.setDocumentHighlightProvider(false);
+        serverCapabilities.setDocumentRangeFormattingProvider(false);
         serverCapabilities.setHoverProvider(true);
         serverCapabilities.setReferencesProvider(true);
-        serverCapabilities.setCodeActionProvider(true);
         serverCapabilities.setRenameProvider(true);
 
-        SignatureHelpOptionsImpl signatureHelpOptions = new SignatureHelpOptionsImpl();
+        SignatureHelpOptions signatureHelpOptions = new SignatureHelpOptions();
         signatureHelpOptions.setTriggerCharacters(Arrays.asList("(", ","));
         serverCapabilities.setSignatureHelpProvider(signatureHelpOptions);
+
+        serverCapabilities.setWorkspaceSymbolProvider(true);
 
         result.setCapabilities(serverCapabilities);
 
@@ -111,9 +104,10 @@ public class ActionScriptLanguageServer implements LanguageServer
     }
 
     @Override
-    public void shutdown()
+    public CompletableFuture<Object> shutdown()
     {
         //not used at this time
+        return CompletableFuture.completedFuture(null);
     }
 
     @Override
@@ -122,54 +116,13 @@ public class ActionScriptLanguageServer implements LanguageServer
         //not used at this time
     }
 
-    @Override
-    public void onTelemetryEvent(Consumer<Object> var1)
-    {
-        //not used at this time
-    }
-
-    /**
-     * Provides a way to communicate with the user and Visual Studio Code.
-     */
-    @Override
-    public WindowService getWindowService()
-    {
-        if(windowService == null)
-        {
-            windowService = new WindowService()
-            {
-                @Override
-                public void onShowMessage(Consumer<MessageParams> callback)
-                {
-                    showMessageCallback = callback;
-                    //pass the callback to the text document service, in case it
-                    //needs to show a message
-                    textDocumentService.showMessageCallback = callback;
-                }
-
-                @Override
-                public void onShowMessageRequest(Consumer<ShowMessageRequestParams> callback)
-                {
-                    //not used at this time
-                }
-
-                @Override
-                public void onLogMessage(Consumer<MessageParams> callback)
-                {
-                    //not used at this time
-                }
-            };
-        }
-        return windowService;
-    }
-
     /**
      * Requests from Visual Studio Code that are at the workspace level.
      */
     @Override
     public WorkspaceService getWorkspaceService()
     {
-        if(workspaceService == null)
+        if (workspaceService == null)
         {
             workspaceService = new WorkspaceService()
             {
@@ -183,7 +136,7 @@ public class ActionScriptLanguageServer implements LanguageServer
                 }
 
                 @Override
-                public void didChangeConfiguraton(DidChangeConfigurationParams params)
+                public void didChangeConfiguration(DidChangeConfigurationParams params)
                 {
                     //inside the extension's entry point, this is handled already
                     //it actually restarts the language server because the language
@@ -214,8 +167,22 @@ public class ActionScriptLanguageServer implements LanguageServer
         if (textDocumentService == null)
         {
             textDocumentService = new ActionScriptTextDocumentService();
+            textDocumentService.setLanguageClient(languageClient);
         }
         return textDocumentService;
+    }
+
+    /**
+     * Passes in a set of functions to communicate with VSCode.
+     */
+    @Override
+    public void connect(LanguageClient client)
+    {
+        languageClient = client;
+        if (textDocumentService != null)
+        {
+            textDocumentService.setLanguageClient(languageClient);
+        }
     }
 
     /**
