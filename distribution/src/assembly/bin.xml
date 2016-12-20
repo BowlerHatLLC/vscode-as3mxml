@@ -50,6 +50,7 @@
         <include>org.eclipse.xtend*.jar</include>
         <include>org.eclipse.xtext*.jar</include>
         <include>org.everit.json*.jar</include>
+        <include>gson*.jar</include>
         <include>json*.jar</include>
       </includes>
     </fileSet>
