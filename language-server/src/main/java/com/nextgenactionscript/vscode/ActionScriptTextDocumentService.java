@@ -110,6 +110,7 @@ import org.apache.flex.compiler.tree.as.IInterfaceNode;
 import org.apache.flex.compiler.tree.as.IKeywordNode;
 import org.apache.flex.compiler.tree.as.IMemberAccessExpressionNode;
 import org.apache.flex.compiler.tree.as.INamespaceDecorationNode;
+import org.apache.flex.compiler.tree.as.IPackageNode;
 import org.apache.flex.compiler.tree.as.IScopedDefinitionNode;
 import org.apache.flex.compiler.tree.as.IScopedNode;
 import org.apache.flex.compiler.tree.as.IVariableNode;
@@ -191,6 +192,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private static final String MARKDOWN_CODE_BLOCK_NEXTGENAS_START = "```nextgenas\n";
     private static final String MARKDOWN_CODE_BLOCK_MXML_START = "```mxml\n";
     private static final String MARKDOWN_CODE_BLOCK_END = "\n```";
+    private static final String COMMAND_IMPORT = "nextgenas.addImport";
 
     private static final String[] LANGUAGE_TYPE_NAMES =
             {
@@ -586,7 +588,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         int end = message.length() - 1;
         String typeString = message.substring(start, end);
 
-        ArrayList<String> types = new ArrayList<>();
+        ArrayList<IDefinition> types = new ArrayList<>();
         for (ICompilationUnit unit : compilationUnits)
         {
             try
@@ -609,7 +611,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                         }
                         if (baseName.equals(typeString))
                         {
-                            types.add(typeDefinition.getQualifiedName());
+                            types.add(typeDefinition);
                         }
                     }
                 }
@@ -619,13 +621,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 //safe to ignore
             }
         }
-        for (String qualifiedName : types)
+        for (IDefinition definitionToImport : types)
         {
-            Command command = new Command();
-            command.setCommand("nextgenas.addImport");
-            command.setTitle("Import " + qualifiedName);
-            command.setArguments(Collections.singletonList(qualifiedName));
-            commands.add(command);
+            commands.add(createImportCommand(definitionToImport));
         }
     }
 
@@ -2536,6 +2534,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             item.setInsertText(prefix + definition.getBaseName());
         }
+        if (definition instanceof ITypeDefinition)
+        {
+            item.setCommand(createImportCommand(definition));
+        }
         result.getItems().add(item);
     }
 
@@ -2545,6 +2547,59 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         item.setKind(CompletionItemKind.Keyword);
         item.setLabel(keyword);
         result.getItems().add(item);
+    }
+
+    private Command createImportCommand(IDefinition definition)
+    {
+        IASNode ast = null;
+        try
+        {
+            ast = currentUnit.getSyntaxTreeRequest().get().getAST();
+        }
+        catch (Exception e)
+        {
+            //do nothing
+        }
+        int startIndex = -1;
+        int endIndex = -1;
+        if (ast != null)
+        {
+            IASNode offsetNode = ast.getContainingNode(currentOffset);
+            if (offsetNode != null)
+            {
+                IPackageNode packageNode = (IPackageNode) offsetNode.getAncestorOfType(IPackageNode.class);
+                if (packageNode == null)
+                {
+                    IFileNode fileNode = (IFileNode) offsetNode.getAncestorOfType(IFileNode.class);
+                    boolean foundPackage = false;
+                    for (int i = 0; i < fileNode.getChildCount(); i++)
+                    {
+                        IASNode childNode = fileNode.getChild(i);
+                        if (foundPackage)
+                        {
+                            //use the start of the the next node after the
+                            //package as the place where the import can go
+                            startIndex = childNode.getAbsoluteStart();
+                            break;
+                        }
+                        if (childNode instanceof IPackageNode)
+                        {
+                            foundPackage = true;
+                        }
+                    }
+                }
+                else
+                {
+                    endIndex = packageNode.getAbsoluteEnd();
+                }
+            }
+        }
+        String qualifiedName = definition.getQualifiedName();
+        Command importCommand = new Command();
+        importCommand.setTitle("Import " + qualifiedName);
+        importCommand.setCommand(COMMAND_IMPORT);
+        importCommand.setArguments(Arrays.asList(qualifiedName, startIndex, endIndex));
+        return importCommand;
     }
 
     private void resolveDefinition(IDefinition definition, List<Location> result)

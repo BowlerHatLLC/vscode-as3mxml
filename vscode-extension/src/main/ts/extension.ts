@@ -149,7 +149,7 @@ export function activate(context: vscode.ExtensionContext)
 			});
 		});
 	});
-	vscode.commands.registerTextEditorCommand("nextgenas.addImport", (textEditor: vscode.TextEditor, edit: vscode.TextEditorEdit, qualifiedName: string) =>
+	vscode.commands.registerTextEditorCommand("nextgenas.addImport", (textEditor: vscode.TextEditor, edit: vscode.TextEditorEdit, qualifiedName: string, startIndex: number, endIndex: number) =>
 	{
 		if(!qualifiedName)
 		{
@@ -160,11 +160,19 @@ export function activate(context: vscode.ExtensionContext)
 		let regExp = /^(\s*)import ([\w\.]+)/gm;
 		let matches;
 		let currentMatches;
+		if(startIndex !== -1)
+		{
+			regExp.lastIndex = startIndex;
+		}
 		do
 		{
 			currentMatches = regExp.exec(text);
 			if(currentMatches)
 			{
+				if(endIndex !== -1 && currentMatches.index >= endIndex)
+				{
+					break;
+				}
 				if(currentMatches[2] === qualifiedName)
 				{
 					//this class is already imported!
@@ -185,14 +193,22 @@ export function activate(context: vscode.ExtensionContext)
 		}
 		else //no existing imports
 		{
-			regExp = /^package( [\w\.]+)*\s*{[\r\n]+(\s*)/g;
-			matches = regExp.exec(text);
-			if(!matches)
+			if(startIndex !== -1)
 			{
-				return;
+				position = document.positionAt(startIndex);
+				indent = "";
 			}
-			position = document.positionAt(regExp.lastIndex);
-			indent = matches[2];
+			else
+			{
+				regExp = /^package( [\w\.]+)*\s*{[\r\n]+(\s*)/g;
+				matches = regExp.exec(text);
+				if(!matches)
+				{
+					return;
+				}
+				position = document.positionAt(regExp.lastIndex);
+				indent = matches[2];
+			}
 			lineBreaks += "\n"; //add an extra line break
 			position = new vscode.Position(position.line, 0);
 		}
