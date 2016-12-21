@@ -24,6 +24,10 @@
 		</dict>
 		<dict>
 			<key>include</key>
+			<string>#interface</string>
+		</dict>
+		<dict>
+			<key>include</key>
 			<string>#import</string>
 		</dict>
 		<dict>

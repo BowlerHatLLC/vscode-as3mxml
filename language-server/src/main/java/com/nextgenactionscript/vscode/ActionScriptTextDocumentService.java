@@ -188,6 +188,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private static final String DEFAULT_NS_PREFIX = "ns";
     private static final String STAR = "*";
     private static final String DOT_STAR = ".*";
+    private static final String MARKDOWN_CODE_BLOCK_NEXTGENAS_START = "```nextgenas\n";
+    private static final String MARKDOWN_CODE_BLOCK_MXML_START = "```mxml\n";
+    private static final String MARKDOWN_CODE_BLOCK_END = "\n```";
 
     private static final String[] LANGUAGE_TYPE_NAMES =
             {
@@ -1523,16 +1526,18 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             String prefix = offsetTag.getPrefix();
             Hover result = new Hover();
             List<String> contents = new ArrayList<>();
-            String detail = null;
+            StringBuilder detailBuilder = new StringBuilder();
+            detailBuilder.append(MARKDOWN_CODE_BLOCK_MXML_START);
             if (prefix.length() > 0)
             {
-                detail = "xmlns:" + prefix + "=\"" + offsetTag.getURI() + "\"";
+                detailBuilder.append("xmlns:" + prefix + "=\"" + offsetTag.getURI() + "\"");
             }
             else
             {
-                detail = "xmlns=\"" + offsetTag.getURI() + "\"";
+                detailBuilder.append("xmlns=\"" + offsetTag.getURI() + "\"");
             }
-            contents.add(detail);
+            detailBuilder.append(MARKDOWN_CODE_BLOCK_END);
+            contents.add(detailBuilder.toString());
             result.setContents(contents);
             return CompletableFuture.completedFuture(result);
         }
@@ -3775,6 +3780,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private String getDefinitionDetail(IDefinition definition)
     {
         StringBuilder detailBuilder = new StringBuilder();
+        detailBuilder.append(MARKDOWN_CODE_BLOCK_NEXTGENAS_START);
         if (definition instanceof IClassDefinition)
         {
             IClassDefinition classDefinition = (IClassDefinition) definition;
@@ -3843,14 +3849,21 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             else if (parentDefinition instanceof IFunctionDefinition)
             {
-                detailBuilder.append("(local ");
-                if (variableDefinition instanceof IConstantDefinition)
+                if (variableDefinition instanceof IParameterDefinition)
                 {
-                    detailBuilder.append("const) ");
+                    detailBuilder.append("(parameter) ");
                 }
                 else
                 {
-                    detailBuilder.append("var) ");
+                    detailBuilder.append("(local ");
+                    if (variableDefinition instanceof IConstantDefinition)
+                    {
+                        detailBuilder.append("const) ");
+                    }
+                    else
+                    {
+                        detailBuilder.append("var) ");
+                    }
                 }
             }
             else
@@ -3939,6 +3952,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             detailBuilder.append(")");
             detailBuilder.append("]");
         }
+        detailBuilder.append(MARKDOWN_CODE_BLOCK_END);
         return detailBuilder.toString();
     }
 
