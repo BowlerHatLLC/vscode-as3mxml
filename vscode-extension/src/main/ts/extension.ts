@@ -157,7 +157,7 @@ export function activate(context: vscode.ExtensionContext)
 		}
 		let document = textEditor.document;
 		let text = document.getText();
-		let regExp = /^(\s*)import ([\w\.]+)/gm;
+		let regExp = /^([ \t]*)import ([\w\.]+)/gm;
 		let matches;
 		let currentMatches;
 		if(startIndex !== -1)
@@ -187,6 +187,7 @@ export function activate(context: vscode.ExtensionContext)
 		let position: vscode.Position;
 		if(matches)
 		{
+			//we found existing imports
 			position = document.positionAt(matches.index);
 			indent = matches[1];
 			position = new vscode.Position(position.line + 1, 0);
@@ -196,21 +197,41 @@ export function activate(context: vscode.ExtensionContext)
 			if(startIndex !== -1)
 			{
 				position = document.positionAt(startIndex);
-				indent = "";
+				if(position.character > 0)
+				{
+					//go to the next line, if we're not at the start
+					position = position.with(position.line + 1, 0);
+				}
+				//try to use the same indent as whatever follows
+				let regExp = /^([ \t]*)\w/gm;
+				regExp.lastIndex = startIndex;
+				matches = regExp.exec(text);
+				if(matches)
+				{
+					indent = matches[1];
+				}
+				else
+				{
+					indent = "";
+				}
 			}
 			else
 			{
-				regExp = /^package( [\w\.]+)*\s*{[\r\n]+(\s*)/g;
+				regExp = /^package( [\w\.]+)*\s*{[\r\n]+([ \t]*)/g;
 				matches = regExp.exec(text);
 				if(!matches)
 				{
 					return;
 				}
 				position = document.positionAt(regExp.lastIndex);
+				if(position.character > 0)
+				{
+					//go to the beginning of the line, if we're not there
+					position = position.with(position.line, 0);
+				}
 				indent = matches[2];
 			}
 			lineBreaks += "\n"; //add an extra line break
-			position = new vscode.Position(position.line, 0);
 		}
 		let textToInsert = indent + "import " + qualifiedName + ";" + lineBreaks;
 		edit.insert(position, textToInsert);
