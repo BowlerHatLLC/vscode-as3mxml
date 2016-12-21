@@ -157,7 +157,7 @@ export function activate(context: vscode.ExtensionContext)
 		}
 		let document = textEditor.document;
 		let text = document.getText();
-		let regExp = /^(\s*)import [\w\.]+/gm;
+		let regExp = /^(\s*)import ([\w\.]+)/gm;
 		let matches;
 		let currentMatches;
 		do
@@ -165,6 +165,11 @@ export function activate(context: vscode.ExtensionContext)
 			currentMatches = regExp.exec(text);
 			if(currentMatches)
 			{
+				if(currentMatches[2] === qualifiedName)
+				{
+					//this class is already imported!
+					return;
+				}
 				matches = currentMatches;
 			}
 		}
