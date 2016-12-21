@@ -1736,7 +1736,7 @@ suite("hover provider", () =>
 							"vscode.executeHoverProvider failed to provide hover contents for local variable reference: " + uri);
 						let content = contents[0];
 						let contentValue: string;
-						if(content instanceof String)
+						if(typeof content === "string")
 						{
 							contentValue = content;
 						}
@@ -1770,7 +1770,7 @@ suite("hover provider", () =>
 							"vscode.executeHoverProvider failed to provide hover contents for local function reference: " + uri);
 						let content = contents[0];
 						let contentValue: string;
-						if(content instanceof String)
+						if(typeof content === "string")
 						{
 							contentValue = content;
 						}
@@ -1804,7 +1804,7 @@ suite("hover provider", () =>
 							"vscode.executeHoverProvider failed to provide hover contents for member variable reference: " + uri);
 						let content = contents[0];
 						let contentValue: string;
-						if(content instanceof String)
+						if(typeof content === "string")
 						{
 							contentValue = content;
 						}
@@ -1839,7 +1839,7 @@ suite("hover provider", () =>
 							"vscode.executeHoverProvider failed to provide hover contents for member variable reference with member access operator on this: " + uri);
 						let content = contents[0];
 						let contentValue: string;
-						if(content instanceof String)
+						if(typeof content === "string")
 						{
 							contentValue = content;
 						}
@@ -1873,7 +1873,7 @@ suite("hover provider", () =>
 							"vscode.executeHoverProvider failed to provide hover contents for member function reference: " + uri);
 						let content = contents[0];
 						let contentValue: string;
-						if(content instanceof String)
+						if(typeof content === "string")
 						{
 							contentValue = content;
 						}
@@ -1907,7 +1907,7 @@ suite("hover provider", () =>
 							"vscode.executeHoverProvider failed to provide hover contents for member function reference with member access operator on this: " + uri);
 						let content = contents[0];
 						let contentValue: string;
-						if(content instanceof String)
+						if(typeof content === "string")
 						{
 							contentValue = content;
 						}
@@ -1941,7 +1941,7 @@ suite("hover provider", () =>
 							"vscode.executeHoverProvider failed to provide hover contents for member property reference: " + uri);
 						let content = contents[0];
 						let contentValue: string;
-						if(content instanceof String)
+						if(typeof content === "string")
 						{
 							contentValue = content;
 						}
@@ -1975,7 +1975,7 @@ suite("hover provider", () =>
 							"vscode.executeHoverProvider failed to provide hover contents for member property reference with member access operator on this: " + uri);
 						let content = contents[0];
 						let contentValue: string;
-						if(content instanceof String)
+						if(typeof content === "string")
 						{
 							contentValue = content;
 						}
@@ -2009,7 +2009,7 @@ suite("hover provider", () =>
 							"vscode.executeHoverProvider failed to provide hover contents for static variable reference: " + uri);
 						let content = contents[0];
 						let contentValue: string;
-						if(content instanceof String)
+						if(typeof content === "string")
 						{
 							contentValue = content;
 						}
@@ -2043,7 +2043,7 @@ suite("hover provider", () =>
 							"vscode.executeHoverProvider failed to provide hover contents for static variable reference with member access operator on class: " + uri);
 						let content = contents[0];
 						let contentValue: string;
-						if(content instanceof String)
+						if(typeof content === "string")
 						{
 							contentValue = content;
 						}
@@ -2077,7 +2077,7 @@ suite("hover provider", () =>
 							"vscode.executeHoverProvider failed to provide hover contents for static function reference: " + uri);
 						let content = contents[0];
 						let contentValue: string;
-						if(content instanceof String)
+						if(typeof content === "string")
 						{
 							contentValue = content;
 						}
@@ -2111,7 +2111,7 @@ suite("hover provider", () =>
 							"vscode.executeHoverProvider failed to provide hover contents for static function reference with member access operator on class: " + uri);
 						let content = contents[0];
 						let contentValue: string;
-						if(content instanceof String)
+						if(typeof content === "string")
 						{
 							contentValue = content;
 						}
@@ -2145,7 +2145,7 @@ suite("hover provider", () =>
 							"vscode.executeHoverProvider failed to provide hover contents for static property reference: " + uri);
 						let content = contents[0];
 						let contentValue: string;
-						if(content instanceof String)
+						if(typeof content === "string")
 						{
 							contentValue = content;
 						}
@@ -2179,7 +2179,7 @@ suite("hover provider", () =>
 							"vscode.executeHoverProvider failed to provide hover contents for static property reference with member access operator on class: " + uri);
 						let content = contents[0];
 						let contentValue: string;
-						if(content instanceof String)
+						if(typeof content === "string")
 						{
 							contentValue = content;
 						}
@@ -2214,7 +2214,7 @@ suite("hover provider", () =>
 							"vscode.executeHoverProvider failed to provide hover contents for package function reference: " + uri);
 						let content = contents[0];
 						let contentValue: string;
-						if(content instanceof String)
+						if(typeof content === "string")
 						{
 							contentValue = content;
 						}
@@ -2249,7 +2249,7 @@ suite("hover provider", () =>
 							"vscode.executeHoverProvider failed to provide hover contents for fully-qualified package function reference: " + uri);
 						let content = contents[0];
 						let contentValue: string;
-						if(content instanceof String)
+						if(typeof content === "string")
 						{
 							contentValue = content;
 						}
@@ -2284,7 +2284,7 @@ suite("hover provider", () =>
 							"vscode.executeHoverProvider failed to provide hover contents for package variable reference: " + uri);
 						let content = contents[0];
 						let contentValue: string;
-						if(content instanceof String)
+						if(typeof content === "string")
 						{
 							contentValue = content;
 						}
@@ -2319,7 +2319,7 @@ suite("hover provider", () =>
 							"vscode.executeHoverProvider failed to provide hover contents for fully-qualified package variable reference: " + uri);
 						let content = contents[0];
 						let contentValue: string;
-						if(content instanceof String)
+						if(typeof content === "string")
 						{
 							contentValue = content;
 						}
@@ -2354,7 +2354,7 @@ suite("hover provider", () =>
 							"vscode.executeHoverProvider failed to provide hover contents for super static variable reference: " + uri);
 						let content = contents[0];
 						let contentValue: string;
-						if(content instanceof String)
+						if(typeof content === "string")
 						{
 							contentValue = content;
 						}
@@ -2389,7 +2389,7 @@ suite("hover provider", () =>
 							"vscode.executeHoverProvider failed to provide hover contents for super static variable reference with member access operator on superclass: " + uri);
 						let content = contents[0];
 						let contentValue: string;
-						if(content instanceof String)
+						if(typeof content === "string")
 						{
 							contentValue = content;
 						}
@@ -2424,7 +2424,7 @@ suite("hover provider", () =>
 							"vscode.executeHoverProvider failed to provide hover contents for super static property reference: " + uri);
 						let content = contents[0];
 						let contentValue: string;
-						if(content instanceof String)
+						if(typeof content === "string")
 						{
 							contentValue = content;
 						}
@@ -2459,7 +2459,7 @@ suite("hover provider", () =>
 							"vscode.executeHoverProvider failed to provide hover contents for super static property reference with member access operator on superclass: " + uri);
 						let content = contents[0];
 						let contentValue: string;
-						if(content instanceof String)
+						if(typeof content === "string")
 						{
 							contentValue = content;
 						}
@@ -2494,7 +2494,7 @@ suite("hover provider", () =>
 							"vscode.executeHoverProvider failed to provide hover contents for super static function reference: " + uri);
 						let content = contents[0];
 						let contentValue: string;
-						if(content instanceof String)
+						if(typeof content === "string")
 						{
 							contentValue = content;
 						}
@@ -2529,7 +2529,7 @@ suite("hover provider", () =>
 							"vscode.executeHoverProvider failed to provide hover contents for super static function reference with member access operator on superclass: " + uri);
 						let content = contents[0];
 						let contentValue: string;
-						if(content instanceof String)
+						if(typeof content === "string")
 						{
 							contentValue = content;
 						}
@@ -2564,7 +2564,7 @@ suite("hover provider", () =>
 							"vscode.executeHoverProvider failed to provide hover contents for super member function reference: " + uri);
 						let content = contents[0];
 						let contentValue: string;
-						if(content instanceof String)
+						if(typeof content === "string")
 						{
 							contentValue = content;
 						}
@@ -2599,7 +2599,7 @@ suite("hover provider", () =>
 							"vscode.executeHoverProvider failed to provide hover contents for super member function reference with member access operator on this: " + uri);
 						let content = contents[0];
 						let contentValue: string;
-						if(content instanceof String)
+						if(typeof content === "string")
 						{
 							contentValue = content;
 						}
@@ -2634,7 +2634,7 @@ suite("hover provider", () =>
 							"vscode.executeHoverProvider failed to provide hover contents for super member function reference with member access operator on super: " + uri);
 						let content = contents[0];
 						let contentValue: string;
-						if(content instanceof String)
+						if(typeof content === "string")
 						{
 							contentValue = content;
 						}
@@ -2669,7 +2669,7 @@ suite("hover provider", () =>
 							"vscode.executeHoverProvider failed to provide hover contents for super member variable reference: " + uri);
 						let content = contents[0];
 						let contentValue: string;
-						if(content instanceof String)
+						if(typeof content === "string")
 						{
 							contentValue = content;
 						}
@@ -2704,7 +2704,7 @@ suite("hover provider", () =>
 							"vscode.executeHoverProvider failed to provide hover contents for super member variable reference with member access operator on this: " + uri);
 						let content = contents[0];
 						let contentValue: string;
-						if(content instanceof String)
+						if(typeof content === "string")
 						{
 							contentValue = content;
 						}
@@ -2739,7 +2739,7 @@ suite("hover provider", () =>
 							"vscode.executeHoverProvider failed to provide hover contents for super member variable reference with member access operator on super: " + uri);
 						let content = contents[0];
 						let contentValue: string;
-						if(content instanceof String)
+						if(typeof content === "string")
 						{
 							contentValue = content;
 						}
@@ -2774,7 +2774,7 @@ suite("hover provider", () =>
 							"vscode.executeHoverProvider failed to provide hover contents for super member property reference: " + uri);
 						let content = contents[0];
 						let contentValue: string;
-						if(content instanceof String)
+						if(typeof content === "string")
 						{
 							contentValue = content;
 						}
@@ -2809,7 +2809,7 @@ suite("hover provider", () =>
 							"vscode.executeHoverProvider failed to provide hover contents for super member property reference with member access operator on this: " + uri);
 						let content = contents[0];
 						let contentValue: string;
-						if(content instanceof String)
+						if(typeof content === "string")
 						{
 							contentValue = content;
 						}
@@ -2844,7 +2844,7 @@ suite("hover provider", () =>
 							"vscode.executeHoverProvider failed to provide hover contents for super member property reference with member access operator on super: " + uri);
 						let content = contents[0];
 						let contentValue: string;
-						if(content instanceof String)
+						if(typeof content === "string")
 						{
 							contentValue = content;
 						}
@@ -2878,7 +2878,7 @@ suite("hover provider", () =>
 							"vscode.executeHoverProvider failed to provide hover contents for file-internal variable reference: " + uri);
 						let content = contents[0];
 						let contentValue: string;
-						if(content instanceof String)
+						if(typeof content === "string")
 						{
 							contentValue = content;
 						}
@@ -2912,7 +2912,7 @@ suite("hover provider", () =>
 							"vscode.executeHoverProvider failed to provide hover contents for file-internal function reference: " + uri);
 						let content = contents[0];
 						let contentValue: string;
-						if(content instanceof String)
+						if(typeof content === "string")
 						{
 							contentValue = content;
 						}
@@ -2946,7 +2946,7 @@ suite("hover provider", () =>
 							"vscode.executeHoverProvider failed to provide hover contents for file-internal class reference: " + uri);
 						let content = contents[0];
 						let contentValue: string;
-						if(content instanceof String)
+						if(typeof content === "string")
 						{
 							contentValue = content;
 						}
@@ -2980,7 +2980,7 @@ suite("hover provider", () =>
 							"vscode.executeHoverProvider failed to provide hover contents for file-internal member function reference: " + uri);
 						let content = contents[0];
 						let contentValue: string;
-						if(content instanceof String)
+						if(typeof content === "string")
 						{
 							contentValue = content;
 						}
@@ -3014,7 +3014,7 @@ suite("hover provider", () =>
 							"vscode.executeHoverProvider failed to provide hover contents for file-internal member variable reference: " + uri);
 						let content = contents[0];
 						let contentValue: string;
-						if(content instanceof String)
+						if(typeof content === "string")
 						{
 							contentValue = content;
 						}
@@ -3048,7 +3048,7 @@ suite("hover provider", () =>
 							"vscode.executeHoverProvider failed to provide hover contents for file-internal member property reference: " + uri);
 						let content = contents[0];
 						let contentValue: string;
-						if(content instanceof String)
+						if(typeof content === "string")
 						{
 							contentValue = content;
 						}
@@ -3082,7 +3082,7 @@ suite("hover provider", () =>
 							"vscode.executeHoverProvider failed to provide hover contents for file-internal static property reference: " + uri);
 						let content = contents[0];
 						let contentValue: string;
-						if(content instanceof String)
+						if(typeof content === "string")
 						{
 							contentValue = content;
 						}
@@ -3116,7 +3116,7 @@ suite("hover provider", () =>
 							"vscode.executeHoverProvider failed to provide hover contents for file-internal static variable reference: " + uri);
 						let content = contents[0];
 						let contentValue: string;
-						if(content instanceof String)
+						if(typeof content === "string")
 						{
 							contentValue = content;
 						}
@@ -3150,7 +3150,7 @@ suite("hover provider", () =>
 							"vscode.executeHoverProvider failed to provide hover contents for file-internal static function reference: " + uri);
 						let content = contents[0];
 						let contentValue: string;
-						if(content instanceof String)
+						if(typeof content === "string")
 						{
 							contentValue = content;
 						}
