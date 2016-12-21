@@ -28,6 +28,8 @@ public class Main
 {
     private static final int MISSING_PORT = 100;
     private static final int SERVER_CONNECT_ERROR = 101;
+    private static final String SYSTEM_PROPERTY_PORT = "nextgeas.vscode.port";
+    private static final String SOCKET_HOST = "localhost";
 
     /**
      * The main entry point when the JAR is run. Opens a socket to communicate
@@ -40,24 +42,26 @@ public class Main
      */
     public static void main(String[] args)
     {
-        String port = System.getProperty("nextgeas.vscode.port");
+        String port = System.getProperty(SYSTEM_PROPERTY_PORT);
         if (port == null)
         {
-            System.err.println("Error: System property nextgeas.vscode.port is required.");
+            System.err.println("NextGen ActionScript language server encountered an error: System property nextgeas.vscode.port is required.");
             System.exit(MISSING_PORT);
         }
         try
         {
-            Socket socket = new Socket("localhost", Integer.parseInt(port));
-
+            Socket socket = new Socket(SOCKET_HOST, Integer.parseInt(port));
             ActionScriptLanguageServer server = new ActionScriptLanguageServer();
-            Launcher<LanguageClient> launcher = LSPLauncher.createServerLauncher(server, socket.getInputStream(), socket.getOutputStream());
+            Launcher<LanguageClient> launcher = LSPLauncher.createServerLauncher(
+                    server, socket.getInputStream(), socket.getOutputStream());
             server.connect(launcher.getRemoteProxy());
             launcher.startListening();
         }
         catch (Exception e)
         {
-            e.printStackTrace();
+            System.err.println("NextGen ActionScript language server failed to connect.");
+            System.err.println("Visit the following URL to file an issue, and please include this log: https://github.com/BowlerHatLLC/vscode-nextgenas/issues");
+            e.printStackTrace(System.err);
             System.exit(SERVER_CONNECT_ERROR);
         }
     }
