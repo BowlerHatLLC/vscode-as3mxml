@@ -239,6 +239,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private IWorkspace currentWorkspace;
     private ASConfigOptions currentOptions;
     private int currentOffset = -1;
+    private int importStartIndex = -1;
+    private int importEndIndex = -1;
     private LanguageServerFileSpecGetter fileSpecGetter;
     private HashSet<URI> newFilesWithErrors = new HashSet<>();
     private HashSet<URI> oldFilesWithErrors = new HashSet<>();
@@ -2551,54 +2553,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private Command createImportCommand(IDefinition definition)
     {
-        IASNode ast = null;
-        try
-        {
-            ast = currentUnit.getSyntaxTreeRequest().get().getAST();
-        }
-        catch (Exception e)
-        {
-            //do nothing
-        }
-        int startIndex = -1;
-        int endIndex = -1;
-        if (ast != null)
-        {
-            IASNode offsetNode = ast.getContainingNode(currentOffset);
-            if (offsetNode != null)
-            {
-                IPackageNode packageNode = (IPackageNode) offsetNode.getAncestorOfType(IPackageNode.class);
-                if (packageNode == null)
-                {
-                    IFileNode fileNode = (IFileNode) offsetNode.getAncestorOfType(IFileNode.class);
-                    boolean foundPackage = false;
-                    for (int i = 0; i < fileNode.getChildCount(); i++)
-                    {
-                        IASNode childNode = fileNode.getChild(i);
-                        if (foundPackage)
-                        {
-                            //use the start of the the next node after the
-                            //package as the place where the import can go
-                            startIndex = childNode.getAbsoluteStart();
-                            break;
-                        }
-                        if (childNode instanceof IPackageNode)
-                        {
-                            foundPackage = true;
-                        }
-                    }
-                }
-                else
-                {
-                    endIndex = packageNode.getAbsoluteEnd();
-                }
-            }
-        }
         String qualifiedName = definition.getQualifiedName();
         Command importCommand = new Command();
         importCommand.setTitle("Import " + qualifiedName);
         importCommand.setCommand(COMMAND_IMPORT);
-        importCommand.setArguments(Arrays.asList(qualifiedName, startIndex, endIndex));
+        importCommand.setArguments(Arrays.asList(qualifiedName, importStartIndex, importEndIndex));
         return importCommand;
     }
 
@@ -3578,6 +3537,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return null;
         }
         currentOffset = -1;
+        importStartIndex = -1;
+        importEndIndex = -1;
         Path path = getPathFromLanguageServerURI(uri);
         if (path == null)
         {
@@ -3640,6 +3601,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private IASNode getOffsetNode(TextDocumentIdentifier textDocument, Position position)
     {
         currentOffset = -1;
+        if (!textDocument.getUri().endsWith(MXML_EXTENSION))
+        {
+            //if we're in an <fx:Script> element, these will have been
+            //previously calculated, so don't clear them
+            importStartIndex = -1;
+            importEndIndex = -1;
+        }
         Path path = getPathFromLanguageServerURI(textDocument.getUri());
         if (path == null)
         {
@@ -3689,7 +3657,41 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             System.err.println("Could not find code at position " + position.getLine() + ":" + position.getCharacter() + " in file " + path.toAbsolutePath().toString());
             return null;
         }
-        return ast.getContainingNode(currentOffset);
+        IASNode offsetNode = ast.getContainingNode(currentOffset);
+        if (offsetNode != null)
+        {
+            //if we have an offset node, try to find where imports may be added
+            IPackageNode packageNode = (IPackageNode) offsetNode.getAncestorOfType(IPackageNode.class);
+            if (packageNode == null)
+            {
+                IFileNode fileNode = (IFileNode) offsetNode.getAncestorOfType(IFileNode.class);
+                if (fileNode != null)
+                {
+                    boolean foundPackage = false;
+                    for (int i = 0; i < fileNode.getChildCount(); i++)
+                    {
+                        IASNode childNode = fileNode.getChild(i);
+                        if (foundPackage)
+                        {
+                            //this is the node following the package
+                            importStartIndex = childNode.getAbsoluteStart();
+                            break;
+                        }
+                        if (childNode instanceof IPackageNode)
+                        {
+                            //use the start of the the next node after the
+                            //package as the place where the import can be added
+                            foundPackage = true;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                importEndIndex = packageNode.getAbsoluteEnd();
+            }
+        }
+        return offsetNode;
     }
 
     private boolean isInsideTagPrefix(IMXMLTagData tag, int offset)
