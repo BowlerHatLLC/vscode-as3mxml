@@ -1505,7 +1505,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         Hover result = new Hover();
         String detail = getDefinitionDetail(definition);
         List<String> contents = new ArrayList<>();
-        contents.add(detail);
+        contents.add(MARKDOWN_CODE_BLOCK_NEXTGENAS_START + detail + MARKDOWN_CODE_BLOCK_END);
         result.setContents(contents);
         return CompletableFuture.completedFuture(result);
     }
@@ -1543,7 +1543,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         Hover result = new Hover();
         String detail = getDefinitionDetail(definition);
         List<String> contents = new ArrayList<>();
-        contents.add(detail);
+        contents.add(MARKDOWN_CODE_BLOCK_NEXTGENAS_START + detail + MARKDOWN_CODE_BLOCK_END);
         result.setContents(contents);
         return CompletableFuture.completedFuture(result);
     }
@@ -3835,7 +3835,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private String getDefinitionDetail(IDefinition definition)
     {
         StringBuilder detailBuilder = new StringBuilder();
-        detailBuilder.append(MARKDOWN_CODE_BLOCK_NEXTGENAS_START);
         if (definition instanceof IClassDefinition)
         {
             IClassDefinition classDefinition = (IClassDefinition) definition;
@@ -4007,7 +4006,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             detailBuilder.append(")");
             detailBuilder.append("]");
         }
-        detailBuilder.append(MARKDOWN_CODE_BLOCK_END);
         return detailBuilder.toString();
     }
 
