@@ -88,6 +88,7 @@ import org.apache.flex.compiler.mxml.IMXMLDataManager;
 import org.apache.flex.compiler.mxml.IMXMLLanguageConstants;
 import org.apache.flex.compiler.mxml.IMXMLTagAttributeData;
 import org.apache.flex.compiler.mxml.IMXMLTagData;
+import org.apache.flex.compiler.mxml.IMXMLTextData;
 import org.apache.flex.compiler.mxml.IMXMLUnitData;
 import org.apache.flex.compiler.problems.CompilerProblemSeverity;
 import org.apache.flex.compiler.problems.ICompilerProblem;
@@ -3582,13 +3583,25 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
 
         IMXMLUnitData unitData = mxmlData.findContainmentReferenceUnit(currentOffset);
-        while (unitData != null)
+        IMXMLUnitData currentUnitData = unitData;
+        while (currentUnitData != null)
         {
-            if (unitData instanceof IMXMLTagData)
+            if (currentUnitData instanceof IMXMLTagData)
             {
-                return (IMXMLTagData) unitData;
+                IMXMLTagData tagData = (IMXMLTagData) currentUnitData;
+                if (tagData.getXMLName().equals(tagData.getMXMLDialect().resolveScript()) &&
+                        unitData instanceof IMXMLTextData)
+                {
+                    IMXMLTextData textUnitData = (IMXMLTextData) unitData;
+                    if (textUnitData.getTextType() == IMXMLTextData.TextType.CDATA)
+                    {
+                        importStartIndex = textUnitData.getCompilableTextStart();
+                        importEndIndex = textUnitData.getCompilableTextEnd();
+                    }
+                }
+                return tagData;
             }
-            unitData = unitData.getParentUnitData();
+            currentUnitData = currentUnitData.getParentUnitData();
         }
         return null;
     }
