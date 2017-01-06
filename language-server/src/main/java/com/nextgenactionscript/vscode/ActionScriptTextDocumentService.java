@@ -76,7 +76,6 @@ import org.apache.flex.compiler.internal.parsing.as.ASToken;
 import org.apache.flex.compiler.internal.parsing.as.RepairingTokenBuffer;
 import org.apache.flex.compiler.internal.parsing.as.StreamingASTokenizer;
 import org.apache.flex.compiler.internal.projects.CompilerProject;
-import org.apache.flex.compiler.internal.projects.FlexJSProject;
 import org.apache.flex.compiler.internal.projects.FlexProject;
 import org.apache.flex.compiler.internal.scopes.ASScope;
 import org.apache.flex.compiler.internal.scopes.TypeScope;
@@ -3225,11 +3224,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return null;
         }
-        FlexJSProject project = null;
+        FlexProject project = null;
         if (currentWorkspace == null)
         {
             currentWorkspace = new Workspace();
-            project = new FlexJSProject((Workspace) currentWorkspace);
+            project = new FlexProject((Workspace) currentWorkspace);
             project.setProblems(new ArrayList<ICompilerProblem>());
             fileSpecGetter = new LanguageServerFileSpecGetter(currentWorkspace, sourceByPath);
         }
