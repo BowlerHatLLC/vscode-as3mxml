@@ -47,6 +47,8 @@ import org.eclipse.lsp4j.services.WorkspaceService;
  */
 public class ActionScriptLanguageServer implements LanguageServer, LanguageClientAware
 {
+    private static final int MISSING_FLEXLIB = 200;
+    private static final int INVALID_FLEXLIB = 201;
     private static final String FLEXLIB = "flexlib";
     private static final String FRAMEWORKS_RELATIVE_PATH = "../frameworks";
 
@@ -60,7 +62,17 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
         //options, but if it isn't, use the framework included with FlexJS
         if (System.getProperty(FLEXLIB) == null)
         {
-            System.setProperty(FLEXLIB, findFlexLibDirectoryPath());
+            String flexLib = findFlexLibDirectoryPath();
+            if (flexLib == null)
+            {
+                System.exit(MISSING_FLEXLIB);
+            }
+            File flexLibFile = new File(flexLib);
+            if (!flexLibFile.exists() || !flexLibFile.isDirectory())
+            {
+                System.exit(INVALID_FLEXLIB);
+            }
+            System.setProperty(FLEXLIB, flexLib);
         }
     }
 
