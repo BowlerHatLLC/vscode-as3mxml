@@ -13,7 +13,13 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-import {findSDK, findJava} from "./flexjs-utils";
+import addImport from "./commands/addImport";
+import createASConfigTaskRunner from "./commands/createASConfigTaskRunner";
+import findJava from "./utils/findJava";
+import findEditorSDK from "./utils/findEditorSDK";
+import validateJava from "./utils/validateJava";
+import validateEditorSDK from "./utils/validateEditorSDK";
+import getJavaClassPathDelimiter from "./utils/getJavaClassPathDelimiter";
 import * as child_process from "child_process";
 import * as fs from "fs";
 import * as net from "net";
@@ -37,44 +43,6 @@ let javaExecutablePath: string;
 let frameworkSDKHome: string;
 let killed = false;
 portfinder.basePort = 55282;
-let cpDelimiter = ":";
-if(process.platform === "win32")
-{
-	cpDelimiter = ";";
-}
-
-function isValidJavaVersion(javaPath: string): boolean
-{
-	if(!fs.existsSync(javaPath))
-	{
-		return false;
-	}
-	let args =
-	[
-		"-jar",
-		path.join(savedContext.extensionPath, "bin", "check-java-version.jar")
-	];
-	let result = child_process.spawnSync(javaPath, args);
-	return result.status === 0;
-}
-
-function isValidSDKVersion(sdkPath: string): boolean
-{
-	if(!javaExecutablePath || !fs.existsSync(sdkPath) || !fs.statSync(sdkPath).isDirectory())
-	{
-		return false;
-	}
-	let args =
-	[
-		"-cp",
-		path.resolve(sdkPath, "lib", "compiler.jar") + cpDelimiter +
-		path.resolve(sdkPath, "js", "lib", "jsc.jar") + cpDelimiter +
-		path.resolve(savedContext.extensionPath, "bin", "check-flexjs-version.jar"),
-		"com.nextgenactionscript.vscode.CheckFlexJSVersion",
-	];
-	let result = child_process.spawnSync(javaExecutablePath, args);
-	return result.status === 0;
-}
 
 function killJavaProcess()
 {
@@ -91,151 +59,48 @@ function killJavaProcess()
 	savedChild = null;
 }
 
+function onDidChangeConfiguration(event)
+{
+	let newJavaExecutablePath = findJava((javaPath) =>
+	{
+		return validateJava(savedContext.extensionPath, javaPath);
+	});
+	let newFlexHome = findEditorSDK((sdkPath) =>
+	{
+		return validateEditorSDK(savedContext.extensionPath, newJavaExecutablePath, sdkPath);
+	});
+	let newFrameworkSDKHome = vscode.workspace.getConfiguration("nextgenas").get("frameworksdk");
+	if(flexHome != newFlexHome ||
+		javaExecutablePath != newJavaExecutablePath ||
+		frameworkSDKHome != newFrameworkSDKHome)
+	{
+		//on Windows, the language server doesn't restart very gracefully,
+		//so force a restart. 
+		vscode.window.showWarningMessage(RESTART_MESSAGE, RESTART_BUTTON_LABEL).then((action) =>
+		{
+			if(action === RESTART_BUTTON_LABEL)
+			{
+				vscode.commands.executeCommand("workbench.action.reloadWindow");
+			}
+		});
+	}
+}
+
 export function activate(context: vscode.ExtensionContext)
 {
 	savedContext = context;
-	javaExecutablePath = findJava(isValidJavaVersion);
-	flexHome = findSDK(isValidSDKVersion);
+	javaExecutablePath = findJava((javaPath) =>
+	{
+		return validateJava(savedContext.extensionPath, javaPath);
+	});
+	flexHome = findEditorSDK((sdkPath) =>
+	{
+		return validateEditorSDK(savedContext.extensionPath, javaExecutablePath, sdkPath);
+	});
 	frameworkSDKHome = <string> vscode.workspace.getConfiguration("nextgenas").get("frameworksdk");
-	vscode.workspace.onDidChangeConfiguration((event) =>
-	{
-		let newJavaExecutablePath = findJava(isValidJavaVersion);
-		let newFlexHome = findSDK(isValidSDKVersion);
-		let newFrameworkSDKHome = vscode.workspace.getConfiguration("nextgenas").get("frameworksdk");
-		if(flexHome != newFlexHome ||
-			javaExecutablePath != newJavaExecutablePath ||
-			frameworkSDKHome != newFrameworkSDKHome)
-		{
-			//on Windows, the language server doesn't restart very gracefully,
-			//so force a restart. 
-			vscode.window.showWarningMessage(RESTART_MESSAGE, RESTART_BUTTON_LABEL).then((action) =>
-			{
-				if(action === RESTART_BUTTON_LABEL)
-				{
-					vscode.commands.executeCommand("workbench.action.reloadWindow");
-				}
-			});
-		}
-	});
-	vscode.commands.registerCommand("nextgenas.createASConfigTaskRunner", () =>
-	{
-		let vscodePath = path.resolve(vscode.workspace.rootPath, ".vscode/");
-		let tasksPath = path.resolve(vscodePath, "tasks.json");
-		vscode.workspace.openTextDocument(tasksPath).then((document: vscode.TextDocument) =>
-		{
-			//if it already exists, just open it. do nothing else.
-			//even if it doesn't run asconfigc.
-			vscode.window.showTextDocument(document);
-		},
-		() =>
-		{
-			let tasks = "{\n\t// See https://go.microsoft.com/fwlink/?LinkId=733558\n\t// for the documentation about the tasks.json format\n\t\"version\": \"0.1.0\",\n\t\"command\": \"asconfigc\",\n\t\"isShellCommand\": true,\n\t\"args\": [\n\t\t//\"--flexHome=path/to/sdk\"\n\t],\n\t\"showOutput\": \"always\"\n}";
-			if(!fs.existsSync(vscodePath))
-			{
-				//on Windows, if the directory isn't created first, writing the
-				//file will fail
-				fs.mkdirSync(vscodePath);
-			}
-			fs.writeFileSync(tasksPath, tasks,
-			{
-				encoding: "utf8"
-			});
-			vscode.workspace.openTextDocument(tasksPath).then((document: vscode.TextDocument) =>
-			{
-				vscode.window.showTextDocument(document);
-			}, () =>
-			{
-				vscode.window.showErrorMessage("Failed to create tasks.json for asconfigc.");
-			});
-		});
-	});
-	vscode.commands.registerTextEditorCommand("nextgenas.addImport", (textEditor: vscode.TextEditor, edit: vscode.TextEditorEdit, qualifiedName: string, startIndex: number, endIndex: number) =>
-	{
-		if(!qualifiedName)
-		{
-			return;
-		}
-		let document = textEditor.document;
-		let text = document.getText();
-		let regExp = /^([ \t]*)import ([\w\.]+)/gm;
-		let matches;
-		let currentMatches;
-		if(startIndex !== -1)
-		{
-			regExp.lastIndex = startIndex;
-		}
-		do
-		{
-			currentMatches = regExp.exec(text);
-			if(currentMatches)
-			{
-				if(endIndex !== -1 && currentMatches.index >= endIndex)
-				{
-					break;
-				}
-				if(currentMatches[2] === qualifiedName)
-				{
-					//this class is already imported!
-					return;
-				}
-				matches = currentMatches;
-			}
-		}
-		while(currentMatches);
-		let indent = "";
-		let lineBreaks = "\n";
-		let position: vscode.Position;
-		if(matches)
-		{
-			//we found existing imports
-			position = document.positionAt(matches.index);
-			indent = matches[1];
-			position = new vscode.Position(position.line + 1, 0);
-		}
-		else //no existing imports
-		{
-			if(startIndex !== -1)
-			{
-				position = document.positionAt(startIndex);
-				if(position.character > 0)
-				{
-					//go to the next line, if we're not at the start
-					position = position.with(position.line + 1, 0);
-				}
-				//try to use the same indent as whatever follows
-				let regExp = /^([ \t]*)\w/gm;
-				regExp.lastIndex = startIndex;
-				matches = regExp.exec(text);
-				if(matches)
-				{
-					indent = matches[1];
-				}
-				else
-				{
-					indent = "";
-				}
-			}
-			else
-			{
-				regExp = /^package( [\w\.]+)*\s*{[\r\n]+([ \t]*)/g;
-				matches = regExp.exec(text);
-				if(!matches)
-				{
-					return;
-				}
-				position = document.positionAt(regExp.lastIndex);
-				if(position.character > 0)
-				{
-					//go to the beginning of the line, if we're not there
-					position = position.with(position.line, 0);
-				}
-				indent = matches[2];
-			}
-			lineBreaks += "\n"; //add an extra line break
-		}
-		let textToInsert = indent + "import " + qualifiedName + ";" + lineBreaks;
-		edit.insert(position, textToInsert);
-	});
+	vscode.workspace.onDidChangeConfiguration(onDidChangeConfiguration);
+	vscode.commands.registerCommand("nextgenas.createASConfigTaskRunner", createASConfigTaskRunner);
+	vscode.commands.registerTextEditorCommand("nextgenas.addImport", addImport);
 
 	startClient();
 }
@@ -365,6 +230,7 @@ function createLanguageServer(): Promise<StreamInfo>
 		}
 		portfinder.getPort((err, port) =>
 		{
+			let cpDelimiter = getJavaClassPathDelimiter();
 			let args =
 			[
 				"-cp",

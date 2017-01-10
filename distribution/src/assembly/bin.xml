@@ -66,8 +66,9 @@
       <directory>../vscode-extension/target</directory>
       <outputDirectory>.</outputDirectory>
       <includes>
+        <include>commands/*.js</include>
+        <include>utils/*.js</include>
         <include>extension.js</include>
-        <include>flexjs-utils.js</include>
       </includes>
     </fileSet>
   </fileSets>
