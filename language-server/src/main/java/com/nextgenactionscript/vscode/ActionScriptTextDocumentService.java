@@ -1351,7 +1351,15 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             if (offsetNode instanceof IScopedNode)
             {
                 IScopedNode scopedNode = (IScopedNode) offsetNode;
+
+                //include all members and local things that are in scope
                 autoCompleteScope(scopedNode, result);
+
+                //include all public definitions
+                IASScope scope = scopedNode.getScope();
+                IDefinition definitionToSkip = scope.getDefinition();
+                autoCompleteDefinitions(result, false, false, null, definitionToSkip);
+
                 return CompletableFuture.completedFuture(result);
             }
             offsetNode = offsetNode.getParent();
@@ -1942,7 +1950,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             String prefix = getNumberedNamespacePrefix(DEFAULT_NS_PREFIX, prefixMap);
             return new MXMLNamespace(prefix, fallbackNamespace);
         }
-        
+
         //4. worse case: create a new xmlns with numbered prefix and package name
         String prefix = getNumberedNamespacePrefix(DEFAULT_NS_PREFIX, prefixMap);
         return new MXMLNamespace(prefix, packageNamespace);
@@ -2101,38 +2109,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private void autoCompleteScope(IScopedNode node, CompletionList result)
     {
-        IASScope scope = node.getScope();
-        IDefinition definitionToSkip = scope.getDefinition();
-        //include definitions in the top-level package
-        autoCompleteDefinitions(result, false, false, "", definitionToSkip);
-        //include definitions in the same package
-        String packageName = node.getPackageName();
-        if (packageName != null && packageName.length() > 0)
-        {
-            autoCompleteDefinitions(result, false, false, packageName, definitionToSkip);
-        }
-        //include definitions that are imported from other packages
-        ArrayList<IImportNode> importNodes = new ArrayList<>();
-        node.getAllImportNodes(importNodes);
-        for (IImportNode importNode : importNodes)
-        {
-            IDefinition importDefinition = null;
-            try
-            {
-                //this can throw a null pointer exception when parsing MXML, for
-                //some reason
-                importDefinition = importNode.resolveImport(currentProject);
-            }
-            catch (Exception e)
-            {
-                //do nothing
-            }
-            if (importDefinition != null)
-            {
-                addDefinitionAutoCompleteActionScript(importDefinition, result);
-            }
-        }
-        //include all members and local things that are in scope
         IScopedNode currentNode = node;
         while (currentNode != null)
         {
