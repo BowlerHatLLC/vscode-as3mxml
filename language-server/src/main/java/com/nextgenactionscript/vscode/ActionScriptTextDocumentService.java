@@ -193,6 +193,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private static final String MARKDOWN_CODE_BLOCK_MXML_START = "```mxml\n";
     private static final String MARKDOWN_CODE_BLOCK_END = "\n```";
     private static final String COMMAND_IMPORT = "nextgenas.addImport";
+    private static final String COMMAND_XMLNS = "nextgenas.addMXMLNamespace";
 
     private static final String[] LANGUAGE_TYPE_NAMES =
             {
@@ -241,9 +242,23 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private int currentOffset = -1;
     private int importStartIndex = -1;
     private int importEndIndex = -1;
+    private int namespaceStartIndex = -1;
+    private int namespaceEndIndex = -1;
     private LanguageServerFileSpecGetter fileSpecGetter;
     private HashSet<URI> newFilesWithErrors = new HashSet<>();
     private HashSet<URI> oldFilesWithErrors = new HashSet<>();
+
+    private class MXMLNamespace
+    {
+        public MXMLNamespace(String prefix, String uri)
+        {
+            this.prefix = prefix;
+            this.uri = uri;
+        }
+
+        public String prefix;
+        public String uri;
+    }
 
     public ActionScriptTextDocumentService()
     {
@@ -1865,10 +1880,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return location;
     }
 
-    private String getMXMLPrefixForDefinition(IDefinition definition, MXMLData mxmlData)
+    private MXMLNamespace getMXMLNamespaceForTypeDefinition(ITypeDefinition definition, MXMLData mxmlData)
     {
         PrefixMap prefixMap = mxmlData.getRootTagPrefixMap();
         Collection<XMLName> tagNames = currentProject.getTagNamesForClass(definition.getQualifiedName());
+
+        //1. try to use an existing xmlns with an uri
         for (XMLName tagName : tagNames)
         {
             String tagNamespace = tagName.getXMLNamespace();
@@ -1879,29 +1896,65 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 //use the language namespace of the root tag instead
                 tagNamespace = mxmlData.getRootTag().getMXMLDialect().getLanguageNamespace();
             }
-            String[] prefixes = prefixMap.getPrefixesForNamespace(tagNamespace);
-            if (prefixes.length > 0)
+            String[] uriPrefixes = prefixMap.getPrefixesForNamespace(tagNamespace);
+            if (uriPrefixes.length > 0)
             {
-                return prefixes[0];
+                return new MXMLNamespace(uriPrefixes[0], tagNamespace);
             }
         }
-        //try to find a prefix based on the package name
-        String packageNamespace = null;
+
+        //2. try to use an existing xmlns with a package name
         String packageName = definition.getPackageName();
+        String packageNamespace = getPackageNameMXMLNamespaceURI(packageName);
+        String[] packagePrefixes = prefixMap.getPrefixesForNamespace(packageNamespace);
+        if (packagePrefixes.length > 0)
+        {
+            return new MXMLNamespace(packagePrefixes[0], packageNamespace);
+        }
+
+        //3. try to create a new xmlns with a prefix and uri
+        String fallbackNamespace = null;
+        for (XMLName tagName : tagNames)
+        {
+            //we know this type is in one or more namespaces
+            //let's try to figure out a nice prefix to use
+            String prefix = null;
+            fallbackNamespace = tagName.getXMLNamespace();
+            //we'll check if the namespace comes from a known library
+            //with a common prefix
+            if (NAMESPACE_TO_PREFIX.containsKey(fallbackNamespace))
+            {
+                prefix = NAMESPACE_TO_PREFIX.get(fallbackNamespace);
+                if (prefixMap.containsPrefix(prefix))
+                {
+                    //the prefix already exists, so we can't use it
+                    prefix = null;
+                }
+            }
+            if (prefix != null)
+            {
+                return new MXMLNamespace(prefix, fallbackNamespace);
+            }
+        }
+        if (fallbackNamespace != null)
+        {
+            //if we couldn't find a known prefix, use a numbered one
+            String prefix = getNumberedNamespacePrefix(DEFAULT_NS_PREFIX, prefixMap);
+            return new MXMLNamespace(prefix, fallbackNamespace);
+        }
+        
+        //4. worse case: create a new xmlns with numbered prefix and package name
+        String prefix = getNumberedNamespacePrefix(DEFAULT_NS_PREFIX, prefixMap);
+        return new MXMLNamespace(prefix, packageNamespace);
+    }
+
+    private String getPackageNameMXMLNamespaceURI(String packageName)
+    {
         if (packageName.length() > 0)
         {
-            packageNamespace = packageName + DOT_STAR;
+            return packageName + DOT_STAR;
         }
-        else
-        {
-            packageNamespace = STAR;
-        }
-        String[] prefixes = prefixMap.getPrefixesForNamespace(packageNamespace);
-        if (prefixes.length > 0)
-        {
-            return prefixes[0];
-        }
-        return null;
+        return STAR;
     }
 
     private void autoCompleteTypes(CompletionList result)
@@ -1944,16 +1997,17 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 {
                     continue;
                 }
+                ITypeDefinition typeDefinition = (ITypeDefinition) definition;
 
                 //first check that the tag either doesn't have a short name yet
                 //or that the definition's base name matches the short name 
-                if (tagStartShortName.length() == 0 || definition.getBaseName().startsWith(tagStartShortName))
+                if (tagStartShortName.length() == 0 || typeDefinition.getBaseName().startsWith(tagStartShortName))
                 {
                     //if a prefix already exists, make sure the definition is
                     //in a namespace with that prefix
                     if (tagPrefix.length() > 0)
                     {
-                        Collection<XMLName> tagNames = currentProject.getTagNamesForClass(definition.getQualifiedName());
+                        Collection<XMLName> tagNames = currentProject.getTagNamesForClass(typeDefinition.getQualifiedName());
                         for (XMLName tagName : tagNames)
                         {
                             String tagNamespace = tagName.getXMLNamespace();
@@ -1969,22 +2023,16 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                             {
                                 if (tagPrefix.equals(otherPrefix))
                                 {
-                                    addDefinitionAutoComplete(definition, result);
+                                    addDefinitionAutoCompleteMXML(typeDefinition, null, null, result);
                                 }
                             }
                         }
                     }
                     else
                     {
-                        //no prefix, so complete the definition with a prefix
-                        String prefix = getMXMLPrefixForDefinition(definition, mxmlData);
-                        if (prefix == null)
-                        {
-                            prefix = getNumberedNamespacePrefix(DEFAULT_NS_PREFIX, prefixMap);
-                        }
-                        addDefinitionAutoComplete(definition,
-                                prefix + IMXMLCoreConstants.colon,
-                                result);
+                        //no prefix yet, so complete the definition with a prefix
+                        MXMLNamespace ns = getMXMLNamespaceForTypeDefinition(typeDefinition, mxmlData);
+                        addDefinitionAutoCompleteMXML(typeDefinition, ns.prefix, ns.uri, result);
                     }
                 }
             }
@@ -2036,7 +2084,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                         }
                         else
                         {
-                            addDefinitionAutoComplete(definition, result);
+                            addDefinitionAutoCompleteActionScript(definition, result);
                         }
                     }
                 }
@@ -2081,7 +2129,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             if (importDefinition != null)
             {
-                addDefinitionAutoComplete(importDefinition, result);
+                addDefinitionAutoCompleteActionScript(importDefinition, result);
             }
         }
         //include all members and local things that are in scope
@@ -2110,7 +2158,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                             continue;
                         }
                     }
-                    addDefinitionAutoComplete(localDefinition, result);
+                    addDefinitionAutoCompleteActionScript(localDefinition, result);
                 }
             }
             currentNode = currentNode.getContainingScope();
@@ -2126,14 +2174,14 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             ITypeDefinition typeDefinition = (ITypeDefinition) leftDefinition;
             TypeScope typeScope = (TypeScope) typeDefinition.getContainedScope();
-            addDefinitionsInTypeScopeToAutoComplete(typeScope, scope, true, result);
+            addDefinitionsInTypeScopeToAutoCompleteActionScript(typeScope, scope, true, result);
             return;
         }
         ITypeDefinition leftType = leftOperand.resolveType(currentProject);
         if (leftType != null)
         {
             TypeScope typeScope = (TypeScope) leftType.getContainedScope();
-            addDefinitionsInTypeScopeToAutoComplete(typeScope, scope, false, result);
+            addDefinitionsInTypeScopeToAutoCompleteActionScript(typeScope, scope, false, result);
             return;
         }
     }
@@ -2231,20 +2279,25 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 String prefix = offsetTag.getPrefix();
                 if (prefix.length() > 0)
                 {
-                    propertyElementPrefix = prefix + IMXMLCoreConstants.colon;
+                    propertyElementPrefix = prefix;
                 }
             }
             TypeScope typeScope = (TypeScope) definition.getContainedScope();
             ASScope scope = (ASScope) scopes[0];
-            addDefinitionsInTypeScopeToAutoComplete(typeScope, scope, false, true, propertyElementPrefix, result);
-            addStyleMetadataToAutoComplete(typeScope, propertyElementPrefix, result);
-            addEventMetadataToAutoComplete(typeScope, propertyElementPrefix, result);
+            addDefinitionsInTypeScopeToAutoCompleteMXML(typeScope, scope, propertyElementPrefix, result);
+            addStyleMetadataToAutoCompleteMXML(typeScope, propertyElementPrefix, result);
+            addEventMetadataToAutoCompleteMXML(typeScope, propertyElementPrefix, result);
         }
     }
 
-    private void addDefinitionsInTypeScopeToAutoComplete(TypeScope typeScope, ASScope otherScope, boolean isStatic, CompletionList result)
+    private void addDefinitionsInTypeScopeToAutoCompleteActionScript(TypeScope typeScope, ASScope otherScope, boolean isStatic, CompletionList result)
     {
         addDefinitionsInTypeScopeToAutoComplete(typeScope, otherScope, isStatic, false, null, result);
+    }
+
+    private void addDefinitionsInTypeScopeToAutoCompleteMXML(TypeScope typeScope, ASScope otherScope, String prefix, CompletionList result)
+    {
+        addDefinitionsInTypeScopeToAutoComplete(typeScope, otherScope, false, true, prefix, result);
     }
 
     private void addDefinitionsInTypeScopeToAutoComplete(TypeScope typeScope, ASScope otherScope, boolean isStatic, boolean forMXML, String prefix, CompletionList result)
@@ -2333,11 +2386,18 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 //skip it!
                 continue;
             }
-            addDefinitionAutoComplete(localDefinition, prefix, result);
+            if (forMXML)
+            {
+                addDefinitionAutoCompleteMXML(localDefinition, prefix, null, result);
+            }
+            else //actionscript
+            {
+                addDefinitionAutoCompleteActionScript(localDefinition, result);
+            }
         }
     }
 
-    private void addEventMetadataToAutoComplete(TypeScope typeScope, String prefix, CompletionList result)
+    private void addEventMetadataToAutoCompleteMXML(TypeScope typeScope, String prefix, CompletionList result)
     {
         ArrayList<String> eventNames = new ArrayList<>();
         IDefinition definition = typeScope.getDefinition();
@@ -2373,7 +2433,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
     }
 
-    private void addStyleMetadataToAutoComplete(TypeScope typeScope, String prefix, CompletionList result)
+    private void addStyleMetadataToAutoCompleteMXML(TypeScope typeScope, String prefix, CompletionList result)
     {
         ArrayList<String> styleNames = new ArrayList<>();
         IDefinition definition = typeScope.getDefinition();
@@ -2430,56 +2490,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     {
         IMXMLDataManager mxmlDataManager = currentWorkspace.getMXMLDataManager();
         MXMLData mxmlData = (MXMLData) mxmlDataManager.get(fileSpecGetter.getFileSpecification(currentUnit.getAbsoluteFilename()));
-        PrefixMap prefixMap = mxmlData.getRootTagPrefixMap();
-
-        //first, try to use one of the existing prefixes in the document
-        Collection<XMLName> tagNames = currentProject.getTagNamesForClass(definition.getQualifiedName());
-        String discoveredPrefix = getMXMLPrefixForDefinition(definition, mxmlData);
-        if (discoveredPrefix != null)
-        {
-            addDefinitionAutoComplete(definition, discoveredPrefix + IMXMLCoreConstants.colon, result);
-            return;
-        }
-        String fallbackNamespace = null;
-        if (tagNames.size() > 0 && fallbackNamespace == null)
-        {
-            XMLName tagName = tagNames.iterator().next();
-            fallbackNamespace = tagName.getXMLNamespace();
-        }
-
-        if (fallbackNamespace != null)
-        {
-            //this type is in a namespace
-            //let's try to figure out a nice prefix to use
-            String prefix = null;
-
-            //first, we'll check if the namespace comes from a known library
-            //with a common prefix
-            if (NAMESPACE_TO_PREFIX.containsKey(fallbackNamespace))
-            {
-                prefix = NAMESPACE_TO_PREFIX.get(fallbackNamespace);
-                if (prefixMap.containsPrefix(prefix))
-                {
-                    //the prefix already exists, so we can't use it
-                    prefix = null;
-                }
-                else
-                {
-                    prefix += IMXMLCoreConstants.colon;
-                }
-            }
-            //if we can't find a known library, we'll generate a prefix
-            if (prefix == null)
-            {
-                prefix = getNumberedNamespacePrefix(DEFAULT_NS_PREFIX, prefixMap) + IMXMLCoreConstants.colon;
-            }
-            addDefinitionAutoComplete(definition, prefix, result);
-            return;
-        }
-
-        //finally, our last option is to generate a prefix
-        String prefix = getNumberedNamespacePrefix(DEFAULT_NS_PREFIX, prefixMap) + IMXMLCoreConstants.colon;
-        addDefinitionAutoComplete(definition, prefix, result);
+        MXMLNamespace discoveredNS = getMXMLNamespaceForTypeDefinition(definition, mxmlData);
+        addDefinitionAutoCompleteMXML(definition, discoveredNS.prefix, discoveredNS.uri, result);
     }
 
     private String getNumberedNamespacePrefix(String prefixPrefix, PrefixMap prefixMap)
@@ -2500,42 +2512,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return prefix;
     }
 
-    private void addDefinitionAutoComplete(IDefinition definition, CompletionList result)
-    {
-        addDefinitionAutoComplete(definition, null, result);
-    }
-
-    private void addDefinitionAutoComplete(IDefinition definition, String prefix, CompletionList result)
+    private void addDefinitionAutoCompleteActionScript(IDefinition definition, CompletionList result)
     {
         CompletionItem item = new CompletionItem();
-        if (definition instanceof IClassDefinition)
-        {
-            item.setKind(CompletionItemKind.Class);
-        }
-        else if (definition instanceof IInterfaceDefinition)
-        {
-            item.setKind(CompletionItemKind.Interface);
-        }
-        else if (definition instanceof IFunctionDefinition)
-        {
-            IFunctionDefinition functionDefinition = (IFunctionDefinition) definition;
-            if (functionDefinition.isConstructor())
-            {
-                //ignore constructors
-                return;
-            }
-            item.setKind(CompletionItemKind.Function);
-        }
-        else if (definition instanceof IVariableDefinition)
-        {
-            item.setKind(CompletionItemKind.Variable);
-        }
+        item.setKind(getDefinitionKind(definition));
         item.setDetail(getDefinitionDetail(definition));
         item.setLabel(definition.getBaseName());
-        if (prefix != null)
-        {
-            item.setInsertText(prefix + definition.getBaseName());
-        }
         if (definition instanceof ITypeDefinition)
         {
             item.setCommand(createImportCommand(definition));
@@ -2543,12 +2525,47 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         result.getItems().add(item);
     }
 
-    private void addKeywordAutoComplete(String keyword, CompletionList result)
+    private void addDefinitionAutoCompleteMXML(IDefinition definition, String prefix, String uri, CompletionList result)
     {
         CompletionItem item = new CompletionItem();
-        item.setKind(CompletionItemKind.Keyword);
-        item.setLabel(keyword);
+        item.setKind(getDefinitionKind(definition));
+        item.setDetail(getDefinitionDetail(definition));
+        item.setLabel(definition.getBaseName());
+        if (prefix != null)
+        {
+            item.setInsertText(prefix + IMXMLCoreConstants.colon + definition.getBaseName());
+            if (definition instanceof ITypeDefinition && uri != null)
+            {
+                item.setCommand(createMXMLNamespaceCommand(definition, prefix, uri));
+            }
+        }
         result.getItems().add(item);
+    }
+
+    private CompletionItemKind getDefinitionKind(IDefinition definition)
+    {
+        if (definition instanceof IClassDefinition)
+        {
+            return CompletionItemKind.Class;
+        }
+        else if (definition instanceof IInterfaceDefinition)
+        {
+            return CompletionItemKind.Interface;
+        }
+        else if (definition instanceof IFunctionDefinition)
+        {
+            IFunctionDefinition functionDefinition = (IFunctionDefinition) definition;
+            if (functionDefinition.isConstructor())
+            {
+                return CompletionItemKind.Constructor;
+            }
+            return CompletionItemKind.Function;
+        }
+        else if (definition instanceof IVariableDefinition)
+        {
+            return CompletionItemKind.Variable;
+        }
+        return CompletionItemKind.Value;
     }
 
     private Command createImportCommand(IDefinition definition)
@@ -2559,6 +2576,15 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         importCommand.setCommand(COMMAND_IMPORT);
         importCommand.setArguments(Arrays.asList(qualifiedName, importStartIndex, importEndIndex));
         return importCommand;
+    }
+
+    private Command createMXMLNamespaceCommand(IDefinition definition, String prefix, String uri)
+    {
+        Command xmlnsCommand = new Command();
+        xmlnsCommand.setTitle("Add Namespace " + uri);
+        xmlnsCommand.setCommand(COMMAND_XMLNS);
+        xmlnsCommand.setArguments(Arrays.asList(prefix, uri, namespaceStartIndex, namespaceEndIndex));
+        return xmlnsCommand;
     }
 
     private void resolveDefinition(IDefinition definition, List<Location> result)
@@ -3530,6 +3556,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private IMXMLTagData getOffsetMXMLTag(TextDocumentIdentifier textDocument, Position position)
     {
+        namespaceStartIndex = -1;
+        namespaceEndIndex = -1;
         String uri = textDocument.getUri();
         if (!uri.endsWith(MXML_EXTENSION))
         {
@@ -3579,6 +3607,32 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             System.err.println("Could not find code at position " + position.getLine() + ":" + position.getCharacter() + " in file " + path.toAbsolutePath().toString());
             return null;
+        }
+
+        //calculate the location for automatically generated xmlns tags
+        IMXMLTagData rootTag = mxmlData.getRootTag();
+        IMXMLTagAttributeData[] attributeDatas = rootTag.getAttributeDatas();
+        for (IMXMLTagAttributeData attributeData : attributeDatas)
+        {
+            if (!attributeData.getName().startsWith("xmlns"))
+            {
+                if (namespaceStartIndex == -1)
+                {
+                    namespaceStartIndex = attributeData.getStart();
+                    namespaceEndIndex = namespaceStartIndex;
+                }
+                break;
+            }
+            int start = attributeData.getAbsoluteStart();
+            int end = attributeData.getValueEnd() + 1;
+            if (namespaceStartIndex == -1 || namespaceStartIndex > start)
+            {
+                namespaceStartIndex = start;
+            }
+            if (namespaceEndIndex == -1 || namespaceEndIndex < end)
+            {
+                namespaceEndIndex = end;
+            }
         }
 
         IMXMLUnitData unitData = mxmlData.findContainmentReferenceUnit(currentOffset);

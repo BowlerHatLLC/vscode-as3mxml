@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 import addImport from "./commands/addImport";
+import addMXMLNamespace from "./commands/addMXMLNamespace";
 import createASConfigTaskRunner from "./commands/createASConfigTaskRunner";
 import findJava from "./utils/findJava";
 import findEditorSDK from "./utils/findEditorSDK";
@@ -101,6 +102,7 @@ export function activate(context: vscode.ExtensionContext)
 	vscode.workspace.onDidChangeConfiguration(onDidChangeConfiguration);
 	vscode.commands.registerCommand("nextgenas.createASConfigTaskRunner", createASConfigTaskRunner);
 	vscode.commands.registerTextEditorCommand("nextgenas.addImport", addImport);
+	vscode.commands.registerTextEditorCommand("nextgenas.addMXMLNamespace", addMXMLNamespace);
 
 	startClient();
 }
