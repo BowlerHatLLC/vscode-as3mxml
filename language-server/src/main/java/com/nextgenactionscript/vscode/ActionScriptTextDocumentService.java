@@ -2070,11 +2070,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             for (IDefinition definition : definitions)
             {
-                if (definition.isGeneratedEmbedClass())
-                {
-                    //don't show these classes in completion
-                    continue;
-                }
                 boolean isType = definition instanceof ITypeDefinition;
                 if (!typesOnly || isType)
                 {
@@ -2084,6 +2079,15 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                                 && skipQualifiedName.equals(definition.getQualifiedName()))
                         {
                             continue;
+                        }
+                        if (isType)
+                        {
+                            IMetaTag excludeClassMetaTag = definition.getMetaTagByName(IMetaAttributeConstants.ATTRIBUTE_EXCLUDECLASS);
+                            if (excludeClassMetaTag != null)
+                            {
+                                //skip types with [ExcludeClass] metadata
+                                continue;
+                            }
                         }
                         if (forMXML && isType)
                         {
