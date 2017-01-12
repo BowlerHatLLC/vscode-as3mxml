@@ -83,7 +83,7 @@ limitations under the License.
     <dependency>
       <groupId>org.eclipse.lsp4j</groupId>
       <artifactId>org.eclipse.lsp4j</artifactId>
-      <version>0.1.0.M4</version>
+      <version>0.1.0</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
