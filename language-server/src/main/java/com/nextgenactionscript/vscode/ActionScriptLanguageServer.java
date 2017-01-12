@@ -25,9 +25,12 @@ import java.util.concurrent.CompletableFuture;
 
 import org.apache.flex.compiler.tree.as.IASNode;
 
+import com.nextgenactionscript.vscode.project.ASConfigProjectConfigStrategy;
+import com.nextgenactionscript.vscode.utils.LanguageServerUtils;
 import org.eclipse.lsp4j.CompletionOptions;
 import org.eclipse.lsp4j.DidChangeConfigurationParams;
 import org.eclipse.lsp4j.DidChangeWatchedFilesParams;
+import org.eclipse.lsp4j.FileEvent;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.InitializeResult;
 import org.eclipse.lsp4j.ServerCapabilities;
@@ -51,13 +54,16 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
     private static final int INVALID_FLEXLIB = 201;
     private static final String FLEXLIB = "flexlib";
     private static final String FRAMEWORKS_RELATIVE_PATH = "../frameworks";
+    private static final String ASCONFIG_JSON = "asconfig.json";
 
     private WorkspaceService workspaceService;
     private ActionScriptTextDocumentService textDocumentService;
+    private ASConfigProjectConfigStrategy projectConfigStrategy;
     private LanguageClient languageClient;
 
     public ActionScriptLanguageServer()
     {
+        projectConfigStrategy = new ASConfigProjectConfigStrategy();
         //the flexlib system property may be configured in the command line
         //options, but if it isn't, use the framework included with FlexJS
         if (System.getProperty(FLEXLIB) == null)
@@ -83,6 +89,7 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
     public CompletableFuture<InitializeResult> initialize(InitializeParams params)
     {
         Path workspaceRoot = Paths.get(params.getRootPath()).toAbsolutePath().normalize();
+        projectConfigStrategy.setASConfigPath(workspaceRoot.resolve(ASCONFIG_JSON));
         textDocumentService.setWorkspaceRoot(workspaceRoot);
 
         InitializeResult result = new InitializeResult();
@@ -159,6 +166,22 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
                 @Override
                 public void didChangeWatchedFiles(DidChangeWatchedFilesParams params)
                 {
+                    for (FileEvent event : params.getChanges())
+                    {
+                        Path path = LanguageServerUtils.getPathFromLanguageServerURI(event.getUri());
+                        if (path == null)
+                        {
+                            continue;
+                        }
+                        File file = path.toFile();
+                        String fileName = file.getName();
+                        if (fileName.equals(ASCONFIG_JSON))
+                        {
+                            //compiler settings may have changed, which means we should
+                            //start fresh
+                            projectConfigStrategy.setChanged(true);
+                        }
+                    }
                     //delegate to the ActionScriptTextDocumentService, since that's
                     //where the compiler is running, and the compiler may need to
                     //know about file changes
@@ -180,6 +203,7 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
         {
             textDocumentService = new ActionScriptTextDocumentService();
             textDocumentService.setLanguageClient(languageClient);
+            textDocumentService.setProjectConfigStrategy(projectConfigStrategy);
         }
         return textDocumentService;
     }

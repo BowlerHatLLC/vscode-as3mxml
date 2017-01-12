@@ -13,7 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package com.nextgenactionscript.vscode.asconfig;
+package com.nextgenactionscript.vscode.project;
 
 import java.util.Arrays;
 
@@ -21,7 +21,7 @@ import java.util.Arrays;
  * Defines constants for all top-level fields of an asconfig.json file, and
  * stores the parsed values for those fields. 
  */
-public class ASConfigOptions
+public class ProjectOptions
 {
     public static final String TYPE = "type";
     public static final String CONFIG = "config";
@@ -35,7 +35,7 @@ public class ASConfigOptions
     public CompilerOptions compilerOptions;
     public String additionalOptions;
 
-    public boolean equals(ASConfigOptions other)
+    public boolean equals(ProjectOptions other)
     {
         return other.type.equals(type)
                 && other.config.equals(config)

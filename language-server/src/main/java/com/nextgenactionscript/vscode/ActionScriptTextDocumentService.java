@@ -20,7 +20,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
@@ -36,11 +35,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.flex.compiler.clients.problems.CompilerProblemCategorizer;
 import org.apache.flex.compiler.common.ISourceLocation;
 import org.apache.flex.compiler.common.PrefixMap;
@@ -70,7 +67,6 @@ import org.apache.flex.compiler.definitions.metadata.IMetaTag;
 import org.apache.flex.compiler.filespecs.IFileSpecification;
 import org.apache.flex.compiler.internal.driver.js.goog.JSGoogConfiguration;
 import org.apache.flex.compiler.internal.mxml.MXMLData;
-import org.apache.flex.compiler.internal.mxml.MXMLNamespaceMapping;
 import org.apache.flex.compiler.internal.parsing.as.ASParser;
 import org.apache.flex.compiler.internal.parsing.as.ASToken;
 import org.apache.flex.compiler.internal.parsing.as.RepairingTokenBuffer;
@@ -118,10 +114,12 @@ import org.apache.flex.compiler.units.ICompilationUnit;
 import org.apache.flex.compiler.units.IInvisibleCompilationUnit;
 import org.apache.flex.compiler.workspaces.IWorkspace;
 
-import com.nextgenactionscript.vscode.asconfig.ASConfigOptions;
-import com.nextgenactionscript.vscode.asconfig.CompilerOptions;
-import com.nextgenactionscript.vscode.asconfig.ProjectType;
 import com.nextgenactionscript.vscode.mxml.IMXMLLibraryConstants;
+import com.nextgenactionscript.vscode.project.CompilerOptions;
+import com.nextgenactionscript.vscode.project.IProjectConfigStrategy;
+import com.nextgenactionscript.vscode.project.ProjectOptions;
+import com.nextgenactionscript.vscode.project.ProjectType;
+import com.nextgenactionscript.vscode.utils.LanguageServerUtils;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.CodeLensParams;
@@ -167,12 +165,6 @@ import org.eclipse.lsp4j.WorkspaceEdit;
 import org.eclipse.lsp4j.WorkspaceSymbolParams;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.TextDocumentService;
-import org.everit.json.schema.Schema;
-import org.everit.json.schema.ValidationException;
-import org.everit.json.schema.loader.SchemaLoader;
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.json.JSONTokener;
 
 /**
  * Handles requests from Visual Studio Code that are at the document level,
@@ -185,7 +177,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private static final String MXML_EXTENSION = ".mxml";
     private static final String AS_EXTENSION = ".as";
     private static final String SWC_EXTENSION = ".swc";
-    private static final String ASCONFIG_JSON = "asconfig.json";
     private static final String DEFAULT_NS_PREFIX = "ns";
     private static final String STAR = "*";
     private static final String DOT_STAR = ".*";
@@ -230,7 +221,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     }
 
     private LanguageClient languageClient;
-    private Boolean asconfigChanged = true;
+    private IProjectConfigStrategy projectConfigStrategy;
     private Path workspaceRoot;
     private Map<Path, String> sourceByPath = new HashMap<>();
     private Collection<ICompilationUnit> compilationUnits;
@@ -238,7 +229,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private ICompilationUnit currentUnit;
     private FlexProject currentProject;
     private IWorkspace currentWorkspace;
-    private ASConfigOptions currentOptions;
+    private ProjectOptions currentProjectOptions;
     private int currentOffset = -1;
     private int importStartIndex = -1;
     private int importEndIndex = -1;
@@ -262,6 +253,16 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     public ActionScriptTextDocumentService()
     {
+    }
+
+    public IProjectConfigStrategy getProjectConfigStrategy()
+    {
+        return projectConfigStrategy;
+    }
+
+    public void setProjectConfigStrategy(IProjectConfigStrategy value)
+    {
+        projectConfigStrategy = value;
     }
 
     public Path getWorkspaceRoot()
@@ -516,7 +517,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     public CompletableFuture<List<? extends SymbolInformation>> documentSymbol(DocumentSymbolParams params)
     {
         TextDocumentIdentifier textDocument = params.getTextDocument();
-        Path path = getPathFromLanguageServerURI(textDocument.getUri());
+        Path path = LanguageServerUtils.getPathFromLanguageServerURI(textDocument.getUri());
         if (path == null)
         {
             return CompletableFuture.completedFuture(Collections.emptyList());
@@ -553,7 +554,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     {
         List<? extends Diagnostic> diagnostics = params.getContext().getDiagnostics();
         TextDocumentIdentifier textDocument = params.getTextDocument();
-        Path path = getPathFromLanguageServerURI(textDocument.getUri());
+        Path path = LanguageServerUtils.getPathFromLanguageServerURI(textDocument.getUri());
         if (path == null || !sourceByPath.containsKey(path))
         {
             return CompletableFuture.completedFuture(Collections.emptyList());
@@ -724,7 +725,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return;
         }
-        Path path = getPathFromLanguageServerURI(textDocumentUri);
+        Path path = LanguageServerUtils.getPathFromLanguageServerURI(textDocumentUri);
         if (path != null)
         {
             String text = textDocument.getText();
@@ -751,7 +752,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return;
         }
-        Path path = getPathFromLanguageServerURI(textDocumentUri);
+        Path path = LanguageServerUtils.getPathFromLanguageServerURI(textDocumentUri);
         if (path != null)
         {
             for (TextDocumentContentChangeEvent change : params.getContentChanges())
@@ -794,7 +795,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return;
         }
-        Path path = getPathFromLanguageServerURI(textDocumentUri);
+        Path path = LanguageServerUtils.getPathFromLanguageServerURI(textDocumentUri);
         if (path != null)
         {
             sourceByPath.remove(path);
@@ -813,30 +814,23 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     /**
      * Called when certain files in the workspace are added, removed, or
-     * changed, even if they are not considered open for editing. This includes
-     * the asconfig.json file that holds compiler configuration settings, and
-     * any ActionScript file in the workspace.
+     * changed, even if they are not considered open for editing. Also checks if
+     * the project configuration strategy has changed. If it has, checks for
+     * errors on the whole project.
      */
     public void didChangeWatchedFiles(DidChangeWatchedFilesParams params)
     {
         boolean needsFullCheck = false;
         for (FileEvent event : params.getChanges())
         {
-            Path path = getPathFromLanguageServerURI(event.getUri());
+            Path path = LanguageServerUtils.getPathFromLanguageServerURI(event.getUri());
             if (path == null)
             {
                 continue;
             }
             File file = path.toFile();
             String fileName = file.getName();
-            if (fileName.equals(ASCONFIG_JSON))
-            {
-                //compiler settings may have changed, which means we should
-                //start fresh
-                asconfigChanged = true;
-                needsFullCheck = true;
-            }
-            else if ((fileName.endsWith(AS_EXTENSION) || fileName.endsWith(MXML_EXTENSION))
+            if ((fileName.endsWith(AS_EXTENSION) || fileName.endsWith(MXML_EXTENSION))
                     && currentWorkspace != null)
             {
                 if (event.getType().equals(FileChangeType.Deleted))
@@ -858,9 +852,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 }
             }
         }
-        if (needsFullCheck)
+        if (needsFullCheck || projectConfigStrategy.getChanged())
         {
-            if (currentOptions != null && currentOptions.type.equals(ProjectType.LIB))
+            if (currentProjectOptions != null && currentProjectOptions.type.equals(ProjectType.LIB))
             {
                 Set<Path> filePaths = this.sourceByPath.keySet();
                 if (filePaths.size() > 0)
@@ -882,222 +876,18 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
     }
 
-    private File getASConfigFile()
+    private void refreshProjectOptions()
     {
-        if (workspaceRoot == null)
-        {
-            return null;
-        }
-        Path asconfigPath = workspaceRoot.resolve(ASCONFIG_JSON);
-        File asconfigFile = new File(asconfigPath.toUri());
-        if (!asconfigFile.exists())
-        {
-            return null;
-        }
-        return asconfigFile;
-    }
-
-    private void loadASConfigFile()
-    {
-        if (!asconfigChanged && currentOptions != null)
+        if (!projectConfigStrategy.getChanged() && currentProjectOptions != null)
         {
             //the options are fully up-to-date
             return;
         }
         //if the configuration changed, start fresh with a whole new workspace
-        currentOptions = null;
-        currentWorkspace = null;
         currentProject = null;
         fileSpecGetter = null;
         compilationUnits = null;
-        File asconfigFile = getASConfigFile();
-        if (asconfigFile == null)
-        {
-            return;
-        }
-        asconfigChanged = false;
-        ProjectType type = ProjectType.APP;
-        String config = null;
-        String[] files = null;
-        String additionalOptions = null;
-        CompilerOptions compilerOptions = new CompilerOptions();
-        try (InputStream schemaInputStream = getClass().getResourceAsStream("/schemas/asconfig.schema.json"))
-        {
-            JSONObject rawJsonSchema = new JSONObject(new JSONTokener(schemaInputStream));
-            Schema schema = SchemaLoader.load(rawJsonSchema);
-            String contents = FileUtils.readFileToString(asconfigFile);
-            JSONObject json = new JSONObject(contents);
-            schema.validate(json);
-            if (json.has(ASConfigOptions.TYPE)) //optional, defaults to "app"
-            {
-                String typeString = json.getString(ASConfigOptions.TYPE);
-                type = ProjectType.fromToken(typeString);
-            }
-            config = json.getString(ASConfigOptions.CONFIG);
-            if (json.has(ASConfigOptions.FILES)) //optional
-            {
-                JSONArray jsonFiles = json.getJSONArray(ASConfigOptions.FILES);
-                int fileCount = jsonFiles.length();
-                files = new String[fileCount];
-                for (int i = 0; i < fileCount; i++)
-                {
-                    String pathString = jsonFiles.getString(i);
-                    Path filePath = workspaceRoot.resolve(pathString);
-                    files[i] = filePath.toString();
-                }
-            }
-            if (json.has(ASConfigOptions.COMPILER_OPTIONS)) //optional
-            {
-                JSONObject jsonCompilerOptions = json.getJSONObject(ASConfigOptions.COMPILER_OPTIONS);
-                if (jsonCompilerOptions.has(CompilerOptions.DEBUG))
-                {
-                    compilerOptions.debug = jsonCompilerOptions.getBoolean(CompilerOptions.DEBUG);
-                }
-                if (jsonCompilerOptions.has(CompilerOptions.DEFINE))
-                {
-                    HashMap<String, String> defines = new HashMap<>();
-                    JSONArray jsonDefine = jsonCompilerOptions.getJSONArray(CompilerOptions.DEFINE);
-                    for (int i = 0, count = jsonDefine.length(); i < count; i++)
-                    {
-                        JSONObject jsonNamespace = jsonDefine.getJSONObject(i);
-                        String name = jsonNamespace.getString(CompilerOptions.DEFINE_NAME);
-                        Object value = jsonNamespace.get(CompilerOptions.DEFINE_VALUE);
-                        if (value instanceof String)
-                        {
-                            value = "\"" + value + "\"";
-                        }
-                        defines.put(name, value.toString());
-                    }
-                    compilerOptions.defines = defines;
-                }
-                if (jsonCompilerOptions.has(CompilerOptions.EXTERNAL_LIBRARY_PATH))
-                {
-                    JSONArray jsonExternalLibraryPath = jsonCompilerOptions.getJSONArray(CompilerOptions.EXTERNAL_LIBRARY_PATH);
-                    ArrayList<File> externalLibraryPath = new ArrayList<>();
-                    for (int i = 0, count = jsonExternalLibraryPath.length(); i < count; i++)
-                    {
-                        String pathString = jsonExternalLibraryPath.getString(i);
-                        Path filePath = workspaceRoot.resolve(pathString);
-                        externalLibraryPath.add(filePath.toFile());
-                    }
-                    compilerOptions.externalLibraryPath = externalLibraryPath;
-                }
-                if (jsonCompilerOptions.has(CompilerOptions.INCLUDE_CLASSES))
-                {
-                    JSONArray jsonIncludeClasses = jsonCompilerOptions.getJSONArray(CompilerOptions.INCLUDE_CLASSES);
-                    ArrayList<String> includeClasses = new ArrayList<>();
-                    for (int i = 0, count = jsonIncludeClasses.length(); i < count; i++)
-                    {
-                        String qualifiedName = jsonIncludeClasses.getString(i);
-                        includeClasses.add(qualifiedName);
-                    }
-                    compilerOptions.includeClasses = includeClasses;
-                }
-                if (jsonCompilerOptions.has(CompilerOptions.INCLUDE_NAMESPACES))
-                {
-                    JSONArray jsonIncludeNamespaces = jsonCompilerOptions.getJSONArray(CompilerOptions.INCLUDE_NAMESPACES);
-                    ArrayList<String> includeNamespaces = new ArrayList<>();
-                    for (int i = 0, count = jsonIncludeNamespaces.length(); i < count; i++)
-                    {
-                        String namespaceURI = jsonIncludeNamespaces.getString(i);
-                        includeNamespaces.add(namespaceURI);
-                    }
-                    compilerOptions.includeNamespaces = includeNamespaces;
-                }
-                if (jsonCompilerOptions.has(CompilerOptions.INCLUDE_SOURCES))
-                {
-                    JSONArray jsonIncludeSources = jsonCompilerOptions.getJSONArray(CompilerOptions.INCLUDE_SOURCES);
-                    ArrayList<File> includeSources = new ArrayList<>();
-                    for (int i = 0, count = jsonIncludeSources.length(); i < count; i++)
-                    {
-                        String pathString = jsonIncludeSources.getString(i);
-                        Path filePath = workspaceRoot.resolve(pathString);
-                        includeSources.add(filePath.toFile());
-                    }
-                    compilerOptions.includeSources = includeSources;
-                }
-                if (jsonCompilerOptions.has(CompilerOptions.NAMESPACE))
-                {
-                    JSONArray jsonLibraryPath = jsonCompilerOptions.getJSONArray(CompilerOptions.NAMESPACE);
-                    ArrayList<MXMLNamespaceMapping> namespaceMappings = new ArrayList<>();
-                    for (int i = 0, count = jsonLibraryPath.length(); i < count; i++)
-                    {
-                        JSONObject jsonNamespace = jsonLibraryPath.getJSONObject(i);
-                        String uri = jsonNamespace.getString(CompilerOptions.NAMESPACE_URI);
-                        String manifest = jsonNamespace.getString(CompilerOptions.NAMESPACE_MANIFEST);
-                        MXMLNamespaceMapping mapping = new MXMLNamespaceMapping(uri, manifest);
-                        namespaceMappings.add(mapping);
-                    }
-                    compilerOptions.namespaceMappings = namespaceMappings;
-                }
-                if (jsonCompilerOptions.has(CompilerOptions.LIBRARY_PATH))
-                {
-                    JSONArray jsonLibraryPath = jsonCompilerOptions.getJSONArray(CompilerOptions.LIBRARY_PATH);
-                    ArrayList<File> libraryPath = new ArrayList<>();
-                    for (int i = 0, count = jsonLibraryPath.length(); i < count; i++)
-                    {
-                        String pathString = jsonLibraryPath.getString(i);
-                        Path filePath = workspaceRoot.resolve(pathString);
-                        libraryPath.add(filePath.toFile());
-                    }
-                    compilerOptions.libraryPath = libraryPath;
-                }
-                if (jsonCompilerOptions.has(CompilerOptions.SOURCE_PATH))
-                {
-                    JSONArray jsonSourcePath = jsonCompilerOptions.getJSONArray(CompilerOptions.SOURCE_PATH);
-                    ArrayList<File> sourcePath = new ArrayList<>();
-                    for (int i = 0, count = jsonSourcePath.length(); i < count; i++)
-                    {
-                        String pathString = jsonSourcePath.getString(i);
-                        Path filePath = workspaceRoot.resolve(pathString);
-                        sourcePath.add(filePath.toFile());
-                    }
-                    compilerOptions.sourcePath = sourcePath;
-                }
-                if (jsonCompilerOptions.has(CompilerOptions.WARNINGS))
-                {
-                    compilerOptions.warnings = jsonCompilerOptions.getBoolean(CompilerOptions.WARNINGS);
-                }
-            }
-            //these options are formatted as if sent in through the command line
-            if (json.has(ASConfigOptions.ADDITIONAL_OPTIONS)) //optional
-            {
-                additionalOptions = json.getString(ASConfigOptions.ADDITIONAL_OPTIONS);
-            }
-        }
-        catch (ValidationException e)
-        {
-            System.err.println("Failed to validate asconfig.json: " + e);
-            return;
-        }
-        catch (Exception e)
-        {
-            System.err.println("Failed to parse asconfig.json: " + e);
-            e.printStackTrace();
-            return;
-        }
-        //in a library project, the files field will be treated the same as the
-        //include-sources compiler option
-        if (type == ProjectType.LIB && files != null)
-        {
-            if (compilerOptions.includeSources == null)
-            {
-                compilerOptions.includeSources = new ArrayList<>();
-            }
-            for (int i = 0, count = files.length; i < count; i++)
-            {
-                String filePath = files[i];
-                compilerOptions.includeSources.add(new File(filePath));
-            }
-            files = null;
-        }
-        ASConfigOptions options = new ASConfigOptions();
-        options.type = type;
-        options.config = config;
-        options.files = files;
-        options.compilerOptions = compilerOptions;
-        options.additionalOptions = additionalOptions;
-        currentOptions = options;
+        currentProjectOptions = projectConfigStrategy.getOptions();
     }
 
     private CompletableFuture<CompletionList> actionScriptCompletion(TextDocumentPositionParams position)
@@ -1672,7 +1462,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             //definition referenced at the current position.
             return CompletableFuture.completedFuture(Collections.emptyList());
         }
-        Path path = getPathFromLanguageServerURI(params.getTextDocument().getUri());
+        Path path = LanguageServerUtils.getPathFromLanguageServerURI(params.getTextDocument().getUri());
         if (path == null)
         {
             //this probably shouldn't happen, but check just to be safe
@@ -2938,18 +2728,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
     }
 
-    private Optional<Path> getFilePath(URI uri)
-    {
-        if (!uri.getScheme().equals("file"))
-        {
-            return Optional.empty();
-        }
-        else
-        {
-            return Optional.of(Paths.get(uri));
-        }
-    }
-
     private Range getSourceLocationRange(ISourceLocation problem)
     {
         int line = problem.getLine();
@@ -3065,7 +2843,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         Diagnostic diagnostic = createDiagnosticWithoutRange();
         diagnostic.setSeverity(DiagnosticSeverity.Information);
 
-        File asconfigFile = getASConfigFile();
         if (reader == null)
         {
             //the file does not exist
@@ -3078,23 +2855,16 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             diagnostic.setSeverity(DiagnosticSeverity.Error);
             diagnostic.setMessage("A fatal error occurred while checking for simple syntax problems.");
         }
-        else if (currentOptions == null)
+        else if (currentProjectOptions == null)
         {
-            if (asconfigFile == null)
-            {
-                diagnostic.setMessage("Cannot find asconfig.json. Error checking disabled, except for simple syntax problems.");
-            }
-            else
-            {
-                //we found asconfig.json, but something went wrong while
-                //attempting to parse it
-                diagnostic.setMessage("Failed to parse asconfig.json. Error checking disabled, except for simple syntax problems.");
-            }
+            //something went wrong while attempting to load and parse the
+            //project configuration.
+            diagnostic.setMessage("Failed to load project configuration options. Error checking disabled, except for simple syntax problems.");
         }
         else
         {
-            //we loaded and parsed asconfig.json, so something went wrong while
-            //checking for errors.
+            //we loaded and parsed the project configuration, so something went
+            //wrong while checking for errors.
             diagnostic.setMessage("A fatal error occurred while checking for errors. Error checking disabled, except for simple syntax problems.");
         }
 
@@ -3106,7 +2876,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             languageClient.publishDiagnostics(publish);
         }
     }
-    
+
     private Diagnostic createDiagnosticWithoutRange()
     {
         Diagnostic diagnostic = new Diagnostic();
@@ -3135,12 +2905,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private Path getMainCompilationUnitPath()
     {
-        loadASConfigFile();
-        if (currentOptions == null)
+        refreshProjectOptions();
+        if (currentProjectOptions == null)
         {
             return null;
         }
-        String[] files = currentOptions.files;
+        String[] files = currentProjectOptions.files;
         if (files == null || files.length == 0)
         {
             return null;
@@ -3160,7 +2930,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         currentWorkspace = currentProject.getWorkspace();
         //we're going to start with the files passed into the compiler
-        String[] files = currentOptions.files;
+        String[] files = currentProjectOptions.files;
         if (files != null)
         {
             for (int i = files.length - 1; i >= 0; i--)
@@ -3257,8 +3027,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private FlexProject getProject()
     {
         clearInvisibleCompilationUnits();
-        loadASConfigFile();
-        if (currentOptions == null)
+        refreshProjectOptions();
+        if (currentProjectOptions == null)
         {
             return null;
         }
@@ -3274,12 +3044,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return currentProject;
         }
-        CompilerOptions compilerOptions = currentOptions.compilerOptions;
+        CompilerOptions compilerOptions = currentProjectOptions.compilerOptions;
         Configurator configurator = new Configurator(JSGoogConfiguration.class);
-        configurator.setToken("configname", currentOptions.config);
-        ProjectType type = currentOptions.type;
-        String[] files = currentOptions.files;
-        String additionalOptions = currentOptions.additionalOptions;
+        configurator.setToken("configname", currentProjectOptions.config);
+        ProjectType type = currentProjectOptions.type;
+        String[] files = currentProjectOptions.files;
+        String additionalOptions = currentProjectOptions.additionalOptions;
         ArrayList<String> combinedOptions = new ArrayList<>();
         if (additionalOptions != null)
         {
@@ -3327,7 +3097,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             configurator.setDefineDirectives(compilerOptions.defines);
         }
-        if (currentOptions.type.equals(ProjectType.LIB))
+        if (currentProjectOptions.type.equals(ProjectType.LIB))
         {
             if (compilerOptions.includeClasses != null)
             {
@@ -3350,14 +3120,14 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return null;
         }
         ITarget.TargetType targetType = ITarget.TargetType.SWF;
-        if (currentOptions.type.equals(ProjectType.LIB))
+        if (currentProjectOptions.type.equals(ProjectType.LIB))
         {
             targetType = ITarget.TargetType.SWC;
         }
         ITargetSettings targetSettings = configurator.getTargetSettings(targetType);
         if (targetSettings == null)
         {
-            System.err.println("Failed to get compile settings for +configname=" + currentOptions.config + ".");
+            System.err.println("Failed to get compile settings for +configname=" + currentProjectOptions.config + ".");
             return null;
         }
         project.setTargetSettings(targetSettings);
@@ -3461,7 +3231,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                         //compiled compilation units won't have problems
                         continue;
                     }
-                    
+
                     PublishDiagnosticsParams params = checkCompilationUnitForAllProblems(unit);
                     URI uri = Paths.get(unit.getAbsoluteFilename()).toUri();
                     files.put(uri, params);
@@ -3541,18 +3311,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return reader;
     }
 
-    private Path getPathFromLanguageServerURI(String apiURI)
-    {
-        URI uri = URI.create(apiURI);
-        Optional<Path> optionalPath = getFilePath(uri);
-        if (!optionalPath.isPresent())
-        {
-            System.err.println("Could not find URI " + uri);
-            return null;
-        }
-        return optionalPath.get();
-    }
-
     private boolean isMXMLTagValidForCompletion(IMXMLTagData tag)
     {
         if (tag.getXMLName().equals(tag.getMXMLDialect().resolveScript()))
@@ -3581,7 +3339,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         currentOffset = -1;
         importStartIndex = -1;
         importEndIndex = -1;
-        Path path = getPathFromLanguageServerURI(uri);
+        Path path = LanguageServerUtils.getPathFromLanguageServerURI(uri);
         if (path == null)
         {
             return null;
@@ -3688,7 +3446,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             importStartIndex = -1;
             importEndIndex = -1;
         }
-        Path path = getPathFromLanguageServerURI(textDocument.getUri());
+        Path path = LanguageServerUtils.getPathFromLanguageServerURI(textDocument.getUri());
         if (path == null)
         {
             return null;
@@ -4154,7 +3912,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private boolean isInActionScriptComment(TextDocumentPositionParams params)
     {
         TextDocumentIdentifier textDocument = params.getTextDocument();
-        Path path = getPathFromLanguageServerURI(textDocument.getUri());
+        Path path = LanguageServerUtils.getPathFromLanguageServerURI(textDocument.getUri());
         if (path == null || !sourceByPath.containsKey(path))
         {
             return false;
@@ -4182,7 +3940,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private boolean isInXMLComment(TextDocumentPositionParams params)
     {
         TextDocumentIdentifier textDocument = params.getTextDocument();
-        Path path = getPathFromLanguageServerURI(textDocument.getUri());
+        Path path = LanguageServerUtils.getPathFromLanguageServerURI(textDocument.getUri());
         if (path == null || !sourceByPath.containsKey(path))
         {
             return false;
