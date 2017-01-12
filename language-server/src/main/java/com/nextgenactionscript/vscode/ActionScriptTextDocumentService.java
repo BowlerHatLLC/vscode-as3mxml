@@ -1140,7 +1140,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                         || (line == nameExpression.getEndLine() && column > nameExpression.getEndColumn())
                         || (line == typeNode.getLine() && column <= typeNode.getColumn()))
                 {
-                    autoCompleteTypes(result);
+                    autoCompleteTypes(offsetNode, result);
                 }
                 return CompletableFuture.completedFuture(result);
             }
@@ -1151,7 +1151,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             IVariableNode variableNode = (IVariableNode) parentNode;
             if (offsetNode == variableNode.getVariableTypeNode())
             {
-                autoCompleteTypes(result);
+                autoCompleteTypes(parentNode, result);
                 return CompletableFuture.completedFuture(result);
             }
         }
@@ -1170,7 +1170,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                         && line <= typeNode.getLine()
                         && column <= typeNode.getColumn())
                 {
-                    autoCompleteTypes(result);
+                    autoCompleteTypes(offsetNode, result);
                     return CompletableFuture.completedFuture(result);
                 }
             }
@@ -1181,7 +1181,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             IFunctionNode functionNode = (IFunctionNode) parentNode;
             if (offsetNode == functionNode.getReturnTypeNode())
             {
-                autoCompleteTypes(result);
+                autoCompleteTypes(parentNode, result);
                 return CompletableFuture.completedFuture(result);
             }
         }
@@ -1193,7 +1193,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             if (functionCallNode.getNameNode() == offsetNode
                     && functionCallNode.isNewExpression())
             {
-                autoCompleteTypes(result);
+                autoCompleteTypes(parentNode, result);
                 return CompletableFuture.completedFuture(result);
             }
         }
@@ -1201,7 +1201,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 && nodeAtPreviousOffset instanceof IKeywordNode
                 && nodeAtPreviousOffset.getNodeID() == ASTNodeID.KeywordNewID)
         {
-            autoCompleteTypes(result);
+            autoCompleteTypes(nodeAtPreviousOffset, result);
             return CompletableFuture.completedFuture(result);
         }
         //as and is keyword types
@@ -1213,7 +1213,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             IBinaryOperatorNode binaryOperatorNode = (IBinaryOperatorNode) parentNode;
             if (binaryOperatorNode.getRightOperandNode() == offsetNode)
             {
-                autoCompleteTypes(result);
+                autoCompleteTypes(parentNode, result);
                 return CompletableFuture.completedFuture(result);
             }
         }
@@ -1222,7 +1222,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 && (nodeAtPreviousOffset.getNodeID() == ASTNodeID.Op_AsID
                 || nodeAtPreviousOffset.getNodeID() == ASTNodeID.Op_IsID))
         {
-            autoCompleteTypes(result);
+            autoCompleteTypes(nodeAtPreviousOffset, result);
             return CompletableFuture.completedFuture(result);
         }
         //class extends keyword
@@ -1231,7 +1231,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 && nodeAtPreviousOffset instanceof IKeywordNode
                 && nodeAtPreviousOffset.getNodeID() == ASTNodeID.KeywordExtendsID)
         {
-            autoCompleteTypes(result);
+            autoCompleteTypes(offsetNode, result);
             return CompletableFuture.completedFuture(result);
         }
         //class implements keyword
@@ -1240,7 +1240,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 && nodeAtPreviousOffset instanceof IKeywordNode
                 && nodeAtPreviousOffset.getNodeID() == ASTNodeID.KeywordImplementsID)
         {
-            autoCompleteTypes(result);
+            autoCompleteTypes(offsetNode, result);
             return CompletableFuture.completedFuture(result);
         }
         //interface extends keyword
@@ -1249,7 +1249,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 && nodeAtPreviousOffset instanceof IKeywordNode
                 && nodeAtPreviousOffset.getNodeID() == ASTNodeID.KeywordExtendsID)
         {
-            autoCompleteTypes(result);
+            autoCompleteTypes(offsetNode, result);
             return CompletableFuture.completedFuture(result);
         }
 
@@ -1353,7 +1353,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 IScopedNode scopedNode = (IScopedNode) offsetNode;
 
                 //include all members and local things that are in scope
-                autoCompleteScope(scopedNode, result);
+                autoCompleteScope(scopedNode, false, result);
 
                 //include all public definitions
                 IASScope scope = scopedNode.getScope();
@@ -1965,8 +1965,25 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return STAR;
     }
 
-    private void autoCompleteTypes(CompletionList result)
+    private void autoCompleteTypes(IASNode withNode, CompletionList result)
     {
+        //start by getting the types in scope
+        IASNode node = withNode;
+        do
+        {
+            //just keep traversing up until we get a scoped node or run out of
+            //nodes to check
+            if (node instanceof IScopedNode)
+            {
+                IScopedNode scopedNode = (IScopedNode) node;
+
+                //include all members and local things that are in scope
+                autoCompleteScope(scopedNode, true, result);
+                break;
+            }
+            node = node.getParent();
+        }
+        while (node != null);
         autoCompleteDefinitions(result, false, true, null, null);
     }
 
@@ -2111,7 +2128,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
     }
 
-    private void autoCompleteScope(IScopedNode node, CompletionList result)
+    private void autoCompleteScope(IScopedNode node, boolean typesOnly, CompletionList result)
     {
         IScopedNode currentNode = node;
         while (currentNode != null)
@@ -2122,6 +2139,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             for (IDefinition localDefinition : currentScope.getAllLocalDefinitions())
             {
                 if (localDefinition.getBaseName().length() == 0)
+                {
+                    continue;
+                }
+                if (typesOnly && !(localDefinition instanceof ITypeDefinition))
                 {
                     continue;
                 }
