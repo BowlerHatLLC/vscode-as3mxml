@@ -3002,44 +3002,42 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         publish.setUri(uri.toString());
         trackFileWithErrors(uri);
 
+        ASParser parser = null;
         Reader reader = getReaderForPath(path);
-        if (reader == null)
+        if (reader != null)
         {
-            //we can't get the code at all
-            System.err.println("Cannot create Reader for path: " + path.toAbsolutePath().toString());
-            return;
-        }
-        StreamingASTokenizer tokenizer = StreamingASTokenizer.createForRepairingASTokenizer(reader, uri.toString(), null);
-        ASToken[] tokens = tokenizer.getTokens(reader);
-        if (tokenizer.hasTokenizationProblems())
-        {
-            for (ICompilerProblem problem : tokenizer.getTokenizationProblems())
+            StreamingASTokenizer tokenizer = StreamingASTokenizer.createForRepairingASTokenizer(reader, uri.toString(), null);
+            ASToken[] tokens = tokenizer.getTokens(reader);
+            if (tokenizer.hasTokenizationProblems())
             {
-                addCompilerProblem(problem, publish);
+                for (ICompilerProblem problem : tokenizer.getTokenizationProblems())
+                {
+                    addCompilerProblem(problem, publish);
+                }
             }
-        }
-        RepairingTokenBuffer buffer = new RepairingTokenBuffer(tokens);
+            RepairingTokenBuffer buffer = new RepairingTokenBuffer(tokens);
 
-        Workspace workspace = new Workspace();
-        workspace.endRequest();
-        ASParser parser = new ASParser(workspace, buffer);
-        FileNode node = new FileNode(workspace);
-        try
-        {
-            parser.file(node);
-        }
-        catch (Exception e)
-        {
-            parser = null;
-            System.err.println("Failed to parse file (" + path.toString() + "): " + e);
-            e.printStackTrace();
-        }
-        //if an error occurred above, parser will be null
-        if (parser != null)
-        {
-            for (ICompilerProblem problem : parser.getSyntaxProblems())
+            Workspace workspace = new Workspace();
+            workspace.endRequest();
+            parser = new ASParser(workspace, buffer);
+            FileNode node = new FileNode(workspace);
+            try
             {
-                addCompilerProblem(problem, publish);
+                parser.file(node);
+            }
+            catch (Exception e)
+            {
+                parser = null;
+                System.err.println("Failed to parse file (" + path.toString() + "): " + e);
+                e.printStackTrace();
+            }
+            //if an error occurred above, parser will be null
+            if (parser != null)
+            {
+                for (ICompilerProblem problem : parser.getSyntaxProblems())
+                {
+                    addCompilerProblem(problem, publish);
+                }
             }
         }
 
@@ -3047,7 +3045,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         diagnostic.setSeverity(DiagnosticSeverity.Information);
 
         File asconfigFile = getASConfigFile();
-        if (parser == null)
+        if (reader == null)
+        {
+            //the file does not exist
+            diagnostic.setSeverity(DiagnosticSeverity.Error);
+            diagnostic.setMessage("File not found: " + path.toAbsolutePath().toString() + ". Error checking disabled.");
+        }
+        else if (parser == null)
         {
             //something terrible happened, and this is the best we can do
             diagnostic.setMessage("A fatal error occurred while checking for simple syntax problems.");
@@ -3494,10 +3498,15 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         else
         {
+            File file = new File(path.toAbsolutePath().toString());
+            if (!file.exists())
+            {
+                return null;
+            }
             //if the file is not open, read it from the file system
             try
             {
-                reader = new FileReader(path.toAbsolutePath().toString());
+                reader = new FileReader(file);
             }
             catch (FileNotFoundException e)
             {
