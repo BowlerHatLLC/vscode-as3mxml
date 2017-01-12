@@ -3062,7 +3062,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
         }
 
-        Diagnostic diagnostic = new Diagnostic();
+        Diagnostic diagnostic = createDiagnosticWithoutRange();
         diagnostic.setSeverity(DiagnosticSeverity.Information);
 
         File asconfigFile = getASConfigFile();
@@ -3075,6 +3075,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         else if (parser == null)
         {
             //something terrible happened, and this is the best we can do
+            diagnostic.setSeverity(DiagnosticSeverity.Error);
             diagnostic.setMessage("A fatal error occurred while checking for simple syntax problems.");
         }
         else if (currentOptions == null)
@@ -3097,10 +3098,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             diagnostic.setMessage("A fatal error occurred while checking for errors. Error checking disabled, except for simple syntax problems.");
         }
 
-        Range range = new Range();
-        range.setStart(new Position());
-        range.setEnd(new Position());
-        diagnostic.setRange(range);
         diagnostics.add(diagnostic);
 
         cleanUpStaleErrors();
@@ -3108,6 +3105,16 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             languageClient.publishDiagnostics(publish);
         }
+    }
+    
+    private Diagnostic createDiagnosticWithoutRange()
+    {
+        Diagnostic diagnostic = new Diagnostic();
+        Range range = new Range();
+        range.setStart(new Position());
+        range.setEnd(new Position());
+        diagnostic.setRange(range);
+        return diagnostic;
     }
 
     private ICompilationUnit findCompilationUnit(String absoluteFileName)
@@ -3442,10 +3449,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             if (quick)
             {
                 PublishDiagnosticsParams params = checkCompilationUnitForAllProblems(mainUnit);
-                if (params == null)
-                {
-                    return false;
-                }
                 URI uri = Paths.get(mainUnit.getAbsoluteFilename()).toUri();
                 files.put(uri, params);
             }
@@ -3458,11 +3461,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                         //compiled compilation units won't have problems
                         continue;
                     }
+                    
                     PublishDiagnosticsParams params = checkCompilationUnitForAllProblems(unit);
-                    if (params == null)
-                    {
-                        return false;
-                    }
                     URI uri = Paths.get(unit.getAbsoluteFilename()).toUri();
                     files.put(uri, params);
                 }
@@ -3494,16 +3494,20 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         try
         {
             unit.waitForBuildFinish(problems, ITarget.TargetType.SWF);
+            for (ICompilerProblem problem : problems)
+            {
+                addCompilerProblem(problem, publish);
+            }
         }
         catch (Exception e)
         {
             System.err.println("Exception during waitForBuildFinish(): " + e);
             e.printStackTrace();
-            return null;
-        }
-        for (ICompilerProblem problem : problems)
-        {
-            addCompilerProblem(problem, publish);
+
+            Diagnostic diagnostic = createDiagnosticWithoutRange();
+            diagnostic.setSeverity(DiagnosticSeverity.Error);
+            diagnostic.setMessage("A fatal error occurred while checking a file for problems: " + unit.getAbsoluteFilename());
+            publish.getDiagnostics().add(diagnostic);
         }
         return publish;
     }
