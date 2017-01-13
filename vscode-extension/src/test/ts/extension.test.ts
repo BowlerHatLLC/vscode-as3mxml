@@ -3409,6 +3409,25 @@ suite("completion item provider", () =>
 					});
 		}).then(() => done(), done);
 	});
+	test("vscode.executeCompletionItemProvider omits static variable with member access operator on this", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let position = new vscode.Position(46, 8);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider",
+				uri, position, ".")
+				.then((list: vscode.CompletionList) =>
+					{
+						let items = list.items;
+						let staticVarItem = findCompletionItem("staticVar", items);
+						assert.equal(staticVarItem, null, "vscode.executeCompletionItemProvider failed to omit static variable: " + uri);
+					}, (err) =>
+					{
+						assert(false, "Failed to execute completion item provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
 	test("vscode.executeCompletionItemProvider includes static function", (done) =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
@@ -3448,6 +3467,25 @@ suite("completion item provider", () =>
 					});
 		}).then(() => done(), done);
 	});
+	test("vscode.executeCompletionItemProvider omits static function with member access operator on this", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let position = new vscode.Position(46, 8);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider",
+				uri, position, ".")
+				.then((list: vscode.CompletionList) =>
+					{
+						let items = list.items;
+						let staticFunctionItem = findCompletionItem("staticFunction", items);
+						assert.equal(staticFunctionItem, null, "vscode.executeCompletionItemProvider failed to omit static function: " + uri);
+					}, (err) =>
+					{
+						assert(false, "Failed to execute completion item provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
 	test("vscode.executeCompletionItemProvider includes static property", (done) =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
@@ -3481,6 +3519,25 @@ suite("completion item provider", () =>
 						let staticPropItem = findCompletionItem("staticProperty", items);
 						assert.notEqual(staticPropItem, null, "vscode.executeCompletionItemProvider failed to provide static property: " + uri);
 						assert.strictEqual(staticPropItem.kind, vscode.CompletionItemKind.Function, "vscode.executeCompletionItemProvider failed to provide correct kind of static property: " + uri);
+					}, (err) =>
+					{
+						assert(false, "Failed to execute completion item provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeCompletionItemProvider omits static property with member access operator on this", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let position = new vscode.Position(46, 8);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider",
+				uri, position, ".")
+				.then((list: vscode.CompletionList) =>
+					{
+						let items = list.items;
+						let staticPropItem = findCompletionItem("staticProperty", items);
+						assert.equal(staticPropItem, null, "vscode.executeCompletionItemProvider failed to omit static property: " + uri);
 					}, (err) =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
@@ -3797,6 +3854,25 @@ suite("completion item provider", () =>
 					});
 		}).then(() => done(), done);
 	});
+	test("vscode.executeCompletionItemProvider omits super static variable with member access operator on class", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let position = new vscode.Position(48, 15);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider",
+				uri, position, ".")
+				.then((list: vscode.CompletionList) =>
+					{
+						let items = list.items;
+						let superStaticVarItem = findCompletionItem("superStaticVar", items);
+						assert.equal(superStaticVarItem, null, "vscode.executeCompletionItemProvider failed to omit super static variable: " + uri);
+					}, (err) =>
+					{
+						assert(false, "Failed to execute completion item provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
 	test("vscode.executeCompletionItemProvider includes super static variable with member access operator on superclass", (done) =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
@@ -3836,6 +3912,25 @@ suite("completion item provider", () =>
 					});
 		}).then(() => done(), done);
 	});
+	test("vscode.executeCompletionItemProvider omits super static property with member access operator on class", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let position = new vscode.Position(48, 15);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider",
+				uri, position, ".")
+				.then((list: vscode.CompletionList) =>
+					{
+						let items = list.items;
+						let superStaticPropertyItem = findCompletionItem("superStaticProperty", items);
+						assert.equal(superStaticPropertyItem, null, "vscode.executeCompletionItemProvider failed to omit super static property: " + uri);
+					}, (err) =>
+					{
+						assert(false, "Failed to execute completion item provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
 	test("vscode.executeCompletionItemProvider includes super static property with member access operator on superclass", (done) =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
@@ -3869,6 +3964,25 @@ suite("completion item provider", () =>
 						let superStaticFunctionItem = findCompletionItem("superStaticFunction", items);
 						assert.notEqual(superStaticFunctionItem, null, "vscode.executeCompletionItemProvider failed to provide super static function: " + uri);
 						assert.strictEqual(superStaticFunctionItem.kind, vscode.CompletionItemKind.Function, "vscode.executeCompletionItemProvider failed to provide correct kind of super static function: " + uri);
+					}, (err) =>
+					{
+						assert(false, "Failed to execute completion item provider: " + uri);
+					});
+		}).then(() => done(), done);
+	});
+	test("vscode.executeCompletionItemProvider omits super static function with member access operator on class", (done) =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let position = new vscode.Position(48, 15);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider",
+				uri, position, ".")
+				.then((list: vscode.CompletionList) =>
+					{
+						let items = list.items;
+						let superStaticFunctionItem = findCompletionItem("superStaticFunction", items);
+						assert.equal(superStaticFunctionItem, null, "vscode.executeCompletionItemProvider failed to omit super static function: " + uri);
 					}, (err) =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
