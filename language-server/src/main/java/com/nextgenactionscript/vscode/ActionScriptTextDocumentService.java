@@ -64,7 +64,6 @@ import org.apache.flex.compiler.definitions.ITypeDefinition;
 import org.apache.flex.compiler.definitions.IVariableDefinition;
 import org.apache.flex.compiler.definitions.metadata.IMetaTag;
 import org.apache.flex.compiler.filespecs.IFileSpecification;
-import org.apache.flex.compiler.internal.driver.js.goog.JSGoogConfiguration;
 import org.apache.flex.compiler.internal.mxml.MXMLData;
 import org.apache.flex.compiler.internal.parsing.as.ASParser;
 import org.apache.flex.compiler.internal.parsing.as.ASToken;
@@ -2963,7 +2962,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return currentProject;
         }
         CompilerOptions compilerOptions = currentProjectOptions.compilerOptions;
-        Configurator configurator = new Configurator(JSGoogConfiguration.class);
+        Configurator configurator = new Configurator();
         configurator.setToken("configname", currentProjectOptions.config);
         ProjectType type = currentProjectOptions.type;
         String[] files = currentProjectOptions.files;
@@ -2989,6 +2988,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         //configuration buffer before addExternalLibraryPath() is called
         configurator.setExcludeNativeJSLibraries(false);
         boolean result = configurator.applyToProject(project);
+        //if there are errors, log them. ideally, these should be displayed to user.
+        for (ICompilerProblem problem : configurator.getConfigurationProblems())
+        {
+            System.err.println(problem);
+        }
         if (!result)
         {
             return null;
@@ -3125,6 +3129,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         catch (Exception e)
         {
+            System.err.println("Exception during build: " + e);
             return false;
         }
         if (ast == null)
