@@ -2065,6 +2065,14 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             //as public, but should be treated the same way
             namespaceSet.addAll(typeScope.getNamespaceSet(currentProject));
         }
+        //we need to get the protected namespaces from the super classes
+        ITypeDefinition definition = (ITypeDefinition) typeScope.getContainingDefinition();
+        while (definition instanceof IClassDefinition)
+        {
+            IClassDefinition classDefinition = (IClassDefinition) definition;
+            namespaceSet.add(classDefinition.getProtectedNamespaceReference());
+            definition = classDefinition.resolveBaseClass(currentProject);
+        }
         typeScope.getAllPropertiesForMemberAccess(currentProject, memberAccessDefinitions, namespaceSet);
         for (IDefinition localDefinition : memberAccessDefinitions)
         {
