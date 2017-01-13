@@ -2988,10 +2988,32 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         //configuration buffer before addExternalLibraryPath() is called
         configurator.setExcludeNativeJSLibraries(false);
         boolean result = configurator.applyToProject(project);
-        //if there are errors, log them. ideally, these should be displayed to user.
-        for (ICompilerProblem problem : configurator.getConfigurationProblems())
+        Collection<ICompilerProblem> problems = configurator.getConfigurationProblems();
+        if (problems.size() > 0)
         {
-            System.err.println(problem);
+            Map<URI, PublishDiagnosticsParams> filesMap = new HashMap<>();
+            for (ICompilerProblem problem : problems)
+            {
+                URI uri = Paths.get(problem.getSourcePath()).toUri();
+                PublishDiagnosticsParams params = null;
+                if (filesMap.containsKey(uri))
+                {
+                    params = filesMap.get(uri);
+                }
+                else
+                {
+                    params = new PublishDiagnosticsParams();
+                    params.setUri(uri.toString());
+                    params.setDiagnostics(new ArrayList<>());
+                    filesMap.put(uri, params);
+                }
+                addCompilerProblem(problem, params);
+            }
+            if (languageClient != null)
+            {
+                filesMap.values().forEach(languageClient::publishDiagnostics);
+            }
+            //we don't return null if result is not false
         }
         if (!result)
         {
