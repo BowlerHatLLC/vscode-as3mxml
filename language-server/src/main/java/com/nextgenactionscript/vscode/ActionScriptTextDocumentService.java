@@ -1871,35 +1871,48 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private void autoCompleteScope(IScopedNode node, boolean typesOnly, CompletionList result)
     {
         IScopedNode currentNode = node;
+        ASScope scope = (ASScope) node.getScope();
         while (currentNode != null)
         {
             IASScope currentScope = currentNode.getScope();
-            boolean staticOnly = currentNode == node
-                    && currentScope instanceof TypeScope;
-            for (IDefinition localDefinition : currentScope.getAllLocalDefinitions())
+            boolean isType = currentScope instanceof TypeScope;
+            boolean staticOnly = currentNode == node && isType;
+            if (currentScope instanceof TypeScope)
             {
-                if (localDefinition.getBaseName().length() == 0)
+                TypeScope typeScope = (TypeScope) currentScope;
+                addDefinitionsInTypeScopeToAutoCompleteActionScript(typeScope, scope, true, result);
+                if (!staticOnly)
                 {
-                    continue;
+                    addDefinitionsInTypeScopeToAutoCompleteActionScript(typeScope, scope, false, result);
                 }
-                if (typesOnly && !(localDefinition instanceof ITypeDefinition))
+            }
+            else
+            {
+                for (IDefinition localDefinition : currentScope.getAllLocalDefinitions())
                 {
-                    continue;
-                }
-                if (!staticOnly || localDefinition.isStatic())
-                {
-                    if (localDefinition instanceof ISetterDefinition)
+                    if (localDefinition.getBaseName().length() == 0)
                     {
-                        ISetterDefinition setter = (ISetterDefinition) localDefinition;
-                        IGetterDefinition getter = setter.resolveGetter(currentProject);
-                        if (getter != null)
-                        {
-                            //skip the setter if there's also a getter because
-                            //it would add a duplicate entry
-                            continue;
-                        }
+                        continue;
                     }
-                    addDefinitionAutoCompleteActionScript(localDefinition, result);
+                    if (typesOnly && !(localDefinition instanceof ITypeDefinition))
+                    {
+                        continue;
+                    }
+                    if (!staticOnly || localDefinition.isStatic())
+                    {
+                        if (localDefinition instanceof ISetterDefinition)
+                        {
+                            ISetterDefinition setter = (ISetterDefinition) localDefinition;
+                            IGetterDefinition getter = setter.resolveGetter(currentProject);
+                            if (getter != null)
+                            {
+                                //skip the setter if there's also a getter because
+                                //it would add a duplicate entry
+                                continue;
+                            }
+                        }
+                        addDefinitionAutoCompleteActionScript(localDefinition, result);
+                    }
                 }
             }
             currentNode = currentNode.getContainingScope();
@@ -2052,7 +2065,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             //as public, but should be treated the same way
             namespaceSet.addAll(typeScope.getNamespaceSet(currentProject));
         }
-        typeScope.getAllPropertiesForMemberAccess((CompilerProject) currentProject, memberAccessDefinitions, namespaceSet);
+        typeScope.getAllPropertiesForMemberAccess(currentProject, memberAccessDefinitions, namespaceSet);
         for (IDefinition localDefinition : memberAccessDefinitions)
         {
             if (localDefinition.isOverride())
