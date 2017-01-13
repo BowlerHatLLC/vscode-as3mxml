@@ -239,7 +239,8 @@ function createLanguageServer(): Promise<StreamInfo>
 				//the following jars are included with the language server
 				path.resolve(savedContext.extensionPath, "bin", "*") + cpDelimiter +
 				//the following jars come from apache flexjs
-				path.resolve(flexHome, "js", "lib", "jsc.jar"),
+				path.resolve(flexHome, "lib", "*") + cpDelimiter +
+				path.resolve(flexHome, "lib", "external", "*"),
 				//the language server communicates with vscode on this port
 				"-Dnextgeas.vscode.port=" + port,
 				"com.nextgenactionscript.vscode.Main",
