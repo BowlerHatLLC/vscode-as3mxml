@@ -1880,7 +1880,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             if (currentScope instanceof TypeScope)
             {
                 TypeScope typeScope = (TypeScope) currentScope;
-                addDefinitionsInTypeScopeToAutoCompleteActionScript(typeScope, scope, true, result);
+                addDefinitionsInTypeScopeToAutoComplete(typeScope, scope, true, true, false, null, result);
                 if (!staticOnly)
                 {
                     addDefinitionsInTypeScopeToAutoCompleteActionScript(typeScope, scope, false, result);
@@ -2046,15 +2046,15 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private void addDefinitionsInTypeScopeToAutoCompleteActionScript(TypeScope typeScope, ASScope otherScope, boolean isStatic, CompletionList result)
     {
-        addDefinitionsInTypeScopeToAutoComplete(typeScope, otherScope, isStatic, false, null, result);
+        addDefinitionsInTypeScopeToAutoComplete(typeScope, otherScope, isStatic, false, false, null, result);
     }
 
     private void addDefinitionsInTypeScopeToAutoCompleteMXML(TypeScope typeScope, ASScope otherScope, String prefix, CompletionList result)
     {
-        addDefinitionsInTypeScopeToAutoComplete(typeScope, otherScope, false, true, prefix, result);
+        addDefinitionsInTypeScopeToAutoComplete(typeScope, otherScope, false, false, true, prefix, result);
     }
 
-    private void addDefinitionsInTypeScopeToAutoComplete(TypeScope typeScope, ASScope otherScope, boolean isStatic, boolean forMXML, String prefix, CompletionList result)
+    private void addDefinitionsInTypeScopeToAutoComplete(TypeScope typeScope, ASScope otherScope, boolean isStatic, boolean includeSuperStatics, boolean forMXML, String prefix, CompletionList result)
     {
         IMetaTag[] excludeMetaTags = typeScope.getDefinition().getMetaTagsByName(IMetaAttributeConstants.ATTRIBUTE_EXCLUDE);
         ArrayList<IDefinition> memberAccessDefinitions = new ArrayList<>();
@@ -2127,7 +2127,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     //static, skip it
                     continue;
                 }
-                if (localDefinition.getParent() != typeScope.getContainingDefinition())
+                if (!includeSuperStatics && localDefinition.getParent() != typeScope.getContainingDefinition())
                 {
                     //if we want static members, then members from base classes
                     //aren't available with member access
