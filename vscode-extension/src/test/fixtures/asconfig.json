@@ -1,5 +1,8 @@
 {
-	"config": "js",
+	"config": "flex",
+	"compilerOptions": {
+		"js-output-type": "flexjs"
+	},
 	"files": [
 		"src/Main.as"
 	]
