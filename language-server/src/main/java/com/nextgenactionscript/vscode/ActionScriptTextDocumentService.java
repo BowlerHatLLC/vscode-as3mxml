@@ -881,6 +881,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return;
         }
         //if the configuration changed, start fresh with a whole new workspace
+        currentWorkspace = null;
         currentProject = null;
         fileSpecGetter = null;
         compilationUnits = null;
