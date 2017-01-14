@@ -1876,7 +1876,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             IASScope currentScope = currentNode.getScope();
             boolean isType = currentScope instanceof TypeScope;
             boolean staticOnly = currentNode == node && isType;
-            if (currentScope instanceof TypeScope)
+            if (currentScope instanceof TypeScope && !typesOnly)
             {
                 TypeScope typeScope = (TypeScope) currentScope;
                 addDefinitionsInTypeScopeToAutoComplete(typeScope, scope, true, true, false, null, result);
