@@ -36,8 +36,8 @@
     "vscode": "^1.0.3"
   },
   "dependencies": {
-    "portfinder": "^1.0.3",
-    "vscode-languageclient": "^2.6.0"
+    "portfinder": "^1.0.12",
+    "vscode-languageclient": "^2.6.3"
   },
   "activationEvents": [
     "onLanguage:nextgenas",
