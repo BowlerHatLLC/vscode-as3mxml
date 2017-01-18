@@ -125,8 +125,7 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
     @Override
     public CompletableFuture<Object> shutdown()
     {
-        //not used at this time
-        return CompletableFuture.completedFuture(null);
+        return CompletableFuture.completedFuture(new Object());
     }
 
     @Override
