@@ -136,7 +136,15 @@ export function activate(context: vscode.ExtensionContext)
 	});
 	frameworkSDKHome = getFrameworkSDKPathSetting();
 	vscode.workspace.onDidChangeConfiguration(onDidChangeConfiguration);
-	vscode.commands.registerCommand("nextgenas.createASConfigTaskRunner", createASConfigTaskRunner);
+	vscode.commands.registerCommand("nextgenas.createASConfigTaskRunner", () =>
+	{
+		let tasksHome = getFrameworkSDKPathSetting();
+		if(!tasksHome)
+		{
+			tasksHome = getEditorSDKPathSetting();
+		}
+		createASConfigTaskRunner(tasksHome);
+	});
 	vscode.commands.registerTextEditorCommand("nextgenas.addImport", addImport);
 	vscode.commands.registerTextEditorCommand("nextgenas.addMXMLNamespace", addMXMLNamespace);
 
