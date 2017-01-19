@@ -14,11 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 import * as path from "path";
-import * as vscode from "vscode";
 
-export default function(validate: (javaPath: string) => boolean): string
+export default function(settingsPath: string, validate: (javaPath: string) => boolean): string
 {
-	let configJavaPath = <string> vscode.workspace.getConfiguration("nextgenas").get("java");
+	let configJavaPath = settingsPath;
 	if(configJavaPath)
 	{
 		if(validate(configJavaPath))

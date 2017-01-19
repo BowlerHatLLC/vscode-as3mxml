@@ -31,8 +31,10 @@ import {LanguageClient, LanguageClientOptions, SettingMonitor,
 import { Message } from "vscode-jsonrpc";
 import portfinder = require("portfinder");
 
-const INVALID_SDK_ERROR = "nextgenas.flexjssdk in settings does not point to a valid SDK. Requires Apache FlexJS 0.7.0 or newer.";
-const MISSING_SDK_ERROR = "Could not locate valid SDK. Requires Apache FlexJS 0.7.0 or newer. Configure nextgenas.flexjssdk, add to $PATH, or set $FLEX_HOME.";
+const FLEXJSSDK_SETTING_DEPRECATED_ERROR = "nextgenas.flexjssdk in settings is deprecated. Please migrate to nextgenas.sdk.editor instead.";
+const FRAMEWORKSDK_SETTING_DEPRECATED_ERROR = "nextgenas.frameworksdk in settings is deprecated. Please migrate to nextgenas.sdk.framework instead.";
+const INVALID_SDK_ERROR = "nextgenas.sdk.editor in settings does not point to a valid SDK. Requires Apache FlexJS 0.7.0 or newer.";
+const MISSING_SDK_ERROR = "Could not locate valid SDK. Requires Apache FlexJS 0.7.0 or newer. Configure nextgenas.sdk.editor, add to $PATH, or set $FLEX_HOME.";
 const MISSING_JAVA_ERROR = "Could not locate valid Java executable. Configure nextgenas.java, add to $PATH, or set $JAVA_HOME.";
 const MISSING_WORKSPACE_ROOT_ERROR = "Open a folder and create a file named asconfig.json to enable all ActionScript and MXML language features.";
 const RESTART_MESSAGE = "To apply new settings for NextGen ActionScript, please restart Visual Studio Code.";
@@ -43,6 +45,8 @@ let flexHome: string;
 let javaExecutablePath: string;
 let frameworkSDKHome: string;
 let killed = false;
+let hasShownFlexJSSDKWarning = false;
+let hasShownFrameworkSDKWarning = false;
 portfinder.basePort = 55282;
 
 function killJavaProcess()
@@ -62,15 +66,16 @@ function killJavaProcess()
 
 function onDidChangeConfiguration(event)
 {
-	let newJavaExecutablePath = findJava((javaPath) =>
+	let javaSettingsPath = <string> vscode.workspace.getConfiguration("nextgenas").get("java");
+	let newJavaExecutablePath = findJava(javaSettingsPath, (javaPath) =>
 	{
 		return validateJava(savedContext.extensionPath, javaPath);
 	});
-	let newFlexHome = findEditorSDK((sdkPath) =>
+	let newFlexHome = findEditorSDK(getEditorSDKPathSetting(), (sdkPath) =>
 	{
 		return validateEditorSDK(savedContext.extensionPath, newJavaExecutablePath, sdkPath);
 	});
-	let newFrameworkSDKHome = vscode.workspace.getConfiguration("nextgenas").get("frameworksdk");
+	let newFrameworkSDKHome = getFrameworkSDKPathSetting();
 	if(flexHome != newFlexHome ||
 		javaExecutablePath != newJavaExecutablePath ||
 		frameworkSDKHome != newFrameworkSDKHome)
@@ -87,18 +92,49 @@ function onDidChangeConfiguration(event)
 	}
 }
 
+function getEditorSDKPathSetting(): string
+{
+	let editorSDK = <string> vscode.workspace.getConfiguration("nextgenas").get("sdk.editor");
+	if(!editorSDK)
+	{
+		editorSDK = <string> vscode.workspace.getConfiguration("nextgenas").get("flexjssdk");
+		if(editorSDK && !hasShownFlexJSSDKWarning)
+		{
+			hasShownFlexJSSDKWarning = true;
+			vscode.window.showWarningMessage(FLEXJSSDK_SETTING_DEPRECATED_ERROR);
+		}
+	}
+	return editorSDK;
+}
+
+function getFrameworkSDKPathSetting(): string
+{
+	let frameworkSDK = <string> vscode.workspace.getConfiguration("nextgenas").get("sdk.framework");
+	if(!frameworkSDK)
+	{
+		frameworkSDK = <string> vscode.workspace.getConfiguration("nextgenas").get("frameworksdk");
+		if(frameworkSDK && !hasShownFrameworkSDKWarning)
+		{
+			hasShownFrameworkSDKWarning = true;
+			vscode.window.showWarningMessage(FRAMEWORKSDK_SETTING_DEPRECATED_ERROR);
+		}
+	}
+	return frameworkSDK;
+}
+
 export function activate(context: vscode.ExtensionContext)
 {
 	savedContext = context;
-	javaExecutablePath = findJava((javaPath) =>
+	let javaSettingsPath = <string> vscode.workspace.getConfiguration("nextgenas").get("java");
+	javaExecutablePath = findJava(javaSettingsPath, (javaPath) =>
 	{
 		return validateJava(savedContext.extensionPath, javaPath);
 	});
-	flexHome = findEditorSDK((sdkPath) =>
+	flexHome = findEditorSDK(getEditorSDKPathSetting(), (sdkPath) =>
 	{
 		return validateEditorSDK(savedContext.extensionPath, javaExecutablePath, sdkPath);
 	});
-	frameworkSDKHome = <string> vscode.workspace.getConfiguration("nextgenas").get("frameworksdk");
+	frameworkSDKHome = getFrameworkSDKPathSetting();
 	vscode.workspace.onDidChangeConfiguration(onDidChangeConfiguration);
 	vscode.commands.registerCommand("nextgenas.createASConfigTaskRunner", createASConfigTaskRunner);
 	vscode.commands.registerTextEditorCommand("nextgenas.addImport", addImport);
@@ -132,7 +168,7 @@ function childErrorListener(error)
 
 function showSDKError()
 {
-	let sdkPath = <string> vscode.workspace.getConfiguration("nextgenas").get("flexjssdk");
+	let sdkPath = getEditorSDKPathSetting();
 	if(sdkPath)
 	{
 		vscode.window.showErrorMessage(INVALID_SDK_ERROR);
@@ -219,7 +255,7 @@ function createLanguageServer(): Promise<StreamInfo>
 		}
 		if(!flexHome)
 		{
-			let sdkPath = <string> vscode.workspace.getConfiguration("nextgenas").get("flexjssdk");
+			let sdkPath = getEditorSDKPathSetting();
 			if(sdkPath)
 			{
 				reject(INVALID_SDK_ERROR);

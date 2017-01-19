@@ -103,13 +103,30 @@
       "type": "object",
       "description": "NextGen ActionScript configuration",
       "properties": {
+        "nextgenas.sdk.editor": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null,
+          "description": "Specifies the folder path of the Apache FlexJS SDK used for code intelligence. If nextgenas.sdk.framework is not specified, the framework in this SDK will also be loaded."
+        },
         "nextgenas.flexjssdk": {
           "type": [
             "string",
             "null"
           ],
           "default": null,
-          "description": "Specifies the folder path of the Apache FlexJS SDK used for code intelligence. If nextgenas.frameworksdk is not specified, the framework in this SDK will also be loaded."
+          "description": "Deprecated. Use nextgenas.sdk.editor instead.",
+          "title": "Test title"
+        },
+        "nextgenas.sdk.framework": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null,
+          "description": "Specifies the folder path of an ActionScript SDK to load a different framework than the one in nextgenas.sdk.editor, such as the Feathers SDK or the classic Flex SDK."
         },
         "nextgenas.frameworksdk": {
           "type": [
@@ -117,7 +134,7 @@
             "null"
           ],
           "default": null,
-          "description": "Specifies the folder path of an ActionScript SDK to load a different framework than the one in the Apache FlexJS SDK."
+          "description": "Deprecated. Use nextgenas.sdk.framework instead."
         },
         "nextgenas.java": {
           "type": [

@@ -15,11 +15,10 @@ limitations under the License.
 */
 import * as fs from "fs";
 import * as path from "path";
-import * as vscode from "vscode";
 
-export default function(validate: (sdkPath: string) => boolean): string
+export default function(settingsPath: string, validate: (sdkPath: string) => boolean): string
 {
-	let sdkPath = <string> vscode.workspace.getConfiguration("nextgenas").get("flexjssdk");
+	let sdkPath = settingsPath;
 	if(sdkPath)
 	{
 		if(validate(sdkPath))
