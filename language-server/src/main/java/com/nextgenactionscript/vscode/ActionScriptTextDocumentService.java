@@ -64,6 +64,7 @@ import org.apache.flex.compiler.definitions.ITypeDefinition;
 import org.apache.flex.compiler.definitions.IVariableDefinition;
 import org.apache.flex.compiler.definitions.metadata.IMetaTag;
 import org.apache.flex.compiler.filespecs.IFileSpecification;
+import org.apache.flex.compiler.internal.driver.js.goog.JSGoogConfiguration;
 import org.apache.flex.compiler.internal.mxml.MXMLData;
 import org.apache.flex.compiler.internal.parsing.as.ASParser;
 import org.apache.flex.compiler.internal.parsing.as.ASToken;
@@ -182,6 +183,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private static final String MARKDOWN_CODE_BLOCK_END = "\n```";
     private static final String COMMAND_IMPORT = "nextgenas.addImport";
     private static final String COMMAND_XMLNS = "nextgenas.addMXMLNamespace";
+    private static final String CONFIG_FLEX = "flex";
+    private static final String CONFIG_AIR = "air";
+    private static final String CONFIG_AIRMOBILE = "airmobile";
 
     private static final String[] LANGUAGE_TYPE_NAMES =
             {
@@ -2942,6 +2946,19 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         invisibleUnits.clear();
     }
 
+    private boolean isJSConfig(String config, String jsOutputType)
+    {
+        if (config.equals(CONFIG_FLEX)
+                || config.equals(CONFIG_AIR)
+                || config.equals(CONFIG_AIRMOBILE))
+        {
+            //if jsOutputType is not null, it's a JS project
+            //if it's null, then it's a SWF project
+            return jsOutputType != null;
+        }
+        return true;
+    }
+
     private FlexProject getProject()
     {
         clearInvisibleCompilationUnits();
@@ -2963,7 +2980,15 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return currentProject;
         }
         CompilerOptions compilerOptions = currentProjectOptions.compilerOptions;
-        Configurator configurator = new Configurator();
+        Configurator configurator = null;
+        if (isJSConfig(currentProjectOptions.config, compilerOptions.jsOutputType))
+        {
+            configurator = new Configurator(JSGoogConfiguration.class);
+        }
+        else
+        {
+            configurator = new Configurator();
+        }
         configurator.setToken("configname", currentProjectOptions.config);
         ProjectType type = currentProjectOptions.type;
         String[] files = currentProjectOptions.files;

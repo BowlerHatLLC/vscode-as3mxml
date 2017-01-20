@@ -38,6 +38,7 @@ public class CompilerOptions
     public static final String INCLUDE_CLASSES = "include-classes";
     public static final String INCLUDE_NAMESPACES = "include-namespaces";
     public static final String INCLUDE_SOURCES = "include-sources";
+    public static final String JS_OUTPUT_TYPE = "js-output-type";
     public static final String LIBRARY_PATH = "library-path";
     public static final String NAMESPACE = "namespace";
     public static final String NAMESPACE_URI = "uri";
@@ -50,8 +51,9 @@ public class CompilerOptions
     public Collection<String> includeClasses;
     public Collection<String> includeNamespaces;
     public Collection<File> includeSources;
+    public String jsOutputType;
     public Collection<File> libraryPath;
-    public Map<String,String> defines;
+    public Map<String, String> defines;
     public List<MXMLNamespaceMapping> namespaceMappings;
     public List<File> sourcePath;
     public boolean warnings = true;

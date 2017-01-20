@@ -177,6 +177,11 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy
                     }
                     compilerOptions.includeSources = includeSources;
                 }
+                if (jsonCompilerOptions.has(CompilerOptions.JS_OUTPUT_TYPE))
+                {
+                    String jsonJSOutputType = jsonCompilerOptions.getString(CompilerOptions.JS_OUTPUT_TYPE);
+                    compilerOptions.jsOutputType = jsonJSOutputType;
+                }
                 if (jsonCompilerOptions.has(CompilerOptions.NAMESPACE))
                 {
                     JSONArray jsonLibraryPath = jsonCompilerOptions.getJSONArray(CompilerOptions.NAMESPACE);
