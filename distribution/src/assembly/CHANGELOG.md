@@ -1,3 +1,18 @@
+## 0.3.0
+
+* IntelliSense completion of classes in ActionScript and `<fx:Script>` blocks now automatically adds imports.
+* IntelliSense completion of classes in MXML now automatically adds xmlns declarations.
+* The `nextgenas.flexjssdk` setting is deprecated and has been renamed to `nextgenas.sdk.editor`.
+* The `nextgenas.frameworksdk` setting is deprecated and has been renamed to `nextgenas.sdk.framework`.
+* When running the *Tasks: Configure Task Runner (ActionScript - asconfig.json)* command, `tasks.json` is automatically populated with the value of `nextgenas.sdk.framework` or `nextgenas.sdk.editor`.
+* The `nextgenas.sdk.editor` setting now supports an Apache FlexJS binary distribution built with Maven (instead of Ant).
+* Fixed issue where nightly builds of Apache FlexJS 0.8 could not be used as the editor SDK.
+* Fixed issue where problems with compiler options were not reported.
+* Fixed issue where code after a package block would be incorrectly colored.
+* Fixed issue where `[ExcludeClass]` metadata was incorrectly ignored, causing classes with strange names to show up in completion.
+* Fixed issue where file-internal symbols (things after the package block) did not appear in completion.
+* Fixed issue where some members from superclass were not included in completion.
+
 ## 0.2.1
 
 * Fixed issue where opening a second workspace with a NextGenAS project would result in an error.
