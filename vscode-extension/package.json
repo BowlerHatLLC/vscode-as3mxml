@@ -37,6 +37,7 @@
   },
   "dependencies": {
     "portfinder": "^1.0.12",
+    "vscode-jsonrpc": "^3.0.3",
     "vscode-languageclient": "^2.6.3"
   },
   "activationEvents": [
