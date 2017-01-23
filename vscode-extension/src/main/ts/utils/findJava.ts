@@ -29,7 +29,7 @@ export default function(settingsPath: string, validate: (javaPath: string) => bo
 		return null;
 	}
 
-	var executableFile:String = "java";
+	var executableFile: string = "java";
 	if(process["platform"] === "win32")
 	{
 		executableFile += ".exe";
