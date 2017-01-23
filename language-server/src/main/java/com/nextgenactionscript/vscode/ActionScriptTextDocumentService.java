@@ -642,7 +642,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         for (IDefinition definitionToImport : types)
         {
-            commands.add(createImportCommand(definitionToImport));
+            Command command = createImportCommand(definitionToImport);
+            if (command != null)
+            {
+                commands.add(command);
+            }
         }
     }
 
@@ -2286,7 +2290,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         item.setLabel(definition.getBaseName());
         if (definition instanceof ITypeDefinition)
         {
-            item.setCommand(createImportCommand(definition));
+            Command command = createImportCommand(definition);
+            if (command != null)
+            {
+                item.setCommand(command);
+            }
         }
         result.getItems().add(item);
     }
@@ -2336,6 +2344,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private Command createImportCommand(IDefinition definition)
     {
+        String packageName = definition.getPackageName();
+        if (packageName == null || packageName.isEmpty())
+        {
+            return null;
+        }
         String qualifiedName = definition.getQualifiedName();
         Command importCommand = new Command();
         importCommand.setTitle("Import " + qualifiedName);
