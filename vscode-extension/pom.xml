@@ -66,7 +66,7 @@ limitations under the License.
             <phase>generate-sources</phase>
             <configuration>
               <workingDirectory>${project.basedir}/src/main</workingDirectory>
-              <executable>../../node_modules/typescript/bin/tsc</executable>
+              <executable>${project.basedir}/node_modules/typescript/bin/tsc</executable>
               <arguments>
                 <argument>-p</argument>
                 <argument>.</argument>
@@ -81,7 +81,7 @@ limitations under the License.
             <phase>generate-sources</phase>
             <configuration>
               <workingDirectory>${project.basedir}/src/test</workingDirectory>
-              <executable>../../node_modules/typescript/bin/tsc</executable>
+              <executable>${project.basedir}/node_modules/typescript/bin/tsc</executable>
               <arguments>
                 <argument>-p</argument>
                 <argument>.</argument>

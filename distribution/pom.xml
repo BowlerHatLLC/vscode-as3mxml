@@ -61,7 +61,7 @@ limitations under the License.
             <phase>package</phase>
             <configuration>
               <workingDirectory>${project.basedir}/target/vscode-nextgenas/vscode-nextgenas</workingDirectory>
-              <executable>vsce</executable>
+              <executable>${project.basedir}/../vscode-extension/node_modules/vsce/out/vsce</executable>
               <arguments>
                 <argument>package</argument>
               </arguments>

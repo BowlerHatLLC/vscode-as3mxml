@@ -33,6 +33,7 @@
     "@types/node": "^6.0.46",
     "mocha": "^3.1.2",
     "typescript": "^2.0.6",
+    "vsce": "^1.18.0",
     "vscode": "^1.0.3"
   },
   "dependencies": {
