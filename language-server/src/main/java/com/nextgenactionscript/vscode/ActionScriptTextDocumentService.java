@@ -2194,7 +2194,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 item.setLabel(eventName);
                 if (prefix != null)
                 {
-                    item.setInsertText(prefix + eventName);
+                    item.setInsertText(prefix + IMXMLCoreConstants.colon + eventName);
                 }
                 item.setDetail(getDefinitionDetail(eventDefinition));
                 result.getItems().add(item);
@@ -2247,7 +2247,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 item.setLabel(styleName);
                 if (prefix != null)
                 {
-                    item.setInsertText(prefix + styleName);
+                    item.setInsertText(prefix + IMXMLCoreConstants.colon + styleName);
                 }
                 item.setDetail(getDefinitionDetail(styleDefinition));
                 items.add(item);
