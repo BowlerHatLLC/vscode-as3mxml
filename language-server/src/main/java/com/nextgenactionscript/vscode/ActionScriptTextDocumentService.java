@@ -1182,6 +1182,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         //what we want here, so check if currentOffset isn't the end of the tag!
         boolean isAttribute = offsetTag.isOffsetInAttributeList(currentOffset)
                 && currentOffset < offsetTag.getAbsoluteEnd();
+        if (isAttribute && offsetTag.isCloseTag())
+        {
+            return CompletableFuture.completedFuture(result);
+        }
 
         //inside <fx:Declarations>
         if (isDeclarationsTag(offsetTag))
