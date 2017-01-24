@@ -12,6 +12,7 @@
 * Fixed issue where `[ExcludeClass]` metadata was incorrectly ignored, causing classes with strange names to show up in completion.
 * Fixed issue where file-internal symbols (things after the package block) did not appear in completion.
 * Fixed issue where some members from superclass were not included in completion.
+* Fixed issue where extension could be built from source only on macOS. It can now be built on Linux and Windows too.
 
 ## 0.2.1
 
