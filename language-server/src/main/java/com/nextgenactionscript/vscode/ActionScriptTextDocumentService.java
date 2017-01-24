@@ -239,6 +239,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private LanguageServerFileSpecGetter fileSpecGetter;
     private HashSet<URI> newFilesWithErrors = new HashSet<>();
     private HashSet<URI> oldFilesWithErrors = new HashSet<>();
+    private boolean brokenMXMLValueEnd;
 
     private class MXMLNamespace
     {
@@ -254,6 +255,18 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     public ActionScriptTextDocumentService()
     {
+        String sdkVersion = IASNode.class.getPackage().getImplementationVersion();
+        String[] versionParts = sdkVersion.split("-")[0].split("\\.");
+        int major = 0;
+        int minor = 0;
+        int revision = 0;
+        if (versionParts.length >= 3)
+        {
+            major = Integer.parseInt(versionParts[0]);
+            minor = Integer.parseInt(versionParts[1]);
+            revision = Integer.parseInt(versionParts[2]);
+        }
+        brokenMXMLValueEnd = major == 0 && minor == 7;
     }
 
     public IProjectConfigStrategy getProjectConfigStrategy()
@@ -3385,6 +3398,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             int start = attributeData.getAbsoluteStart();
             int end = attributeData.getValueEnd() + 1;
+            if (brokenMXMLValueEnd)
+            {
+                end--;
+            }
             if (namespaceStartIndex == -1 || namespaceStartIndex > start)
             {
                 namespaceStartIndex = start;
