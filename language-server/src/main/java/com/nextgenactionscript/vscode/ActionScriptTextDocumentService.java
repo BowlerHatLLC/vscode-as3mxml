@@ -32,7 +32,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -118,6 +117,7 @@ import com.nextgenactionscript.vscode.project.IProjectConfigStrategy;
 import com.nextgenactionscript.vscode.project.ProjectOptions;
 import com.nextgenactionscript.vscode.project.ProjectType;
 import com.nextgenactionscript.vscode.utils.LanguageServerUtils;
+import com.nextgenactionscript.vscode.utils.ProblemTracker;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.CodeLensParams;
@@ -237,9 +237,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private int namespaceStartIndex = -1;
     private int namespaceEndIndex = -1;
     private LanguageServerFileSpecGetter fileSpecGetter;
-    private HashSet<URI> newFilesWithErrors = new HashSet<>();
-    private HashSet<URI> oldFilesWithErrors = new HashSet<>();
     private boolean brokenMXMLValueEnd;
+    private ProblemTracker codeProblemTracker = new ProblemTracker();
+    private ProblemTracker configProblemTracker = new ProblemTracker();
 
     private class MXMLNamespace
     {
@@ -292,6 +292,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     public void setLanguageClient(LanguageClient value)
     {
         languageClient = value;
+        codeProblemTracker.setLanguageClient(value);
+        configProblemTracker.setLanguageClient(value);
     }
 
     /**
@@ -2759,7 +2761,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         ArrayList<Diagnostic> diagnostics = new ArrayList<>();
         publish.setDiagnostics(diagnostics);
         publish.setUri(uri.toString());
-        trackFileWithErrors(uri);
+        codeProblemTracker.trackFileWithProblems(uri);
 
         ASParser parser = null;
         Reader reader = getReaderForPath(path);
@@ -2830,7 +2832,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
         diagnostics.add(diagnostic);
 
-        cleanUpStaleErrors();
+        codeProblemTracker.cleanUpStaleProblems();
         if (languageClient != null)
         {
             languageClient.publishDiagnostics(publish);
@@ -3059,6 +3061,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             for (ICompilerProblem problem : problems)
             {
                 URI uri = Paths.get(problem.getSourcePath()).toUri();
+                configProblemTracker.trackFileWithProblems(uri);
                 PublishDiagnosticsParams params = null;
                 if (filesMap.containsKey(uri))
                 {
@@ -3079,6 +3082,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             //we don't return null if result is not false
         }
+        configProblemTracker.cleanUpStaleProblems();
         if (!result)
         {
             return null;
@@ -3142,32 +3146,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return project;
     }
 
-    private void cleanUpStaleErrors()
-    {
-        //if any files have been removed, they will still appear in this set, so
-        //clear the errors so that they don't persist
-        for (URI uri : oldFilesWithErrors)
-        {
-            PublishDiagnosticsParams publish = new PublishDiagnosticsParams();
-            publish.setDiagnostics(new ArrayList<>());
-            publish.setUri(uri.toString());
-            if (languageClient != null)
-            {
-                languageClient.publishDiagnostics(publish);
-            }
-        }
-        oldFilesWithErrors.clear();
-        HashSet<URI> temp = newFilesWithErrors;
-        newFilesWithErrors = oldFilesWithErrors;
-        oldFilesWithErrors = temp;
-    }
-
-    private void trackFileWithErrors(URI uri)
-    {
-        newFilesWithErrors.add(uri);
-        oldFilesWithErrors.remove(uri);
-    }
-
     private void checkFilePathForProblems(Path path, Boolean quick)
     {
         currentUnit = null;
@@ -3196,12 +3174,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             PublishDiagnosticsParams publish = new PublishDiagnosticsParams();
             publish.setDiagnostics(new ArrayList<>());
             publish.setUri(uri.toString());
-            trackFileWithErrors(uri);
+            codeProblemTracker.trackFileWithProblems(uri);
             for (ICompilerProblem problem : fatalProblems)
             {
                 addCompilerProblem(problem, publish);
             }
-            cleanUpStaleErrors();
+            codeProblemTracker.cleanUpStaleProblems();
             if (languageClient != null)
             {
                 languageClient.publishDiagnostics(publish);
@@ -3246,7 +3224,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     files.put(uri, params);
                 }
                 //only clean up stale errors on a full check
-                cleanUpStaleErrors();
+                codeProblemTracker.cleanUpStaleProblems();
             }
         }
         catch (Exception e)
@@ -3268,7 +3246,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         PublishDiagnosticsParams publish = new PublishDiagnosticsParams();
         publish.setDiagnostics(new ArrayList<>());
         publish.setUri(uri.toString());
-        trackFileWithErrors(uri);
+        codeProblemTracker.trackFileWithProblems(uri);
         ArrayList<ICompilerProblem> problems = new ArrayList<>();
         try
         {
