@@ -49,46 +49,76 @@ package
 			Completion.;
 			SuperDefinitions.;
 			com.example.;
-			var instance:InternalCompletion = new InternalCompletion();
+			var instance:FileInternalCompletion = new FileInternalCompletion();
 			instance.;
-			InternalCompletion.;
+			FileInternalCompletion.;
 			var types:;
 		}
 	}
 }
 
-function internalFunction():void {}
-var internalVar:Number = 2;
+function fileInternalFunction():void {}
+var fileInternalVar:Number = 2;
 
-class InternalCompletion
+class FileInternalCompletion
 {
-	public static var internalStaticVar:Boolean = false;
+	public static var fileInternalStaticVar:Boolean = false;
 
-	public static function get internalStaticProperty():Boolean
+	public static function get fileInternalStaticProperty():Boolean
 	{
 		return false;
 	}
 
-	public static function set internalStaticProperty(value:Boolean):void
+	public static function set fileInternalStaticProperty(value:Boolean):void
 	{
 	}
 
-	public static function internalStaticFunction():void
+	public static function fileInternalStaticFunction():void
 	{
 	}
 
-	public var internalMemberVar:String;
+	public var fileInternalMemberVar:String;
 
-	public function get internalMemberProperty():Boolean
+	public function get fileInternalMemberProperty():Boolean
 	{
 		return false;
 	}
 
-	public function set internalMemberProperty(value:Boolean):void
+	public function set fileInternalMemberProperty(value:Boolean):void
 	{
 	}
 
-	public function internalMemberFunction():void
+	public function fileInternalMemberFunction():void
+	{
+	}
+
+	protected static var protectedStaticVar:Boolean = false;
+
+	protected static function get protectedStaticProperty():Boolean
+	{
+		return false;
+	}
+
+	protected static function set protectedStaticProperty(value:Boolean):void
+	{
+	}
+
+	protected static function protectedStaticFunction():void
+	{
+	}
+
+	protected var protectedMemberVar:String;
+
+	protected function get protectedMemberProperty():Boolean
+	{
+		return false;
+	}
+
+	protected function set protectedMemberProperty(value:Boolean):void
+	{
+	}
+
+	protected function protectedMemberFunction():void
 	{
 	}
 
