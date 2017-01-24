@@ -22,12 +22,12 @@ limitations under the License.
   <parent>
     <groupId>com.nextgenactionscript.vscode</groupId>
     <artifactId>vscode-nextgenas</artifactId>
-    <version>0.3.0</version>
+    <version>0.3.1</version>
   </parent>
 
   <groupId>com.nextgenactionscript.vscode</groupId>
   <artifactId>distribution</artifactId>
-  <version>0.3.0</version>
+  <version>0.3.1</version>
   <name>distribution</name>
   <packaging>pom</packaging>
 
