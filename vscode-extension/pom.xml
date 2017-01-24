@@ -30,6 +30,11 @@ limitations under the License.
   <version>0.3.0-SNAPSHOT</version>
   <name>vscode-extension</name>
 
+  <properties>
+    <npm.executable>npm</npm.executable>
+    <tsc.executable>${project.basedir}/node_modules/.bin/tsc</tsc.executable>
+  </properties>
+
   <build>
     <finalName>${project.artifactId}</finalName>
     <plugins>
@@ -52,7 +57,7 @@ limitations under the License.
             <phase>generate-sources</phase>
             <configuration>
               <workingDirectory>${project.basedir}</workingDirectory>
-              <executable>npm</executable>
+              <executable>${npm.executable}</executable>
               <arguments>
                 <argument>install</argument>
               </arguments>
@@ -66,7 +71,7 @@ limitations under the License.
             <phase>generate-sources</phase>
             <configuration>
               <workingDirectory>${project.basedir}/src/main</workingDirectory>
-              <executable>${project.basedir}/node_modules/typescript/bin/tsc</executable>
+              <executable>${tsc.executable}</executable>
               <arguments>
                 <argument>-p</argument>
                 <argument>.</argument>
@@ -81,7 +86,7 @@ limitations under the License.
             <phase>generate-sources</phase>
             <configuration>
               <workingDirectory>${project.basedir}/src/test</workingDirectory>
-              <executable>${project.basedir}/node_modules/typescript/bin/tsc</executable>
+              <executable>${tsc.executable}</executable>
               <arguments>
                 <argument>-p</argument>
                 <argument>.</argument>
@@ -96,4 +101,18 @@ limitations under the License.
     </plugins>
   </build>
 
+  <profiles>
+    <profile>
+      <id>platform-windows</id>
+      <activation>
+        <os>
+          <family>windows</family>
+        </os>
+      </activation>
+      <properties>
+        <npm.executable>npm.cmd</npm.executable>
+        <tsc.executable>${project.basedir}/node_modules/.bin/tsc.cmd</tsc.executable>
+      </properties>
+    </profile>
+  </profiles>
 </project>

@@ -31,6 +31,10 @@ limitations under the License.
   <name>distribution</name>
   <packaging>pom</packaging>
 
+  <properties>
+    <vsce.executable>${project.basedir}/../vscode-extension/node_modules/.bin/vsce</vsce.executable>
+  </properties>
+
   <build>
     <plugins>
       <plugin>
@@ -61,7 +65,7 @@ limitations under the License.
             <phase>package</phase>
             <configuration>
               <workingDirectory>${project.basedir}/target/vscode-nextgenas/vscode-nextgenas</workingDirectory>
-              <executable>${project.basedir}/../vscode-extension/node_modules/vsce/out/vsce</executable>
+              <executable>${vsce.executable}</executable>
               <arguments>
                 <argument>package</argument>
               </arguments>
@@ -75,4 +79,17 @@ limitations under the License.
     </plugins>
   </build>
 
+  <profiles>
+    <profile>
+      <id>platform-windows</id>
+      <activation>
+        <os>
+          <family>windows</family>
+        </os>
+      </activation>
+      <properties>
+        <vsce.executable>${project.basedir}/../vscode-extension/node_modules/.bin/vsce.cmd</vsce.executable>
+      </properties>
+    </profile>
+  </profiles>
 </project>
