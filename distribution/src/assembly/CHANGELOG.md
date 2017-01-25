@@ -1,7 +1,7 @@
 ## 0.3.1
 
 * Fixed issue where `protected` members were not omitted in scopes were they should not be accessible.
-* Fixed issue where problems reported for compiler configuration options were no cleared after they were resolved.
+* Fixed issue where problems reported for compiler configuration options were not cleared after they were resolved.
 * Fixed regression that caused the extension to fail when using a Maven distribution of Apache FlexJS.
 
 ## 0.3.0
