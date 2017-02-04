@@ -8,6 +8,8 @@ This project is divided into several modules.
 
 1. **language-server** provides ActionScript and MXML code intelligence for Visual Studio Code or another editor that supports the Language Server Protocol. It integrates with the compiler from Apache FlexJS and is written in Java.
 
+1. **swf-debugger** provides SWF debugging for Visual Studio Code or another editor that supports the VSCode Debugging Protocol. It integrates with the debugger from Apache FlexJS and is written in Java.
+
 1. **check-java-version** creates an executable JAR file that will verify that the current version of Java meets the minimum requirements for the language server.
 
 1. **check-flexjs-version** creates an executable JAR file that will verify that the current version of Apache FlexJS meets the minimum requirements for the language server.

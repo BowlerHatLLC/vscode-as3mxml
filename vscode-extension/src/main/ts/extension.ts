@@ -21,6 +21,7 @@ import findEditorSDK from "./utils/findEditorSDK";
 import validateJava from "./utils/validateJava";
 import validateEditorSDK from "./utils/validateEditorSDK";
 import getJavaClassPathDelimiter from "./utils/getJavaClassPathDelimiter";
+import adapterExecutableCommandSWF from "./commands/adapterExecutableCommandSWF";
 import * as child_process from "child_process";
 import * as fs from "fs";
 import * as net from "net";
@@ -144,6 +145,10 @@ export function activate(context: vscode.ExtensionContext)
 			tasksHome = getEditorSDKPathSetting();
 		}
 		createASConfigTaskRunner(tasksHome);
+	});
+	vscode.commands.registerCommand("nextgenas.adapterExecutableCommandSWF", () =>
+	{
+		return adapterExecutableCommandSWF(javaExecutablePath, flexHome, frameworkSDKHome ? frameworkSDKHome : flexHome);
 	});
 	vscode.commands.registerTextEditorCommand("nextgenas.addImport", addImport);
 	vscode.commands.registerTextEditorCommand("nextgenas.addMXMLNamespace", addMXMLNamespace);

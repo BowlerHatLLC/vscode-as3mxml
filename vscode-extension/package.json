@@ -2,7 +2,7 @@
   "name": "vscode-nextgenas",
   "displayName": "NextGen ActionScript",
   "description": "ActionScript and MXML language extension for Visual Studio Code",
-  "version": "0.3.1",
+  "version": "0.4.0-SNAPSHOT",
   "publisher": "bowlerhatllc",
   "homepage": "http://nextgenactionscript.com/vscode/",
   "repository": {
@@ -32,7 +32,7 @@
     "@types/mocha": "^2.2.32",
     "@types/node": "^6.0.46",
     "mocha": "^3.1.2",
-    "typescript": "^2.0.6",
+    "typescript": "^2.1.5",
     "vsce": "^1.18.0",
     "vscode": "^1.0.3"
   },
@@ -148,7 +148,37 @@
         }
       }
     },
+    "breakpoints": [
+      {
+        "language": "nextgenas"
+      }
+    ],
     "debuggers": [
+      {
+        "type": "swf",
+        "label": "SWF Debug",
+        "adapterExecutableCommand": "nextgenas.adapterExecutableCommandSWF",
+        "configurationAttributes": {
+          "launch": {
+            "required": [
+              "program"
+            ],
+            "properties": {
+              "program": {
+                "type": "string",
+                "description": "Absolute path to SWF or AIR application XML"
+              }
+            }
+          }
+        },
+        "initialConfigurations": [
+          {
+            "name": "SWF Debug",
+            "type": "swf",
+            "request": "launch"
+          }
+        ]
+      },
       {
         "type": "nextgenas-node",
         "label": "NextGenAS Node.js",
