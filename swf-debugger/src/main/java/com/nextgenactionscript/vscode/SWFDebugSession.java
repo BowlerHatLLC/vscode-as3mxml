@@ -429,7 +429,6 @@ public class SWFDebugSession extends DebugSession
                     Source source = new Source();
                     source.name = file.getName();
                     source.path = file.getFullPath();
-                    System.err.println(file.getFullPath() + " " + file.getBasePath() + " " + file.getRawName() + " " + System.getProperty("application.home"));
                     stackFrame.source = source;
                     stackFrame.line = location.getLine();
                     stackFrame.column = 0;
