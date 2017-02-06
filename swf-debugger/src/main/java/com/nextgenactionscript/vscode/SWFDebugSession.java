@@ -75,6 +75,8 @@ import flash.tools.debugger.threadsafe.ThreadSafeSessionManager;
 
 public class SWFDebugSession extends DebugSession
 {
+    private static final String FILE_EXTENSION_AS = ".as";
+    private static final String FILE_EXTENSION_MXML = ".mxml";
     private static final long LOCAL_VARIABLES_REFERENCE = 1;
     private ThreadSafeSession swfSession;
     private java.lang.Thread sessionThread;
@@ -281,7 +283,8 @@ public class SWFDebugSession extends DebugSession
                     SourceFile[] sourceFiles = swf.getSourceList(swfSession);
                     for (SourceFile sourceFile : sourceFiles)
                     {
-                        if (sourceFile.getFullPath().equals(path))
+                        if (sourceFile.getFullPath().equals(path) &&
+                                (path.endsWith(FILE_EXTENSION_AS) || path.endsWith(FILE_EXTENSION_MXML)))
                         {
                             fileId = sourceFile.getId();
                             break;
@@ -294,7 +297,8 @@ public class SWFDebugSession extends DebugSession
                 }
                 if (fileId == -1)
                 {
-                    System.err.println("file not found " + arguments.source.path);
+                    //either the file was not found, or it has an unsupported
+                    //extension
                     responseBreakpoint.verified = false;
                 }
                 else

@@ -185,7 +185,8 @@
         "label": "NextGenAS Node.js",
         "enableBreakpointsFor": {
           "languageIds": [
-            "nextgenas"
+            "nextgenas",
+            "xml"
           ]
         },
         "initialConfigurations": [
