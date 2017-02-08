@@ -306,6 +306,11 @@
 		{
 			"type": "string",
 			"description": "Additional options to send to the compiler, formatted as command line arguments. Useful for testing new options that are not yet supported by the compilerOptions field of asconfig.json."
+		},
+		"application":
+		{
+			"type": "string",
+			"description": "Optional path to Adobe AIR application descriptor. The descriptor's <content> element will be populated, and the file will be copied into the output directory."
 		}
 	},
 	"required":
