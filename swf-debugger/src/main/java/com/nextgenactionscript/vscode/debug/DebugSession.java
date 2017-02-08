@@ -88,9 +88,12 @@ public abstract class DebugSession extends ProtocolServer
     {
         Message msg = new Message(id, format, arguments, user, telemetry);
         String message = format;
-        for (String key : arguments.keySet())
+        if(arguments != null)
         {
-            message = message.replace("{" + key + "}", arguments.get(key).toString());
+            for (String key : arguments.keySet())
+            {
+                message = message.replace("{" + key + "}", arguments.get(key).toString());
+            }
         }
         response.setErrorBody(message, new ErrorResponseBody(msg));
         sendMessage(response);
