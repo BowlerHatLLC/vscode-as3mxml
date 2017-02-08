@@ -17,6 +17,9 @@ package com.nextgenactionscript.vscode;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.net.URI;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -52,12 +55,15 @@ import com.nextgenactionscript.vscode.debug.responses.Thread;
 import com.nextgenactionscript.vscode.debug.responses.ThreadsResponseBody;
 import com.nextgenactionscript.vscode.debug.responses.Variable;
 import com.nextgenactionscript.vscode.debug.responses.VariablesResponseBody;
+import flash.tools.debugger.AIRLaunchInfo;
+import flash.tools.debugger.CommandLineException;
 import flash.tools.debugger.Frame;
 import flash.tools.debugger.InProgressException;
 import flash.tools.debugger.Isolate;
 import flash.tools.debugger.Location;
 import flash.tools.debugger.NoResponseException;
 import flash.tools.debugger.NotConnectedException;
+import flash.tools.debugger.Player;
 import flash.tools.debugger.PlayerDebugException;
 import flash.tools.debugger.SourceFile;
 import flash.tools.debugger.SuspendReason;
@@ -82,6 +88,8 @@ public class SWFDebugSession extends DebugSession
     private java.lang.Thread sessionThread;
     private boolean cancelRunner = false;
     private boolean waitingForResume = false;
+    private String flexlib;
+    private String adlName;
 
     private class SessionRunner implements Runnable
     {
@@ -195,6 +203,12 @@ public class SWFDebugSession extends DebugSession
     public SWFDebugSession()
     {
         super(false);
+        flexlib = System.getProperty("flexlib");
+        adlName = "adl";
+        if (System.getProperty("os.name").toLowerCase().startsWith("windows"))
+        {
+            adlName += ".exe";
+        }
     }
 
     public void initialize(Response response, InitializeRequest.InitializeRequestArguments args)
@@ -213,8 +227,41 @@ public class SWFDebugSession extends DebugSession
             manager.startListening();
             if (manager.supportsLaunch())
             {
-                swfSession = (ThreadSafeSession) manager.launch(swfArgs.program, null, true, null, null);
+                String playerPath = swfArgs.program;
+                try
+                {
+                    URI uri = new URI(playerPath);
+                    if (uri.getScheme() == null)
+                    {
+                        playerPath = "file://" + playerPath;
+                    }
+                }
+                catch (Exception e)
+                {
+                    //safe to ignore
+                }
+                Player player = manager.playerForUri(playerPath, null);
+                AIRLaunchInfo launchInfo = null;
+                if (player.getType() == Player.AIR)
+                {
+                    launchInfo = new AIRLaunchInfo();
+
+                    Path adlPath = Paths.get(flexlib);
+                    adlPath = adlPath.resolve("../bin/" + adlName);
+                    launchInfo.airDebugLauncher = adlPath.toFile();
+                    System.err.println(launchInfo.airDebugLauncher.getAbsolutePath() + " " + launchInfo.airDebugLauncher.exists());
+                }
+                swfSession = (ThreadSafeSession) manager.launch(swfArgs.program, launchInfo, true, null, null);
             }
+        }
+        catch (CommandLineException e)
+        {
+            OutputEvent.OutputBody body = new OutputEvent.OutputBody();
+            body.output = e.getMessage() + "\n" + e.getCommandOutput();
+            body.category = OutputEvent.CATEGORY_STDERR;
+            sendEvent(new OutputEvent(body));
+            e.printStackTrace(System.err);
+            sendErrorResponse(response, 10001, "Error launching SWF debug session. Process exited with code: " + e.getExitValue());
         }
         catch (IOException e)
         {
