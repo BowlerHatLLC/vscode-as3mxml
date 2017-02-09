@@ -83,13 +83,18 @@ public class SWFDebugSession extends DebugSession
 {
     private static final String FILE_EXTENSION_AS = ".as";
     private static final String FILE_EXTENSION_MXML = ".mxml";
+    private static final String FILE_EXTENSION_EXE = ".exe";
+    private static final String ADL_BASE_NAME = "bin/adl";
+    private static final String FLEXLIB_PROPERTY = "flexlib";
+    private static final String SDK_PATH_SIGNATURE = "/frameworks/projects/";
     private static final long LOCAL_VARIABLES_REFERENCE = 1;
     private ThreadSafeSession swfSession;
     private java.lang.Thread sessionThread;
     private boolean cancelRunner = false;
     private boolean waitingForResume = false;
-    private String flexlib;
-    private String adlName;
+    private Path flexlib;
+    private Path flexHome;
+    private Path adlPath;
 
     private class SessionRunner implements Runnable
     {
@@ -203,11 +208,17 @@ public class SWFDebugSession extends DebugSession
     public SWFDebugSession()
     {
         super(false);
-        flexlib = System.getProperty("flexlib");
-        adlName = "adl";
-        if (System.getProperty("os.name").toLowerCase().startsWith("windows"))
+        String flexlibPath = System.getProperty(FLEXLIB_PROPERTY);
+        if (flexlibPath != null)
         {
-            adlName += ".exe";
+            flexlib = Paths.get(flexlibPath);
+            flexHome = flexlib.getParent();
+            String adlRelativePath = ADL_BASE_NAME;
+            if (System.getProperty("os.name").toLowerCase().startsWith("windows"))
+            {
+                adlRelativePath += FILE_EXTENSION_EXE;
+            }
+            adlPath = flexHome.resolve(adlRelativePath);
         }
     }
 
@@ -242,14 +253,10 @@ public class SWFDebugSession extends DebugSession
                 }
                 Player player = manager.playerForUri(playerPath, null);
                 AIRLaunchInfo launchInfo = null;
-                if (player.getType() == Player.AIR)
+                if (player.getType() == Player.AIR && adlPath != null)
                 {
                     launchInfo = new AIRLaunchInfo();
-
-                    Path adlPath = Paths.get(flexlib);
-                    adlPath = adlPath.resolve("../bin/" + adlName);
                     launchInfo.airDebugLauncher = adlPath.toFile();
-                    System.err.println(launchInfo.airDebugLauncher.getAbsolutePath() + " " + launchInfo.airDebugLauncher.exists());
                 }
                 swfSession = (ThreadSafeSession) manager.launch(swfArgs.program, launchInfo, true, null, null);
             }
@@ -475,7 +482,7 @@ public class SWFDebugSession extends DebugSession
                 {
                     Source source = new Source();
                     source.name = file.getName();
-                    source.path = file.getFullPath();
+                    source.path = transformPath(file.getFullPath());
                     stackFrame.source = source;
                     stackFrame.line = location.getLine();
                     stackFrame.column = 0;
@@ -604,6 +611,23 @@ public class SWFDebugSession extends DebugSession
     public void evaluate(Response response, Request.RequestArguments arguments)
     {
         sendResponse(response);
+    }
+
+    protected String transformPath(String sourceFilePath)
+    {
+        int index = sourceFilePath.indexOf(SDK_PATH_SIGNATURE);
+        if (index == -1)
+        {
+            return sourceFilePath;
+        }
+        if (flexHome == null)
+        {
+            return sourceFilePath;
+        }
+        Path transformedPath = flexHome.resolve(sourceFilePath.substring(index + 1));
+        System.err.println(transformedPath.toAbsolutePath().toString());
+        return transformedPath.toAbsolutePath().toString();
+
     }
 
     protected Gson createGson()
