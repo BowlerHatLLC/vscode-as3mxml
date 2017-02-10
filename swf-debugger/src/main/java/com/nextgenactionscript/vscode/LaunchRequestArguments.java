@@ -19,8 +19,10 @@ import com.nextgenactionscript.vscode.debug.requests.LaunchRequest;
 
 public class LaunchRequestArguments extends LaunchRequest.LaunchRequestArguments
 {
-    public String type;
-    public String name;
     public String program;
     public String request;
+    public String profile;
+    public String screensize;
+    public int screenDPI;
+    public String versionPlatform;
 }

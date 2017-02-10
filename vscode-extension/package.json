@@ -167,7 +167,27 @@
             "properties": {
               "program": {
                 "type": "string",
-                "description": "Absolute path to SWF or AIR application XML"
+                "description": "Absolute path to a SWF or AIR application descriptor XML."
+              },
+              "profile": {
+                "type": "string",
+                "description": "The device profile to use in AIR Debug Launcher.",
+                "pattern": "^(desktop|extendedDesktop|mobileDevice)$"
+              },
+              "screensize": {
+                "type": "string",
+                "description": "Defines the screen dimensions when running with the mobileDevice profile in AIR Debug Launcher",
+                "pattern": "^((\\d+x\\d+:\\d+x\\d+)|.*)$"
+              },
+              "screenDPI": {
+                "type": "number",
+                "description": "Overrides the value returned by Capabilities.screenDPI in the AIR Debug Launcher.",
+                "multipleOf": 1
+              },
+              "versionPlatform": {
+                "type": "string",
+                "description": "Overrides the three characters returned by Capabilities.os in the AIR Debug Launcher.",
+                "pattern": "^[A-Z]{3}$"
               }
             }
           }

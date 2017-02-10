@@ -256,6 +256,10 @@ public class SWFDebugSession extends DebugSession
                 if (player.getType() == Player.AIR && adlPath != null)
                 {
                     launchInfo = new AIRLaunchInfo();
+                    launchInfo.profile = swfArgs.profile;
+                    launchInfo.screenSize = swfArgs.screensize;
+                    launchInfo.dpi = swfArgs.screenDPI;
+                    launchInfo.versionPlatform = swfArgs.versionPlatform;
                     launchInfo.airDebugLauncher = adlPath.toFile();
                 }
                 swfSession = (ThreadSafeSession) manager.launch(swfArgs.program, launchInfo, true, null, null);
@@ -625,7 +629,6 @@ public class SWFDebugSession extends DebugSession
             return sourceFilePath;
         }
         Path transformedPath = flexHome.resolve(sourceFilePath.substring(index + 1));
-        System.err.println(transformedPath.toAbsolutePath().toString());
         return transformedPath.toAbsolutePath().toString();
 
     }
