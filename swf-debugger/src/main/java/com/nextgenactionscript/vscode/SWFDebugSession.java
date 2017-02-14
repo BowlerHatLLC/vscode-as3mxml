@@ -252,17 +252,25 @@ public class SWFDebugSession extends DebugSession
                     //safe to ignore
                 }
                 Player player = manager.playerForUri(playerPath, null);
-                AIRLaunchInfo launchInfo = null;
-                if (player.getType() == Player.AIR && adlPath != null)
+                if (player == null)
                 {
-                    launchInfo = new AIRLaunchInfo();
-                    launchInfo.profile = swfArgs.profile;
-                    launchInfo.screenSize = swfArgs.screensize;
-                    launchInfo.dpi = swfArgs.screenDPI;
-                    launchInfo.versionPlatform = swfArgs.versionPlatform;
-                    launchInfo.airDebugLauncher = adlPath.toFile();
+                    sendErrorResponse(response, 10001, "Error launching SWF debug session. Runtime not found for program: " + playerPath);
+                    return;
                 }
-                swfSession = (ThreadSafeSession) manager.launch(swfArgs.program, launchInfo, true, null, null);
+                else
+                {
+                    AIRLaunchInfo launchInfo = null;
+                    if (player.getType() == Player.AIR && adlPath != null)
+                    {
+                        launchInfo = new AIRLaunchInfo();
+                        launchInfo.profile = swfArgs.profile;
+                        launchInfo.screenSize = swfArgs.screensize;
+                        launchInfo.dpi = swfArgs.screenDPI;
+                        launchInfo.versionPlatform = swfArgs.versionPlatform;
+                        launchInfo.airDebugLauncher = adlPath.toFile();
+                    }
+                    swfSession = (ThreadSafeSession) manager.launch(swfArgs.program, launchInfo, true, null, null);
+                }
             }
         }
         catch (CommandLineException e)
@@ -273,6 +281,7 @@ public class SWFDebugSession extends DebugSession
             sendEvent(new OutputEvent(body));
             e.printStackTrace(System.err);
             sendErrorResponse(response, 10001, "Error launching SWF debug session. Process exited with code: " + e.getExitValue());
+            return;
         }
         catch (IOException e)
         {
