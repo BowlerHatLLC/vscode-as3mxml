@@ -25,4 +25,6 @@ public class LaunchRequestArguments extends LaunchRequest.LaunchRequestArguments
     public String screensize;
     public int screenDPI;
     public String versionPlatform;
+    public String runtimeExecutable;
+    public String[] runtimeArgs;
 }

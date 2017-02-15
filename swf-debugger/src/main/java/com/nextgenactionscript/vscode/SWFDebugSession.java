@@ -260,6 +260,7 @@ public class SWFDebugSession extends DebugSession
                 else
                 {
                     AIRLaunchInfo launchInfo = null;
+                    CustomRuntimeLauncher launcher = null;
                     if (player.getType() == Player.AIR && adlPath != null)
                     {
                         launchInfo = new AIRLaunchInfo();
@@ -269,7 +270,18 @@ public class SWFDebugSession extends DebugSession
                         launchInfo.versionPlatform = swfArgs.versionPlatform;
                         launchInfo.airDebugLauncher = adlPath.toFile();
                     }
-                    swfSession = (ThreadSafeSession) manager.launch(swfArgs.program, launchInfo, true, null, null);
+                    if (swfArgs.runtimeExecutable != null)
+                    {
+                        launcher = new CustomRuntimeLauncher(swfArgs.runtimeExecutable, swfArgs.runtimeArgs);
+                    }
+                    if (launcher != null)
+                    {
+                        swfSession = (ThreadSafeSession) manager.launch(swfArgs.program, launchInfo, true, null, null, launcher);
+                    }
+                    else
+                    {
+                        swfSession = (ThreadSafeSession) manager.launch(swfArgs.program, launchInfo, true, null, null);
+                    }
                 }
             }
         }
