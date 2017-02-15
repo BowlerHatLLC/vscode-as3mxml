@@ -177,7 +177,7 @@
               "screensize": {
                 "type": "string",
                 "description": "Defines the screen dimensions when running with the mobileDevice profile in AIR Debug Launcher",
-                "pattern": "^((\\d+x\\d+:\\d+x\\d+)|.*)$"
+                "pattern": "^((\\d+x\\d+:\\d+x\\d+)|iPhone|iPhoneRetina|iPhone5Retina|iPhone6|iPhone6Plus|iPod|iPodRetina|iPod5Retina|iPad|iPadRetina|Droid|NexusOne|SamsungGalaxyS|SamsungGalaxyTab|QVGA|WQVGA|FWQVGA|HVGA|WVGA|FWVGA|1080|720|480)$"
               },
               "screenDPI": {
                 "type": "number",
@@ -194,9 +194,56 @@
         },
         "initialConfigurations": [
           {
-            "name": "SWF Debug",
+            "name": "Launch SWF",
             "type": "swf",
-            "request": "launch"
+            "request": "launch",
+            "program": "path/to/swf"
+          }
+        ],
+        "configurationSnippets": [
+          {
+            "label": "SWF: Launch Standalone SWF",
+            "description": "Launch SWF in standalone Adobe Flash Player executable",
+            "body": {
+              "type": "swf",
+              "request": "launch",
+              "name": "${2:Launch SWF}",
+              "program": "^\"\\${workspaceRoot}/${1:app.swf}\""
+            }
+          },
+          {
+            "label": "SWF: Launch SWF embedded in HTML",
+            "description": "Launch SWF embedded in HTML in a web browser",
+            "body": {
+              "type": "swf",
+              "request": "launch",
+              "name": "${2:Launch SWF}",
+              "program": "^\"\\${workspaceRoot}/${1:index.html}\""
+            }
+          },
+          {
+            "label": "SWF: Launch Adobe AIR desktop",
+            "description": "Launch Adobe AIR desktop application using AIR Debug Launcher",
+            "body": {
+              "type": "swf",
+              "request": "launch",
+              "name": "${2:Launch AIR desktop}",
+              "program": "^\"\\${workspaceRoot}/${1:application.xml}\""
+            }
+          },
+          {
+            "label": "SWF: Launch Adobe AIR mobile",
+            "description": "Launch Adobe AIR mobile application using AIR Debug Launcher",
+            "body": {
+              "type": "swf",
+              "request": "launch",
+              "name": "${5:Launch AIR mobile}",
+              "program": "^\"\\${workspaceRoot}/${1:application.xml}\"",
+              "profile": "mobileDevice",
+              "screensize": "${2:iPhoneRetina}",
+              "screenDPI": "^${3:326}",
+              "versionPlatform": "${4:IOS}"
+            }
           }
         ]
       },
