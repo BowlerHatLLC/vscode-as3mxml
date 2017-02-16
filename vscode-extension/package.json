@@ -284,18 +284,7 @@
             "type": "node",
             "request": "launch",
             "program": "${workspaceRoot}/bin/js-debug/index.js",
-            "stopOnEntry": false,
-            "args": [],
             "cwd": "${workspaceRoot}/bin/js-debug",
-            "preLaunchTask": null,
-            "runtimeExecutable": null,
-            "runtimeArgs": [
-              "--nolazy"
-            ],
-            "env": {
-              "NODE_ENV": "development"
-            },
-            "console": "internalConsole",
             "sourceMaps": true,
             "outDir": "${workspaceRoot}/bin/js-debug"
           }
