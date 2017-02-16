@@ -16,6 +16,7 @@ limitations under the License.
 import addImport from "./commands/addImport";
 import addMXMLNamespace from "./commands/addMXMLNamespace";
 import createASConfigTaskRunner from "./commands/createASConfigTaskRunner";
+import createInitialConfigurationsForSWFDebug from "./commands/createInitialConfigurationsForSWFDebug";
 import findJava from "./utils/findJava";
 import findEditorSDK from "./utils/findEditorSDK";
 import validateJava from "./utils/validateJava";
@@ -150,6 +151,7 @@ export function activate(context: vscode.ExtensionContext)
 	{
 		return adapterExecutableCommandSWF(javaExecutablePath, flexHome, frameworkSDKHome ? frameworkSDKHome : flexHome);
 	});
+	vscode.commands.registerCommand("nextgenas.createInitialConfigurationsForSWFDebug", createInitialConfigurationsForSWFDebug);
 	vscode.commands.registerTextEditorCommand("nextgenas.addImport", addImport);
 	vscode.commands.registerTextEditorCommand("nextgenas.addMXMLNamespace", addMXMLNamespace);
 

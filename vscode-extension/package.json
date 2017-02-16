@@ -46,6 +46,7 @@
     "onLanguage:xml",
     "workspaceContains:asconfig.json",
     "onCommand:nextgenas.createASConfigTaskRunner",
+    "onCommand:nextgenas.createInitialConfigurationsForSWFDebug",
     "onCommand:nextgenas.adapterExecutableCommandSWF"
   ],
   "contributes": {
@@ -220,14 +221,7 @@
             }
           }
         },
-        "initialConfigurations": [
-          {
-            "name": "Launch SWF",
-            "type": "swf",
-            "request": "launch",
-            "program": "path/to/swf"
-          }
-        ],
+        "initialConfigurations": "nextgenas.createInitialConfigurationsForSWFDebug",
         "configurationSnippets": [
           {
             "label": "SWF: Launch Standalone SWF",
