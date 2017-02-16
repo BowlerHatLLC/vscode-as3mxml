@@ -267,11 +267,9 @@ public class SWFDebugSession extends DebugSession
                     String playerPath = program;
                     try
                     {
-                        URI uri = new URI(playerPath);
-                        if (uri.getScheme() == null)
-                        {
-                            playerPath = "file://" + playerPath;
-                        }
+
+                        URI uri = Paths.get(playerPath).toUri();
+                        playerPath = uri.toString();
                     }
                     catch (Exception e)
                     {
