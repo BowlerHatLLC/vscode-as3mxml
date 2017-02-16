@@ -84,8 +84,10 @@ public class SWFDebugSession extends DebugSession
     private static final String FILE_EXTENSION_AS = ".as";
     private static final String FILE_EXTENSION_MXML = ".mxml";
     private static final String FILE_EXTENSION_EXE = ".exe";
+    private static final String FILE_EXTENSION_XML = ".xml";
     private static final String ADL_BASE_NAME = "bin/adl";
     private static final String FLEXLIB_PROPERTY = "flexlib";
+    private static final String WORKSPACE_PROPERTY = "workspace";
     private static final String SDK_PATH_SIGNATURE = "/frameworks/projects/";
     private static final long LOCAL_VARIABLES_REFERENCE = 1;
     private ThreadSafeSession swfSession;
@@ -238,30 +240,62 @@ public class SWFDebugSession extends DebugSession
             manager.startListening();
             if (manager.supportsLaunch())
             {
-                String playerPath = swfArgs.program;
-                try
+                String program = swfArgs.program;
+                Path programPath = Paths.get(program);
+                if (!programPath.isAbsolute())
                 {
-                    URI uri = new URI(playerPath);
-                    if (uri.getScheme() == null)
+                    //if it's not an absolute path, we'll treat it as a
+                    //relative path within the workspace
+                    String workspacePath = System.getProperty(WORKSPACE_PROPERTY);
+                    if (workspacePath != null)
                     {
-                        playerPath = "file://" + playerPath;
+                        program = Paths.get(workspacePath)
+                                .resolve(programPath).toAbsolutePath().toString();
                     }
                 }
-                catch (Exception e)
+                Player player = null;
+                CustomRuntimeLauncher launcher = null;
+                if (swfArgs.runtimeExecutable != null)
                 {
-                    //safe to ignore
+                    //if runtimeExecutable is specified, we'll launch that
+                    launcher = new CustomRuntimeLauncher(swfArgs.runtimeExecutable, swfArgs.runtimeArgs);
                 }
-                Player player = manager.playerForUri(playerPath, null);
-                if (player == null)
+                else
                 {
-                    sendErrorResponse(response, 10001, "Error launching SWF debug session. Runtime not found for program: " + playerPath);
+                    //otherwise, let the SWF debugger automatically figure out
+                    //which runtime is required based on the program path
+                    String playerPath = program;
+                    try
+                    {
+                        URI uri = new URI(playerPath);
+                        if (uri.getScheme() == null)
+                        {
+                            playerPath = "file://" + playerPath;
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        //safe to ignore
+                    }
+                    player = manager.playerForUri(playerPath, null);
+                }
+                if (player == null && launcher == null)
+                {
+                    sendErrorResponse(response, 10001, "Error launching SWF debug session. Runtime not found for program: " + program);
                     return;
                 }
                 else
                 {
                     AIRLaunchInfo launchInfo = null;
-                    CustomRuntimeLauncher launcher = null;
-                    if (player.getType() == Player.AIR && adlPath != null)
+                    //check if the debugger automatically detected AIR
+                    boolean isAIR = player != null && player.getType() == Player.AIR;
+                    if (!isAIR && player == null && program.endsWith(FILE_EXTENSION_XML))
+                    {
+                        //otherwise, check if the program to launch is an AIR
+                        //application descriptor
+                        isAIR = true;
+                    }
+                    if (isAIR && adlPath != null)
                     {
                         launchInfo = new AIRLaunchInfo();
                         launchInfo.profile = swfArgs.profile;
@@ -269,23 +303,6 @@ public class SWFDebugSession extends DebugSession
                         launchInfo.dpi = swfArgs.screenDPI;
                         launchInfo.versionPlatform = swfArgs.versionPlatform;
                         launchInfo.airDebugLauncher = adlPath.toFile();
-                    }
-                    if (swfArgs.runtimeExecutable != null)
-                    {
-                        launcher = new CustomRuntimeLauncher(swfArgs.runtimeExecutable, swfArgs.runtimeArgs);
-                    }
-                    String program = swfArgs.program;
-                    Path programPath = Paths.get(swfArgs.program);
-                    if (!programPath.isAbsolute())
-                    {
-                        //if it's not an absolute path, we'll treat it as a
-                        //relative path within the workspace
-                        String workspacePath = System.getProperty("workspace");
-                        if (workspacePath != null)
-                        {
-                            program = Paths.get(workspacePath)
-                                    .resolve(programPath).toAbsolutePath().toString();
-                        }
                     }
                     if (launcher != null)
                     {
@@ -359,6 +376,7 @@ public class SWFDebugSession extends DebugSession
     public void setBreakpoints(Response response, SetBreakpointsRequest.SetBreakpointsArguments arguments)
     {
         String path = arguments.source.path;
+        Path pathAsPath = Paths.get(path);
         List<Breakpoint> breakpoints = new ArrayList<>();
         for (int i = 0, count = arguments.breakpoints.length; i < count; i++)
         {
@@ -375,7 +393,9 @@ public class SWFDebugSession extends DebugSession
                     SourceFile[] sourceFiles = swf.getSourceList(swfSession);
                     for (SourceFile sourceFile : sourceFiles)
                     {
-                        if (sourceFile.getFullPath().equals(path) &&
+                        //we can't check if the String paths are equal due to
+                        //file system case sensitivity.
+                        if (pathAsPath.equals(Paths.get(sourceFile.getFullPath())) &&
                                 (path.endsWith(FILE_EXTENSION_AS) || path.endsWith(FILE_EXTENSION_MXML)))
                         {
                             fileId = sourceFile.getId();
