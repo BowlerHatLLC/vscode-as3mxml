@@ -158,7 +158,7 @@
     "debuggers": [
       {
         "type": "swf",
-        "label": "SWF Debug",
+        "label": "SWF",
         "adapterExecutableCommand": "nextgenas.adapterExecutableCommandSWF",
         "configurationAttributes": {
           "launch": {
