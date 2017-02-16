@@ -274,13 +274,26 @@ public class SWFDebugSession extends DebugSession
                     {
                         launcher = new CustomRuntimeLauncher(swfArgs.runtimeExecutable, swfArgs.runtimeArgs);
                     }
+                    String program = swfArgs.program;
+                    Path programPath = Paths.get(swfArgs.program);
+                    if (!programPath.isAbsolute())
+                    {
+                        //if it's not an absolute path, we'll treat it as a
+                        //relative path within the workspace
+                        String workspacePath = System.getProperty("workspace");
+                        if (workspacePath != null)
+                        {
+                            program = Paths.get(workspacePath)
+                                    .resolve(programPath).toAbsolutePath().toString();
+                        }
+                    }
                     if (launcher != null)
                     {
-                        swfSession = (ThreadSafeSession) manager.launch(swfArgs.program, launchInfo, true, null, null, launcher);
+                        swfSession = (ThreadSafeSession) manager.launch(program, launchInfo, true, null, null, launcher);
                     }
                     else
                     {
-                        swfSession = (ThreadSafeSession) manager.launch(swfArgs.program, launchInfo, true, null, null);
+                        swfSession = (ThreadSafeSession) manager.launch(program, launchInfo, true, null, null);
                     }
                 }
             }

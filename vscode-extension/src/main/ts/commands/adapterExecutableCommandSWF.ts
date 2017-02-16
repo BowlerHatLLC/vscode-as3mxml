@@ -19,17 +19,24 @@ import getJavaClassPathDelimiter from "../utils/getJavaClassPathDelimiter";
 
 export default function(javaPath: string, editorSDKPath: string, frameworkSDKPath: string)
 {
+	let args = [
+
+		//uncomment to debug the SWF debugger JAR
+		//"-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005",
+
+		"-Dflexlib=" + path.resolve(frameworkSDKPath, "frameworks"),
+		"-cp",
+		getClassPath(editorSDKPath),
+		"com.nextgenactionscript.vscode.SWFDebug"
+	];
+	if(vscode.workspace.rootPath)
+	{
+		args.unshift("-Dworkspace=" + vscode.workspace.rootPath);
+	}
 	let result: any =
 	{
 		command: javaPath,
-		args:
-		[
-			"-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005",
-			"-cp",
-			getClassPath(editorSDKPath),
-			"-Dflexlib=" + path.resolve(frameworkSDKPath, "frameworks"),
-			"com.nextgenactionscript.vscode.SWFDebug"
-		]
+		args: args
 	};
 	return result;
 }
