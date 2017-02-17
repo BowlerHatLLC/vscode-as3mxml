@@ -37,6 +37,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
+import org.apache.flex.abc.ABCParser;
+import org.apache.flex.abc.Pool;
+import org.apache.flex.abc.PoolingABCVisitor;
 import org.apache.flex.compiler.common.ISourceLocation;
 import org.apache.flex.compiler.common.PrefixMap;
 import org.apache.flex.compiler.common.XMLName;
@@ -186,6 +189,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private static final String CONFIG_FLEX = "flex";
     private static final String CONFIG_AIR = "air";
     private static final String CONFIG_AIRMOBILE = "airmobile";
+    private static final String SDK_FRAMEWORKS_PATH_SIGNATURE = "/frameworks/";
+    private static final String SDK_LIBRARY_PATH_SIGNATURE = "/frameworks/libs/";
+    private static final String SDK_SOURCE_PATH_SIGNATURE = "/frameworks/projects/";
+    private static final String FLEXLIB = "flexlib";
 
     private static final String[] LANGUAGE_TYPE_NAMES =
             {
@@ -2393,6 +2400,22 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return xmlnsCommand;
     }
 
+    private String transformDebugFilePath(String sourceFilePath)
+    {
+        //the debug file path divides directories with ; instead of / in a
+        //couple of places, but it's easy to fix
+        sourceFilePath = sourceFilePath.replace(";", "/");
+        int index = sourceFilePath.indexOf(SDK_SOURCE_PATH_SIGNATURE);
+        if (index == -1)
+        {
+            return sourceFilePath;
+        }
+        sourceFilePath = sourceFilePath.substring(index + SDK_FRAMEWORKS_PATH_SIGNATURE.length());
+        Path frameworkPath = Paths.get(System.getProperty(FLEXLIB));
+        Path transformedPath = frameworkPath.resolve(sourceFilePath);
+        return transformedPath.toAbsolutePath().toString();
+    }
+
     private void resolveDefinition(IDefinition definition, List<Location> result)
     {
         String definitionPath = definition.getSourcePath();
@@ -2406,8 +2429,36 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 //if everything is null, there's nothing to do
                 return;
             }
-            //however, getContainingFilePath() also works for SWCs, so only
-            //allow the files we support
+            //however, getContainingFilePath() also works for SWCs
+            if (!definitionPath.endsWith(AS_EXTENSION)
+                    && !definitionPath.endsWith(MXML_EXTENSION)
+                    && definitionPath.contains(SDK_LIBRARY_PATH_SIGNATURE))
+            {
+                //if it's a framework SWC, we're going to attempt to resolve
+                //the source file 
+                ICompilationUnit unit = currentProject.getScope().getCompilationUnitForDefinition(definition);
+                try
+                {
+                    byte[] abcBytes = unit.getABCBytesRequest().get().getABCBytes();
+                    ABCParser parser = new ABCParser(abcBytes);
+                    PoolingABCVisitor visitor = new PoolingABCVisitor();
+                    parser.parseABC(visitor);
+                    Pool<String> pooledStrings = visitor.getStringPool();
+                    for (String pooledString : pooledStrings.getValues())
+                    {
+                        if (pooledString.contains(SDK_SOURCE_PATH_SIGNATURE))
+                        {
+                            //just go with the first one that we find
+                            definitionPath = this.transformDebugFilePath(pooledString);
+                            break;
+                        }
+                    }
+                }
+                catch (InterruptedException e)
+                {
+                    //safe to ignore
+                }
+            }
             if (!definitionPath.endsWith(AS_EXTENSION)
                     && !definitionPath.endsWith(MXML_EXTENSION))
             {
@@ -2419,7 +2470,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         Path resolvedPath = Paths.get(definitionPath);
         Location location = new Location();
         location.setUri(resolvedPath.toUri().toString());
-        Position start = new Position();
         int nameLine = definition.getNameLine();
         int nameColumn = definition.getNameColumn();
         if (nameLine == -1 || nameColumn == -1)
@@ -2450,6 +2500,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             //we can't find the name, so give up
             return;
         }
+        Position start = new Position();
         start.setLine(nameLine);
         start.setCharacter(nameColumn);
         Position end = new Position();
@@ -4170,8 +4221,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 }
                 else
                 {
-                    offset++;
-                    character++;
+                    //\r\n is treated as one character
+                    if (next != '\r')
+                    {
+                        offset++;
+                        character++;
+                    }
 
                     if (next == '\n')
                     {
@@ -4209,7 +4264,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 }
                 else
                 {
-                    offset++;
+                    //\r\n is treated as one character
+                    if (next != '\r')
+                    {
+                        offset++;
+                    }
 
                     if (next == '\n')
                     {
