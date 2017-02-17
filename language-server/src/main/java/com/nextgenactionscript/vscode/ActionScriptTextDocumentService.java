@@ -2874,6 +2874,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             //project configuration.
             diagnostic.setMessage("Failed to load project configuration options. Error checking disabled, except for simple syntax problems.");
         }
+        else if (!path.startsWith(workspaceRoot))
+        {
+            diagnostic.setMessage("Files external to workspace cannot be checked for errors, except for simple syntax problems.");
+        }
         else
         {
             //we loaded and parsed the project configuration, so something went
@@ -3200,7 +3204,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private void checkFilePathForProblems(Path path, Boolean quick)
     {
         currentUnit = null;
-        if (!checkFilePathForAllProblems(path, quick))
+        if (!path.startsWith(workspaceRoot) ||
+                !checkFilePathForAllProblems(path, quick))
         {
             checkFilePathForSyntaxProblems(path);
         }
