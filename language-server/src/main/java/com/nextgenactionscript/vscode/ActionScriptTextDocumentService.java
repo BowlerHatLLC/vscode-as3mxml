@@ -3387,6 +3387,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return null;
         }
+        if (!path.startsWith(workspaceRoot))
+        {
+            //the path must be in the workspace
+            return null;
+        }
         String code;
         if (sourceByPath.containsKey(path))
         {
@@ -3496,6 +3501,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         Path path = LanguageServerUtils.getPathFromLanguageServerURI(textDocument.getUri());
         if (path == null)
         {
+            return null;
+        }
+        if (!path.startsWith(workspaceRoot))
+        {
+            //the path must be in the workspace
             return null;
         }
         String code;
