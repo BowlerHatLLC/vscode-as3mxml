@@ -15,7 +15,10 @@ limitations under the License.
 */
 package com.nextgenactionscript.vscode;
 
+import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.lang.reflect.Type;
 import java.net.URI;
 import java.nio.file.Path;
@@ -278,30 +281,17 @@ public class SWFDebugSession extends DebugSession
                     }
                     player = manager.playerForUri(playerPath, null);
                     if (player == null
-                            && System.getProperty("os.name").toLowerCase().startsWith("windows")
                             && !playerPath.startsWith("http:")
                             && !playerPath.startsWith("https:")
                             && playerPath.endsWith(".swf"))
                     {
-                        //on windows, if the standalone Flash Player wasn't
-                        //found by the debugger, we're going try one last thing.
-                        //we check the registry to see if the user made a file
-                        //association in explorer.
-                        DefaultDebuggerCallbacks callbacks = new DefaultDebuggerCallbacks();
-                        String association = callbacks.queryWindowsRegistry("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\.swf\\UserChoice", "ProgId");
-                        if (association != null)
+                        if (System.getProperty("os.name").toLowerCase().startsWith("windows"))
                         {
-                            String path = callbacks.queryWindowsRegistry("HKEY_CLASSES_ROOT\\" + association + "\\shell\\open\\command", null);
-                            if (path != null)
-                            {
-                                if (path.startsWith("\""))
-                                {
-                                    //strip any quotes that might be wrapping
-                                    //the executable path
-                                    path = path.substring(1, path.indexOf("\"", 1));
-                                }
-                                launcher = new CustomRuntimeLauncher(path);
-                            }
+                            launcher = findWindowsStandalonePlayer();
+                        }
+                        else if (!System.getProperty("os.name").toLowerCase().startsWith("mac os")) //linux
+                        {
+                            launcher = findLinuxStandalonePlayer();
                         }
                     }
                 }
@@ -377,6 +367,68 @@ public class SWFDebugSession extends DebugSession
         cancelRunner = false;
         sessionThread = new java.lang.Thread(new SessionRunner());
         sessionThread.start();
+    }
+
+    /**
+     * On Windows, if the standalone Flash Player wasn't found by the debugger,
+     * we're going try one last thing. We check the registry to see if the user
+     * made a file association in explorer.
+     */
+    private CustomRuntimeLauncher findWindowsStandalonePlayer()
+    {
+        try
+        {
+            DefaultDebuggerCallbacks callbacks = new DefaultDebuggerCallbacks();
+            String association = callbacks.queryWindowsRegistry("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\.swf\\UserChoice", "ProgId");
+            if (association != null)
+            {
+                String path = callbacks.queryWindowsRegistry("HKEY_CLASSES_ROOT\\" + association + "\\shell\\open\\command", null);
+                if (path != null)
+                {
+                    if (path.startsWith("\""))
+                    {
+                        //strip any quotes that might be wrapping
+                        //the executable path
+                        path = path.substring(1, path.indexOf("\"", 1));
+                    }
+                    return new CustomRuntimeLauncher(path);
+                }
+            }
+        }
+        catch (IOException e)
+        {
+            //safe to ignore
+        }
+        return null;
+    }
+
+    /**
+     * On Linux, if the standalone Flash Player wasn't found by the debugger,
+     * we're going try one last thing. We check a different default file name
+     * that might exist that the debugger doesn't know about.
+     */
+    private CustomRuntimeLauncher findLinuxStandalonePlayer()
+    {
+        try
+        {
+            String[] cmd = {"/bin/sh", "-c", "which flashplayerdebugger"};
+            Process process = Runtime.getRuntime().exec(cmd);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            String line = reader.readLine();
+            if (line != null)
+            {
+                File f = new File(line);
+                if (f.exists())
+                {
+                    return new CustomRuntimeLauncher(f.getAbsolutePath());
+                }
+            }
+        }
+        catch (IOException e)
+        {
+            //safe to ignore
+        }
+        return null;
     }
 
     public void attach(Response response, Request.RequestArguments args)
