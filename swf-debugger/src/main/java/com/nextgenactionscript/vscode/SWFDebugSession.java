@@ -57,6 +57,7 @@ import com.nextgenactionscript.vscode.debug.responses.Variable;
 import com.nextgenactionscript.vscode.debug.responses.VariablesResponseBody;
 import flash.tools.debugger.AIRLaunchInfo;
 import flash.tools.debugger.CommandLineException;
+import flash.tools.debugger.DefaultDebuggerCallbacks;
 import flash.tools.debugger.Frame;
 import flash.tools.debugger.InProgressException;
 import flash.tools.debugger.Isolate;
@@ -276,6 +277,33 @@ public class SWFDebugSession extends DebugSession
                         //safe to ignore
                     }
                     player = manager.playerForUri(playerPath, null);
+                    if (player == null
+                            && System.getProperty("os.name").toLowerCase().startsWith("windows")
+                            && !playerPath.startsWith("http:")
+                            && !playerPath.startsWith("https:")
+                            && playerPath.endsWith(".swf"))
+                    {
+                        //on windows, if the standalone Flash Player wasn't
+                        //found by the debugger, we're going try one last thing.
+                        //we check the registry to see if the user made a file
+                        //association in explorer.
+                        DefaultDebuggerCallbacks callbacks = new DefaultDebuggerCallbacks();
+                        String association = callbacks.queryWindowsRegistry("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\.swf\\UserChoice", "ProgId");
+                        if (association != null)
+                        {
+                            String path = callbacks.queryWindowsRegistry("HKEY_CLASSES_ROOT\\" + association + "\\shell\\open\\command", null);
+                            if (path != null)
+                            {
+                                if (path.startsWith("\""))
+                                {
+                                    //strip any quotes that might be wrapping
+                                    //the executable path
+                                    path = path.substring(1, path.indexOf("\"", 1));
+                                }
+                                launcher = new CustomRuntimeLauncher(path);
+                            }
+                        }
+                    }
                 }
                 if (player == null && launcher == null)
                 {
