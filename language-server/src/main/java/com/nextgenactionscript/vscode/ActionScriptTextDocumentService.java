@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.ConcurrentModificationException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -3329,16 +3330,31 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             else
             {
-                for (ICompilationUnit unit : compilationUnits)
+                boolean continueCheckingForErrors = true;
+                while(continueCheckingForErrors)
                 {
-                    if (unit == null || unit instanceof SWCCompilationUnit)
+                    try
                     {
-                        //compiled compilation units won't have problems
-                        continue;
+                        for (ICompilationUnit unit : compilationUnits)
+                        {
+                            if (unit == null || unit instanceof SWCCompilationUnit)
+                            {
+                                //compiled compilation units won't have problems
+                                continue;
+                            }
+                            PublishDiagnosticsParams params = checkCompilationUnitForAllProblems(unit);
+                            URI uri = Paths.get(unit.getAbsoluteFilename()).toUri();
+                            files.put(uri, params);
+                        }
+                        continueCheckingForErrors = false;
                     }
-                    PublishDiagnosticsParams params = checkCompilationUnitForAllProblems(unit);
-                    URI uri = Paths.get(unit.getAbsoluteFilename()).toUri();
-                    files.put(uri, params);
+                    catch(ConcurrentModificationException e)
+                    {
+                        //when we finished building one of the compilation
+                        //units, more were added to the collection, so we need
+                        //to start over because we can't iterate over a modified
+                        //collection.
+                    }
                 }
                 //only clean up stale errors on a full check
                 codeProblemTracker.cleanUpStaleProblems();
