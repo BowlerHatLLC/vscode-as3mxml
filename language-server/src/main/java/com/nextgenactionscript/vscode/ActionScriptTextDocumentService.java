@@ -311,6 +311,15 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     @Override
     public CompletableFuture<CompletionList> completion(TextDocumentPositionParams position)
     {
+        String textDocumentUri = position.getTextDocument().getUri();
+        if (!textDocumentUri.endsWith(AS_EXTENSION)
+                && !textDocumentUri.endsWith(MXML_EXTENSION))
+        {
+            CompletionList result = new CompletionList();
+            result.setIsIncomplete(false);
+            result.setItems(new ArrayList<>());
+            return CompletableFuture.completedFuture(result);
+        }
         IMXMLTagData offsetTag = getOffsetMXMLTag(position);
         //if we're inside an <fx:Script> tag, we want ActionScript completion,
         //so that's why we call isMXMLTagValidForCompletion()
@@ -350,6 +359,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     @Override
     public CompletableFuture<Hover> hover(TextDocumentPositionParams position)
     {
+        String textDocumentUri = position.getTextDocument().getUri();
+        if (!textDocumentUri.endsWith(AS_EXTENSION)
+                && !textDocumentUri.endsWith(MXML_EXTENSION))
+        {
+            return CompletableFuture.completedFuture(new Hover(Collections.emptyList(), null));
+        }
         IMXMLTagData offsetTag = getOffsetMXMLTag(position);
         //if we're inside an <fx:Script> tag, we want ActionScript hover,
         //so that's why we call isMXMLTagValidForCompletion()
@@ -369,6 +384,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     @Override
     public CompletableFuture<SignatureHelp> signatureHelp(TextDocumentPositionParams position)
     {
+        String textDocumentUri = position.getTextDocument().getUri();
+        if (!textDocumentUri.endsWith(AS_EXTENSION)
+                && !textDocumentUri.endsWith(MXML_EXTENSION))
+        {
+            //we couldn't find a node at the specified location
+            return CompletableFuture.completedFuture(new SignatureHelp(Collections.emptyList(), -1, -1));
+        }
         IASNode offsetNode = getOffsetNode(position);
         if (offsetNode == null)
         {
@@ -460,6 +482,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     @Override
     public CompletableFuture<List<? extends Location>> definition(TextDocumentPositionParams position)
     {
+        String textDocumentUri = position.getTextDocument().getUri();
+        if (!textDocumentUri.endsWith(AS_EXTENSION)
+                && !textDocumentUri.endsWith(MXML_EXTENSION))
+        {
+            return CompletableFuture.completedFuture(Collections.emptyList());
+        }
         IMXMLTagData offsetTag = getOffsetMXMLTag(position);
         //if we're inside an <fx:Script> tag, we want ActionScript lookup,
         //so that's why we call isMXMLTagValidForCompletion()
@@ -478,6 +506,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     @Override
     public CompletableFuture<List<? extends Location>> references(ReferenceParams params)
     {
+        String textDocumentUri = params.getTextDocument().getUri();
+        if (!textDocumentUri.endsWith(AS_EXTENSION)
+                && !textDocumentUri.endsWith(MXML_EXTENSION))
+        {
+            return CompletableFuture.completedFuture(Collections.emptyList());
+        }
         IMXMLTagData offsetTag = getOffsetMXMLTag(params);
         //if we're inside an <fx:Script> tag, we want ActionScript lookup,
         //so that's why we call isMXMLTagValidForCompletion()
@@ -723,6 +757,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     @Override
     public CompletableFuture<WorkspaceEdit> rename(RenameParams params)
     {
+        String textDocumentUri = params.getTextDocument().getUri();
+        if (!textDocumentUri.endsWith(AS_EXTENSION)
+                && !textDocumentUri.endsWith(MXML_EXTENSION))
+        {
+            return CompletableFuture.completedFuture(new WorkspaceEdit(new HashMap<>()));
+        }
         IMXMLTagData offsetTag = getOffsetMXMLTag(params.getTextDocument(), params.getPosition());
         //if we're inside an <fx:Script> tag, we want ActionScript rename,
         //so that's why we call isMXMLTagValidForCompletion()
