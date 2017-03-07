@@ -545,7 +545,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         String query = params.getQuery();
         for (ICompilationUnit unit : compilationUnits)
         {
-            if (unit instanceof SWCCompilationUnit)
+            if (unit == null || unit instanceof SWCCompilationUnit)
             {
                 continue;
             }
@@ -666,6 +666,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         ArrayList<IDefinition> types = new ArrayList<>();
         for (ICompilationUnit unit : compilationUnits)
         {
+            if (unit == null)
+            {
+                continue;
+            }
             try
             {
                 Collection<IDefinition> definitions = unit.getFileScopeRequest().get().getExternallyVisibleDefinitions();
@@ -1655,7 +1659,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     {
         for (ICompilationUnit compilationUnit : compilationUnits)
         {
-            if (compilationUnit instanceof SWCCompilationUnit)
+            if (compilationUnit == null || compilationUnit instanceof SWCCompilationUnit)
             {
                 continue;
             }
@@ -1820,6 +1824,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
         for (ICompilationUnit unit : compilationUnits)
         {
+            if (unit == null)
+            {
+                continue;
+            }
             Collection<IDefinition> definitions = null;
             try
             {
@@ -1889,6 +1897,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         for (ICompilationUnit unit : compilationUnits)
         {
+            if (unit == null)
+            {
+                continue;
+            }
             Collection<IDefinition> definitions = null;
             try
             {
@@ -2019,6 +2031,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         List<CompletionItem> items = result.getItems();
         for (ICompilationUnit unit : compilationUnits)
         {
+            if (unit == null)
+            {
+                continue;
+            }
             Collection<IDefinition> definitions = null;
             try
             {
@@ -2645,7 +2661,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         for (ICompilationUnit compilationUnit : compilationUnits)
         {
-            if (compilationUnit instanceof SWCCompilationUnit)
+            if (compilationUnit == null || compilationUnit instanceof SWCCompilationUnit)
             {
                 continue;
             }
@@ -2952,7 +2968,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         for (ICompilationUnit unit : compilationUnits)
         {
-            if (unit.getAbsoluteFilename().equals(absoluteFileName))
+            //it's possible for the collection of compilation units to contain
+            //null values, so be sure to check for null values before checking
+            //the file name
+            if (unit != null && unit.getAbsoluteFilename().equals(absoluteFileName))
             {
                 return unit;
             }
@@ -3027,7 +3046,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             //might already be created
             for (ICompilationUnit unit : compilationUnits)
             {
-                if (unit.getAbsoluteFilename().equals(absolutePath))
+                if (unit != null && unit.getAbsoluteFilename().equals(absolutePath))
                 {
                     currentUnit = unit;
                     break;
@@ -3312,12 +3331,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             {
                 for (ICompilationUnit unit : compilationUnits)
                 {
-                    if (unit instanceof SWCCompilationUnit)
+                    if (unit == null || unit instanceof SWCCompilationUnit)
                     {
                         //compiled compilation units won't have problems
                         continue;
                     }
-
                     PublishDiagnosticsParams params = checkCompilationUnitForAllProblems(unit);
                     URI uri = Paths.get(unit.getAbsoluteFilename()).toUri();
                     files.put(uri, params);
