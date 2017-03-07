@@ -3134,6 +3134,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             String[] splitOptions = additionalOptions.split("\\s+");
             combinedOptions.addAll(Arrays.asList(splitOptions));
         }
+        //not all framework SDKs support a theme (such as Adobe's AIR SDK), so
+        //we clear it for the editor to avoid a missing spark.css file.
+        combinedOptions.add("-theme=");
         if (type.equals(ProjectType.LIB))
         {
             configurator.setConfiguration(combinedOptions.toArray(new String[combinedOptions.size()]),
