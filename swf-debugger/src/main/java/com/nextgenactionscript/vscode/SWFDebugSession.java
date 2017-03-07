@@ -319,6 +319,10 @@ public class SWFDebugSession extends DebugSession
                         launchInfo.dpi = swfArgs.screenDPI;
                         launchInfo.versionPlatform = swfArgs.versionPlatform;
                         launchInfo.airDebugLauncher = adlPath.toFile();
+                        if (launcher != null)
+                        {
+                            launcher.isAIR = true;
+                        }
                     }
                     if (launcher != null)
                     {

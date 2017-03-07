@@ -32,6 +32,7 @@ public class CustomRuntimeLauncher implements ILauncher
     private static final String EXTENSION_APP = ".app";
     private String runtimeExecutable;
     private String[] runtimeArgs;
+    public boolean isAIR = false;
 
     public CustomRuntimeLauncher(String runtimeExecutablePath)
     {
@@ -62,20 +63,35 @@ public class CustomRuntimeLauncher implements ILauncher
 
     public Process launch(String[] cmd) throws IOException
     {
-        int count = 1 + cmd.length;
+        int baseCount = cmd.length;
+        if (!isAIR)
+        {
+            //for some reason, the debugger always includes the path to ADL in
+            //the launch arguments for a custom launcher, but not to Flash
+            //Player. we need to account for this difference in length.
+            baseCount++;
+        }
+        int extraCount = 0;
         if (runtimeArgs != null)
         {
-            count += runtimeArgs.length;
+            extraCount = runtimeArgs.length;
         }
-        String[] finalArgs = new String[count];
+        String[] finalArgs = new String[baseCount + extraCount];
         finalArgs[0] = runtimeExecutable;
-        int offset = 1;
+        if (isAIR)
+        {
+            //as noted above, we ignore the debugger's incorrect path to ADL
+            //and start copying from index 1 instead of 0.
+            System.arraycopy(cmd, 1, finalArgs, 1, cmd.length - 1);
+        }
+        else
+        {
+            System.arraycopy(cmd, 0, finalArgs, 1, cmd.length);
+        }
         if (runtimeArgs != null)
         {
-            System.arraycopy(runtimeArgs, 0, finalArgs, offset, runtimeArgs.length);
-            offset += runtimeArgs.length;
+            System.arraycopy(runtimeArgs, 0, finalArgs, baseCount, runtimeArgs.length);
         }
-        System.arraycopy(cmd, 0, finalArgs, offset, cmd.length);
         return Runtime.getRuntime().exec(finalArgs);
     }
 
