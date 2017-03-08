@@ -2931,9 +2931,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             //project configuration.
             diagnostic.setMessage("Failed to load project configuration options. Error checking disabled, except for simple syntax problems.");
         }
-        else if (!path.startsWith(workspaceRoot))
+        else if (!isInWorkspaceOrSourcePath(path))
         {
-            diagnostic.setMessage("Files external to workspace cannot be checked for errors, except for simple syntax problems.");
+            diagnostic.setMessage("Files external to workspace or source-path cannot be checked for errors, except for simple syntax problems.");
         }
         else
         {
@@ -3267,7 +3267,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private void checkFilePathForProblems(Path path, Boolean quick)
     {
         currentUnit = null;
-        if (!path.startsWith(workspaceRoot) ||
+        if (!isInWorkspaceOrSourcePath(path) ||
                 !checkFilePathForAllProblems(path, quick))
         {
             checkFilePathForSyntaxProblems(path);
@@ -3331,7 +3331,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             else
             {
                 boolean continueCheckingForErrors = true;
-                while(continueCheckingForErrors)
+                while (continueCheckingForErrors)
                 {
                     try
                     {
@@ -3348,7 +3348,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                         }
                         continueCheckingForErrors = false;
                     }
-                    catch(ConcurrentModificationException e)
+                    catch (ConcurrentModificationException e)
                     {
                         //when we finished building one of the compilation
                         //units, more were added to the collection, so we need
@@ -3464,9 +3464,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return null;
         }
-        if (!path.startsWith(workspaceRoot))
+        if (!isInWorkspaceOrSourcePath(path))
         {
-            //the path must be in the workspace
+            //the path must be in the workspace or source-path
             return null;
         }
         String code;
@@ -3580,9 +3580,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return null;
         }
-        if (!path.startsWith(workspaceRoot))
+        if (!isInWorkspaceOrSourcePath(path))
         {
-            //the path must be in the workspace
+            //the path must be in the workspace or source-path
             return null;
         }
         String code;
@@ -4106,6 +4106,40 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return false;
         }
         return true;
+    }
+
+    private boolean isInWorkspaceOrSourcePath(Path path)
+    {
+        if (path.startsWith(workspaceRoot))
+        {
+            return true;
+        }
+        //if we haven't accessed a compilation unit yet, the project may be null
+        currentProject = getProject();
+        if (currentProjectOptions == null)
+        {
+            return false;
+        }
+        List<File> sourcePaths = currentProjectOptions.compilerOptions.sourcePath;
+        if (sourcePaths != null)
+        {
+            for (File sourcePathFile : sourcePaths)
+            {
+                try
+                {
+                    Path sourcePathPath = sourcePathFile.getCanonicalFile().toPath();
+                    if (path.startsWith(sourcePathPath))
+                    {
+                        return true;
+                    }
+                }
+                catch (IOException e)
+                {
+                    //safe to ignore
+                }
+            }
+        }
+        return false;
     }
 
     private void querySymbolsInScope(String query, IASScope scope, List<SymbolInformation> result)
