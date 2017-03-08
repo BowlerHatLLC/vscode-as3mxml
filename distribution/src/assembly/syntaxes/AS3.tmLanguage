@@ -372,6 +372,10 @@
 					<key>include</key>
 					<string>#functions</string>
 				</dict>
+				<dict>
+					<key>include</key>
+					<string>#import</string>
+				</dict>
 			</array>
 		</dict>
 		<key>comments</key>
@@ -993,7 +997,19 @@
 				</dict>
 				<dict>
 					<key>include</key>
+					<string>#variable_declaration</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#method</string>
+				</dict>
+				<dict>
+					<key>include</key>
 					<string>#comments</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#return_type</string>
 				</dict>
 				<dict>
 					<key>include</key>
@@ -1002,6 +1018,18 @@
 				<dict>
 					<key>include</key>
 					<string>#use_namespace</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#strings</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#numbers</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#language_constants</string>
 				</dict>
 				<dict>
 					<key>include</key>
