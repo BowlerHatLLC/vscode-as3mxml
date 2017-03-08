@@ -161,7 +161,7 @@
 				</dict>
 				<dict>
 					<key>include</key>
-					<string>#embed_metadata</string>
+					<string>#metadata</string>
 				</dict>
 				<dict>
 					<key>include</key>
@@ -430,30 +430,6 @@
 			</dict>
 			<key>match</key>
 			<string>(?&lt;=:)\s*(\*)</string>
-		</dict>
-		<key>embed_metadata</key>
-		<dict>
-			<key>begin</key>
-			<string>\[\s*\b(Embed)\b</string>
-			<key>beginCaptures</key>
-			<dict>
-				<key>1</key>
-				<dict>
-					<key>name</key>
-					<string>keyword.other.actionscript.3</string>
-				</dict>
-			</dict>
-			<key>end</key>
-			<string>\]</string>
-			<key>name</key>
-			<string>meta.swf_info.actionscript.3</string>
-			<key>patterns</key>
-			<array>
-				<dict>
-					<key>include</key>
-					<string>#metadata_info</string>
-				</dict>
-			</array>
 		</dict>
 		<key>escapes</key>
 		<dict>
@@ -820,7 +796,7 @@
 				</dict>
 				<dict>
 					<key>include</key>
-					<string>#embed_metadata</string>
+					<string>#metadata</string>
 				</dict>
 				<dict>
 					<key>include</key>
@@ -1029,7 +1005,7 @@
 				</dict>
 				<dict>
 					<key>include</key>
-					<string>#swf_metadata</string>
+					<string>#metadata</string>
 				</dict>
 				<dict>
 					<key>include</key>
@@ -1133,10 +1109,10 @@
 				</dict>
 			</array>
 		</dict>
-		<key>swf_metadata</key>
+		<key>metadata</key>
 		<dict>
 			<key>begin</key>
-			<string>\[\s*\b(SWF)\b</string>
+			<string>\[\s*\b(\w+)\b</string>
 			<key>beginCaptures</key>
 			<dict>
 				<key>1</key>
@@ -1148,7 +1124,7 @@
 			<key>end</key>
 			<string>\]</string>
 			<key>name</key>
-			<string>meta.swf_info.actionscript.3</string>
+			<string>meta.metadata_info.actionscript.3</string>
 			<key>patterns</key>
 			<array>
 				<dict>
