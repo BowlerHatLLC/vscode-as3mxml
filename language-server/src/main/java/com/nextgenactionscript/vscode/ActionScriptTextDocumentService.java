@@ -3127,11 +3127,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             currentWorkspace = new Workspace();
             project = new FlexProject((Workspace) currentWorkspace);
-            project.setProblems(new ArrayList<ICompilerProblem>());
+            project.setProblems(new ArrayList<>());
             fileSpecGetter = new LanguageServerFileSpecGetter(currentWorkspace, sourceByPath);
         }
         else
         {
+            //clear all old problems because they won't be cleared automatically
+            currentProject.getProblems().clear();
             return currentProject;
         }
         CompilerOptions compilerOptions = currentProjectOptions.compilerOptions;
