@@ -311,6 +311,11 @@
 		{
 			"type": "string",
 			"description": "Optional path to Adobe AIR application descriptor. The descriptor's <content> element will be populated, and the file will be copied into the output directory."
+		},
+		"copySourcePathAssets":
+		{
+			"type": "boolean",
+			"description": "Optionally copies any files in the source path that don't have .as or .mxml extensions to the output directory."
 		}
 	},
 	"required":
