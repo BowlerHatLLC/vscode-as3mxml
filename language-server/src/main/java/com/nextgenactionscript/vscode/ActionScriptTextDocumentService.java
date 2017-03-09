@@ -87,6 +87,7 @@ import org.apache.flex.compiler.mxml.IMXMLTagAttributeData;
 import org.apache.flex.compiler.mxml.IMXMLTagData;
 import org.apache.flex.compiler.mxml.IMXMLTextData;
 import org.apache.flex.compiler.mxml.IMXMLUnitData;
+import org.apache.flex.compiler.problems.FontEmbeddingNotSupported;
 import org.apache.flex.compiler.problems.ICompilerProblem;
 import org.apache.flex.compiler.scopes.IASScope;
 import org.apache.flex.compiler.targets.ITarget;
@@ -246,6 +247,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private int namespaceEndIndex = -1;
     private LanguageServerFileSpecGetter fileSpecGetter;
     private boolean brokenMXMLValueEnd;
+    private boolean flexLibSDKContainsFalconCompiler = false;
     private ProblemTracker codeProblemTracker = new ProblemTracker();
     private ProblemTracker configProblemTracker = new ProblemTracker();
 
@@ -274,7 +276,14 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             minor = Integer.parseInt(versionParts[1]);
             revision = Integer.parseInt(versionParts[2]);
         }
+        //FlexJS 0.7 has a bug in parsing MXML and we need a workaround
         brokenMXMLValueEnd = major == 0 && minor == 7;
+
+        //if the framework SDK doesn't include the Falcon compiler, we can
+        //ignore certain errors from the editor SDK, which includes Falcon.
+        Path sdkPath = Paths.get(System.getProperty(FLEXLIB));
+        sdkPath = sdkPath.resolve("../lib/falcon-mxmlc.jar");
+        flexLibSDKContainsFalconCompiler = sdkPath.toFile().exists();
     }
 
     public IProjectConfigStrategy getProjectConfigStrategy()
@@ -2832,6 +2841,17 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private void addCompilerProblem(ICompilerProblem problem, PublishDiagnosticsParams publish)
     {
+        if (!flexLibSDKContainsFalconCompiler)
+        {
+            //the following errors get special treatment if the framework SDK's
+            //compiler isn't Falcon
+
+            if (problem.getClass().equals(FontEmbeddingNotSupported.class))
+            {
+                //ignore this error because the framework SDK can embed fonts
+                return;
+            }
+        }
         Diagnostic diagnostic = new Diagnostic();
 
         DiagnosticSeverity severity = LanguageServerUtils.getDiagnosticSeverityFromCompilerProblem(problem);
