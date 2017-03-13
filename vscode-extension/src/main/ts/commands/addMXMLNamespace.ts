@@ -21,7 +21,17 @@ export default function(textEditor: vscode.TextEditor, edit: vscode.TextEditorEd
 	{
 		return;
 	}
+	//exclude the whitespace before the namespace so that finding duplicates
+	//doesn't depend on it
+	let textToInsert = "xmlns:" + prefix + "=\"" + uri + "\"";
 	let document = textEditor.document;
+	let text = document.getText();
+	let index = text.indexOf(textToInsert, startIndex);
+	if(index !== -1 && index < endIndex)
+	{
+		return;
+	}
 	let position = document.positionAt(endIndex);
-	edit.insert(position, " xmlns:" + prefix + "=\"" + uri + "\"");
+	//include the whitespace here instead (see above)
+	edit.insert(position, " " + textToInsert);
 }
