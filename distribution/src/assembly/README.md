@@ -21,7 +21,7 @@
 
 ## Minimum Requirements
 
-* Visual Studio Code 1.9
+* Visual Studio Code 1.10
 * Java 8 Runtime
 * Apache FlexJS 0.7
 
@@ -36,10 +36,11 @@ Add a file named [`asconfig.json`](https://github.com/BowlerHatLLC/vscode-nextge
 			"library-path": [
 				"libs"
 			],
+			"output": "bin/MyProject.swf"
 		},
 		"files":
 		[
-			"src/Main.as"
+			"src/MyProject.as"
 		]
 	}
 

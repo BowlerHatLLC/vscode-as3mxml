@@ -103,7 +103,7 @@ suite("NextGenAS extension", () =>
 
 suite("document symbol provider", () =>
 {
-	test("vscode.executeDocumentSymbolProvider not empty", (done) =>
+	test("vscode.executeDocumentSymbolProvider not empty", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Main.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
@@ -117,9 +117,9 @@ suite("document symbol provider", () =>
 					{
 						assert(false, "Failed to execute document symbol provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeDocumentSymbolProvider includes class", (done) =>
+	test("vscode.executeDocumentSymbolProvider includes class", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Main.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
@@ -138,9 +138,9 @@ suite("document symbol provider", () =>
 					{
 						assert(false, "Failed to execute document symbol provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeDocumentSymbolProvider includes constructor", (done) =>
+	test("vscode.executeDocumentSymbolProvider includes constructor", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Main.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
@@ -159,9 +159,9 @@ suite("document symbol provider", () =>
 					{
 						assert(false, "Failed to execute document symbol provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeDocumentSymbolProvider includes member variable", (done) =>
+	test("vscode.executeDocumentSymbolProvider includes member variable", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Main.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
@@ -180,9 +180,9 @@ suite("document symbol provider", () =>
 					{
 						assert(false, "Failed to execute document symbol provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeDocumentSymbolProvider includes member function", (done) =>
+	test("vscode.executeDocumentSymbolProvider includes member function", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Main.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
@@ -201,9 +201,9 @@ suite("document symbol provider", () =>
 					{
 						assert(false, "Failed to execute document symbol provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeDocumentSymbolProvider includes static variable", (done) =>
+	test("vscode.executeDocumentSymbolProvider includes static variable", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Main.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
@@ -222,9 +222,9 @@ suite("document symbol provider", () =>
 					{
 						assert(false, "Failed to execute document symbol provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeDocumentSymbolProvider includes static constant", (done) =>
+	test("vscode.executeDocumentSymbolProvider includes static constant", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Main.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
@@ -243,9 +243,9 @@ suite("document symbol provider", () =>
 					{
 						assert(false, "Failed to execute document symbol provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeDocumentSymbolProvider includes static function", (done) =>
+	test("vscode.executeDocumentSymbolProvider includes static function", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Main.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
@@ -264,9 +264,9 @@ suite("document symbol provider", () =>
 					{
 						assert(false, "Failed to execute document symbol provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeDocumentSymbolProvider includes internal class", (done) =>
+	test("vscode.executeDocumentSymbolProvider includes internal class", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Main.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
@@ -285,9 +285,9 @@ suite("document symbol provider", () =>
 					{
 						assert(false, "Failed to execute document symbol provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeDocumentSymbolProvider includes member variable in internal class", (done) =>
+	test("vscode.executeDocumentSymbolProvider includes member variable in internal class", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Main.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
@@ -306,13 +306,13 @@ suite("document symbol provider", () =>
 					{
 						assert(false, "Failed to execute document symbol provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
 });
 
 suite("workspace symbol provider", () =>
 {
-	test("vscode.executeWorkspaceSymbolProvider includes class", (done) =>
+	test("vscode.executeWorkspaceSymbolProvider includes class", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Main.as"));
 		let query = "Main";
@@ -331,9 +331,9 @@ suite("workspace symbol provider", () =>
 					{
 						assert(false, "Failed to execute workspace symbol provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeWorkspaceSymbolProvider includes constructor", (done) =>
+	test("vscode.executeWorkspaceSymbolProvider includes constructor", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Main.as"));
 		let query = "Main";
@@ -352,9 +352,9 @@ suite("workspace symbol provider", () =>
 					{
 						assert(false, "Failed to execute workspace symbol provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeWorkspaceSymbolProvider includes member variable", (done) =>
+	test("vscode.executeWorkspaceSymbolProvider includes member variable", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Main.as"));
 		let query = "memberVar";
@@ -373,9 +373,9 @@ suite("workspace symbol provider", () =>
 					{
 						assert(false, "Failed to execute workspace symbol provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeWorkspaceSymbolProvider includes member function", (done) =>
+	test("vscode.executeWorkspaceSymbolProvider includes member function", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Main.as"));
 		let query = "memberFunction";
@@ -394,9 +394,9 @@ suite("workspace symbol provider", () =>
 					{
 						assert(false, "Failed to execute workspace symbol provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeWorkspaceSymbolProvider includes static variable", (done) =>
+	test("vscode.executeWorkspaceSymbolProvider includes static variable", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Main.as"));
 		let query = "staticVar";
@@ -415,9 +415,9 @@ suite("workspace symbol provider", () =>
 					{
 						assert(false, "Failed to execute workspace symbol provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeWorkspaceSymbolProvider includes static constant", (done) =>
+	test("vscode.executeWorkspaceSymbolProvider includes static constant", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Main.as"));
 		let query = "STATIC_CONST";
@@ -436,9 +436,9 @@ suite("workspace symbol provider", () =>
 					{
 						assert(false, "Failed to execute workspace symbol provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeWorkspaceSymbolProvider includes static function", (done) =>
+	test("vscode.executeWorkspaceSymbolProvider includes static function", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Main.as"));
 		let query = "staticFunction";
@@ -457,9 +457,9 @@ suite("workspace symbol provider", () =>
 					{
 						assert(false, "Failed to execute workspace symbol provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeWorkspaceSymbolProvider includes internal class", (done) =>
+	test("vscode.executeWorkspaceSymbolProvider includes internal class", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Main.as"));
 		let query = "MainInternalClass";
@@ -479,9 +479,9 @@ suite("workspace symbol provider", () =>
 					{
 						assert(false, "Failed to execute workspace symbol provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeWorkspaceSymbolProvider includes member variable in internal class", (done) =>
+	test("vscode.executeWorkspaceSymbolProvider includes member variable in internal class", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Main.as"));
 		let query = "internalClassMemberVar";
@@ -500,9 +500,9 @@ suite("workspace symbol provider", () =>
 					{
 						assert(false, "Failed to execute workspace symbol provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeWorkspaceSymbolProvider includes symbols in unreferenced files", (done) =>
+	test("vscode.executeWorkspaceSymbolProvider includes symbols in unreferenced files", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Main.as"));
 		let query = "Unreferenced";
@@ -519,9 +519,9 @@ suite("workspace symbol provider", () =>
 					{
 						assert(false, "Failed to execute workspace symbol provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeWorkspaceSymbolProvider includes class in unreferenced file", (done) =>
+	test("vscode.executeWorkspaceSymbolProvider includes class in unreferenced file", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Main.as"));
 		let query = "Unreferenced";
@@ -541,9 +541,9 @@ suite("workspace symbol provider", () =>
 					{
 						assert(false, "Failed to execute workspace symbol provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeWorkspaceSymbolProvider includes constructor in unreferenced file", (done) =>
+	test("vscode.executeWorkspaceSymbolProvider includes constructor in unreferenced file", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Main.as"));
 		let query = "Unreferenced";
@@ -563,9 +563,9 @@ suite("workspace symbol provider", () =>
 					{
 						assert(false, "Failed to execute workspace symbol provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeWorkspaceSymbolProvider includes interface in unreferenced file", (done) =>
+	test("vscode.executeWorkspaceSymbolProvider includes interface in unreferenced file", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Main.as"));
 		let query = "Unreferenced";
@@ -585,13 +585,13 @@ suite("workspace symbol provider", () =>
 					{
 						assert(false, "Failed to execute workspace symbol provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
 });
 
 suite("signature help provider", () =>
 {
-	test("vscode.executeSignatureHelpProvider provides help for local function", (done) =>
+	test("vscode.executeSignatureHelpProvider provides help for local function", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "SignatureHelp.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
@@ -610,9 +610,9 @@ suite("signature help provider", () =>
 					{
 						assert(false, "Failed to execute workspace symbol provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeSignatureHelpProvider provides help for member function", (done) =>
+	test("vscode.executeSignatureHelpProvider provides help for member function", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "SignatureHelp.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
@@ -631,9 +631,9 @@ suite("signature help provider", () =>
 					{
 						assert(false, "Failed to execute workspace symbol provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeSignatureHelpProvider provides help for member function with member access operator on this", (done) =>
+	test("vscode.executeSignatureHelpProvider provides help for member function with member access operator on this", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "SignatureHelp.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
@@ -652,9 +652,9 @@ suite("signature help provider", () =>
 					{
 						assert(false, "Failed to execute workspace symbol provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeSignatureHelpProvider provides help for static function", (done) =>
+	test("vscode.executeSignatureHelpProvider provides help for static function", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "SignatureHelp.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
@@ -673,9 +673,9 @@ suite("signature help provider", () =>
 					{
 						assert(false, "Failed to execute workspace symbol provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeSignatureHelpProvider provides help for static function with member access operator on class", (done) =>
+	test("vscode.executeSignatureHelpProvider provides help for static function with member access operator on class", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "SignatureHelp.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
@@ -694,9 +694,9 @@ suite("signature help provider", () =>
 					{
 						assert(false, "Failed to execute workspace symbol provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeSignatureHelpProvider provides help for package function", (done) =>
+	test("vscode.executeSignatureHelpProvider provides help for package function", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "SignatureHelp.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
@@ -715,9 +715,9 @@ suite("signature help provider", () =>
 					{
 						assert(false, "Failed to execute workspace symbol provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeSignatureHelpProvider provides help for fully-qualified package function", (done) =>
+	test("vscode.executeSignatureHelpProvider provides help for fully-qualified package function", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "SignatureHelp.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
@@ -736,9 +736,9 @@ suite("signature help provider", () =>
 					{
 						assert(false, "Failed to execute workspace symbol provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeSignatureHelpProvider provides help for internal function", (done) =>
+	test("vscode.executeSignatureHelpProvider provides help for internal function", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "SignatureHelp.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
@@ -757,9 +757,9 @@ suite("signature help provider", () =>
 					{
 						assert(false, "Failed to execute workspace symbol provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeSignatureHelpProvider provides help for super constructor", (done) =>
+	test("vscode.executeSignatureHelpProvider provides help for super constructor", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "SignatureHelp.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
@@ -778,9 +778,9 @@ suite("signature help provider", () =>
 					{
 						assert(false, "Failed to execute workspace symbol provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeSignatureHelpProvider provides help for super member method", (done) =>
+	test("vscode.executeSignatureHelpProvider provides help for super member method", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "SignatureHelp.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
@@ -799,9 +799,9 @@ suite("signature help provider", () =>
 					{
 						assert(false, "Failed to execute workspace symbol provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeSignatureHelpProvider must not provide help for private super member method", (done) =>
+	test("vscode.executeSignatureHelpProvider must not provide help for private super member method", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "SignatureHelp.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
@@ -816,13 +816,13 @@ suite("signature help provider", () =>
 					{
 						assert(false, "Failed to execute workspace symbol provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
 });
 
 suite("definition provider", () =>
 {
-	test("vscode.executeDefinitionProvider finds definition of local variable", (done) =>
+	test("vscode.executeDefinitionProvider finds definition of local variable", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let position = new vscode.Position(90, 5);
@@ -841,9 +841,9 @@ suite("definition provider", () =>
 					{
 						assert(false, "Failed to execute definition provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeDefinitionProvider finds definition of local function", (done) =>
+	test("vscode.executeDefinitionProvider finds definition of local function", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let position = new vscode.Position(92, 5);
@@ -862,9 +862,9 @@ suite("definition provider", () =>
 					{
 						assert(false, "Failed to execute definition provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeDefinitionProvider finds definition of member variable", (done) =>
+	test("vscode.executeDefinitionProvider finds definition of member variable", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let position = new vscode.Position(54, 5);
@@ -883,9 +883,9 @@ suite("definition provider", () =>
 					{
 						assert(false, "Failed to execute definition provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeDefinitionProvider finds definition of member variable with member access operator on this", (done) =>
+	test("vscode.executeDefinitionProvider finds definition of member variable with member access operator on this", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let position = new vscode.Position(55, 10);
@@ -904,9 +904,9 @@ suite("definition provider", () =>
 					{
 						assert(false, "Failed to execute definition provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeDefinitionProvider finds definition of member function", (done) =>
+	test("vscode.executeDefinitionProvider finds definition of member function", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let position = new vscode.Position(45, 5);
@@ -925,9 +925,9 @@ suite("definition provider", () =>
 					{
 						assert(false, "Failed to execute definition provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeDefinitionProvider finds definition of member function with member access operator on this", (done) =>
+	test("vscode.executeDefinitionProvider finds definition of member function with member access operator on this", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let position = new vscode.Position(46, 10);
@@ -946,9 +946,9 @@ suite("definition provider", () =>
 					{
 						assert(false, "Failed to execute definition provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeDefinitionProvider finds definition of member property", (done) =>
+	test("vscode.executeDefinitionProvider finds definition of member property", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let position = new vscode.Position(57, 5);
@@ -967,9 +967,9 @@ suite("definition provider", () =>
 					{
 						assert(false, "Failed to execute definition provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeDefinitionProvider finds definition of member property with member access operator on this", (done) =>
+	test("vscode.executeDefinitionProvider finds definition of member property with member access operator on this", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let position = new vscode.Position(58, 10);
@@ -988,9 +988,9 @@ suite("definition provider", () =>
 					{
 						assert(false, "Failed to execute definition provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeDefinitionProvider finds definition of static variable", (done) =>
+	test("vscode.executeDefinitionProvider finds definition of static variable", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let position = new vscode.Position(51, 5);
@@ -1009,9 +1009,9 @@ suite("definition provider", () =>
 					{
 						assert(false, "Failed to execute definition provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeDefinitionProvider finds definition of static variable with member access operator on class", (done) =>
+	test("vscode.executeDefinitionProvider finds definition of static variable with member access operator on class", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let position = new vscode.Position(52, 17);
@@ -1030,9 +1030,9 @@ suite("definition provider", () =>
 					{
 						assert(false, "Failed to execute definition provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeDefinitionProvider finds definition of static function", (done) =>
+	test("vscode.executeDefinitionProvider finds definition of static function", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let position = new vscode.Position(48, 5);
@@ -1051,9 +1051,9 @@ suite("definition provider", () =>
 					{
 						assert(false, "Failed to execute definition provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeDefinitionProvider finds definition of static function with member access operator on class", (done) =>
+	test("vscode.executeDefinitionProvider finds definition of static function with member access operator on class", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let position = new vscode.Position(49, 17);
@@ -1072,9 +1072,9 @@ suite("definition provider", () =>
 					{
 						assert(false, "Failed to execute definition provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeDefinitionProvider finds definition of static property", (done) =>
+	test("vscode.executeDefinitionProvider finds definition of static property", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let position = new vscode.Position(60, 5);
@@ -1093,9 +1093,9 @@ suite("definition provider", () =>
 					{
 						assert(false, "Failed to execute definition provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeDefinitionProvider finds definition of static property with member access operator on class", (done) =>
+	test("vscode.executeDefinitionProvider finds definition of static property with member access operator on class", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let position = new vscode.Position(61, 17);
@@ -1114,9 +1114,9 @@ suite("definition provider", () =>
 					{
 						assert(false, "Failed to execute definition provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeDefinitionProvider finds definition of package function", (done) =>
+	test("vscode.executeDefinitionProvider finds definition of package function", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "packageFunction.as"));
@@ -1136,9 +1136,9 @@ suite("definition provider", () =>
 					{
 						assert(false, "Failed to execute definition provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeDefinitionProvider finds definition of fully-qualified package function", (done) =>
+	test("vscode.executeDefinitionProvider finds definition of fully-qualified package function", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "packageFunction.as"));
@@ -1158,9 +1158,9 @@ suite("definition provider", () =>
 					{
 						assert(false, "Failed to execute definition provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeDefinitionProvider finds definition of package variable", (done) =>
+	test("vscode.executeDefinitionProvider finds definition of package variable", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "packageVar.as"));
@@ -1180,9 +1180,9 @@ suite("definition provider", () =>
 					{
 						assert(false, "Failed to execute definition provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeDefinitionProvider finds definition of fully-qualified package variable", (done) =>
+	test("vscode.executeDefinitionProvider finds definition of fully-qualified package variable", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "packageVar.as"));
@@ -1202,9 +1202,9 @@ suite("definition provider", () =>
 					{
 						assert(false, "Failed to execute definition provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeDefinitionProvider finds definition of super static variable", (done) =>
+	test("vscode.executeDefinitionProvider finds definition of super static variable", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
@@ -1224,9 +1224,9 @@ suite("definition provider", () =>
 					{
 						assert(false, "Failed to execute definition provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeDefinitionProvider finds definition of super static variable with member access operator on superclass", (done) =>
+	test("vscode.executeDefinitionProvider finds definition of super static variable with member access operator on superclass", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
@@ -1246,9 +1246,9 @@ suite("definition provider", () =>
 					{
 						assert(false, "Failed to execute definition provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeDefinitionProvider finds definition of super static property", (done) =>
+	test("vscode.executeDefinitionProvider finds definition of super static property", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
@@ -1268,9 +1268,9 @@ suite("definition provider", () =>
 					{
 						assert(false, "Failed to execute definition provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeDefinitionProvider finds definition of super static property with member access operator on superclass", (done) =>
+	test("vscode.executeDefinitionProvider finds definition of super static property with member access operator on superclass", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
@@ -1290,9 +1290,9 @@ suite("definition provider", () =>
 					{
 						assert(false, "Failed to execute definition provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeDefinitionProvider finds definition of super static function", (done) =>
+	test("vscode.executeDefinitionProvider finds definition of super static function", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
@@ -1312,9 +1312,9 @@ suite("definition provider", () =>
 					{
 						assert(false, "Failed to execute definition provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeDefinitionProvider finds definition of super static function with member access operator on superclass", (done) =>
+	test("vscode.executeDefinitionProvider finds definition of super static function with member access operator on superclass", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
@@ -1334,9 +1334,9 @@ suite("definition provider", () =>
 					{
 						assert(false, "Failed to execute definition provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeDefinitionProvider finds definition of super member function", (done) =>
+	test("vscode.executeDefinitionProvider finds definition of super member function", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
@@ -1356,9 +1356,9 @@ suite("definition provider", () =>
 					{
 						assert(false, "Failed to execute definition provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeDefinitionProvider finds definition of super member function with member access operator on this", (done) =>
+	test("vscode.executeDefinitionProvider finds definition of super member function with member access operator on this", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
@@ -1378,9 +1378,9 @@ suite("definition provider", () =>
 					{
 						assert(false, "Failed to execute definition provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeDefinitionProvider finds definition of super member function with member access operator on super", (done) =>
+	test("vscode.executeDefinitionProvider finds definition of super member function with member access operator on super", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
@@ -1400,9 +1400,9 @@ suite("definition provider", () =>
 					{
 						assert(false, "Failed to execute definition provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeDefinitionProvider finds definition of super member variable", (done) =>
+	test("vscode.executeDefinitionProvider finds definition of super member variable", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
@@ -1422,9 +1422,9 @@ suite("definition provider", () =>
 					{
 						assert(false, "Failed to execute definition provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeDefinitionProvider finds definition of super member variable with member access operator on this", (done) =>
+	test("vscode.executeDefinitionProvider finds definition of super member variable with member access operator on this", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
@@ -1444,9 +1444,9 @@ suite("definition provider", () =>
 					{
 						assert(false, "Failed to execute definition provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeDefinitionProvider finds definition of super member variable with member access operator on super", (done) =>
+	test("vscode.executeDefinitionProvider finds definition of super member variable with member access operator on super", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
@@ -1466,9 +1466,9 @@ suite("definition provider", () =>
 					{
 						assert(false, "Failed to execute definition provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeDefinitionProvider finds definition of super member property", (done) =>
+	test("vscode.executeDefinitionProvider finds definition of super member property", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
@@ -1488,9 +1488,9 @@ suite("definition provider", () =>
 					{
 						assert(false, "Failed to execute definition provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeDefinitionProvider finds definition of super member property with member access operator on this", (done) =>
+	test("vscode.executeDefinitionProvider finds definition of super member property with member access operator on this", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
@@ -1510,9 +1510,9 @@ suite("definition provider", () =>
 					{
 						assert(false, "Failed to execute definition provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeDefinitionProvider finds definition of super member property with member access operator on super", (done) =>
+	test("vscode.executeDefinitionProvider finds definition of super member property with member access operator on super", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
@@ -1532,9 +1532,9 @@ suite("definition provider", () =>
 					{
 						assert(false, "Failed to execute definition provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeDefinitionProvider finds definition of file-internal variable", (done) =>
+	test("vscode.executeDefinitionProvider finds definition of file-internal variable", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let position = new vscode.Position(94, 5);
@@ -1553,9 +1553,9 @@ suite("definition provider", () =>
 					{
 						assert(false, "Failed to execute definition provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeDefinitionProvider finds definition of file-internal function", (done) =>
+	test("vscode.executeDefinitionProvider finds definition of file-internal function", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let position = new vscode.Position(95, 5);
@@ -1574,9 +1574,9 @@ suite("definition provider", () =>
 					{
 						assert(false, "Failed to execute definition provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeDefinitionProvider finds definition of file-internal class", (done) =>
+	test("vscode.executeDefinitionProvider finds definition of file-internal class", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let position = new vscode.Position(97, 37);
@@ -1595,9 +1595,9 @@ suite("definition provider", () =>
 					{
 						assert(false, "Failed to execute definition provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeDefinitionProvider finds definition of file-internal member function", (done) =>
+	test("vscode.executeDefinitionProvider finds definition of file-internal member function", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let position = new vscode.Position(99, 33);
@@ -1616,9 +1616,9 @@ suite("definition provider", () =>
 					{
 						assert(false, "Failed to execute definition provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeDefinitionProvider finds definition of file-internal member variable", (done) =>
+	test("vscode.executeDefinitionProvider finds definition of file-internal member variable", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let position = new vscode.Position(100, 33);
@@ -1637,9 +1637,9 @@ suite("definition provider", () =>
 					{
 						assert(false, "Failed to execute definition provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeDefinitionProvider finds definition of file-internal member property", (done) =>
+	test("vscode.executeDefinitionProvider finds definition of file-internal member property", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let position = new vscode.Position(101, 33);
@@ -1658,9 +1658,9 @@ suite("definition provider", () =>
 					{
 						assert(false, "Failed to execute definition provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeDefinitionProvider finds definition of file-internal static property", (done) =>
+	test("vscode.executeDefinitionProvider finds definition of file-internal static property", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let position = new vscode.Position(105, 25);
@@ -1679,9 +1679,9 @@ suite("definition provider", () =>
 					{
 						assert(false, "Failed to execute definition provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeDefinitionProvider finds definition of file-internal static variable", (done) =>
+	test("vscode.executeDefinitionProvider finds definition of file-internal static variable", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let position = new vscode.Position(104, 25);
@@ -1700,9 +1700,9 @@ suite("definition provider", () =>
 					{
 						assert(false, "Failed to execute definition provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeDefinitionProvider finds definition of file-internal static function", (done) =>
+	test("vscode.executeDefinitionProvider finds definition of file-internal static function", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let position = new vscode.Position(103, 25);
@@ -1721,13 +1721,13 @@ suite("definition provider", () =>
 					{
 						assert(false, "Failed to execute definition provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
 });
 
 suite("hover provider", () =>
 {
-	test("vscode.executeHoverProvider displays hover for local variable", (done) =>
+	test("vscode.executeHoverProvider displays hover for local variable", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let position = new vscode.Position(90, 5);
@@ -1759,9 +1759,9 @@ suite("hover provider", () =>
 					{
 						assert(false, "Failed to execute hover provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeHoverProvider displays hover of local function", (done) =>
+	test("vscode.executeHoverProvider displays hover of local function", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let position = new vscode.Position(92, 5);
@@ -1793,9 +1793,9 @@ suite("hover provider", () =>
 					{
 						assert(false, "Failed to execute hover provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeHoverProvider displays hover of member variable", (done) =>
+	test("vscode.executeHoverProvider displays hover of member variable", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let position = new vscode.Position(54, 5);
@@ -1827,10 +1827,10 @@ suite("hover provider", () =>
 					{
 						assert(false, "Failed to execute hover provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
 
-	test("vscode.executeHoverProvider displays hover of member variable with member access operator on this", (done) =>
+	test("vscode.executeHoverProvider displays hover of member variable with member access operator on this", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let position = new vscode.Position(55, 10);
@@ -1862,9 +1862,9 @@ suite("hover provider", () =>
 					{
 						assert(false, "Failed to execute hover provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeHoverProvider displays hover of member function", (done) =>
+	test("vscode.executeHoverProvider displays hover of member function", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let position = new vscode.Position(45, 5);
@@ -1896,9 +1896,9 @@ suite("hover provider", () =>
 					{
 						assert(false, "Failed to execute hover provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeHoverProvider displays hover of member function with member access operator on this", (done) =>
+	test("vscode.executeHoverProvider displays hover of member function with member access operator on this", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let position = new vscode.Position(46, 10);
@@ -1930,9 +1930,9 @@ suite("hover provider", () =>
 					{
 						assert(false, "Failed to execute hover provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeHoverProvider displays hover of member property", (done) =>
+	test("vscode.executeHoverProvider displays hover of member property", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let position = new vscode.Position(57, 5);
@@ -1964,9 +1964,9 @@ suite("hover provider", () =>
 					{
 						assert(false, "Failed to execute hover provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeHoverProvider displays hover of member property with member access operator on this", (done) =>
+	test("vscode.executeHoverProvider displays hover of member property with member access operator on this", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let position = new vscode.Position(58, 10);
@@ -1998,9 +1998,9 @@ suite("hover provider", () =>
 					{
 						assert(false, "Failed to execute hover provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeHoverProvider displays hover of static variable", (done) =>
+	test("vscode.executeHoverProvider displays hover of static variable", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let position = new vscode.Position(51, 5);
@@ -2032,9 +2032,9 @@ suite("hover provider", () =>
 					{
 						assert(false, "Failed to execute hover provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeHoverProvider displays hover of static variable with member access operator on class", (done) =>
+	test("vscode.executeHoverProvider displays hover of static variable with member access operator on class", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let position = new vscode.Position(52, 17);
@@ -2066,9 +2066,9 @@ suite("hover provider", () =>
 					{
 						assert(false, "Failed to execute hover provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeHoverProvider displays hover of static function", (done) =>
+	test("vscode.executeHoverProvider displays hover of static function", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let position = new vscode.Position(48, 5);
@@ -2100,9 +2100,9 @@ suite("hover provider", () =>
 					{
 						assert(false, "Failed to execute hover provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeHoverProvider displays hover of static function with member access operator on class", (done) =>
+	test("vscode.executeHoverProvider displays hover of static function with member access operator on class", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let position = new vscode.Position(49, 17);
@@ -2134,9 +2134,9 @@ suite("hover provider", () =>
 					{
 						assert(false, "Failed to execute hover provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeHoverProvider displays hover of static property", (done) =>
+	test("vscode.executeHoverProvider displays hover of static property", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let position = new vscode.Position(60, 5);
@@ -2168,9 +2168,9 @@ suite("hover provider", () =>
 					{
 						assert(false, "Failed to execute hover provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeHoverProvider displays hover of static property with member access operator on class", (done) =>
+	test("vscode.executeHoverProvider displays hover of static property with member access operator on class", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let position = new vscode.Position(61, 17);
@@ -2202,9 +2202,9 @@ suite("hover provider", () =>
 					{
 						assert(false, "Failed to execute hover provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeHoverProvider displays hover of package function", (done) =>
+	test("vscode.executeHoverProvider displays hover of package function", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "packageFunction.as"));
@@ -2237,9 +2237,9 @@ suite("hover provider", () =>
 					{
 						assert(false, "Failed to execute hover provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeHoverProvider displays hover of fully-qualified package function", (done) =>
+	test("vscode.executeHoverProvider displays hover of fully-qualified package function", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "packageFunction.as"));
@@ -2272,9 +2272,9 @@ suite("hover provider", () =>
 					{
 						assert(false, "Failed to execute hover provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeHoverProvider displays hover of package variable", (done) =>
+	test("vscode.executeHoverProvider displays hover of package variable", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "packageVar.as"));
@@ -2307,9 +2307,9 @@ suite("hover provider", () =>
 					{
 						assert(false, "Failed to execute hover provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeHoverProvider displays hover of fully-qualified package variable", (done) =>
+	test("vscode.executeHoverProvider displays hover of fully-qualified package variable", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "packageVar.as"));
@@ -2342,9 +2342,9 @@ suite("hover provider", () =>
 					{
 						assert(false, "Failed to execute hover provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeHoverProvider displays hover of super static variable", (done) =>
+	test("vscode.executeHoverProvider displays hover of super static variable", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
@@ -2377,9 +2377,9 @@ suite("hover provider", () =>
 					{
 						assert(false, "Failed to execute hover provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeHoverProvider displays hover of super static variable with member access operator on superclass", (done) =>
+	test("vscode.executeHoverProvider displays hover of super static variable with member access operator on superclass", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
@@ -2412,9 +2412,9 @@ suite("hover provider", () =>
 					{
 						assert(false, "Failed to execute hover provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeHoverProvider displays hover of super static property", (done) =>
+	test("vscode.executeHoverProvider displays hover of super static property", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
@@ -2447,9 +2447,9 @@ suite("hover provider", () =>
 					{
 						assert(false, "Failed to execute hover provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeHoverProvider displays hover of super static property with member access operator on superclass", (done) =>
+	test("vscode.executeHoverProvider displays hover of super static property with member access operator on superclass", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
@@ -2482,9 +2482,9 @@ suite("hover provider", () =>
 					{
 						assert(false, "Failed to execute hover provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeHoverProvider displays hover of super static function", (done) =>
+	test("vscode.executeHoverProvider displays hover of super static function", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
@@ -2517,9 +2517,9 @@ suite("hover provider", () =>
 					{
 						assert(false, "Failed to execute hover provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeHoverProvider displays hover of super static function with member access operator on superclass", (done) =>
+	test("vscode.executeHoverProvider displays hover of super static function with member access operator on superclass", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
@@ -2552,9 +2552,9 @@ suite("hover provider", () =>
 					{
 						assert(false, "Failed to execute hover provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeHoverProvider displays hover of super member function", (done) =>
+	test("vscode.executeHoverProvider displays hover of super member function", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
@@ -2587,9 +2587,9 @@ suite("hover provider", () =>
 					{
 						assert(false, "Failed to execute hover provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeHoverProvider displays hover of super member function with member access operator on this", (done) =>
+	test("vscode.executeHoverProvider displays hover of super member function with member access operator on this", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
@@ -2622,9 +2622,9 @@ suite("hover provider", () =>
 					{
 						assert(false, "Failed to execute hover provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeHoverProvider displays hover of super member function with member access operator on super", (done) =>
+	test("vscode.executeHoverProvider displays hover of super member function with member access operator on super", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
@@ -2657,9 +2657,9 @@ suite("hover provider", () =>
 					{
 						assert(false, "Failed to execute hover provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeHoverProvider displays hover of super member variable", (done) =>
+	test("vscode.executeHoverProvider displays hover of super member variable", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
@@ -2692,9 +2692,9 @@ suite("hover provider", () =>
 					{
 						assert(false, "Failed to execute hover provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeHoverProvider displays hover of super member variable with member access operator on this", (done) =>
+	test("vscode.executeHoverProvider displays hover of super member variable with member access operator on this", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
@@ -2727,9 +2727,9 @@ suite("hover provider", () =>
 					{
 						assert(false, "Failed to execute hover provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeHoverProvider displays hover of super member variable with member access operator on super", (done) =>
+	test("vscode.executeHoverProvider displays hover of super member variable with member access operator on super", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
@@ -2762,9 +2762,9 @@ suite("hover provider", () =>
 					{
 						assert(false, "Failed to execute hover provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeHoverProvider displays hover of super member property", (done) =>
+	test("vscode.executeHoverProvider displays hover of super member property", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
@@ -2797,9 +2797,9 @@ suite("hover provider", () =>
 					{
 						assert(false, "Failed to execute hover provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeHoverProvider displays hover of super member property with member access operator on this", (done) =>
+	test("vscode.executeHoverProvider displays hover of super member property with member access operator on this", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
@@ -2832,9 +2832,9 @@ suite("hover provider", () =>
 					{
 						assert(false, "Failed to execute hover provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeHoverProvider displays hover of super member property with member access operator on super", (done) =>
+	test("vscode.executeHoverProvider displays hover of super member property with member access operator on super", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
@@ -2867,9 +2867,9 @@ suite("hover provider", () =>
 					{
 						assert(false, "Failed to execute hover provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeHoverProvider displays hover of file-internal variable", (done) =>
+	test("vscode.executeHoverProvider displays hover of file-internal variable", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let position = new vscode.Position(94, 5);
@@ -2901,9 +2901,9 @@ suite("hover provider", () =>
 					{
 						assert(false, "Failed to execute hover provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeHoverProvider displays hover of file-internal function", (done) =>
+	test("vscode.executeHoverProvider displays hover of file-internal function", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let position = new vscode.Position(95, 5);
@@ -2935,9 +2935,9 @@ suite("hover provider", () =>
 					{
 						assert(false, "Failed to execute hover provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeHoverProvider displays hover of file-internal class", (done) =>
+	test("vscode.executeHoverProvider displays hover of file-internal class", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let position = new vscode.Position(97, 37);
@@ -2969,9 +2969,9 @@ suite("hover provider", () =>
 					{
 						assert(false, "Failed to execute hover provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeHoverProvider displays hover of file-internal member function", (done) =>
+	test("vscode.executeHoverProvider displays hover of file-internal member function", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let position = new vscode.Position(99, 33);
@@ -3003,9 +3003,9 @@ suite("hover provider", () =>
 					{
 						assert(false, "Failed to execute hover provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeHoverProvider displays hover of file-internal member variable", (done) =>
+	test("vscode.executeHoverProvider displays hover of file-internal member variable", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let position = new vscode.Position(100, 33);
@@ -3037,9 +3037,9 @@ suite("hover provider", () =>
 					{
 						assert(false, "Failed to execute hover provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeHoverProvider displays hover of file-internal member property", (done) =>
+	test("vscode.executeHoverProvider displays hover of file-internal member property", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let position = new vscode.Position(101, 33);
@@ -3071,9 +3071,9 @@ suite("hover provider", () =>
 					{
 						assert(false, "Failed to execute hover provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeHoverProvider displays hover of file-internal static property", (done) =>
+	test("vscode.executeHoverProvider displays hover of file-internal static property", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let position = new vscode.Position(105, 25);
@@ -3105,9 +3105,9 @@ suite("hover provider", () =>
 					{
 						assert(false, "Failed to execute hover provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeHoverProvider displays hover of file-internal static variable", (done) =>
+	test("vscode.executeHoverProvider displays hover of file-internal static variable", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let position = new vscode.Position(104, 25);
@@ -3139,9 +3139,9 @@ suite("hover provider", () =>
 					{
 						assert(false, "Failed to execute hover provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeHoverProvider displays hover of file-internal static function", (done) =>
+	test("vscode.executeHoverProvider displays hover of file-internal static function", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
 		let position = new vscode.Position(103, 25);
@@ -3173,13 +3173,13 @@ suite("hover provider", () =>
 					{
 						assert(false, "Failed to execute hover provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
 });
 
 suite("completion item provider", () =>
 {
-	test("vscode.executeCompletionItemProvider includes local variable", (done) =>
+	test("vscode.executeCompletionItemProvider includes local variable", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(45, 3);
@@ -3196,9 +3196,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider omits local variable with member access operator on this", (done) =>
+	test("vscode.executeCompletionItemProvider omits local variable with member access operator on this", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(46, 8);
@@ -3214,9 +3214,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider omits local variable with member access operator on super", (done) =>
+	test("vscode.executeCompletionItemProvider omits local variable with member access operator on super", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(47, 9);
@@ -3232,9 +3232,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider omits local variable from type annotation", (done) =>
+	test("vscode.executeCompletionItemProvider omits local variable from type annotation", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(54, 13);
@@ -3251,9 +3251,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider includes local function", (done) =>
+	test("vscode.executeCompletionItemProvider includes local function", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(45, 3);
@@ -3270,9 +3270,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider omits local function with member access operator on this", (done) =>
+	test("vscode.executeCompletionItemProvider omits local function with member access operator on this", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(46, 8);
@@ -3288,9 +3288,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider omits local function with member access operator on super", (done) =>
+	test("vscode.executeCompletionItemProvider omits local function with member access operator on super", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(47, 9);
@@ -3306,9 +3306,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider omits local function from type annotation", (done) =>
+	test("vscode.executeCompletionItemProvider omits local function from type annotation", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(54, 13);
@@ -3325,9 +3325,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider includes member variable", (done) =>
+	test("vscode.executeCompletionItemProvider includes member variable", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(45, 3);
@@ -3344,9 +3344,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider includes member variable with member access operator on this", (done) =>
+	test("vscode.executeCompletionItemProvider includes member variable with member access operator on this", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(46, 8);
@@ -3364,9 +3364,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider omits member variable with member access operator on super", (done) =>
+	test("vscode.executeCompletionItemProvider omits member variable with member access operator on super", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(47, 9);
@@ -3382,9 +3382,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider omits member variable from type annotation", (done) =>
+	test("vscode.executeCompletionItemProvider omits member variable from type annotation", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(54, 13);
@@ -3401,9 +3401,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider includes member function", (done) =>
+	test("vscode.executeCompletionItemProvider includes member function", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(45, 3);
@@ -3420,9 +3420,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider includes member function with member access operator on this", (done) =>
+	test("vscode.executeCompletionItemProvider includes member function with member access operator on this", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(46, 8);
@@ -3440,9 +3440,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider omits member function with member access operator on super", (done) =>
+	test("vscode.executeCompletionItemProvider omits member function with member access operator on super", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(47, 9);
@@ -3458,9 +3458,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider omits member function from type annotation", (done) =>
+	test("vscode.executeCompletionItemProvider omits member function from type annotation", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(54, 13);
@@ -3477,9 +3477,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider includes member property", (done) =>
+	test("vscode.executeCompletionItemProvider includes member property", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(45, 3);
@@ -3496,9 +3496,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider includes member property with member access operator on this", (done) =>
+	test("vscode.executeCompletionItemProvider includes member property with member access operator on this", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(46, 8);
@@ -3516,9 +3516,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider omits member property with member access operator on super", (done) =>
+	test("vscode.executeCompletionItemProvider omits member property with member access operator on super", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(47, 9);
@@ -3534,9 +3534,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider omits member property from type annotation", (done) =>
+	test("vscode.executeCompletionItemProvider omits member property from type annotation", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(54, 13);
@@ -3553,9 +3553,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider includes static variable", (done) =>
+	test("vscode.executeCompletionItemProvider includes static variable", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(45, 3);
@@ -3572,9 +3572,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider includes static variable with member access operator on class", (done) =>
+	test("vscode.executeCompletionItemProvider includes static variable with member access operator on class", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(48, 14);
@@ -3592,9 +3592,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider omits static variable with member access operator on this", (done) =>
+	test("vscode.executeCompletionItemProvider omits static variable with member access operator on this", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(46, 8);
@@ -3611,9 +3611,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider omits static variable with member access operator on super", (done) =>
+	test("vscode.executeCompletionItemProvider omits static variable with member access operator on super", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(47, 9);
@@ -3629,9 +3629,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider omits static variable from type annotation", (done) =>
+	test("vscode.executeCompletionItemProvider omits static variable from type annotation", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(54, 13);
@@ -3648,9 +3648,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider includes static function", (done) =>
+	test("vscode.executeCompletionItemProvider includes static function", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(45, 3);
@@ -3667,9 +3667,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider includes static function with member access operator on class", (done) =>
+	test("vscode.executeCompletionItemProvider includes static function with member access operator on class", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(48, 14);
@@ -3687,9 +3687,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider omits static function with member access operator on this", (done) =>
+	test("vscode.executeCompletionItemProvider omits static function with member access operator on this", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(46, 8);
@@ -3706,9 +3706,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider omits static function with member access operator on super", (done) =>
+	test("vscode.executeCompletionItemProvider omits static function with member access operator on super", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(47, 9);
@@ -3724,9 +3724,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider omits static function from type annotation", (done) =>
+	test("vscode.executeCompletionItemProvider omits static function from type annotation", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(54, 13);
@@ -3743,9 +3743,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider includes static property", (done) =>
+	test("vscode.executeCompletionItemProvider includes static property", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(45, 3);
@@ -3762,9 +3762,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider includes static property with member access operator on class", (done) =>
+	test("vscode.executeCompletionItemProvider includes static property with member access operator on class", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(48, 14);
@@ -3782,9 +3782,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider omits static property with member access operator on this", (done) =>
+	test("vscode.executeCompletionItemProvider omits static property with member access operator on this", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(46, 8);
@@ -3801,9 +3801,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider omits static property with member access operator on super", (done) =>
+	test("vscode.executeCompletionItemProvider omits static property with member access operator on super", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(47, 9);
@@ -3819,9 +3819,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider omits static property from type annotation", (done) =>
+	test("vscode.executeCompletionItemProvider omits static property from type annotation", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(54, 13);
@@ -3838,9 +3838,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider includes package class", (done) =>
+	test("vscode.executeCompletionItemProvider includes package class", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(45, 3);
@@ -3857,9 +3857,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider omits package class with member access operator on this", (done) =>
+	test("vscode.executeCompletionItemProvider omits package class with member access operator on this", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(46, 8);
@@ -3875,9 +3875,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider omits package class with member access operator on super", (done) =>
+	test("vscode.executeCompletionItemProvider omits package class with member access operator on super", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(47, 9);
@@ -3893,9 +3893,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider includes package class as type annotation", (done) =>
+	test("vscode.executeCompletionItemProvider includes package class as type annotation", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(54, 13);
@@ -3912,9 +3912,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider includes package variable", (done) =>
+	test("vscode.executeCompletionItemProvider includes package variable", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(45, 3);
@@ -3931,9 +3931,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	/*test("vscode.executeCompletionItemProvider includes package variable with member access on fully-qualified package", (done) =>
+	/*test("vscode.executeCompletionItemProvider includes package variable with member access on fully-qualified package", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(50, 15);
@@ -3950,9 +3950,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});*/
-	test("vscode.executeCompletionItemProvider omits package variable with member access operator on this", (done) =>
+	test("vscode.executeCompletionItemProvider omits package variable with member access operator on this", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(46, 8);
@@ -3968,9 +3968,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider omits package variable with member access operator on super", (done) =>
+	test("vscode.executeCompletionItemProvider omits package variable with member access operator on super", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(47, 9);
@@ -3986,9 +3986,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider omits package variable as type annotation", (done) =>
+	test("vscode.executeCompletionItemProvider omits package variable as type annotation", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(54, 13);
@@ -4004,9 +4004,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider includes package function", (done) =>
+	test("vscode.executeCompletionItemProvider includes package function", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(45, 3);
@@ -4023,9 +4023,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	/*test("vscode.executeCompletionItemProvider includes package function with member access on fully-qualified package", (done) =>
+	/*test("vscode.executeCompletionItemProvider includes package function with member access on fully-qualified package", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(50, 15);
@@ -4042,9 +4042,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});*/
-	test("vscode.executeCompletionItemProvider omits package function with member access operator on this", (done) =>
+	test("vscode.executeCompletionItemProvider omits package function with member access operator on this", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(46, 8);
@@ -4060,9 +4060,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider omits package function with member access operator on super", (done) =>
+	test("vscode.executeCompletionItemProvider omits package function with member access operator on super", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(47, 9);
@@ -4078,9 +4078,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider omits package function as type annotation", (done) =>
+	test("vscode.executeCompletionItemProvider omits package function as type annotation", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(54, 13);
@@ -4096,9 +4096,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider includes super member variable", (done) =>
+	test("vscode.executeCompletionItemProvider includes super member variable", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(45, 3);
@@ -4115,9 +4115,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider includes super member variable with member access operator on this", (done) =>
+	test("vscode.executeCompletionItemProvider includes super member variable with member access operator on this", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(46, 8);
@@ -4135,9 +4135,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider omits super member variable from type annotation", (done) =>
+	test("vscode.executeCompletionItemProvider omits super member variable from type annotation", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(54, 13);
@@ -4154,9 +4154,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider includes super member variable with member access operator on super", (done) =>
+	test("vscode.executeCompletionItemProvider includes super member variable with member access operator on super", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(47, 9);
@@ -4174,9 +4174,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider includes super member property", (done) =>
+	test("vscode.executeCompletionItemProvider includes super member property", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(45, 3);
@@ -4193,9 +4193,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider includes super member property with member access operator on this", (done) =>
+	test("vscode.executeCompletionItemProvider includes super member property with member access operator on this", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(46, 8);
@@ -4213,9 +4213,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider includes super member property with member access operator on super", (done) =>
+	test("vscode.executeCompletionItemProvider includes super member property with member access operator on super", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(47, 9);
@@ -4233,9 +4233,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider omits super member property from type annotation", (done) =>
+	test("vscode.executeCompletionItemProvider omits super member property from type annotation", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(54, 13);
@@ -4252,9 +4252,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider includes super member function", (done) =>
+	test("vscode.executeCompletionItemProvider includes super member function", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(45, 3);
@@ -4271,9 +4271,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider includes super member function with member access operator on this", (done) =>
+	test("vscode.executeCompletionItemProvider includes super member function with member access operator on this", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(46, 8);
@@ -4291,9 +4291,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider includes super member function with member access operator on super", (done) =>
+	test("vscode.executeCompletionItemProvider includes super member function with member access operator on super", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(47, 9);
@@ -4311,9 +4311,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider omits super member function from type annotation", (done) =>
+	test("vscode.executeCompletionItemProvider omits super member function from type annotation", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(54, 13);
@@ -4330,9 +4330,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider includes super static variable", (done) =>
+	test("vscode.executeCompletionItemProvider includes super static variable", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(45, 3);
@@ -4349,9 +4349,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider omits super static variable with member access operator on class", (done) =>
+	test("vscode.executeCompletionItemProvider omits super static variable with member access operator on class", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(48, 15);
@@ -4368,9 +4368,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider includes super static variable with member access operator on superclass", (done) =>
+	test("vscode.executeCompletionItemProvider includes super static variable with member access operator on superclass", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(49, 20);
@@ -4388,9 +4388,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider includes super static variable with member access operator on this", (done) =>
+	test("vscode.executeCompletionItemProvider includes super static variable with member access operator on this", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(46, 8);
@@ -4407,9 +4407,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider omits super static variable with member access operator on super", (done) =>
+	test("vscode.executeCompletionItemProvider omits super static variable with member access operator on super", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(47, 9);
@@ -4426,9 +4426,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider omits super static variable from type annotation", (done) =>
+	test("vscode.executeCompletionItemProvider omits super static variable from type annotation", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(54, 13);
@@ -4445,9 +4445,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider includes super static property", (done) =>
+	test("vscode.executeCompletionItemProvider includes super static property", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(45, 3);
@@ -4464,9 +4464,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider omits super static property with member access operator on class", (done) =>
+	test("vscode.executeCompletionItemProvider omits super static property with member access operator on class", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(48, 15);
@@ -4483,9 +4483,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider includes super static property with member access operator on superclass", (done) =>
+	test("vscode.executeCompletionItemProvider includes super static property with member access operator on superclass", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(49, 20);
@@ -4503,9 +4503,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider includes super static property with member access operator on this", (done) =>
+	test("vscode.executeCompletionItemProvider includes super static property with member access operator on this", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(46, 8);
@@ -4522,9 +4522,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider omits super static property with member access operator on super", (done) =>
+	test("vscode.executeCompletionItemProvider omits super static property with member access operator on super", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(47, 9);
@@ -4541,9 +4541,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider omits super static property from type annotation", (done) =>
+	test("vscode.executeCompletionItemProvider omits super static property from type annotation", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(54, 13);
@@ -4560,9 +4560,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider includes super static function", (done) =>
+	test("vscode.executeCompletionItemProvider includes super static function", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(45, 3);
@@ -4579,9 +4579,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider omits super static function with member access operator on class", (done) =>
+	test("vscode.executeCompletionItemProvider omits super static function with member access operator on class", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(48, 15);
@@ -4598,9 +4598,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider includes super static function with member access operator on superclass", (done) =>
+	test("vscode.executeCompletionItemProvider includes super static function with member access operator on superclass", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(49, 20);
@@ -4618,9 +4618,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider includes super static function with member access operator on this", (done) =>
+	test("vscode.executeCompletionItemProvider includes super static function with member access operator on this", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(46, 8);
@@ -4637,9 +4637,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider omits super static function with member access operator on super", (done) =>
+	test("vscode.executeCompletionItemProvider omits super static function with member access operator on super", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(47, 9);
@@ -4656,9 +4656,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider omits super static function from type annotation", (done) =>
+	test("vscode.executeCompletionItemProvider omits super static function from type annotation", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(54, 13);
@@ -4675,9 +4675,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider includes file-internal variable", (done) =>
+	test("vscode.executeCompletionItemProvider includes file-internal variable", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(45, 3);
@@ -4694,9 +4694,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider omits file-internal variable with member access operator on this", (done) =>
+	test("vscode.executeCompletionItemProvider omits file-internal variable with member access operator on this", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(46, 8);
@@ -4712,9 +4712,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider omits file-internal variable from type annotation", (done) =>
+	test("vscode.executeCompletionItemProvider omits file-internal variable from type annotation", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(54, 13);
@@ -4731,9 +4731,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider includes file-internal function", (done) =>
+	test("vscode.executeCompletionItemProvider includes file-internal function", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(45, 3);
@@ -4750,9 +4750,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider omits file-internal function with member access operator on this", (done) =>
+	test("vscode.executeCompletionItemProvider omits file-internal function with member access operator on this", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(46, 8);
@@ -4768,9 +4768,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider omits file-internal function from type annotation", (done) =>
+	test("vscode.executeCompletionItemProvider omits file-internal function from type annotation", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(54, 13);
@@ -4787,9 +4787,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider includes file-internal class", (done) =>
+	test("vscode.executeCompletionItemProvider includes file-internal class", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(45, 3);
@@ -4806,9 +4806,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider includes file-internal class as type annotation", (done) =>
+	test("vscode.executeCompletionItemProvider includes file-internal class as type annotation", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(54, 13);
@@ -4825,9 +4825,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider includes file-internal member variable", (done) =>
+	test("vscode.executeCompletionItemProvider includes file-internal member variable", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(52, 12);
@@ -4844,9 +4844,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider includes file-internal member function", (done) =>
+	test("vscode.executeCompletionItemProvider includes file-internal member function", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(52, 12);
@@ -4863,9 +4863,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider includes file-internal member property", (done) =>
+	test("vscode.executeCompletionItemProvider includes file-internal member property", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(52, 12);
@@ -4882,9 +4882,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider includes file-internal static variable", (done) =>
+	test("vscode.executeCompletionItemProvider includes file-internal static variable", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(53, 26);
@@ -4901,9 +4901,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider includes file-internal static function", (done) =>
+	test("vscode.executeCompletionItemProvider includes file-internal static function", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(53, 26);
@@ -4920,9 +4920,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider includes file-internal static property", (done) =>
+	test("vscode.executeCompletionItemProvider includes file-internal static property", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(53, 26);
@@ -4939,9 +4939,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider omits protected member variable not in superclass", (done) =>
+	test("vscode.executeCompletionItemProvider omits protected member variable not in superclass", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(52, 12);
@@ -4957,9 +4957,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider omits protected member function not in superclass", (done) =>
+	test("vscode.executeCompletionItemProvider omits protected member function not in superclass", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(52, 12);
@@ -4975,9 +4975,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider omits protected member property not in superclass", (done) =>
+	test("vscode.executeCompletionItemProvider omits protected member property not in superclass", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(52, 12);
@@ -4993,9 +4993,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider omits protected static variable not in superclass", (done) =>
+	test("vscode.executeCompletionItemProvider omits protected static variable not in superclass", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(53, 26);
@@ -5011,9 +5011,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider omits protected static function not in superclass", (done) =>
+	test("vscode.executeCompletionItemProvider omits protected static function not in superclass", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(53, 26);
@@ -5029,9 +5029,9 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider omits protected static property not in superclass", (done) =>
+	test("vscode.executeCompletionItemProvider omits protected static property not in superclass", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(53, 26);
@@ -5047,13 +5047,13 @@ suite("completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
 });
 
 suite("MXML completion item provider", () =>
 {
-	test("vscode.executeCompletionItemProvider includes property as attribute", (done) =>
+	test("vscode.executeCompletionItemProvider includes property as attribute", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
 		let position = new vscode.Position(5, 13);
@@ -5071,9 +5071,9 @@ suite("MXML completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider includes property as child element", (done) =>
+	test("vscode.executeCompletionItemProvider includes property as child element", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
 		let position = new vscode.Position(6, 9);
@@ -5091,9 +5091,9 @@ suite("MXML completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider omits property as attribute of closing element", (done) =>
+	test("vscode.executeCompletionItemProvider omits property as attribute of closing element", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
 		let position = new vscode.Position(7, 14);
@@ -5109,9 +5109,9 @@ suite("MXML completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider includes event as attribute", (done) =>
+	test("vscode.executeCompletionItemProvider includes event as attribute", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
 		let position = new vscode.Position(5, 13);
@@ -5129,9 +5129,9 @@ suite("MXML completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider includes event as child element", (done) =>
+	test("vscode.executeCompletionItemProvider includes event as child element", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
 		let position = new vscode.Position(6, 9);
@@ -5149,9 +5149,9 @@ suite("MXML completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider omits event as attribute of closing element", (done) =>
+	test("vscode.executeCompletionItemProvider omits event as attribute of closing element", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
 		let position = new vscode.Position(7, 14);
@@ -5167,9 +5167,9 @@ suite("MXML completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
-	test("vscode.executeCompletionItemProvider includes class as child element", (done) =>
+	test("vscode.executeCompletionItemProvider includes class as child element", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
 		let position = new vscode.Position(6, 9);
@@ -5187,6 +5187,6 @@ suite("MXML completion item provider", () =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
-		}).then(() => done(), done);
+		});
 	});
 });
