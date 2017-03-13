@@ -1,3 +1,14 @@
+## 0.4.0
+
+* Debug SWF files in Adobe AIR or Flash Player.
+* Goto definition now finds framework classes in the SDK, even if they are compiled into a SWC.
+* Fixed issue where misleading errors were displayed for ActionScript and MXML files that are outside the workspace or a `source-path`.
+* Fixed issue where a problem was reported for embedded fonts even if the framework SDK supports them.
+* Fixed issue where some syntax inside a package block was not colored correctly.
+* Fixed issue where checking for errors would fail for certain projects due to exceptions in the compiler.
+* Fixed issue where the Adobe AIR SDK & Compiler could not be passed to the `nextgenas.sdk.framework` setting because the compiler set an invalid default for the `-theme` compiler option.
+* Improved default launch configuration options for Node.js.
+
 ## 0.3.1
 
 * Fixed issue where `protected` members were not omitted in scopes were they should not be accessible.
