@@ -98,6 +98,7 @@ public class SWFDebugSession extends DebugSession
     private java.lang.Thread sessionThread;
     private boolean cancelRunner = false;
     private boolean waitingForResume = false;
+    private boolean requestedThreads = false;
     private Path flexlib;
     private Path flexHome;
     private Path adlPath;
@@ -154,7 +155,14 @@ public class SWFDebugSession extends DebugSession
                         {
                             case SuspendReason.ScriptLoaded:
                             {
-                                swfSession.resume();
+                                //if we resumed immediately, we might not get
+                                //the breakpoints registered in time. waiting to
+                                //resume until we get the threads request
+                                //ensures that we stop at all breakpoints.
+                                if(requestedThreads)
+                                {
+                                    swfSession.resume();
+                                }
                                 break;
                             }
                             case SuspendReason.Breakpoint:
@@ -746,6 +754,7 @@ public class SWFDebugSession extends DebugSession
         List<Thread> threads = new ArrayList<>();
         threads.add(new Thread(Isolate.DEFAULT_ID, "Main SWF"));
         sendResponse(response, new ThreadsResponseBody(threads));
+        requestedThreads = true;
     }
 
     public void evaluate(Response response, Request.RequestArguments arguments)
