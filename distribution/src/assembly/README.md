@@ -12,7 +12,7 @@
 * **Goto Symbol** lists all symbols in the current file with `Ctrl+Shift+O`.
 * **Open Symbol by Name** with `Ctrl+T` and type the name of any symbol in the project.
 * **Rename Symbol** for class members and local variables.
-* **Debug** ActionScript transpiled to JavaScript in web browsers like Google Chrome and Mozilla Firefox, or even in Node.js.
+* **Debug** Apache FlexJS projects in web browsers and Node.js and SWF projects in Adobe AIR and Flash Player.
 
 ## Help and Support
 
