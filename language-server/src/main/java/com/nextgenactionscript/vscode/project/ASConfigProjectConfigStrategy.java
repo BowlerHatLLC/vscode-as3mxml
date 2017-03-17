@@ -134,8 +134,9 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy
                         {
                             JsonNode jsonNamespace = jsonDefine.get(i);
                             String name = jsonNamespace.get(CompilerOptions.DEFINE_NAME).asText();
-                            Object value = jsonNamespace.get(CompilerOptions.DEFINE_VALUE).asText();
-                            if (value instanceof String)
+                            JsonNode jsonValue = jsonNamespace.get(CompilerOptions.DEFINE_VALUE);
+                            String value = jsonValue.asText();
+                            if (jsonValue.isTextual())
                             {
                                 value = "\"" + value + "\"";
                             }
