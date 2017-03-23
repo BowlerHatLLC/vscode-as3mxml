@@ -192,8 +192,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private static final String CONFIG_AIR = "air";
     private static final String CONFIG_AIRMOBILE = "airmobile";
     private static final String SDK_FRAMEWORKS_PATH_SIGNATURE = "/frameworks/";
-    private static final String SDK_LIBRARY_PATH_SIGNATURE = "/frameworks/libs/";
-    private static final String SDK_SOURCE_PATH_SIGNATURE = "/frameworks/projects/";
+    private static final String SDK_LIBRARY_PATH_SIGNATURE_UNIX = "/frameworks/libs/";
+    private static final String SDK_LIBRARY_PATH_SIGNATURE_WINDOWS = "\\frameworks\\libs\\";
+    private static final String SDK_SOURCE_PATH_SIGNATURE_UNIX = "/frameworks/projects/";
+    private static final String SDK_SOURCE_PATH_SIGNATURE_WINDOWS = "\\frameworks\\projects\\";
     private static final String FLEXLIB = "flexlib";
 
     private static final String[] LANGUAGE_TYPE_NAMES =
@@ -229,6 +231,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         //Feathers
         NAMESPACE_TO_PREFIX.put(IMXMLLibraryConstants.FEATHERS, "f");
     }
+
+    private static boolean isWindows;
 
     private LanguageClient languageClient;
     private IProjectConfigStrategy projectConfigStrategy;
@@ -284,6 +288,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         Path sdkPath = Paths.get(System.getProperty(FLEXLIB));
         sdkPath = sdkPath.resolve("../lib/falcon-mxmlc.jar");
         flexLibSDKContainsFalconCompiler = sdkPath.toFile().exists();
+
+        isWindows = System.getProperty("os.name").toLowerCase().startsWith("windows");
     }
 
     public IProjectConfigStrategy getProjectConfigStrategy()
@@ -2468,10 +2474,21 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private String transformDebugFilePath(String sourceFilePath)
     {
-        //the debug file path divides directories with ; instead of / in a
-        //couple of places, but it's easy to fix
-        sourceFilePath = sourceFilePath.replace(";", "/");
-        int index = sourceFilePath.indexOf(SDK_SOURCE_PATH_SIGNATURE);
+        int index = -1;
+        if (isWindows)
+        {
+            //the debug file path divides directories with ; instead of slash in
+            //a couple of places, but it's easy to fix
+            sourceFilePath = sourceFilePath.replace(';', '\\');
+            sourceFilePath = sourceFilePath.replace('/', '\\');
+            index = sourceFilePath.indexOf(SDK_SOURCE_PATH_SIGNATURE_WINDOWS);
+        }
+        else
+        {
+            sourceFilePath = sourceFilePath.replace(';', '/');
+            sourceFilePath = sourceFilePath.replace('\\', '/');
+            index = sourceFilePath.indexOf(SDK_SOURCE_PATH_SIGNATURE_UNIX);
+        }
         if (index == -1)
         {
             return sourceFilePath;
@@ -2479,7 +2496,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         sourceFilePath = sourceFilePath.substring(index + SDK_FRAMEWORKS_PATH_SIGNATURE.length());
         Path frameworkPath = Paths.get(System.getProperty(FLEXLIB));
         Path transformedPath = frameworkPath.resolve(sourceFilePath);
-        return transformedPath.toAbsolutePath().toString();
+        return transformedPath.toFile().getAbsolutePath();
     }
 
     private void resolveDefinition(IDefinition definition, List<Location> result)
@@ -2498,7 +2515,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             //however, getContainingFilePath() also works for SWCs
             if (!definitionPath.endsWith(AS_EXTENSION)
                     && !definitionPath.endsWith(MXML_EXTENSION)
-                    && definitionPath.contains(SDK_LIBRARY_PATH_SIGNATURE))
+                    && (definitionPath.contains(SDK_LIBRARY_PATH_SIGNATURE_UNIX)
+                    || definitionPath.contains(SDK_LIBRARY_PATH_SIGNATURE_WINDOWS)))
             {
                 //if it's a framework SWC, we're going to attempt to resolve
                 //the source file 
@@ -2512,7 +2530,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     Pool<String> pooledStrings = visitor.getStringPool();
                     for (String pooledString : pooledStrings.getValues())
                     {
-                        if (pooledString.contains(SDK_SOURCE_PATH_SIGNATURE))
+                        if (pooledString.contains(SDK_SOURCE_PATH_SIGNATURE_UNIX)
+                                || pooledString.contains(SDK_SOURCE_PATH_SIGNATURE_WINDOWS))
                         {
                             //just go with the first one that we find
                             definitionPath = this.transformDebugFilePath(pooledString);
@@ -4368,8 +4387,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 }
                 else
                 {
-                    //\r\n is treated as one character
-                    if (next != '\r')
+                    //\r\n is treated as one character on windows
+                    if (!isWindows || next != '\r')
                     {
                         offset++;
                         character++;
