@@ -818,6 +818,27 @@ suite("signature help provider", () =>
 					});
 		});
 	});
+	test("vscode.executeSignatureHelpProvider provides help for constructor of new instance", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "SignatureHelp.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeSignatureHelpProvider",
+				uri, new vscode.Position(30, 25), "(")
+				.then((signatureHelp: vscode.SignatureHelp) =>
+					{
+						assert.strictEqual(signatureHelp.signatures.length, 1,
+							"Signature help not provided for constructor of new instance");
+						assert.strictEqual(signatureHelp.activeSignature, 0,
+							"Active signature incorrect for constructor of new instance");
+						assert.strictEqual(signatureHelp.activeParameter, 0,
+							"Active parameter incorrect for constructor of new instance");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute workspace symbol provider: " + uri);
+					});
+		});
+	});
 });
 
 suite("definition provider", () =>

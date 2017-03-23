@@ -28,6 +28,7 @@ package
 			super();
 			super.superMemberMethod();
 			super.privateSuperMemberMethod();
+			new AfterPackageClass();
 		}
 
 		private function memberFunction(one:String, two:Number = 3, ...rest:Array):Boolean
@@ -40,4 +41,12 @@ package
 function internalFunction(one:String, two:Number = 3, ...rest:Array):Boolean
 {
 	return false;
+}
+
+class AfterPackageClass
+{
+	public function AfterPackageClass(one:String, two:Number = 3, ...rest:Array)
+	{
+
+	}
 }

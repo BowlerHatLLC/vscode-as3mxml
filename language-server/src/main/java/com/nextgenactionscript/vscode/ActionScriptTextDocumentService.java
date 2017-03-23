@@ -424,6 +424,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             {
                 functionDefinition = (IFunctionDefinition) definition;
             }
+            else if (definition instanceof IClassDefinition)
+            {
+                IClassDefinition classDefinition = (IClassDefinition) definition;
+                functionDefinition = classDefinition.getConstructor();
+            }
             else if (nameNode instanceof IIdentifierNode)
             {
                 //special case for super()
