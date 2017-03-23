@@ -4387,12 +4387,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 }
                 else
                 {
-                    //\r\n is treated as one character on windows
-                    if (!isWindows || next != '\r')
-                    {
-                        offset++;
-                        character++;
-                    }
+                    offset++;
+                    character++;
 
                     if (next == '\n')
                     {
