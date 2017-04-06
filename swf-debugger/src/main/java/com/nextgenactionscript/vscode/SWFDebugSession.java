@@ -135,15 +135,25 @@ public class SWFDebugSession extends DebugSession
                         else if (event instanceof TraceEvent)
                         {
                             TraceEvent traceEvent = (TraceEvent) event;
+                            String output = traceEvent.information;
+                            if (output.charAt(output.length() - 1) != '\n')
+                            {
+                                output += '\n';
+                            }
                             OutputEvent.OutputBody body = new OutputEvent.OutputBody();
-                            body.output = traceEvent.information;
+                            body.output = output;
                             sendEvent(new OutputEvent(body));
                         }
                         else if (event instanceof FaultEvent)
                         {
                             FaultEvent faultEvent = (FaultEvent) event;
+                            String output = faultEvent.information + "\n" + faultEvent.stackTrace();
+                            if (output.charAt(output.length() - 1) != '\n')
+                            {
+                                output += '\n';
+                            }
                             OutputEvent.OutputBody body = new OutputEvent.OutputBody();
-                            body.output = faultEvent.information + "\n" + faultEvent.stackTrace();
+                            body.output = output;
                             body.category = OutputEvent.CATEGORY_STDERR;
                             sendEvent(new OutputEvent(body));
                         }
