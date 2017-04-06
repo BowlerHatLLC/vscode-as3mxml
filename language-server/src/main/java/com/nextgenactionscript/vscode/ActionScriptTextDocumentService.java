@@ -1136,6 +1136,36 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return CompletableFuture.completedFuture(result);
         }
 
+        //package (must be before member access)
+        if (offsetNode instanceof IPackageNode)
+        {
+            IPackageNode packageNode = (IPackageNode) offsetNode;
+            autoCompletePackage(packageNode.getPackageName(), result);
+            return CompletableFuture.completedFuture(result);
+        }
+        if (parentNode != null
+                && parentNode instanceof FullNameNode)
+        {
+            IASNode gpNode = parentNode.getParent();
+            if (gpNode != null && gpNode instanceof IPackageNode)
+            {
+                IPackageNode packageNode = (IPackageNode) gpNode;
+                autoCompletePackage(packageNode.getPackageName(), result);
+            }
+        }
+        if (parentNode != null
+                && parentNode instanceof IPackageNode)
+        {
+            //we'll get here if the last character in the package name is .
+            IPackageNode packageNode = (IPackageNode) parentNode;
+            IExpressionNode nameNode = packageNode.getNameExpressionNode();
+            if (offsetNode == nameNode)
+            {
+                autoCompletePackage(packageNode.getPackageName(), result);
+                return CompletableFuture.completedFuture(result);
+            }
+        }
+
         //import (must be before member access)
         if (parentNode != null
                 && parentNode instanceof IImportNode)
@@ -2045,6 +2075,57 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             addDefinitionsInTypeScopeToAutoCompleteActionScript(typeScope, scope, false, result);
             return;
         }
+    }
+
+    private void autoCompletePackage(String partialPackageName, CompletionList result)
+    {
+        //we'll guess the package name based on path of the parent directory
+        File unitFile = new File(currentUnit.getAbsoluteFilename());
+        unitFile = unitFile.getParentFile();
+
+        //find the source path that the parent directory is inside
+        //that way we can strip it down to just the package
+        String basePath = null;
+        for (File sourcePath : currentProject.getSourcePath())
+        {
+            if (unitFile.toPath().startsWith(sourcePath.toPath()))
+            {
+                basePath = sourcePath.toPath().toString();
+                break;
+            }
+        }
+        if (basePath == null)
+        {
+            //we couldn't find the source path!
+            return;
+        }
+
+        String expectedPackage = unitFile.getAbsolutePath().substring(basePath.length());
+        expectedPackage = expectedPackage.replaceAll("/", ".");
+        if (expectedPackage.startsWith("."))
+        {
+            expectedPackage = expectedPackage.substring(1);
+        }
+        if (expectedPackage.length() == 0)
+        {
+            //it's the top level package
+            return;
+        }
+        if (partialPackageName.startsWith(expectedPackage))
+        {
+            //we already have the correct package, maybe with some extra
+            return;
+        }
+        if (partialPackageName.contains(".")
+                && expectedPackage.startsWith(partialPackageName))
+        {
+            int lastDot = partialPackageName.lastIndexOf('.');
+            expectedPackage = expectedPackage.substring(lastDot + 1);
+        }
+        CompletionItem item = new CompletionItem();
+        item.setKind(CompletionItemKind.Module);
+        item.setLabel(expectedPackage);
+        result.getItems().add(item);
     }
 
     private void autoCompleteImport(String importName, CompletionList result)
