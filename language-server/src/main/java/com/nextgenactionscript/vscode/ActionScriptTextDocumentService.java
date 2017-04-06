@@ -4345,8 +4345,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         location.setUri(definitionPath.toUri().toString());
         Position start = new Position();
         Position end = new Position();
-        int line = definition.getLine();
-        int column = definition.getColumn();
+        //getLine() and getColumn() may include things like metadata, so it
+        //makes more sense to jump to where the definition name starts
+        int line = definition.getNameLine();
+        int column = definition.getNameColumn();
         if (line < 0 || column < 0)
         {
             //this is not ideal, but MXML variable definitions may not have a
