@@ -122,7 +122,7 @@ class FileInternalCompletion
 	{
 	}
 
-	public function InternalCompletion()
+	public function FileInternalCompletion()
 	{
 	}
 }
