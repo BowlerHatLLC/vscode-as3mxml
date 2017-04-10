@@ -4519,11 +4519,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 }
                 else
                 {
-                    //\r\n is treated as one character
-                    if (next != '\r')
-                    {
-                        offset++;
-                    }
+                    //don't skip \r here if line endings are \r\n in the file
+                    //there may be cases where the file line endings don't match
+                    //what the editor ends up rendering. skipping \r will help
+                    //that, but it will break other cases.
+                    offset++;
 
                     if (next == '\n')
                     {
