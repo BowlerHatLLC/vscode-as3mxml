@@ -2260,17 +2260,22 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         IClassDefinition otherContainingClass = otherScope.getContainingClass();
         if (otherContainingClass != null)
         {
-            ITypeDefinition definition = (ITypeDefinition) typeScope.getContainingDefinition();
-            if (definition instanceof IClassDefinition && otherContainingClass.equals(definition))
+            IClassDefinition classDefinition = typeScope.getContainingClass();
+            if (classDefinition != null)
             {
-                //we need to get the protected namespaces from the super classes
-                do
+                boolean isSuperClass = Arrays.asList(otherContainingClass.resolveAncestry(currentProject)).contains(classDefinition);
+                if (isSuperClass)
                 {
-                    IClassDefinition classDefinition = (IClassDefinition) definition;
-                    namespaceSet.add(classDefinition.getProtectedNamespaceReference());
-                    definition = classDefinition.resolveBaseClass(currentProject);
+                    //if the containing class of the type scope is a superclass
+                    //of the other scope, we need to add the protected
+                    //namespaces from the super classes
+                    do
+                    {
+                        namespaceSet.add(classDefinition.getProtectedNamespaceReference());
+                        classDefinition = classDefinition.resolveBaseClass(currentProject);
+                    }
+                    while (classDefinition instanceof IClassDefinition);
                 }
-                while (definition instanceof IClassDefinition);
             }
         }
         typeScope.getAllPropertiesForMemberAccess(currentProject, memberAccessDefinitions, namespaceSet);
