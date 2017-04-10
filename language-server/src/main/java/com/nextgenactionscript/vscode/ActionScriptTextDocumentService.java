@@ -310,6 +310,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     public void setWorkspaceRoot(Path value)
     {
         workspaceRoot = value;
+        /*if (workspaceRoot != null)
+        {
+            checkProjectForProblems();
+        }*/
     }
 
     public void setLanguageClient(LanguageClient value)
@@ -946,25 +950,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         if (needsFullCheck || projectConfigStrategy.getChanged())
         {
-            if (currentProjectOptions != null && currentProjectOptions.type.equals(ProjectType.LIB))
-            {
-                Set<Path> filePaths = this.sourceByPath.keySet();
-                if (filePaths.size() > 0)
-                {
-                    //it doesn't matter which file we pick here because we're
-                    //doing a full build
-                    Path path = filePaths.iterator().next();
-                    checkFilePathForProblems(path, false);
-                }
-            }
-            else //app
-            {
-                Path path = getMainCompilationUnitPath();
-                if (path != null)
-                {
-                    checkFilePathForProblems(path, false);
-                }
-            }
+            checkProjectForProblems();
         }
     }
 
@@ -2625,7 +2611,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                                 || pooledString.contains(SDK_SOURCE_PATH_SIGNATURE_WINDOWS))
                         {
                             //just go with the first one that we find
-                            definitionPath = this.transformDebugFilePath(pooledString);
+                            definitionPath = transformDebugFilePath(pooledString);
                             break;
                         }
                     }
@@ -3390,6 +3376,30 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         project.setTargetSettings(targetSettings);
         return project;
+    }
+
+    private void checkProjectForProblems()
+    {
+        refreshProjectOptions();
+        if (currentProjectOptions != null && currentProjectOptions.type.equals(ProjectType.LIB))
+        {
+            Set<Path> filePaths = sourceByPath.keySet();
+            if (filePaths.size() > 0)
+            {
+                //it doesn't matter which file we pick here because we're
+                //doing a full build
+                Path path = filePaths.iterator().next();
+                checkFilePathForProblems(path, false);
+            }
+        }
+        else //app
+        {
+            Path path = getMainCompilationUnitPath();
+            if (path != null)
+            {
+                checkFilePathForProblems(path, false);
+            }
+        }
     }
 
     private void checkFilePathForProblems(Path path, Boolean quick)
