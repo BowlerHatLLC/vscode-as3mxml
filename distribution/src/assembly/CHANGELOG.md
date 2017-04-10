@@ -1,3 +1,13 @@
+## 0.4.1
+
+* Fixed issue where super protected members were sometimes omitted
+* Added missing completion for package name at beginning of file.
+* Fixed issue where list of document or workspace symbols would sometimes jump to metadata instead of definition name.
+* Fixed issue where `trace()` console output would not appear on new lines.
+* Fixed issue where signature help was not provided for constructor functions.
+* Fixed issue where goto definition did not work on framework classes if framework was built on Windows (caused by different slashes in path).
+* Fixed issue where numeric or boolean conditional compilation constants were not parsed correctly.
+
 ## 0.4.0
 
 * Debug SWF files in Adobe AIR or Flash Player.
