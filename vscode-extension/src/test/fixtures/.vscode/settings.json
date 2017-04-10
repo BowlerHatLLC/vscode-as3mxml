@@ -1,10 +1,10 @@
 {
 	//0.7.0
-	//"nextgenas.flexjssdk": "/Users/joshtynjala/Development/Flex/sdks/flexjs-0.7.0"
+	//"nextgenas.sdk.editor": "/Users/joshtynjala/Development/Flex/sdks/flexjs-0.7.0"
 
 	//nightly
-	//"nextgenas.flexjssdk": "/Users/joshtynjala/Development/Flex/sdks/flexjs-nightly"
+	//"nextgenas.sdk.editor": "/Users/joshtynjala/Development/Flex/sdks/flexjs-nightly"
 
 	//maven local
-	//"nextgenas.flexjssdk": "/Users/joshtynjala/Development/apache-flex/maven-flex-asjs/distribution/target/apache-flex-flexjs-0.8.0-SNAPSHOT"
+	//"nextgenas.sdk.editor": "/Users/joshtynjala/Development/apache-flex/maven-flex-asjs/distribution/target/apache-flex-flexjs-0.8.0-SNAPSHOT"
 }
