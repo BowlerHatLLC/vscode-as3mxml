@@ -310,10 +310,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     public void setWorkspaceRoot(Path value)
     {
         workspaceRoot = value;
-        /*if (workspaceRoot != null)
+        if (workspaceRoot != null)
         {
             checkProjectForProblems();
-        }*/
+        }
     }
 
     public void setLanguageClient(LanguageClient value)

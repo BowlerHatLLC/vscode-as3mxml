@@ -92,12 +92,13 @@ suite("NextGenAS extension", () =>
 		let extensionName = "bowlerhatllc.vscode-nextgenas";
 		let extension = vscode.extensions.getExtension(extensionName);
 		assert.ok(extension, `Extension "${extensionName}" not found!`);
-		//wait a bit for the the extension to fully activate
+		//wait a bit for the the extension to fully activate because we need
+		//the project to be fully loaded into the compiler for future tests
 		setTimeout(() =>
 		{
 			assert.ok(extension.isActive, `Extension "${extensionName}" not active!`);
 			done();
-		}, 1000);
+		}, 3500);
 	});
 });
 
