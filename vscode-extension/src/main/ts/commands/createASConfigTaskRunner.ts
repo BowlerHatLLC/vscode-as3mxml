@@ -29,7 +29,7 @@ export default function(flexHome?: string)
 	},
 	() =>
 	{
-		let tasks = "{\n\t// See https://go.microsoft.com/fwlink/?LinkId=733558\n\t// for the documentation about the tasks.json format\n\t\"version\": \"0.1.0\",\n\t\"command\": \"asconfigc\",\n\t\"isShellCommand\": true,\n\t\"args\": [\n\t\t";
+		let tasks = "{\n\t// See https://go.microsoft.com/fwlink/?LinkId=733558\n\t// for the documentation about the tasks.json format\n\t\"version\": \"0.1.0\",\n\t\"command\": \"asconfigc\",\n\t\"isShellCommand\": true,\n\t\"args\": [\n\t\t\"--debug=true\",\n\t\t";
 		if(flexHome)
 		{
 			tasks += "\"--flexHome=" + flexHome + "\"";
