@@ -26,7 +26,7 @@ const initialConfigurations =
 		type: "swf",
 		request: "launch",
 		name: "Launch SWF",
-		program: "${workspaceRoot}/Main.as"
+		program: "${workspaceRoot}/Main.swf"
 	}
 ];
 
