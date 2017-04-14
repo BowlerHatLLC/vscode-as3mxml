@@ -1,4 +1,0 @@
-{
-	"typescript.tsdk": "./vscode-extension/node_modules/typescript/lib",
-	"java.home": "/Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home"
-}
