@@ -8,6 +8,7 @@ node_modules/
 Thumbs.db
 ._*
 .project
+.classpath
 *.local.properties
 *.stackdump
 *.p12
