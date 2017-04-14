@@ -548,7 +548,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     }
 
     /**
-     * This feature is implemented at this time.
+     * This feature is not implemented at this time.
      */
     @Override
     public CompletableFuture<List<? extends DocumentHighlight>> documentHighlight(TextDocumentPositionParams position)
@@ -736,7 +736,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     }
 
     /**
-     * This feature is implemented at this time.
+     * This feature is not implemented at this time.
      */
     @Override
     public CompletableFuture<List<? extends CodeLens>> codeLens(CodeLensParams params)
@@ -745,7 +745,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     }
 
     /**
-     * This feature is implemented at this time.
+     * This feature is not implemented at this time.
      */
     @Override
     public CompletableFuture<CodeLens> resolveCodeLens(CodeLens unresolved)
@@ -754,7 +754,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     }
 
     /**
-     * This feature is implemented at this time.
+     * This feature is not implemented at this time.
      */
     @Override
     public CompletableFuture<List<? extends TextEdit>> formatting(DocumentFormattingParams params)
@@ -763,7 +763,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     }
 
     /**
-     * This feature is implemented at this time.
+     * This feature is not implemented at this time.
      */
     @Override
     public CompletableFuture<List<? extends TextEdit>> rangeFormatting(DocumentRangeFormattingParams params)
@@ -772,7 +772,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     }
 
     /**
-     * This feature is implemented at this time.
+     * This feature is not implemented at this time.
      */
     @Override
     public CompletableFuture<List<? extends TextEdit>> onTypeFormatting(DocumentOnTypeFormattingParams params)
