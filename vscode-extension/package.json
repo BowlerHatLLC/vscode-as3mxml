@@ -223,7 +223,7 @@
                   "string",
                   "null"
                 ],
-                "description": "Path to directory containing AIR native extensions.",
+                "description": "Path to directory containing unpackaged AIR native extensions for debugging.",
                 "default": null
               }
             }
