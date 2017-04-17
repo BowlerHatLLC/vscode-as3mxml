@@ -27,4 +27,5 @@ public class LaunchRequestArguments extends LaunchRequest.LaunchRequestArguments
     public String versionPlatform;
     public String runtimeExecutable;
     public String[] runtimeArgs;
+    public String extdir;
 }
