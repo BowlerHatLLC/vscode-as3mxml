@@ -5071,6 +5071,25 @@ suite("completion item provider", () =>
 					});
 		});
 	});
+	test("vscode.executeCompletionItemProvider includes class on left side of member access for static constant", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let position = new vscode.Position(55, 21);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
+				.then((list: vscode.CompletionList) =>
+					{
+						let items = list.items;
+						let classItem = findCompletionItem("ClassWithConstants", items);
+						assert.notEqual(classItem, null, "vscode.executeCompletionItemProvider failed to provide class: " + uri);
+						assert.strictEqual(classItem.kind, vscode.CompletionItemKind.Class, "vscode.executeCompletionItemProvider failed to provide correct kind of class: " + uri);
+					}, (err) =>
+					{
+						assert(false, "Failed to execute completion item provider: " + uri);
+					});
+		});
+	});
 });
 
 suite("MXML completion item provider", () =>

@@ -53,6 +53,7 @@ package
 			instance.;
 			FileInternalCompletion.;
 			var types:;
+			ClassWithConstants.ONE;
 		}
 	}
 }

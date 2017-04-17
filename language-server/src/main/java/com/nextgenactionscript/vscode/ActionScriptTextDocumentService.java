@@ -1215,9 +1215,17 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             IMemberAccessExpressionNode memberAccessNode = (IMemberAccessExpressionNode) parentNode;
             //you would expect that the offset node could only be the right
             //operand, but it's actually possible for it to be the left operand,
-            //even if the . has been typed!
+            //even if the . has been typed! only sometimes, though.
+            boolean isValidLeft = true;
+            if (offsetNode == memberAccessNode.getLeftOperandNode()
+                && memberAccessNode.getRightOperandNode() instanceof IIdentifierNode)
+            {
+                //if the left and right operands both exist, then this is not
+                //member access and we should skip ahead
+                isValidLeft = false;
+            }
             if (offsetNode == memberAccessNode.getRightOperandNode()
-                    || offsetNode == memberAccessNode.getLeftOperandNode())
+                    || isValidLeft)
             {
                 autoCompleteMemberAccess(memberAccessNode, result);
                 return CompletableFuture.completedFuture(result);
