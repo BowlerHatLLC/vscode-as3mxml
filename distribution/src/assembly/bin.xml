@@ -22,7 +22,7 @@
         <include>CHANGELOG*</include>
         <include>nextgenas.configuration.json</include>
         <include>mxml.configuration.json</include>
-        <include>nextgenas.png</include>
+        <include>nextgenas.svg</include>
         <include>schemas/*</include>
         <include>syntaxes/*</include>
       </includes>

@@ -19,7 +19,7 @@
     "Debuggers"
   ],
   "main": "extension",
-  "icon": "nextgenas.png",
+  "icon": "nextgenas.svg",
   "scripts": {
     "postinstall": "node ./node_modules/vscode/bin/install",
     "build": "mvn clean package",
