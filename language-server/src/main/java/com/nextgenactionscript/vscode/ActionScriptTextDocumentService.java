@@ -2974,7 +2974,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             //skip it
         }
 
-        List diagnostics = publish.getDiagnostics();
+        List<Diagnostic> diagnostics = publish.getDiagnostics();
         diagnostics.add(diagnostic);
     }
 
