@@ -112,6 +112,8 @@ import org.apache.flex.compiler.tree.as.IPackageNode;
 import org.apache.flex.compiler.tree.as.IScopedDefinitionNode;
 import org.apache.flex.compiler.tree.as.IScopedNode;
 import org.apache.flex.compiler.tree.as.IVariableNode;
+import org.apache.flex.compiler.tree.mxml.IMXMLEventSpecifierNode;
+import org.apache.flex.compiler.tree.mxml.IMXMLInstanceNode;
 import org.apache.flex.compiler.units.ICompilationUnit;
 import org.apache.flex.compiler.units.IInvisibleCompilationUnit;
 import org.apache.flex.compiler.workspaces.IWorkspace;
@@ -341,11 +343,35 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return CompletableFuture.completedFuture(result);
         }
         IMXMLTagData offsetTag = getOffsetMXMLTag(position);
-        //if we're inside an <fx:Script> tag, we want ActionScript completion,
-        //so that's why we call isMXMLTagValidForCompletion()
-        if (offsetTag != null && isMXMLTagValidForCompletion(offsetTag))
+        if (offsetTag != null)
         {
-            return mxmlCompletion(position, offsetTag);
+            IMXMLTagAttributeData attributeData = getMXMLAttributeForCompletion(offsetTag);
+            if (attributeData != null)
+            {
+                IClassDefinition tagDefinition = (IClassDefinition) currentProject.resolveXMLNameToDefinition(offsetTag.getXMLName(), offsetTag.getMXMLDialect());
+                IDefinition attributeDefinition = currentProject.resolveSpecifier(tagDefinition, attributeData.getShortName());
+                if (attributeDefinition instanceof IEventDefinition)
+                {
+                    IMXMLInstanceNode mxmlNode = (IMXMLInstanceNode) getOffsetNode(position);
+                    IMXMLEventSpecifierNode eventNode = mxmlNode.getEventSpecifierNode(attributeData.getShortName());
+                    for (IASNode asNode : eventNode.getASNodes())
+                    {
+                        IASNode containingNode = asNode.getContainingNode(currentOffset);
+                        if (containingNode != null)
+                        {
+                            return actionScriptCompletionWithNode(position, containingNode);
+                        }
+                    }
+                    return actionScriptCompletionWithNode(position, eventNode);
+                }
+            }
+            else if (isMXMLTagValidForCompletion(offsetTag))
+            {
+                //if we're inside an <fx:Script> tag, we want ActionScript completion,
+                //so that's why we call isMXMLTagValidForCompletion()
+                return mxmlCompletion(position, offsetTag);
+            }
+            
         }
         if (offsetTag == null && position.getTextDocument().getUri().endsWith(MXML_EXTENSION))
         {
@@ -971,12 +997,15 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private CompletableFuture<CompletionList> actionScriptCompletion(TextDocumentPositionParams position)
     {
+        IASNode offsetNode = getOffsetNode(position);
+        return actionScriptCompletionWithNode(position, offsetNode);
+    }
+
+    private CompletableFuture<CompletionList> actionScriptCompletionWithNode(TextDocumentPositionParams position, IASNode offsetNode)
+    {
         CompletionList result = new CompletionList();
         result.setIsIncomplete(false);
         result.setItems(new ArrayList<>());
-
-        //ActionScript completion
-        IASNode offsetNode = getOffsetNode(position);
         if (offsetNode == null)
         {
             //we couldn't find a node at the specified location
@@ -3588,6 +3617,21 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return false;
         }
         return true;
+    }
+
+    private IMXMLTagAttributeData getMXMLAttributeForCompletion(IMXMLTagData tag)
+    {
+        IMXMLTagAttributeData attribute = getMXMLTagAttributeWithValueAtOffset(tag, currentOffset);
+        if (attribute != null)
+        {
+            IClassDefinition tagDefinition = (IClassDefinition) currentProject.resolveXMLNameToDefinition(tag.getXMLName(), tag.getMXMLDialect());
+            IDefinition attributeDefinition = currentProject.resolveSpecifier(tagDefinition, attribute.getShortName());
+            if (attributeDefinition instanceof IEventDefinition)
+            {
+                return attribute;
+            }
+        }
+        return null;
     }
 
     private IMXMLTagData getOffsetMXMLTag(TextDocumentPositionParams position)
