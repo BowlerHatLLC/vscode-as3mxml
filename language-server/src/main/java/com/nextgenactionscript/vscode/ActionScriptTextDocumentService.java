@@ -362,7 +362,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     IMXMLEventSpecifierNode eventNode = mxmlNode.getEventSpecifierNode(attributeData.getShortName());
                     for (IASNode asNode : eventNode.getASNodes())
                     {
-                        IASNode containingNode = asNode.getContainingNode(currentOffset);
+                        IASNode containingNode = getContainingNodeIncludingStart(asNode, currentOffset);
                         if (containingNode != null)
                         {
                             return actionScriptCompletionWithNode(position, containingNode);
@@ -3848,7 +3848,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             System.err.println("Could not find code at position " + position.getLine() + ":" + position.getCharacter() + " in file " + path.toAbsolutePath().toString());
             return null;
         }
-        IASNode offsetNode = ast.getContainingNode(currentOffset);
+        IASNode offsetNode = getContainingNodeIncludingStart(ast, currentOffset);
         if (offsetNode != null)
         {
             //if we have an offset node, try to find where imports may be added
@@ -3883,6 +3883,29 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
         }
         return offsetNode;
+    }
+
+    private boolean containsWithStart(IASNode node, int offset)
+    {
+        return offset >= node.getAbsoluteStart() && offset <= node.getAbsoluteEnd();
+    }
+
+    private IASNode getContainingNodeIncludingStart(IASNode node, int offset)
+    {
+        if (!containsWithStart(node, offset))
+        {
+            return null;
+        }
+        for (int i = 0, count = node.getChildCount(); i < count; i++)
+        {
+            IASNode child = node.getChild(i);
+            IASNode result = getContainingNodeIncludingStart(child, offset);
+            if (result != null)
+            {
+                return result;
+            }
+        }
+        return node;
     }
 
     private boolean isInsideTagPrefix(IMXMLTagData tag, int offset)
