@@ -22,12 +22,12 @@ limitations under the License.
   <parent>
     <groupId>com.nextgenactionscript.vscode</groupId>
     <artifactId>vscode-nextgenas</artifactId>
-    <version>0.4.2-SNAPSHOT</version>
+    <version>0.4.2</version>
   </parent>
 
   <groupId>com.nextgenactionscript.vscode</groupId>
   <artifactId>vscode-extension</artifactId>
-  <version>0.4.2-SNAPSHOT</version>
+  <version>0.4.2</version>
   <name>vscode-extension</name>
 
   <properties>

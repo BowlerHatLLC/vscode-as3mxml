@@ -1,3 +1,13 @@
+## 0.4.2
+
+* When opening a workspace, immediately checks for errors instead of waiting to open an ActionScript or MXML file.
+* ActionScript completion is now supported inside MXML event attributes.
+* Added ability to specify `extdir` option in `launch.json` to allow AIR applications to access a directory of unpacked native extensions.
+* Search for symbols in workspace is now case insensitive and it may start from anywhere inside the fully qualified name of a symbol (not only from the beginning).
+* Fixed issue where the generated `launch.json` might reference the wrong file extension (was .as, but should have been .swf).
+* Fixed issue where the completion list was incorrectly empty after activating with Ctrl+click on the left side of member access.
+* Fixed issue where a goto definition link would not appear if the mouse was over the first character of an identifier.
+
 ## 0.4.1
 
 * Fixed issue where super protected members were sometimes omitted
