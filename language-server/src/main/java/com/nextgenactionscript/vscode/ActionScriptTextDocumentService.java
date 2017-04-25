@@ -4386,6 +4386,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private void querySymbolsInScope(String query, IASScope scope, List<SymbolInformation> result)
     {
+        String lowerCaseQuery
+         = query.toLowerCase();
         Collection<IDefinition> definitions = scope.getAllLocalDefinitions();
         for (IDefinition definition : definitions)
         {
@@ -4399,8 +4401,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             {
                 ITypeDefinition typeDefinition = (ITypeDefinition) definition;
                 if (!definition.isImplicit()
-                        && (typeDefinition.getBaseName().startsWith(query)
-                        || typeDefinition.getQualifiedName().startsWith(query)))
+                        && typeDefinition.getQualifiedName().toLowerCase().contains(lowerCaseQuery))
                 {
                     SymbolInformation symbol = definitionToSymbol(typeDefinition);
                     result.add(symbol);
@@ -4415,8 +4416,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     continue;
                 }
                 IFunctionDefinition functionDefinition = (IFunctionDefinition) definition;
-                if (functionDefinition.getBaseName().startsWith(query)
-                        || functionDefinition.getQualifiedName().startsWith(query))
+                if (functionDefinition.getQualifiedName().toLowerCase().contains(lowerCaseQuery))
                 {
                     SymbolInformation symbol = definitionToSymbol(functionDefinition);
                     result.add(symbol);
@@ -4431,8 +4431,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     continue;
                 }
                 IVariableDefinition variableDefinition = (IVariableDefinition) definition;
-                if (variableDefinition.getBaseName().startsWith(query)
-                        || variableDefinition.getQualifiedName().startsWith(query))
+                if (variableDefinition.getQualifiedName().toLowerCase().contains(lowerCaseQuery))
                 {
                     SymbolInformation symbol = definitionToSymbol(variableDefinition);
                     result.add(symbol);
