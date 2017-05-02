@@ -41,6 +41,7 @@ import java.util.concurrent.CompletableFuture;
 import org.apache.flex.abc.ABCParser;
 import org.apache.flex.abc.Pool;
 import org.apache.flex.abc.PoolingABCVisitor;
+import org.apache.flex.compiler.clients.JSConfiguration;
 import org.apache.flex.compiler.common.ISourceLocation;
 import org.apache.flex.compiler.common.PrefixMap;
 import org.apache.flex.compiler.common.XMLName;
@@ -3340,7 +3341,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         else
         {
-            configurator = new Configurator();
+            //using JSConfiguration is necessary for the new -targets option
+            //in FlexJS 0.8 and newer that also applies to SWF
+            configurator = new Configurator(JSConfiguration.class);
         }
         configurator.setToken("configname", currentProjectOptions.config);
         ProjectType type = currentProjectOptions.type;

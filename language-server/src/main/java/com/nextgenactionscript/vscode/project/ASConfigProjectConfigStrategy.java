@@ -236,6 +236,17 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy
                         }
                         compilerOptions.sourcePath = sourcePath;
                     }
+                    if (jsonCompilerOptions.has(CompilerOptions.TARGETS))
+                    {
+                        JsonNode jsonTargets = jsonCompilerOptions.get(CompilerOptions.TARGETS);
+                        ArrayList<String> targets = new ArrayList<>();
+                        for (int i = 0, count = jsonTargets.size(); i < count; i++)
+                        {
+                            String target = jsonTargets.get(i).asText();
+                            targets.add(target);
+                        }
+                        compilerOptions.targets = targets;
+                    }
                     if (jsonCompilerOptions.has(CompilerOptions.WARNINGS))
                     {
                         compilerOptions.warnings = jsonCompilerOptions.get(CompilerOptions.WARNINGS).asBoolean();

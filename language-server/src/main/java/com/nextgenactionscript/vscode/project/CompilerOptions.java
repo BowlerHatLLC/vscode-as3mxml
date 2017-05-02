@@ -44,6 +44,7 @@ public class CompilerOptions
     public static final String NAMESPACE_URI = "uri";
     public static final String NAMESPACE_MANIFEST = "manifest";
     public static final String SOURCE_PATH = "source-path";
+    public static final String TARGETS = "targets";
     public static final String WARNINGS = "warnings";
 
     public boolean debug = true;
@@ -56,5 +57,6 @@ public class CompilerOptions
     public Map<String, String> defines;
     public List<MXMLNamespaceMapping> namespaceMappings;
     public List<File> sourcePath;
+    public List<String> targets;
     public boolean warnings = true;
 }

@@ -263,6 +263,15 @@
 					"minimum": 9,
 					"multipleOf": 1
 				},
+				"targets":
+				{
+					"type": "array",
+					"description": "Specifies the output targets for Apache FlexJS. Supported values include \"JSFlex\", \"JS\", \"JSNode\", and \"SWF\".",
+					"items":
+					{
+						"type": "string"
+					}
+				},
 				"target-player":
 				{
 					"type": "string",
