@@ -1021,6 +1021,14 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
     }
 
+    private void cleanupCurrentProject()
+    {
+        currentWorkspace = null;
+        currentProject = null;
+        fileSpecGetter = null;
+        compilationUnits = null;
+    }
+
     private void refreshProjectOptions()
     {
         if (!projectConfigStrategy.getChanged() && currentProjectOptions != null)
@@ -1029,10 +1037,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return;
         }
         //if the configuration changed, start fresh with a whole new workspace
-        currentWorkspace = null;
-        currentProject = null;
-        fileSpecGetter = null;
-        compilationUnits = null;
+        cleanupCurrentProject();
         currentProjectOptions = projectConfigStrategy.getOptions();
     }
 
@@ -3310,14 +3315,15 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         refreshProjectOptions();
         if (currentProjectOptions == null)
         {
+            cleanupCurrentProject();
             return null;
         }
         FlexProject project = null;
-        if (currentWorkspace == null)
+        if (currentProject == null)
         {
-            currentWorkspace = new Workspace();
-            project = new FlexProject((Workspace) currentWorkspace);
+            project = new FlexProject(new Workspace());
             project.setProblems(new ArrayList<>());
+            currentWorkspace = project.getWorkspace();
             fileSpecGetter = new LanguageServerFileSpecGetter(currentWorkspace, sourceByPath);
         }
         else
