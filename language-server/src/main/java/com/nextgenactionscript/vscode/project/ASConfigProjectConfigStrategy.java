@@ -25,6 +25,7 @@ import java.util.Set;
 import org.apache.commons.io.FileUtils;
 import org.apache.flex.compiler.internal.mxml.MXMLNamespaceMapping;
 
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.networknt.schema.JsonSchema;
@@ -88,6 +89,8 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy
             JsonSchema schema = factory.getSchema(schemaInputStream);
             String contents = FileUtils.readFileToString(asconfigFile);
             ObjectMapper mapper = new ObjectMapper();
+            //VSCode allows comments, so we should too
+            mapper.configure(JsonParser.Feature.ALLOW_COMMENTS, true);
             JsonNode json = mapper.readTree(contents);
             Set<ValidationMessage> errors = schema.validate(json);
             if (!errors.isEmpty())
