@@ -2316,6 +2316,17 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         addDefinitionsInTypeScopeToAutoComplete(typeScope, otherScope, false, false, true, prefix, result);
     }
 
+    private void collectInterfaceNamespaces(IInterfaceDefinition interfaceDefinition, Set<INamespaceDefinition> namespaceSet)
+    {
+        TypeScope typeScope = (TypeScope) interfaceDefinition.getContainedScope();
+        namespaceSet.addAll(typeScope.getNamespaceSet(currentProject));
+        IInterfaceDefinition[] interfaceDefinitions = interfaceDefinition.resolveExtendedInterfaces(currentProject);
+        for (IInterfaceDefinition extendedInterface : interfaceDefinitions)
+        {
+            collectInterfaceNamespaces(extendedInterface, namespaceSet);
+        }
+    }
+
     private void addDefinitionsInTypeScopeToAutoComplete(TypeScope typeScope, ASScope otherScope, boolean isStatic, boolean includeSuperStatics, boolean forMXML, String prefix, CompletionList result)
     {
         IMetaTag[] excludeMetaTags = typeScope.getDefinition().getMetaTagsByName(IMetaAttributeConstants.ATTRIBUTE_EXCLUDE);
@@ -2325,7 +2336,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             //interfaces have a special namespace that isn't actually the same
             //as public, but should be treated the same way
-            namespaceSet.addAll(typeScope.getNamespaceSet(currentProject));
+            IInterfaceDefinition interfaceDefinition = (IInterfaceDefinition) typeScope.getContainingDefinition();
+            collectInterfaceNamespaces(interfaceDefinition, namespaceSet);
         }
         IClassDefinition otherContainingClass = otherScope.getContainingClass();
         if (otherContainingClass != null)

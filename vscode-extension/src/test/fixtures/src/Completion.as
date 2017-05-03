@@ -3,6 +3,7 @@ package
 	import com.example.SuperDefinitions;
 	import com.example.packageFunction;
 	import com.example.packageVar;
+	import com.example.IPackageInterface;
 
 	public class Completion extends SuperDefinitions
 	{
@@ -54,6 +55,8 @@ package
 			FileInternalCompletion.;
 			var types:;
 			ClassWithConstants.ONE;
+			var instance2:IPackageInterface;
+			instance2.;
 		}
 	}
 }

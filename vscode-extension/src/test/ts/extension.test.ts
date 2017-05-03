@@ -3204,7 +3204,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes local variable", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(45, 3);
+		let position = new vscode.Position(46, 3);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -3223,7 +3223,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider omits local variable with member access operator on this", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(46, 8);
+		let position = new vscode.Position(47, 8);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -3241,7 +3241,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider omits local variable with member access operator on super", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(47, 9);
+		let position = new vscode.Position(48, 9);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -3259,7 +3259,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider omits local variable from type annotation", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(54, 13);
+		let position = new vscode.Position(55, 13);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider",
@@ -3278,7 +3278,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes local function", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(45, 3);
+		let position = new vscode.Position(46, 3);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -3297,7 +3297,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider omits local function with member access operator on this", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(46, 8);
+		let position = new vscode.Position(47, 8);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -3315,7 +3315,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider omits local function with member access operator on super", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(47, 9);
+		let position = new vscode.Position(48, 9);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -3333,7 +3333,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider omits local function from type annotation", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(54, 13);
+		let position = new vscode.Position(55, 13);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider",
@@ -3352,7 +3352,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes member variable", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(45, 3);
+		let position = new vscode.Position(46, 3);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -3371,7 +3371,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes member variable with member access operator on this", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(46, 8);
+		let position = new vscode.Position(47, 8);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider",
@@ -3391,7 +3391,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider omits member variable with member access operator on super", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(47, 9);
+		let position = new vscode.Position(48, 9);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -3409,7 +3409,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider omits member variable from type annotation", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(54, 13);
+		let position = new vscode.Position(55, 13);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider",
@@ -3428,7 +3428,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes member function", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(45, 3);
+		let position = new vscode.Position(46, 3);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -3447,7 +3447,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes member function with member access operator on this", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(46, 8);
+		let position = new vscode.Position(47, 8);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider",
@@ -3467,7 +3467,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider omits member function with member access operator on super", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(47, 9);
+		let position = new vscode.Position(48, 9);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -3485,7 +3485,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider omits member function from type annotation", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(54, 13);
+		let position = new vscode.Position(55, 13);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider",
@@ -3504,7 +3504,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes member property", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(45, 3);
+		let position = new vscode.Position(46, 3);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -3523,7 +3523,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes member property with member access operator on this", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(46, 8);
+		let position = new vscode.Position(47, 8);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider",
@@ -3543,7 +3543,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider omits member property with member access operator on super", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(47, 9);
+		let position = new vscode.Position(48, 9);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -3561,7 +3561,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider omits member property from type annotation", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(54, 13);
+		let position = new vscode.Position(55, 13);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider",
@@ -3580,7 +3580,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes static variable", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(45, 3);
+		let position = new vscode.Position(46, 3);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -3599,7 +3599,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes static variable with member access operator on class", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(48, 14);
+		let position = new vscode.Position(49, 14);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider",
@@ -3619,7 +3619,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider omits static variable with member access operator on this", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(46, 8);
+		let position = new vscode.Position(47, 8);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider",
@@ -3638,7 +3638,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider omits static variable with member access operator on super", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(47, 9);
+		let position = new vscode.Position(48, 9);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -3656,7 +3656,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider omits static variable from type annotation", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(54, 13);
+		let position = new vscode.Position(55, 13);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider",
@@ -3675,7 +3675,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes static function", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(45, 3);
+		let position = new vscode.Position(46, 3);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -3694,7 +3694,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes static function with member access operator on class", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(48, 14);
+		let position = new vscode.Position(49, 14);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider",
@@ -3714,7 +3714,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider omits static function with member access operator on this", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(46, 8);
+		let position = new vscode.Position(47, 8);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider",
@@ -3733,7 +3733,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider omits static function with member access operator on super", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(47, 9);
+		let position = new vscode.Position(48, 9);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -3751,7 +3751,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider omits static function from type annotation", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(54, 13);
+		let position = new vscode.Position(55, 13);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider",
@@ -3770,7 +3770,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes static property", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(45, 3);
+		let position = new vscode.Position(46, 3);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -3789,7 +3789,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes static property with member access operator on class", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(48, 14);
+		let position = new vscode.Position(49, 14);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider",
@@ -3809,7 +3809,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider omits static property with member access operator on this", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(46, 8);
+		let position = new vscode.Position(47, 8);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider",
@@ -3828,7 +3828,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider omits static property with member access operator on super", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(47, 9);
+		let position = new vscode.Position(48, 9);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -3846,7 +3846,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider omits static property from type annotation", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(54, 13);
+		let position = new vscode.Position(55, 13);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider",
@@ -3865,7 +3865,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes package class", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(45, 3);
+		let position = new vscode.Position(46, 3);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -3884,7 +3884,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider omits package class with member access operator on this", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(46, 8);
+		let position = new vscode.Position(47, 8);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -3902,7 +3902,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider omits package class with member access operator on super", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(47, 9);
+		let position = new vscode.Position(48, 9);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -3920,7 +3920,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes package class as type annotation", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(54, 13);
+		let position = new vscode.Position(55, 13);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -3939,7 +3939,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes package variable", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(45, 3);
+		let position = new vscode.Position(46, 3);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -3977,7 +3977,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider omits package variable with member access operator on this", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(46, 8);
+		let position = new vscode.Position(47, 8);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -3995,7 +3995,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider omits package variable with member access operator on super", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(47, 9);
+		let position = new vscode.Position(48, 9);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -4013,7 +4013,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider omits package variable as type annotation", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(54, 13);
+		let position = new vscode.Position(55, 13);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -4031,7 +4031,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes package function", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(45, 3);
+		let position = new vscode.Position(46, 3);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -4069,7 +4069,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider omits package function with member access operator on this", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(46, 8);
+		let position = new vscode.Position(47, 8);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -4087,7 +4087,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider omits package function with member access operator on super", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(47, 9);
+		let position = new vscode.Position(48, 9);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -4105,7 +4105,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider omits package function as type annotation", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(54, 13);
+		let position = new vscode.Position(55, 13);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -4123,7 +4123,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes super member variable", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(45, 3);
+		let position = new vscode.Position(46, 3);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -4142,7 +4142,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes super member variable with member access operator on this", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(46, 8);
+		let position = new vscode.Position(47, 8);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider",
@@ -4162,7 +4162,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider omits super member variable from type annotation", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(54, 13);
+		let position = new vscode.Position(55, 13);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider",
@@ -4181,7 +4181,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes super member variable with member access operator on super", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(47, 9);
+		let position = new vscode.Position(48, 9);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider",
@@ -4201,7 +4201,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes super member property", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(45, 3);
+		let position = new vscode.Position(46, 3);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -4220,7 +4220,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes super member property with member access operator on this", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(46, 8);
+		let position = new vscode.Position(47, 8);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider",
@@ -4240,7 +4240,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes super member property with member access operator on super", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(47, 9);
+		let position = new vscode.Position(48, 9);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider",
@@ -4260,7 +4260,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider omits super member property from type annotation", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(54, 13);
+		let position = new vscode.Position(55, 13);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider",
@@ -4279,7 +4279,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes super member function", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(45, 3);
+		let position = new vscode.Position(46, 3);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -4298,7 +4298,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes super member function with member access operator on this", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(46, 8);
+		let position = new vscode.Position(47, 8);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider",
@@ -4318,7 +4318,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes super member function with member access operator on super", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(47, 9);
+		let position = new vscode.Position(48, 9);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider",
@@ -4338,7 +4338,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider omits super member function from type annotation", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(54, 13);
+		let position = new vscode.Position(55, 13);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider",
@@ -4357,7 +4357,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes super static variable", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(45, 3);
+		let position = new vscode.Position(46, 3);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -4376,7 +4376,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider omits super static variable with member access operator on class", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(48, 15);
+		let position = new vscode.Position(49, 15);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider",
@@ -4395,7 +4395,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes super static variable with member access operator on superclass", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(49, 20);
+		let position = new vscode.Position(50, 20);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider",
@@ -4415,7 +4415,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes super static variable with member access operator on this", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(46, 8);
+		let position = new vscode.Position(47, 8);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider",
@@ -4434,7 +4434,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider omits super static variable with member access operator on super", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(47, 9);
+		let position = new vscode.Position(48, 9);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider",
@@ -4453,7 +4453,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider omits super static variable from type annotation", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(54, 13);
+		let position = new vscode.Position(55, 13);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider",
@@ -4472,7 +4472,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes super static property", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(45, 3);
+		let position = new vscode.Position(46, 3);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -4491,7 +4491,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider omits super static property with member access operator on class", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(48, 15);
+		let position = new vscode.Position(49, 15);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider",
@@ -4510,7 +4510,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes super static property with member access operator on superclass", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(49, 20);
+		let position = new vscode.Position(50, 20);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider",
@@ -4530,7 +4530,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes super static property with member access operator on this", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(46, 8);
+		let position = new vscode.Position(47, 8);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider",
@@ -4549,7 +4549,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider omits super static property with member access operator on super", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(47, 9);
+		let position = new vscode.Position(48, 9);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider",
@@ -4568,7 +4568,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider omits super static property from type annotation", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(54, 13);
+		let position = new vscode.Position(55, 13);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider",
@@ -4587,7 +4587,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes super static function", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(45, 3);
+		let position = new vscode.Position(46, 3);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -4606,7 +4606,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider omits super static function with member access operator on class", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(48, 15);
+		let position = new vscode.Position(49, 15);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider",
@@ -4625,7 +4625,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes super static function with member access operator on superclass", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(49, 20);
+		let position = new vscode.Position(50, 20);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider",
@@ -4645,7 +4645,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes super static function with member access operator on this", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(46, 8);
+		let position = new vscode.Position(47, 8);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider",
@@ -4664,7 +4664,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider omits super static function with member access operator on super", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(47, 9);
+		let position = new vscode.Position(48, 9);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider",
@@ -4683,7 +4683,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider omits super static function from type annotation", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(54, 13);
+		let position = new vscode.Position(55, 13);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider",
@@ -4702,7 +4702,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes file-internal variable", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(45, 3);
+		let position = new vscode.Position(46, 3);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -4721,7 +4721,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider omits file-internal variable with member access operator on this", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(46, 8);
+		let position = new vscode.Position(47, 8);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -4739,7 +4739,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider omits file-internal variable from type annotation", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(54, 13);
+		let position = new vscode.Position(55, 13);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider",
@@ -4758,7 +4758,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes file-internal function", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(45, 3);
+		let position = new vscode.Position(46, 3);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -4777,7 +4777,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider omits file-internal function with member access operator on this", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(46, 8);
+		let position = new vscode.Position(47, 8);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -4795,7 +4795,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider omits file-internal function from type annotation", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(54, 13);
+		let position = new vscode.Position(55, 13);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider",
@@ -4814,7 +4814,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes file-internal class", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(45, 3);
+		let position = new vscode.Position(46, 3);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -4833,7 +4833,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes file-internal class as type annotation", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(54, 13);
+		let position = new vscode.Position(55, 13);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -4852,7 +4852,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes file-internal member variable", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(52, 12);
+		let position = new vscode.Position(53, 12);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -4871,7 +4871,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes file-internal member function", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(52, 12);
+		let position = new vscode.Position(53, 12);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -4890,7 +4890,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes file-internal member property", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(52, 12);
+		let position = new vscode.Position(53, 12);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -4909,7 +4909,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes file-internal static variable", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(53, 26);
+		let position = new vscode.Position(54, 26);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -4928,7 +4928,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes file-internal static function", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(53, 26);
+		let position = new vscode.Position(54, 26);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -4947,7 +4947,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes file-internal static property", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(53, 26);
+		let position = new vscode.Position(54, 26);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -4966,7 +4966,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider omits protected member variable not in superclass", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(52, 12);
+		let position = new vscode.Position(53, 12);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -4984,7 +4984,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider omits protected member function not in superclass", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(52, 12);
+		let position = new vscode.Position(53, 12);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -5002,7 +5002,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider omits protected member property not in superclass", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(52, 12);
+		let position = new vscode.Position(53, 12);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -5020,7 +5020,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider omits protected static variable not in superclass", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(53, 26);
+		let position = new vscode.Position(54, 26);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -5038,7 +5038,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider omits protected static function not in superclass", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(53, 26);
+		let position = new vscode.Position(54, 26);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -5056,7 +5056,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider omits protected static property not in superclass", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(53, 26);
+		let position = new vscode.Position(54, 26);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -5074,7 +5074,7 @@ suite("completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes class on left side of member access for static constant", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
-		let position = new vscode.Position(55, 21);
+		let position = new vscode.Position(56, 21);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -5084,6 +5084,120 @@ suite("completion item provider", () =>
 						let classItem = findCompletionItem("ClassWithConstants", items);
 						assert.notEqual(classItem, null, "vscode.executeCompletionItemProvider failed to provide class: " + uri);
 						assert.strictEqual(classItem.kind, vscode.CompletionItemKind.Class, "vscode.executeCompletionItemProvider failed to provide correct kind of class: " + uri);
+					}, (err) =>
+					{
+						assert(false, "Failed to execute completion item provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeCompletionItemProvider includes interface member property", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let position = new vscode.Position(58, 13);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
+				.then((list: vscode.CompletionList) =>
+					{
+						let items = list.items;
+						let propertyItem = findCompletionItem("memberProperty", items);
+						assert.notEqual(propertyItem, null, "vscode.executeCompletionItemProvider failed to provide member property: " + uri);
+						assert.strictEqual(propertyItem.kind, vscode.CompletionItemKind.Function, "vscode.executeCompletionItemProvider failed to provide correct kind of member property: " + uri);
+					}, (err) =>
+					{
+						assert(false, "Failed to execute completion item provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeCompletionItemProvider includes interface member function", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let position = new vscode.Position(58, 13);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
+				.then((list: vscode.CompletionList) =>
+					{
+						let items = list.items;
+						let functionItem = findCompletionItem("memberFunction", items);
+						assert.notEqual(functionItem, null, "vscode.executeCompletionItemProvider failed to provide member function: " + uri);
+						assert.strictEqual(functionItem.kind, vscode.CompletionItemKind.Function, "vscode.executeCompletionItemProvider failed to provide correct kind of member function: " + uri);
+					}, (err) =>
+					{
+						assert(false, "Failed to execute completion item provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeCompletionItemProvider includes interface super member property", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let position = new vscode.Position(58, 13);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
+				.then((list: vscode.CompletionList) =>
+					{
+						let items = list.items;
+						let propertyItem = findCompletionItem("superMemberProperty", items);
+						assert.notEqual(propertyItem, null, "vscode.executeCompletionItemProvider failed to provide super member property: " + uri);
+						assert.strictEqual(propertyItem.kind, vscode.CompletionItemKind.Function, "vscode.executeCompletionItemProvider failed to provide correct kind of super member property: " + uri);
+					}, (err) =>
+					{
+						assert(false, "Failed to execute completion item provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeCompletionItemProvider includes interface super member function", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let position = new vscode.Position(58, 13);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
+				.then((list: vscode.CompletionList) =>
+					{
+						let items = list.items;
+						let functionItem = findCompletionItem("superMemberFunction", items);
+						assert.notEqual(functionItem, null, "vscode.executeCompletionItemProvider failed to provide super member function: " + uri);
+						assert.strictEqual(functionItem.kind, vscode.CompletionItemKind.Function, "vscode.executeCompletionItemProvider failed to provide correct kind of super member function: " + uri);
+					}, (err) =>
+					{
+						assert(false, "Failed to execute completion item provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeCompletionItemProvider includes interface super super member property", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let position = new vscode.Position(58, 13);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
+				.then((list: vscode.CompletionList) =>
+					{
+						let items = list.items;
+						let propertyItem = findCompletionItem("superSuperMemberProperty", items);
+						assert.notEqual(propertyItem, null, "vscode.executeCompletionItemProvider failed to provide super super member property: " + uri);
+						assert.strictEqual(propertyItem.kind, vscode.CompletionItemKind.Function, "vscode.executeCompletionItemProvider failed to provide correct kind of super super member property: " + uri);
+					}, (err) =>
+					{
+						assert(false, "Failed to execute completion item provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeCompletionItemProvider includes interface super super member function", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let position = new vscode.Position(58, 13);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
+				.then((list: vscode.CompletionList) =>
+					{
+						let items = list.items;
+						let functionItem = findCompletionItem("superSuperMemberFunction", items);
+						assert.notEqual(functionItem, null, "vscode.executeCompletionItemProvider failed to provide super super member function: " + uri);
+						assert.strictEqual(functionItem.kind, vscode.CompletionItemKind.Function, "vscode.executeCompletionItemProvider failed to provide correct kind of super super member function: " + uri);
 					}, (err) =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
