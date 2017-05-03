@@ -2145,6 +2145,43 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             addDefinitionsInTypeScopeToAutoCompleteActionScript(typeScope, scope, false, result);
             return;
         }
+
+        if (leftOperand instanceof IMemberAccessExpressionNode)
+        {
+            IMemberAccessExpressionNode memberAccess = (IMemberAccessExpressionNode) leftOperand;
+            String packageName = memberAccessToPackageName(memberAccess);
+            if (packageName != null)
+            {
+                autoCompleteDefinitions(result, false, false, packageName, null);
+                return;
+            }
+        }
+    }
+
+    private String memberAccessToPackageName(IMemberAccessExpressionNode memberAccess)
+    {
+        String result = null;
+        IExpressionNode rightOperand = memberAccess.getRightOperandNode();
+        if(!(rightOperand instanceof IIdentifierNode))
+        {
+            return null;
+        }
+        IExpressionNode leftOperand = memberAccess.getLeftOperandNode();
+        if (leftOperand instanceof IMemberAccessExpressionNode)
+        {
+            result = memberAccessToPackageName((IMemberAccessExpressionNode) leftOperand);
+        }
+        else if(leftOperand instanceof IIdentifierNode)
+        {
+            IIdentifierNode identifierNode = (IIdentifierNode) leftOperand;
+            result = identifierNode.getName();
+        }
+        else
+        {
+            return null;
+        }
+        IIdentifierNode identifierNode = (IIdentifierNode) rightOperand;
+        return result + "." + identifierNode.getName();
     }
 
     private void autoCompletePackage(String partialPackageName, CompletionList result)

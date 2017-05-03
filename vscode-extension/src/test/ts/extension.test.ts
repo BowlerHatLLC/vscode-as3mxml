@@ -3881,6 +3881,25 @@ suite("completion item provider", () =>
 					});
 		});
 	});
+	test("vscode.executeCompletionItemProvider includes package class with member access on fully-qualified package", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let position = new vscode.Position(50, 15);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
+				.then((list: vscode.CompletionList) =>
+					{
+						let items = list.items;
+						let classItem = findCompletionItem("UnreferencedClass", items);
+						assert.notEqual(classItem, null, "vscode.executeCompletionItemProvider failed to provide package class: " + uri);
+						assert.strictEqual(classItem.kind, vscode.CompletionItemKind.Class, "vscode.executeCompletionItemProvider failed to provide correct kind of package class: " + uri);
+					}, (err) =>
+					{
+						assert(false, "Failed to execute completion item provider: " + uri);
+					});
+		});
+	});
 	test("vscode.executeCompletionItemProvider omits package class with member access operator on this", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
@@ -3891,7 +3910,7 @@ suite("completion item provider", () =>
 				.then((list: vscode.CompletionList) =>
 					{
 						let items = list.items;
-						let localVarItem = findCompletionItem("UnreferenceClass", items);
+						let localVarItem = findCompletionItem("UnreferencedClass", items);
 						assert.equal(localVarItem, null, "vscode.executeCompletionItemProvider failed to omit package class: " + uri);
 					}, (err) =>
 					{
@@ -3909,7 +3928,7 @@ suite("completion item provider", () =>
 				.then((list: vscode.CompletionList) =>
 					{
 						let items = list.items;
-						let localVarItem = findCompletionItem("UnreferenceClass", items);
+						let localVarItem = findCompletionItem("UnreferencedClass", items);
 						assert.equal(localVarItem, null, "vscode.executeCompletionItemProvider failed to omit package class: " + uri);
 					}, (err) =>
 					{
@@ -3955,7 +3974,7 @@ suite("completion item provider", () =>
 					});
 		});
 	});
-	/*test("vscode.executeCompletionItemProvider includes package variable with member access on fully-qualified package", () =>
+	test("vscode.executeCompletionItemProvider includes package variable with member access on fully-qualified package", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(50, 15);
@@ -3973,7 +3992,7 @@ suite("completion item provider", () =>
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
 		});
-	});*/
+	});
 	test("vscode.executeCompletionItemProvider omits package variable with member access operator on this", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
@@ -4047,7 +4066,7 @@ suite("completion item provider", () =>
 					});
 		});
 	});
-	/*test("vscode.executeCompletionItemProvider includes package function with member access on fully-qualified package", () =>
+	test("vscode.executeCompletionItemProvider includes package function with member access on fully-qualified package", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
 		let position = new vscode.Position(50, 15);
@@ -4065,7 +4084,7 @@ suite("completion item provider", () =>
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
 		});
-	});*/
+	});
 	test("vscode.executeCompletionItemProvider omits package function with member access operator on this", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
@@ -5084,6 +5103,80 @@ suite("completion item provider", () =>
 						let classItem = findCompletionItem("ClassWithConstants", items);
 						assert.notEqual(classItem, null, "vscode.executeCompletionItemProvider failed to provide class: " + uri);
 						assert.strictEqual(classItem.kind, vscode.CompletionItemKind.Class, "vscode.executeCompletionItemProvider failed to provide correct kind of class: " + uri);
+					}, (err) =>
+					{
+						assert(false, "Failed to execute completion item provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeCompletionItemProvider includes package interface with member access on fully-qualified package", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let position = new vscode.Position(50, 15);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
+				.then((list: vscode.CompletionList) =>
+					{
+						let items = list.items;
+						let interfaceItem = findCompletionItem("IPackageInterface", items);
+						assert.notEqual(interfaceItem, null, "vscode.executeCompletionItemProvider failed to provide package interface: " + uri);
+						assert.strictEqual(interfaceItem.kind, vscode.CompletionItemKind.Interface, "vscode.executeCompletionItemProvider failed to provide correct kind of package interface: " + uri);
+					}, (err) =>
+					{
+						assert(false, "Failed to execute completion item provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeCompletionItemProvider omits package interface with member access operator on this", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let position = new vscode.Position(47, 8);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
+				.then((list: vscode.CompletionList) =>
+					{
+						let items = list.items;
+						let localVarItem = findCompletionItem("IPackageInterface", items);
+						assert.equal(localVarItem, null, "vscode.executeCompletionItemProvider failed to omit package interface: " + uri);
+					}, (err) =>
+					{
+						assert(false, "Failed to execute completion item provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeCompletionItemProvider omits package interface with member access operator on super", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let position = new vscode.Position(48, 9);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
+				.then((list: vscode.CompletionList) =>
+					{
+						let items = list.items;
+						let localVarItem = findCompletionItem("IPackageInterface", items);
+						assert.equal(localVarItem, null, "vscode.executeCompletionItemProvider failed to omit package interface: " + uri);
+					}, (err) =>
+					{
+						assert(false, "Failed to execute completion item provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeCompletionItemProvider includes package interface as type annotation", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let position = new vscode.Position(55, 13);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
+				.then((list: vscode.CompletionList) =>
+					{
+						let items = list.items;
+						let packageInterfaceItem = findCompletionItem("IPackageInterface", items);
+						assert.notEqual(packageInterfaceItem, null, "vscode.executeCompletionItemProvider failed to provide package interface: " + uri);
+						assert.strictEqual(packageInterfaceItem.kind, vscode.CompletionItemKind.Interface, "vscode.executeCompletionItemProvider failed to provide correct kind of package interface: " + uri);
 					}, (err) =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
