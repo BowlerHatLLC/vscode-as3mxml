@@ -204,6 +204,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private static final String SDK_SOURCE_PATH_SIGNATURE_UNIX = "/frameworks/projects/";
     private static final String SDK_SOURCE_PATH_SIGNATURE_WINDOWS = "\\frameworks\\projects\\";
     private static final String FLEXLIB = "flexlib";
+    private static final String PACKAGE_NAME_NO_IMPORT = "__AS3__.";
+    private static final String VECTOR_HIDDEN_PREFIX = "Vector$";
 
     private static final String[] LANGUAGE_TYPE_NAMES =
             {
@@ -1827,6 +1829,33 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
     }
 
+    private MXMLNamespace getNamespaceFromURI(String uri, PrefixMap prefixMap)
+    {
+        String[] uriPrefixes = prefixMap.getPrefixesForNamespace(uri);
+        if (uriPrefixes.length > 0)
+        {
+            return new MXMLNamespace(uriPrefixes[0], uri);
+        }
+
+        //we'll check if the namespace comes from a known library
+        //with a common prefix
+        if (NAMESPACE_TO_PREFIX.containsKey(uri))
+        {
+            String prefix = NAMESPACE_TO_PREFIX.get(uri);
+            if (prefixMap.containsPrefix(prefix))
+            {
+                //the prefix already exists with a different URI, so we can't
+                //use it for this URI
+                prefix = null;
+            }
+            if (prefix != null)
+            {
+                return new MXMLNamespace(prefix, uri);
+            }
+        }
+        return null;
+    }
+
     private MXMLNamespace getMXMLNamespaceForTypeDefinition(ITypeDefinition definition, MXMLData mxmlData)
     {
         PrefixMap prefixMap = mxmlData.getRootTagPrefixMap();
@@ -1860,27 +1889,30 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
 
         //3. try to create a new xmlns with a prefix and uri
+
+
+        //special case for the __AS3__ package
+        if (packageName != null && packageName.startsWith(PACKAGE_NAME_NO_IMPORT))
+        {
+            //anything in this package is in the language namespace
+            String fxNamespace = mxmlData.getRootTag().getMXMLDialect().getLanguageNamespace();
+            MXMLNamespace resultNS = getNamespaceFromURI(fxNamespace, prefixMap);
+            if (resultNS != null)
+            {
+                return resultNS;
+            }
+        }
+
         String fallbackNamespace = null;
         for (XMLName tagName : tagNames)
         {
             //we know this type is in one or more namespaces
             //let's try to figure out a nice prefix to use
-            String prefix = null;
             fallbackNamespace = tagName.getXMLNamespace();
-            //we'll check if the namespace comes from a known library
-            //with a common prefix
-            if (NAMESPACE_TO_PREFIX.containsKey(fallbackNamespace))
+            MXMLNamespace resultNS = getNamespaceFromURI(fallbackNamespace, prefixMap);
+            if (resultNS != null)
             {
-                prefix = NAMESPACE_TO_PREFIX.get(fallbackNamespace);
-                if (prefixMap.containsPrefix(prefix))
-                {
-                    //the prefix already exists, so we can't use it
-                    prefix = null;
-                }
-            }
-            if (prefix != null)
-            {
-                return new MXMLNamespace(prefix, fallbackNamespace);
+                return resultNS;
             }
         }
         if (fallbackNamespace != null)
@@ -2600,6 +2632,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private void addDefinitionAutoCompleteActionScript(IDefinition definition, CompletionList result)
     {
+        if (definition.getBaseName().startsWith(VECTOR_HIDDEN_PREFIX))
+        {
+            return;
+        }
         CompletionItem item = new CompletionItem();
         item.setKind(getDefinitionKind(definition));
         item.setDetail(getDefinitionDetail(definition));
@@ -2617,6 +2653,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private void addDefinitionAutoCompleteMXML(IDefinition definition, String prefix, String uri, CompletionList result)
     {
+        if (definition.getBaseName().startsWith(VECTOR_HIDDEN_PREFIX))
+        {
+            return;
+        }
         CompletionItem item = new CompletionItem();
         item.setKind(getDefinitionKind(definition));
         item.setDetail(getDefinitionDetail(definition));
@@ -2661,7 +2701,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private Command createImportCommand(IDefinition definition)
     {
         String packageName = definition.getPackageName();
-        if (packageName == null || packageName.isEmpty())
+        if (packageName == null
+                || packageName.isEmpty()
+                || packageName.startsWith(PACKAGE_NAME_NO_IMPORT))
         {
             return null;
         }
@@ -4119,7 +4161,16 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             detailBuilder.append(IASKeywordConstants.CLASS);
             detailBuilder.append(" ");
-            detailBuilder.append(classDefinition.getQualifiedName());
+            if (classDefinition.getPackageName().startsWith(PACKAGE_NAME_NO_IMPORT))
+            {
+                //classes like __AS3__.vec.Vector should not include the
+                //package name
+                detailBuilder.append(classDefinition.getBaseName());
+            }
+            else
+            {
+                detailBuilder.append(classDefinition.getQualifiedName());
+            }
             IClassDefinition baseClassDefinition = classDefinition.resolveBaseClass(currentProject);
             if (baseClassDefinition != null && !baseClassDefinition.getQualifiedName().equals(IASLanguageConstants.Object))
             {
