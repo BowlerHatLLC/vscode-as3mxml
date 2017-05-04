@@ -35,8 +35,7 @@ Add a file named [`asconfig.json`](https://github.com/BowlerHatLLC/vscode-nextge
 			"debug": true,
 			"library-path": [
 				"libs"
-			],
-			"output": "bin/MyProject.swf"
+			]
 		},
 		"files":
 		[
