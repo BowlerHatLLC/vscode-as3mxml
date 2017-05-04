@@ -393,7 +393,7 @@ function startClient()
 		documentSelector:
 		[
 			"nextgenas",
-			"xml"
+			"mxml"
 		],
 		synchronize:
 		{
