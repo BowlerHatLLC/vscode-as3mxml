@@ -3066,48 +3066,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private String patch(String sourceText, TextDocumentContentChangeEvent change)
     {
-        try
-        {
-            Range range = change.getRange();
-            BufferedReader reader = new BufferedReader(new StringReader(sourceText));
-            StringWriter writer = new StringWriter();
-
-            // Skip unchanged lines
-            int line = 0;
-
-            while (line < range.getStart().getLine())
-            {
-                writer.write(reader.readLine() + '\n');
-                line++;
-            }
-
-            // Skip unchanged chars
-            for (int character = 0; character < range.getStart().getCharacter(); character++)
-            {
-                writer.write(reader.read());
-            }
-
-            // Write replacement text
-            writer.write(change.getText());
-
-            // Skip replaced text
-            reader.skip(change.getRangeLength());
-
-            // Write remaining text
-            while (true)
-            {
-                int next = reader.read();
-
-                if (next == -1)
-                    return writer.toString();
-                else
-                    writer.write(next);
-            }
-        }
-        catch (IOException e)
-        {
-            throw new RuntimeException(e);
-        }
+        Range range = change.getRange();
+        Position start = range.getStart();
+        StringReader reader = new StringReader(sourceText);
+        int offset = lineAndCharacterToOffset(reader, start.getLine(), start.getCharacter());
+        return sourceText.substring(0, offset) + change.getText() + sourceText.substring(offset + change.getRangeLength());
     }
 
     private void addCompilerProblem(ICompilerProblem problem, PublishDiagnosticsParams publish)
