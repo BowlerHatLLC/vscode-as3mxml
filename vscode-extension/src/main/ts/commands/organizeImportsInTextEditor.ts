@@ -15,43 +15,44 @@ limitations under the License.
 */
 import * as vscode from "vscode";
 
-function getEOL(eol: vscode.EndOfLine): string
+function organizeImportsInDocumentFromIndex(document: vscode.TextDocument, startIndex: number, edit: vscode.TextEditorEdit): number
 {
-	if(eol === vscode.EndOfLine.LF)
-	{
-		return "\n";
-	}
-	return "\r\n";
-}
-
-export default function organizeImportsInTextEditor(editor: vscode.TextEditor, edit: vscode.TextEditorEdit)
-{
-	let document = editor.document;
-	let fileName = document.fileName;
-	if(!fileName.endsWith(".as") && !fileName.endsWith(".mxml"))
-	{
-		//we can't organize imports in this file
-		return;
-	}
 	let text = document.getText();
 	let regExp = /^([ \t]*)import ([\w\.]+);?/gm;
+	if(startIndex !== -1)
+	{
+		regExp.lastIndex = startIndex;
+	}
 	let matches;
 	let names: string[] = [];
 	let insertIndex = 0;
 	let indent = "";
-	let startIndex = -1;
+	let startImportsIndex = -1;
+	let endImportsIndex = -1;
 	let endIndex = -1;
 	do
 	{
 		matches = regExp.exec(text);
 		if(matches)
 		{
-			if(startIndex === -1)
+			let matchIndex = matches.index;
+			if(startImportsIndex === -1)
 			{
-				startIndex = matches.index;
+				startImportsIndex = matchIndex;
+				let nextBlockOpenIndex = text.indexOf("{", startImportsIndex);
+				let nextBlockCloseIndex = text.indexOf("}", startImportsIndex);
+				endIndex = nextBlockOpenIndex;
+				if(endIndex === -1 || (nextBlockCloseIndex !== -1 && nextBlockCloseIndex < endIndex))
+				{
+					endIndex = nextBlockCloseIndex;
+				}
 				indent = matches[1];
 			}
-			endIndex = matches.index + matches[0].length;
+			if(endIndex !== -1 && matchIndex >= endIndex)
+			{
+				break;
+			}
+			endImportsIndex = matchIndex + matches[0].length;
 			names[insertIndex] = matches[2];
 			insertIndex++;
 		}
@@ -79,7 +80,6 @@ export default function organizeImportsInTextEditor(editor: vscode.TextEditor, e
 	});
 	let result = "";
 	let previousFirstPart: string = null;
-	let eol = getEOL(document.eol);
 	for(let i = 0, count = names.length; i < count; i++)
 	{
 		let name = names[i];
@@ -91,15 +91,32 @@ export default function organizeImportsInTextEditor(editor: vscode.TextEditor, e
 		else if(firstPart !== previousFirstPart)
 		{
 			//add an extra line if the top-level package changes
-			result += eol;
+			result += "\n";
 			previousFirstPart = firstPart;
 		}
 		if(i > 0)
 		{
-			result += eol;
+			result += "\n";
 		}
 		result += indent + "import " + names[i] + ";";
 	}
-	let range = new vscode.Range(document.positionAt(startIndex), document.positionAt(endIndex));
+	let range = new vscode.Range(document.positionAt(startImportsIndex), document.positionAt(endImportsIndex));
 	edit.replace(range, result);
+	return endIndex;
+}
+
+export default function organizeImportsInTextEditor(editor: vscode.TextEditor, edit: vscode.TextEditorEdit)
+{
+	let document = editor.document;
+	let fileName = document.fileName;
+	if(!fileName.endsWith(".as") && !fileName.endsWith(".mxml"))
+	{
+		//we can't organize imports in this file
+		return;
+	}
+	let nextIndex = 0;
+	while(nextIndex !== -1)
+	{
+		nextIndex = organizeImportsInDocumentFromIndex(document, nextIndex, edit);
+	}
 }
