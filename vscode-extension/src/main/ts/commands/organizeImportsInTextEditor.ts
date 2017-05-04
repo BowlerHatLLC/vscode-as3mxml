@@ -66,8 +66,6 @@ function organizeImportsInDocumentFromIndex(document: vscode.TextDocument, start
 	//put them in alphabetical order
 	names = names.sort(function(a: string, b: string): number
 	{
-		a = a.toLowerCase();
-		b = b.toLowerCase();
 		if(a < b)
 		{
 			return -1;
