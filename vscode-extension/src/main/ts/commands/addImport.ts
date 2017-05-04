@@ -15,7 +15,7 @@ limitations under the License.
 */
 import * as vscode from "vscode";
 
-export default function(textEditor: vscode.TextEditor, edit: vscode.TextEditorEdit, qualifiedName: string, startIndex: number, endIndex: number)
+export default function addImport(textEditor: vscode.TextEditor, edit: vscode.TextEditorEdit, qualifiedName: string, startIndex: number, endIndex: number)
 {
 	if(!qualifiedName)
 	{

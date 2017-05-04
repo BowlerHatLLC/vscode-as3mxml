@@ -15,7 +15,7 @@ limitations under the License.
 */
 import * as vscode from "vscode";
 
-export default function(textEditor: vscode.TextEditor, edit: vscode.TextEditorEdit, prefix: string, uri: string, startIndex: number, endIndex: number)
+export default function addMXMLNamespace(textEditor: vscode.TextEditor, edit: vscode.TextEditorEdit, prefix: string, uri: string, startIndex: number, endIndex: number)
 {
 	if(!prefix || !uri)
 	{
