@@ -15,6 +15,8 @@ limitations under the License.
 */
 import addImport from "./commands/addImport";
 import addMXMLNamespace from "./commands/addMXMLNamespace";
+import organizeImportsInUri from "./commands/organizeImportsInUri";
+import organizeImportsInTextEditor from "./commands/organizeImportsInTextEditor";
 import createASConfigTaskRunner from "./commands/createASConfigTaskRunner";
 import createInitialConfigurationsForSWFDebug from "./commands/createInitialConfigurationsForSWFDebug";
 import findJava from "./utils/findJava";
@@ -154,6 +156,8 @@ export function activate(context: vscode.ExtensionContext)
 	vscode.commands.registerCommand("nextgenas.createInitialConfigurationsForSWFDebug", createInitialConfigurationsForSWFDebug);
 	vscode.commands.registerTextEditorCommand("nextgenas.addImport", addImport);
 	vscode.commands.registerTextEditorCommand("nextgenas.addMXMLNamespace", addMXMLNamespace);
+	vscode.commands.registerCommand("nextgenas.organizeImportsInUri", organizeImportsInUri);
+	vscode.commands.registerCommand("nextgenas.organizeImportsInTextEditor", organizeImportsInTextEditor);
 
 	startClient();
 }

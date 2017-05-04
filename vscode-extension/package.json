@@ -26,7 +26,7 @@
     "build-debug": "mvn package"
   },
   "engines": {
-    "vscode": "^1.10.0"
+    "vscode": "^1.11.0"
   },
   "devDependencies": {
     "@types/mocha": "^2.2.40",
@@ -47,15 +47,73 @@
     "workspaceContains:asconfig.json",
     "onCommand:nextgenas.createASConfigTaskRunner",
     "onCommand:nextgenas.createInitialConfigurationsForSWFDebug",
-    "onCommand:nextgenas.adapterExecutableCommandSWF"
+    "onCommand:nextgenas.adapterExecutableCommandSWF",
+    "onCommand:nextgenas.organizeImportsInTextEditor",
+    "onCommand:nextgenas.organizeImportsInUri"
   ],
   "contributes": {
     "commands": [
       {
         "command": "nextgenas.createASConfigTaskRunner",
         "title": "Tasks: Configure Task Runner (ActionScript - asconfig.json)"
+      },
+      {
+        "command": "nextgenas.organizeImportsInTextEditor",
+        "title": "ActionScript: Organize Imports"
+      },
+      {
+        "command": "nextgenas.organizeImportsInUri",
+        "title": "Organize Imports"
       }
     ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "nextgenas.organizeImportsInTextEditor",
+          "when": "editorLangId == nextgenas"
+        },
+        {
+          "command": "nextgenas.organizeImportsInTextEditor",
+          "when": "editorLangId == xml"
+        },
+        {
+          "command": "nextgenas.organizeImportsInUri",
+          "when": "false"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "nextgenas.organizeImportsInUri",
+          "when": "editorLangId == nextgenas",
+          "group": "1_modification"
+        },
+        {
+          "command": "nextgenas.organizeImportsInUri",
+          "when": "editorLangId == xml",
+          "group": "1_modification"
+        }
+      ],
+      "editor/title/context": [
+        {
+          "command": "nextgenas.organizeImportsInUri",
+          "when": "resourceLangId == nextgenas"
+        },
+        {
+          "command": "nextgenas.organizeImportsInUri",
+          "when": "resourceLangId == xml"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "nextgenas.organizeImportsInUri",
+          "when": "resourceLangId == nextgenas"
+        },
+        {
+          "command": "nextgenas.organizeImportsInUri",
+          "when": "resourceLangId == xml"
+        }
+      ]
+    },
     "languages": [
       {
         "id": "nextgenas",
