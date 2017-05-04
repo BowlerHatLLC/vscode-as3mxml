@@ -18,7 +18,7 @@ import * as vscode from "vscode";
 function organizeImportsInDocumentFromIndex(document: vscode.TextDocument, startIndex: number, edit: vscode.TextEditorEdit): number
 {
 	let text = document.getText();
-	let regExp = /^([ \t]*)import ([\w\.]+);?/gm;
+	let regExp = /^([ \t]*)import ([\w\.\*]+);?/gm;
 	if(startIndex !== -1)
 	{
 		regExp.lastIndex = startIndex;
@@ -61,7 +61,7 @@ function organizeImportsInDocumentFromIndex(document: vscode.TextDocument, start
 	if(names.length === 0)
 	{
 		//nothing to organize
-		return;
+		return endIndex;
 	}
 	//put them in alphabetical order
 	names = names.sort(function(a: string, b: string): number
