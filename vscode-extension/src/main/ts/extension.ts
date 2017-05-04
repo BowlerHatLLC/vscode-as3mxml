@@ -17,6 +17,7 @@ import addImport from "./commands/addImport";
 import addMXMLNamespace from "./commands/addMXMLNamespace";
 import organizeImportsInUri from "./commands/organizeImportsInUri";
 import organizeImportsInTextEditor from "./commands/organizeImportsInTextEditor";
+import organizeImportsInDirectory from "./commands/organizeImportsInDirectory";
 import createASConfigTaskRunner from "./commands/createASConfigTaskRunner";
 import createInitialConfigurationsForSWFDebug from "./commands/createInitialConfigurationsForSWFDebug";
 import findJava from "./utils/findJava";
@@ -158,6 +159,7 @@ export function activate(context: vscode.ExtensionContext)
 	vscode.commands.registerTextEditorCommand("nextgenas.addMXMLNamespace", addMXMLNamespace);
 	vscode.commands.registerCommand("nextgenas.organizeImportsInUri", organizeImportsInUri);
 	vscode.commands.registerCommand("nextgenas.organizeImportsInTextEditor", organizeImportsInTextEditor);
+	vscode.commands.registerCommand("nextgenas.organizeImportsInDirectory", organizeImportsInDirectory);
 
 	startClient();
 }

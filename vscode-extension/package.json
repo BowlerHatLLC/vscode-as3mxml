@@ -49,7 +49,8 @@
     "onCommand:nextgenas.createInitialConfigurationsForSWFDebug",
     "onCommand:nextgenas.adapterExecutableCommandSWF",
     "onCommand:nextgenas.organizeImportsInTextEditor",
-    "onCommand:nextgenas.organizeImportsInUri"
+    "onCommand:nextgenas.organizeImportsInUri",
+    "onCommand:nextgenas.organizeImportsInDirectory"
   ],
   "contributes": {
     "commands": [
@@ -64,6 +65,10 @@
       {
         "command": "nextgenas.organizeImportsInUri",
         "title": "Organize Imports"
+      },
+      {
+        "command": "nextgenas.organizeImportsInDirectory",
+        "title": "Organize Imports (Recursive)"
       }
     ],
     "menus": {
@@ -78,6 +83,10 @@
         },
         {
           "command": "nextgenas.organizeImportsInUri",
+          "when": "false"
+        },
+        {
+          "command": "nextgenas.organizeImportsInDirectory",
           "when": "false"
         }
       ],
@@ -111,6 +120,10 @@
         {
           "command": "nextgenas.organizeImportsInUri",
           "when": "resourceLangId == xml"
+        },
+        {
+          "command": "nextgenas.organizeImportsInDirectory",
+          "when": "explorerResourceIsFolder"
         }
       ]
     },

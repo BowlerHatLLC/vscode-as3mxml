@@ -16,15 +16,27 @@ limitations under the License.
 import * as vscode from "vscode";
 import organizeImportsInTextEditor from "./organizeImportsInTextEditor";
 
-export default function organizeImportsInUri(uri: vscode.Uri)
+export default function organizeImportsInUri(uri: vscode.Uri, save?: boolean, close?: boolean): Thenable<any>
 {
 	return vscode.workspace.openTextDocument(uri).then((document: vscode.TextDocument) =>
 	{
-		vscode.window.showTextDocument(document).then((editor: vscode.TextEditor) =>
+		return vscode.window.showTextDocument(document).then((editor: vscode.TextEditor) =>
 		{
-			editor.edit((edit: vscode.TextEditorEdit) =>
+			return editor.edit((edit: vscode.TextEditorEdit) =>
 			{
 				organizeImportsInTextEditor(editor, edit);
+			}).then(() =>
+			{
+				if(save)
+				{
+					return editor.document.save().then(() =>
+					{
+						if(close)
+						{
+							return vscode.commands.executeCommand("workbench.action.closeActiveEditor");
+						}
+					});
+				}
 			});
 		});
 	});
