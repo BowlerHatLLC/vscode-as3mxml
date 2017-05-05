@@ -1,28 +1,24 @@
 {
 	"title": "JSON schema for the ActionScript configuration file",
 	"type": "object",
-	"default":
-	{
-		"config": "js"
-	},
 	"properties":
 	{
 		"type":
 		{
 			"type": "string",
-			"description": "The project type. Supported values include \"app\" and \"lib\".",
+			"description": "Indicates if the project is an application or library. Supported values include \"app\" and \"lib\". Then default value is \"app\".",
 			"pattern": "^(app|lib)$"
 		},
 		"config":
 		{
 			"type": "string",
-			"description": "The default configuration file to use from the SDK. Supported values include \"js\", \"node\", \"flex\", \"air\", and \"airmobile\".",
-			"pattern": "^(js|node|flex|air|airmobile)$"
+			"description": "The default configuration file to use from the SDK. Supported values include \"js\", \"node\", \"flex\", \"air\", and \"airmobile\". The default value is \"flex\".",
+			"pattern": "^(flex|air|airmobile|js|node)$"
 		},
 		"files":
 		{
 			"type": "array",
-			"description": "The specified files will be included, including all of their dependencies. For an application, this field will typically contain the main class only.",
+			"description": "The specified files will be included by the compiler, including all of their dependencies. For an application, this field will typically contain one main class only.",
 			"items":
 			{
 				"type": "string"
@@ -32,7 +28,7 @@
 		"compilerOptions":
 		{
 			"type": "object",
-			"description": "Instructs the Apache FlexJS compiler how to compile the project.",
+			"description": "Instructs the ActionScript and MXML compiler how to build the project.",
 			"properties":
 			{
 				"accessible":
@@ -245,7 +241,7 @@
 				"source-map":
 				{
 					"type": "boolean",
-					"description": "In a transpiled JS project, emits source maps in the debug build for each ActionScript file. The default value is false."
+					"description": "In an Apache FlexJS project, emits source maps in the debug build for each ActionScript and MXML file. The default value is false."
 				},
 				"source-path":
 				{
@@ -266,7 +262,7 @@
 				"targets":
 				{
 					"type": "array",
-					"description": "Specifies the output targets for Apache FlexJS. Supported values include \"JSFlex\", \"JS\", \"JSNode\", and \"SWF\".",
+					"description": "In an Apache FlexJS project, specifies one or more output targets. Supported values include \"JSFlex\", \"JS\", \"JSNode\", and \"SWF\".",
 					"items":
 					{
 						"type": "string"
@@ -326,9 +322,5 @@
 			"type": "boolean",
 			"description": "Optionally copies any files in the source path that don't have .as or .mxml extensions to the output directory."
 		}
-	},
-	"required":
-	[
-		"config"
-	]
+	}
 }
