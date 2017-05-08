@@ -41,10 +41,10 @@ import java.util.concurrent.CompletableFuture;
 import org.apache.flex.abc.ABCParser;
 import org.apache.flex.abc.Pool;
 import org.apache.flex.abc.PoolingABCVisitor;
-import org.apache.flex.compiler.clients.JSConfiguration;
 import org.apache.flex.compiler.common.ISourceLocation;
 import org.apache.flex.compiler.common.PrefixMap;
 import org.apache.flex.compiler.common.XMLName;
+import org.apache.flex.compiler.config.Configuration;
 import org.apache.flex.compiler.config.Configurator;
 import org.apache.flex.compiler.config.ICompilerSettingsConstants;
 import org.apache.flex.compiler.constants.IASKeywordConstants;
@@ -195,9 +195,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private static final String MARKDOWN_CODE_BLOCK_END = "\n```";
     private static final String COMMAND_IMPORT = "nextgenas.addImport";
     private static final String COMMAND_XMLNS = "nextgenas.addMXMLNamespace";
-    private static final String CONFIG_FLEX = "flex";
-    private static final String CONFIG_AIR = "air";
-    private static final String CONFIG_AIRMOBILE = "airmobile";
+    private static final String CONFIG_JS = "js";
+    private static final String CONFIG_NODE = "node";
     private static final String SDK_FRAMEWORKS_PATH_SIGNATURE = "/frameworks/";
     private static final String SDK_LIBRARY_PATH_SIGNATURE_UNIX = "/frameworks/libs/";
     private static final String SDK_LIBRARY_PATH_SIGNATURE_WINDOWS = "\\frameworks\\libs\\";
@@ -261,6 +260,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private LanguageServerFileSpecGetter fileSpecGetter;
     private boolean brokenMXMLValueEnd;
     private boolean flexLibSDKContainsFalconCompiler = false;
+    private boolean flexLibSDKIsFlexJS = false;
     private ProblemTracker codeProblemTracker = new ProblemTracker();
     private ProblemTracker configProblemTracker = new ProblemTracker();
 
@@ -297,6 +297,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         Path sdkPath = Paths.get(System.getProperty(FLEXLIB));
         sdkPath = sdkPath.resolve("../lib/falcon-mxmlc.jar");
         flexLibSDKContainsFalconCompiler = sdkPath.toFile().exists();
+        sdkPath = Paths.get(System.getProperty(FLEXLIB));
+        sdkPath = sdkPath.resolve("../js/bin/asjsc");
+        flexLibSDKIsFlexJS = sdkPath.toFile().exists();
 
         isWindows = System.getProperty("os.name").toLowerCase().startsWith("windows");
     }
@@ -3351,17 +3354,28 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         invisibleUnits.clear();
     }
 
-    private boolean isJSConfig(String config, String jsOutputType)
+    private boolean isJSConfig(ProjectOptions projectOptions)
     {
-        if (config.equals(CONFIG_FLEX)
-                || config.equals(CONFIG_AIR)
-                || config.equals(CONFIG_AIRMOBILE))
+        if(flexLibSDKIsFlexJS)
         {
-            //if jsOutputType is not null, it's a JS project
-            //if it's null, then it's a SWF project
-            return jsOutputType != null;
+            return true;
         }
-        return true;
+        String config = projectOptions.config;
+        if (config.equals(CONFIG_JS) || config.equals(CONFIG_NODE))
+        {
+            return true;
+        }
+        CompilerOptions compilerOptions = projectOptions.compilerOptions;
+        if (compilerOptions.jsOutputType != null)
+        {
+            return true;
+        }
+        if (compilerOptions.targets != null
+                && compilerOptions.targets.size() > 0)
+        {
+            return true;
+        }
+        return false;
     }
 
     private FlexProject getProject()
@@ -3389,15 +3403,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         CompilerOptions compilerOptions = currentProjectOptions.compilerOptions;
         Configurator configurator = null;
-        if (isJSConfig(currentProjectOptions.config, compilerOptions.jsOutputType))
+        if (isJSConfig(currentProjectOptions))
         {
             configurator = new Configurator(JSGoogConfiguration.class);
         }
-        else
+        else //swf only
         {
-            //using JSConfiguration is necessary for the new -targets option
-            //in FlexJS 0.8 and newer that also applies to SWF
-            configurator = new Configurator(JSConfiguration.class);
+            configurator = new Configurator(Configuration.class);
         }
         configurator.setToken("configname", currentProjectOptions.config);
         ProjectType type = currentProjectOptions.type;

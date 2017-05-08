@@ -79,7 +79,7 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy
         }
         Path projectRoot = asconfigPath.getParent();
         ProjectType type = ProjectType.APP;
-        String config = null;
+        String config = "flex";
         String[] files = null;
         String additionalOptions = null;
         CompilerOptions compilerOptions = new CompilerOptions();
@@ -109,7 +109,10 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy
                     String typeString = json.get(ProjectOptions.TYPE).asText();
                     type = ProjectType.fromToken(typeString);
                 }
-                config = json.get(ProjectOptions.CONFIG).asText();
+                if (json.has(ProjectOptions.CONFIG)) //optional, defaults to "flex"
+                {
+                    config = json.get(ProjectOptions.CONFIG).asText();
+                }
                 if (json.has(ProjectOptions.FILES)) //optional
                 {
                     JsonNode jsonFiles = json.get(ProjectOptions.FILES);
