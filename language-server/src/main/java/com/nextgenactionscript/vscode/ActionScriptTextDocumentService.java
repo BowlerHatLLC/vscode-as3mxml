@@ -506,7 +506,40 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             //we couldn't find a node at the specified location
             return CompletableFuture.completedFuture(new SignatureHelp(Collections.emptyList(), -1, -1));
         }
-        IASNode offsetNode = getOffsetNode(position);
+        IASNode offsetNode = null;
+        IMXMLTagData offsetTag = getOffsetMXMLTag(position);
+        if (offsetTag != null)
+        {
+            IMXMLTagAttributeData attributeData = getMXMLTagAttributeWithValueAtOffset(offsetTag, currentOffset);
+            if (attributeData != null)
+            {
+                //some attributes can have ActionScript completion, such as
+                //events and properties with data binding
+                IClassDefinition tagDefinition = (IClassDefinition) currentProject.resolveXMLNameToDefinition(offsetTag.getXMLName(), offsetTag.getMXMLDialect());
+                IDefinition attributeDefinition = currentProject.resolveSpecifier(tagDefinition, attributeData.getShortName());
+                if (attributeDefinition instanceof IEventDefinition)
+                {
+                    IMXMLInstanceNode mxmlNode = (IMXMLInstanceNode) getOffsetNode(position);
+                    IMXMLEventSpecifierNode eventNode = mxmlNode.getEventSpecifierNode(attributeData.getShortName());
+                    for (IASNode asNode : eventNode.getASNodes())
+                    {
+                        IASNode containingNode = getContainingNodeIncludingStart(asNode, currentOffset);
+                        if (containingNode != null)
+                        {
+                            offsetNode = containingNode;
+                        }
+                    }
+                    if (offsetNode == null)
+                    {
+                        offsetNode = eventNode;
+                    }
+                }
+            }
+        }
+        if (offsetNode == null)
+        {
+            offsetNode = getOffsetNode(position);
+        }
         if (offsetNode == null)
         {
             //we couldn't find a node at the specified location
@@ -609,6 +642,28 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return CompletableFuture.completedFuture(Collections.emptyList());
         }
         IMXMLTagData offsetTag = getOffsetMXMLTag(position);
+        IMXMLTagAttributeData attributeData = getMXMLTagAttributeWithValueAtOffset(offsetTag, currentOffset);
+        if (attributeData != null)
+        {
+            //some attributes can have ActionScript completion, such as
+            //events and properties with data binding
+            IClassDefinition tagDefinition = (IClassDefinition) currentProject.resolveXMLNameToDefinition(offsetTag.getXMLName(), offsetTag.getMXMLDialect());
+            IDefinition attributeDefinition = currentProject.resolveSpecifier(tagDefinition, attributeData.getShortName());
+            if (attributeDefinition instanceof IEventDefinition)
+            {
+                IMXMLInstanceNode mxmlNode = (IMXMLInstanceNode) getOffsetNode(position);
+                IMXMLEventSpecifierNode eventNode = mxmlNode.getEventSpecifierNode(attributeData.getShortName());
+                for (IASNode asNode : eventNode.getASNodes())
+                {
+                    IASNode containingNode = getContainingNodeIncludingStart(asNode, currentOffset);
+                    if (containingNode != null)
+                    {
+                        return actionScriptDefinitionWithNode(position, containingNode);
+                    }
+                }
+                return actionScriptDefinitionWithNode(position, eventNode);
+            }
+        }
         //if we're inside an <fx:Script> tag, we want ActionScript lookup,
         //so that's why we call isMXMLTagValidForCompletion()
         if (offsetTag != null && isMXMLTagValidForCompletion(offsetTag))
@@ -1595,6 +1650,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private CompletableFuture<List<? extends Location>> actionScriptDefinition(TextDocumentPositionParams position)
     {
         IASNode offsetNode = getOffsetNode(position);
+        return actionScriptDefinitionWithNode(position, offsetNode);
+    }
+
+    private CompletableFuture<List<? extends Location>> actionScriptDefinitionWithNode(TextDocumentPositionParams position, IASNode offsetNode)
+    {
         if (offsetNode == null)
         {
             //we couldn't find a node at the specified location
