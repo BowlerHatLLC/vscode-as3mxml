@@ -459,6 +459,28 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return CompletableFuture.completedFuture(new Hover(Collections.emptyList(), null));
         }
         IMXMLTagData offsetTag = getOffsetMXMLTag(position);
+        IMXMLTagAttributeData attributeData = getMXMLTagAttributeWithValueAtOffset(offsetTag, currentOffset);
+        if (attributeData != null)
+        {
+            //some attributes can have ActionScript completion, such as
+            //events and properties with data binding
+            IClassDefinition tagDefinition = (IClassDefinition) currentProject.resolveXMLNameToDefinition(offsetTag.getXMLName(), offsetTag.getMXMLDialect());
+            IDefinition attributeDefinition = currentProject.resolveSpecifier(tagDefinition, attributeData.getShortName());
+            if (attributeDefinition instanceof IEventDefinition)
+            {
+                IMXMLInstanceNode mxmlNode = (IMXMLInstanceNode) getOffsetNode(position);
+                IMXMLEventSpecifierNode eventNode = mxmlNode.getEventSpecifierNode(attributeData.getShortName());
+                for (IASNode asNode : eventNode.getASNodes())
+                {
+                    IASNode containingNode = getContainingNodeIncludingStart(asNode, currentOffset);
+                    if (containingNode != null)
+                    {
+                        return actionScriptHoverWithNode(position, containingNode);
+                    }
+                }
+                return actionScriptHoverWithNode(position, eventNode);
+            }
+        }
         //if we're inside an <fx:Script> tag, we want ActionScript hover,
         //so that's why we call isMXMLTagValidForCompletion()
         if (offsetTag != null && isMXMLTagValidForCompletion(offsetTag))
@@ -1496,8 +1518,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private CompletableFuture<Hover> actionScriptHover(TextDocumentPositionParams position)
     {
-        IDefinition definition = null;
         IASNode offsetNode = getOffsetNode(position);
+        return actionScriptHoverWithNode(position, offsetNode);
+    }
+
+    private CompletableFuture<Hover> actionScriptHoverWithNode(TextDocumentPositionParams position, IASNode offsetNode)
+    {
+        IDefinition definition = null;
         if (offsetNode == null)
         {
             //we couldn't find a node at the specified location
