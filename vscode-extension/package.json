@@ -43,7 +43,7 @@
   },
   "activationEvents": [
     "onLanguage:nextgenas",
-    "onLanguage:xml",
+    "onLanguage:mxml",
     "workspaceContains:asconfig.json",
     "onCommand:nextgenas.createASConfigTaskRunner",
     "onCommand:nextgenas.createInitialConfigurationsForSWFDebug",
