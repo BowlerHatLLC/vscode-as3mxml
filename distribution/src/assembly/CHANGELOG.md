@@ -11,6 +11,7 @@
 * Fixed issue where triggering completion on the left side of member access failed to provide suggestions.
 * Fixed issue where inherited members were not included in completion for an interface.
 * Fixed issue where failure to parse `asconfig.json` would result in null reference errors from the language server.
+* In addition to support for completion from the previous update, ActionScript in MXML event attributes now includes support for signature help, hover, goto definition, find all references, and rename.
 
 ## 0.4.2
 
