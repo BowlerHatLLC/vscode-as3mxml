@@ -1,3 +1,17 @@
+## 0.4.3
+
+* Added "Organize Imports" context menu items for ActionScript and MXML files, and "ActionScript: Organize Imports" appears in the command palette.
+* Added support for the the new `targets` compiler option from Apache FlexJS 0.8 in `asconfig.json`.
+* The `config` field in `asconfig.json` is now optional. It will default to `"flex"`, the same as when you run the `mxmlc` compiler.
+* Fixed issue where functions or variables defined in a package were not automatically imported like classes or interfaces.
+* Fixed issue where CRLF line endings were not stored properly in memory, causing the code intelligence to get out of sync with the editor on Windows.
+* Fixed issue where Visual Studio code would incorrectly recognize all XML files as MXML.
+* Fixed issue where `__AS3__.vec.Vector` would be incorrectly imported when typing a variable as `Vector`.
+* Fixed issue where the `Vector` type in MXML was not considered part of the `http://ns.adobe.com/mxml/2009` namespace.
+* Fixed issue where triggering completion on the left side of member access failed to provide suggestions.
+* Fixed issue where inherited members were not included in completion for an interface.
+* Fixed issue where failure to parse `asconfig.json` would result in null reference errors from the language server.
+
 ## 0.4.2
 
 * When opening a workspace, immediately checks for errors instead of waiting to open an ActionScript or MXML file.
