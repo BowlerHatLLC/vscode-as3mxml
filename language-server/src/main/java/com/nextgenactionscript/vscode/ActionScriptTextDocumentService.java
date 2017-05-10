@@ -2675,7 +2675,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         item.setKind(getDefinitionKind(definition));
         item.setDetail(getDefinitionDetail(definition));
         item.setLabel(definition.getBaseName());
-        if (definition instanceof ITypeDefinition)
+        boolean isInPackage = !definition.getQualifiedName().equals(definition.getBaseName());
+        if (isInPackage)
         {
             Command command = createImportCommand(definition);
             if (command != null)
