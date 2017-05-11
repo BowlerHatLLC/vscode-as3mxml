@@ -28,6 +28,17 @@ mvn clean package
 
 The extension will be generated in `distribution/target/vscode-nextgenas/vscode-nextgenas`. This directory may be run inside Visual Studio Code's extension host. Additionally, a `vsix` file will be generated that may be installed in Visual Studio Code.
 
+## Running tests
+
+Tests are run in the Visual Studio Code extension host.
+
+1. Open the root of this repository in Visual Studio Code.
+1. Goto the **View** menu, and select **Debug**.
+1. Choose the **Launch Tests** configuration.
+1. Goto the **Debug** menu and select **Start Debugging**.
+
+Results will appear in the **Output** view.
+
 ## Support this project
 
 Want to see more ActionScript tools and utilities like this Visual Studio Code extension? Please [become a patron](http://patreon.com/josht) and support the next generation of ActionScript development on the web -- without a plugin!
