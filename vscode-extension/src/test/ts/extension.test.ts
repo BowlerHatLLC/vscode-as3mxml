@@ -85,6 +85,14 @@ function findCompletionItem(name: string, items: vscode.CompletionItem[]): vscod
 	});
 }
 
+function containsNonTextCompletionItems(items: vscode.CompletionItem[]): boolean
+{
+	return items.some((item: vscode.CompletionItem) =>
+	{
+		return item.kind !== vscode.CompletionItemKind.Text;
+	})
+}
+
 suite("NextGenAS extension", () =>
 {
 	test("vscode.extensions.getExtension() and isActive", (done) =>
@@ -5525,6 +5533,40 @@ suite("completion item provider", () =>
 						let functionItem = findCompletionItem("superSuperMemberFunction", items);
 						assert.notEqual(functionItem, null, "vscode.executeCompletionItemProvider failed to provide super super member function: " + uri);
 						assert.strictEqual(functionItem.kind, vscode.CompletionItemKind.Function, "vscode.executeCompletionItemProvider failed to provide correct kind of super super member function: " + uri);
+					}, (err) =>
+					{
+						assert(false, "Failed to execute completion item provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeCompletionItemProvider empty inside string literal", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let position = new vscode.Position(59, 33);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
+				.then((list: vscode.CompletionList) =>
+					{
+						assert.ok(!containsNonTextCompletionItems(list.items),
+							"vscode.executeCompletionItemProvider incorrectly provides items inside a string literal");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute completion item provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeCompletionItemProvider empty inside RegExp literal", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let position = new vscode.Position(60, 33);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
+				.then((list: vscode.CompletionList) =>
+					{
+						assert.ok(!containsNonTextCompletionItems(list.items),
+							"vscode.executeCompletionItemProvider incorrectly provides items inside a RegExp literal");
 					}, (err) =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);

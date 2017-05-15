@@ -1082,9 +1082,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             nodeAtPreviousOffset = parentNode.getContainingNode(currentOffset - 1);
         }
 
-        if (isInActionScriptComment(position))
+        if (!isActionScriptCompletionAllowedInNode(position, offsetNode))
         {
-            //if we're inside a comment, no completion!
+            //if we're inside a node that shouldn't have completion!
             return CompletableFuture.completedFuture(new CompletionList());
         }
 
@@ -4471,6 +4471,22 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             labelBuilder.append(functionDefinition.getReturnTypeAsDisplayString());
         }
         return labelBuilder.toString();
+    }
+
+    private boolean isActionScriptCompletionAllowedInNode(TextDocumentPositionParams params, IASNode offsetNode)
+    {
+        if (offsetNode != null)
+        {
+            if (offsetNode.getNodeID().equals(ASTNodeID.LiteralStringID))
+            {
+                return false;
+            }
+            if (offsetNode.getNodeID().equals(ASTNodeID.LiteralRegexID))
+            {
+                return false;
+            }
+        }
+        return !isInActionScriptComment(params);
     }
 
     private boolean isInActionScriptComment(TextDocumentPositionParams params)

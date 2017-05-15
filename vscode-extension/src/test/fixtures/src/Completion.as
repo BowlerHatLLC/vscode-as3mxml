@@ -57,6 +57,8 @@ package
 			ClassWithConstants.ONE;
 			var instance2:IPackageInterface;
 			instance2.;
+			var s:String = "no completion in string";
+			var r:RegExp = /no completion in regexp/";
 		}
 	}
 }
