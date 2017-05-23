@@ -4093,36 +4093,40 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             else
             {
-                IMXMLInstanceNode mxmlNode = (IMXMLInstanceNode) getOffsetNode(position);
-                IMXMLPropertySpecifierNode propertyNode = mxmlNode.getPropertySpecifierNode(attributeData.getShortName());
-                for (int i = 0, count = propertyNode.getChildCount(); i < count; i++)
+                IASNode offsetNode = getOffsetNode(position);
+                if (offsetNode instanceof IMXMLInstanceNode)
                 {
-                    IMXMLNode propertyChild = (IMXMLNode) propertyNode.getChild(i);
-                    if (propertyChild instanceof IMXMLConcatenatedDataBindingNode)
+                    IMXMLInstanceNode instanceNode = (IMXMLInstanceNode) offsetNode;
+                    IMXMLPropertySpecifierNode propertyNode = instanceNode.getPropertySpecifierNode(attributeData.getShortName());
+                    for (int i = 0, count = propertyNode.getChildCount(); i < count; i++)
                     {
-                        IMXMLConcatenatedDataBindingNode dataBinding = (IMXMLConcatenatedDataBindingNode) propertyChild;
-                        for (int j = 0, childCount = dataBinding.getChildCount(); j < childCount; j++)
+                        IMXMLNode propertyChild = (IMXMLNode) propertyNode.getChild(i);
+                        if (propertyChild instanceof IMXMLConcatenatedDataBindingNode)
                         {
-                            IASNode dataBindingChild = dataBinding.getChild(i);
-                            if (dataBindingChild.contains(currentOffset)
-                                    && dataBindingChild instanceof IMXMLSingleDataBindingNode)
+                            IMXMLConcatenatedDataBindingNode dataBinding = (IMXMLConcatenatedDataBindingNode) propertyChild;
+                            for (int j = 0, childCount = dataBinding.getChildCount(); j < childCount; j++)
                             {
-                                //we'll parse this in a moment, as if it were
-                                //a direct child of the property specifier
-                                propertyChild = (IMXMLSingleDataBindingNode) dataBindingChild;
-                                break;
+                                IASNode dataBindingChild = dataBinding.getChild(i);
+                                if (dataBindingChild.contains(currentOffset)
+                                        && dataBindingChild instanceof IMXMLSingleDataBindingNode)
+                                {
+                                    //we'll parse this in a moment, as if it were
+                                    //a direct child of the property specifier
+                                    propertyChild = (IMXMLSingleDataBindingNode) dataBindingChild;
+                                    break;
+                                }
                             }
                         }
-                    }
-                    if (propertyChild instanceof IMXMLSingleDataBindingNode)
-                    {
-                        IMXMLSingleDataBindingNode dataBinding = (IMXMLSingleDataBindingNode) propertyChild;
-                        IASNode containingNode = dataBinding.getExpressionNode().getContainingNode(currentOffset);
-                        //we found the correct expression, but due to a bug
-                        //in the compiler its line and column positions
-                        //will be wrong. the resulting completion is too
-                        //quirky, so this feature will be completed later.
-                        //return containingNode;
+                        if (propertyChild instanceof IMXMLSingleDataBindingNode)
+                        {
+                            IMXMLSingleDataBindingNode dataBinding = (IMXMLSingleDataBindingNode) propertyChild;
+                            IASNode containingNode = dataBinding.getExpressionNode().getContainingNode(currentOffset);
+                            //we found the correct expression, but due to a bug
+                            //in the compiler its line and column positions
+                            //will be wrong. the resulting completion is too
+                            //quirky, so this feature will be completed later.
+                            //return containingNode;
+                        }
                     }
                 }
                 //nothing possible for this attribute
