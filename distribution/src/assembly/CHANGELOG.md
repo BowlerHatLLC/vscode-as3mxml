@@ -1,3 +1,5 @@
+## 0.4.4
+
 ## 0.4.3
 
 * Added "Organize Imports" context menu items for ActionScript and MXML files, and "ActionScript: Organize Imports" appears in the command palette.
