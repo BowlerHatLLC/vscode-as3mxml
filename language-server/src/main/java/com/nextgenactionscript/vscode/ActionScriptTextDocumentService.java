@@ -1073,7 +1073,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         if (offsetNode == null)
         {
             //we couldn't find a node at the specified location
-            return CompletableFuture.completedFuture(new CompletionList());
+            autoCompletePackageBlock(result);
+            return CompletableFuture.completedFuture(result);
         }
         IASNode parentNode = offsetNode.getParent();
         IASNode nodeAtPreviousOffset = null;
@@ -1219,7 +1220,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         if (offsetNode instanceof IPackageNode)
         {
             IPackageNode packageNode = (IPackageNode) offsetNode;
-            autoCompletePackage(packageNode.getPackageName(), result);
+            autoCompletePackageName(packageNode.getPackageName(), result);
             return CompletableFuture.completedFuture(result);
         }
         if (parentNode != null
@@ -1229,7 +1230,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             if (gpNode != null && gpNode instanceof IPackageNode)
             {
                 IPackageNode packageNode = (IPackageNode) gpNode;
-                autoCompletePackage(packageNode.getPackageName(), result);
+                autoCompletePackageName(packageNode.getPackageName(), result);
             }
         }
         if (parentNode != null
@@ -1240,7 +1241,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             IExpressionNode nameNode = packageNode.getNameExpressionNode();
             if (offsetNode == nameNode)
             {
-                autoCompletePackage(packageNode.getPackageName(), result);
+                autoCompletePackageName(packageNode.getPackageName(), result);
                 return CompletableFuture.completedFuture(result);
             }
         }
@@ -2251,10 +2252,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return result + "." + identifierNode.getName();
     }
 
-    private void autoCompletePackage(String partialPackageName, CompletionList result)
+    private String getExpectedPackage(ICompilationUnit unit)
     {
         //we'll guess the package name based on path of the parent directory
-        File unitFile = new File(currentUnit.getAbsoluteFilename());
+        File unitFile = new File(unit.getAbsoluteFilename());
         unitFile = unitFile.getParentFile();
 
         //find the source path that the parent directory is inside
@@ -2271,7 +2272,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         if (basePath == null)
         {
             //we couldn't find the source path!
-            return;
+            return "";
         }
 
         String expectedPackage = unitFile.getAbsolutePath().substring(basePath.length());
@@ -2283,6 +2284,28 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             expectedPackage = expectedPackage.substring(1);
         }
+        return expectedPackage;
+    }
+
+    private void autoCompletePackageBlock(CompletionList result)
+    {
+        String expectedPackage = getExpectedPackage(currentUnit);
+        StringBuilder builder = new StringBuilder();
+        builder.append("package");
+        if (expectedPackage.length() > 0)
+        {
+            builder.append(" ");
+            builder.append(expectedPackage);
+        }
+        builder.append("\n{\n\t\n}");
+        CompletionItem packageItem = new CompletionItem();
+        packageItem.setLabel(builder.toString());
+        result.getItems().add(packageItem);
+    }
+
+    private void autoCompletePackageName(String partialPackageName, CompletionList result)
+    {
+        String expectedPackage = getExpectedPackage(currentUnit);
         if (expectedPackage.length() == 0)
         {
             //it's the top level package
