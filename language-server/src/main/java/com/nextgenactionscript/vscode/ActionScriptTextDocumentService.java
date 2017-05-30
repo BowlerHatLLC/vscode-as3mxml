@@ -2275,7 +2275,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
 
         String expectedPackage = unitFile.getAbsolutePath().substring(basePath.length());
+        //replace / in path on Unix
         expectedPackage = expectedPackage.replaceAll("/", ".");
+        //replaces \ in path on Windows
+        expectedPackage = expectedPackage.replaceAll("\\\\", ".");
         if (expectedPackage.startsWith("."))
         {
             expectedPackage = expectedPackage.substring(1);
