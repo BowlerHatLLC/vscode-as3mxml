@@ -158,10 +158,29 @@
 						"type": "string"
 					}
 				},
+				"html-output-filename":
+				{
+					"type": "string",
+					"description": "In an Apache FlexJS project, specifies the name of the output file generated using the html-template."
+				},
+				"html-template":
+				{
+					"type": "string",
+					"description": "In an Apache FlexJS project, specifies a custom HTML template file."
+				},
 				"include-sources":
 				{
 					"type": "array",
 					"description": "(Library projects only) Specifies classes or directories to add to the SWC file. When specifying classes, you specify the path to the class file (for instance, com/example/MyClass.as) rather than the class name itself (for instance, com.example.MyClass).",
+					"items":
+					{
+						"type": "string"
+					}
+				},
+				"js-compiler-option":
+				{
+					"type": "array",
+					"description": "In an Apache FlexJS project, passes additional options to the Closure Compiler for a release build.",
 					"items":
 					{
 						"type": "string"
@@ -268,6 +287,11 @@
 				{
 					"type": "string",
 					"description": "The path where the generated output should be saved."
+				},
+				"remove-circulars":
+				{
+					"type": "boolean",
+					"description": "In an Apache FlexJS project, removes circular references for a release build."
 				},
 				"strict":
 				{
