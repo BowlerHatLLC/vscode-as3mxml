@@ -37,6 +37,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.flex.abc.ABCParser;
 import org.apache.flex.abc.Pool;
@@ -263,6 +265,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private boolean flexLibSDKIsFlexJS = false;
     private ProblemTracker codeProblemTracker = new ProblemTracker();
     private ProblemTracker configProblemTracker = new ProblemTracker();
+    private Pattern additionalOptionsPattern = Pattern.compile("[^\\s]*'([^'])*?'|[^\\s]*\"([^\"])*?\"|[^\\s]+");
 
     private class MXMLNamespace
     {
@@ -3477,8 +3480,14 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         ArrayList<String> combinedOptions = new ArrayList<>();
         if (additionalOptions != null)
         {
-            String[] splitOptions = additionalOptions.split("\\s+");
-            combinedOptions.addAll(Arrays.asList(splitOptions));
+            //split the additionalOptions into separate values so that we can
+            //pass them in as String[], as the compiler expects.
+            Matcher matcher = additionalOptionsPattern.matcher(additionalOptions);
+            while (matcher.find())
+            {
+                String option = matcher.group();
+                combinedOptions.add(option);
+            }
         }
         //not all framework SDKs support a theme (such as Adobe's AIR SDK), so
         //we clear it for the editor to avoid a missing spark.css file.
