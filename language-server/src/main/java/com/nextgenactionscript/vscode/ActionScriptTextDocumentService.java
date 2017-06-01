@@ -2304,6 +2304,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         builder.append("\n{\n\t\n}");
         CompletionItem packageItem = new CompletionItem();
         packageItem.setLabel(builder.toString());
+        packageItem.setKind(CompletionItemKind.Module);
         result.getItems().add(packageItem);
     }
 
