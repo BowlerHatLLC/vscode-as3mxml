@@ -20,6 +20,7 @@ import organizeImportsInTextEditor from "./commands/organizeImportsInTextEditor"
 import organizeImportsInDirectory from "./commands/organizeImportsInDirectory";
 import createASConfigTaskRunner from "./commands/createASConfigTaskRunner";
 import createInitialConfigurationsForSWFDebug from "./commands/createInitialConfigurationsForSWFDebug";
+import findPort from "./utils/findPort";
 import findJava from "./utils/findJava";
 import findEditorSDK from "./utils/findEditorSDK";
 import validateJava from "./utils/validateJava";
@@ -34,7 +35,6 @@ import * as vscode from "vscode";
 import {LanguageClient, LanguageClientOptions, SettingMonitor,
 	ServerOptions, StreamInfo, ErrorHandler, ErrorAction, CloseAction} from "vscode-languageclient";
 import { Message } from "vscode-jsonrpc";
-import portfinder = require("portfinder");
 
 const FLEXJSSDK_SETTING_DEPRECATED_ERROR = "nextgenas.flexjssdk in settings is deprecated. Please migrate to nextgenas.sdk.editor instead.";
 const FRAMEWORKSDK_SETTING_DEPRECATED_ERROR = "nextgenas.frameworksdk in settings is deprecated. Please migrate to nextgenas.sdk.framework instead.";
@@ -52,7 +52,6 @@ let frameworkSDKHome: string;
 let killed = false;
 let hasShownFlexJSSDKWarning = false;
 let hasShownFrameworkSDKWarning = false;
-portfinder.basePort = 55282;
 
 function killJavaProcess()
 {
@@ -287,7 +286,7 @@ function createLanguageServer(): Promise<StreamInfo>
 			}
 			return;
 		}
-		portfinder.getPort((err, port) =>
+		findPort(55282, (port) =>
 		{
 			let cpDelimiter = getJavaClassPathDelimiter();
 			let args =

@@ -37,7 +37,6 @@
     "vscode": "^1.1.0"
   },
   "dependencies": {
-    "portfinder": "^1.0.12",
     "vscode-jsonrpc": "^3.1.0",
     "vscode-languageclient": "^2.6.3"
   },
