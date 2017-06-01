@@ -20,6 +20,7 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
@@ -153,14 +154,17 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy
                     if (jsonCompilerOptions.has(CompilerOptions.EXTERNAL_LIBRARY_PATH))
                     {
                         JsonNode jsonExternalLibraryPath = jsonCompilerOptions.get(CompilerOptions.EXTERNAL_LIBRARY_PATH);
-                        ArrayList<File> externalLibraryPath = new ArrayList<>();
-                        for (int i = 0, count = jsonExternalLibraryPath.size(); i < count; i++)
-                        {
-                            String pathString = jsonExternalLibraryPath.get(i).asText();
-                            Path filePath = projectRoot.resolve(pathString);
-                            externalLibraryPath.add(filePath.toFile());
-                        }
-                        compilerOptions.externalLibraryPath = externalLibraryPath;
+                        compilerOptions.externalLibraryPath = jsonPathsToList(jsonExternalLibraryPath, projectRoot);
+                    }
+                    if (jsonCompilerOptions.has(CompilerOptions.JS_EXTERNAL_LIBRARY_PATH))
+                    {
+                        JsonNode jsonExternalLibraryPath = jsonCompilerOptions.get(CompilerOptions.JS_EXTERNAL_LIBRARY_PATH);
+                        compilerOptions.jsExternalLibraryPath = jsonPathsToList(jsonExternalLibraryPath, projectRoot);
+                    }
+                    if (jsonCompilerOptions.has(CompilerOptions.SWF_EXTERNAL_LIBRARY_PATH))
+                    {
+                        JsonNode jsonExternalLibraryPath = jsonCompilerOptions.get(CompilerOptions.SWF_EXTERNAL_LIBRARY_PATH);
+                        compilerOptions.swfExternalLibraryPath = jsonPathsToList(jsonExternalLibraryPath, projectRoot);
                     }
                     if (jsonCompilerOptions.has(CompilerOptions.INCLUDE_CLASSES))
                     {
@@ -187,14 +191,7 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy
                     if (jsonCompilerOptions.has(CompilerOptions.INCLUDE_SOURCES))
                     {
                         JsonNode jsonIncludeSources = jsonCompilerOptions.get(CompilerOptions.INCLUDE_SOURCES);
-                        ArrayList<File> includeSources = new ArrayList<>();
-                        for (int i = 0, count = jsonIncludeSources.size(); i < count; i++)
-                        {
-                            String pathString = jsonIncludeSources.get(i).asText();
-                            Path filePath = projectRoot.resolve(pathString);
-                            includeSources.add(filePath.toFile());
-                        }
-                        compilerOptions.includeSources = includeSources;
+                        compilerOptions.includeSources = jsonPathsToList(jsonIncludeSources, projectRoot);
                     }
                     if (jsonCompilerOptions.has(CompilerOptions.JS_OUTPUT_TYPE))
                     {
@@ -218,26 +215,22 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy
                     if (jsonCompilerOptions.has(CompilerOptions.LIBRARY_PATH))
                     {
                         JsonNode jsonLibraryPath = jsonCompilerOptions.get(CompilerOptions.LIBRARY_PATH);
-                        ArrayList<File> libraryPath = new ArrayList<>();
-                        for (int i = 0, count = jsonLibraryPath.size(); i < count; i++)
-                        {
-                            String pathString = jsonLibraryPath.get(i).asText();
-                            Path filePath = projectRoot.resolve(pathString);
-                            libraryPath.add(filePath.toFile());
-                        }
-                        compilerOptions.libraryPath = libraryPath;
+                        compilerOptions.libraryPath = jsonPathsToList(jsonLibraryPath, projectRoot);
+                    }
+                    if (jsonCompilerOptions.has(CompilerOptions.JS_LIBRARY_PATH))
+                    {
+                        JsonNode jsonLibraryPath = jsonCompilerOptions.get(CompilerOptions.JS_LIBRARY_PATH);
+                        compilerOptions.jsLibraryPath = jsonPathsToList(jsonLibraryPath, projectRoot);
+                    }
+                    if (jsonCompilerOptions.has(CompilerOptions.SWF_LIBRARY_PATH))
+                    {
+                        JsonNode jsonLibraryPath = jsonCompilerOptions.get(CompilerOptions.SWF_LIBRARY_PATH);
+                        compilerOptions.swfLibraryPath = jsonPathsToList(jsonLibraryPath, projectRoot);
                     }
                     if (jsonCompilerOptions.has(CompilerOptions.SOURCE_PATH))
                     {
                         JsonNode jsonSourcePath = jsonCompilerOptions.get(CompilerOptions.SOURCE_PATH);
-                        ArrayList<File> sourcePath = new ArrayList<>();
-                        for (int i = 0, count = jsonSourcePath.size(); i < count; i++)
-                        {
-                            String pathString = jsonSourcePath.get(i).asText();
-                            Path filePath = projectRoot.resolve(pathString);
-                            sourcePath.add(filePath.toFile());
-                        }
-                        compilerOptions.sourcePath = sourcePath;
+                        compilerOptions.sourcePath = jsonPathsToList(jsonSourcePath, projectRoot);
                     }
                     if (jsonCompilerOptions.has(CompilerOptions.TARGETS))
                     {
@@ -290,5 +283,17 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy
         options.compilerOptions = compilerOptions;
         options.additionalOptions = additionalOptions;
         return options;
+    }
+
+    private List<File> jsonPathsToList(JsonNode paths, Path projectRoot)
+    {
+        List<File> result = new ArrayList<>();
+        for (int i = 0, count = paths.size(); i < count; i++)
+        {
+            String pathString = paths.get(i).asText();
+            Path filePath = projectRoot.resolve(pathString);
+            result.add(filePath.toFile());
+        }
+        return result;
     }
 }

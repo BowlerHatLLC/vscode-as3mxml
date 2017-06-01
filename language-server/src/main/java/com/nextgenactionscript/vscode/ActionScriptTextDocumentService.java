@@ -197,6 +197,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private static final String MARKDOWN_CODE_BLOCK_END = "\n```";
     private static final String COMMAND_IMPORT = "nextgenas.addImport";
     private static final String COMMAND_XMLNS = "nextgenas.addMXMLNamespace";
+    private static final String TOKEN_CONFIGNAME = "configname";
     private static final String CONFIG_JS = "js";
     private static final String CONFIG_NODE = "node";
     private static final String SDK_FRAMEWORKS_PATH_SIGNATURE = "/frameworks/";
@@ -3440,6 +3441,20 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return false;
     }
 
+    private void appendPathCompilerOptions(String prefix, Collection<File> files, List<String> options)
+    {
+        for(File file : files)
+        {
+            String path = file.getAbsolutePath();
+            if (path.indexOf(' ') != -1)
+            {
+                //wrap in quotes, if required
+                path = "\"" + path + "\"";
+            }
+            options.add(prefix + file.getAbsolutePath());
+        }
+    }
+
     private FlexProject getProject()
     {
         clearInvisibleCompilationUnits();
@@ -3473,11 +3488,28 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             configurator = new Configurator(Configuration.class);
         }
-        configurator.setToken("configname", currentProjectOptions.config);
+        configurator.setToken(TOKEN_CONFIGNAME, currentProjectOptions.config);
         ProjectType type = currentProjectOptions.type;
         String[] files = currentProjectOptions.files;
         String additionalOptions = currentProjectOptions.additionalOptions;
         ArrayList<String> combinedOptions = new ArrayList<>();
+        if (compilerOptions.swfExternalLibraryPath != null)
+        {
+            //this isn't available in the configurator, so add it like the additionalOptions
+            appendPathCompilerOptions("--swf-external-library-path+=", compilerOptions.swfExternalLibraryPath, combinedOptions);
+        }
+        if (compilerOptions.swfLibraryPath != null)
+        {
+            appendPathCompilerOptions("--swf-library-path+=", compilerOptions.swfLibraryPath, combinedOptions);
+        }
+        if (compilerOptions.jsExternalLibraryPath != null)
+        {
+            appendPathCompilerOptions("--js-external-library-path+=", compilerOptions.jsExternalLibraryPath, combinedOptions);
+        }
+        if (compilerOptions.jsLibraryPath != null)
+        {
+            appendPathCompilerOptions("--js-library-path+=", compilerOptions.jsLibraryPath, combinedOptions);
+        }
         if (additionalOptions != null)
         {
             //split the additionalOptions into separate values so that we can

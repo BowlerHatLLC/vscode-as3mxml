@@ -122,6 +122,24 @@
 						"type": "string"
 					}
 				},
+				"js-external-library-path":
+				{
+					"type": "array",
+					"description": "In an Apache FlexJS project, specifies a list of SWC files, or directories containing SWC files, to exclude from linking in only the generated JavaScript output.",
+					"items":
+					{
+						"type": "string"
+					}
+				},
+				"swf-external-library-path":
+				{
+					"type": "array",
+					"description": "In an Apache FlexJS project, specifies a list of SWC files, or directories containing SWC files, to exclude from linking in only the generated SWF output.",
+					"items":
+					{
+						"type": "string"
+					}
+				},
 				"include-classes":
 				{
 					"type": "array",
@@ -162,6 +180,24 @@
 				{
 					"type": "array",
 					"description": "Links SWC libraries to the generated output of the build. The compiler only links in those classes for the SWC file that are required. You can specify a directory or individual SWC files.",
+					"items":
+					{
+						"type": "string"
+					}
+				},
+				"js-library-path":
+				{
+					"type": "array",
+					"description": "In an Apache FlexJS project, links SWC libraries to only the generated JavaScript output of the build.",
+					"items":
+					{
+						"type": "string"
+					}
+				},
+				"swf-library-path":
+				{
+					"type": "array",
+					"description": "In an Apache FlexJS project, links SWC libraries to only the generated SWF output of the build.",
 					"items":
 					{
 						"type": "string"

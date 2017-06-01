@@ -38,12 +38,16 @@ public class CompilerOptions
     public static final String INCLUDE_CLASSES = "include-classes";
     public static final String INCLUDE_NAMESPACES = "include-namespaces";
     public static final String INCLUDE_SOURCES = "include-sources";
+    public static final String JS_EXTERNAL_LIBRARY_PATH = "js-external-library-path";
+    public static final String JS_LIBRARY_PATH = "js-library-path";
     public static final String JS_OUTPUT_TYPE = "js-output-type";
     public static final String LIBRARY_PATH = "library-path";
     public static final String NAMESPACE = "namespace";
     public static final String NAMESPACE_URI = "uri";
     public static final String NAMESPACE_MANIFEST = "manifest";
     public static final String SOURCE_PATH = "source-path";
+    public static final String SWF_EXTERNAL_LIBRARY_PATH = "swf-external-library-path";
+    public static final String SWF_LIBRARY_PATH = "swf-library-path";
     public static final String TARGETS = "targets";
     public static final String WARNINGS = "warnings";
 
@@ -52,11 +56,15 @@ public class CompilerOptions
     public Collection<String> includeClasses;
     public Collection<String> includeNamespaces;
     public Collection<File> includeSources;
+    public Collection<File> jsExternalLibraryPath;
+    public Collection<File> jsLibraryPath;
     public String jsOutputType;
     public Collection<File> libraryPath;
     public Map<String, String> defines;
     public List<MXMLNamespaceMapping> namespaceMappings;
     public List<File> sourcePath;
+    public Collection<File> swfExternalLibraryPath;
+    public Collection<File> swfLibraryPath;
     public List<String> targets;
     public boolean warnings = true;
 }
