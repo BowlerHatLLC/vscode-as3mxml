@@ -49,13 +49,18 @@
     "onCommand:nextgenas.adapterExecutableCommandSWF",
     "onCommand:nextgenas.organizeImportsInTextEditor",
     "onCommand:nextgenas.organizeImportsInUri",
-    "onCommand:nextgenas.organizeImportsInDirectory"
+    "onCommand:nextgenas.organizeImportsInDirectory",
+    "onCommand:nextgenas.selectWorkspaceSDK"
   ],
   "contributes": {
     "commands": [
       {
         "command": "nextgenas.createASConfigTaskRunner",
         "title": "Tasks: Configure Task Runner (ActionScript - asconfig.json)"
+      },
+      {
+        "command": "nextgenas.selectWorkspaceSDK",
+        "title": "ActionScript: Select Workspace SDK"
       },
       {
         "command": "nextgenas.organizeImportsInTextEditor",
