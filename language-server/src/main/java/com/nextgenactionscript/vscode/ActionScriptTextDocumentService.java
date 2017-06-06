@@ -15,14 +15,12 @@ limitations under the License.
 */
 package com.nextgenactionscript.vscode;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
-import java.io.StringWriter;
 import java.lang.reflect.Field;
 import java.net.URI;
 import java.nio.file.Path;
