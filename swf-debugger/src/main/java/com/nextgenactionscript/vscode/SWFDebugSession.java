@@ -338,6 +338,7 @@ public class SWFDebugSession extends DebugSession
                         launchInfo.versionPlatform = swfArgs.versionPlatform;
                         launchInfo.airDebugLauncher = adlPath.toFile();
                         launchInfo.extDir = swfArgs.extdir;
+                        launchInfo.applicationArgumentsArray = swfArgs.args;
                         if (launcher != null)
                         {
                             launcher.isAIR = true;

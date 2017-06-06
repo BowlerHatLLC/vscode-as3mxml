@@ -232,6 +232,14 @@
                 "pattern": "^(desktop|extendedDesktop|mobileDevice)$",
                 "default": null
               },
+              "args": {
+                "type": "array",
+                "description": "Optional arguments to pass to the AIR application.",
+                "items": {
+                  "type": "string"
+                },
+                "default": []
+              },
               "screensize": {
                 "type": [
                   "string",
