@@ -3537,6 +3537,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         //this needs to be set before applyToProject() so that it's in the
         //configuration buffer before addExternalLibraryPath() is called
         configurator.setExcludeNativeJSLibraries(false);
+        Path appendConfigPath = Paths.get(System.getProperty(FLEXLIB));
+        appendConfigPath = appendConfigPath.resolve("../ide/vscode-nextgenas/vscode-nextgenas-config.xml");
+        File appendConfigFile = appendConfigPath.toFile();
+        if (appendConfigFile.exists())
+        {
+            configurator.addConfiguration(appendConfigFile);
+        }
         boolean result = configurator.applyToProject(project);
         Collection<ICompilerProblem> problems = configurator.getConfigurationProblems();
         if (problems.size() > 0)
