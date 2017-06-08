@@ -22,7 +22,6 @@ import createASConfigTaskRunner from "./commands/createASConfigTaskRunner";
 import createInitialConfigurationsForSWFDebug from "./commands/createInitialConfigurationsForSWFDebug";
 import findPort from "./utils/findPort";
 import findJava from "./utils/findJava";
-import findEditorSDK from "./utils/findEditorSDK";
 import validateJava from "./utils/validateJava";
 import validateEditorSDK from "./utils/validateEditorSDK";
 import getJavaClassPathDelimiter from "./utils/getJavaClassPathDelimiter";
@@ -38,17 +37,17 @@ import {LanguageClient, LanguageClientOptions, SettingMonitor,
 	ServerOptions, StreamInfo, ErrorHandler, ErrorAction, CloseAction} from "vscode-languageclient";
 import { Message } from "vscode-jsonrpc";
 
-const FLEXJSSDK_SETTING_DEPRECATED_ERROR = "nextgenas.flexjssdk in settings is deprecated. Please migrate to nextgenas.sdk.editor instead.";
-const FRAMEWORKSDK_SETTING_DEPRECATED_ERROR = "nextgenas.frameworksdk in settings is deprecated. Please migrate to nextgenas.sdk.framework instead.";
 const INVALID_SDK_ERROR = "nextgenas.sdk.editor in settings does not point to a valid SDK. Requires Apache FlexJS 0.7.0 or newer.";
-const MISSING_SDK_ERROR = "Could not locate valid SDK. Requires Apache FlexJS 0.7.0 or newer. Configure nextgenas.sdk.editor, add to $PATH, or set $FLEX_HOME.";
+const MISSING_FRAMEWORK_SDK_ERROR = "You must configure an SDK to enable all ActionScript and MXML features.";
 const MISSING_JAVA_ERROR = "Could not locate valid Java executable. Configure nextgenas.java, add to $PATH, or set $JAVA_HOME.";
 const MISSING_WORKSPACE_ROOT_ERROR = "Open a folder and create a file named asconfig.json to enable all ActionScript and MXML language features.";
 const RESTART_MESSAGE = "To apply new settings for NextGen ActionScript, please restart Visual Studio Code.";
 const RESTART_BUTTON_LABEL = "Restart Now";
+const CONFIGURE_SDK_LABEL = "Configure SDK";
 const NO_SDK = "$(alert) No SDK";
 let savedChild: child_process.ChildProcess;
 let savedContext: vscode.ExtensionContext;
+let bundledCompilerPath: string;
 let editorSDKHome: string;
 let javaExecutablePath: string;
 let frameworkSDKHome: string;
@@ -72,6 +71,17 @@ function killJavaProcess()
 	savedChild = null;
 }
 
+function getValidatedEditorSDKConfiguration(javaExecutablePath: string): string
+{
+	let result = <string> vscode.workspace.getConfiguration("nextgenas").get("sdk.editor");
+	if(result && !validateEditorSDK(savedContext.extensionPath, javaExecutablePath, result))
+	{
+		//this is not a valid SDK
+		return null;
+	}
+	return result;
+}
+
 function onDidChangeConfiguration(event)
 {
 	let javaSettingsPath = <string> vscode.workspace.getConfiguration("nextgenas").get("java");
@@ -79,11 +89,8 @@ function onDidChangeConfiguration(event)
 	{
 		return validateJava(savedContext.extensionPath, javaPath);
 	});
-	let newEditorSDKHome = findEditorSDK(getEditorSDKPathSetting(), (sdkPath) =>
-	{
-		return validateEditorSDK(savedContext.extensionPath, newJavaExecutablePath, sdkPath);
-	});
-	let newFrameworkSDKHome = getFrameworkSDKPathSetting();
+	let newEditorSDKHome = getValidatedEditorSDKConfiguration(newJavaExecutablePath);
+	let newFrameworkSDKHome = <string> vscode.workspace.getConfiguration("nextgenas").get("sdk.framework");
 	if(editorSDKHome != newEditorSDKHome ||
 		javaExecutablePath != newJavaExecutablePath ||
 		frameworkSDKHome != newFrameworkSDKHome)
@@ -102,36 +109,6 @@ function onDidChangeConfiguration(event)
 			}
 		});
 	}
-}
-
-function getEditorSDKPathSetting(): string
-{
-	let editorSDK = <string> vscode.workspace.getConfiguration("nextgenas").get("sdk.editor");
-	if(!editorSDK)
-	{
-		editorSDK = <string> vscode.workspace.getConfiguration("nextgenas").get("flexjssdk");
-		if(editorSDK && !hasShownFlexJSSDKWarning)
-		{
-			hasShownFlexJSSDKWarning = true;
-			vscode.window.showWarningMessage(FLEXJSSDK_SETTING_DEPRECATED_ERROR);
-		}
-	}
-	return editorSDK;
-}
-
-function getFrameworkSDKPathSetting(): string
-{
-	let frameworkSDK = <string> vscode.workspace.getConfiguration("nextgenas").get("sdk.framework");
-	if(!frameworkSDK)
-	{
-		frameworkSDK = <string> vscode.workspace.getConfiguration("nextgenas").get("frameworksdk");
-		if(frameworkSDK && !hasShownFrameworkSDKWarning)
-		{
-			hasShownFrameworkSDKWarning = true;
-			vscode.window.showWarningMessage(FRAMEWORKSDK_SETTING_DEPRECATED_ERROR);
-		}
-	}
-	return frameworkSDK;
 }
 
 function updateSDKStatusBarItem()
@@ -158,18 +135,15 @@ export function activate(context: vscode.ExtensionContext)
 	{
 		return validateJava(savedContext.extensionPath, javaPath);
 	});
-	editorSDKHome = findEditorSDK(getEditorSDKPathSetting(), (sdkPath) =>
-	{
-		return validateEditorSDK(savedContext.extensionPath, javaExecutablePath, sdkPath);
-	});
-	frameworkSDKHome = getFrameworkSDKPathSetting();
+	editorSDKHome = getValidatedEditorSDKConfiguration(javaExecutablePath);
+	frameworkSDKHome = <string> vscode.workspace.getConfiguration("nextgenas").get("sdk.framework");
 	vscode.workspace.onDidChangeConfiguration(onDidChangeConfiguration);
 	vscode.commands.registerCommand("nextgenas.createASConfigTaskRunner", () =>
 	{
-		let tasksHome = getFrameworkSDKPathSetting();
+		let tasksHome = frameworkSDKHome;
 		if(!tasksHome)
 		{
-			tasksHome = getEditorSDKPathSetting();
+			tasksHome = editorSDKHome;
 		}
 		createASConfigTaskRunner(tasksHome);
 	});
@@ -217,17 +191,21 @@ function childErrorListener(error)
 	console.error(error);
 }
 
-function showSDKError()
+function hasInvalidEditorSDK(): boolean
 {
-	let sdkPath = getEditorSDKPathSetting();
-	if(sdkPath)
+	let sdkPath = <string> vscode.workspace.getConfiguration("nextgenas").get("sdk.editor");
+	return !editorSDKHome && sdkPath != null;
+}
+
+function showMissingFrameworkSDKError()
+{
+	vscode.window.showErrorMessage(MISSING_FRAMEWORK_SDK_ERROR, CONFIGURE_SDK_LABEL).then((value: string) =>
 	{
-		vscode.window.showErrorMessage(INVALID_SDK_ERROR);
-	}
-	else
-	{
-		vscode.window.showErrorMessage(MISSING_SDK_ERROR);
-	}
+		if(value === CONFIGURE_SDK_LABEL)
+		{
+			selectWorkspaceSDK();
+		}
+	});
 }
 
 class CustomErrorHandler implements ErrorHandler
@@ -262,10 +240,16 @@ class CustomErrorHandler implements ErrorHandler
 			vscode.window.showErrorMessage(MISSING_JAVA_ERROR);
 			return CloseAction.DoNotRestart;
 		}
-		if(!editorSDKHome)
+		if(hasInvalidEditorSDK())
 		{
+			vscode.window.showErrorMessage(INVALID_SDK_ERROR);
 			//if we can't find the SDK, we can't start the process
-			showSDKError();
+			return CloseAction.DoNotRestart;
+		}
+		if(!frameworkSDKHome && !editorSDKHome)
+		{
+			showMissingFrameworkSDKError();
+			//if we can't find an SDK, we can't start the process
 			return CloseAction.DoNotRestart;
 		}
 
@@ -304,34 +288,40 @@ function createLanguageServer(): Promise<StreamInfo>
 			reject(MISSING_JAVA_ERROR);
 			return;
 		}
-		if(!editorSDKHome)
+		if(hasInvalidEditorSDK())
 		{
-			let sdkPath = getEditorSDKPathSetting();
-			if(sdkPath)
-			{
-				reject(INVALID_SDK_ERROR);
-			}
-			else
-			{
-				reject(MISSING_SDK_ERROR);
-			}
+			reject(INVALID_SDK_ERROR);
+			return;
+		}
+		if(!frameworkSDKHome && !editorSDKHome)
+		{
+			reject(MISSING_FRAMEWORK_SDK_ERROR);
 			return;
 		}
 		findPort(55282, (port) =>
 		{
 			let cpDelimiter = getJavaClassPathDelimiter();
+			let cp = path.resolve(savedContext.extensionPath, "bin", "*");
+			if(editorSDKHome)
+			{
+				//use the nextgenas.sdk.editor configuration
+				cp += cpDelimiter +
+					//the following jars come from apache flexjs
+					path.resolve(editorSDKHome, "lib", "*") +
+					cpDelimiter +
+					path.resolve(editorSDKHome, "lib", "external", "*") +
+					cpDelimiter +
+					path.resolve(editorSDKHome, "js", "lib", "*");
+			}
+			else
+			{
+				//use the bundled compiler
+				cp += cpDelimiter + path.join(savedContext.asAbsolutePath("./bundled-compiler"), "*");
+			}
 			let args =
 			[
 				"-cp",
-				//the following jars are included with the language server
-				path.resolve(savedContext.extensionPath, "bin", "*") +
-				cpDelimiter +
-				//the following jars come from apache flexjs
-				path.resolve(editorSDKHome, "lib", "*") +
-				cpDelimiter +
-				path.resolve(editorSDKHome, "lib", "external", "*") +
-				cpDelimiter +
-				path.resolve(editorSDKHome, "js", "lib", "*"),
+				cp,
 				//the language server communicates with vscode on this port
 				"-Dnextgeas.vscode.port=" + port,
 				"com.nextgenactionscript.vscode.Main",
@@ -398,9 +388,14 @@ function startClient()
 		vscode.window.showErrorMessage(MISSING_JAVA_ERROR);
 		return;
 	}
-	if(!editorSDKHome)
+	if(hasInvalidEditorSDK())
 	{
-		showSDKError();
+		vscode.window.showErrorMessage(INVALID_SDK_ERROR);
+		return;
+	}
+	if(!frameworkSDKHome && !editorSDKHome)
+	{
+		showMissingFrameworkSDKError();
 		return;
 	}
 	if(!vscode.workspace.rootPath)

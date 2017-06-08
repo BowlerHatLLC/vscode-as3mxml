@@ -56,6 +56,19 @@
       </includes>
     </fileSet>
     <fileSet>
+      <directory>../language-server/target</directory>
+      <outputDirectory>bundled-compiler</outputDirectory>
+      <includes>
+        <include>commons-*.jar</include>
+        <include>compiler-*.jar</include>
+        <include>antlr-*.jar</include>
+        <include>guava-*.jar</include>
+        <include>jburg-*.jar</include>
+        <include>jflex-*.jar</include>
+        <include>lzma-sdk-*.jar</include>
+      </includes>
+    </fileSet>
+    <fileSet>
       <directory>../swf-debugger/target</directory>
       <outputDirectory>bin</outputDirectory>
       <includes>
