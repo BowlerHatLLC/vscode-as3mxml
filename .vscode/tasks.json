@@ -11,13 +11,17 @@
 			"taskName": "build",
 			"args": [
 				"clean",
-				"package"
+				"package",
+				"-s",
+				"settings-template.xml"
 			]
 		},
 		{
 			"taskName": "build-debug",
 			"args": [
-				"package"
+				"package",
+				"-s",
+				"settings-template.xml"
 			]
 		}
 	]
