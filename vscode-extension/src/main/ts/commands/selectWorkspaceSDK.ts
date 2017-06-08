@@ -19,6 +19,9 @@ import * as path from "path";
 import findSDKName from "../utils/findSDKName";
 import validateFrameworkSDK from "../utils/validateFrameworkSDK";
 
+const COMMAND_GLOBAL_SETTINGS = "workbench.action.openGlobalSettings";
+const COMMAND_WORKSPACE_SETTINGS = "workbench.action.openWorkspaceSettings";
+const INSTRUCTIONS_SEARCH_PATHS = "Add more SDKs using the nextgenas.sdk.searchPaths setting";
 const ENVIRONMENT_VARIABLE_FLEX_HOME = "FLEX_HOME";
 const ENVIRONMENT_VARIABLE_PATH = "PATH";
 const DESCRIPTION_FLEX_HOME = "FLEX_HOME environment variable";
@@ -60,22 +63,30 @@ interface SDKQuickPickItem extends vscode.QuickPickItem
 	custom?: any;
 }
 
-function openWorkspaceSettings()
+function openSettingsForSearchPaths()
 {
-	let workspaceSettingsPath = path.join(vscode.workspace.rootPath, ".vscode", "settings.json");
-	if(!fs.existsSync(workspaceSettingsPath))
+	let searchPaths = vscode.workspace.getConfiguration("nextgenas").inspect("sdk.searchPaths");
+	if(searchPaths.workspaceValue)
 	{
-		vscode.workspace.getConfiguration("nextgenas").update("sdk.framework", null).then(() =>
-		{
-			openWorkspaceSettings();
-		});
+		//the search paths have already been defined in this workspace,
+		//so that's what we should open.
+		vscode.commands.executeCommand(COMMAND_WORKSPACE_SETTINGS);
+		vscode.window.showInformationMessage(INSTRUCTIONS_SEARCH_PATHS);
+	}
+	else if(searchPaths.globalValue)
+	{
+		//the search paths have already been defined globally,
+		//so that's what we should open.
+		vscode.commands.executeCommand(COMMAND_GLOBAL_SETTINGS);
+		vscode.window.showInformationMessage(INSTRUCTIONS_SEARCH_PATHS);
 	}
 	else
 	{
-		let uri = vscode.Uri.file(workspaceSettingsPath);
-		vscode.workspace.openTextDocument(uri).then((document: vscode.TextDocument) =>
+		//search paths haven't been defined yet, so add a global value
+		//and then open the settings
+		vscode.workspace.getConfiguration("nextgenas").update("sdk.searchPaths", [], true).then(() =>
 		{
-			vscode.window.showTextDocument(document);
+			openSettingsForSearchPaths();
 		});
 	}
 }
@@ -127,6 +138,23 @@ function checkSearchPath(searchPath: string, description: string, items: SDKQuic
 	}
 }
 
+function createSearchPathsItem(): SDKQuickPickItem
+{
+	let item =
+	{
+		label: "Add more SDKs to this list...",
+		description: "Opens User Settings",
+		detail: "Define nextgenas.sdk.searchPaths in settings to add more SDKs",
+		custom: true
+	};
+	let searchPaths = vscode.workspace.getConfiguration("nextgenas").inspect("sdk.searchPaths");
+	if(searchPaths.workspaceValue)
+	{
+		item.description = "Opens Workspace Settings";
+	}
+	return item;
+}
+
 export default function selectWorkspaceSDK(): void
 {
 	if(!vscode.workspace.rootPath)
@@ -151,14 +179,9 @@ export default function selectWorkspaceSDK(): void
 		addedEditorSDK = true;
 		addSDKItem(editorSDK, DESCRIPTION_CURRENT, items, allPaths, true);
 	}
-	//for convenience, add an option to open workspace settings and define a custom SDK
-	items.push(
-	{
-		label: "Define a custom SDK...",
-		description: "Opens workspace settings",
-		detail: "Set nextgenas.sdk.framework to the path of your custom SDK",
-		custom: true
-	});
+	//for convenience, add an option to open user settings and define custom SDK paths
+	
+	items.push(createSearchPathsItem());
 	//then search for an SDK that's a locally installed Node.js module
 	let nodeModuleSDK: string = null;
 	try
@@ -247,13 +270,6 @@ export default function selectWorkspaceSDK(): void
 			}
 		});
 	}
-	if(items.length === 1)
-	{
-		//if there are no SDKs in the list (only the option to define a custom
-		//path), then open the workspace settings immediately.
-		openWorkspaceSettings();
-		return;
-	}
 	vscode.window.showQuickPick(items, {placeHolder: "Select an ActionScript SDK for this workspace"}).then((value: SDKQuickPickItem) =>
 	{
 		if(!value)
@@ -264,7 +280,7 @@ export default function selectWorkspaceSDK(): void
 		if(typeof value.custom !== "undefined")
 		{
 			//if the user chose to define a custom SDK, open workspace settings
-			openWorkspaceSettings();
+			openSettingsForSearchPaths();
 			return;
 		}
 		//if they chose an SDK, save it to the workspace settings
