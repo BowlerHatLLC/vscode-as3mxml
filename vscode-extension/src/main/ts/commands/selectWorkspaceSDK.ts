@@ -17,6 +17,7 @@ import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
 import findSDKName from "../utils/findSDKName";
+import validateFrameworkSDK from "../utils/validateFrameworkSDK";
 
 const ENVIRONMENT_VARIABLE_FLEX_HOME = "FLEX_HOME";
 const ENVIRONMENT_VARIABLE_PATH = "PATH";
@@ -26,57 +27,30 @@ const DESCRIPTION_CURRENT = "Current SDK";
 const DESCRIPTION_EDITOR_SDK = "Editor SDK in Settings";
 const DESCRIPTION_FLASH_BUILDER_4_7 = "Flash Builder 4.7";
 const DESCRIPTION_FLASH_BUILDER_4_6 = "Flash Builder 4.6";
-const KNOWN_SDKS_MAC =
+const DESCRIPTION_USER_DEFINED = "User Defined";
+const SEARCH_PATHS_MAC =
 [
 	{
-		path: "/Applications/Adobe Flash Builder 4.7/eclipse/plugins/com.adobe.flash.compiler_4.7.0.349722/AIRSDK",
+		path: "/Applications/Adobe Flash Builder 4.7/sdks/",
 		description: DESCRIPTION_FLASH_BUILDER_4_7
 	},
 	{
-		path: "/Applications/Adobe Flash Builder 4.7/sdks/4.6.0/",
-		description: DESCRIPTION_FLASH_BUILDER_4_7
-	},
-	{
-		path: "/Applications/Adobe Flash Builder 4.7/sdks/3.6.0/",
-		description: DESCRIPTION_FLASH_BUILDER_4_7
-	},
-	{
-		path: "/Applications/Adobe Flash Builder 4.6/sdks/4.6.0/",
-		description: DESCRIPTION_FLASH_BUILDER_4_6
-	},
-	{
-		path: "/Applications/Adobe Flash Builder 4.6/sdks/3.6.0/",
+		path: "/Applications/Adobe Flash Builder 4.6/sdks/",
 		description: DESCRIPTION_FLASH_BUILDER_4_6
 	},
 ];
-const KNOWN_SDKS_WIN =
+const SEARCH_PATHS_WIN =
 [
 	{
-		path: "C:\\Program Files\\Adobe\\Adobe Flash Builder 4.7 (64 Bit)\\eclipse\\plugins\\com.adobe.flash.compiler_4.7.0.349722\\AIRSDK",
+		path: "C:\\Program Files\\Adobe\\Adobe Flash Builder 4.7 (64 Bit)\\sdks\\",
 		description: DESCRIPTION_FLASH_BUILDER_4_7
 	},
 	{
-		path: "C:\\Program Files\\Adobe\\Adobe Flash Builder 4.7 (64 Bit)\\sdks\\4.6.0",
-		description: DESCRIPTION_FLASH_BUILDER_4_7
-	},
-	{
-		path: "C:\\Program Files\\Adobe\\Adobe Flash Builder 4.7 (64 Bit)\\sdks\\3.6.0",
-		description: DESCRIPTION_FLASH_BUILDER_4_7
-	},
-	{
-		path: "C:\\Program Files (x86)\\Adobe\\Adobe Flash Builder 4.6\\sdks\\4.6.0",
+		path: "C:\\Program Files (x86)\\Adobe\\Adobe Flash Builder 4.6\\sdks\\",
 		description: DESCRIPTION_FLASH_BUILDER_4_6
 	},
 	{
-		path: "C:\\Program Files (x86)\\Adobe\\Adobe Flash Builder 4.6\\sdks\\3.6.0",
-		description: DESCRIPTION_FLASH_BUILDER_4_6
-	},
-	{
-		path: "C:\\Program Files\\Adobe\\Adobe Flash Builder 4.6\\sdks\\4.6.0",
-		description: DESCRIPTION_FLASH_BUILDER_4_6
-	},
-	{
-		path: "C:\\Program Files\\Adobe\\Adobe Flash Builder 4.6\\sdks\\3.6.0",
+		path: "C:\\Program Files\\Adobe\\Adobe Flash Builder 4.6\\sdks\\",
 		description: DESCRIPTION_FLASH_BUILDER_4_6
 	},
 ];
@@ -133,6 +107,26 @@ function addSDKItem(path: string, description: string, items: SDKQuickPickItem[]
 	});
 }
 
+function checkSearchPath(searchPath: string, description: string, items: SDKQuickPickItem[], allPaths: string[])
+{
+	if(validateFrameworkSDK(searchPath))
+	{
+		addSDKItem(searchPath, description, items, allPaths, false);
+	}
+	else
+	{
+		let files = fs.readdirSync(searchPath);
+		files.forEach((file) =>
+		{
+			let filePath = path.join(searchPath, file);
+			if(validateFrameworkSDK(filePath))
+			{
+				addSDKItem(filePath, description, items, allPaths, false);
+			}
+		});
+	}
+}
+
 export default function selectWorkspaceSDK(): void
 {
 	if(!vscode.workspace.rootPath)
@@ -176,6 +170,29 @@ export default function selectWorkspaceSDK(): void
 	{
 		addSDKItem(nodeModuleSDK, "Node Module", items, allPaths, true);
 	}
+	//if the user has defined search paths for SDKs, include them
+	let searchPaths = vscode.workspace.getConfiguration("nextgenas").get("sdk.searchPaths");
+	if(Array.isArray(searchPaths))
+	{
+		searchPaths.forEach((searchPath) =>
+		{
+			checkSearchPath(searchPath, DESCRIPTION_USER_DEFINED, items, allPaths);
+		});
+	}
+	else if(typeof searchPaths === "string")
+	{
+		checkSearchPath(searchPaths, DESCRIPTION_USER_DEFINED, items, allPaths);
+	}
+	//check some common locations where SDKs might exist
+	let knownPaths = SEARCH_PATHS_MAC;
+	if(process.platform === "win32")
+	{
+		knownPaths = SEARCH_PATHS_WIN;
+	}
+	knownPaths.forEach((knownPath) =>
+	{
+		checkSearchPath(knownPath.path, knownPath.description, items, allPaths);
+	});
 	//if we haven't already added the editor SDK, do it now
 	if(!addedEditorSDK && editorSDK)
 	{
@@ -191,10 +208,8 @@ export default function selectWorkspaceSDK(): void
 	{
 		let PATH = <string> process.env.PATH;
 		let paths = PATH.split(path.delimiter);
-		let pathCount = paths.length;
-		for(let i = 0; i < pathCount; i++)
+		paths.forEach((currentPath) =>
 		{
-			let currentPath = paths[i];
 			//first check if this directory contains the NPM version of FlexJS for Windows
 			let mxmlcPath = path.join(currentPath, "mxmlc.cmd");
 			if(fs.existsSync(mxmlcPath))
@@ -230,22 +245,7 @@ export default function selectWorkspaceSDK(): void
 					}
 				}
 			}
-		}
-	}
-	//finish by checking some known SDK locations that might exist
-	let knownSDKs = KNOWN_SDKS_MAC;
-	if(process.platform === "win32")
-	{
-		knownSDKs = KNOWN_SDKS_WIN;
-	}
-	for(let i = 0, count = knownSDKs.length; i < count; i++)
-	{
-		let knownSDK = knownSDKs[i];
-		let path = knownSDK.path;
-		if(fs.existsSync(path))
-		{
-			addSDKItem(path, knownSDK.description, items, allPaths, false);
-		}
+		});
 	}
 	if(items.length === 1)
 	{
