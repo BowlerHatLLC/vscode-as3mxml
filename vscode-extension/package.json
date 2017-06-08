@@ -188,7 +188,7 @@
             "null"
           ],
           "default": null,
-          "description": "Specifies the folder path of the Apache FlexJS SDK used for code intelligence. If nextgenas.sdk.framework is not specified, the framework in this SDK will also be loaded."
+          "description": "(Advanced) Specifies the folder path of the Apache FlexJS SDK used internally by the extension for code intelligence. Unless you know what you're doing, you should probably set nextgenas.sdk.framework instead."
         },
         "nextgenas.sdk.framework": {
           "type": [
@@ -196,7 +196,7 @@
             "null"
           ],
           "default": null,
-          "description": "Specifies the folder path of an ActionScript SDK to load a different framework than the one in nextgenas.sdk.editor, such as the Feathers SDK or the classic Flex SDK."
+          "description": "Specifies the folder path of the ActionScript SDK used by the current workspace."
         },
         "nextgenas.sdk.searchPaths": {
           "type": [
@@ -205,7 +205,7 @@
             "null"
           ],
           "default": null,
-          "description": "Specifies a folder path containing one or more ActionScript SDKs.",
+          "description": "Specifies a folder path containing one or more ActionScript SDKs to show in the SDK picker.",
           "items":
 					{
 						"type": "string"
