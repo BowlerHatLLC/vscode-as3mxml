@@ -72,7 +72,7 @@ public class LanguageServerFileSpecGetter implements IFileSpecificationGetter
             {
                 code = fixPackageWithoutBraces(code);
             }
-            else if (filePath.endsWith(FILE_EXTENSION_MXML))
+            else if (path.endsWith(FILE_EXTENSION_MXML))
             {
                 code = fixUnclosedXMLComment(code);
                 code = fixUnclosedScriptCDATA(code);
@@ -141,13 +141,10 @@ public class LanguageServerFileSpecGetter implements IFileSpecificationGetter
             if (startCDATA != -1)
             {
                 int endCDATA = code.lastIndexOf(IMXMLCoreConstants.cDataEnd, endScript);
-                System.out.print("startCDATA: " + startCDATA + "endCDATA: " + endCDATA);
                 if (endCDATA < startCDATA)
                 {
                     code = code.substring(0, endScript) + IMXMLCoreConstants.cDataEnd + code.substring(endScript);
                     endScript += IMXMLCoreConstants.cDataEnd.length();
-                    System.out.println("========");
-                    System.out.println(code);
                 }
             }
             startIndex = endScript;
