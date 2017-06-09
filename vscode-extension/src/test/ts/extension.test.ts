@@ -5592,7 +5592,26 @@ suite("completion item provider", () =>
 					});
 		});
 	});
-	/*test("vscode.executeCompletionItemProvider includes package name for unfinished package block", () =>
+	test("vscode.executeCompletionItemProvider includes package name at end of package keyword", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "PackageCompletion4.as"));
+		let position = new vscode.Position(0, 7);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
+				.then((list: vscode.CompletionList) =>
+					{
+						let items = list.items;
+						let packageItem = findCompletionItem("package com.example\n{\n\t\n}", items);
+						assert.notEqual(packageItem, null, "vscode.executeCompletionItemProvider failed to provide package name: " + uri);
+						assert.strictEqual(packageItem.kind, vscode.CompletionItemKind.Module, "vscode.executeCompletionItemProvider failed to provide correct kind of package name: " + uri);
+					}, (err) =>
+					{
+						assert(false, "Failed to execute completion item provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeCompletionItemProvider includes package name for unfinished package block", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "PackageCompletion2.as"));
 		let position = new vscode.Position(0, 8);
@@ -5610,7 +5629,7 @@ suite("completion item provider", () =>
 						assert(false, "Failed to execute completion item provider: " + uri);
 					});
 		});
-	});*/
+	});
 	test("vscode.executeCompletionItemProvider includes package name for empty file", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "PackageCompletion3.as"));

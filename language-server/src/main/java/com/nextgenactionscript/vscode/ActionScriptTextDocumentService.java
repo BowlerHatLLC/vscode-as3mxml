@@ -914,6 +914,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             String text = textDocument.getText();
             sourceByPath.put(path, text);
 
+            if (currentWorkspace != null)
+            {
+                //if the compiler was using the file system version, switch to
+                //the in-memory version
+                IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(path.toAbsolutePath().toString());
+                currentWorkspace.fileChanged(fileSpec);
+            }
             //we need to check for problems when opening a new file because it
             //may not have been in the workspace before.
             checkFilePathForProblems(path, false);
@@ -1075,7 +1082,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         if (offsetNode == null)
         {
             //we couldn't find a node at the specified location
-            autoCompletePackageBlock(result);
             return CompletableFuture.completedFuture(result);
         }
         IASNode parentNode = offsetNode.getParent();
@@ -1219,6 +1225,32 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
 
         //package (must be before member access)
+        if (offsetNode instanceof IFileNode)
+        {
+            IFileNode fileNode = (IFileNode) offsetNode;
+            if (fileNode.getChildCount() == 0 && fileNode.getAbsoluteEnd() == 0)
+            {
+                //the file is completely empty
+                autoCompletePackageBlock(result);
+                return CompletableFuture.completedFuture(result);
+            }
+        }
+        if (parentNode != null
+                && parentNode instanceof IFileNode)
+        {
+            IFileNode fileNode = (IFileNode) parentNode;
+            if (fileNode.getChildCount() == 1 && offsetNode instanceof IIdentifierNode)
+            {
+                IIdentifierNode identifierNode = (IIdentifierNode) offsetNode;
+                String identifier = identifierNode.getName();
+                if (IASKeywordConstants.PACKAGE.startsWith(identifier))
+                {
+                    //the file contains only a substring of the package keyword
+                    autoCompletePackageBlock(result);
+                    return CompletableFuture.completedFuture(result);
+                }
+            }
+        }
         if (offsetNode instanceof IPackageNode)
         {
             IPackageNode packageNode = (IPackageNode) offsetNode;
@@ -1243,7 +1275,14 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             IExpressionNode nameNode = packageNode.getNameExpressionNode();
             if (offsetNode == nameNode)
             {
-                autoCompletePackageName(packageNode.getPackageName(), result);
+                if (currentOffset == IASKeywordConstants.PACKAGE.length())
+                {
+                    autoCompletePackageBlock(result);
+                }
+                else
+                {
+                    autoCompletePackageName(packageNode.getPackageName(), result);
+                }
                 return CompletableFuture.completedFuture(result);
             }
         }
