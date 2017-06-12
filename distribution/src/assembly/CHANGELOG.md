@@ -1,5 +1,15 @@
 ## 0.4.4
 
+* MXML completion list includes `<fx:Binding>`, `<fx:Component>`, `<fx:Declarations>`, `<fx:Metdata>`, `<fx:Script>`, and `<fx:Style>` tags.
+* Added new `args` field to `launch.json` configuration for Adobe AIR debugging. May be used to pass arguments to invoked AIR application.
+* Added new compiler options for Apache FlexJS to `asconfig.json` schema, including `html-template`, `html-output-filename`, `js-compiler-option`, `js-external-library-path`, `js-library-path`, `swf-external-library-path`, `swf-library-path`, and `remove-circulars`.
+* Fixed issue where the extension could not be used in multiple VSCode windows on Windows 10 because it did not properly detect an open port.
+* Fixed issue where package completion on Windows would incorrectly contain backslashes.
+* Fixed issue where package completion would not work when file is completely empty and editor is powered by Apache FlexJS 0.8.0 (not fixed with FlexJS 0.7.0, due to bugs in the compiler).
+* Fixed issue where values surrounded in quotes in the `additionalOptions` field of `asconfig.json` were not parsed correctly and would lead to misleading errors.
+* Fixed issue where completion could be unexpectedly triggered inside a string or a regular expression literal.
+* Fixed regression where code intelligence features might stop working (and require restarting VSCode to fix) when the current file contains unclosed MXML constructs, like CDATA or comments, and the editor is powered by Apache FlexJS 0.7.0.
+
 ## 0.4.3
 
 * Added "Organize Imports" context menu items for ActionScript and MXML files, and "ActionScript: Organize Imports" appears in the command palette.
