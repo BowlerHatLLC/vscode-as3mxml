@@ -4854,8 +4854,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     SymbolInformation symbol = definitionToSymbol(functionDefinition);
                     result.add(symbol);
                 }
-                IASScope functionScope = functionDefinition.getContainedScope();
-                querySymbolsInScope(query, functionScope, result);
             }
             else if (definition instanceof IVariableDefinition)
             {
