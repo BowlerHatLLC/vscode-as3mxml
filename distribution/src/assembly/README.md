@@ -21,7 +21,7 @@
 
 ## Minimum Requirements
 
-* Visual Studio Code 1.11
+* Visual Studio Code 1.13
 * Java 8 Runtime
 * Apache FlexJS 0.7
 

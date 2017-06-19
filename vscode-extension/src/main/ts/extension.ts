@@ -18,6 +18,8 @@ import addMXMLNamespace from "./commands/addMXMLNamespace";
 import organizeImportsInUri from "./commands/organizeImportsInUri";
 import organizeImportsInTextEditor from "./commands/organizeImportsInTextEditor";
 import organizeImportsInDirectory from "./commands/organizeImportsInDirectory";
+import organizeImportsInSourcePathFile from "./commands/organizeImportsInSourcePathFile";
+import organizeImportsInSourcePathDirectory from "./commands/organizeImportsInSourcePathDirectory";
 import createASConfigTaskRunner from "./commands/createASConfigTaskRunner";
 import createInitialConfigurationsForSWFDebug from "./commands/createInitialConfigurationsForSWFDebug";
 import findPort from "./utils/findPort";
@@ -25,6 +27,7 @@ import findJava from "./utils/findJava";
 import findEditorSDK from "./utils/findEditorSDK";
 import validateJava from "./utils/validateJava";
 import validateEditorSDK from "./utils/validateEditorSDK";
+import ActionScriptSourcePathDataProvider from "./utils/ActionScriptSourcePathDataProvider";
 import getJavaClassPathDelimiter from "./utils/getJavaClassPathDelimiter";
 import adapterExecutableCommandSWF from "./commands/adapterExecutableCommandSWF";
 import * as child_process from "child_process";
@@ -52,6 +55,7 @@ let frameworkSDKHome: string;
 let killed = false;
 let hasShownFlexJSSDKWarning = false;
 let hasShownFrameworkSDKWarning = false;
+let sourcePathDataProvider: ActionScriptSourcePathDataProvider = null;
 
 function killJavaProcess()
 {
@@ -159,6 +163,11 @@ export function activate(context: vscode.ExtensionContext)
 	vscode.commands.registerCommand("nextgenas.organizeImportsInUri", organizeImportsInUri);
 	vscode.commands.registerCommand("nextgenas.organizeImportsInTextEditor", organizeImportsInTextEditor);
 	vscode.commands.registerCommand("nextgenas.organizeImportsInDirectory", organizeImportsInDirectory);
+	vscode.commands.registerCommand("nextgenas.organizeImportsInSourcePathFile", organizeImportsInSourcePathFile);
+	vscode.commands.registerCommand("nextgenas.organizeImportsInSourcePathDirectory", organizeImportsInSourcePathDirectory);
+
+	sourcePathDataProvider = new ActionScriptSourcePathDataProvider(vscode.workspace.rootPath);
+	vscode.window.registerTreeDataProvider("actionScriptSourcePaths", sourcePathDataProvider);
 
 	startClient();
 }

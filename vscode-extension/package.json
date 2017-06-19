@@ -26,9 +26,10 @@
     "build-debug": "mvn package"
   },
   "engines": {
-    "vscode": "^1.11.0"
+    "vscode": "^1.13.0"
   },
   "devDependencies": {
+    "@types/json5": "0.0.29",
     "@types/mocha": "^2.2.40",
     "@types/node": "^6.0.65",
     "mocha": "^3.2.0",
@@ -37,6 +38,7 @@
     "vscode": "^1.1.0"
   },
   "dependencies": {
+    "json5": "^0.5.1",
     "vscode-jsonrpc": "^3.1.0",
     "vscode-languageclient": "^2.6.3"
   },
@@ -49,7 +51,8 @@
     "onCommand:nextgenas.adapterExecutableCommandSWF",
     "onCommand:nextgenas.organizeImportsInTextEditor",
     "onCommand:nextgenas.organizeImportsInUri",
-    "onCommand:nextgenas.organizeImportsInDirectory"
+    "onCommand:nextgenas.organizeImportsInDirectory",
+    "onCommand:nextgenas.organizeImportsInSourcePathFile"
   ],
   "contributes": {
     "commands": [
@@ -67,6 +70,14 @@
       },
       {
         "command": "nextgenas.organizeImportsInDirectory",
+        "title": "Organize Imports (Recursive)"
+      },
+      {
+        "command": "nextgenas.organizeImportsInSourcePathFile",
+        "title": "Organize Imports"
+      },
+      {
+        "command": "nextgenas.organizeImportsInSourcePathDirectory",
         "title": "Organize Imports (Recursive)"
       }
     ],
@@ -123,6 +134,28 @@
         {
           "command": "nextgenas.organizeImportsInDirectory",
           "when": "explorerResourceIsFolder"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "nextgenas.organizeImportsInSourcePathFile",
+          "when": "view == actionScriptSourcePaths && viewItem == nextgenas"
+        },
+        {
+          "command": "nextgenas.organizeImportsInSourcePathFile",
+          "when": "view == actionScriptSourcePaths && viewItem == mxml"
+        },
+        {
+          "command": "nextgenas.organizeImportsInSourcePathDirectory",
+          "when": "view == actionScriptSourcePaths && viewItem == folder"
+        }
+      ]
+    },
+    "views": {
+      "explorer": [
+        {
+          "id": "actionScriptSourcePaths",
+          "name": "ActionScript Source Path"
         }
       ]
     },
