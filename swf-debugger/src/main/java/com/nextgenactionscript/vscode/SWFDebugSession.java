@@ -24,7 +24,9 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -102,6 +104,7 @@ public class SWFDebugSession extends DebugSession
     private Path flexlib;
     private Path flexHome;
     private Path adlPath;
+    private Map<String,SourceBreakpoint[]> pendingBreakpoints;
 
     private class SessionRunner implements Runnable
     {
@@ -128,6 +131,7 @@ public class SWFDebugSession extends DebugSession
                         {
                             if (!swfLoaded)
                             {
+                                //SWFLoadedEvent happens after SuspendReason.ScriptLoaded
                                 swfLoaded = true;
                                 sendEvent(new InitializedEvent());
                             }
@@ -165,11 +169,23 @@ public class SWFDebugSession extends DebugSession
                         {
                             case SuspendReason.ScriptLoaded:
                             {
+                                if (!pendingBreakpoints.isEmpty())
+                                {
+                                    //if we weren't able to add some breakpoints earlier
+                                    //because we couldn't find the source file, try again!
+                                    for (String path : pendingBreakpoints.keySet())
+                                    {
+                                        SourceBreakpoint[] pending = pendingBreakpoints.get(path);
+                                        setBreakpoints(path, pending);
+                                        //unfortunately, I don't know how to send a response
+                                        //to make them appear to be verified in the editor
+                                    }
+                                }
                                 //if we resumed immediately, we might not get
                                 //the breakpoints registered in time. waiting to
                                 //resume until we get the threads request
                                 //ensures that we stop at all breakpoints.
-                                if(requestedThreads)
+                                if (requestedThreads)
                                 {
                                     swfSession.resume();
                                 }
@@ -232,6 +248,7 @@ public class SWFDebugSession extends DebugSession
     public SWFDebugSession()
     {
         super(false);
+        pendingBreakpoints = new HashMap<>();
         String flexlibPath = System.getProperty(FLEXLIB_PROPERTY);
         if (flexlibPath != null)
         {
@@ -478,44 +495,84 @@ public class SWFDebugSession extends DebugSession
     public void setBreakpoints(Response response, SetBreakpointsRequest.SetBreakpointsArguments arguments)
     {
         String path = arguments.source.path;
+        List<Breakpoint> breakpoints = setBreakpoints(path, arguments.breakpoints);
+        sendResponse(response, new SetBreakpointsResponseBody(breakpoints));
+    }
+
+    private List<Breakpoint> setBreakpoints(String path, SourceBreakpoint[] breakpoints)
+    {
+        //start by trying to find the file ID for this path
         Path pathAsPath = Paths.get(path);
-        List<Breakpoint> breakpoints = new ArrayList<>();
-        for (int i = 0, count = arguments.breakpoints.length; i < count; i++)
+        int fileId = -1;
+        boolean badExtension = false;
+        try
         {
-            SourceBreakpoint sourceBreakpoint = arguments.breakpoints[i];
-            int sourceLine = sourceBreakpoint.line;
-            Breakpoint responseBreakpoint = new Breakpoint();
-            responseBreakpoint.line = sourceLine;
-            int fileId = -1;
-            try
+            SwfInfo[] swfs = swfSession.getSwfs();
+            for (SwfInfo swf : swfs)
             {
-                SwfInfo[] swfs = swfSession.getSwfs();
-                for (SwfInfo swf : swfs)
+                SourceFile[] sourceFiles = swf.getSourceList(swfSession);
+                for (SourceFile sourceFile : sourceFiles)
                 {
-                    SourceFile[] sourceFiles = swf.getSourceList(swfSession);
-                    for (SourceFile sourceFile : sourceFiles)
+                    //we can't check if the String paths are equal due to
+                    //file system case sensitivity.
+                    if (pathAsPath.equals(Paths.get(sourceFile.getFullPath())))
                     {
-                        //we can't check if the String paths are equal due to
-                        //file system case sensitivity.
-                        if (pathAsPath.equals(Paths.get(sourceFile.getFullPath())) &&
-                                (path.endsWith(FILE_EXTENSION_AS) || path.endsWith(FILE_EXTENSION_MXML)))
+                        if (path.endsWith(FILE_EXTENSION_AS) || path.endsWith(FILE_EXTENSION_MXML))
                         {
                             fileId = sourceFile.getId();
-                            break;
                         }
-                    }
-                    if (fileId != -1)
-                    {
+                        else
+                        {
+                            badExtension = true;
+                        }
                         break;
                     }
                 }
-                if (fileId == -1)
+                if (fileId != -1)
                 {
-                    //either the file was not found, or it has an unsupported
-                    //extension
-                    responseBreakpoint.verified = false;
+                    break;
                 }
-                else
+            }
+        }
+        catch (InProgressException e)
+        {
+            e.printStackTrace(System.err);
+        }
+        catch (NoResponseException e)
+        {
+            e.printStackTrace(System.err);
+        }
+        if (fileId != -1)
+        {
+            //if we found the fileId, make sure the breakpoints are no longer
+            //pending so that we don't try to add them again
+            pendingBreakpoints.remove(path);
+        }
+        else if (!badExtension)
+        {
+            //the file was not found, but it has a supported extension,
+            //so we'll try to add it again later.
+            //SWF is a streaming format, so not all bytecode is loaded
+            //immediately.
+            pendingBreakpoints.put(path, breakpoints);
+        }
+        List<Breakpoint> result = new ArrayList<>();
+        for (int i = 0, count = breakpoints.length; i < count; i++)
+        {
+            SourceBreakpoint sourceBreakpoint = breakpoints[i];
+            int sourceLine = sourceBreakpoint.line;
+            Breakpoint responseBreakpoint = new Breakpoint();
+            responseBreakpoint.line = sourceLine;
+            if (fileId == -1)
+            {
+                //we couldn't find the file, so we can't verify this breakpoint
+                responseBreakpoint.verified = false;
+            }
+            else
+            {
+                //we found the file, so let's try to add this breakpoint
+                //it may not work, but at least we tried!
+                try
                 {
                     Location breakpointLocation = swfSession.setBreakpoint(fileId, sourceLine);
                     if (breakpointLocation != null)
@@ -527,31 +584,26 @@ public class SWFDebugSession extends DebugSession
                     }
                     else
                     {
-                        //setBreakpoint() may return null if the breakpoint could
-                        //not be set. that's fine. the user will see that the
-                        //breakpoint is not verified, so it's fine.
+                        //setBreakpoint() may return null if the breakpoint
+                        //could not be set. that's fine. the user will simply
+                        //see that the breakpoint is not verified.
                         responseBreakpoint.verified = false;
                     }
                 }
+                catch (NoResponseException e)
+                {
+                    e.printStackTrace(System.err);
+                    responseBreakpoint.verified = false;
+                }
+                catch (NotConnectedException e)
+                {
+                    e.printStackTrace(System.err);
+                    responseBreakpoint.verified = false;
+                }
             }
-            catch (InProgressException e)
-            {
-                e.printStackTrace(System.err);
-                responseBreakpoint.verified = false;
-            }
-            catch (NoResponseException e)
-            {
-                e.printStackTrace(System.err);
-                responseBreakpoint.verified = false;
-            }
-            catch (NotConnectedException e)
-            {
-                e.printStackTrace(System.err);
-                responseBreakpoint.verified = false;
-            }
-            breakpoints.add(responseBreakpoint);
+            result.add(responseBreakpoint);
         }
-        sendResponse(response, new SetBreakpointsResponseBody(breakpoints));
+        return result;
     }
 
     public void continueCommand(Response response, Request.RequestArguments arguments)
