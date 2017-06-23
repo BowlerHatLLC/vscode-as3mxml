@@ -51,8 +51,7 @@
     "onCommand:nextgenas.adapterExecutableCommandSWF",
     "onCommand:nextgenas.organizeImportsInTextEditor",
     "onCommand:nextgenas.organizeImportsInUri",
-    "onCommand:nextgenas.organizeImportsInDirectory",
-    "onCommand:nextgenas.organizeImportsInSourcePathFile"
+    "onCommand:nextgenas.organizeImportsInDirectory"
   ],
   "contributes": {
     "commands": [
@@ -70,14 +69,6 @@
       },
       {
         "command": "nextgenas.organizeImportsInDirectory",
-        "title": "Organize Imports (Recursive)"
-      },
-      {
-        "command": "nextgenas.organizeImportsInSourcePathFile",
-        "title": "Organize Imports"
-      },
-      {
-        "command": "nextgenas.organizeImportsInSourcePathDirectory",
         "title": "Organize Imports (Recursive)"
       }
     ],
@@ -134,20 +125,6 @@
         {
           "command": "nextgenas.organizeImportsInDirectory",
           "when": "explorerResourceIsFolder"
-        }
-      ],
-      "view/item/context": [
-        {
-          "command": "nextgenas.organizeImportsInSourcePathFile",
-          "when": "view == actionScriptSourcePaths && viewItem == nextgenas"
-        },
-        {
-          "command": "nextgenas.organizeImportsInSourcePathFile",
-          "when": "view == actionScriptSourcePaths && viewItem == mxml"
-        },
-        {
-          "command": "nextgenas.organizeImportsInSourcePathDirectory",
-          "when": "view == actionScriptSourcePaths && viewItem == folder"
         }
       ]
     },

@@ -18,8 +18,6 @@ import addMXMLNamespace from "./commands/addMXMLNamespace";
 import organizeImportsInUri from "./commands/organizeImportsInUri";
 import organizeImportsInTextEditor from "./commands/organizeImportsInTextEditor";
 import organizeImportsInDirectory from "./commands/organizeImportsInDirectory";
-import organizeImportsInSourcePathFile from "./commands/organizeImportsInSourcePathFile";
-import organizeImportsInSourcePathDirectory from "./commands/organizeImportsInSourcePathDirectory";
 import createASConfigTaskRunner from "./commands/createASConfigTaskRunner";
 import createInitialConfigurationsForSWFDebug from "./commands/createInitialConfigurationsForSWFDebug";
 import findPort from "./utils/findPort";
@@ -163,8 +161,6 @@ export function activate(context: vscode.ExtensionContext)
 	vscode.commands.registerCommand("nextgenas.organizeImportsInUri", organizeImportsInUri);
 	vscode.commands.registerCommand("nextgenas.organizeImportsInTextEditor", organizeImportsInTextEditor);
 	vscode.commands.registerCommand("nextgenas.organizeImportsInDirectory", organizeImportsInDirectory);
-	vscode.commands.registerCommand("nextgenas.organizeImportsInSourcePathFile", organizeImportsInSourcePathFile);
-	vscode.commands.registerCommand("nextgenas.organizeImportsInSourcePathDirectory", organizeImportsInSourcePathDirectory);
 
 	sourcePathDataProvider = new ActionScriptSourcePathDataProvider(vscode.workspace.rootPath);
 	vscode.window.registerTreeDataProvider("actionScriptSourcePaths", sourcePathDataProvider);
