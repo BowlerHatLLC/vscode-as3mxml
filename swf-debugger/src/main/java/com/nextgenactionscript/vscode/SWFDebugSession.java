@@ -556,6 +556,26 @@ public class SWFDebugSession extends DebugSession
             //immediately.
             pendingBreakpoints.put(path, breakpoints);
         }
+        try
+        {
+            //clear all old breakpoints for this file because our new list
+            //doesn't specify exactly which ones are cleared
+            for (Location location : swfSession.getBreakpointList())
+            {
+                if (pathAsPath.equals(Paths.get(location.getFile().getFullPath())))
+                {
+                    swfSession.clearBreakpoint(location);
+                }
+            }
+        }
+        catch (NoResponseException e)
+        {
+            e.printStackTrace(System.err);
+        }
+        catch (NotConnectedException e)
+        {
+            e.printStackTrace(System.err);
+        }
         List<Breakpoint> result = new ArrayList<>();
         for (int i = 0, count = breakpoints.length; i < count; i++)
         {
