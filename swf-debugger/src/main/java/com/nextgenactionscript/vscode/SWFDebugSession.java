@@ -35,6 +35,7 @@ import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
 import com.nextgenactionscript.vscode.debug.DebugSession;
+import com.nextgenactionscript.vscode.debug.events.BreakpointEvent;
 import com.nextgenactionscript.vscode.debug.events.InitializedEvent;
 import com.nextgenactionscript.vscode.debug.events.OutputEvent;
 import com.nextgenactionscript.vscode.debug.events.StoppedEvent;
@@ -169,18 +170,7 @@ public class SWFDebugSession extends DebugSession
                         {
                             case SuspendReason.ScriptLoaded:
                             {
-                                if (!pendingBreakpoints.isEmpty())
-                                {
-                                    //if we weren't able to add some breakpoints earlier
-                                    //because we couldn't find the source file, try again!
-                                    for (String path : pendingBreakpoints.keySet())
-                                    {
-                                        SourceBreakpoint[] pending = pendingBreakpoints.get(path);
-                                        setBreakpoints(path, pending);
-                                        //unfortunately, I don't know how to send a response
-                                        //to make them appear to be verified in the editor
-                                    }
-                                }
+                                refreshPendingBreakpoints();
                                 //if we resumed immediately, we might not get
                                 //the breakpoints registered in time. waiting to
                                 //resume until we get the threads request
@@ -624,6 +614,30 @@ public class SWFDebugSession extends DebugSession
             result.add(responseBreakpoint);
         }
         return result;
+    }
+
+    private void refreshPendingBreakpoints()
+    {
+        if (pendingBreakpoints.isEmpty())
+        {
+            return;
+        }
+        //if we weren't able to add some breakpoints earlier because we
+        //we couldn't find the source file, try again!
+        for (String path : pendingBreakpoints.keySet())
+        {
+            SourceBreakpoint[] pending = pendingBreakpoints.get(path);
+            List<Breakpoint> breakpoints = setBreakpoints(path, pending);
+            for (Breakpoint breakpoint : breakpoints)
+            {
+                //this breakpoint was unverified, but it may be verified
+                //now, so let the editor know the updated status
+                BreakpointEvent.BreakpointBody body = new BreakpointEvent.BreakpointBody();
+                body.breakpoint = breakpoint;
+                body.reason = BreakpointEvent.REASON_CHANGED;
+                sendEvent(new BreakpointEvent(body));
+            }
+        }
     }
 
     public void continueCommand(Response response, Request.RequestArguments arguments)
