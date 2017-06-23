@@ -80,7 +80,6 @@ import flash.tools.debugger.VariableType;
 import flash.tools.debugger.VersionException;
 import flash.tools.debugger.events.DebugEvent;
 import flash.tools.debugger.events.FaultEvent;
-import flash.tools.debugger.events.SwfLoadedEvent;
 import flash.tools.debugger.events.TraceEvent;
 import flash.tools.debugger.threadsafe.ThreadSafeBootstrap;
 import flash.tools.debugger.threadsafe.ThreadSafeSession;
@@ -109,7 +108,7 @@ public class SWFDebugSession extends DebugSession
 
     private class SessionRunner implements Runnable
     {
-        private boolean swfLoaded = false;
+        private boolean initialized = false;
 
         public SessionRunner()
         {
@@ -128,16 +127,7 @@ public class SWFDebugSession extends DebugSession
                     while (swfSession.getEventCount() > 0)
                     {
                         DebugEvent event = swfSession.nextEvent();
-                        if (event instanceof SwfLoadedEvent)
-                        {
-                            if (!swfLoaded)
-                            {
-                                //SWFLoadedEvent happens after SuspendReason.ScriptLoaded
-                                swfLoaded = true;
-                                sendEvent(new InitializedEvent());
-                            }
-                        }
-                        else if (event instanceof TraceEvent)
+                        if (event instanceof TraceEvent)
                         {
                             TraceEvent traceEvent = (TraceEvent) event;
                             String output = traceEvent.information;
@@ -170,14 +160,23 @@ public class SWFDebugSession extends DebugSession
                         {
                             case SuspendReason.ScriptLoaded:
                             {
-                                refreshPendingBreakpoints();
-                                //if we resumed immediately, we might not get
-                                //the breakpoints registered in time. waiting to
-                                //resume until we get the threads request
-                                //ensures that we stop at all breakpoints.
-                                if (requestedThreads)
+                                if (initialized)
                                 {
-                                    swfSession.resume();
+                                    refreshPendingBreakpoints();
+                                    //if we resumed immediately, we might not get
+                                    //the breakpoints registered in time. waiting to
+                                    //resume until we get the threads request
+                                    //ensures that we stop at all breakpoints.
+                                    if (requestedThreads)
+                                    {
+                                        swfSession.resume();
+                                    }
+                                }
+                                else
+                                {
+                                    //initialize when the first script is loaded
+                                    initialized = true;
+                                    sendEvent(new InitializedEvent());
                                 }
                                 break;
                             }
