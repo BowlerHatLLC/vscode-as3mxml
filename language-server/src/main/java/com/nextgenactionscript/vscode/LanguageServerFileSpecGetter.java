@@ -20,6 +20,7 @@ import java.nio.file.Paths;
 import java.util.Map;
 
 import org.apache.flex.compiler.common.IFileSpecificationGetter;
+import org.apache.flex.compiler.constants.IASKeywordConstants;
 import org.apache.flex.compiler.constants.IMXMLCoreConstants;
 import org.apache.flex.compiler.filespecs.FileSpecification;
 import org.apache.flex.compiler.filespecs.IFileSpecification;
@@ -38,7 +39,9 @@ public class LanguageServerFileSpecGetter implements IFileSpecificationGetter
 {
     private static final String SCRIPT_START = "<fx:Script>";
     private static final String SCRIPT_END = "</fx:Script>";
-    private static final String MXML_FILE_EXTENSION = ".mxml";
+    private static final String PACKAGE_WITHOUT_BRACES = "package ";
+    private static final String FILE_EXTENSION_MXML = ".mxml";
+    private static final String FILE_EXTENSION_AS = ".as";
 
     public LanguageServerFileSpecGetter(IWorkspace workspace, Map<Path, String> sourceByPath)
     {
@@ -65,14 +68,37 @@ public class LanguageServerFileSpecGetter implements IFileSpecificationGetter
         if (sourceByPath.containsKey(path))
         {
             String code = sourceByPath.get(path);
-            if (path.endsWith(MXML_FILE_EXTENSION))
+            if (filePath.endsWith(FILE_EXTENSION_AS))
             {
+                code = fixPackageWithoutBraces(code);
+            }
+            else if (filePath.endsWith(FILE_EXTENSION_MXML))
+            {
+                //these workaround are for FlexJS 0.7.0 and can be removed when
+                //that version is no longer supported
                 code = fixUnclosedXMLComment(code);
                 code = fixUnclosedScriptCDATA(code);
             }
             return new StringFileSpecification(filePath, code);
         }
         return new FileSpecification(filePath);
+    }
+
+    /**
+     * If the file only contains the package keyword followed by a space, the
+     * compiler will return an IFileNode with no children.
+     */
+    private String fixPackageWithoutBraces(String code)
+    {
+        if (code.equals(IASKeywordConstants.PACKAGE))
+        {
+            return code + " {}";
+        }
+        if (code.equals(PACKAGE_WITHOUT_BRACES))
+        {
+            return code + "{}";
+        }
+        return code;
     }
 
     /**
@@ -117,13 +143,10 @@ public class LanguageServerFileSpecGetter implements IFileSpecificationGetter
             if (startCDATA != -1)
             {
                 int endCDATA = code.lastIndexOf(IMXMLCoreConstants.cDataEnd, endScript);
-                System.out.print("startCDATA: " + startCDATA + "endCDATA: " + endCDATA);
                 if (endCDATA < startCDATA)
                 {
                     code = code.substring(0, endScript) + IMXMLCoreConstants.cDataEnd + code.substring(endScript);
                     endScript += IMXMLCoreConstants.cDataEnd.length();
-                    System.out.println("========");
-                    System.out.println(code);
                 }
             }
             startIndex = endScript;

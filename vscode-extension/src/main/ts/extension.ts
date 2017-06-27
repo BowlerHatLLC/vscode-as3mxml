@@ -24,6 +24,7 @@ import findPort from "./utils/findPort";
 import findJava from "./utils/findJava";
 import validateJava from "./utils/validateJava";
 import validateEditorSDK from "./utils/validateEditorSDK";
+import ActionScriptSourcePathDataProvider from "./utils/ActionScriptSourcePathDataProvider";
 import getJavaClassPathDelimiter from "./utils/getJavaClassPathDelimiter";
 import findSDKShortName from "./utils/findSDKShortName";
 import adapterExecutableCommandSWF from "./commands/adapterExecutableCommandSWF";
@@ -55,6 +56,7 @@ let killed = false;
 let hasShownFlexJSSDKWarning = false;
 let hasShownFrameworkSDKWarning = false;
 let sdkStatusBarItem: vscode.StatusBarItem;
+let sourcePathDataProvider: ActionScriptSourcePathDataProvider = null;
 
 function killJavaProcess()
 {
@@ -164,6 +166,9 @@ export function activate(context: vscode.ExtensionContext)
 	sdkStatusBarItem.tooltip = "Select ActionScript SDK";
 	sdkStatusBarItem.command = "nextgenas.selectWorkspaceSDK";
 	sdkStatusBarItem.show();
+
+	sourcePathDataProvider = new ActionScriptSourcePathDataProvider(vscode.workspace.rootPath);
+	vscode.window.registerTreeDataProvider("actionScriptSourcePaths", sourcePathDataProvider);
 
 	startClient();
 }

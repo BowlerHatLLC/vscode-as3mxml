@@ -21,6 +21,8 @@ import com.nextgenactionscript.vscode.debug.responses.Breakpoint;
 public class BreakpointEvent extends Event<BreakpointEvent.BreakpointBody>
 {
     public static String EVENT_TYPE = "breakpoint";
+    public static String REASON_CHANGED = "changed";
+    public static String REASON_NEW = "new";
 
     public BreakpointEvent(BreakpointEvent.BreakpointBody body)
     {

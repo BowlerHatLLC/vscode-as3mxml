@@ -2,7 +2,7 @@
   "name": "vscode-nextgenas",
   "displayName": "NextGen ActionScript",
   "description": "ActionScript and MXML language extension for Visual Studio Code",
-  "version": "0.4.4-SNAPSHOT",
+  "version": "0.4.4",
   "publisher": "bowlerhatllc",
   "homepage": "http://nextgenactionscript.com/vscode/",
   "repository": {
@@ -26,9 +26,10 @@
     "build-debug": "mvn package"
   },
   "engines": {
-    "vscode": "^1.11.0"
+    "vscode": "^1.13.0"
   },
   "devDependencies": {
+    "@types/json5": "0.0.29",
     "@types/mocha": "^2.2.40",
     "@types/node": "^6.0.65",
     "mocha": "^3.2.0",
@@ -37,6 +38,7 @@
     "vscode": "^1.1.0"
   },
   "dependencies": {
+    "json5": "^0.5.1",
     "vscode-jsonrpc": "^3.1.0",
     "vscode-languageclient": "^2.6.3"
   },
@@ -128,6 +130,14 @@
         {
           "command": "nextgenas.organizeImportsInDirectory",
           "when": "explorerResourceIsFolder"
+        }
+      ]
+    },
+    "views": {
+      "explorer": [
+        {
+          "id": "actionScriptSourcePaths",
+          "name": "ActionScript Source Path"
         }
       ]
     },
@@ -249,6 +259,14 @@
                 "description": "The device profile to use in AIR Debug Launcher.",
                 "pattern": "^(desktop|extendedDesktop|mobileDevice)$",
                 "default": null
+              },
+              "args": {
+                "type": "array",
+                "description": "Optional arguments to pass to the AIR application.",
+                "items": {
+                  "type": "string"
+                },
+                "default": []
               },
               "screensize": {
                 "type": [

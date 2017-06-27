@@ -22,6 +22,7 @@ public class LaunchRequestArguments extends LaunchRequest.LaunchRequestArguments
     public String program;
     public String request;
     public String profile;
+    public String[] args;
     public String screensize;
     public int screenDPI;
     public String versionPlatform;
