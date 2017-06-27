@@ -83,7 +83,7 @@ export default function addImport(textEditor: vscode.TextEditor, edit: vscode.Te
 		}
 		else
 		{
-			regExp = /^package( [\w\.]+)*\s*{[\r\n]+([ \t]*)/g;
+			regExp = /^package( [\w\.]+)*\s*{[\r\n]+([ \t]*)/gm;
 			matches = regExp.exec(text);
 			if(!matches)
 			{
