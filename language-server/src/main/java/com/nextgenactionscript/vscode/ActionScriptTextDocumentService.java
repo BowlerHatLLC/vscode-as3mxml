@@ -3602,6 +3602,37 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             options.add(prefix + file.getAbsolutePath());
         }
     }
+    
+    private void publishConfigurationProblems(Configurator configurator)
+    {
+        Collection<ICompilerProblem> problems = configurator.getConfigurationProblems();
+        if (problems.size() > 0)
+        {
+            Map<URI, PublishDiagnosticsParams> filesMap = new HashMap<>();
+            for (ICompilerProblem problem : problems)
+            {
+                URI uri = Paths.get(problem.getSourcePath()).toUri();
+                configProblemTracker.trackFileWithProblems(uri);
+                PublishDiagnosticsParams params = null;
+                if (filesMap.containsKey(uri))
+                {
+                    params = filesMap.get(uri);
+                }
+                else
+                {
+                    params = new PublishDiagnosticsParams();
+                    params.setUri(uri.toString());
+                    params.setDiagnostics(new ArrayList<>());
+                    filesMap.put(uri, params);
+                }
+                addCompilerProblem(problem, params);
+            }
+            if (languageClient != null)
+            {
+                filesMap.values().forEach(languageClient::publishDiagnostics);
+            }
+        }
+    }
 
     private FlexProject getProject()
     {
@@ -3694,34 +3725,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             configurator.addConfiguration(appendConfigFile);
         }
         boolean result = configurator.applyToProject(project);
-        Collection<ICompilerProblem> problems = configurator.getConfigurationProblems();
-        if (problems.size() > 0)
-        {
-            Map<URI, PublishDiagnosticsParams> filesMap = new HashMap<>();
-            for (ICompilerProblem problem : problems)
-            {
-                URI uri = Paths.get(problem.getSourcePath()).toUri();
-                configProblemTracker.trackFileWithProblems(uri);
-                PublishDiagnosticsParams params = null;
-                if (filesMap.containsKey(uri))
-                {
-                    params = filesMap.get(uri);
-                }
-                else
-                {
-                    params = new PublishDiagnosticsParams();
-                    params.setUri(uri.toString());
-                    params.setDiagnostics(new ArrayList<>());
-                    filesMap.put(uri, params);
-                }
-                addCompilerProblem(problem, params);
-            }
-            if (languageClient != null)
-            {
-                filesMap.values().forEach(languageClient::publishDiagnostics);
-            }
-            //we don't return null if result is not false
-        }
+        publishConfigurationProblems(configurator);
         configProblemTracker.cleanUpStaleProblems();
         if (!result)
         {
@@ -3767,6 +3771,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         configurator.enableDebugging(compilerOptions.debug, null);
         configurator.showActionScriptWarnings(compilerOptions.warnings);
         result = configurator.applyToProject(project);
+        publishConfigurationProblems(configurator);
+        configProblemTracker.cleanUpStaleProblems();
         if (!result)
         {
             return null;
