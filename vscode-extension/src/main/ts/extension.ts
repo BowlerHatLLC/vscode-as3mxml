@@ -38,7 +38,7 @@ import {LanguageClient, LanguageClientOptions, SettingMonitor,
 	ServerOptions, StreamInfo, ErrorHandler, ErrorAction, CloseAction} from "vscode-languageclient";
 import { Message } from "vscode-jsonrpc";
 
-const INVALID_SDK_ERROR = "nextgenas.sdk.editor in settings does not point to a valid SDK. Requires Apache FlexJS 0.7.0 or newer.";
+const INVALID_SDK_ERROR = "nextgenas.sdk.editor in settings does not point to a valid SDK. Requires Apache FlexJS 0.8.0 or newer.";
 const MISSING_FRAMEWORK_SDK_ERROR = "You must configure an SDK to enable all ActionScript and MXML features.";
 const MISSING_JAVA_ERROR = "Could not locate valid Java executable. Configure nextgenas.java, add to $PATH, or set $JAVA_HOME.";
 const MISSING_WORKSPACE_ROOT_ERROR = "Open a folder and create a file named asconfig.json to enable all ActionScript and MXML language features.";

@@ -49,7 +49,7 @@ public class CheckFlexJSVersion
             }
             else if (major == 0)
             {
-                if (minor >= 7)
+                if (minor >= 8)
                 {
                     //minor version is valid
                     System.exit(GOOD_VERSION);
