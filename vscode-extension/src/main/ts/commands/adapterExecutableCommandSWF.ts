@@ -41,9 +41,18 @@ export default function(javaPath: string, editorSDKPath: string, frameworkSDKPat
 	return result;
 }
 
-function getClassPath(editorSDK: string)
+function getClassPath(sdkPath: string)
 {
 	let extension = vscode.extensions.getExtension("bowlerhatllc.vscode-nextgenas");
-	return path.resolve(extension.extensionPath, "bin", "*") + getJavaClassPathDelimiter() +
-		path.resolve(editorSDK, "lib", "*");
+	let cp = path.resolve(extension.extensionPath, "bin", "*");
+	if(sdkPath)
+	{
+		cp += getJavaClassPathDelimiter() + path.resolve(sdkPath, "lib", "*");
+	}
+	else
+	{
+		cp += getJavaClassPathDelimiter() + path.resolve(extension.extensionPath, "bundled-compiler", "*");
+	}
+	return cp;
+		
 }
