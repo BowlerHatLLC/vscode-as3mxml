@@ -27,6 +27,7 @@ import validateEditorSDK from "./utils/validateEditorSDK";
 import ActionScriptSourcePathDataProvider from "./utils/ActionScriptSourcePathDataProvider";
 import getJavaClassPathDelimiter from "./utils/getJavaClassPathDelimiter";
 import findSDKShortName from "./utils/findSDKShortName";
+import getFrameworkSDKPathWithFallbacks from "./utils/getFrameworkSDKPathWithFallbacks";
 import adapterExecutableCommandSWF from "./commands/adapterExecutableCommandSWF";
 import selectWorkspaceSDK from "./commands/selectWorkspaceSDK";
 import * as child_process from "child_process";
@@ -92,7 +93,7 @@ function onDidChangeConfiguration(event)
 		return validateJava(savedContext.extensionPath, javaPath);
 	});
 	let newEditorSDKHome = getValidatedEditorSDKConfiguration(newJavaExecutablePath);
-	let newFrameworkSDKHome = <string> vscode.workspace.getConfiguration("nextgenas").get("sdk.framework");
+	let newFrameworkSDKHome = getFrameworkSDKPathWithFallbacks();
 	if(editorSDKHome != newEditorSDKHome ||
 		javaExecutablePath != newJavaExecutablePath ||
 		frameworkSDKHome != newFrameworkSDKHome)
@@ -120,12 +121,6 @@ function updateSDKStatusBarItem()
 	{
 		sdkShortName = findSDKShortName(frameworkSDKHome);
 	}
-	else if(editorSDKHome)
-	{
-		//for legacy reasons, we fall back to the editor SDK if the framework
-		//SDK is not defined.
-		sdkShortName = findSDKShortName(editorSDKHome);
-	}
 	sdkStatusBarItem.text = sdkShortName;
 }
 
@@ -138,20 +133,15 @@ export function activate(context: vscode.ExtensionContext)
 		return validateJava(savedContext.extensionPath, javaPath);
 	});
 	editorSDKHome = getValidatedEditorSDKConfiguration(javaExecutablePath);
-	frameworkSDKHome = <string> vscode.workspace.getConfiguration("nextgenas").get("sdk.framework");
+	frameworkSDKHome = getFrameworkSDKPathWithFallbacks();
 	vscode.workspace.onDidChangeConfiguration(onDidChangeConfiguration);
 	vscode.commands.registerCommand("nextgenas.createASConfigTaskRunner", () =>
 	{
-		let tasksHome = frameworkSDKHome;
-		if(!tasksHome)
-		{
-			tasksHome = editorSDKHome;
-		}
-		createASConfigTaskRunner(tasksHome);
+		createASConfigTaskRunner(frameworkSDKHome);
 	});
 	vscode.commands.registerCommand("nextgenas.adapterExecutableCommandSWF", () =>
 	{
-		return adapterExecutableCommandSWF(javaExecutablePath, editorSDKHome, frameworkSDKHome ? frameworkSDKHome : editorSDKHome);
+		return adapterExecutableCommandSWF(javaExecutablePath, editorSDKHome, frameworkSDKHome);
 	});
 	vscode.commands.registerCommand("nextgenas.createInitialConfigurationsForSWFDebug", createInitialConfigurationsForSWFDebug);
 	vscode.commands.registerTextEditorCommand("nextgenas.addImport", addImport);
@@ -251,7 +241,7 @@ class CustomErrorHandler implements ErrorHandler
 			//if we can't find the SDK, we can't start the process
 			return CloseAction.DoNotRestart;
 		}
-		if(!frameworkSDKHome && !editorSDKHome)
+		if(!frameworkSDKHome)
 		{
 			showMissingFrameworkSDKError();
 			//if we can't find an SDK, we can't start the process
@@ -298,7 +288,7 @@ function createLanguageServer(): Promise<StreamInfo>
 			reject(INVALID_SDK_ERROR);
 			return;
 		}
-		if(!frameworkSDKHome && !editorSDKHome)
+		if(!frameworkSDKHome)
 		{
 			reject(MISSING_FRAMEWORK_SDK_ERROR);
 			return;
@@ -398,7 +388,7 @@ function startClient()
 		vscode.window.showErrorMessage(INVALID_SDK_ERROR);
 		return;
 	}
-	if(!frameworkSDKHome && !editorSDKHome)
+	if(!frameworkSDKHome)
 	{
 		showMissingFrameworkSDKError();
 		return;

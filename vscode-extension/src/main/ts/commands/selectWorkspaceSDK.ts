@@ -18,12 +18,13 @@ import * as fs from "fs";
 import * as path from "path";
 import findSDKName from "../utils/findSDKName";
 import validateFrameworkSDK from "../utils/validateFrameworkSDK";
+import findSDKInLocalNodeModule from "../utils/findSDKInLocalNodeModule";
+import findSDKInFlexHomeEnvironmentVariable from "../utils/findSDKInFlexHomeEnvironmentVariable";
+import findSDKsInPathEnvironmentVariable from "../utils/findSDKsInPathEnvironmentVariable";
 
 const COMMAND_GLOBAL_SETTINGS = "workbench.action.openGlobalSettings";
 const COMMAND_WORKSPACE_SETTINGS = "workbench.action.openWorkspaceSettings";
 const INSTRUCTIONS_SEARCH_PATHS = "Add more SDKs using the nextgenas.sdk.searchPaths setting";
-const ENVIRONMENT_VARIABLE_FLEX_HOME = "FLEX_HOME";
-const ENVIRONMENT_VARIABLE_PATH = "PATH";
 const DESCRIPTION_FLEX_HOME = "FLEX_HOME environment variable";
 const DESCRIPTION_PATH = "PATH environment variable";
 const DESCRIPTION_CURRENT = "Current SDK";
@@ -164,6 +165,8 @@ export default function selectWorkspaceSDK(): void
 	}
 	let allPaths: string[] = [];
 	let items: SDKQuickPickItem[] = [];
+	//for convenience, add an option to open user settings and define custom SDK paths
+	items.push(createSearchPathsItem());
 	//start with the current framework and editor SDKs
 	let frameworkSDK = <string> vscode.workspace.getConfiguration("nextgenas").get("sdk.framework");
 	let editorSDK = <string> vscode.workspace.getConfiguration("nextgenas").get("sdk.editor");
@@ -179,11 +182,12 @@ export default function selectWorkspaceSDK(): void
 		addedEditorSDK = true;
 		addSDKItem(editorSDK, DESCRIPTION_CURRENT, items, allPaths, true);
 	}
-	//for convenience, add an option to open user settings and define custom SDK paths
-	items.push(createSearchPathsItem());
 	//then search for an SDK that's a locally installed Node.js module
-	let nodeModuleSDK: string = path.join(vscode.workspace.rootPath, "node_modules", "flexjs");
-	addSDKItem(nodeModuleSDK, "Node Module", items, allPaths, true);
+	let nodeModuleSDK = findSDKInLocalNodeModule();
+	if(nodeModuleSDK)
+	{
+		addSDKItem(nodeModuleSDK, "Node Module", items, allPaths, true);
+	}
 	//if the user has defined search paths for SDKs, include them
 	let searchPaths = vscode.workspace.getConfiguration("nextgenas").get("sdk.searchPaths");
 	if(Array.isArray(searchPaths))
@@ -213,54 +217,17 @@ export default function selectWorkspaceSDK(): void
 		addSDKItem(editorSDK, DESCRIPTION_EDITOR_SDK, items, allPaths, true);
 	}
 	//check if the FLEX_HOME environment variable is defined
-	if(ENVIRONMENT_VARIABLE_FLEX_HOME in process.env)
+	let flexHome = findSDKInFlexHomeEnvironmentVariable();
+	if(flexHome)
 	{
-		addSDKItem(process.env.FLEX_HOME, DESCRIPTION_FLEX_HOME, items, allPaths, false);
+		addSDKItem(flexHome, DESCRIPTION_FLEX_HOME, items, allPaths, false);
 	}
-	//try to discover SDKs from the PATH environment variable
-	if(ENVIRONMENT_VARIABLE_PATH in process.env)
+	//check if any SDKs are in the PATH environment variable
+	let paths = findSDKsInPathEnvironmentVariable();
+	paths.forEach((sdkPath) =>
 	{
-		let PATH = <string> process.env.PATH;
-		let paths = PATH.split(path.delimiter);
-		paths.forEach((currentPath) =>
-		{
-			//first check if this directory contains the NPM version of FlexJS for Windows
-			let mxmlcPath = path.join(currentPath, "mxmlc.cmd");
-			if(fs.existsSync(mxmlcPath))
-			{
-				let sdkPath = path.join(path.dirname(mxmlcPath), "node_modules", "flexjs");
-				if(fs.existsSync(sdkPath))
-				{
-					addSDKItem(sdkPath, DESCRIPTION_PATH, items, allPaths, false);
-				}
-			}
-			else
-			{
-				mxmlcPath = path.join(currentPath, "mxmlc");
-				if(fs.existsSync(mxmlcPath))
-				{
-					//this may a symbolic link rather than the actual file, such as
-					//when Apache FlexJS is installed with NPM on macOS, so get the
-					//real path.
-					mxmlcPath = fs.realpathSync(mxmlcPath);
-					//first, check for bin/mxmlc
-					let frameworksPath = path.join(path.dirname(mxmlcPath), "..", "frameworks");
-					if(fs.existsSync(frameworksPath) && fs.statSync(frameworksPath).isDirectory())
-					{
-						let sdkPath = path.join(path.dirname(mxmlcPath), "..");
-						addSDKItem(sdkPath, DESCRIPTION_PATH, items, allPaths, false);
-					}
-					//then, check for js/bin/mxmlc
-					frameworksPath = path.join(path.dirname(mxmlcPath), "..", "..", "frameworks");
-					if(fs.existsSync(frameworksPath) && fs.statSync(frameworksPath).isDirectory())
-					{
-						let sdkPath = path.join(path.dirname(mxmlcPath), "..", "..");
-						addSDKItem(sdkPath, DESCRIPTION_PATH, items, allPaths, false);
-					}
-				}
-			}
-		});
-	}
+		addSDKItem(sdkPath, DESCRIPTION_PATH, items, allPaths, false);
+	});
 	vscode.window.showQuickPick(items, {placeHolder: "Select an ActionScript SDK for this workspace"}).then((value: SDKQuickPickItem) =>
 	{
 		if(!value)
