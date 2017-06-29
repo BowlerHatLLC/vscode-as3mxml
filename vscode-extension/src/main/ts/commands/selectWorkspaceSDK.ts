@@ -180,19 +180,10 @@ export default function selectWorkspaceSDK(): void
 		addSDKItem(editorSDK, DESCRIPTION_CURRENT, items, allPaths, true);
 	}
 	//for convenience, add an option to open user settings and define custom SDK paths
-	
 	items.push(createSearchPathsItem());
 	//then search for an SDK that's a locally installed Node.js module
-	let nodeModuleSDK: string = null;
-	try
-	{
-		nodeModuleSDK = require.resolve("flexjs");
-	}
-	catch(error){}
-	if(nodeModuleSDK)
-	{
-		addSDKItem(nodeModuleSDK, "Node Module", items, allPaths, true);
-	}
+	let nodeModuleSDK: string = path.join(vscode.workspace.rootPath, "node_modules", "flexjs");
+	addSDKItem(nodeModuleSDK, "Node Module", items, allPaths, true);
 	//if the user has defined search paths for SDKs, include them
 	let searchPaths = vscode.workspace.getConfiguration("nextgenas").get("sdk.searchPaths");
 	if(Array.isArray(searchPaths))
