@@ -46,6 +46,7 @@
     "onLanguage:nextgenas",
     "onLanguage:mxml",
     "workspaceContains:asconfig.json",
+    "onView:actionScriptSourcePaths",
     "onCommand:nextgenas.createASConfigTaskRunner",
     "onCommand:nextgenas.createInitialConfigurationsForSWFDebug",
     "onCommand:nextgenas.adapterExecutableCommandSWF",
