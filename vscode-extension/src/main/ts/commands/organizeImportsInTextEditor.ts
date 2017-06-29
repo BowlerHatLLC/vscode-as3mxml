@@ -105,6 +105,11 @@ function organizeImportsInDocumentFromIndex(document: vscode.TextDocument, start
 
 export default function organizeImportsInTextEditor(editor: vscode.TextEditor, edit: vscode.TextEditorEdit)
 {
+	if(!vscode.workspace.rootPath)
+	{
+		vscode.window.showErrorMessage("Cannot organize imports because no workspace is currently open.");
+		return;
+	}
 	let document = editor.document;
 	let fileName = document.fileName;
 	if(!fileName.endsWith(".as") && !fileName.endsWith(".mxml"))

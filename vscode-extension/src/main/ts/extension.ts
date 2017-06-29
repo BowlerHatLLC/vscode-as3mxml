@@ -151,15 +151,18 @@ export function activate(context: vscode.ExtensionContext)
 	vscode.commands.registerCommand("nextgenas.organizeImportsInDirectory", organizeImportsInDirectory);
 	vscode.commands.registerCommand("nextgenas.selectWorkspaceSDK", selectWorkspaceSDK);
 
-	sdkStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
-	updateSDKStatusBarItem();
-	sdkStatusBarItem.tooltip = "Select ActionScript SDK";
-	sdkStatusBarItem.command = "nextgenas.selectWorkspaceSDK";
-	sdkStatusBarItem.show();
+	//don't activate these things unless we're in a workspace
+	if(vscode.workspace.rootPath)
+	{
+		sdkStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
+		updateSDKStatusBarItem();
+		sdkStatusBarItem.tooltip = "Select ActionScript SDK";
+		sdkStatusBarItem.command = "nextgenas.selectWorkspaceSDK";
+		sdkStatusBarItem.show();
 
-	sourcePathDataProvider = new ActionScriptSourcePathDataProvider(vscode.workspace.rootPath);
-	vscode.window.registerTreeDataProvider("actionScriptSourcePaths", sourcePathDataProvider);
-
+		sourcePathDataProvider = new ActionScriptSourcePathDataProvider(vscode.workspace.rootPath);
+		vscode.window.registerTreeDataProvider("actionScriptSourcePaths", sourcePathDataProvider);
+	}
 	startClient();
 }
 
@@ -378,6 +381,20 @@ function startClient()
 		//something very bad happened!
 		return;
 	}
+	if(!vscode.workspace.rootPath)
+	{
+		vscode.window.showInformationMessage(MISSING_WORKSPACE_ROOT_ERROR,
+			{ title: "Help", href: "https://github.com/BowlerHatLLC/vscode-nextgenas/wiki" }
+		).then((value) =>
+		{
+			if(value && value.href)
+			{
+				let uri = vscode.Uri.parse(value.href);
+				vscode.commands.executeCommand("vscode.open", uri);
+			}
+		});
+		return;
+	}
 	if(!javaExecutablePath)
 	{ 
 		vscode.window.showErrorMessage(MISSING_JAVA_ERROR);
@@ -391,20 +408,6 @@ function startClient()
 	if(!frameworkSDKHome)
 	{
 		showMissingFrameworkSDKError();
-		return;
-	}
-	if(!vscode.workspace.rootPath)
-	{
-		vscode.window.showInformationMessage(MISSING_WORKSPACE_ROOT_ERROR,
-			{ title: "Help", href: "https://github.com/BowlerHatLLC/vscode-nextgenas/wiki" }
-		).then((value) =>
-		{
-			if(value && value.href)
-			{
-				let uri = vscode.Uri.parse(value.href);
-				vscode.commands.executeCommand("vscode.open", uri);
-			}
-		});
 		return;
 	}
 

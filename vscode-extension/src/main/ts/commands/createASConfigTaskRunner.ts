@@ -19,6 +19,11 @@ import * as vscode from "vscode";
 
 export default function(flexHome?: string)
 {
+	if(!vscode.workspace.rootPath)
+	{
+		vscode.window.showErrorMessage("Cannot create tasks.json because no workspace is currently open.");
+		return;
+	}
 	let vscodePath = path.resolve(vscode.workspace.rootPath, ".vscode/");
 	let tasksPath = path.resolve(vscodePath, "tasks.json");
 	vscode.workspace.openTextDocument(tasksPath).then((document: vscode.TextDocument) =>
