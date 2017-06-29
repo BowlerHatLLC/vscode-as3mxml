@@ -18,6 +18,9 @@ import * as json5 from "json5";
 import * as path from "path";
 import * as vscode from "vscode";
 
+const FILE_EXTENSION_AS = ".as";
+const FILE_EXTENSION_MXML = ".mxml";
+
 export class ActionScriptSourcePath extends vscode.TreeItem
 {
 	constructor(label: string, filePath?: string)
@@ -35,11 +38,11 @@ export class ActionScriptSourcePath extends vscode.TreeItem
 			else
 			{
 				let extname = path.extname(filePath);
-				if(extname === ".as")
+				if(extname === FILE_EXTENSION_AS)
 				{
 					contextValue = "nextgenas";
 				}
-				else if(extname === ".mxml")
+				else if(extname === FILE_EXTENSION_MXML)
 				{
 					contextValue = "mxml";
 				}
@@ -108,11 +111,24 @@ export default class ActionScriptSourcePathDataProvider implements vscode.TreeDa
 					return resolve([]);
 				}
 				let files = fs.readdirSync(elementPath);
-				let sourcePaths = files.map((filePath) =>
+				let sourcePaths = [];
+				files.forEach((filePath) =>
 				{
 					filePath = path.join(elementPath, filePath);
-					return this.pathToSourcePath(filePath);
-				})
+					if(fs.statSync(filePath).isDirectory())
+					{
+						sourcePaths.push(this.pathToSourcePath(filePath));
+					}
+					else
+					{
+						let extension = path.extname(filePath);
+						//don't show files that have different extensions
+						if(extension === FILE_EXTENSION_AS || extension === FILE_EXTENSION_MXML)
+						{
+							sourcePaths.push(this.pathToSourcePath(filePath));
+						}
+					}
+				});
 				return resolve(sourcePaths);
 			}
 			else
@@ -130,6 +146,12 @@ export default class ActionScriptSourcePathDataProvider implements vscode.TreeDa
 	{
 		let rootPath = path.resolve(this._workspaceRoot, pathToResolve);
 		let name = path.basename(rootPath);
+		let extension = path.extname(name);
+		if(extension.length > 0)
+		{
+			//don't show the file extension
+			name = name.substr(0, name.length - extension.length);
+		}
 		return new ActionScriptSourcePath(name, rootPath);
 	}
 
