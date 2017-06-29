@@ -55,19 +55,19 @@ function readName(fileContents: string, includeBuild: boolean): string
 export default function findSDKName(sdkPath: string): string
 {
 	let sdkName: string = null;
-	let airDescriptionPath = path.join(sdkPath, PATH_SDK_DESCRIPTION_AIR);
-	if(fs.existsSync(airDescriptionPath))
+	let flexDescriptionPath = path.join(sdkPath, PATH_SDK_DESCRIPTION_FLEX);
+	if(fs.existsSync(flexDescriptionPath))
 	{
-		let airDescription = fs.readFileSync(airDescriptionPath, "utf8");
-		sdkName = readName(airDescription, true);
+		let flexDescription = fs.readFileSync(flexDescriptionPath, "utf8");
+		sdkName = readName(flexDescription, false);
 	}
 	if(sdkName === null)
 	{
-		let flexDescriptionPath = path.join(sdkPath, PATH_SDK_DESCRIPTION_FLEX);
-		if(fs.existsSync(flexDescriptionPath))
+		let airDescriptionPath = path.join(sdkPath, PATH_SDK_DESCRIPTION_AIR);
+		if(fs.existsSync(airDescriptionPath))
 		{
-			let flexDescription = fs.readFileSync(flexDescriptionPath, "utf8");
-			sdkName = readName(flexDescription, false);
+			let airDescription = fs.readFileSync(airDescriptionPath, "utf8");
+			sdkName = readName(airDescription, true);
 		}
 	}
 	return sdkName;
