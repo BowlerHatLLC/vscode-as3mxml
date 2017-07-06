@@ -41,6 +41,7 @@ import java.util.regex.Pattern;
 import org.apache.flex.abc.ABCParser;
 import org.apache.flex.abc.Pool;
 import org.apache.flex.abc.PoolingABCVisitor;
+import org.apache.flex.compiler.clients.MXMLJSC;
 import org.apache.flex.compiler.common.ISourceLocation;
 import org.apache.flex.compiler.common.PrefixMap;
 import org.apache.flex.compiler.common.XMLName;
@@ -67,14 +68,20 @@ import org.apache.flex.compiler.definitions.IStyleDefinition;
 import org.apache.flex.compiler.definitions.ITypeDefinition;
 import org.apache.flex.compiler.definitions.IVariableDefinition;
 import org.apache.flex.compiler.definitions.metadata.IMetaTag;
+import org.apache.flex.compiler.driver.IBackend;
 import org.apache.flex.compiler.filespecs.IFileSpecification;
+import org.apache.flex.compiler.internal.driver.js.flexjs.FlexJSBackend;
 import org.apache.flex.compiler.internal.driver.js.goog.JSGoogConfiguration;
+import org.apache.flex.compiler.internal.driver.js.jsc.JSCBackend;
+import org.apache.flex.compiler.internal.driver.js.node.NodeBackend;
+import org.apache.flex.compiler.internal.driver.js.node.NodeModuleBackend;
 import org.apache.flex.compiler.internal.mxml.MXMLData;
 import org.apache.flex.compiler.internal.parsing.as.ASParser;
 import org.apache.flex.compiler.internal.parsing.as.ASToken;
 import org.apache.flex.compiler.internal.parsing.as.RepairingTokenBuffer;
 import org.apache.flex.compiler.internal.parsing.as.StreamingASTokenizer;
 import org.apache.flex.compiler.internal.projects.CompilerProject;
+import org.apache.flex.compiler.internal.projects.FlexJSProject;
 import org.apache.flex.compiler.internal.projects.FlexProject;
 import org.apache.flex.compiler.internal.scopes.ASScope;
 import org.apache.flex.compiler.internal.scopes.TypeScope;
@@ -3646,7 +3653,64 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         FlexProject project = null;
         if (currentProject == null)
         {
-            project = new FlexProject(new Workspace());
+            //we're going to try to determine if we need a JS project or a SWF one
+            IBackend backend = null;
+            List<String> targets = currentProjectOptions.compilerOptions.targets;
+            if (targets != null && targets.size() > 0)
+            {
+                //first, check if any targets are specified
+                String firstTarget = targets.get(0);
+                switch (MXMLJSC.JSTargetType.fromString(firstTarget))
+                {
+                    case SWF:
+                    {
+                        //no backend. fall back to FlexProject.
+                        backend = null;
+                        break;
+                    }
+                    case JS_NATIVE:
+                    {
+                        backend = new JSCBackend();
+                        break;
+                    }
+                    case JS_NODE:
+                    {
+                        backend = new NodeBackend();
+                        break;
+                    }
+                    case JS_NODE_MODULE:
+                    {
+                        backend = new NodeModuleBackend();
+                        break;
+                    }
+                    default:
+                    {
+                        //it actually shouldn't matter too much which JS
+                        //backend is used. we just want to rule out SWF.
+                        backend = new FlexJSBackend();
+                        break;
+                    }
+                }
+            }
+            //if no targets are specified, we can guess JS from some configs
+            else if (currentProjectOptions.config.equals(CONFIG_JS))
+            {
+                backend = new JSCBackend();
+            }
+            else if (currentProjectOptions.config.equals(CONFIG_NODE))
+            {
+                backend = new NodeBackend();
+            }
+            if (backend != null)
+            {
+                //if we created a backend, it's a JS project
+                project = new FlexJSProject(new Workspace(), backend);
+            }
+            if (project == null)
+            {
+                //if we haven't created the project yet, we default to SWF
+                project = new FlexProject(new Workspace());
+            }
             project.setProblems(new ArrayList<>());
             currentWorkspace = project.getWorkspace();
             fileSpecGetter = new LanguageServerFileSpecGetter(currentWorkspace, sourceByPath);
