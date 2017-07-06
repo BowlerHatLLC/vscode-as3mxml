@@ -43,7 +43,7 @@ const INVALID_SDK_ERROR = "nextgenas.sdk.editor in settings does not point to a 
 const MISSING_FRAMEWORK_SDK_ERROR = "You must configure an SDK to enable all ActionScript and MXML features.";
 const MISSING_JAVA_ERROR = "Could not locate valid Java executable. Configure nextgenas.java, add to $PATH, or set $JAVA_HOME.";
 const MISSING_WORKSPACE_ROOT_ERROR = "Open a folder and create a file named asconfig.json to enable all ActionScript and MXML language features.";
-const RESTART_MESSAGE = "To apply new settings for NextGen ActionScript, please restart Visual Studio Code.";
+const RESTART_MESSAGE = "To apply new settings for ActionScript and MXML, please restart Visual Studio Code.";
 const RESTART_BUTTON_LABEL = "Restart Now";
 const CONFIGURE_SDK_LABEL = "Configure SDK";
 const NO_SDK = "$(alert) No SDK";
@@ -179,12 +179,12 @@ function childExitListener(code)
 	{
 		return;
 	}
-	vscode.window.showErrorMessage("NextGen ActionScript extension exited with error code " + code);
+	vscode.window.showErrorMessage("ActionScript and MXML extension exited with error code " + code);
 }
 
 function childErrorListener(error)
 {
-	vscode.window.showErrorMessage("Failed to start NextGen ActionScript extension.");
+	vscode.window.showErrorMessage("Failed to start ActionScript and MXML extension.");
 	console.error("Error connecting to child process.");
 	console.error(error);
 }
@@ -428,7 +428,7 @@ function startClient()
 				vscode.workspace.createFileSystemWatcher("**/*.mxml"),
 			]
 		},
-		errorHandler: new CustomErrorHandler("NextGen ActionScript")
+		errorHandler: new CustomErrorHandler("ActionScript and MXML")
 	};
 	vscode.languages.setLanguageConfiguration("nextgenas",
 	{
@@ -445,7 +445,7 @@ function startClient()
 			},
 		]
 	});
-	let client = new LanguageClient("nextgenas", "NextGen ActionScript Language Server", createLanguageServer, clientOptions);
+	let client = new LanguageClient("nextgenas", "ActionScript and MXML Language Server", createLanguageServer, clientOptions);
 	let disposable = client.start();
 	savedContext.subscriptions.push(disposable);
 }

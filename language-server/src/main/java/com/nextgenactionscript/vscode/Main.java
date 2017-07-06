@@ -45,7 +45,7 @@ public class Main
         String port = System.getProperty(SYSTEM_PROPERTY_PORT);
         if (port == null)
         {
-            System.err.println("NextGen ActionScript language server encountered an error: System property nextgeas.vscode.port is required.");
+            System.err.println("ActionScript and MXML language server encountered an error: System property nextgeas.vscode.port is required.");
             System.exit(MISSING_PORT);
         }
         try
@@ -59,7 +59,7 @@ public class Main
         }
         catch (Exception e)
         {
-            System.err.println("NextGen ActionScript language server failed to connect.");
+            System.err.println("ActionScript and MXML language server failed to connect.");
             System.err.println("Visit the following URL to file an issue, and please include this log: https://github.com/BowlerHatLLC/vscode-nextgenas/issues");
             e.printStackTrace(System.err);
             System.exit(SERVER_CONNECT_ERROR);

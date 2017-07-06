@@ -1,7 +1,7 @@
 {
   "name": "vscode-nextgenas",
   "displayName": "NextGen ActionScript",
-  "description": "ActionScript and MXML language extension for Visual Studio Code",
+  "description": "Language support for ActionScript and MXML provided by NextGen ActionScript",
   "version": "0.5.0-SNAPSHOT",
   "publisher": "bowlerhatllc",
   "homepage": "http://nextgenactionscript.com/vscode/",
@@ -191,7 +191,7 @@
     ],
     "configuration": {
       "type": "object",
-      "description": "NextGen ActionScript configuration",
+      "description": "ActionScript and MXML configuration",
       "properties": {
         "nextgenas.sdk.editor": {
           "type": [
