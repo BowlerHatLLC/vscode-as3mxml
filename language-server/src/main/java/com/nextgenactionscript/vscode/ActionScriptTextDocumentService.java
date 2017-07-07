@@ -161,6 +161,7 @@ import org.eclipse.lsp4j.FileChangeType;
 import org.eclipse.lsp4j.FileEvent;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.Location;
+import org.eclipse.lsp4j.MarkedString;
 import org.eclipse.lsp4j.MessageParams;
 import org.eclipse.lsp4j.MessageType;
 import org.eclipse.lsp4j.ParameterInformation;
@@ -181,6 +182,7 @@ import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.VersionedTextDocumentIdentifier;
 import org.eclipse.lsp4j.WorkspaceEdit;
 import org.eclipse.lsp4j.WorkspaceSymbolParams;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.TextDocumentService;
 
@@ -351,7 +353,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
      * user types, and may not necessarily be triggered only on "." or ":".
      */
     @Override
-    public CompletableFuture<CompletionList> completion(TextDocumentPositionParams position)
+    public CompletableFuture<Either<List<CompletionItem>, CompletionList>> completion(TextDocumentPositionParams position)
     {
         String textDocumentUri = position.getTextDocument().getUri();
         if (!textDocumentUri.endsWith(AS_EXTENSION)
@@ -360,7 +362,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             CompletionList result = new CompletionList();
             result.setIsIncomplete(false);
             result.setItems(new ArrayList<>());
-            return CompletableFuture.completedFuture(result);
+            return CompletableFuture.completedFuture(Either.forRight(result));
         }
         IMXMLTagData offsetTag = getOffsetMXMLTag(position);
         if (offsetTag != null)
@@ -368,13 +370,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             IASNode embeddedNode = getEmbeddedActionScriptNodeInMXMLTag(offsetTag, currentOffset, position);
             if (embeddedNode != null)
             {
-                return actionScriptCompletionWithNode(position, embeddedNode);
+                return CompletableFuture.completedFuture(Either.forRight(actionScriptCompletionWithNode(position, embeddedNode)));
             }
             //if we're inside an <fx:Script> tag, we want ActionScript completion,
             //so that's why we call isMXMLTagValidForCompletion()
             if (isMXMLTagValidForCompletion(offsetTag))
             {
-                return mxmlCompletion(position, offsetTag);
+                return CompletableFuture.completedFuture(Either.forRight(mxmlCompletion(position, offsetTag)));
             }
         }
         if (offsetTag == null && position.getTextDocument().getUri().endsWith(MXML_EXTENSION))
@@ -387,9 +389,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             CompletionList result = new CompletionList();
             result.setIsIncomplete(false);
             result.setItems(new ArrayList<>());
-            return CompletableFuture.completedFuture(result);
+            return CompletableFuture.completedFuture(Either.forRight(result));
         }
-        return actionScriptCompletion(position);
+        return CompletableFuture.completedFuture(Either.forRight(actionScriptCompletion(position)));
     }
 
     /**
@@ -1076,13 +1078,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         currentProjectOptions = projectConfigStrategy.getOptions();
     }
 
-    private CompletableFuture<CompletionList> actionScriptCompletion(TextDocumentPositionParams position)
+    private CompletionList actionScriptCompletion(TextDocumentPositionParams position)
     {
         IASNode offsetNode = getOffsetNode(position);
         return actionScriptCompletionWithNode(position, offsetNode);
     }
 
-    private CompletableFuture<CompletionList> actionScriptCompletionWithNode(TextDocumentPositionParams position, IASNode offsetNode)
+    private CompletionList actionScriptCompletionWithNode(TextDocumentPositionParams position, IASNode offsetNode)
     {
         CompletionList result = new CompletionList();
         result.setIsIncomplete(false);
@@ -1090,7 +1092,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         if (offsetNode == null)
         {
             //we couldn't find a node at the specified location
-            return CompletableFuture.completedFuture(result);
+            return result;
         }
         IASNode parentNode = offsetNode.getParent();
         IASNode nodeAtPreviousOffset = null;
@@ -1102,7 +1104,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         if (!isActionScriptCompletionAllowedInNode(position, offsetNode))
         {
             //if we're inside a node that shouldn't have completion!
-            return CompletableFuture.completedFuture(new CompletionList());
+            return new CompletionList();
         }
 
         //variable types
@@ -1121,7 +1123,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 {
                     autoCompleteTypes(offsetNode, result);
                 }
-                return CompletableFuture.completedFuture(result);
+                return result;
             }
         }
         if (parentNode != null
@@ -1131,7 +1133,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             if (offsetNode == variableNode.getVariableTypeNode())
             {
                 autoCompleteTypes(parentNode, result);
-                return CompletableFuture.completedFuture(result);
+                return result;
             }
         }
         //function return types
@@ -1150,7 +1152,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                         && column <= typeNode.getColumn())
                 {
                     autoCompleteTypes(offsetNode, result);
-                    return CompletableFuture.completedFuture(result);
+                    return result;
                 }
             }
         }
@@ -1161,7 +1163,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             if (offsetNode == functionNode.getReturnTypeNode())
             {
                 autoCompleteTypes(parentNode, result);
-                return CompletableFuture.completedFuture(result);
+                return result;
             }
         }
         //new keyword types
@@ -1173,7 +1175,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     && functionCallNode.isNewExpression())
             {
                 autoCompleteTypes(parentNode, result);
-                return CompletableFuture.completedFuture(result);
+                return result;
             }
         }
         if (nodeAtPreviousOffset != null
@@ -1181,7 +1183,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 && nodeAtPreviousOffset.getNodeID() == ASTNodeID.KeywordNewID)
         {
             autoCompleteTypes(nodeAtPreviousOffset, result);
-            return CompletableFuture.completedFuture(result);
+            return result;
         }
         //as and is keyword types
         if (parentNode != null
@@ -1193,7 +1195,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             if (binaryOperatorNode.getRightOperandNode() == offsetNode)
             {
                 autoCompleteTypes(parentNode, result);
-                return CompletableFuture.completedFuture(result);
+                return result;
             }
         }
         if (nodeAtPreviousOffset != null
@@ -1202,7 +1204,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 || nodeAtPreviousOffset.getNodeID() == ASTNodeID.Op_IsID))
         {
             autoCompleteTypes(nodeAtPreviousOffset, result);
-            return CompletableFuture.completedFuture(result);
+            return result;
         }
         //class extends keyword
         if (offsetNode instanceof IClassNode
@@ -1211,7 +1213,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 && nodeAtPreviousOffset.getNodeID() == ASTNodeID.KeywordExtendsID)
         {
             autoCompleteTypes(offsetNode, result);
-            return CompletableFuture.completedFuture(result);
+            return result;
         }
         //class implements keyword
         if (offsetNode instanceof IClassNode
@@ -1220,7 +1222,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 && nodeAtPreviousOffset.getNodeID() == ASTNodeID.KeywordImplementsID)
         {
             autoCompleteTypes(offsetNode, result);
-            return CompletableFuture.completedFuture(result);
+            return result;
         }
         //interface extends keyword
         if (offsetNode instanceof IInterfaceNode
@@ -1229,7 +1231,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 && nodeAtPreviousOffset.getNodeID() == ASTNodeID.KeywordExtendsID)
         {
             autoCompleteTypes(offsetNode, result);
-            return CompletableFuture.completedFuture(result);
+            return result;
         }
 
         //package (must be before member access)
@@ -1240,7 +1242,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             {
                 //the file is completely empty
                 autoCompletePackageBlock(result);
-                return CompletableFuture.completedFuture(result);
+                return result;
             }
         }
         if (parentNode != null
@@ -1255,7 +1257,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 {
                     //the file contains only a substring of the package keyword
                     autoCompletePackageBlock(result);
-                    return CompletableFuture.completedFuture(result);
+                    return result;
                 }
             }
         }
@@ -1263,7 +1265,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             IPackageNode packageNode = (IPackageNode) offsetNode;
             autoCompletePackageName(packageNode.getPackageName(), result);
-            return CompletableFuture.completedFuture(result);
+            return result;
         }
         if (parentNode != null
                 && parentNode instanceof FullNameNode)
@@ -1291,7 +1293,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 {
                     autoCompletePackageName(packageNode.getPackageName(), result);
                 }
-                return CompletableFuture.completedFuture(result);
+                return result;
             }
         }
 
@@ -1306,7 +1308,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 String importName = importNode.getImportName();
                 importName = importName.substring(0, position.getPosition().getCharacter() - nameNode.getColumn());
                 autoCompleteImport(importName, result);
-                return CompletableFuture.completedFuture(result);
+                return result;
             }
         }
         if (parentNode != null
@@ -1322,7 +1324,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     String importName = importNode.getImportName();
                     importName = importName.substring(0, position.getPosition().getCharacter() - nameNode.getColumn());
                     autoCompleteImport(importName, result);
-                    return CompletableFuture.completedFuture(result);
+                    return result;
                 }
             }
         }
@@ -1330,7 +1332,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 && nodeAtPreviousOffset instanceof IImportNode)
         {
             autoCompleteImport("", result);
-            return CompletableFuture.completedFuture(result);
+            return result;
         }
 
         //member access
@@ -1348,7 +1350,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                         || (line == rightOperand.getLine() && column <= rightOperand.getColumn()))
                 {
                     autoCompleteMemberAccess(memberAccessNode, result);
-                    return CompletableFuture.completedFuture(result);
+                    return result;
                 }
             }
         }
@@ -1371,7 +1373,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     || isValidLeft)
             {
                 autoCompleteMemberAccess(memberAccessNode, result);
-                return CompletableFuture.completedFuture(result);
+                return result;
             }
         }
         if (nodeAtPreviousOffset != null
@@ -1388,7 +1390,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 if (identifierNode.getName().equals(""))
                 {
                     autoCompleteMemberAccess(memberAccessNode, result);
-                    return CompletableFuture.completedFuture(result);
+                    return result;
                 }
             }
         }
@@ -1410,16 +1412,16 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 IDefinition definitionToSkip = scope.getDefinition();
                 autoCompleteDefinitions(result, false, false, null, definitionToSkip);
 
-                return CompletableFuture.completedFuture(result);
+                return result;
             }
             offsetNode = offsetNode.getParent();
         }
         while (offsetNode != null);
 
-        return CompletableFuture.completedFuture(result);
+        return result;
     }
 
-    private CompletableFuture<CompletionList> mxmlCompletion(TextDocumentPositionParams position, IMXMLTagData offsetTag)
+    private CompletionList mxmlCompletion(TextDocumentPositionParams position, IMXMLTagData offsetTag)
     {
         CompletionList result = new CompletionList();
         result.setIsIncomplete(false);
@@ -1427,7 +1429,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         if (isInXMLComment(position))
         {
             //if we're inside a comment, no completion!
-            return CompletableFuture.completedFuture(result);
+            return result;
         }
 
         IMXMLTagData parentTag = offsetTag.getParentTag();
@@ -1438,7 +1440,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 && currentOffset < offsetTag.getAbsoluteEnd();
         if (isAttribute && offsetTag.isCloseTag())
         {
-            return CompletableFuture.completedFuture(result);
+            return result;
         }
 
         //inside <fx:Declarations>
@@ -1448,7 +1450,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             {
                 autoCompleteTypesForMXML(result);
             }
-            return CompletableFuture.completedFuture(result);
+            return result;
         }
 
         IDefinition offsetDefinition = getDefinitionForMXMLTag(offsetTag);
@@ -1514,14 +1516,14 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     //prefix is not required
                     autoCompleteTypesForMXMLFromExistingTag(result, offsetTag);
                 }
-                return CompletableFuture.completedFuture(result);
+                return result;
             }
             else if (isDeclarationsTag(parentTag))
             {
                 autoCompleteTypesForMXMLFromExistingTag(result, offsetTag);
-                return CompletableFuture.completedFuture(result);
+                return result;
             }
-            return CompletableFuture.completedFuture(result);
+            return result;
         }
         if (offsetDefinition instanceof IClassDefinition)
         {
@@ -1552,7 +1554,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     autoCompleteTypesForMXML(result);
                 }
             }
-            return CompletableFuture.completedFuture(result);
+            return result;
         }
         if (offsetDefinition instanceof IVariableDefinition
                 || offsetDefinition instanceof IEventDefinition
@@ -1562,13 +1564,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             {
                 autoCompleteTypesForMXML(result);
             }
-            return CompletableFuture.completedFuture(result);
+            return result;
         }
         System.err.println("Unknown definition for MXML completion: " + offsetDefinition.getClass());
-        return CompletableFuture.completedFuture(result);
+        return result;
     }
 
-    private CompletableFuture<CompletionList> mxmlAttributeCompletion(IMXMLTagData offsetTag, CompletionList result)
+    private CompletionList mxmlAttributeCompletion(IMXMLTagData offsetTag, CompletionList result)
     {
         List<CompletionItem> items = result.getItems();
         IDefinition attributeDefinition = getDefinitionForMXMLTagAttribute(offsetTag, currentOffset, true);
@@ -1585,10 +1587,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 trueItem.setKind(CompletionItemKind.Value);
                 trueItem.setLabel(IASLanguageConstants.TRUE);
                 items.add(trueItem);
-                return CompletableFuture.completedFuture(result);
+                return result;
             }
         }
-        return CompletableFuture.completedFuture(result);
+        return result;
     }
 
     private CompletableFuture<Hover> actionScriptHover(TextDocumentPositionParams position)
@@ -1623,8 +1625,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
         Hover result = new Hover();
         String detail = getDefinitionDetail(definition);
-        List<String> contents = new ArrayList<>();
-        contents.add(MARKDOWN_CODE_BLOCK_NEXTGENAS_START + detail + MARKDOWN_CODE_BLOCK_END);
+        List<Either<String,MarkedString>> contents = new ArrayList<>();
+        contents.add(Either.forLeft(MARKDOWN_CODE_BLOCK_NEXTGENAS_START + detail + MARKDOWN_CODE_BLOCK_END));
         result.setContents(contents);
         return CompletableFuture.completedFuture(result);
     }
@@ -1642,7 +1644,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             //inside the prefix
             String prefix = offsetTag.getPrefix();
             Hover result = new Hover();
-            List<String> contents = new ArrayList<>();
+            List<Either<String,MarkedString>> contents = new ArrayList<>();
             StringBuilder detailBuilder = new StringBuilder();
             detailBuilder.append(MARKDOWN_CODE_BLOCK_MXML_START);
             if (prefix.length() > 0)
@@ -1654,15 +1656,15 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 detailBuilder.append("xmlns=\"" + offsetTag.getURI() + "\"");
             }
             detailBuilder.append(MARKDOWN_CODE_BLOCK_END);
-            contents.add(detailBuilder.toString());
+            contents.add(Either.forLeft(detailBuilder.toString()));
             result.setContents(contents);
             return CompletableFuture.completedFuture(result);
         }
 
         Hover result = new Hover();
         String detail = getDefinitionDetail(definition);
-        List<String> contents = new ArrayList<>();
-        contents.add(MARKDOWN_CODE_BLOCK_NEXTGENAS_START + detail + MARKDOWN_CODE_BLOCK_END);
+        List<Either<String,MarkedString>> contents = new ArrayList<>();
+        contents.add(Either.forLeft(MARKDOWN_CODE_BLOCK_NEXTGENAS_START + detail + MARKDOWN_CODE_BLOCK_END));
         result.setContents(contents);
         return CompletableFuture.completedFuture(result);
     }
