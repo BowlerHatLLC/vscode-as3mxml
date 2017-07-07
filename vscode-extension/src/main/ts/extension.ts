@@ -420,6 +420,7 @@ function startClient()
 		],
 		synchronize:
 		{
+			configurationSection: "nextgenas",
 			//the server will be notified when these files change
 			fileEvents:
 			[
