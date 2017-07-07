@@ -102,15 +102,21 @@ function onDidChangeConfiguration(event)
 		frameworkSDKHome = newFrameworkSDKHome;
 		updateSDKStatusBarItem();
 
-		//on Windows, the language server doesn't restart very gracefully,
-		//so force a restart. 
-		vscode.window.showWarningMessage(RESTART_MESSAGE, RESTART_BUTTON_LABEL).then((action) =>
+		if(editorSDKHome != newEditorSDKHome ||
+			javaExecutablePath != newJavaExecutablePath)
 		{
-			if(action === RESTART_BUTTON_LABEL)
+			//on Windows, the language server doesn't restart very gracefully,
+			//so force a restart if either of these two settings changes.
+			//we don't need to restart if nextgenas.sdk.framework changes
+			//because the language server can detect that and update.
+			vscode.window.showWarningMessage(RESTART_MESSAGE, RESTART_BUTTON_LABEL).then((action) =>
 			{
-				vscode.commands.executeCommand("workbench.action.reloadWindow");
-			}
-		});
+				if(action === RESTART_BUTTON_LABEL)
+				{
+					vscode.commands.executeCommand("workbench.action.reloadWindow");
+				}
+			});
+		}
 	}
 }
 

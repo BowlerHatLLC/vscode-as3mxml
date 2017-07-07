@@ -25,6 +25,7 @@ import java.util.concurrent.CompletableFuture;
 
 import org.apache.flex.compiler.tree.as.IASNode;
 
+import com.google.gson.internal.LinkedTreeMap;
 import com.nextgenactionscript.vscode.project.ASConfigProjectConfigStrategy;
 import com.nextgenactionscript.vscode.utils.LanguageServerUtils;
 import org.eclipse.lsp4j.CompletionOptions;
@@ -53,7 +54,8 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
     private static final int MISSING_FLEXLIB = 200;
     private static final int INVALID_FLEXLIB = 201;
     private static final String FLEXLIB = "flexlib";
-    private static final String FRAMEWORKS_RELATIVE_PATH = "../frameworks";
+    private static final String FRAMEWORKS_RELATIVE_PATH_CHILD = "./frameworks";
+    private static final String FRAMEWORKS_RELATIVE_PATH_PARENT = "../frameworks";
     private static final String ASCONFIG_JSON = "asconfig.json";
 
     private WorkspaceService workspaceService;
@@ -156,10 +158,33 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
                 @Override
                 public void didChangeConfiguration(DidChangeConfigurationParams params)
                 {
-                    //inside the extension's entry point, this is handled already
-                    //it actually restarts the language server because the language
-                    //server may need to be loaded with a different version of the
-                    //Apache FlexJS SDK
+                    if(!(params.getSettings() instanceof LinkedTreeMap))
+                    {
+                        return;
+                    }
+                    LinkedTreeMap settings = (LinkedTreeMap) params.getSettings();
+                    LinkedTreeMap nextgenas = (LinkedTreeMap) settings.get("nextgenas");
+                    LinkedTreeMap sdk = (LinkedTreeMap) nextgenas.get("sdk");
+                    String frameworkSDK = (String) sdk.get("framework");
+                    if (frameworkSDK == null)
+                    {
+                        //for legacy reasons, we fall back to the editor SDK
+                        frameworkSDK = (String) sdk.get("editor");
+                    }
+                    if (frameworkSDK == null)
+                    {
+                        //keep using the existing framework for now
+                        return;
+                    }
+                    String flexlib = Paths.get(frameworkSDK).resolve(FRAMEWORKS_RELATIVE_PATH_CHILD).toAbsolutePath().normalize().toString();
+                    String oldFlexlib = System.getProperty(FLEXLIB);
+                    if (oldFlexlib.equals(flexlib))
+                    {
+                        //flexlib has not changed
+                        return;
+                    }
+                    System.setProperty(FLEXLIB, flexlib);
+                    projectConfigStrategy.setChanged(true);
                 }
 
                 @Override
@@ -230,7 +255,7 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
         try
         {
             URI uri = IASNode.class.getProtectionDomain().getCodeSource().getLocation().toURI();
-            String path = Paths.get(uri.resolve(FRAMEWORKS_RELATIVE_PATH)).toString();
+            String path = Paths.get(uri.resolve(FRAMEWORKS_RELATIVE_PATH_PARENT)).normalize().toString();
             File file = new File(path);
             if (file.exists() && file.isDirectory())
             {
