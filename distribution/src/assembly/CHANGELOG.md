@@ -1,3 +1,20 @@
+## 0.5.0
+
+* SDK version is listed in status bar and you can click it to open a helpful new SDK picker.
+* New `nextgenas.sdks.searchPaths` setting allows you to add more SDKs to the SDK picker.
+* New "ActionScript Source Path" view lists all classes/interfaces/components available from the `source-path` compiler option.
+* The `nextgenas.sdk.editor` setting is now considered advanced, and most users should not need to use it any longer (even when using SDKs other than Apache FlexJS). Simply set `nextgenas.sdk.framework` (or use the new SDK picker) to choose your current project's SDK.
+* Changing the `nextgenas.sdk.framework` setting does not require restarting Visual Studio Code anymore.
+* In a FlexJS project, if value of `targets` compiler option does not start with "SWF", completion will give precedence to JS APIs.
+* Replaced "NextGen ActionScript" icon with a new "AS3" icon.
+* SWF debugger: If a source file is not found when trying to add a breakpoint, tries again later when more scripts are loaded. If breakpoints start out unverified, it's possible that they will be verified later when the SWF goes to a new frame.
+* SWF debugger: Fixed issue where breakpoints removed in editor were not actually removed in running SWF and would still stop the debugger.
+* SWF debugger: Begins executing SWF earlier because breakpoints can now be verified after startup. This may allow preloaders to render properly now (they skipped immediately to the end before).
+* Searching workspace symbols simplified to exclude local variables in methods.
+* Fixed issue where automatically adding an import would fail if the ActionScript file contained a license header or other comments before the package keyword.
+* Fixed issue where some errors caused by invalid compiler options might not be displayed in the problems view.
+* Fixed issue where extension could crash when doing certain things without an open workspace. Will now display a warning if certain actions are attempted without an open workspace.
+
 ## 0.4.4
 
 * MXML completion list includes `<fx:Binding>`, `<fx:Component>`, `<fx:Declarations>`, `<fx:Metdata>`, `<fx:Script>`, and `<fx:Style>` tags.
