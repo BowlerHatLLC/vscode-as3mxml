@@ -189,6 +189,61 @@
         "url": "./schemas/asconfig.schema.json"
       }
     ],
+    "problemMatchers": [
+      {
+        "name": "flexjs",
+        "label": "Apache FlexJS",
+        "owner": "nextgenas",
+        "applyTo": "closedDocuments",
+        "fileLocation": [
+          "absolute"
+        ],
+        "pattern": {
+          "regexp": "^(.*)\\((\\d+)\\): col: (\\d+)(.*)",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "message": 4
+        }
+      },
+      {
+        "name": "flex",
+        "label": "Classic Flex SDK",
+        "owner": "nextgenas",
+        "applyTo": "closedDocuments",
+        "fileLocation": [
+          "absolute"
+        ],
+        "pattern": {
+          "regexp": "^(.*)\\((\\d+)\\):\\s+(Error|Warning): (.*)",
+          "file": 1,
+          "line": 2,
+          "severity": 3,
+          "message": 4
+        }
+      },
+      {
+        "name": "air",
+        "label": "Adobe AIR SDK & Compiler",
+        "owner": "nextgenas",
+        "applyTo": "closedDocuments",
+        "fileLocation": [
+          "absolute"
+        ],
+        "pattern": [
+          {
+            "regexp": "^(.*):(\\d+)$",
+            "file": 1,
+            "line": 2
+          },
+          {
+            "regexp": "^(Syntax )?(Error|error|Warning): (.*)$",
+            "severity": 2,
+            "message": 3
+          }
+        ]
+      }
+    ],
     "configuration": {
       "type": "object",
       "description": "ActionScript and MXML configuration",
