@@ -6,6 +6,7 @@
 * The `nextgenas.sdk.editor` setting is now considered advanced, and most users should not need to use it any longer (even when using SDKs other than Apache FlexJS). Simply set `nextgenas.sdk.framework` (or use the new SDK picker) to choose your current project's SDK.
 * Changing the `nextgenas.sdk.framework` setting does not require restarting Visual Studio Code anymore.
 * In a FlexJS project, if value of `targets` compiler option does not start with "SWF", completion will give precedence to JS APIs.
+* Adding a new line inside an asdoc comment will automatically add a `*` on the next line.
 * Replaced "NextGen ActionScript" icon with a new "AS3" icon.
 * SWF debugger: If a source file is not found when trying to add a breakpoint, tries again later when more scripts are loaded. If breakpoints start out unverified, it's possible that they will be verified later when the SWF goes to a new frame.
 * SWF debugger: Fixed issue where breakpoints removed in editor were not actually removed in running SWF and would still stop the debugger.
