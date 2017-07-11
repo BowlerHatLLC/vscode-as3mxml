@@ -18,13 +18,13 @@ import addMXMLNamespace from "./commands/addMXMLNamespace";
 import organizeImportsInUri from "./commands/organizeImportsInUri";
 import organizeImportsInTextEditor from "./commands/organizeImportsInTextEditor";
 import organizeImportsInDirectory from "./commands/organizeImportsInDirectory";
-import createASConfigTaskRunner from "./commands/createASConfigTaskRunner";
 import createInitialConfigurationsForSWFDebug from "./commands/createInitialConfigurationsForSWFDebug";
 import findPort from "./utils/findPort";
 import findJava from "./utils/findJava";
 import validateJava from "./utils/validateJava";
 import validateEditorSDK from "./utils/validateEditorSDK";
 import ActionScriptSourcePathDataProvider from "./utils/ActionScriptSourcePathDataProvider";
+import ActionScriptTaskProvider from "./utils/ActionScriptTaskProvider";
 import getJavaClassPathDelimiter from "./utils/getJavaClassPathDelimiter";
 import findSDKShortName from "./utils/findSDKShortName";
 import getFrameworkSDKPathWithFallbacks from "./utils/getFrameworkSDKPathWithFallbacks";
@@ -58,6 +58,7 @@ let hasShownFlexJSSDKWarning = false;
 let hasShownFrameworkSDKWarning = false;
 let sdkStatusBarItem: vscode.StatusBarItem;
 let sourcePathDataProvider: ActionScriptSourcePathDataProvider = null;
+let actionScriptTaskProvider: ActionScriptTaskProvider = null;
 
 function killJavaProcess()
 {
@@ -143,7 +144,8 @@ export function activate(context: vscode.ExtensionContext)
 	vscode.workspace.onDidChangeConfiguration(onDidChangeConfiguration);
 	vscode.commands.registerCommand("nextgenas.createASConfigTaskRunner", () =>
 	{
-		createASConfigTaskRunner(frameworkSDKHome);
+		//this command is deprecated
+		vscode.commands.executeCommand("workbench.action.tasks.configureDefaultBuildTask");
 	});
 	vscode.commands.registerCommand("nextgenas.adapterExecutableCommandSWF", () =>
 	{
@@ -168,6 +170,9 @@ export function activate(context: vscode.ExtensionContext)
 
 		sourcePathDataProvider = new ActionScriptSourcePathDataProvider(vscode.workspace.rootPath);
 		vscode.window.registerTreeDataProvider("actionScriptSourcePaths", sourcePathDataProvider);
+
+		actionScriptTaskProvider = new ActionScriptTaskProvider();
+		vscode.workspace.registerTaskProvider("actionscript", actionScriptTaskProvider);
 	}
 	startClient();
 }

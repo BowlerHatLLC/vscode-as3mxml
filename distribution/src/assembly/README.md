@@ -21,7 +21,7 @@
 
 ## Minimum Requirements
 
-* Visual Studio Code 1.13
+* Visual Studio Code 1.14
 * Java 8 Runtime
 
 ## asconfig.json

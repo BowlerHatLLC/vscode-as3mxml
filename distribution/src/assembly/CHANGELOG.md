@@ -7,6 +7,7 @@
 * Changing the `nextgenas.sdk.framework` setting does not require restarting Visual Studio Code anymore.
 * In a FlexJS project, if value of `targets` compiler option does not start with "SWF", completion will give precedence to JS APIs.
 * Adding a new line inside an asdoc comment will automatically add a `*` on the next line.
+* The "Tasks: Configure Task Runner (ActionScript - asconfig.json)" command is deprecated. Go to Visual Studio Code's new "Tasks" menu and choose "Configure Default Build Task" instead.
 * Replaced "NextGen ActionScript" icon with a new "AS3" icon.
 * SWF debugger: If a source file is not found when trying to add a breakpoint, tries again later when more scripts are loaded. If breakpoints start out unverified, it's possible that they will be verified later when the SWF goes to a new frame.
 * SWF debugger: Fixed issue where breakpoints removed in editor were not actually removed in running SWF and would still stop the debugger.
