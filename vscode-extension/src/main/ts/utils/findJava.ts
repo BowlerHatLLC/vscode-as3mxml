@@ -17,12 +17,11 @@ import * as path from "path";
 
 export default function(settingsPath: string, validate: (javaPath: string) => boolean): string
 {
-	let configJavaPath = settingsPath;
-	if(configJavaPath)
+	if(settingsPath)
 	{
-		if(validate(configJavaPath))
+		if(validate(settingsPath))
 		{
-			return configJavaPath;
+			return settingsPath;
 		}
 		//if the user specified java in the settings, no fallback
 		//otherwise, it could be confusing

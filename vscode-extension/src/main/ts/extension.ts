@@ -41,7 +41,8 @@ import { Message } from "vscode-jsonrpc";
 
 const INVALID_SDK_ERROR = "nextgenas.sdk.editor in settings does not point to a valid SDK. Requires Apache FlexJS 0.8.0 or newer.";
 const MISSING_FRAMEWORK_SDK_ERROR = "You must configure an SDK to enable all ActionScript and MXML features.";
-const MISSING_JAVA_ERROR = "Could not locate valid Java executable. Configure nextgenas.java, add to $PATH, or set $JAVA_HOME.";
+const INVALID_JAVA_ERROR = "nextgenas.java in settings does not point to a valid executable. It cannot be a directory, and Java 1.8 or newer is required.";
+const MISSING_JAVA_ERROR = "Could not locate valid Java executable. To configure Java manually, use the nextgenas.java setting.";
 const MISSING_WORKSPACE_ROOT_ERROR = "Open a folder and create a file named asconfig.json to enable all ActionScript and MXML language features.";
 const RESTART_MESSAGE = "To apply new settings for ActionScript and MXML, please restart Visual Studio Code.";
 const RESTART_BUTTON_LABEL = "Restart Now";
@@ -200,6 +201,12 @@ function childErrorListener(error)
 	console.error(error);
 }
 
+function hasInvalidJava(): boolean
+{
+	let javaPath = <string> vscode.workspace.getConfiguration("nextgenas").get("java");
+	return !javaExecutablePath && javaPath != null;
+}
+
 function hasInvalidEditorSDK(): boolean
 {
 	let sdkPath = <string> vscode.workspace.getConfiguration("nextgenas").get("sdk.editor");
@@ -292,6 +299,11 @@ function createLanguageServer(): Promise<StreamInfo>
 	return new Promise((resolve, reject) =>
 	{
 		//immediately reject if flexjs or java cannot be found
+		if(hasInvalidJava())
+		{
+			reject(INVALID_JAVA_ERROR)
+			return;
+		}
 		if(!javaExecutablePath)
 		{ 
 			reject(MISSING_JAVA_ERROR);
@@ -404,6 +416,11 @@ function startClient()
 				vscode.commands.executeCommand("vscode.open", uri);
 			}
 		});
+		return;
+	}
+	if(hasInvalidJava())
+	{
+		vscode.window.showErrorMessage(INVALID_JAVA_ERROR);
 		return;
 	}
 	if(!javaExecutablePath)
