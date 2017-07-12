@@ -294,7 +294,7 @@
             "null"
           ],
           "default": null,
-          "description": "Specifies the path to the java exectuable."
+          "description": "Specifies the path to the java exectuable (Note: this must be an executable, and not a directory). Use this setting if the extension cannot find Java automatically."
         }
       }
     },
