@@ -19,7 +19,7 @@
     "Debuggers"
   ],
   "main": "extension",
-  "icon": "as3.svg",
+  "icon": "as3.png",
   "scripts": {
     "postinstall": "node ./node_modules/vscode/bin/install",
     "build": "mvn clean package",
@@ -33,14 +33,14 @@
     "@types/mocha": "^2.2.40",
     "@types/node": "^6.0.65",
     "mocha": "^3.2.0",
-    "typescript": "^2.2.1",
-    "vsce": "^1.18.0",
-    "vscode": "^1.1.0"
+    "typescript": "^2.4.1",
+    "vsce": "^1.29.0",
+    "vscode": "^1.1.4"
   },
   "dependencies": {
     "json5": "^0.5.1",
-    "vscode-jsonrpc": "^3.1.0",
-    "vscode-languageclient": "^2.6.3"
+    "vscode-jsonrpc": "^3.3.1",
+    "vscode-languageclient": "^3.3.0"
   },
   "activationEvents": [
     "onLanguage:nextgenas",
@@ -283,10 +283,9 @@
           ],
           "default": null,
           "description": "Specifies a folder path containing one or more ActionScript SDKs to show in the SDK picker.",
-          "items":
-					{
-						"type": "string"
-					}
+          "items": {
+            "type": "string"
+          }
         },
         "nextgenas.java": {
           "type": [
