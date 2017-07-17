@@ -17,3 +17,4 @@ Thumbs.db
 *.iml
 *.vsix
 npm-debug.log
+.vscode-test/
