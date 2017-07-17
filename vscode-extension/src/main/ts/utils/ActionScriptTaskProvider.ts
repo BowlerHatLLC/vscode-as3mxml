@@ -48,13 +48,13 @@ export default class ActionScriptTaskProvider implements vscode.TaskProvider
 		let debugIdentifier: ActionScriptTaskDefinition = { type: "actionscript", debug: true };
 		let debugOptions = ["--debug=true", "--flexHome", frameworkSDK];
 		let debugBuildTask = new vscode.Task(debugIdentifier, "debug build using asconfig.json", "ActionScript",
-			new vscode.ProcessExecution(command, debugOptions));
+			new vscode.ProcessExecution(command, debugOptions), ["$nextgenas_nomatch"]);
 		debugBuildTask.group = vscode.TaskGroup.Build;
 
 		let releaseIdentifier: ActionScriptTaskDefinition = { type: "actionscript", debug: false };
 		let releaseOptions = ["--debug=false", "--flexHome", frameworkSDK];
 		let releaseBuildTask = new vscode.Task(releaseIdentifier, "release build using asconfig.json", "ActionScript",
-			new vscode.ProcessExecution(command, releaseOptions));
+			new vscode.ProcessExecution(command, releaseOptions), ["$nextgenas_nomatch"]);
 		releaseBuildTask.group = vscode.TaskGroup.Build;
 		return Promise.resolve([debugBuildTask, releaseBuildTask]);
 	}

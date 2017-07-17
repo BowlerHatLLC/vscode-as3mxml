@@ -191,6 +191,14 @@
     ],
     "problemMatchers": [
       {
+        "name": "nextgenas_nomatch",
+        "label": "No Problem Matcher (Default for ActionScript)",
+        "applyTo": "allDocuments",
+        "pattern": {
+          "regexp": "^$"
+        }
+      },
+      {
         "name": "flexjs",
         "label": "Apache FlexJS",
         "owner": "nextgenas",
