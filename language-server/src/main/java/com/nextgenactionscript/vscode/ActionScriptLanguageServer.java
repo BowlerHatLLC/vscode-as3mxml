@@ -185,6 +185,7 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
                     }
                     System.setProperty(FLEXLIB, flexlib);
                     projectConfigStrategy.setChanged(true);
+                    textDocumentService.checkForProblemsNow();
                 }
 
                 @Override

@@ -1058,6 +1058,17 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
     }
 
+    /**
+     * Called if something in the configuration has changed.
+     */
+    public void checkForProblemsNow()
+    {
+        if (projectConfigStrategy.getChanged())
+        {
+            checkProjectForProblems();
+        }
+    }
+
     private void cleanupCurrentProject()
     {
         currentWorkspace = null;
