@@ -125,7 +125,7 @@ function checkSearchPath(searchPath: string, description: string, items: SDKQuic
 	{
 		addSDKItem(searchPath, description, items, allPaths, false);
 	}
-	else
+	else if(fs.existsSync(searchPath) && fs.statSync(searchPath).isDirectory())
 	{
 		let files = fs.readdirSync(searchPath);
 		files.forEach((file) =>
