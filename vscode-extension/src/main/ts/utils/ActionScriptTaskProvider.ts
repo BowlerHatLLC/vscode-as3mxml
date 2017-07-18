@@ -67,25 +67,25 @@ export default class ActionScriptTaskProvider implements vscode.TaskProvider
 	private getCommand(): string
 	{
 		let nodeModulesBin = path.join(vscode.workspace.rootPath, "node_modules", ".bin");
-		//start out by looking for asconfigc in the locally installed Node modules
 		const platform = process.platform;
 		if(platform === "win32")
 		{
-			let winPath = path.join(nodeModulesBin, "asconfigc.cmd");
+			let executableName = "asconfigc.cmd";
+			//start out by looking for asconfigc in the workspace's local Node modules
+			let winPath = path.join(nodeModulesBin, executableName);
 			if(fs.existsSync(winPath))
 			{
 				return winPath;
 			}
+			//otherwise, try to use a global executable
+			return executableName;
 		}
-		else
+		let executableName = "asconfigc";
+		let unixPath = path.join(nodeModulesBin, executableName);
+		if(fs.existsSync(unixPath))
 		{
-			let unixPath = path.join(nodeModulesBin, "asconfigc");
-			if(fs.existsSync(unixPath))
-			{
-				return unixPath;
-			}
+			return unixPath;
 		}
-		//use global
-		return "asconfigc";
-}
+		return executableName;
+	}
 }
