@@ -97,28 +97,26 @@ function onDidChangeConfiguration(event)
 	let newEditorSDKHome = getValidatedEditorSDKConfiguration(newJavaExecutablePath);
 	let newFrameworkSDKHome = getFrameworkSDKPathWithFallbacks();
 	if(editorSDKHome != newEditorSDKHome ||
-		javaExecutablePath != newJavaExecutablePath ||
+		javaExecutablePath != newJavaExecutablePath)
+	{
+		//on Windows, the language server doesn't restart very gracefully,
+		//so force a restart if either of these two settings changes.
+		//we don't need to restart if nextgenas.sdk.framework changes
+		//because the language server can detect that and update.
+		vscode.window.showWarningMessage(RESTART_MESSAGE, RESTART_BUTTON_LABEL).then((action) =>
+		{
+			if(action === RESTART_BUTTON_LABEL)
+			{
+				vscode.commands.executeCommand("workbench.action.reloadWindow");
+			}
+		});
+	}
+	if(editorSDKHome != newEditorSDKHome ||
 		frameworkSDKHome != newFrameworkSDKHome)
 	{
 		editorSDKHome = newEditorSDKHome;
 		frameworkSDKHome = newFrameworkSDKHome;
 		updateSDKStatusBarItem();
-
-		if(editorSDKHome != newEditorSDKHome ||
-			javaExecutablePath != newJavaExecutablePath)
-		{
-			//on Windows, the language server doesn't restart very gracefully,
-			//so force a restart if either of these two settings changes.
-			//we don't need to restart if nextgenas.sdk.framework changes
-			//because the language server can detect that and update.
-			vscode.window.showWarningMessage(RESTART_MESSAGE, RESTART_BUTTON_LABEL).then((action) =>
-			{
-				if(action === RESTART_BUTTON_LABEL)
-				{
-					vscode.commands.executeCommand("workbench.action.reloadWindow");
-				}
-			});
-		}
 	}
 }
 
