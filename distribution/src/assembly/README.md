@@ -12,6 +12,7 @@
 * **Goto Symbol** lists all symbols in the current file with `Ctrl+Shift+O`.
 * **Open Symbol by Name** with `Ctrl+T` and type the name of any symbol in the project.
 * **Rename Symbol** for class members and local variables.
+* **Build** a project with `Ctrl+Shift+B`.
 * **Debug** Apache FlexJS projects in web browsers and Node.js and SWF projects in Adobe AIR and Flash Player.
 
 ## Help and Support
@@ -26,25 +27,39 @@
 
 ## asconfig.json
 
-Add a file named [`asconfig.json`](https://github.com/BowlerHatLLC/vscode-nextgenas/wiki/asconfig.json) to the root of your project to enable the NextGenAS extension. A sample `asconfig.json` appears below:
+Add a file named [`asconfig.json`](https://github.com/BowlerHatLLC/vscode-nextgenas/wiki/asconfig.json) to the root of your project to enable the ActionScript and MXML extension.
+
+A sample `asconfig.json` file for an Apache FlexJS project appears below:
 
 	{
-		"config": "js",
 		"compilerOptions": {
-			"debug": true,
-			"library-path": [
-				"libs"
+			"targets": [
+				"JSFlex",
 			]
 		},
 		"files":
 		[
-			"src/MyProject.as"
+			"src/HelloFlexJS.mxml"
+		]
+	}
+
+Here's another sample `asconfig.json` file that is for a pure ActionScript project targeting Adobe AIR on mobile:
+
+	{
+		"config": "airmobile",
+		"compilerOptions": {
+			"output": "bin/HelloAIR.swf"
+		},
+		"application": "src/HelloAIR-app.xml",
+		"files":
+		[
+			"src/HelloAIR.as"
 		]
 	}
 
 ## Support this project
 
-Want to see more ActionScript tools and utilities like this Visual Studio Code extension? Please [become a patron](http://patreon.com/josht) and support the next generation of ActionScript development on the web -- without a plugin!
+Want to see more ActionScript and MXML tools and utilities like this Visual Studio Code extension? Please [become a patron](http://patreon.com/josht) and support the next generation of ActionScript development on the web -- without a plugin!
 
 [NextGen ActionScript by Josh Tynjala on Patreon](http://patreon.com/josht)
 
