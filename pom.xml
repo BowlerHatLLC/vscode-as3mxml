@@ -20,7 +20,7 @@ limitations under the License.
 
   <groupId>com.nextgenactionscript.vscode</groupId>
   <artifactId>vscode-nextgenas</artifactId>
-  <version>0.5.0-SNAPSHOT</version>
+  <version>0.5.0</version>
   <name>vscode-nextgenas</name>
   <packaging>pom</packaging>
 
