@@ -1,7 +1,7 @@
 ## 0.5.0
 
 * SDK version is listed in status bar and you can click it to open a helpful new SDK picker.
-* New `nextgenas.sdks.searchPaths` setting allows you to add more SDKs to the SDK picker.
+* New `nextgenas.sdk.searchPaths` setting allows you to add more SDKs to the SDK picker.
 * New "ActionScript Source Path" view lists all classes/interfaces/components available from the `source-path` compiler option.
 * The `nextgenas.sdk.editor` setting is now considered advanced, and most users should not need to use it any longer (even when using SDKs other than Apache FlexJS). Simply set `nextgenas.sdk.framework` (or use the new SDK picker) to choose your current project's SDK.
 * Changing the `nextgenas.sdk.framework` setting does not require restarting Visual Studio Code anymore.
