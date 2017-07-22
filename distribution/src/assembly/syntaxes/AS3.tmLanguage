@@ -276,6 +276,10 @@
 					<key>include</key>
 					<string>#multiple_implements</string>
 				</dict>
+				<dict>
+					<key>include</key>
+					<string>#comments</string>
+				</dict>
 			</array>
 		</dict>
 		<key>code_block</key>
@@ -542,6 +546,10 @@
 					<key>include</key>
 					<string>#return_type</string>
 				</dict>
+				<dict>
+					<key>include</key>
+					<string>#comments</string>
+				</dict>
 			</array>
 		</dict>
 		<key>guess_constant</key>
@@ -672,6 +680,10 @@
 				<dict>
 					<key>include</key>
 					<string>#extends</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#comments</string>
 				</dict>
 			</array>
 		</dict>
