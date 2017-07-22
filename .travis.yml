@@ -1,0 +1,12 @@
+language: node_js
+node_js:
+- "6"
+os:
+- osx
+env:
+- CODE_EXTENSIONS_PATH=$TRAVIS_BUILD_DIR/distribution/target/vscode-nextgenas/vscode-nextgenas CODE_TESTS_WORKSPACE=$TRAVIS_BUILD_DIR/vscode-extension/src/test/fixtures CODE_TESTS_PATH=$TRAVIS_BUILD_DIR/vscode-extension/target/test
+install:
+- yes | npm install -g flexjs
+script:
+- yes | mvn clean package -s settings-template.xml -q -Dorg.slf4j.simpleLogger.defaultLogLevel=warn -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn -B
+- vscode-extension/node_modules/vscode/bin/test
