@@ -121,9 +121,9 @@ import org.apache.flex.compiler.tree.as.IPackageNode;
 import org.apache.flex.compiler.tree.as.IScopedDefinitionNode;
 import org.apache.flex.compiler.tree.as.IScopedNode;
 import org.apache.flex.compiler.tree.as.IVariableNode;
+import org.apache.flex.compiler.tree.mxml.IMXMLClassReferenceNode;
 import org.apache.flex.compiler.tree.mxml.IMXMLConcatenatedDataBindingNode;
 import org.apache.flex.compiler.tree.mxml.IMXMLEventSpecifierNode;
-import org.apache.flex.compiler.tree.mxml.IMXMLInstanceNode;
 import org.apache.flex.compiler.tree.mxml.IMXMLNode;
 import org.apache.flex.compiler.tree.mxml.IMXMLPropertySpecifierNode;
 import org.apache.flex.compiler.tree.mxml.IMXMLSingleDataBindingNode;
@@ -464,7 +464,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 IDefinition attributeDefinition = currentProject.resolveSpecifier(tagDefinition, attributeData.getShortName());
                 if (attributeDefinition instanceof IEventDefinition)
                 {
-                    IMXMLInstanceNode mxmlNode = (IMXMLInstanceNode) getOffsetNode(position);
+                    IMXMLClassReferenceNode mxmlNode = (IMXMLClassReferenceNode) getOffsetNode(position);
                     IMXMLEventSpecifierNode eventNode = mxmlNode.getEventSpecifierNode(attributeData.getShortName());
                     for (IASNode asNode : eventNode.getASNodes())
                     {
@@ -4384,7 +4384,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             IDefinition attributeDefinition = currentProject.resolveSpecifier(tagDefinition, attributeData.getShortName());
             if (attributeDefinition instanceof IEventDefinition)
             {
-                IMXMLInstanceNode mxmlNode = (IMXMLInstanceNode) getOffsetNode(position);
+                IMXMLClassReferenceNode mxmlNode = (IMXMLClassReferenceNode) getOffsetNode(position);
                 IMXMLEventSpecifierNode eventNode = mxmlNode.getEventSpecifierNode(attributeData.getShortName());
                 for (IASNode asNode : eventNode.getASNodes())
                 {
@@ -4399,10 +4399,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             else
             {
                 IASNode offsetNode = getOffsetNode(position);
-                if (offsetNode instanceof IMXMLInstanceNode)
+                if (offsetNode instanceof IMXMLClassReferenceNode)
                 {
-                    IMXMLInstanceNode instanceNode = (IMXMLInstanceNode) offsetNode;
-                    IMXMLPropertySpecifierNode propertyNode = instanceNode.getPropertySpecifierNode(attributeData.getShortName());
+                    IMXMLClassReferenceNode mxmlNode = (IMXMLClassReferenceNode) offsetNode;
+                    IMXMLPropertySpecifierNode propertyNode = mxmlNode.getPropertySpecifierNode(attributeData.getShortName());
                     if (propertyNode != null)
                     {
                         for (int i = 0, count = propertyNode.getChildCount(); i < count; i++)
