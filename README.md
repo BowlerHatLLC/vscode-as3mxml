@@ -23,7 +23,7 @@ This project is divided into several modules.
 Requires [Apache Maven](https://maven.apache.org/). Run the following command in the root directory to build the extension:
 
 ```
-mvn clean package
+mvn clean package -s settings-template.xml
 ```
 
 The extension will be generated in `distribution/target/vscode-nextgenas/vscode-nextgenas`. This directory may be run inside Visual Studio Code's extension host. Additionally, a `vsix` file will be generated that may be installed in Visual Studio Code.
