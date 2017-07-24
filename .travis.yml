@@ -7,8 +7,6 @@ env:
 - CODE_EXTENSIONS_PATH=$TRAVIS_BUILD_DIR/distribution/target/vscode-nextgenas/vscode-nextgenas CODE_TESTS_WORKSPACE=$TRAVIS_BUILD_DIR/vscode-extension/src/test/fixtures CODE_TESTS_PATH=$TRAVIS_BUILD_DIR/vscode-extension/target/test
 install:
 - yes | npm install -g flexjs
-before_script:
-- chmod +x vscode-extension/node_modules/vscode/bin/test
 script:
 - yes | mvn clean package -s settings-template.xml -q
 - vscode-extension/node_modules/vscode/bin/test
