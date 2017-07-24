@@ -5064,8 +5064,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             //this is not ideal, but MXML variable definitions may not have a
             //node associated with them, so we need to figure this out from the
             //offset instead of a pre-calculated line and column -JT
-            String code = sourceByPath.get(Paths.get(sourcePath));
-            offsetToLineAndCharacter(new StringReader(code), definition.getNameStart(), start);
+            Reader definitionReader = getReaderForPath(definitionPath);
+            offsetToLineAndCharacter(definitionReader, definition.getNameStart(), start);
             end.setLine(start.getLine());
             end.setCharacter(start.getCharacter());
         }
