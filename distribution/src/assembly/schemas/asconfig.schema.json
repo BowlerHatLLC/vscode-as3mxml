@@ -1,29 +1,55 @@
 {
 	"title": "JSON schema for the ActionScript configuration file",
 	"type": "object",
-	"properties":
-	{
-		"type":
+	"oneOf": [
 		{
-			"type": "string",
-			"description": "Indicates if the project is an application or library. Supported values include \"app\" and \"lib\". Then default value is \"app\".",
-			"pattern": "^(app|lib)$"
-		},
-		"config":
-		{
-			"type": "string",
-			"description": "The default configuration file to use from the SDK. Supported values include \"js\", \"node\", \"flex\", \"air\", and \"airmobile\". The default value is \"flex\".",
-			"pattern": "^(flex|air|airmobile|js|node)$"
-		},
-		"files":
-		{
-			"type": "array",
-			"description": "The specified files will be included by the compiler, including all of their dependencies. For an application, this field will typically contain one main class only.",
-			"items":
+			"properties":
 			{
-				"type": "string"
+				"type":
+				{
+					"type": "string",
+					"description": "Indicates if the project is an application or library. Supported values include \"app\" and \"lib\". Then default value is \"app\".",
+					"default": "app"
+				},
+				"additionalOptions": { "$ref": "#/definitions/additionalOptions" },
+				"application": { "$ref": "#/definitions/application" },
+				"compilerOptions": { "$ref": "#/definitions/compilerOptions" },
+				"copySourcePathAssets": { "$ref": "#/definitions/copySourcePathAssets" },
+				"config": { "$ref": "#/definitions/config" },
+				"files": { "$ref": "#/definitions/files" }
 			},
-			"minItems": 1
+			"required": ["files"]
+		},
+		{
+			"properties":
+			{
+				"type":
+				{
+					"type": "string",
+					"description": "Indicates if the project is an application or library. Supported values include \"app\" and \"lib\". Then default value is \"app\".",
+					"pattern": "lib"
+				},
+				"additionalOptions": { "$ref": "#/definitions/additionalOptions" },
+				"application": { "$ref": "#/definitions/application" },
+				"compilerOptions": { "$ref": "#/definitions/compilerOptions" },
+				"copySourcePathAssets": { "$ref": "#/definitions/copySourcePathAssets" },
+				"config": { "$ref": "#/definitions/config" },
+				"files": { "$ref": "#/definitions/files" }
+			},
+			"required": ["type"]
+		}
+	],
+	"definitions":
+	{
+		"additionalOptions":
+		{
+			"type": "string",
+			"description": "Additional options to send to the compiler, formatted as command line arguments. Useful for testing new options that are not yet supported by the compilerOptions field of asconfig.json."
+		},
+		"application":
+		{
+			"type": "string",
+			"description": "Optional path to Adobe AIR application descriptor. The descriptor's <content> element will be populated, and the file will be copied into the output directory."
 		},
 		"compilerOptions":
 		{
@@ -367,20 +393,26 @@
 				}
 			}
 		},
-		"additionalOptions":
+		"config":
 		{
 			"type": "string",
-			"description": "Additional options to send to the compiler, formatted as command line arguments. Useful for testing new options that are not yet supported by the compilerOptions field of asconfig.json."
-		},
-		"application":
-		{
-			"type": "string",
-			"description": "Optional path to Adobe AIR application descriptor. The descriptor's <content> element will be populated, and the file will be copied into the output directory."
+			"description": "The default configuration file to use from the SDK. Supported values include \"js\", \"node\", \"flex\", \"air\", and \"airmobile\". The default value is \"flex\".",
+			"pattern": "^(flex|air|airmobile|js|node)$"
 		},
 		"copySourcePathAssets":
 		{
 			"type": "boolean",
 			"description": "Optionally copies any files in the source path that don't have .as or .mxml extensions to the output directory."
+		},
+		"files":
+		{
+			"type": "array",
+			"description": "The specified files will be included by the compiler, including all of their dependencies. For an application, this field will typically contain one main class only.",
+			"items":
+			{
+				"type": "string"
+			},
+			"minItems": 1
 		}
 	}
 }
