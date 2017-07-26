@@ -2,7 +2,7 @@
   "name": "vscode-nextgenas",
   "displayName": "NextGen ActionScript",
   "description": "Language support for ActionScript and MXML provided by NextGen ActionScript",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "publisher": "bowlerhatllc",
   "homepage": "http://nextgenactionscript.com/vscode/",
   "repository": {

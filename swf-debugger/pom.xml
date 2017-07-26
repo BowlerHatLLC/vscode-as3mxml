@@ -21,12 +21,12 @@ limitations under the License.
 	<parent>
 		<artifactId>vscode-nextgenas</artifactId>
 		<groupId>com.nextgenactionscript.vscode</groupId>
-		<version>0.5.0</version>
+		<version>0.5.1</version>
 	</parent>
 
 	<groupId>com.nextgenactionscript.vscode</groupId>
 	<artifactId>swf-debugger</artifactId>
-	<version>0.5.0</version>
+	<version>0.5.1</version>
 	<name>swf-debugger</name>
 
 	<build>

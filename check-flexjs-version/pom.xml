@@ -22,12 +22,12 @@ limitations under the License.
   <parent>
     <groupId>com.nextgenactionscript.vscode</groupId>
     <artifactId>vscode-nextgenas</artifactId>
-    <version>0.5.0</version>
+    <version>0.5.1</version>
   </parent>
 
   <groupId>com.nextgenactionscript.vscode</groupId>
   <artifactId>check-flexjs-version</artifactId>
-  <version>0.5.0</version>
+  <version>0.5.1</version>
   <name>check-flexjs-version</name>
   
   <build>
