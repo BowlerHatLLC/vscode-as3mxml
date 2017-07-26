@@ -34,7 +34,7 @@ A sample `asconfig.json` file for an Apache FlexJS project appears below:
 	{
 		"compilerOptions": {
 			"targets": [
-				"JSFlex",
+				"JSFlex"
 			]
 		},
 		"files":
