@@ -12,22 +12,22 @@
 	<array>
 		<dict>
 			<key>begin</key>
-			<string>(?=&lt;fx:Script&gt;)</string>
+			<string>(?=&lt;(?:fx|mx):Script&gt;)</string>
 			<key>end</key>
-			<string>(?&lt;=&lt;\/fx:Script&gt;)</string>
+			<string>(?&lt;=&lt;\/(?:fx|mx):Script&gt;)</string>
 			<key>name</key>
 			<string>meta.script.mxml</string>
 			<key>patterns</key>
 			<array>
 				<dict>
 					<key>match</key>
-					<string>&lt;fx:Script&gt;</string>
+					<string>&lt;(?:fx|mx):Script&gt;</string>
 					<key>name</key>
 					<string>entity.name.tag.xml</string>
 				</dict>
 				<dict>
 					<key>match</key>
-					<string>&lt;\/fx:Script&gt;</string>
+					<string>&lt;\/(?:fx|mx):Script&gt;</string>
 					<key>name</key>
 					<string>entity.name.tag.xml</string>
 				</dict>
