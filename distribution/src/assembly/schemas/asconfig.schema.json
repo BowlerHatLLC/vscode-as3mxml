@@ -27,7 +27,7 @@
 				{
 					"type": "string",
 					"description": "Indicates if the project is an application or library. Supported values include \"app\" and \"lib\". Then default value is \"app\".",
-					"pattern": "lib"
+					"pattern": "^lib$"
 				},
 				"additionalOptions": { "$ref": "#/definitions/additionalOptions" },
 				"application": { "$ref": "#/definitions/application" },
