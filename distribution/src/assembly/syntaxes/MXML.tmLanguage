@@ -49,6 +49,21 @@
 			</array>
 		</dict>
 		<dict>
+			<key>begin</key>
+			<string>&lt;(?:fx|mx):Style&gt;</string>
+			<key>end</key>
+			<string>&lt;\/(?:fx|mx):Style&gt;</string>
+			<key>name</key>
+			<string>entity.name.tag.xml</string>
+			<key>patterns</key>
+			<array>
+				<dict>
+					<key>include</key>
+					<string>source.css</string>
+				</dict>
+			</array>
+		</dict>
+		<dict>
 			<key>include</key>
 			<string>text.xml</string>
 		</dict>
