@@ -5042,7 +5042,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             symbol.setKind(SymbolKind.Variable);
         }
-        symbol.setName(definition.getQualifiedName());
+        if (!definition.getQualifiedName().equals(definition.getBaseName()))
+        {
+            symbol.setContainerName(definition.getPackageName());
+        }
+        symbol.setName(definition.getBaseName());
         Location location = new Location();
         String sourcePath = definition.getSourcePath();
         if (sourcePath == null)
