@@ -67,6 +67,7 @@ import org.apache.flex.compiler.definitions.ISetterDefinition;
 import org.apache.flex.compiler.definitions.IStyleDefinition;
 import org.apache.flex.compiler.definitions.ITypeDefinition;
 import org.apache.flex.compiler.definitions.IVariableDefinition;
+import org.apache.flex.compiler.definitions.IVariableDefinition.VariableClassification;
 import org.apache.flex.compiler.definitions.metadata.IMetaTag;
 import org.apache.flex.compiler.driver.IBackend;
 import org.apache.flex.compiler.filespecs.IFileSpecification;
@@ -131,6 +132,8 @@ import org.apache.flex.compiler.units.ICompilationUnit;
 import org.apache.flex.compiler.units.IInvisibleCompilationUnit;
 import org.apache.flex.compiler.workspaces.IWorkspace;
 
+import com.nextgenactionscript.vscode.commands.ICommandConstants;
+import com.nextgenactionscript.vscode.commands.ICommandHintCodes;
 import com.nextgenactionscript.vscode.mxml.IMXMLLibraryConstants;
 import com.nextgenactionscript.vscode.project.CompilerOptions;
 import com.nextgenactionscript.vscode.project.IProjectConfigStrategy;
@@ -138,6 +141,8 @@ import com.nextgenactionscript.vscode.project.ProjectOptions;
 import com.nextgenactionscript.vscode.project.ProjectType;
 import com.nextgenactionscript.vscode.utils.LanguageServerUtils;
 import com.nextgenactionscript.vscode.utils.ProblemTracker;
+
+import org.eclipse.lsp4j.ApplyWorkspaceEditParams;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.CodeLensParams;
@@ -157,6 +162,7 @@ import org.eclipse.lsp4j.DocumentHighlight;
 import org.eclipse.lsp4j.DocumentOnTypeFormattingParams;
 import org.eclipse.lsp4j.DocumentRangeFormattingParams;
 import org.eclipse.lsp4j.DocumentSymbolParams;
+import org.eclipse.lsp4j.ExecuteCommandParams;
 import org.eclipse.lsp4j.FileChangeType;
 import org.eclipse.lsp4j.FileEvent;
 import org.eclipse.lsp4j.Hover;
@@ -741,6 +747,15 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             switch (code)
             {
+                case ICommandHintCodes.GENERATE_ACCESSOR:
+                {
+                    Command generateAccessorCommand = new Command();
+                    generateAccessorCommand.setTitle("Generate Getter and Setter");
+                    generateAccessorCommand.setCommand(ICommandConstants.GENERATE_ACCESSOR);
+                    generateAccessorCommand.setArguments(Arrays.asList(diagnostic.getSource()));
+                    commands.add(generateAccessorCommand);
+                    break;
+                }
                 case "1120": //AccessUndefinedPropertyProblem
                 {
                     //see if there's anything we can import
@@ -897,6 +912,15 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
         }
         return actionScriptRename(params);
+    }
+
+    /**
+     * Called when one of the commands registered in ActionScriptLanguageServer
+     * is executed.
+     */
+    public CompletableFuture<Object> executeCommand(ExecuteCommandParams params)
+    {
+        return CompletableFuture.completedFuture(new Object());
     }
 
     /**
@@ -4009,7 +4033,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     {
         URI uri = Paths.get(unit.getAbsoluteFilename()).toUri();
         PublishDiagnosticsParams publish = new PublishDiagnosticsParams();
-        publish.setDiagnostics(new ArrayList<>());
+        ArrayList<Diagnostic> diagnostics = new ArrayList<>();
+        publish.setDiagnostics(diagnostics);
         publish.setUri(uri.toString());
         codeProblemTracker.trackFileWithProblems(uri);
         ArrayList<ICompilerProblem> problems = new ArrayList<>();
@@ -4029,9 +4054,55 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             Diagnostic diagnostic = createDiagnosticWithoutRange();
             diagnostic.setSeverity(DiagnosticSeverity.Error);
             diagnostic.setMessage("A fatal error occurred while checking a file for problems: " + unit.getAbsoluteFilename());
-            publish.getDiagnostics().add(diagnostic);
+            diagnostics.add(diagnostic);
         }
+
+        if (sourceByPath.containsKey(Paths.get(uri)))
+        {
+            IASNode ast = null;
+            try
+            {
+                ast = unit.getSyntaxTreeRequest().get().getAST();
+            }
+            catch (Exception e)
+            {
+                //do nothing
+            }
+            if (ast != null)
+            {
+                addCodeGenerationHints(ast, diagnostics);
+            }
+        }
+
         return publish;
+    }
+
+    private void addCodeGenerationHints(IASNode node, ArrayList<Diagnostic> diagnostics)
+    {
+        if (node instanceof IVariableNode)
+        {
+            IVariableNode definitionNode = (IVariableNode) node;
+            IExpressionNode expressionNode = definitionNode.getNameExpressionNode();
+            IDefinition definition = expressionNode.resolve(currentProject);
+            if (definition instanceof IVariableDefinition)
+            {
+                IVariableDefinition variableDefinition = (IVariableDefinition) definition;
+                if (variableDefinition.getVariableClassification().equals(VariableClassification.CLASS_MEMBER))
+                {
+                    Diagnostic generateGetterHint = new Diagnostic();
+                    generateGetterHint.setSeverity(DiagnosticSeverity.Hint);
+                    generateGetterHint.setSource(node.getSourcePath());
+                    generateGetterHint.setRange(LanguageServerUtils.getRangeFromSourceLocation(node));
+                    generateGetterHint.setCode(ICommandHintCodes.GENERATE_ACCESSOR);
+                    diagnostics.add(generateGetterHint);
+                }
+            }
+        }
+        for (int i = 0, childCount = node.getChildCount(); i < childCount; i++)
+        {
+            IASNode child = node.getChild(i);
+            addCodeGenerationHints(child, diagnostics);
+        }
     }
 
     private Reader getReaderForPath(Path path)

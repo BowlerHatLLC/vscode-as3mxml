@@ -26,11 +26,14 @@ import java.util.concurrent.CompletableFuture;
 import org.apache.flex.compiler.tree.as.IASNode;
 
 import com.google.gson.internal.LinkedTreeMap;
+import com.nextgenactionscript.vscode.commands.ICommandConstants;
 import com.nextgenactionscript.vscode.project.ASConfigProjectConfigStrategy;
 import com.nextgenactionscript.vscode.utils.LanguageServerUtils;
 import org.eclipse.lsp4j.CompletionOptions;
 import org.eclipse.lsp4j.DidChangeConfigurationParams;
 import org.eclipse.lsp4j.DidChangeWatchedFilesParams;
+import org.eclipse.lsp4j.ExecuteCommandOptions;
+import org.eclipse.lsp4j.ExecuteCommandParams;
 import org.eclipse.lsp4j.FileEvent;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.InitializeResult;
@@ -118,6 +121,11 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
         serverCapabilities.setSignatureHelpProvider(signatureHelpOptions);
 
         serverCapabilities.setWorkspaceSymbolProvider(true);
+        
+        ExecuteCommandOptions executeCommandOptions = new ExecuteCommandOptions();
+        executeCommandOptions.setCommands(Arrays.asList(
+            ICommandConstants.GENERATE_ACCESSOR));
+        serverCapabilities.setExecuteCommandProvider(executeCommandOptions);
 
         result.setCapabilities(serverCapabilities);
 
@@ -211,6 +219,12 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
                     //where the compiler is running, and the compiler may need to
                     //know about file changes
                     textDocumentService.didChangeWatchedFiles(params);
+                }
+
+                @Override
+                public CompletableFuture<Object> executeCommand(ExecuteCommandParams params)
+                {
+                    return textDocumentService.executeCommand(params);
                 }
             };
         }
