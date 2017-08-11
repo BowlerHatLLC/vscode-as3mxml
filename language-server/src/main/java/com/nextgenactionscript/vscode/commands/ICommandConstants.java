@@ -17,5 +17,5 @@ package com.nextgenactionscript.vscode.commands;
 
 public interface ICommandConstants
 {
-	public static final String GENERATE_ACCESSOR = "generateAccessor";
+	public static final String GENERATE_ACCESSOR = "nextgenas.generateAccessor";
 }

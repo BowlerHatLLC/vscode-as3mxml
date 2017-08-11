@@ -752,8 +752,27 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     Command generateAccessorCommand = new Command();
                     generateAccessorCommand.setTitle("Generate Getter and Setter");
                     generateAccessorCommand.setCommand(ICommandConstants.GENERATE_ACCESSOR);
-                    generateAccessorCommand.setArguments(Arrays.asList(diagnostic.getSource()));
-                    commands.add(generateAccessorCommand);
+                    IASNode offsetNode = getOffsetNode(textDocument, diagnostic.getRange().getStart());
+                    IVariableNode variableNode = null;
+                    if (offsetNode instanceof IVariableNode)
+                    {
+                        variableNode = (IVariableNode) offsetNode;
+                    }
+                    if (offsetNode.getParent() instanceof IVariableNode)
+                    {
+                        variableNode = (IVariableNode) offsetNode.getParent();
+                    }
+                    if (variableNode != null)
+                    {
+                        generateAccessorCommand.setArguments(Arrays.asList(
+                            variableNode.getName(),
+                            diagnostic.getSource(),
+                            diagnostic.getRange().getStart().getLine(),
+                            diagnostic.getRange().getStart().getCharacter(),
+                            diagnostic.getRange().getEnd().getLine(),
+                            diagnostic.getRange().getEnd().getCharacter()));
+                        commands.add(generateAccessorCommand);
+                    }
                     break;
                 }
                 case "1120": //AccessUndefinedPropertyProblem
@@ -920,7 +939,18 @@ public class ActionScriptTextDocumentService implements TextDocumentService
      */
     public CompletableFuture<Object> executeCommand(ExecuteCommandParams params)
     {
-        return CompletableFuture.completedFuture(new Object());
+        switch(params.getCommand())
+        {
+            case ICommandConstants.GENERATE_ACCESSOR:
+            {
+                return executeGenerateAccessorCommand(params);
+            }
+            default:
+            {
+                System.err.println("Unknown command: " + params.getCommand());
+                return CompletableFuture.completedFuture(new Object());
+            }
+        }
     }
 
     /**
@@ -5157,6 +5187,36 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         location.setRange(range);
         symbol.setLocation(location);
         return symbol;
+    }
+
+    private CompletableFuture<Object> executeGenerateAccessorCommand(ExecuteCommandParams params)
+    {
+        List<Object> args = params.getArguments();
+        String name = (String) args.get(0);
+        String path = (String) args.get(1);
+        int startLine = ((Double) args.get(2)).intValue();
+        int startChar = ((Double) args.get(3)).intValue();
+        int endLine = ((Double) args.get(4)).intValue();
+        int endChar = ((Double) args.get(5)).intValue();
+
+        ApplyWorkspaceEditParams editParams = new ApplyWorkspaceEditParams();
+
+        WorkspaceEdit workspaceEdit = new WorkspaceEdit();
+        editParams.setEdit(workspaceEdit);
+
+        HashMap<String,List<TextEdit>> changes = new HashMap<>();
+        workspaceEdit.setChanges(changes);
+
+        List<TextEdit> edits = new ArrayList<>();
+        changes.put(Paths.get(path).toUri().toString(), edits);
+
+        TextEdit edit = new TextEdit();
+        edit.setNewText("{generated accessor:" + name + "}");
+        edit.setRange(new Range(new Position(startLine, startChar), new Position(endLine, endChar)));
+        edits.add(edit);
+
+        languageClient.applyEdit(editParams);
+        return CompletableFuture.completedFuture(new Object());
     }
 
     private static void offsetToLineAndCharacter(Reader in, int targetOffset, Position result)
