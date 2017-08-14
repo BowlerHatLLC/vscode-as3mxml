@@ -42,6 +42,7 @@ import org.apache.flex.abc.ABCParser;
 import org.apache.flex.abc.Pool;
 import org.apache.flex.abc.PoolingABCVisitor;
 import org.apache.flex.compiler.clients.MXMLJSC;
+import org.apache.flex.compiler.common.ASModifier;
 import org.apache.flex.compiler.common.ISourceLocation;
 import org.apache.flex.compiler.common.PrefixMap;
 import org.apache.flex.compiler.common.XMLName;
@@ -764,13 +765,25 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     }
                     if (variableNode != null)
                     {
+                        IExpressionNode assignedValueNode = variableNode.getAssignedValueNode();
+                        String assignedValue = null;
+                        if (assignedValueNode != null)
+                        {
+                            String source = sourceByPath.get(Paths.get(diagnostic.getSource()));
+                            assignedValue = source.substring(assignedValueNode.getAbsoluteStart(),
+                                assignedValueNode.getAbsoluteEnd());
+                        }
                         generateAccessorCommand.setArguments(Arrays.asList(
-                            variableNode.getName(),
                             diagnostic.getSource(),
                             diagnostic.getRange().getStart().getLine(),
                             diagnostic.getRange().getStart().getCharacter(),
                             diagnostic.getRange().getEnd().getLine(),
-                            diagnostic.getRange().getEnd().getCharacter()));
+                            diagnostic.getRange().getEnd().getCharacter(),
+                            variableNode.getName(),
+                            variableNode.getNamespace(),
+                            variableNode.hasModifier(ASModifier.STATIC),
+                            variableNode.getVariableType(),
+                            assignedValue));
                         commands.add(generateAccessorCommand);
                     }
                     break;
@@ -4114,8 +4127,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             IVariableNode definitionNode = (IVariableNode) node;
             IExpressionNode expressionNode = definitionNode.getNameExpressionNode();
             IDefinition definition = expressionNode.resolve(currentProject);
-            if (definition instanceof IVariableDefinition)
+            if (definition instanceof IVariableDefinition
+                && !(definition instanceof IConstantDefinition))
             {
+                //we want variables, but not constants
                 IVariableDefinition variableDefinition = (IVariableDefinition) definition;
                 if (variableDefinition.getVariableClassification().equals(VariableClassification.CLASS_MEMBER))
                 {
@@ -4127,6 +4142,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     diagnostics.add(generateGetterHint);
                 }
             }
+        }
+        if (node instanceof IFunctionNode)
+        {
+            //a member can't be the child of a function, so no need to continue
+            return;
         }
         for (int i = 0, childCount = node.getChildCount(); i < childCount; i++)
         {
@@ -5192,12 +5212,16 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private CompletableFuture<Object> executeGenerateAccessorCommand(ExecuteCommandParams params)
     {
         List<Object> args = params.getArguments();
-        String name = (String) args.get(0);
-        String path = (String) args.get(1);
-        int startLine = ((Double) args.get(2)).intValue();
-        int startChar = ((Double) args.get(3)).intValue();
-        int endLine = ((Double) args.get(4)).intValue();
-        int endChar = ((Double) args.get(5)).intValue();
+        String path = (String) args.get(0);
+        int startLine = ((Double) args.get(1)).intValue();
+        int startChar = ((Double) args.get(2)).intValue();
+        int endLine = ((Double) args.get(3)).intValue();
+        int endChar = ((Double) args.get(4)).intValue();
+        String name = (String) args.get(5);
+        String namespace = (String) args.get(6);
+        boolean isStatic = (Boolean) args.get(7);
+        String type = (String) args.get(8);
+        String assignedValue = (String) args.get(9);
 
         ApplyWorkspaceEditParams editParams = new ApplyWorkspaceEditParams();
 
@@ -5211,7 +5235,51 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         changes.put(Paths.get(path).toUri().toString(), edits);
 
         TextEdit edit = new TextEdit();
-        edit.setNewText("{generated accessor:" + name + "}");
+        StringBuilder builder = new StringBuilder();
+        builder.append("private ");
+        if(isStatic)
+        {
+            builder.append("static ");
+        }
+        builder.append("var _" + name);
+        if(type != null && type.length() > 0)
+        {
+            builder.append(":" + type);
+        }
+        if(assignedValue != null)
+        {
+            builder.append(" = " + assignedValue);
+        }
+        builder.append(";\n\n");
+        builder.append("\t\t" + namespace + " ");
+        if(isStatic)
+        {
+            builder.append("static ");
+        }
+        builder.append("function get " + name + "()");
+        if(type != null && type.length() > 0)
+        {
+            builder.append(":" + type);
+        }
+        builder.append("\n");
+        builder.append("\t\t{\n");
+        builder.append("\t\t\treturn _" + name +";\n");
+        builder.append("\t\t}\n\n");
+        builder.append("\t\t" + namespace + " ");
+        if(isStatic)
+        {
+            builder.append("static ");
+        }
+        builder.append("function set " + name + "(value");
+        if(type != null && type.length() > 0)
+        {
+            builder.append(":" + type);
+        }
+        builder.append("):void\n");
+        builder.append("\t\t{\n");
+        builder.append("\t\t\t_" + name + " = value;\n");
+        builder.append("\t\t}");
+        edit.setNewText(builder.toString());
         edit.setRange(new Range(new Position(startLine, startChar), new Position(endLine, endChar)));
         edits.add(edit);
 
