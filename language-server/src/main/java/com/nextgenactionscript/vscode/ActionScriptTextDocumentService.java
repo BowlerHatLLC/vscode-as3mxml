@@ -4193,9 +4193,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             IExpressionNode expressionNode = definitionNode.getNameExpressionNode();
             IDefinition definition = expressionNode.resolve(currentProject);
             if (definition instanceof IVariableDefinition
-                && !(definition instanceof IConstantDefinition))
+                && !(definition instanceof IConstantDefinition)
+                && !(definition instanceof IAccessorDefinition))
             {
-                //we want variables, but not constants
+                //we want variables, but not constants or accessors
                 IVariableDefinition variableDefinition = (IVariableDefinition) definition;
                 if (variableDefinition.getVariableClassification().equals(VariableClassification.CLASS_MEMBER))
                 {
