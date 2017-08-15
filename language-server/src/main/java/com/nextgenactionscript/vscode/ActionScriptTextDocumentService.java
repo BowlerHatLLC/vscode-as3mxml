@@ -3363,9 +3363,28 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             if (node instanceof IIdentifierNode)
             {
                 IIdentifierNode identifierNode = (IIdentifierNode) node;
-                if (identifierNode.resolve(currentProject) == definition)
+                IDefinition resolvedDefinition = identifierNode.resolve(currentProject);
+                if (resolvedDefinition == definition)
                 {
                     result.add(identifierNode);
+                }
+                else if (definition instanceof IGetterDefinition)
+                {
+                    IGetterDefinition getterDefinition = (IGetterDefinition) definition;
+                    ISetterDefinition setterDefinition = getterDefinition.resolveSetter(currentProject);
+                    if (setterDefinition != null && resolvedDefinition == setterDefinition)
+                    {
+                        result.add(identifierNode);
+                    }
+                }
+                else if (definition instanceof ISetterDefinition)
+                {
+                    ISetterDefinition setterDefinition = (ISetterDefinition) definition;
+                    IGetterDefinition getterDefinition = setterDefinition.resolveGetter(currentProject);
+                    if (getterDefinition != null && resolvedDefinition == getterDefinition)
+                    {
+                        result.add(identifierNode);
+                    }
                 }
             }
             return;
