@@ -41,6 +41,7 @@ import java.util.regex.Pattern;
 import org.apache.flex.abc.ABCParser;
 import org.apache.flex.abc.Pool;
 import org.apache.flex.abc.PoolingABCVisitor;
+import org.apache.flex.compiler.asdoc.IASDocComment;
 import org.apache.flex.compiler.clients.MXMLJSC;
 import org.apache.flex.compiler.common.ASModifier;
 import org.apache.flex.compiler.common.ISourceLocation;
@@ -57,6 +58,7 @@ import org.apache.flex.compiler.definitions.IAccessorDefinition;
 import org.apache.flex.compiler.definitions.IClassDefinition;
 import org.apache.flex.compiler.definitions.IConstantDefinition;
 import org.apache.flex.compiler.definitions.IDefinition;
+import org.apache.flex.compiler.definitions.IDocumentableDefinition;
 import org.apache.flex.compiler.definitions.IEventDefinition;
 import org.apache.flex.compiler.definitions.IFunctionDefinition;
 import org.apache.flex.compiler.definitions.IGetterDefinition;
@@ -80,6 +82,7 @@ import org.apache.flex.compiler.internal.driver.js.node.NodeModuleBackend;
 import org.apache.flex.compiler.internal.mxml.MXMLData;
 import org.apache.flex.compiler.internal.parsing.as.ASParser;
 import org.apache.flex.compiler.internal.parsing.as.ASToken;
+import org.apache.flex.compiler.internal.parsing.as.FlexJSASDocDelegate;
 import org.apache.flex.compiler.internal.parsing.as.RepairingTokenBuffer;
 import org.apache.flex.compiler.internal.parsing.as.StreamingASTokenizer;
 import org.apache.flex.compiler.internal.projects.CompilerProject;
@@ -1705,6 +1708,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         String detail = getDefinitionDetail(definition);
         List<Either<String,MarkedString>> contents = new ArrayList<>();
         contents.add(Either.forLeft(MARKDOWN_CODE_BLOCK_NEXTGENAS_START + detail + MARKDOWN_CODE_BLOCK_END));
+        String docs = getDocumentationForDefinition(definition);
+        if(docs != null)
+        {
+            contents.add(Either.forLeft(docs));
+        }
         result.setContents(contents);
         return CompletableFuture.completedFuture(result);
     }
@@ -2940,6 +2948,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         item.setKind(getDefinitionKind(definition));
         item.setDetail(getDefinitionDetail(definition));
         item.setLabel(definition.getBaseName());
+        String docs = getDocumentationForDefinition(definition);
+        if (docs != null)
+        {
+            item.setDocumentation(docs);
+        }
         boolean isInPackage = !definition.getQualifiedName().equals(definition.getBaseName());
         if (isInPackage)
         {
@@ -2962,6 +2975,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         item.setKind(getDefinitionKind(definition));
         item.setDetail(getDefinitionDetail(definition));
         item.setLabel(definition.getBaseName());
+        String docs = getDocumentationForDefinition(definition);
+        if (docs != null)
+        {
+            item.setDocumentation(docs);
+        }
         if (prefix != null)
         {
             item.setInsertText(prefix + IMXMLCoreConstants.colon + definition.getBaseName());
@@ -2971,6 +2989,33 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
         }
         result.getItems().add(item);
+    }
+    
+    private String getDocumentationForDefinition(IDefinition definition)
+    {
+        if (!(definition instanceof IDocumentableDefinition))
+        {
+            return null;
+        }
+        IDocumentableDefinition documentableDefinition = (IDocumentableDefinition) definition;
+        IASDocComment comment = documentableDefinition.getExplicitSourceComment();
+        if (comment == null)
+        {
+            return null;
+        }
+        comment.compile();
+        String description = comment.getDescription();
+        if (description == null)
+        {
+            return null;
+        }
+        int endOfFirstSentence = description.indexOf(". ");
+        if (endOfFirstSentence != -1)
+        {
+            description = description.substring(0, endOfFirstSentence + 1);
+        }
+        description = description.replaceAll("<\\/{0,1}\\w+\\/{0,1}>", "");
+        return description;
     }
 
     private CompletionItemKind getDefinitionKind(IDefinition definition)
@@ -3793,6 +3838,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             project.setProblems(new ArrayList<>());
             currentWorkspace = project.getWorkspace();
+            currentWorkspace.setASDocDelegate(new FlexJSASDocDelegate());
             fileSpecGetter = new LanguageServerFileSpecGetter(currentWorkspace, sourceByPath);
         }
         else
