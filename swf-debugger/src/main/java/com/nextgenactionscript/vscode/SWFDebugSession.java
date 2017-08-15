@@ -649,7 +649,7 @@ public class SWFDebugSession extends DebugSession
     {
         try
         {
-            swfSession.stepContinue();
+            swfSession.stepOver();
             waitingForResume = false;
         }
         catch (Exception e)
