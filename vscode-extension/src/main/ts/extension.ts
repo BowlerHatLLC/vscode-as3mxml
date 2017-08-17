@@ -13,7 +13,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-import addImport from "./commands/addImport";
 import addMXMLNamespace from "./commands/addMXMLNamespace";
 import organizeImportsInUri from "./commands/organizeImportsInUri";
 import organizeImportsInTextEditor from "./commands/organizeImportsInTextEditor";
@@ -151,7 +150,6 @@ export function activate(context: vscode.ExtensionContext)
 		return adapterExecutableCommandSWF(javaExecutablePath, editorSDKHome, frameworkSDKHome);
 	});
 	vscode.commands.registerCommand("nextgenas.createInitialConfigurationsForSWFDebug", createInitialConfigurationsForSWFDebug);
-	vscode.commands.registerTextEditorCommand("nextgenas.addImport", addImport);
 	vscode.commands.registerTextEditorCommand("nextgenas.addMXMLNamespace", addMXMLNamespace);
 	vscode.commands.registerCommand("nextgenas.organizeImportsInUri", organizeImportsInUri);
 	vscode.commands.registerCommand("nextgenas.organizeImportsInTextEditor", organizeImportsInTextEditor);

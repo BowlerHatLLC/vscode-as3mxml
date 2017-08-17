@@ -6274,3 +6274,78 @@ suite("MXML completion item provider", () =>
 		});
 	});
 });
+
+suite("imports", () =>
+{
+	teardown(() =>
+	{
+		return vscode.commands.executeCommand("workbench.action.revertAndCloseActiveEditor").then(() =>
+		{
+			return new Promise((resolve, reject) =>
+			{
+				setTimeout(() =>
+				{
+					resolve();
+				}, 100);
+			});
+		});
+	});
+	test("nextgenas.addImport adds import for qualified class", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Imports.as"));
+		let qualifiedName = "com.example.PackageClass";
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("nextgenas.addImport", "com.example.PackageClass", uri.toString(), -1, -1)
+				.then(() =>
+					{
+						return new Promise((resolve, reject) =>
+						{
+							//the text edit is not applied immediately, so give
+							//it a short delay before we check
+							setTimeout(() =>
+							{
+								let start = new vscode.Position(2, 0);
+								let end = new vscode.Position(4, 0);
+								let range = new vscode.Range(start, end);
+								let importText = editor.document.getText(range);
+								assert.strictEqual(importText, "\timport com.example.PackageClass;\n\n", "nextgenas.addImport failed to add import for class: " + uri);
+								resolve();
+							}, 100);
+						})
+					}, (err) =>
+					{
+						assert(false, "Failed to execute add import command: " + uri);
+					});
+		});
+	});
+	test("nextgenas.addImport adds import for qualified class after package block", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Imports.as"));
+		let qualifiedName = "com.example.PackageClass";
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("nextgenas.addImport", "com.example.PackageClass", uri.toString(), 127, -1)
+				.then(() =>
+					{
+						return new Promise((resolve, reject) =>
+						{
+							//the text edit is not applied immediately, so give
+							//it a short delay before we check
+							setTimeout(() =>
+							{
+								let start = new vscode.Position(11, 0);
+								let end = new vscode.Position(13, 0);
+								let range = new vscode.Range(start, end);
+								let importText = editor.document.getText(range);
+								assert.strictEqual(importText, "import com.example.PackageClass;\n\n", "nextgenas.addImport failed to add import for class: " + uri);
+								resolve();
+							}, 100);
+						})
+					}, (err) =>
+					{
+						assert(false, "Failed to execute add import command: " + uri);
+					});
+		});
+	});
+});

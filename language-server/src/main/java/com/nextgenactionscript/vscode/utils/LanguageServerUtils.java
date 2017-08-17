@@ -15,6 +15,8 @@ limitations under the License.
 */
 package com.nextgenactionscript.vscode.utils;
 
+import java.io.IOException;
+import java.io.Reader;
 import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -129,6 +131,115 @@ public class LanguageServerUtils
         range.setEnd(end);
 
         return range;
+    }
+    
+    /**
+     * Converts the absolute character offset to a language server position.
+     */
+    public static Position getPositionFromOffset(Reader in, int targetOffset)
+    {
+        return getPositionFromOffset(in, targetOffset, new Position());
+    }
+
+    public static Position getPositionFromOffset(Reader in, int targetOffset, Position result)
+    {
+        try
+        {
+            int offset = 0;
+            int line = 0;
+            int character = 0;
+
+            while (offset < targetOffset)
+            {
+                int next = in.read();
+
+                if (next < 0)
+                {
+                    result.setLine(line);
+                    result.setCharacter(line);
+                    return result;
+                }
+                else
+                {
+                    offset++;
+                    character++;
+
+                    if (next == '\n')
+                    {
+                        line++;
+                        character = 0;
+                    }
+                }
+            }
+
+            result.setLine(line);
+            result.setCharacter(character);
+        }
+        catch (IOException e)
+        {
+            result.setLine(-1);
+            result.setCharacter(-1);
+        }
+        return result;
+    }
+    
+    /**
+     * Converts a language server position to the absolute character offset.
+     */
+    public static int getOffsetFromPosition(Reader in, Position position)
+    {
+        int targetLine = position.getLine();
+        int targetCharacter = position.getCharacter();
+        try
+        {
+            int offset = 0;
+            int line = 0;
+            int character = 0;
+
+            while (line < targetLine)
+            {
+                int next = in.read();
+
+                if (next < 0)
+                {
+                    return offset;
+                }
+                else
+                {
+                    //don't skip \r here if line endings are \r\n in the file
+                    //there may be cases where the file line endings don't match
+                    //what the editor ends up rendering. skipping \r will help
+                    //that, but it will break other cases.
+                    offset++;
+
+                    if (next == '\n')
+                    {
+                        line++;
+                    }
+                }
+            }
+
+            while (character < targetCharacter)
+            {
+                int next = in.read();
+
+                if (next < 0)
+                {
+                    return offset;
+                }
+                else
+                {
+                    offset++;
+                    character++;
+                }
+            }
+
+            return offset;
+        }
+        catch (IOException e)
+        {
+            return -1;
+        }
     }
 
     private static Optional<Path> getFilePath(URI uri)

@@ -124,6 +124,7 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
         
         ExecuteCommandOptions executeCommandOptions = new ExecuteCommandOptions();
         executeCommandOptions.setCommands(Arrays.asList(
+            ICommandConstants.ADD_IMPORT,
             ICommandConstants.GENERATE_ACCESSOR));
         serverCapabilities.setExecuteCommandProvider(executeCommandOptions);
 

@@ -143,6 +143,7 @@ import com.nextgenactionscript.vscode.project.CompilerOptions;
 import com.nextgenactionscript.vscode.project.IProjectConfigStrategy;
 import com.nextgenactionscript.vscode.project.ProjectOptions;
 import com.nextgenactionscript.vscode.project.ProjectType;
+import com.nextgenactionscript.vscode.utils.ImportTextEditUtils;
 import com.nextgenactionscript.vscode.utils.LanguageServerUtils;
 import com.nextgenactionscript.vscode.utils.ProblemTracker;
 
@@ -213,7 +214,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private static final String MARKDOWN_CODE_BLOCK_NEXTGENAS_START = "```nextgenas\n";
     private static final String MARKDOWN_CODE_BLOCK_MXML_START = "```mxml\n";
     private static final String MARKDOWN_CODE_BLOCK_END = "\n```";
-    private static final String COMMAND_IMPORT = "nextgenas.addImport";
     private static final String COMMAND_XMLNS = "nextgenas.addMXMLNamespace";
     private static final String TOKEN_CONFIGNAME = "configname";
     private static final String CONFIG_JS = "js";
@@ -276,6 +276,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private int currentOffset = -1;
     private int importStartIndex = -1;
     private int importEndIndex = -1;
+    private String importUri;
     private int namespaceStartIndex = -1;
     private int namespaceEndIndex = -1;
     private LanguageServerFileSpecGetter fileSpecGetter;
@@ -957,6 +958,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     {
         switch(params.getCommand())
         {
+            case ICommandConstants.ADD_IMPORT:
+            {
+                return executeAddImportCommand(params);
+            }
             case ICommandConstants.GENERATE_ACCESSOR:
             {
                 return executeGenerateAccessorCommand(params);
@@ -3056,8 +3061,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         String qualifiedName = definition.getQualifiedName();
         Command importCommand = new Command();
         importCommand.setTitle("Import " + qualifiedName);
-        importCommand.setCommand(COMMAND_IMPORT);
-        importCommand.setArguments(Arrays.asList(qualifiedName, importStartIndex, importEndIndex));
+        importCommand.setCommand(ICommandConstants.ADD_IMPORT);
+        importCommand.setArguments(Arrays.asList(
+            qualifiedName,
+            importUri,
+            importStartIndex,
+            importEndIndex));
         return importCommand;
     }
 
@@ -3173,8 +3182,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 return;
             }
 
-            Position position = new Position();
-            offsetToLineAndCharacter(reader, nameOffset, position);
+            Position position = LanguageServerUtils.getPositionFromOffset(reader, nameOffset);
             nameLine = position.getLine();
             nameColumn = position.getCharacter();
         }
@@ -3434,7 +3442,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         Range range = change.getRange();
         Position start = range.getStart();
         StringReader reader = new StringReader(sourceText);
-        int offset = lineAndCharacterToOffset(reader, start.getLine(), start.getCharacter());
+        int offset = LanguageServerUtils.getOffsetFromPosition(reader, start);
         return sourceText.substring(0, offset) + change.getText() + sourceText.substring(offset + change.getRangeLength());
     }
 
@@ -4316,9 +4324,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return null;
         }
 
-        currentOffset = lineAndCharacterToOffset(new StringReader(code),
-                position.getLine(),
-                position.getCharacter());
+        currentOffset = LanguageServerUtils.getOffsetFromPosition(new StringReader(code), position);
         if (currentOffset == -1)
         {
             System.err.println("Could not find code at position " + position.getLine() + ":" + position.getCharacter() + " in file " + path.toAbsolutePath().toString());
@@ -4440,9 +4446,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return null;
         }
 
-        currentOffset = lineAndCharacterToOffset(new StringReader(code),
-                position.getLine(),
-                position.getCharacter());
+        currentOffset = LanguageServerUtils.getOffsetFromPosition(new StringReader(code), position);
         if (currentOffset == -1)
         {
             System.err.println("Could not find code at position " + position.getLine() + ":" + position.getCharacter() + " in file " + path.toAbsolutePath().toString());
@@ -4481,6 +4485,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             {
                 importEndIndex = packageNode.getAbsoluteEnd();
             }
+            importUri = textDocument.getUri();
         }
         return offsetNode;
     }
@@ -5256,7 +5261,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             //node associated with them, so we need to figure this out from the
             //offset instead of a pre-calculated line and column -JT
             Reader definitionReader = getReaderForPath(definitionPath);
-            offsetToLineAndCharacter(definitionReader, definition.getNameStart(), start);
+            LanguageServerUtils.getPositionFromOffset(definitionReader, definition.getNameStart(), start);
             end.setLine(start.getLine());
             end.setCharacter(start.getCharacter());
         }
@@ -5273,6 +5278,40 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         location.setRange(range);
         symbol.setLocation(location);
         return symbol;
+    }
+    
+    private CompletableFuture<Object> executeAddImportCommand(ExecuteCommandParams params)
+    {
+        List<Object> args = params.getArguments();
+        String qualifiedName = (String) args.get(0);
+        String uri = (String) args.get(1);
+        int startIndex = ((Double) args.get(2)).intValue();
+        int endIndex = ((Double) args.get(3)).intValue();
+        if(qualifiedName == null)
+        {
+            return CompletableFuture.completedFuture(new Object());
+        }
+        Path pathForImport = Paths.get(URI.create(uri));
+        String text = sourceByPath.get(pathForImport);
+        TextEdit edit = ImportTextEditUtils.createTextEditForImport(qualifiedName, text, startIndex, endIndex);
+        if(edit == null)
+        {
+            //no edit required
+            return CompletableFuture.completedFuture(new Object());
+        }
+
+        ApplyWorkspaceEditParams editParams = new ApplyWorkspaceEditParams();
+        WorkspaceEdit workspaceEdit = new WorkspaceEdit();
+        HashMap<String,List<TextEdit>> changes = new HashMap<>();
+        List<TextEdit> edits = new ArrayList<>();
+        edits.add(edit);
+        changes.put(uri, edits);
+        workspaceEdit.setChanges(changes);
+        editParams.setEdit(workspaceEdit);
+
+        languageClient.applyEdit(editParams);
+
+        return CompletableFuture.completedFuture(new Object());
     }
 
     private CompletableFuture<Object> executeGenerateAccessorCommand(ExecuteCommandParams params)
@@ -5301,6 +5340,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         changes.put(Paths.get(path).toUri().toString(), edits);
 
         TextEdit edit = new TextEdit();
+        edits.add(edit);
+
         StringBuilder builder = new StringBuilder();
         builder.append("private ");
         if(isStatic)
@@ -5347,104 +5388,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         builder.append("\t\t}");
         edit.setNewText(builder.toString());
         edit.setRange(new Range(new Position(startLine, startChar), new Position(endLine, endChar)));
-        edits.add(edit);
 
         languageClient.applyEdit(editParams);
         return CompletableFuture.completedFuture(new Object());
-    }
-
-    private static void offsetToLineAndCharacter(Reader in, int targetOffset, Position result)
-    {
-        try
-        {
-            int offset = 0;
-            int line = 0;
-            int character = 0;
-
-            while (offset < targetOffset)
-            {
-                int next = in.read();
-
-                if (next < 0)
-                {
-                    result.setLine(line);
-                    result.setCharacter(line);
-                    return;
-                }
-                else
-                {
-                    offset++;
-                    character++;
-
-                    if (next == '\n')
-                    {
-                        line++;
-                        character = 0;
-                    }
-                }
-            }
-
-            result.setLine(line);
-            result.setCharacter(character);
-        }
-        catch (IOException e)
-        {
-            result.setLine(-1);
-            result.setCharacter(-1);
-        }
-    }
-
-    private static int lineAndCharacterToOffset(Reader in, int targetLine, int targetCharacter)
-    {
-        try
-        {
-            int offset = 0;
-            int line = 0;
-            int character = 0;
-
-            while (line < targetLine)
-            {
-                int next = in.read();
-
-                if (next < 0)
-                {
-                    return offset;
-                }
-                else
-                {
-                    //don't skip \r here if line endings are \r\n in the file
-                    //there may be cases where the file line endings don't match
-                    //what the editor ends up rendering. skipping \r will help
-                    //that, but it will break other cases.
-                    offset++;
-
-                    if (next == '\n')
-                    {
-                        line++;
-                    }
-                }
-            }
-
-            while (character < targetCharacter)
-            {
-                int next = in.read();
-
-                if (next < 0)
-                {
-                    return offset;
-                }
-                else
-                {
-                    offset++;
-                    character++;
-                }
-            }
-
-            return offset;
-        }
-        catch (IOException e)
-        {
-            return -1;
-        }
     }
 }
