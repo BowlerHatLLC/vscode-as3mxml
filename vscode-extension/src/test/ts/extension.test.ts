@@ -371,6 +371,30 @@ suite("workspace symbol provider", () =>
 					});
 		});
 	});
+	test("vscode.executeWorkspaceSymbolProvider includes class in package", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Main.as"));
+		let query = "PackageClass";
+		let packageName = "com.example";
+		let classUri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "PackageClass.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeWorkspaceSymbolProvider", query)
+				.then((symbols: vscode.SymbolInformation[]) =>
+					{
+						assert.ok(findSymbol(symbols, new vscode.SymbolInformation(
+							query,
+							vscode.SymbolKind.Class,
+							createRange(2, 14),
+							classUri,
+							packageName)),
+							"vscode.executeWorkspaceSymbolProvider failed to provide symbol for class: " + query);
+					}, (err) =>
+					{
+						assert(false, "Failed to execute workspace symbol provider: " + uri);
+					});
+		});
+	});
 	test("vscode.executeWorkspaceSymbolProvider includes member variable", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Main.as"));
