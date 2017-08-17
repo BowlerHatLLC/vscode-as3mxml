@@ -544,15 +544,17 @@ suite("workspace symbol provider", () =>
 		let query = "Unreferenced";
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
-			let qualifiedClassName = "com.example.UnreferencedClass";
+			let symbolName = "UnreferencedClass";
+			let packageName = "com.example";
 			let classUri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "UnreferencedClass.as"));
 			return vscode.commands.executeCommand("vscode.executeWorkspaceSymbolProvider", query)
 				.then((symbols: vscode.SymbolInformation[]) =>
 					{
-						assert.ok(findSymbol(symbols, new vscode.SymbolInformation(qualifiedClassName,
+						assert.ok(findSymbol(symbols, new vscode.SymbolInformation(symbolName,
 							vscode.SymbolKind.Class,
 							createRange(2, 14),
-							classUri)),
+							classUri,
+							packageName)),
 							"vscode.executeWorkspaceSymbolProvider failed to provide symbol for class in unreferenced file with query: " + query);
 					}, (err) =>
 					{
@@ -566,15 +568,17 @@ suite("workspace symbol provider", () =>
 		let query = "Unreferenced";
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
-			let qualifiedClassName = "com.example.UnreferencedClass";
+			let symbolName = "UnreferencedClass";
+			let packageName = "com.example";
 			let classUri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "UnreferencedClass.as"));
 			return vscode.commands.executeCommand("vscode.executeWorkspaceSymbolProvider", query)
 				.then((symbols: vscode.SymbolInformation[]) =>
 					{
-						assert.ok(findSymbol(symbols, new vscode.SymbolInformation(qualifiedClassName,
+						assert.ok(findSymbol(symbols, new vscode.SymbolInformation(symbolName,
 							vscode.SymbolKind.Constructor,
 							createRange(4, 18),
-							classUri)),
+							classUri,
+							packageName)),
 							"vscode.executeWorkspaceSymbolProvider failed to provide symbol for constructor in unreferenced file with query: " + query);
 					}, (err) =>
 					{
@@ -588,15 +592,17 @@ suite("workspace symbol provider", () =>
 		let query = "Unreferenced";
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
-			let qualifiedInterfaceName = "com.example.core.UnreferencedInterface";
+			let symbolName = "UnreferencedInterface";
+			let packageName = "com.example.core";
 			let interfaceUri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "core", "UnreferencedInterface.as"));
 			return vscode.commands.executeCommand("vscode.executeWorkspaceSymbolProvider", query)
 				.then((symbols: vscode.SymbolInformation[]) =>
 					{
-						assert.ok(findSymbol(symbols, new vscode.SymbolInformation(qualifiedInterfaceName,
+						assert.ok(findSymbol(symbols, new vscode.SymbolInformation(symbolName,
 							vscode.SymbolKind.Interface,
 							createRange(2, 18),
-							interfaceUri)),
+							interfaceUri,
+							packageName)),
 							"vscode.executeWorkspaceSymbolProvider failed to provide symbol for interface in unreferenced file with query: " + query);
 					}, (err) =>
 					{
