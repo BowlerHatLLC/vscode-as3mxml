@@ -1168,6 +1168,18 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         currentProjectOptions = projectConfigStrategy.getOptions();
     }
 
+    private String nodeToContainingPackageName(IASNode node)
+    {
+        IASNode currentNode = node;
+        String containingPackageName = null;
+        while(currentNode != null && containingPackageName == null)
+        {
+            containingPackageName = currentNode.getPackageName();
+            currentNode = currentNode.getParent();
+        }
+        return containingPackageName;
+    }
+
     private CompletionList actionScriptCompletion(TextDocumentPositionParams position)
     {
         IASNode offsetNode = getOffsetNode(position);
@@ -1197,6 +1209,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return new CompletionList();
         }
 
+        String containingPackageName = nodeToContainingPackageName(offsetNode);
+
         //variable types
         if (offsetNode instanceof IVariableNode)
         {
@@ -1211,7 +1225,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                         || (line == nameExpression.getEndLine() && column > nameExpression.getEndColumn())
                         || (line == typeNode.getLine() && column <= typeNode.getColumn()))
                 {
-                    autoCompleteTypes(offsetNode, result);
+                    autoCompleteTypes(offsetNode, containingPackageName, result);
                 }
                 return result;
             }
@@ -1222,7 +1236,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             IVariableNode variableNode = (IVariableNode) parentNode;
             if (offsetNode == variableNode.getVariableTypeNode())
             {
-                autoCompleteTypes(parentNode, result);
+                autoCompleteTypes(parentNode, containingPackageName, result);
                 return result;
             }
         }
@@ -1241,7 +1255,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                         && line <= typeNode.getLine()
                         && column <= typeNode.getColumn())
                 {
-                    autoCompleteTypes(offsetNode, result);
+                    autoCompleteTypes(offsetNode, containingPackageName, result);
                     return result;
                 }
             }
@@ -1252,7 +1266,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             IFunctionNode functionNode = (IFunctionNode) parentNode;
             if (offsetNode == functionNode.getReturnTypeNode())
             {
-                autoCompleteTypes(parentNode, result);
+                autoCompleteTypes(parentNode, containingPackageName, result);
                 return result;
             }
         }
@@ -1264,7 +1278,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             if (functionCallNode.getNameNode() == offsetNode
                     && functionCallNode.isNewExpression())
             {
-                autoCompleteTypes(parentNode, result);
+                autoCompleteTypes(parentNode, containingPackageName, result);
                 return result;
             }
         }
@@ -1272,7 +1286,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 && nodeAtPreviousOffset instanceof IKeywordNode
                 && nodeAtPreviousOffset.getNodeID() == ASTNodeID.KeywordNewID)
         {
-            autoCompleteTypes(nodeAtPreviousOffset, result);
+            autoCompleteTypes(nodeAtPreviousOffset, containingPackageName, result);
             return result;
         }
         //as and is keyword types
@@ -1284,7 +1298,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             IBinaryOperatorNode binaryOperatorNode = (IBinaryOperatorNode) parentNode;
             if (binaryOperatorNode.getRightOperandNode() == offsetNode)
             {
-                autoCompleteTypes(parentNode, result);
+                autoCompleteTypes(parentNode, containingPackageName, result);
                 return result;
             }
         }
@@ -1293,7 +1307,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 && (nodeAtPreviousOffset.getNodeID() == ASTNodeID.Op_AsID
                 || nodeAtPreviousOffset.getNodeID() == ASTNodeID.Op_IsID))
         {
-            autoCompleteTypes(nodeAtPreviousOffset, result);
+            autoCompleteTypes(nodeAtPreviousOffset, containingPackageName, result);
             return result;
         }
         //class extends keyword
@@ -1302,7 +1316,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 && nodeAtPreviousOffset instanceof IKeywordNode
                 && nodeAtPreviousOffset.getNodeID() == ASTNodeID.KeywordExtendsID)
         {
-            autoCompleteTypes(offsetNode, result);
+            autoCompleteTypes(offsetNode, containingPackageName, result);
             return result;
         }
         //class implements keyword
@@ -1311,7 +1325,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 && nodeAtPreviousOffset instanceof IKeywordNode
                 && nodeAtPreviousOffset.getNodeID() == ASTNodeID.KeywordImplementsID)
         {
-            autoCompleteTypes(offsetNode, result);
+            autoCompleteTypes(offsetNode, containingPackageName, result);
             return result;
         }
         //interface extends keyword
@@ -1320,7 +1334,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 && nodeAtPreviousOffset instanceof IKeywordNode
                 && nodeAtPreviousOffset.getNodeID() == ASTNodeID.KeywordExtendsID)
         {
-            autoCompleteTypes(offsetNode, result);
+            autoCompleteTypes(offsetNode, containingPackageName, result);
             return result;
         }
 
@@ -1495,12 +1509,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 IScopedNode scopedNode = (IScopedNode) offsetNode;
 
                 //include all members and local things that are in scope
-                autoCompleteScope(scopedNode, false, result);
+                autoCompleteScope(scopedNode, false, containingPackageName, result);
 
                 //include all public definitions
                 IASScope scope = scopedNode.getScope();
                 IDefinition definitionToSkip = scope.getDefinition();
-                autoCompleteDefinitions(result, false, false, null, definitionToSkip);
+                autoCompleteDefinitions(result, false, false, null, definitionToSkip, containingPackageName);
 
                 return result;
             }
@@ -2163,7 +2177,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return STAR;
     }
 
-    private void autoCompleteTypes(IASNode withNode, CompletionList result)
+    private void autoCompleteTypes(IASNode withNode, String containingPackageName, CompletionList result)
     {
         //start by getting the types in scope
         IASNode node = withNode;
@@ -2176,18 +2190,18 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 IScopedNode scopedNode = (IScopedNode) node;
 
                 //include all members and local things that are in scope
-                autoCompleteScope(scopedNode, true, result);
+                autoCompleteScope(scopedNode, true, containingPackageName, result);
                 break;
             }
             node = node.getParent();
         }
         while (node != null);
-        autoCompleteDefinitions(result, false, true, null, null);
+        autoCompleteDefinitions(result, false, true, null, null, containingPackageName);
     }
 
     private void autoCompleteTypesForMXML(CompletionList result)
     {
-        autoCompleteDefinitions(result, true, true, null, null);
+        autoCompleteDefinitions(result, true, true, null, null, null);
     }
 
     /**
@@ -2267,8 +2281,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     }
 
     private void autoCompleteDefinitions(CompletionList result, boolean forMXML,
-                                         boolean typesOnly, String packageName,
-                                         IDefinition definitionToSkip)
+                                         boolean typesOnly, String requiredPackageName,
+                                         IDefinition definitionToSkip, String containingPackageName)
     {
         String skipQualifiedName = null;
         if (definitionToSkip != null)
@@ -2296,7 +2310,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 boolean isType = definition instanceof ITypeDefinition;
                 if (!typesOnly || isType)
                 {
-                    if (packageName == null || definition.getPackageName().equals(packageName))
+                    if (requiredPackageName == null || definition.getPackageName().equals(requiredPackageName))
                     {
                         if (skipQualifiedName != null
                                 && skipQualifiedName.equals(definition.getQualifiedName()))
@@ -2319,13 +2333,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                         }
                         else
                         {
-                            addDefinitionAutoCompleteActionScript(definition, result);
+                            addDefinitionAutoCompleteActionScript(definition, containingPackageName, result);
                         }
                     }
                 }
             }
         }
-        if (packageName == null || packageName.equals(""))
+        if (requiredPackageName == null || requiredPackageName.equals(""))
         {
             CompletionItem item = new CompletionItem();
             item.setKind(CompletionItemKind.Class);
@@ -2334,7 +2348,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
     }
 
-    private void autoCompleteScope(IScopedNode node, boolean typesOnly, CompletionList result)
+    private void autoCompleteScope(IScopedNode node, boolean typesOnly, String containingPackageName, CompletionList result)
     {
         IScopedNode currentNode = node;
         ASScope scope = (ASScope) node.getScope();
@@ -2377,7 +2391,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                                 continue;
                             }
                         }
-                        addDefinitionAutoCompleteActionScript(localDefinition, result);
+                        addDefinitionAutoCompleteActionScript(localDefinition, containingPackageName, result);
                     }
                 }
             }
@@ -2411,7 +2425,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             String packageName = memberAccessToPackageName(memberAccess);
             if (packageName != null)
             {
-                autoCompleteDefinitions(result, false, false, packageName, null);
+                autoCompleteDefinitions(result, false, false, packageName, null, null);
                 return;
             }
         }
@@ -2827,7 +2841,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             else //actionscript
             {
-                addDefinitionAutoCompleteActionScript(localDefinition, result);
+                addDefinitionAutoCompleteActionScript(localDefinition, null, result);
             }
         }
     }
@@ -2947,7 +2961,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return prefix;
     }
 
-    private void addDefinitionAutoCompleteActionScript(IDefinition definition, CompletionList result)
+    private void addDefinitionAutoCompleteActionScript(IDefinition definition, String containingPackageName, CompletionList result)
     {
         if (definition.getBaseName().startsWith(VECTOR_HIDDEN_PREFIX))
         {
@@ -2963,7 +2977,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             item.setDocumentation(docs);
         }
         boolean isInPackage = !definition.getQualifiedName().equals(definition.getBaseName());
-        if (isInPackage)
+        if (isInPackage && (containingPackageName == null || !definition.getPackageName().equals(containingPackageName)))
         {
             Command command = createImportCommand(definition);
             if (command != null)
