@@ -6349,3 +6349,81 @@ suite("imports", () =>
 		});
 	});
 });
+
+suite("mxml namespaces", () =>
+{
+	teardown(() =>
+	{
+		return vscode.commands.executeCommand("workbench.action.revertAndCloseActiveEditor").then(() =>
+		{
+			return new Promise((resolve, reject) =>
+			{
+				setTimeout(() =>
+				{
+					resolve();
+				}, 100);
+			});
+		});
+	});
+	test("nextgenas.addMXMLNamespace adds new namespace", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLNamespace.mxml"));
+		let nsPrefix = "mx";
+		let nsUri = "library://ns.adobe.com/flex/mx";
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("nextgenas.addMXMLNamespace", nsPrefix, nsUri, uri.toString(), 48, 140)
+				.then(() =>
+					{
+						return new Promise((resolve, reject) =>
+						{
+							//the text edit is not applied immediately, so give
+							//it a short delay before we check
+							setTimeout(() =>
+							{
+								let start = new vscode.Position(2, 51);
+								let end = new vscode.Position(2, 93);
+								let range = new vscode.Range(start, end);
+								let importText = editor.document.getText(range);
+								assert.strictEqual(importText, " xmlns:mx=\"library://ns.adobe.com/flex/mx\"", "nextgenas.addMXMLNamespace failed to add MXML namspace in file: " + uri);
+								resolve();
+							}, 100);
+						})
+					}, (err) =>
+					{
+						assert(false, "Failed to execute add import command: " + uri);
+					});
+		});
+	});
+	test("nextgenas.addMXMLNamespace skips duplicate namespace", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLNamespace.mxml"));
+		let nsPrefix = "fx";
+		let nsUri = "http://ns.adobe.com/mxml/2009";
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			let originalText = editor.document.getText();
+			return vscode.commands.executeCommand("nextgenas.addMXMLNamespace", nsPrefix, nsUri, uri.toString(), 48, 140)
+				.then(() =>
+					{
+						return new Promise((resolve, reject) =>
+						{
+							//the text edit is not applied immediately, so give
+							//it a short delay before we check
+							setTimeout(() =>
+							{
+								let start = new vscode.Position(2, 51);
+								let end = new vscode.Position(2, 93);
+								let range = new vscode.Range(start, end);
+								let newText = editor.document.getText();
+								assert.strictEqual(newText, originalText, "nextgenas.addMXMLNamespace incorrectly added duplicate MXML namespace in file: " + uri);
+								resolve();
+							}, 100);
+						})
+					}, (err) =>
+					{
+						assert(false, "Failed to execute add import command: " + uri);
+					});
+		});
+	});
+});

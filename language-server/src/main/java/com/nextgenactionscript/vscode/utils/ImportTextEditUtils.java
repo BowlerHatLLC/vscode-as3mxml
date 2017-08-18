@@ -114,4 +114,23 @@ public class ImportTextEditUtils
 		edit.setRange(new Range(position, position));
 		return edit;
 	}
+    
+    public static TextEdit createTextEditForMXMLNamespace(String prefix, String uri, String text, int startIndex, int endIndex)
+    {
+        //exclude the whitespace before the namespace so that finding duplicates
+        //doesn't depend on it
+        String textToInsert = "xmlns:" + prefix + "=\"" + uri + "\"";
+        //check if this namespace URI and prefix already exist
+        int index = text.indexOf(textToInsert, startIndex);
+        if(index != -1 && index < endIndex)
+        {
+            return null;
+        }
+        Position position = LanguageServerUtils.getPositionFromOffset(new StringReader(text), endIndex);
+    
+        TextEdit edit = new TextEdit();
+        edit.setNewText(" " + textToInsert);
+		edit.setRange(new Range(position, position));
+		return edit;
+    }
 }

@@ -19,4 +19,5 @@ public interface ICommandConstants
 {
 	public static final String GENERATE_ACCESSOR = "nextgenas.generateAccessor";
 	public static final String ADD_IMPORT = "nextgenas.addImport";
+	public static final String ADD_MXML_NAMESPACE = "nextgenas.addMXMLNamespace";
 }

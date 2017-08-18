@@ -214,7 +214,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private static final String MARKDOWN_CODE_BLOCK_NEXTGENAS_START = "```nextgenas\n";
     private static final String MARKDOWN_CODE_BLOCK_MXML_START = "```mxml\n";
     private static final String MARKDOWN_CODE_BLOCK_END = "\n```";
-    private static final String COMMAND_XMLNS = "nextgenas.addMXMLNamespace";
     private static final String TOKEN_CONFIGNAME = "configname";
     private static final String CONFIG_JS = "js";
     private static final String CONFIG_NODE = "node";
@@ -279,6 +278,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private String importUri;
     private int namespaceStartIndex = -1;
     private int namespaceEndIndex = -1;
+    private String namespaceUri;
     private LanguageServerFileSpecGetter fileSpecGetter;
     private boolean brokenMXMLValueEnd;
     private boolean flexLibSDKContainsFalconCompiler = false;
@@ -961,6 +961,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             case ICommandConstants.ADD_IMPORT:
             {
                 return executeAddImportCommand(params);
+            }
+            case ICommandConstants.ADD_MXML_NAMESPACE:
+            {
+                return executeAddMXMLNamespaceCommand(params);
             }
             case ICommandConstants.GENERATE_ACCESSOR:
             {
@@ -3074,8 +3078,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     {
         Command xmlnsCommand = new Command();
         xmlnsCommand.setTitle("Add Namespace " + uri);
-        xmlnsCommand.setCommand(COMMAND_XMLNS);
-        xmlnsCommand.setArguments(Arrays.asList(prefix, uri, namespaceStartIndex, namespaceEndIndex));
+        xmlnsCommand.setCommand(ICommandConstants.ADD_MXML_NAMESPACE);
+        xmlnsCommand.setArguments(Arrays.asList(
+            prefix,
+            uri,
+            namespaceUri,
+            namespaceStartIndex,
+            namespaceEndIndex));
         return xmlnsCommand;
     }
 
@@ -4382,6 +4391,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             currentUnitData = currentUnitData.getParentUnitData();
         }
+        namespaceUri = textDocument.getUri();
         return null;
     }
 
@@ -5294,6 +5304,41 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         Path pathForImport = Paths.get(URI.create(uri));
         String text = sourceByPath.get(pathForImport);
         TextEdit edit = ImportTextEditUtils.createTextEditForImport(qualifiedName, text, startIndex, endIndex);
+        if(edit == null)
+        {
+            //no edit required
+            return CompletableFuture.completedFuture(new Object());
+        }
+
+        ApplyWorkspaceEditParams editParams = new ApplyWorkspaceEditParams();
+        WorkspaceEdit workspaceEdit = new WorkspaceEdit();
+        HashMap<String,List<TextEdit>> changes = new HashMap<>();
+        List<TextEdit> edits = new ArrayList<>();
+        edits.add(edit);
+        changes.put(uri, edits);
+        workspaceEdit.setChanges(changes);
+        editParams.setEdit(workspaceEdit);
+
+        languageClient.applyEdit(editParams);
+
+        return CompletableFuture.completedFuture(new Object());
+    }
+    
+    private CompletableFuture<Object> executeAddMXMLNamespaceCommand(ExecuteCommandParams params)
+    {
+        List<Object> args = params.getArguments();
+        String nsPrefix = (String) args.get(0);
+        String nsUri = (String) args.get(1);
+        String uri = (String) args.get(2);
+        int startIndex = ((Double) args.get(3)).intValue();
+        int endIndex = ((Double) args.get(4)).intValue();
+        if(nsPrefix == null || nsUri == null)
+        {
+            return CompletableFuture.completedFuture(new Object());
+        }
+        Path pathForImport = Paths.get(URI.create(uri));
+        String text = sourceByPath.get(pathForImport);
+        TextEdit edit = ImportTextEditUtils.createTextEditForMXMLNamespace(nsPrefix, nsUri, text, startIndex, endIndex);
         if(edit == null)
         {
             //no edit required
