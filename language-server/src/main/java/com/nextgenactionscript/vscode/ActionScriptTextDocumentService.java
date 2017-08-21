@@ -25,6 +25,7 @@ import java.lang.reflect.Field;
 import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -136,6 +137,7 @@ import org.apache.flex.compiler.units.ICompilationUnit;
 import org.apache.flex.compiler.units.IInvisibleCompilationUnit;
 import org.apache.flex.compiler.workspaces.IWorkspace;
 
+import com.google.common.io.Files;
 import com.nextgenactionscript.vscode.commands.ICommandConstants;
 import com.nextgenactionscript.vscode.commands.ICommandHintCodes;
 import com.nextgenactionscript.vscode.mxml.IMXMLLibraryConstants;
@@ -527,7 +529,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     if (typeDefinition instanceof IClassDefinition)
                     {
                         IClassDefinition classDefinition = (IClassDefinition) typeDefinition;
-                        functionDefinition = classDefinitionToConstructor(classDefinition);
+                        functionDefinition = classDefinition.getConstructor();
                     }
                 }
             }
@@ -3305,18 +3307,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             return result;
         }
-        IDefinition parentDefinition = definition.getParent();
-        if (parentDefinition != null && parentDefinition instanceof IPackageDefinition)
-        {
-            if (languageClient != null)
-            {
-                MessageParams message = new MessageParams();
-                message.setType(MessageType.Info);
-                message.setMessage("You cannot rename this element.");
-                languageClient.showMessage(message);
-            }
-            return result;
-        }
+        Path originalDefinitionFilePath = null;
+        Path newDefinitionFilePath = null;
         for (ICompilationUnit compilationUnit : compilationUnits)
         {
             if (compilationUnit == null || compilationUnit instanceof SWCCompilationUnit)
@@ -3381,10 +3373,72 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             {
                 continue;
             }
+
             URI uri = Paths.get(compilationUnit.getAbsoluteFilename()).toUri();
+            if (definitionIsMainDefinitionInCompilationUnit(compilationUnit, definition))
+            {
+                originalDefinitionFilePath = Paths.get(compilationUnit.getAbsoluteFilename());
+                String newBaseName = newName + "." + Files.getFileExtension(originalDefinitionFilePath.toFile().getName());
+                newDefinitionFilePath = originalDefinitionFilePath.getParent().resolve(newBaseName);
+                uri = newDefinitionFilePath.toUri();
+            }
             changes.put(uri.toString(), textEdits);
         }
+        if (newDefinitionFilePath != null)
+        {
+            //wait to actually rename the file because we need to be sure
+            //that finding the identifiers above still works with the old name
+            try
+            {
+                java.nio.file.Files.move(originalDefinitionFilePath, newDefinitionFilePath, StandardCopyOption.ATOMIC_MOVE);
+            }
+            catch(IOException e)
+            {
+                System.err.println("could not move file for rename: " + newDefinitionFilePath.toUri().toString());
+            }
+        }
         return result;
+    }
+
+    private boolean definitionIsMainDefinitionInCompilationUnit(ICompilationUnit unit, IDefinition definition)
+    {
+        IASScope[] scopes;
+        try
+        {
+            scopes = unit.getFileScopeRequest().get().getScopes();
+        }
+        catch (Exception e)
+        {
+            return false;
+        }
+        for (IASScope scope : scopes)
+        {
+            for (IDefinition localDefinition : scope.getAllLocalDefinitions())
+            {
+                if (localDefinition instanceof IPackageDefinition)
+                {
+                    IPackageDefinition packageDefinition = (IPackageDefinition) localDefinition;
+                    IASScope packageScope = packageDefinition.getContainedScope();
+                    boolean mightBeConstructor = definition instanceof IFunctionDefinition;
+                    for (IDefinition localDefinition2 : packageScope.getAllLocalDefinitions())
+                    {
+                        if(localDefinition2 == definition)
+                        {
+                            return true;
+                        }
+                        if(mightBeConstructor && localDefinition2 instanceof IClassDefinition)
+                        {
+                            IClassDefinition classDefinition = (IClassDefinition) localDefinition2;
+                            if (classDefinition.getConstructor() == definition)
+                            {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     private void findIdentifiers(IASNode node, IDefinition definition, List<IIdentifierNode> result)
@@ -3399,8 +3453,34 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 {
                     result.add(identifierNode);
                 }
-                else if (definition instanceof IGetterDefinition)
+                else if (resolvedDefinition instanceof IClassDefinition
+                    && definition instanceof IFunctionDefinition
+                    && ((IFunctionDefinition) definition).isConstructor())
                 {
+                    //if renaming the constructor, also rename the class
+                    IClassDefinition classDefinition = (IClassDefinition) resolvedDefinition;
+                    IFunctionDefinition constructorDefinition = classDefinition.getConstructor();
+                    if (constructorDefinition != null && definition == constructorDefinition)
+                    {
+                        result.add(identifierNode);
+                    }
+                }
+                else if (resolvedDefinition instanceof IFunctionDefinition
+                    && ((IFunctionDefinition) resolvedDefinition).isConstructor()
+                    && definition instanceof IClassDefinition)
+                {
+                    //if renaming the class, also rename the constructor
+                    IClassDefinition classDefinition = (IClassDefinition) definition;
+                    IFunctionDefinition constructorDefinition = classDefinition.getConstructor();
+                    if (constructorDefinition != null && resolvedDefinition == constructorDefinition)
+                    {
+                        result.add(identifierNode);
+                    }
+                }
+                else if (resolvedDefinition instanceof ISetterDefinition
+                        && definition instanceof IGetterDefinition)
+                {
+                    //if renaming the getter, also rename the setter
                     IGetterDefinition getterDefinition = (IGetterDefinition) definition;
                     ISetterDefinition setterDefinition = getterDefinition.resolveSetter(currentProject);
                     if (setterDefinition != null && resolvedDefinition == setterDefinition)
@@ -3408,8 +3488,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                         result.add(identifierNode);
                     }
                 }
-                else if (definition instanceof ISetterDefinition)
+                else if (resolvedDefinition instanceof IGetterDefinition
+                        && definition instanceof ISetterDefinition)
                 {
+                    //if renaming the setter, also rename the getter
                     ISetterDefinition setterDefinition = (ISetterDefinition) definition;
                     IGetterDefinition getterDefinition = setterDefinition.resolveGetter(currentProject);
                     if (getterDefinition != null && resolvedDefinition == getterDefinition)
@@ -5168,24 +5250,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 }
             }
         }
-    }
-
-    private IFunctionDefinition classDefinitionToConstructor(IClassDefinition definition)
-    {
-        IASScope scope = definition.getContainedScope();
-        Collection<IDefinition> definitions = scope.getAllLocalDefinitions();
-        for (IDefinition localDefinition : definitions)
-        {
-            if (localDefinition instanceof IFunctionDefinition)
-            {
-                IFunctionDefinition functionDefinition = (IFunctionDefinition) localDefinition;
-                if (functionDefinition.isConstructor())
-                {
-                    return functionDefinition;
-                }
-            }
-        }
-        return null;
     }
 
     private void scopeToSymbols(IASScope scope, List<SymbolInformation> result)
