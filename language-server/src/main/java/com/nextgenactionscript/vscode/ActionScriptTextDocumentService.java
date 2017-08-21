@@ -126,6 +126,7 @@ import org.apache.flex.compiler.tree.as.INamespaceDecorationNode;
 import org.apache.flex.compiler.tree.as.IPackageNode;
 import org.apache.flex.compiler.tree.as.IScopedDefinitionNode;
 import org.apache.flex.compiler.tree.as.IScopedNode;
+import org.apache.flex.compiler.tree.as.ITypeNode;
 import org.apache.flex.compiler.tree.as.IVariableNode;
 import org.apache.flex.compiler.tree.mxml.IMXMLClassReferenceNode;
 import org.apache.flex.compiler.tree.mxml.IMXMLConcatenatedDataBindingNode;
@@ -1502,13 +1503,14 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
 
         //local scope
+        IASNode currentNodeForScope = offsetNode;
         do
         {
             //just keep traversing up until we get a scoped node or run out of
             //nodes to check
-            if (offsetNode instanceof IScopedNode)
+            if (currentNodeForScope instanceof IScopedNode)
             {
-                IScopedNode scopedNode = (IScopedNode) offsetNode;
+                IScopedNode scopedNode = (IScopedNode) currentNodeForScope;
 
                 //include all members and local things that are in scope
                 autoCompleteScope(scopedNode, false, containingPackageName, result);
@@ -1517,12 +1519,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 IASScope scope = scopedNode.getScope();
                 IDefinition definitionToSkip = scope.getDefinition();
                 autoCompleteDefinitions(result, false, false, null, definitionToSkip, containingPackageName);
-
-                return result;
+                autoCompleteKeywords(scopedNode, result);
+                return result;                
             }
-            offsetNode = offsetNode.getParent();
+            currentNodeForScope = currentNodeForScope.getParent();
         }
-        while (offsetNode != null);
+        while (currentNodeForScope != null);
 
         return result;
     }
@@ -2191,6 +2193,14 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         return STAR;
     }
+    
+    private void autoCompleteKeyword(String keyword, CompletionList result)
+    {
+        CompletionItem item = new CompletionItem();
+        item.setKind(CompletionItemKind.Keyword);
+        item.setLabel(keyword);
+        result.getItems().add(item);
+    }
 
     private void autoCompleteTypes(IASNode withNode, String containingPackageName, CompletionList result)
     {
@@ -2412,6 +2422,158 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             currentNode = currentNode.getContainingScope();
         }
+    }
+    
+    private void autoCompleteKeywords(IScopedNode node, CompletionList result)
+    {
+        boolean isInFunction = false;
+        boolean isInClass = false;
+        boolean isFileScope = false;
+        boolean isTypeScope = false;
+        boolean isClassScope = false;
+        boolean isPackageScope = false;
+
+        IASNode exactNode = node.getParent();
+        IScopedNode currentNode = node;
+        while (currentNode != null)
+        {
+            IASNode parentNode = currentNode.getParent();
+            if (parentNode instanceof IFunctionNode)
+            {
+                isInFunction = true;
+            }
+            if (parentNode instanceof IClassNode)
+            {
+                if (parentNode == exactNode)
+                {
+                    isClassScope = true;
+                }
+                isInClass = true;
+            }
+            if (parentNode instanceof IFileNode && parentNode == exactNode)
+            {
+                isFileScope = true;
+            }
+            if (parentNode instanceof ITypeNode && parentNode == exactNode)
+            {
+                isTypeScope = true;
+            }
+            if (parentNode instanceof IPackageNode && parentNode == exactNode)
+            {
+                isPackageScope = true;
+            }
+
+            currentNode = currentNode.getContainingScope();
+        }
+
+        autoCompleteKeyword(IASKeywordConstants.AS, result);
+        autoCompleteKeyword(IASKeywordConstants.BREAK, result);
+        autoCompleteKeyword(IASKeywordConstants.CASE, result);
+        autoCompleteKeyword(IASKeywordConstants.CATCH, result);
+        if (isPackageScope || isFileScope)
+        {
+            autoCompleteKeyword(IASKeywordConstants.CLASS, result);
+        }
+        autoCompleteKeyword(IASKeywordConstants.CONST, result);
+        autoCompleteKeyword(IASKeywordConstants.CONTINUE, result);
+        autoCompleteKeyword(IASKeywordConstants.DEFAULT, result);
+        autoCompleteKeyword(IASKeywordConstants.DELETE, result);
+        autoCompleteKeyword(IASKeywordConstants.DO, result);
+        if (isPackageScope || isFileScope)
+        {
+            autoCompleteKeyword(IASKeywordConstants.DYNAMIC, result);
+        }
+        autoCompleteKeyword(IASKeywordConstants.EACH, result);
+        autoCompleteKeyword(IASKeywordConstants.ELSE, result);
+        if (isPackageScope || isFileScope)
+        {
+            autoCompleteKeyword(IASKeywordConstants.EXTENDS, result);
+            autoCompleteKeyword(IASKeywordConstants.FINAL, result);
+        }
+        autoCompleteKeyword(IASKeywordConstants.FINALLY, result);
+        autoCompleteKeyword(IASKeywordConstants.FOR, result);
+        autoCompleteKeyword(IASKeywordConstants.FUNCTION, result);
+        if (isTypeScope)
+        {
+            //get keyword can only be used in a class/interface
+            autoCompleteKeyword(IASKeywordConstants.GET, result);
+        }
+        autoCompleteKeyword(IASKeywordConstants.GOTO, result);
+        autoCompleteKeyword(IASKeywordConstants.IF, result);
+        if (isPackageScope || isFileScope)
+        {
+            autoCompleteKeyword(IASKeywordConstants.IMPLEMENTS, result);
+        }
+        autoCompleteKeyword(IASKeywordConstants.IMPORT, result);
+        autoCompleteKeyword(IASKeywordConstants.IN, result);
+        autoCompleteKeyword(IASKeywordConstants.INCLUDE, result);
+        autoCompleteKeyword(IASKeywordConstants.INSTANCEOF, result);
+        if (isPackageScope || isFileScope)
+        {
+            autoCompleteKeyword(IASKeywordConstants.INTERFACE, result);
+        }
+        if (!isInFunction)
+        {
+            //namespaces can't be in functions
+            autoCompleteKeyword(IASKeywordConstants.INTERNAL, result);
+        }
+        autoCompleteKeyword(IASKeywordConstants.IS, result);
+        autoCompleteKeyword(IASKeywordConstants.NAMESPACE, result);
+        if (isClassScope)
+        {
+            //native keyword may only be used for class members
+            autoCompleteKeyword(IASKeywordConstants.NATIVE, result);
+        }
+        autoCompleteKeyword(IASKeywordConstants.NEW, result);
+        if (isClassScope)
+        {
+            //override keyword may only be used for class members
+            autoCompleteKeyword(IASKeywordConstants.OVERRIDE, result);
+        }
+        if (isFileScope)
+        {
+            //a package can only be defined directly in a file
+            autoCompleteKeyword(IASKeywordConstants.PACKAGE, result);
+        }
+        if (isPackageScope || isClassScope)
+        {
+            //namespaces can't be in functions
+            autoCompleteKeyword(IASKeywordConstants.PRIVATE, result);
+            autoCompleteKeyword(IASKeywordConstants.PROTECTED, result);
+            autoCompleteKeyword(IASKeywordConstants.PUBLIC, result);
+        }
+        if (isInFunction)
+        {
+            //can only return from a function
+            autoCompleteKeyword(IASKeywordConstants.RETURN, result);
+        }
+        if (isTypeScope)
+        {
+            //set keyword can only be used in a class/interface
+            autoCompleteKeyword(IASKeywordConstants.SET, result);
+        }
+        if (isClassScope)
+        {
+            //static keyword may only be used for class members
+            autoCompleteKeyword(IASKeywordConstants.STATIC, result);
+        }
+        if (isInFunction && isInClass)
+        {
+            //can only be used in functions that are in classes
+            autoCompleteKeyword(IASKeywordConstants.SUPER, result);
+        }
+        autoCompleteKeyword(IASKeywordConstants.SWITCH, result);
+        if (isInFunction)
+        {
+            //this should only be used in functions
+            autoCompleteKeyword(IASKeywordConstants.THIS, result);
+        }
+        autoCompleteKeyword(IASKeywordConstants.THROW, result);
+        autoCompleteKeyword(IASKeywordConstants.TRY, result);
+        autoCompleteKeyword(IASKeywordConstants.TYPEOF, result);
+        autoCompleteKeyword(IASKeywordConstants.VAR, result);
+        autoCompleteKeyword(IASKeywordConstants.WHILE, result);
+        autoCompleteKeyword(IASKeywordConstants.WITH, result);
     }
 
     private void autoCompleteMemberAccess(IMemberAccessExpressionNode node, CompletionList result)
