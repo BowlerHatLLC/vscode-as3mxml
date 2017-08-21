@@ -1800,6 +1800,19 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             IIdentifierNode expressionNode = (IIdentifierNode) offsetNode;
             definition = expressionNode.resolve(currentProject);
+
+            if (definition == null)
+            {
+                if (expressionNode.getName().equals(IASKeywordConstants.SUPER))
+                {
+                    ITypeDefinition typeDefinition = expressionNode.resolveType(currentProject);
+                    if (typeDefinition instanceof IClassDefinition)
+                    {
+                        IClassDefinition classDefinition = (IClassDefinition) typeDefinition;
+                        definition = classDefinition.getConstructor();
+                    }
+                }
+            }
         }
 
         if (definition == null)
