@@ -26,7 +26,7 @@
     "build-debug": "mvn package"
   },
   "engines": {
-    "vscode": "^1.14.0"
+    "vscode": "^1.15.0"
   },
   "devDependencies": {
     "@types/json5": "0.0.29",
@@ -433,9 +433,9 @@
               "name": "${5:Launch AIR mobile}",
               "program": "^\"\\${workspaceRoot}/${1:application.xml}\"",
               "profile": "mobileDevice",
-              "screensize": "${2:iPhoneRetina}",
+              "screensize": "${2|iPhoneRetina,iPhone,iPhone5Retina,iPhone6,iPhone6Plus,iPad,iPadRetina,Droid,NexusOne,SamsungGalaxyS,SamsungGalaxyTab,480,720,1080,WVGA,WQVGA,QVGA,HVGA,FWVGA,FWQVGA|}",
               "screenDPI": "^${3:326}",
-              "versionPlatform": "${4:IOS}"
+              "versionPlatform": "${4|IOS,AND|}"
             }
           }
         ]
