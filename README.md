@@ -41,9 +41,9 @@ Results will appear in the **Output** view.
 
 ## Support this project
 
-Want to see more ActionScript tools and utilities like this Visual Studio Code extension? Please [become a patron](http://patreon.com/josht) and support the next generation of ActionScript development on the web -- without a plugin!
+The [ActionScript and MXML extension for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=bowlerhatllc.vscode-nextgenas) and [`asconfigc`](https://www.npmjs.com/package/asconfigc) are developed by Josh Tynjala with the support of community members like you.
 
-[NextGen ActionScript by Josh Tynjala on Patreon](http://patreon.com/josht)
+[Support Josh Tynjala on Patreon](http://patreon.com/josht)
 
 Special thanks to the following sponsors for their generous support:
 
