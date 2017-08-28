@@ -4854,6 +4854,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             //some attributes can have ActionScript completion, such as
             //events and properties with data binding
             IClassDefinition tagDefinition = (IClassDefinition) currentProject.resolveXMLNameToDefinition(tag.getXMLName(), tag.getMXMLDialect());
+            if (tagDefinition == null)
+            {
+                //we can't figure out which class the tag represents!
+                //maybe the user hasn't defined the tag's namespace or something
+                return null;
+            }
             IDefinition attributeDefinition = currentProject.resolveSpecifier(tagDefinition, attributeData.getShortName());
             if (attributeDefinition instanceof IEventDefinition)
             {
