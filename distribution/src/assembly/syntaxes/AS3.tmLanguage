@@ -646,6 +646,10 @@
 				</dict>
 				<dict>
 					<key>include</key>
+					<string>#metadata</string>
+				</dict>
+				<dict>
+					<key>include</key>
 					<string>#functions</string>
 				</dict>
 				<dict>
