@@ -757,48 +757,15 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             {
                 case ICommandHintCodes.GENERATE_ACCESSOR:
                 {
-                    Command generateAccessorCommand = new Command();
-                    generateAccessorCommand.setTitle("Generate Getter and Setter");
-                    generateAccessorCommand.setCommand(ICommandConstants.GENERATE_ACCESSOR);
-                    IASNode offsetNode = getOffsetNode(textDocument, diagnostic.getRange().getStart());
-                    IVariableNode variableNode = null;
-                    if (offsetNode instanceof IVariableNode)
-                    {
-                        variableNode = (IVariableNode) offsetNode;
-                    }
-                    if (offsetNode.getParent() instanceof IVariableNode)
-                    {
-                        variableNode = (IVariableNode) offsetNode.getParent();
-                    }
-                    if (variableNode != null)
-                    {
-                        IExpressionNode assignedValueNode = variableNode.getAssignedValueNode();
-                        String assignedValue = null;
-                        if (assignedValueNode != null)
-                        {
-                            String source = sourceByPath.get(Paths.get(diagnostic.getSource()));
-                            assignedValue = source.substring(assignedValueNode.getAbsoluteStart(),
-                                assignedValueNode.getAbsoluteEnd());
-                        }
-                        generateAccessorCommand.setArguments(Arrays.asList(
-                            diagnostic.getSource(),
-                            diagnostic.getRange().getStart().getLine(),
-                            diagnostic.getRange().getStart().getCharacter(),
-                            diagnostic.getRange().getEnd().getLine(),
-                            diagnostic.getRange().getEnd().getCharacter(),
-                            variableNode.getName(),
-                            variableNode.getNamespace(),
-                            variableNode.hasModifier(ASModifier.STATIC),
-                            variableNode.getVariableType(),
-                            assignedValue));
-                        commands.add(generateAccessorCommand);
-                    }
+                    createCodeActionForGenerateAccessor(textDocument, diagnostic, commands);
                     break;
                 }
                 case "1120": //AccessUndefinedPropertyProblem
                 {
                     //see if there's anything we can import
                     createCodeActionsForImport(diagnostic, commands);
+                    createCodeActionForMissingLocalVariable(textDocument, diagnostic, commands);
+                    createCodeActionForMissingField(textDocument, diagnostic, commands);
                     break;
                 }
                 case "1046": //UnknownTypeProblem
@@ -817,11 +784,146 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 {
                     //see if there's anything we can import
                     createCodeActionsForImport(diagnostic, commands);
+                    createCodeActionForMissingMethod(textDocument, diagnostic, commands);
                     break;
                 }
             }
         }
         return CompletableFuture.completedFuture(commands);
+    }
+
+    private void createCodeActionForGenerateAccessor(TextDocumentIdentifier textDocument, Diagnostic diagnostic, List<Command> commands)
+    {
+        Command generateAccessorCommand = new Command();
+        generateAccessorCommand.setTitle("Generate Getter and Setter");
+        generateAccessorCommand.setCommand(ICommandConstants.GENERATE_ACCESSOR);
+        IASNode offsetNode = getOffsetNode(textDocument, diagnostic.getRange().getStart());
+        IVariableNode variableNode = null;
+        if (offsetNode instanceof IVariableNode)
+        {
+            variableNode = (IVariableNode) offsetNode;
+        }
+        if (offsetNode.getParent() instanceof IVariableNode)
+        {
+            variableNode = (IVariableNode) offsetNode.getParent();
+        }
+        if (variableNode == null)
+        {
+            return;
+        }
+        IExpressionNode assignedValueNode = variableNode.getAssignedValueNode();
+        String assignedValue = null;
+        if (assignedValueNode != null)
+        {
+            String source = sourceByPath.get(Paths.get(diagnostic.getSource()));
+            assignedValue = source.substring(assignedValueNode.getAbsoluteStart(),
+                assignedValueNode.getAbsoluteEnd());
+        }
+        generateAccessorCommand.setArguments(Arrays.asList(
+            diagnostic.getSource(),
+            diagnostic.getRange().getStart().getLine(),
+            diagnostic.getRange().getStart().getCharacter(),
+            diagnostic.getRange().getEnd().getLine(),
+            diagnostic.getRange().getEnd().getCharacter(),
+            variableNode.getName(),
+            variableNode.getNamespace(),
+            variableNode.hasModifier(ASModifier.STATIC),
+            variableNode.getVariableType(),
+            assignedValue
+        ));
+        commands.add(generateAccessorCommand);
+    }
+
+    private void createCodeActionForMissingField(TextDocumentIdentifier textDocument, Diagnostic diagnostic, List<Command> commands)
+    {
+        IASNode offsetNode = getOffsetNode(textDocument, diagnostic.getRange().getStart());
+        IIdentifierNode identifierNode = null;
+        if (offsetNode instanceof IIdentifierNode)
+        {
+            identifierNode = (IIdentifierNode) offsetNode;
+        }
+        if (identifierNode == null)
+        {
+            return;
+        }
+
+        String identifierName = identifierNode.getName();
+        Command generateVariableCommand = new Command();
+        generateVariableCommand.setTitle("Generate Field Variable");
+        generateVariableCommand.setCommand(ICommandConstants.GENERATE_FIELD_VARIABLE);
+        generateVariableCommand.setArguments(Arrays.asList(
+            textDocument.getUri(),
+            identifierName
+        ));
+        commands.add(generateVariableCommand);
+    }
+    
+    private void createCodeActionForMissingLocalVariable(TextDocumentIdentifier textDocument, Diagnostic diagnostic, List<Command> commands)
+    {
+        IASNode offsetNode = getOffsetNode(textDocument, diagnostic.getRange().getStart());
+        IIdentifierNode identifierNode = null;
+        if (offsetNode instanceof IIdentifierNode)
+        {
+            identifierNode = (IIdentifierNode) offsetNode;
+        }
+        if (identifierNode == null)
+        {
+            return;
+        }
+
+        String identifierName = identifierNode.getName();
+        Command generateVariableCommand = new Command();
+        generateVariableCommand.setTitle("Generate Local Variable");
+        generateVariableCommand.setCommand(ICommandConstants.GENERATE_LOCAL_VARIABLE);
+        generateVariableCommand.setArguments(Arrays.asList(
+            textDocument.getUri(),
+            identifierName
+        ));
+        commands.add(generateVariableCommand);
+    }
+
+    private void createCodeActionForMissingMethod(TextDocumentIdentifier textDocument, Diagnostic diagnostic, List<Command> commands)
+    {
+        IASNode offsetNode = getOffsetNode(textDocument, diagnostic.getRange().getStart());
+        IFunctionCallNode functionCallNode = null;
+        if (offsetNode instanceof IFunctionCallNode)
+        {
+            functionCallNode = (IFunctionCallNode) offsetNode;
+        }
+        if (offsetNode.getParent() instanceof IFunctionCallNode)
+        {
+            functionCallNode = (IFunctionCallNode) offsetNode.getParent();
+        }
+        if (functionCallNode == null)
+        {
+            return;
+        }
+
+        String functionName = functionCallNode.getFunctionName();
+
+        ArrayList<String> argTypes = new ArrayList<>();
+        for (IExpressionNode arg : functionCallNode.getArgumentNodes())
+        {
+            ITypeDefinition typeDefinition = arg.resolveType(currentProject);
+            if (typeDefinition != null)
+            {
+                argTypes.add(typeDefinition.getBaseName());
+            }
+            else
+            {
+                argTypes.add(IASLanguageConstants.Object);
+            }
+        }
+
+        Command generateMethodCommand = new Command();
+        generateMethodCommand.setTitle("Generate Method");
+        generateMethodCommand.setCommand(ICommandConstants.GENERATE_METHOD);
+        generateMethodCommand.setArguments(Arrays.asList(
+            textDocument.getUri(),
+            functionName,
+            argTypes.toArray()
+        ));
+        commands.add(generateMethodCommand);
     }
 
     private void createCodeActionsForImport(Diagnostic diagnostic, List<Command> commands)
@@ -972,6 +1074,18 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             case ICommandConstants.GENERATE_ACCESSOR:
             {
                 return executeGenerateAccessorCommand(params);
+            }
+            case ICommandConstants.GENERATE_LOCAL_VARIABLE:
+            {
+                return executeGenerateLocalVariableCommand(params);
+            }
+            case ICommandConstants.GENERATE_FIELD_VARIABLE:
+            {
+                return executeGenerateFieldVariableCommand(params);
+            }
+            case ICommandConstants.GENERATE_METHOD:
+            {
+                return executeGenerateMethodCommand(params);
             }
             default:
             {
@@ -2025,6 +2139,50 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         return CompletableFuture.completedFuture(new WorkspaceEdit(new HashMap<>()));
     }
+    
+    private void referencesForDefinitionInCompilationUnit(IDefinition definition, ICompilationUnit compilationUnit, List<Location> result)
+    {
+        if (compilationUnit.getAbsoluteFilename().endsWith(MXML_EXTENSION))
+        {
+            IMXMLDataManager mxmlDataManager = currentWorkspace.getMXMLDataManager();
+            MXMLData mxmlData = (MXMLData) mxmlDataManager.get(fileSpecGetter.getFileSpecification(compilationUnit.getAbsoluteFilename()));
+            IMXMLTagData rootTag = mxmlData.getRootTag();
+            if (rootTag != null)
+            {
+                ArrayList<ISourceLocation> units = new ArrayList<>();
+                findMXMLUnits(mxmlData.getRootTag(), definition, units);
+                for (ISourceLocation otherUnit : units)
+                {
+                    Location location = LanguageServerUtils.getLocationFromSourceLocation(otherUnit);
+                    if (location == null)
+                    {
+                        continue;
+                    }
+                    result.add(location);
+                }
+            }
+        }
+        IASNode ast;
+        try
+        {
+            ast = compilationUnit.getSyntaxTreeRequest().get().getAST();
+        }
+        catch (Exception e)
+        {
+            return;
+        }
+        ArrayList<IIdentifierNode> identifiers = new ArrayList<>();
+        findIdentifiers(ast, definition, identifiers);
+        for (IIdentifierNode otherNode : identifiers)
+        {
+            Location location = LanguageServerUtils.getLocationFromSourceLocation(otherNode);
+            if (location == null)
+            {
+                continue;
+            }
+            result.add(location);
+        }
+    }
 
     private void referencesForDefinition(IDefinition definition, List<Location> result)
     {
@@ -2034,46 +2192,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             {
                 continue;
             }
-            if (compilationUnit.getAbsoluteFilename().endsWith(MXML_EXTENSION))
-            {
-                IMXMLDataManager mxmlDataManager = currentWorkspace.getMXMLDataManager();
-                MXMLData mxmlData = (MXMLData) mxmlDataManager.get(fileSpecGetter.getFileSpecification(compilationUnit.getAbsoluteFilename()));
-                IMXMLTagData rootTag = mxmlData.getRootTag();
-                if (rootTag != null)
-                {
-                    ArrayList<ISourceLocation> units = new ArrayList<>();
-                    findMXMLUnits(mxmlData.getRootTag(), definition, units);
-                    for (ISourceLocation otherUnit : units)
-                    {
-                        Location location = LanguageServerUtils.getLocationFromSourceLocation(otherUnit);
-                        if (location == null)
-                        {
-                            continue;
-                        }
-                        result.add(location);
-                    }
-                }
-            }
-            IASNode ast;
-            try
-            {
-                ast = compilationUnit.getSyntaxTreeRequest().get().getAST();
-            }
-            catch (Exception e)
-            {
-                continue;
-            }
-            ArrayList<IIdentifierNode> identifiers = new ArrayList<>();
-            findIdentifiers(ast, definition, identifiers);
-            for (IIdentifierNode otherNode : identifiers)
-            {
-                Location location = LanguageServerUtils.getLocationFromSourceLocation(otherNode);
-                if (location == null)
-                {
-                    continue;
-                }
-                result.add(location);
-            }
+            referencesForDefinitionInCompilationUnit(definition, compilationUnit, result);
         }
     }
 
@@ -3261,7 +3380,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             qualifiedName,
             importUri,
             importStartIndex,
-            importEndIndex));
+            importEndIndex
+        ));
         return importCommand;
     }
 
@@ -3275,7 +3395,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             uri,
             namespaceUri,
             namespaceStartIndex,
-            namespaceEndIndex));
+            namespaceEndIndex
+        ));
         return xmlnsCommand;
     }
 
@@ -5615,6 +5736,78 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
         languageClient.applyEdit(editParams);
 
+        return CompletableFuture.completedFuture(new Object());
+    }
+    
+    private CompletableFuture<Object> executeGenerateLocalVariableCommand(ExecuteCommandParams params)
+    {
+        List<Object> args = params.getArguments();
+        String path = (String) args.get(0);
+        String name = (String) args.get(1);
+
+        StringBuilder builder = new StringBuilder();
+        builder.append("var ");
+        builder.append(name);
+        builder.append(":");
+        builder.append("Object;");
+        System.out.println("generate local variable: " + builder.toString());
+        return CompletableFuture.completedFuture(new Object());
+    }
+    
+    private CompletableFuture<Object> executeGenerateFieldVariableCommand(ExecuteCommandParams params)
+    {
+        List<Object> args = params.getArguments();
+        String path = (String) args.get(0);
+        String name = (String) args.get(1);
+
+        StringBuilder builder = new StringBuilder();
+        builder.append("public var ");
+        builder.append(name);
+        builder.append(":");
+        builder.append("Object;");
+
+        System.out.println("generate field variable: " + builder.toString());
+        return CompletableFuture.completedFuture(new Object());
+    }
+    
+    private CompletableFuture<Object> executeGenerateMethodCommand(ExecuteCommandParams params)
+    {
+        List<Object> args = params.getArguments();
+        String path = (String) args.get(0);
+        String name = (String) args.get(1);
+        Object uncastArgs = args.get(2);
+        ArrayList<?> methodArgs = null;
+        if (uncastArgs instanceof ArrayList<?>)
+        {
+            methodArgs = (ArrayList<?>) args.get(2);
+        }
+
+        StringBuilder builder = new StringBuilder();
+        builder.append("private function ");
+        builder.append(name);
+        builder.append("(");
+        for (int i = 0, count = methodArgs.size(); i < count; i++)
+        {
+            if(i > 0)
+            {
+                builder.append(", ");
+            }
+            String type = (String) methodArgs.get(i);
+            builder.append("param");
+            builder.append(i);
+            builder.append(":");
+            builder.append(type);
+        }
+        builder.append(")");
+        builder.append(":");
+        builder.append("void");
+        builder.append("\n");
+        builder.append("\t\t");
+        builder.append("{");
+        builder.append("\n");
+        builder.append("\t\t");
+        builder.append("}");
+        System.out.println("generate method: " + builder.toString());
         return CompletableFuture.completedFuture(new Object());
     }
 

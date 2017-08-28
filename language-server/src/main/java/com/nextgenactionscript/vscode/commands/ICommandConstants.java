@@ -18,6 +18,9 @@ package com.nextgenactionscript.vscode.commands;
 public interface ICommandConstants
 {
 	public static final String GENERATE_ACCESSOR = "nextgenas.generateAccessor";
+	public static final String GENERATE_LOCAL_VARIABLE = "nextgenas.generateLocalVariable";
+	public static final String GENERATE_FIELD_VARIABLE = "nextgenas.generateFieldVariable";
+	public static final String GENERATE_METHOD = "nextgenas.generateMethod";
 	public static final String ADD_IMPORT = "nextgenas.addImport";
 	public static final String ADD_MXML_NAMESPACE = "nextgenas.addMXMLNamespace";
 }
