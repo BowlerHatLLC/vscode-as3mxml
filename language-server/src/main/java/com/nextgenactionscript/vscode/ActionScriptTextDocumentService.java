@@ -853,6 +853,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         generateVariableCommand.setCommand(ICommandConstants.GENERATE_FIELD_VARIABLE);
         generateVariableCommand.setArguments(Arrays.asList(
             textDocument.getUri(),
+            diagnostic.getRange().getStart().getLine(),
+            diagnostic.getRange().getStart().getCharacter(),
+            diagnostic.getRange().getEnd().getLine(),
+            diagnostic.getRange().getEnd().getCharacter(),
             identifierName
         ));
         commands.add(generateVariableCommand);
@@ -877,6 +881,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         generateVariableCommand.setCommand(ICommandConstants.GENERATE_LOCAL_VARIABLE);
         generateVariableCommand.setArguments(Arrays.asList(
             textDocument.getUri(),
+            diagnostic.getRange().getStart().getLine(),
+            diagnostic.getRange().getStart().getCharacter(),
+            diagnostic.getRange().getEnd().getLine(),
+            diagnostic.getRange().getEnd().getCharacter(),
             identifierName
         ));
         commands.add(generateVariableCommand);
@@ -920,6 +928,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         generateMethodCommand.setCommand(ICommandConstants.GENERATE_METHOD);
         generateMethodCommand.setArguments(Arrays.asList(
             textDocument.getUri(),
+            diagnostic.getRange().getStart().getLine(),
+            diagnostic.getRange().getStart().getCharacter(),
+            diagnostic.getRange().getEnd().getLine(),
+            diagnostic.getRange().getEnd().getCharacter(),
             functionName,
             argTypes.toArray()
         ));
@@ -5750,47 +5762,167 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private CompletableFuture<Object> executeGenerateLocalVariableCommand(ExecuteCommandParams params)
     {
         List<Object> args = params.getArguments();
-        String path = (String) args.get(0);
-        String name = (String) args.get(1);
+        String uri = (String) args.get(0);
+        int startLine = ((Double) args.get(1)).intValue();
+        int startChar = ((Double) args.get(2)).intValue();
+        int endLine = ((Double) args.get(3)).intValue();
+        int endChar = ((Double) args.get(4)).intValue();
+        String name = (String) args.get(5);
 
+        TextDocumentIdentifier identifier = new TextDocumentIdentifier(uri);
+        Position position = new Position(startLine, startChar);
+        IASNode offsetNode = getOffsetNode(identifier, position);
+        if (offsetNode == null)
+        {
+            return CompletableFuture.completedFuture(new Object());
+        }
+        IFunctionNode functionNode = (IFunctionNode) offsetNode.getAncestorOfType(IFunctionNode.class);
+        if (functionNode == null)
+        {
+            return CompletableFuture.completedFuture(new Object());
+        }
+        IScopedNode scopedNode = functionNode.getScopedNode();
+        if (scopedNode == null)
+        {
+            return CompletableFuture.completedFuture(new Object());
+        }
+
+        String newLine = "\n";
+        String indent = "\t\t\t";
         StringBuilder builder = new StringBuilder();
+        builder.append(newLine);
+        builder.append(indent);
         builder.append("var ");
         builder.append(name);
         builder.append(":");
-        builder.append("Object;");
-        System.out.println("generate local variable: " + builder.toString());
+        builder.append(IASLanguageConstants.Object);
+        builder.append(";");
+        
+        ApplyWorkspaceEditParams editParams = new ApplyWorkspaceEditParams();
+        
+        WorkspaceEdit workspaceEdit = new WorkspaceEdit();
+        editParams.setEdit(workspaceEdit);
+
+        HashMap<String,List<TextEdit>> changes = new HashMap<>();
+        workspaceEdit.setChanges(changes);
+
+        List<TextEdit> edits = new ArrayList<>();
+        changes.put(uri, edits);
+
+        TextEdit edit = new TextEdit();
+        edits.add(edit);
+
+        edit.setNewText(builder.toString());
+        Position editPosition = new Position(scopedNode.getLine(), scopedNode.getColumn() + 1);
+        edit.setRange(new Range(editPosition, editPosition));
+
+        languageClient.applyEdit(editParams);
+
         return CompletableFuture.completedFuture(new Object());
     }
     
     private CompletableFuture<Object> executeGenerateFieldVariableCommand(ExecuteCommandParams params)
     {
         List<Object> args = params.getArguments();
-        String path = (String) args.get(0);
-        String name = (String) args.get(1);
+        String uri = (String) args.get(0);
+        int startLine = ((Double) args.get(1)).intValue();
+        int startChar = ((Double) args.get(2)).intValue();
+        int endLine = ((Double) args.get(3)).intValue();
+        int endChar = ((Double) args.get(4)).intValue();
+        String name = (String) args.get(5);
+        
+        TextDocumentIdentifier identifier = new TextDocumentIdentifier(uri);
+        Position position = new Position(startLine, startChar);
+        IASNode offsetNode = getOffsetNode(identifier, position);
+        if (offsetNode == null)
+        {
+            return CompletableFuture.completedFuture(new Object());
+        }
+        IClassNode classNode = (IClassNode) offsetNode.getAncestorOfType(IClassNode.class);
+        if (classNode == null)
+        {
+            return CompletableFuture.completedFuture(new Object());
+        }
+        IScopedNode scopedNode = classNode.getScopedNode();
+        if (scopedNode == null)
+        {
+            return CompletableFuture.completedFuture(new Object());
+        }
 
+        String indent = "\t\t";
+        String newLine = "\n";
         StringBuilder builder = new StringBuilder();
+        builder.append(newLine);
+        builder.append(indent);
         builder.append("public var ");
         builder.append(name);
         builder.append(":");
-        builder.append("Object;");
+        builder.append(IASLanguageConstants.Object);
+        builder.append(";");
+        builder.append(newLine);
+        
+        ApplyWorkspaceEditParams editParams = new ApplyWorkspaceEditParams();
+        
+        WorkspaceEdit workspaceEdit = new WorkspaceEdit();
+        editParams.setEdit(workspaceEdit);
 
-        System.out.println("generate field variable: " + builder.toString());
+        HashMap<String,List<TextEdit>> changes = new HashMap<>();
+        workspaceEdit.setChanges(changes);
+
+        List<TextEdit> edits = new ArrayList<>();
+        changes.put(uri, edits);
+
+        TextEdit edit = new TextEdit();
+        edits.add(edit);
+
+        edit.setNewText(builder.toString());
+        Position editPosition = new Position(scopedNode.getEndLine(), 0);
+        edit.setRange(new Range(editPosition, editPosition));
+
+        languageClient.applyEdit(editParams);
+
         return CompletableFuture.completedFuture(new Object());
     }
     
     private CompletableFuture<Object> executeGenerateMethodCommand(ExecuteCommandParams params)
     {
         List<Object> args = params.getArguments();
-        String path = (String) args.get(0);
-        String name = (String) args.get(1);
-        Object uncastArgs = args.get(2);
+        String uri = (String) args.get(0);
+        int startLine = ((Double) args.get(1)).intValue();
+        int startChar = ((Double) args.get(2)).intValue();
+        int endLine = ((Double) args.get(3)).intValue();
+        int endChar = ((Double) args.get(4)).intValue();
+        String name = (String) args.get(5);
+        Object uncastArgs = args.get(6);
         ArrayList<?> methodArgs = null;
         if (uncastArgs instanceof ArrayList<?>)
         {
-            methodArgs = (ArrayList<?>) args.get(2);
+            methodArgs = (ArrayList<?>) uncastArgs;
         }
 
+        TextDocumentIdentifier identifier = new TextDocumentIdentifier(uri);
+        Position position = new Position(startLine, startChar);
+        IASNode offsetNode = getOffsetNode(identifier, position);
+        if (offsetNode == null)
+        {
+            return CompletableFuture.completedFuture(new Object());
+        }
+        IClassNode classNode = (IClassNode) offsetNode.getAncestorOfType(IClassNode.class);
+        if (classNode == null)
+        {
+            return CompletableFuture.completedFuture(new Object());
+        }
+        IScopedNode scopedNode = classNode.getScopedNode();
+        if (scopedNode == null)
+        {
+            return CompletableFuture.completedFuture(new Object());
+        }
+
+        String newLine = "\n";
+        String indent = "\t\t";
         StringBuilder builder = new StringBuilder();
+        builder.append(newLine);
+        builder.append(indent);
         builder.append("private function ");
         builder.append(name);
         builder.append("(");
@@ -5808,14 +5940,35 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         builder.append(")");
         builder.append(":");
-        builder.append("void");
-        builder.append("\n");
-        builder.append("\t\t");
+        builder.append(IASLanguageConstants.void_);
+        builder.append(newLine);
+        builder.append(indent);
         builder.append("{");
-        builder.append("\n");
-        builder.append("\t\t");
+        builder.append(newLine);
+        builder.append(indent);
         builder.append("}");
-        System.out.println("generate method: " + builder.toString());
+        builder.append(newLine);
+
+        ApplyWorkspaceEditParams editParams = new ApplyWorkspaceEditParams();
+        
+        WorkspaceEdit workspaceEdit = new WorkspaceEdit();
+        editParams.setEdit(workspaceEdit);
+
+        HashMap<String,List<TextEdit>> changes = new HashMap<>();
+        workspaceEdit.setChanges(changes);
+
+        List<TextEdit> edits = new ArrayList<>();
+        changes.put(uri, edits);
+
+        TextEdit edit = new TextEdit();
+        edits.add(edit);
+
+        edit.setNewText(builder.toString());
+        Position editPosition = new Position(scopedNode.getEndLine(), 0);
+        edit.setRange(new Range(editPosition, editPosition));
+
+        languageClient.applyEdit(editParams);
+
         return CompletableFuture.completedFuture(new Object());
     }
 
