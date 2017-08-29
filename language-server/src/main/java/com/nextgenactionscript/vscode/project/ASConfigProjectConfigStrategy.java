@@ -247,6 +247,14 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy
                     {
                         compilerOptions.warnings = jsonCompilerOptions.get(CompilerOptions.WARNINGS).asBoolean();
                     }
+                    if (jsonCompilerOptions.has(CompilerOptions.SWF_VERSION))
+                    {
+                        compilerOptions.swfVersion = jsonCompilerOptions.get(CompilerOptions.SWF_VERSION).asInt();
+                    }
+                    if (jsonCompilerOptions.has(CompilerOptions.TARGET_PLAYER))
+                    {
+                        compilerOptions.targetPlayer = jsonCompilerOptions.get(CompilerOptions.TARGET_PLAYER).asText();
+                    }
                 }
                 //these options are formatted as if sent in through the command line
                 if (json.has(ProjectOptions.ADDITIONAL_OPTIONS)) //optional

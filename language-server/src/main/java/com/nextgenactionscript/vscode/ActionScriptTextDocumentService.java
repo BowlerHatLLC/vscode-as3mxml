@@ -4307,6 +4307,14 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             appendPathCompilerOptions("--js-library-path+=", compilerOptions.jsLibraryPath, combinedOptions);
         }
+        if (compilerOptions.swfVersion != -1)
+        {
+            combinedOptions.add("--swf-version=" + compilerOptions.swfVersion);
+        }
+        if (compilerOptions.targetPlayer != null)
+        {
+            combinedOptions.add("--target-player=" + compilerOptions.targetPlayer);
+        }
         if (additionalOptions != null)
         {
             //split the additionalOptions into separate values so that we can

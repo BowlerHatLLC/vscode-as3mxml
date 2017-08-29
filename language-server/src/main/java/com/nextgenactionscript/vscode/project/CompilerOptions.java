@@ -48,7 +48,9 @@ public class CompilerOptions
     public static final String SOURCE_PATH = "source-path";
     public static final String SWF_EXTERNAL_LIBRARY_PATH = "swf-external-library-path";
     public static final String SWF_LIBRARY_PATH = "swf-library-path";
+    public static final String SWF_VERSION = "swf-version";
     public static final String TARGETS = "targets";
+    public static final String TARGET_PLAYER = "target-player";
     public static final String WARNINGS = "warnings";
 
     public boolean debug = true;
@@ -67,4 +69,6 @@ public class CompilerOptions
     public Collection<File> swfLibraryPath;
     public List<String> targets;
     public boolean warnings = true;
+    public int swfVersion = -1;
+    public String targetPlayer;
 }
