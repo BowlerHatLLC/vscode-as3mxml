@@ -774,6 +774,16 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     createCodeActionsForImport(diagnostic, commands);
                     break;
                 }
+                case "1061": //StrictUndefinedMethodProblem
+                {
+                    createCodeActionForMissingMethod(textDocument, diagnostic, commands);
+                    break;
+                }
+                case "1119": //AccessUndefinedMemberProblem
+                {
+                    createCodeActionForMissingField(textDocument, diagnostic, commands);
+                    break;
+                }
                 case "1178": //InaccessiblePropertyReferenceProblem
                 {
                     //see if there's anything we can import
@@ -840,7 +850,24 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         IIdentifierNode identifierNode = null;
         if (offsetNode instanceof IIdentifierNode)
         {
-            identifierNode = (IIdentifierNode) offsetNode;
+            IASNode parentNode = offsetNode.getParent();
+            if (parentNode instanceof IMemberAccessExpressionNode)
+            {
+                IMemberAccessExpressionNode memberAccessExpressionNode = (IMemberAccessExpressionNode) offsetNode.getParent();
+                IExpressionNode leftOperandNode = memberAccessExpressionNode.getLeftOperandNode();
+                if (leftOperandNode instanceof IIdentifierNode)
+                {
+                    IIdentifierNode leftIdentifierNode = (IIdentifierNode) leftOperandNode;
+                    if (leftIdentifierNode.getName().equals(IASKeywordConstants.THIS))
+                    {
+                        identifierNode = (IIdentifierNode) offsetNode;
+                    }
+                }
+            }
+            else //no member access
+            {
+                identifierNode = (IIdentifierNode) offsetNode;
+            }
         }
         if (identifierNode == null)
         {
@@ -893,21 +920,40 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private void createCodeActionForMissingMethod(TextDocumentIdentifier textDocument, Diagnostic diagnostic, List<Command> commands)
     {
         IASNode offsetNode = getOffsetNode(textDocument, diagnostic.getRange().getStart());
+        IASNode parentNode = offsetNode.getParent();
         IFunctionCallNode functionCallNode = null;
+        String functionName = null;
         if (offsetNode instanceof IFunctionCallNode)
         {
             functionCallNode = (IFunctionCallNode) offsetNode;
+            functionName = functionCallNode.getFunctionName();
         }
-        if (offsetNode.getParent() instanceof IFunctionCallNode)
+        else if (parentNode instanceof IFunctionCallNode)
         {
             functionCallNode = (IFunctionCallNode) offsetNode.getParent();
+            functionName = functionCallNode.getFunctionName();
         }
-        if (functionCallNode == null)
+        else if(offsetNode instanceof IIdentifierNode
+                && parentNode instanceof IMemberAccessExpressionNode)
+        {
+            IMemberAccessExpressionNode memberAccessExpressionNode = (IMemberAccessExpressionNode) offsetNode.getParent();
+            IExpressionNode leftOperandNode = memberAccessExpressionNode.getLeftOperandNode();
+            if (leftOperandNode instanceof IIdentifierNode)
+            {
+                IIdentifierNode leftIdentifierNode = (IIdentifierNode) leftOperandNode;
+                IASNode gpNode = parentNode.getParent();
+                if (leftIdentifierNode.getName().equals(IASKeywordConstants.THIS) && gpNode instanceof IFunctionCallNode)
+                {
+                    functionCallNode = (IFunctionCallNode) gpNode;
+                    IIdentifierNode rightIdentifierNode = (IIdentifierNode) offsetNode;
+                    functionName = rightIdentifierNode.getName();
+                }
+            }
+        }
+        if (functionCallNode == null || functionName == null || functionName.length() == 0)
         {
             return;
         }
-
-        String functionName = functionCallNode.getFunctionName();
 
         ArrayList<String> argTypes = new ArrayList<>();
         for (IExpressionNode arg : functionCallNode.getArgumentNodes())
