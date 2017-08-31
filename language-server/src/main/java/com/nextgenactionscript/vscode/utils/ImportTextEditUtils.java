@@ -32,8 +32,14 @@ public class ImportTextEditUtils
 	public static TextEdit createTextEditForImport(String qualifiedName, String text, int startIndex, int endIndex)
 	{
         Matcher importMatcher = importPattern.matcher(text);
-        if (startIndex != -1)
+        if (startIndex != -1 || endIndex != -1)
         {
+            if(startIndex == -1)
+            {
+                //if startIndex equals -1, but endIndex doesn't,
+                //and startIndex should default to 0
+                startIndex = 0;
+            }
             int endRegion = endIndex;
             if (endRegion == -1)
             {
