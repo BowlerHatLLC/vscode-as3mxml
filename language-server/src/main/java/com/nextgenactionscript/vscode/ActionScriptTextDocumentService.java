@@ -139,6 +139,8 @@ import org.apache.flex.compiler.units.IInvisibleCompilationUnit;
 import org.apache.flex.compiler.workspaces.IWorkspace;
 
 import com.google.common.io.Files;
+import com.nextgenactionscript.vscode.asdoc.VSCodeASDocComment;
+import com.nextgenactionscript.vscode.asdoc.VSCodeASDocDelegate;
 import com.nextgenactionscript.vscode.commands.ICommandConstants;
 import com.nextgenactionscript.vscode.commands.ICommandHintCodes;
 import com.nextgenactionscript.vscode.mxml.IMXMLLibraryConstants;
@@ -1907,7 +1909,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         String detail = getDefinitionDetail(definition);
         List<Either<String,MarkedString>> contents = new ArrayList<>();
         contents.add(Either.forLeft(MARKDOWN_CODE_BLOCK_NEXTGENAS_START + detail + MARKDOWN_CODE_BLOCK_END));
-        String docs = getDocumentationForDefinition(definition);
+        String docs = getDocumentationForDefinition(definition, true);
         if(docs != null)
         {
             contents.add(Either.forLeft(docs));
@@ -3325,7 +3327,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         item.setKind(getDefinitionKind(definition));
         item.setDetail(getDefinitionDetail(definition));
         item.setLabel(definition.getBaseName());
-        String docs = getDocumentationForDefinition(definition);
+        String docs = getDocumentationForDefinition(definition, false);
         if (docs != null)
         {
             item.setDocumentation(docs);
@@ -3352,7 +3354,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         item.setKind(getDefinitionKind(definition));
         item.setDetail(getDefinitionDetail(definition));
         item.setLabel(definition.getBaseName());
-        String docs = getDocumentationForDefinition(definition);
+        String docs = getDocumentationForDefinition(definition, false);
         if (docs != null)
         {
             item.setDocumentation(docs);
@@ -3368,30 +3370,24 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         result.getItems().add(item);
     }
     
-    private String getDocumentationForDefinition(IDefinition definition)
+    private String getDocumentationForDefinition(IDefinition definition, boolean useMarkdown)
     {
         if (!(definition instanceof IDocumentableDefinition))
         {
             return null;
         }
         IDocumentableDefinition documentableDefinition = (IDocumentableDefinition) definition;
-        IASDocComment comment = documentableDefinition.getExplicitSourceComment();
+        VSCodeASDocComment comment = (VSCodeASDocComment) documentableDefinition.getExplicitSourceComment();
         if (comment == null)
         {
             return null;
         }
-        comment.compile();
+        comment.compile(useMarkdown);
         String description = comment.getDescription();
         if (description == null)
         {
             return null;
         }
-        int endOfFirstSentence = description.indexOf(". ");
-        if (endOfFirstSentence != -1)
-        {
-            description = description.substring(0, endOfFirstSentence + 1);
-        }
-        description = description.replaceAll("<\\/{0,1}\\w+\\/{0,1}>", "");
         return description;
     }
 
@@ -4324,7 +4320,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             project.setProblems(new ArrayList<>());
             currentWorkspace = project.getWorkspace();
-            currentWorkspace.setASDocDelegate(new FlexJSASDocDelegate());
+            currentWorkspace.setASDocDelegate(new VSCodeASDocDelegate());
             fileSpecGetter = new LanguageServerFileSpecGetter(currentWorkspace, sourceByPath);
         }
         else
