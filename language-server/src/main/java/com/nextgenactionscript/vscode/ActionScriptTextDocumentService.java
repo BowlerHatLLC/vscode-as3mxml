@@ -121,6 +121,7 @@ import org.apache.flex.compiler.tree.as.IIdentifierNode;
 import org.apache.flex.compiler.tree.as.IImportNode;
 import org.apache.flex.compiler.tree.as.IInterfaceNode;
 import org.apache.flex.compiler.tree.as.IKeywordNode;
+import org.apache.flex.compiler.tree.as.ILanguageIdentifierNode;
 import org.apache.flex.compiler.tree.as.IMemberAccessExpressionNode;
 import org.apache.flex.compiler.tree.as.INamespaceDecorationNode;
 import org.apache.flex.compiler.tree.as.IPackageNode;
@@ -857,10 +858,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             {
                 IMemberAccessExpressionNode memberAccessExpressionNode = (IMemberAccessExpressionNode) offsetNode.getParent();
                 IExpressionNode leftOperandNode = memberAccessExpressionNode.getLeftOperandNode();
-                if (leftOperandNode instanceof IIdentifierNode)
+                if (leftOperandNode instanceof ILanguageIdentifierNode)
                 {
-                    IIdentifierNode leftIdentifierNode = (IIdentifierNode) leftOperandNode;
-                    if (leftIdentifierNode.getName().equals(IASKeywordConstants.THIS))
+                    ILanguageIdentifierNode leftIdentifierNode = (ILanguageIdentifierNode) leftOperandNode;
+                    if (leftIdentifierNode.getKind() == ILanguageIdentifierNode.LanguageIdentifierKind.THIS)
                     {
                         identifierNode = (IIdentifierNode) offsetNode;
                     }
@@ -940,11 +941,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             IMemberAccessExpressionNode memberAccessExpressionNode = (IMemberAccessExpressionNode) offsetNode.getParent();
             IExpressionNode leftOperandNode = memberAccessExpressionNode.getLeftOperandNode();
-            if (leftOperandNode instanceof IIdentifierNode)
+            if (leftOperandNode instanceof ILanguageIdentifierNode)
             {
-                IIdentifierNode leftIdentifierNode = (IIdentifierNode) leftOperandNode;
+                ILanguageIdentifierNode leftIdentifierNode = (ILanguageIdentifierNode) leftOperandNode;
                 IASNode gpNode = parentNode.getParent();
-                if (leftIdentifierNode.getName().equals(IASKeywordConstants.THIS) && gpNode instanceof IFunctionCallNode)
+                if (leftIdentifierNode.getKind() == ILanguageIdentifierNode.LanguageIdentifierKind.THIS
+                        && gpNode instanceof IFunctionCallNode)
                 {
                     functionCallNode = (IFunctionCallNode) gpNode;
                     IIdentifierNode rightIdentifierNode = (IIdentifierNode) offsetNode;
