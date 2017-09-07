@@ -141,6 +141,12 @@ export function activate(context: vscode.ExtensionContext)
 	vscode.workspace.onDidChangeConfiguration(onDidChangeConfiguration);
 	vscode.commands.registerCommand("nextgenas.createASConfigTaskRunner", () =>
 	{
+		let asconfigPath = path.resolve(vscode.workspace.rootPath, "asconfig.json");
+		if(!fs.existsSync(asconfigPath))
+		{
+			vscode.window.showErrorMessage("Failed to configure task runner. No asconfig.json file found at root of project.");
+			return;
+		}
 		//this command is deprecated
 		vscode.commands.executeCommand("workbench.action.tasks.configureDefaultBuildTask");
 	});
