@@ -229,7 +229,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private static final String SDK_SOURCE_PATH_SIGNATURE_UNIX = "/frameworks/projects/";
     private static final String SDK_SOURCE_PATH_SIGNATURE_WINDOWS = "\\frameworks\\projects\\";
     private static final String FLEXLIB = "flexlib";
-    private static final String PACKAGE_NAME_NO_IMPORT = "__AS3__.";
+    private static final String UNDERSCORE_UNDERSCORE_AS3_PACKAGE = "__AS3__.";
     private static final String VECTOR_HIDDEN_PREFIX = "Vector$";
 
     private static final String[] LANGUAGE_TYPE_NAMES =
@@ -279,9 +279,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private IWorkspace currentWorkspace;
     private ProjectOptions currentProjectOptions;
     private int currentOffset = -1;
-    private int importStartIndex = -1;
-    private int importEndIndex = -1;
-    private String importUri;
+    private ImportRange importRange = new ImportRange();
     private int namespaceStartIndex = -1;
     private int namespaceEndIndex = -1;
     private String namespaceUri;
@@ -965,7 +963,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             ITypeDefinition typeDefinition = arg.resolveType(currentProject);
             if (typeDefinition != null)
             {
-                argTypes.add(typeDefinition.getBaseName());
+                argTypes.add(typeDefinition.getQualifiedName());
             }
             else
             {
@@ -2331,7 +2329,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
 
         //special case for the __AS3__ package
-        if (packageName != null && packageName.startsWith(PACKAGE_NAME_NO_IMPORT))
+        if (packageName != null && packageName.startsWith(UNDERSCORE_UNDERSCORE_AS3_PACKAGE))
         {
             //anything in this package is in the language namespace
             String fxNamespace = mxmlData.getRootTag().getMXMLDialect().getLanguageNamespace();
@@ -3424,8 +3422,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         String packageName = definition.getPackageName();
         if (packageName == null
                 || packageName.isEmpty()
-                || packageName.startsWith(PACKAGE_NAME_NO_IMPORT))
+                || packageName.startsWith(UNDERSCORE_UNDERSCORE_AS3_PACKAGE))
         {
+            //don't even bother with these things that don't need importing
             return null;
         }
         String qualifiedName = definition.getQualifiedName();
@@ -3434,9 +3433,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         importCommand.setCommand(ICommandConstants.ADD_IMPORT);
         importCommand.setArguments(Arrays.asList(
             qualifiedName,
-            importUri,
-            importStartIndex,
-            importEndIndex
+            importRange.uri,
+            importRange.startIndex,
+            importRange.endIndex
         ));
         return importCommand;
     }
@@ -4749,8 +4748,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return null;
         }
         currentOffset = -1;
-        importStartIndex = -1;
-        importEndIndex = -1;
+        importRange.uri = null;
+        importRange.startIndex = -1;
+        importRange.endIndex = -1;
         Path path = LanguageServerUtils.getPathFromLanguageServerURI(uri);
         if (path == null)
         {
@@ -4839,8 +4839,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     IMXMLTextData textUnitData = (IMXMLTextData) unitData;
                     if (textUnitData.getTextType() == IMXMLTextData.TextType.CDATA)
                     {
-                        importStartIndex = textUnitData.getCompilableTextStart();
-                        importEndIndex = textUnitData.getCompilableTextEnd();
+                        importRange.startIndex = textUnitData.getCompilableTextStart();
+                        importRange.endIndex = textUnitData.getCompilableTextEnd();
                     }
                 }
                 return tagData;
@@ -4863,8 +4863,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             //if we're in an <fx:Script> element, these will have been
             //previously calculated, so don't clear them
-            importStartIndex = -1;
-            importEndIndex = -1;
+            importRange.uri = null;
+            importRange.startIndex = -1;
+            importRange.endIndex = -1;
         }
         Path path = LanguageServerUtils.getPathFromLanguageServerURI(textDocument.getUri());
         if (path == null)
@@ -4919,6 +4920,20 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return null;
         }
         IASNode offsetNode = getContainingNodeIncludingStart(ast, currentOffset);
+        importRange = getImportRange(offsetNode);
+        return offsetNode;
+    }
+    
+    private class ImportRange
+    {
+        public String uri = null;
+        public int startIndex = -1;
+        public int endIndex = -1;
+    }
+    
+    private ImportRange getImportRange(IASNode offsetNode)
+    {
+        ImportRange range = new ImportRange();
         if (offsetNode != null)
         {
             //if we have an offset node, try to find where imports may be added
@@ -4935,7 +4950,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                         if (foundPackage)
                         {
                             //this is the node following the package
-                            importStartIndex = childNode.getAbsoluteStart();
+                            range.startIndex = childNode.getAbsoluteStart();
                             break;
                         }
                         if (childNode instanceof IPackageNode)
@@ -4949,11 +4964,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             else
             {
-                importEndIndex = packageNode.getAbsoluteEnd();
+                range.endIndex = packageNode.getAbsoluteEnd();
             }
-            importUri = textDocument.getUri();
+            range.uri = Paths.get(offsetNode.getSourcePath()).toUri().toString();
         }
-        return offsetNode;
+        return range;
     }
 
     private boolean containsWithStart(IASNode node, int offset)
@@ -5216,7 +5231,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             detailBuilder.append(IASKeywordConstants.CLASS);
             detailBuilder.append(" ");
-            if (classDefinition.getPackageName().startsWith(PACKAGE_NAME_NO_IMPORT))
+            if (classDefinition.getPackageName().startsWith(UNDERSCORE_UNDERSCORE_AS3_PACKAGE))
             {
                 //classes like __AS3__.vec.Vector should not include the
                 //package name
@@ -5961,38 +5976,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return CompletableFuture.completedFuture(new Object());
         }
-
-        String newLine = "\n";
-        String indent = "\t\t";
-        StringBuilder builder = new StringBuilder();
-        builder.append(newLine);
-        builder.append(indent);
-        builder.append("private function ");
-        builder.append(name);
-        builder.append("(");
-        for (int i = 0, count = methodArgs.size(); i < count; i++)
-        {
-            if(i > 0)
-            {
-                builder.append(", ");
-            }
-            String type = (String) methodArgs.get(i);
-            builder.append("param");
-            builder.append(i);
-            builder.append(":");
-            builder.append(type);
-        }
-        builder.append(")");
-        builder.append(":");
-        builder.append(IASLanguageConstants.void_);
-        builder.append(newLine);
-        builder.append(indent);
-        builder.append("{");
-        builder.append(newLine);
-        builder.append(indent);
-        builder.append("}");
-        builder.append(newLine);
-
+        
         ApplyWorkspaceEditParams editParams = new ApplyWorkspaceEditParams();
         
         WorkspaceEdit workspaceEdit = new WorkspaceEdit();
@@ -6006,6 +5990,53 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
         TextEdit edit = new TextEdit();
         edits.add(edit);
+
+        String newLine = "\n";
+        String indent = "\t\t";
+        StringBuilder builder = new StringBuilder();
+        builder.append(newLine);
+        builder.append(indent);
+        builder.append("private function ");
+        builder.append(name);
+        builder.append("(");
+        ImportRange importRange = getImportRange(offsetNode);
+        Path pathForImport = Paths.get(URI.create(uri));
+        String fileText = sourceByPath.get(pathForImport);
+        for (int i = 0, count = methodArgs.size(); i < count; i++)
+        {
+            if(i > 0)
+            {
+                builder.append(", ");
+            }
+            String type = (String) methodArgs.get(i);
+            builder.append("param");
+            builder.append(i);
+            builder.append(":");
+            int index = type.lastIndexOf(".");
+            if (index == -1)
+            {
+                builder.append(type);
+            }
+            else
+            {
+                builder.append(type.substring(index + 1));
+            }
+            TextEdit importEdit = ImportTextEditUtils.createTextEditForImport(type, fileText, importRange.startIndex, importRange.endIndex);
+            if (importEdit != null)
+            {
+                edits.add(importEdit);
+            }
+        }
+        builder.append(")");
+        builder.append(":");
+        builder.append(IASLanguageConstants.void_);
+        builder.append(newLine);
+        builder.append(indent);
+        builder.append("{");
+        builder.append(newLine);
+        builder.append(indent);
+        builder.append("}");
+        builder.append(newLine);
 
         edit.setNewText(builder.toString());
         Position editPosition = new Position(scopedNode.getEndLine(), 0);

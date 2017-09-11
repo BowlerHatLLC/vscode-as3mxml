@@ -28,9 +28,20 @@ public class ImportTextEditUtils
     private static final Pattern importPattern = Pattern.compile("(?m)^([ \\t]*)import ([\\w\\.]+)");
     private static final Pattern indentPattern = Pattern.compile("(?m)^([ \\t]*)\\w");
     private static final Pattern packagePattern = Pattern.compile("(?m)^package( [\\w\\.]+)*\\s*\\{[\\r\\n]+([ \\t]*)");
+    private static final String UNDERSCORE_UNDERSCORE_AS3_PACKAGE = "__AS3__.";
 
 	public static TextEdit createTextEditForImport(String qualifiedName, String text, int startIndex, int endIndex)
 	{
+        if(qualifiedName.lastIndexOf(".") == -1)
+        {
+            //if it's not in a package, it doesn't need to be imported
+            return null;
+        }
+        if(qualifiedName.startsWith(UNDERSCORE_UNDERSCORE_AS3_PACKAGE))
+        {
+            //things in this package don't need to be imported
+            return null;
+        }
         Matcher importMatcher = importPattern.matcher(text);
         if (startIndex != -1 || endIndex != -1)
         {
