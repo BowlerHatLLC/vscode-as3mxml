@@ -41,6 +41,7 @@ const INVALID_JAVA_ERROR = "nextgenas.java in settings does not point to a valid
 const MISSING_JAVA_ERROR = "Could not locate valid Java executable. To configure Java manually, use the nextgenas.java setting.";
 const MISSING_WORKSPACE_ROOT_ERROR = "Open a folder and create a file named asconfig.json to enable all ActionScript and MXML language features.";
 const RESTART_MESSAGE = "To apply new settings for ActionScript and MXML, please restart Visual Studio Code.";
+const INITIALIZING_MESSAGE = "Initializing ActionScript and MXML language server...";
 const RESTART_BUTTON_LABEL = "Restart Now";
 const CONFIGURE_SDK_LABEL = "Configure SDK";
 const NO_SDK = "$(alert) No SDK";
@@ -439,7 +440,7 @@ function startClient()
 	{
 		return new Promise((resolve, reject) =>
 		{
-			progress.report({message: "Initializing ActionScript and MXML language server..."});
+			progress.report({message: INITIALIZING_MESSAGE});
 			let clientOptions: LanguageClientOptions =
 			{
 				documentSelector:
@@ -523,7 +524,6 @@ function startClient()
 			let languageClient = new LanguageClient("nextgenas", "ActionScript and MXML Language Server", createLanguageServer, clientOptions);
 			languageClient.onReady().then(() =>
 			{
-				progress.report({message: "Initialization complete!"});
 				resolve();
 			});
 			let disposable = languageClient.start();
