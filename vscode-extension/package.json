@@ -149,10 +149,13 @@
           ".as"
         ],
         "aliases": [
-          "NextGen ActionScript",
-          "NextGenAS",
           "ActionScript",
-          "as"
+          "AS3",
+          "as3",
+          "AS",
+          "as",
+          "NextGenAS",
+          "NextGen ActionScript"
         ],
         "configuration": "./nextgenas.configuration.json"
       },
