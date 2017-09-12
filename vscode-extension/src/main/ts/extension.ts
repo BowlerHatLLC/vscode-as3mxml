@@ -435,87 +435,99 @@ function startClient()
 		return;
 	}
 
-	let clientOptions: LanguageClientOptions =
+	vscode.window.withProgress({location: vscode.ProgressLocation.Window}, (progress) =>
 	{
-		documentSelector:
-		[
-			"nextgenas",
-			"mxml"
-		],
-		synchronize:
+		return new Promise((resolve, reject) =>
 		{
-			configurationSection: "nextgenas",
-			//the server will be notified when these files change
-			fileEvents:
-			[
-				vscode.workspace.createFileSystemWatcher("**/asconfig.json"),
-				vscode.workspace.createFileSystemWatcher("**/*.as"),
-				vscode.workspace.createFileSystemWatcher("**/*.mxml"),
-			]
-		},
-		errorHandler: new CustomErrorHandler("ActionScript and MXML")
-	};
-	vscode.languages.setLanguageConfiguration("nextgenas",
-	{
-		//this code is MIT licensed from Microsoft's official TypeScript
-		//extension that's built into VSCode
-		//https://github.com/Microsoft/vscode/blob/9d611d4dfd5a4a101b5201b8c9e21af97f06e7a7/extensions/typescript/src/typescriptMain.ts#L186
-		"onEnterRules":
-		[
+			progress.report({message: "Initializing ActionScript and MXML language server..."});
+			let clientOptions: LanguageClientOptions =
 			{
-				beforeText: /^\s*\/\*\*(?!\/)([^\*]|\*(?!\/))*$/,
-				afterText: /^\s*\*\/$/,
-				action:
+				documentSelector:
+				[
+					"nextgenas",
+					"mxml"
+				],
+				synchronize:
 				{
-					//if you press enter between /** and */ on the same line,
-					//it will insert a * on the next line
-					indentAction: vscode.IndentAction.IndentOutdent,
-					appendText: " * "
-				}
-			},
+					configurationSection: "nextgenas",
+					//the server will be notified when these files change
+					fileEvents:
+					[
+						vscode.workspace.createFileSystemWatcher("**/asconfig.json"),
+						vscode.workspace.createFileSystemWatcher("**/*.as"),
+						vscode.workspace.createFileSystemWatcher("**/*.mxml"),
+					]
+				},
+				errorHandler: new CustomErrorHandler("ActionScript and MXML")
+			};
+			vscode.languages.setLanguageConfiguration("nextgenas",
 			{
-				beforeText: /^\s*\/\*\*(?!\/)([^\*]|\*(?!\/))*$/,
-				action:
-				{
-					//if you press enter after /**, when there is no */, it
-					//will insert a * on the next line
-					indentAction: vscode.IndentAction.None,
-					appendText: " * "
-				}
-			},
+				//this code is MIT licensed from Microsoft's official TypeScript
+				//extension that's built into VSCode
+				//https://github.com/Microsoft/vscode/blob/9d611d4dfd5a4a101b5201b8c9e21af97f06e7a7/extensions/typescript/src/typescriptMain.ts#L186
+				"onEnterRules":
+				[
+					{
+						beforeText: /^\s*\/\*\*(?!\/)([^\*]|\*(?!\/))*$/,
+						afterText: /^\s*\*\/$/,
+						action:
+						{
+							//if you press enter between /** and */ on the same line,
+							//it will insert a * on the next line
+							indentAction: vscode.IndentAction.IndentOutdent,
+							appendText: " * "
+						}
+					},
+					{
+						beforeText: /^\s*\/\*\*(?!\/)([^\*]|\*(?!\/))*$/,
+						action:
+						{
+							//if you press enter after /**, when there is no */, it
+							//will insert a * on the next line
+							indentAction: vscode.IndentAction.None,
+							appendText: " * "
+						}
+					},
+					{
+						beforeText: /^(\t|(\ \ ))*\ \*(\ ([^\*]|\*(?!\/))*)?$/,
+						action:
+						{
+							//if you press enter on a line with *, it will insert
+							//another * on the next line
+							indentAction: vscode.IndentAction.None,
+							appendText: "* "
+						}
+					},
+					{
+						beforeText: /^(\t|(\ \ ))*\ \*\/\s*$/,
+						action:
+						{
+							//removes the extra space if you press enter after a line
+							//that contains only */
+							indentAction: vscode.IndentAction.None,
+							removeText: 1
+						}
+					},
+					{
+						beforeText: /^(\t|(\ \ ))*\ \*[^/]*\*\/\s*$/,
+						action:
+						{
+							//removes the extra space if you press enter after a line
+							//that starts with * and also has */ at the end
+							indentAction: vscode.IndentAction.None,
+							removeText: 1
+						}
+					}
+				]
+			});
+			let languageClient = new LanguageClient("nextgenas", "ActionScript and MXML Language Server", createLanguageServer, clientOptions);
+			languageClient.onReady().then(() =>
 			{
-				beforeText: /^(\t|(\ \ ))*\ \*(\ ([^\*]|\*(?!\/))*)?$/,
-				action:
-				{
-					//if you press enter on a line with *, it will insert
-					//another * on the next line
-					indentAction: vscode.IndentAction.None,
-					appendText: "* "
-				}
-			},
-			{
-				beforeText: /^(\t|(\ \ ))*\ \*\/\s*$/,
-				action:
-				{
-					//removes the extra space if you press enter after a line
-					//that contains only */
-					indentAction: vscode.IndentAction.None,
-					removeText: 1
-				}
-			},
-			{
-				beforeText: /^(\t|(\ \ ))*\ \*[^/]*\*\/\s*$/,
-				action:
-				{
-					//removes the extra space if you press enter after a line
-					//that starts with * and also has */ at the end
-					indentAction: vscode.IndentAction.None,
-					removeText: 1
-				}
-			}
-		]
+				progress.report({message: "Initialization complete!"});
+				resolve();
+			});
+			let disposable = languageClient.start();
+			savedContext.subscriptions.push(disposable);
+		});
 	});
-	let client = new LanguageClient("nextgenas", "ActionScript and MXML Language Server", createLanguageServer, clientOptions);
-	let disposable = client.start();
-	savedContext.subscriptions.push(disposable);
 }
