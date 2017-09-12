@@ -13,9 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-import organizeImportsInUri from "./commands/organizeImportsInUri";
 import organizeImportsInTextEditor from "./commands/organizeImportsInTextEditor";
-import organizeImportsInDirectory from "./commands/organizeImportsInDirectory";
 import createInitialConfigurationsForSWFDebug from "./commands/createInitialConfigurationsForSWFDebug";
 import findPort from "./utils/findPort";
 import findJava from "./utils/findJava";
@@ -155,11 +153,9 @@ export function activate(context: vscode.ExtensionContext)
 		return adapterExecutableCommandSWF(javaExecutablePath, editorSDKHome, frameworkSDKHome);
 	});
 	vscode.commands.registerCommand("nextgenas.createInitialConfigurationsForSWFDebug", createInitialConfigurationsForSWFDebug);
-	vscode.commands.registerCommand("nextgenas.organizeImportsInUri", organizeImportsInUri);
-	vscode.commands.registerCommand("nextgenas.organizeImportsInTextEditor", organizeImportsInTextEditor);
-	vscode.commands.registerCommand("nextgenas.organizeImportsInDirectory", organizeImportsInDirectory);
 	vscode.commands.registerCommand("nextgenas.selectWorkspaceSDK", selectWorkspaceSDK);
-
+	vscode.commands.registerTextEditorCommand("nextgenas.organizeImportsInTextEditor", organizeImportsInTextEditor);
+	
 	//don't activate these things unless we're in a workspace
 	if(vscode.workspace.rootPath)
 	{

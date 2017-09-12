@@ -16,6 +16,9 @@ limitations under the License.
 package com.nextgenactionscript.vscode.utils;
 
 import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -25,10 +28,101 @@ import org.eclipse.lsp4j.TextEdit;
 
 public class ImportTextEditUtils
 {
+    private static final Pattern organizeImportPattern = Pattern.compile("(?m)^([ \\t]*)import ([\\w\\.]+);?");
     private static final Pattern importPattern = Pattern.compile("(?m)^([ \\t]*)import ([\\w\\.]+)");
     private static final Pattern indentPattern = Pattern.compile("(?m)^([ \\t]*)\\w");
     private static final Pattern packagePattern = Pattern.compile("(?m)^package( [\\w\\.]+)*\\s*\\{[\\r\\n]+([ \\t]*)");
     private static final String UNDERSCORE_UNDERSCORE_AS3_PACKAGE = "__AS3__.";
+
+    protected static int organizeImportsFromStartIndex(String text, int startIndex, List<TextEdit> edits)
+    {
+        Matcher importMatcher = organizeImportPattern.matcher(text);
+        if(startIndex != -1)
+        {
+            importMatcher.region(startIndex, text.length());
+        }
+        List<String> names = new ArrayList<>();
+        String indent = "";
+        int startImportsIndex = -1;
+        int endImportsIndex = -1;
+        int endIndex = -1;
+        while (importMatcher.find())
+        {
+            int matchIndex = importMatcher.start();
+            if (startImportsIndex == -1)
+            {
+                startImportsIndex = matchIndex;
+                int nextBlockOpenIndex = text.indexOf("{", startImportsIndex);
+                int nextBlockCloseIndex = text.indexOf("}", startImportsIndex);
+                endIndex = nextBlockOpenIndex;
+                if(endIndex == -1 || (nextBlockCloseIndex != -1 && nextBlockCloseIndex < endIndex))
+                {
+                    endIndex = nextBlockCloseIndex;
+                }
+                indent = importMatcher.group(1);
+            }
+            if(endIndex != -1 && matchIndex >= endIndex)
+            {
+                break;
+            }
+            endImportsIndex = matchIndex + importMatcher.group(0).length();
+            names.add(importMatcher.group(2));
+        }
+        if(names.size() == 0)
+        {
+            //nothing to organize
+            return endIndex;
+        }
+        //put them in alphabetical order
+        Collections.sort(names);
+        StringBuilder result = new StringBuilder();
+        String previousFirstPart = null;
+        for(int i = 0, count = names.size(); i < count; i++)
+        {
+            String name = names.get(i);
+            String[] parts = name.split("\\.");
+            String firstPart = parts[0];
+            if(previousFirstPart == null)
+            {
+                previousFirstPart = firstPart;
+            }
+            else if(parts.length > 1 && !firstPart.equals(previousFirstPart))
+            {
+                //add an extra line when the first part of the package name
+                //is different than the previous import
+                result.append("\n");
+                previousFirstPart = firstPart;
+            }
+            if(i > 0)
+            {
+                result.append("\n");
+            }
+            result.append(indent);
+            result.append("import ");
+            result.append(name);
+            result.append(";");
+        }
+
+        TextEdit edit = new TextEdit();
+        edit.setNewText(result.toString());
+        Position start = LanguageServerUtils.getPositionFromOffset(new StringReader(text), startImportsIndex);
+        Position end = LanguageServerUtils.getPositionFromOffset(new StringReader(text), endImportsIndex);
+        edit.setRange(new Range(start, end));
+        edits.add(edit);
+        return endIndex;
+    }
+
+    public static List<TextEdit> organizeImports(String text)
+    {
+        List<TextEdit> edits = new ArrayList<>();
+        int index = 0;
+        do
+        {
+            index = organizeImportsFromStartIndex(text, index, edits);
+        }
+        while(index != -1);
+        return edits;
+    }
 
 	public static TextEdit createTextEditForImport(String qualifiedName, String text, int startIndex, int endIndex)
 	{

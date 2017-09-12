@@ -23,4 +23,6 @@ public interface ICommandConstants
 	public static final String GENERATE_METHOD = "nextgenas.generateMethod";
 	public static final String ADD_IMPORT = "nextgenas.addImport";
 	public static final String ADD_MXML_NAMESPACE = "nextgenas.addMXMLNamespace";
+	public static final String ORGANIZE_IMPORTS_IN_URI = "nextgenas.organizeImportsInUri";
+	public static final String ORGANIZE_IMPORTS_IN_DIRECTORY = "nextgenas.organizeImportsInDirectory";
 }

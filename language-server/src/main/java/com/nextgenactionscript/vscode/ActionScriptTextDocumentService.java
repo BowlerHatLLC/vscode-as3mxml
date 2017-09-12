@@ -39,6 +39,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.flex.abc.ABCParser;
 import org.apache.flex.abc.Pool;
 import org.apache.flex.abc.PoolingABCVisitor;
@@ -140,6 +141,7 @@ import org.apache.flex.compiler.units.IInvisibleCompilationUnit;
 import org.apache.flex.compiler.workspaces.IWorkspace;
 
 import com.google.common.io.Files;
+import com.google.gson.internal.LinkedTreeMap;
 import com.nextgenactionscript.vscode.asdoc.VSCodeASDocComment;
 import com.nextgenactionscript.vscode.asdoc.VSCodeASDocDelegate;
 import com.nextgenactionscript.vscode.commands.ICommandConstants;
@@ -1130,6 +1132,14 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             case ICommandConstants.ADD_MXML_NAMESPACE:
             {
                 return executeAddMXMLNamespaceCommand(params);
+            }
+            case ICommandConstants.ORGANIZE_IMPORTS_IN_URI:
+            {
+                return executeOrganizeImportsInUriCommand(params);
+            }
+            case ICommandConstants.ORGANIZE_IMPORTS_IN_DIRECTORY:
+            {
+                return executeOrganizeImportsInDirectoryCommand(params);
             }
             case ICommandConstants.GENERATE_ACCESSOR:
             {
@@ -5747,6 +5757,92 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         location.setRange(range);
         symbol.setLocation(location);
         return symbol;
+    }
+
+    private CompletableFuture<Object> executeOrganizeImportsInDirectoryCommand(ExecuteCommandParams params)
+    {
+        List<Object> args = params.getArguments();
+        Object uncastUri = args.get(0);
+        LinkedTreeMap<?,?> encodedUri = null;
+        if (uncastUri instanceof LinkedTreeMap<?,?>)
+        {
+            encodedUri = (LinkedTreeMap<?,?>) uncastUri;
+        }
+        String uri = (String) encodedUri.get("external");
+
+        File rootDir = Paths.get(URI.create(uri)).toFile();
+        if (!rootDir.isDirectory())
+        {
+            return CompletableFuture.completedFuture(new Object());
+        }
+        ArrayList<File> directories = new ArrayList<>();
+        directories.add(rootDir);
+        for(int i = 0, dirCount = 1; i < dirCount; i++)
+        {
+            File currentDir = directories.get(i);
+            File[] files = currentDir.listFiles();
+            for (File file : files)
+            {
+                if (file.isDirectory())
+                {
+                    //add this directory to the list to search
+                    directories.add(file);
+                    dirCount++;
+                    continue;
+                }
+                if (!file.getName().endsWith(AS_EXTENSION) && !file.getName().endsWith(MXML_EXTENSION))
+                {
+                    continue;
+                }
+                organizeImportsInUri(file.toURI().toString());
+            }
+        }
+        return CompletableFuture.completedFuture(new Object());
+    }
+
+    private void organizeImportsInUri(String uri)
+    {
+        Path pathForImport = Paths.get(URI.create(uri));
+        Reader reader = getReaderForPath(pathForImport);
+        String text = null;
+        try
+        {
+            text = IOUtils.toString(reader);
+        }
+        catch (IOException e)
+        {
+            return;
+        }
+        List<TextEdit> edits = ImportTextEditUtils.organizeImports(text);
+        if(edits == null || edits.size() == 0)
+        {
+            //no edit required
+            return;
+        }
+        
+        ApplyWorkspaceEditParams editParams = new ApplyWorkspaceEditParams();
+        WorkspaceEdit workspaceEdit = new WorkspaceEdit();
+        HashMap<String,List<TextEdit>> changes = new HashMap<>();
+        changes.put(uri, edits);
+        workspaceEdit.setChanges(changes);
+        editParams.setEdit(workspaceEdit);
+
+        languageClient.applyEdit(editParams);
+    }
+    
+    private CompletableFuture<Object> executeOrganizeImportsInUriCommand(ExecuteCommandParams params)
+    {
+        List<Object> args = params.getArguments();
+        Object uncastUri = args.get(0);
+        LinkedTreeMap<?,?> encodedUri = null;
+        if (uncastUri instanceof LinkedTreeMap<?,?>)
+        {
+            encodedUri = (LinkedTreeMap<?,?>) uncastUri;
+        }
+        String uri = (String) encodedUri.get("external");
+        organizeImportsInUri(uri);
+
+        return CompletableFuture.completedFuture(new Object());
     }
     
     private CompletableFuture<Object> executeAddImportCommand(ExecuteCommandParams params)
