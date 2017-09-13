@@ -18,10 +18,19 @@ package com.nextgenactionscript.vscode.utils;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.flex.compiler.definitions.IDefinition;
+import org.apache.flex.compiler.definitions.IPackageDefinition;
+import org.apache.flex.compiler.projects.ICompilerProject;
+import org.apache.flex.compiler.tree.as.IASNode;
+import org.apache.flex.compiler.tree.as.IIdentifierNode;
+import org.apache.flex.compiler.tree.as.IImportNode;
+import org.apache.flex.compiler.tree.as.IScopedNode;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
@@ -34,7 +43,57 @@ public class ImportTextEditUtils
     private static final Pattern packagePattern = Pattern.compile("(?m)^package( [\\w\\.]+)*\\s*\\{[\\r\\n]+([ \\t]*)");
     private static final String UNDERSCORE_UNDERSCORE_AS3_PACKAGE = "__AS3__.";
 
-    protected static int organizeImportsFromStartIndex(String text, int startIndex, List<TextEdit> edits)
+    public static Set<IImportNode> findImportsToRemove(IASNode node, ICompilerProject project)
+    {
+        HashSet<IImportNode> importsToRemove = new HashSet<>();
+        findImportsToRemove(node, project, new HashSet<>(), importsToRemove);
+        return importsToRemove;
+    }
+    
+    protected static void findImportsToRemove(IASNode node, ICompilerProject project, Set<String> referencedDefinitions, Set<IImportNode> importsToRemove)
+    {
+        Set<IImportNode> childImports = null;
+        if (node instanceof IScopedNode)
+        {
+            childImports = new HashSet<>();
+        }
+        for (int i = 0, count = node.getChildCount(); i < count; i++)
+        {
+            IASNode child = node.getChild(i);
+            if (childImports != null && child instanceof IImportNode)
+            {
+                IImportNode importNode = (IImportNode) child;
+                childImports.add(importNode);
+                continue;
+            }
+            if (child instanceof IIdentifierNode)
+            {
+                IIdentifierNode identifierNode = (IIdentifierNode) child;
+                IDefinition definition = identifierNode.resolve(project);
+                if (definition != null
+                        && definition.getPackageName().length() > 0
+                        && definition.getQualifiedName().startsWith(definition.getPackageName()))
+                {
+                    referencedDefinitions.add(definition.getQualifiedName());
+                }
+            }
+            findImportsToRemove(child, project, referencedDefinitions, importsToRemove);
+        }
+        if (childImports != null)
+        {
+            childImports.removeIf(importNode ->
+            {
+                if (importNode.getAbsoluteStart() == -1)
+                {
+                    return true;
+                }
+                return referencedDefinitions.contains(importNode.getImportName());
+            });
+            importsToRemove.addAll(childImports);
+        }
+    }
+
+    protected static int organizeImportsFromStartIndex(String text, int startIndex, Set<IImportNode> importsToRemove, List<TextEdit> edits)
     {
         Matcher importMatcher = organizeImportPattern.matcher(text);
         if(startIndex != -1)
@@ -66,7 +125,25 @@ public class ImportTextEditUtils
                 break;
             }
             endImportsIndex = matchIndex + importMatcher.group(0).length();
-            names.add(importMatcher.group(2));
+            String importName = importMatcher.group(2);
+            boolean removeImport = false;
+            if (importsToRemove != null)
+            {
+                for (IImportNode importNode : importsToRemove)
+                {
+                    int importStart = importNode.getAbsoluteStart();
+                    if (importStart >= matchIndex && importStart < endImportsIndex
+                            && importNode.getImportName().equals(importName))
+                    {
+                        removeImport = true;
+                        break;
+                    }
+                }
+            }
+            if (!removeImport)
+            {
+                names.add(importName);
+            }
         }
         if(names.size() == 0)
         {
@@ -111,14 +188,19 @@ public class ImportTextEditUtils
         edits.add(edit);
         return endIndex;
     }
-
+    
     public static List<TextEdit> organizeImports(String text)
+    {
+        return organizeImports(text, null);
+    }
+
+    public static List<TextEdit> organizeImports(String text, Set<IImportNode> importsToRemove)
     {
         List<TextEdit> edits = new ArrayList<>();
         int index = 0;
         do
         {
-            index = organizeImportsFromStartIndex(text, index, edits);
+            index = organizeImportsFromStartIndex(text, index, importsToRemove, edits);
         }
         while(index != -1);
         return edits;

@@ -4085,6 +4085,34 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return Paths.get(lastFilePath);
     }
 
+    private IASNode getAST(Path path)
+    {
+        ICompilationUnit unit = getCompilationUnit(path);
+        if (unit == null)
+        {
+            //no need to log this case because it can happen for reasons that
+            //should have been logged already
+            return null;
+        }
+        IASNode ast = null;
+        try
+        {
+            ast = unit.getSyntaxTreeRequest().get().getAST();
+        }
+        catch (InterruptedException e)
+        {
+            System.err.println("Interrupted while getting AST: " + path.toAbsolutePath().toString());
+            return null;
+        }
+        if (ast == null)
+        {
+            //we couldn't find the root node for this file
+            System.err.println("Could not find AST: " + path.toAbsolutePath().toString());
+            return null;
+        }
+        return ast;
+    }
+
     private ICompilationUnit getCompilationUnit(Path path)
     {
         String absolutePath = path.toAbsolutePath().toString();
@@ -4899,27 +4927,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return null;
         }
 
-        ICompilationUnit unit = getCompilationUnit(path);
-        if (unit == null)
-        {
-            //no need to log this case because it can happen for reasons that
-            //should have been logged already
-            return null;
-        }
-        IASNode ast = null;
-        try
-        {
-            ast = unit.getSyntaxTreeRequest().get().getAST();
-        }
-        catch (InterruptedException e)
-        {
-            System.err.println("Interrupted while getting AST: " + path.toAbsolutePath().toString());
-            return null;
-        }
+        IASNode ast = getAST(path);
         if (ast == null)
         {
-            //we couldn't find the root node for this file
-            System.err.println("Could not find AST: " + path.toAbsolutePath().toString());
             return null;
         }
 
@@ -5813,7 +5823,14 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return;
         }
-        List<TextEdit> edits = ImportTextEditUtils.organizeImports(text);
+
+        Set<IImportNode> importsToRemove = null;
+        IASNode ast = getAST(pathForImport);
+        if (ast != null)
+        {
+            importsToRemove = ImportTextEditUtils.findImportsToRemove(ast, currentProject);
+        }
+        List<TextEdit> edits = ImportTextEditUtils.organizeImports(text, importsToRemove);
         if(edits == null || edits.size() == 0)
         {
             //no edit required
@@ -5839,6 +5856,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             encodedUri = (LinkedTreeMap<?,?>) uncastUri;
         }
+
         String uri = (String) encodedUri.get("external");
         organizeImportsInUri(uri);
 
