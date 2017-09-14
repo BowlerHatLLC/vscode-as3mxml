@@ -11,7 +11,9 @@
 * **Find All References** for any symbol in the project.
 * **Goto Symbol** lists all symbols in the current file with `Ctrl+Shift+O`.
 * **Open Symbol by Name** with `Ctrl+T` and type the name of any symbol in the project.
-* **Rename Symbol** for class members and local variables.
+* **Rename Symbol** for classes, interfaces, methods, and both local an member variables.
+* **Organize Imports** sorts imports alphabetically and removes unused imports.
+* **Code Generation** supports adding getters/setters, methods, and both local and member variables.
 * **Build** a project with `Ctrl+Shift+B`.
 * **Debug** Apache FlexJS projects in web browsers and Node.js and SWF projects in Adobe AIR and Flash Player.
 
@@ -22,7 +24,7 @@
 
 ## Minimum Requirements
 
-* Visual Studio Code 1.15
+* Visual Studio Code 1.16
 * Java 1.8 Runtime
 
 ## asconfig.json

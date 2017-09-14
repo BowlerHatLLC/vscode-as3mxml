@@ -1,3 +1,30 @@
+## 0.6.0
+
+### New Features
+
+* Code generation: If an unknown method is called, a new code action can generate a new method with that signature.
+* Code generation: If an unknown variable is referenced, a new code action can generate a new variable.
+* Code generation: New code action will convert a member variable into a getter and setter.
+* Completion: now includes language keywords in completion list when in certain contexts.
+* Debugging: Some fields in *launch.json* for SWF now provide a helpful completion list.
+* Documentation: If asdoc comments are defined in *.as* and *.mxml* source files, they will be displayed in UI. Supported in both completion list and in hover popup.
+* Organize imports: Added support for removing unused imports.
+* Rename Symbol: Added support for renaming classes and interfaces.
+* Syntax highlighting: CSS in `<mx:Style>` or `<fx:Style>` blocks is now colored.
+* UI: On startup, displays initializing message in status bar until extension is ready.
+
+### Fixed Issues
+
+* Completion: Fixed issue where an import could be incorrectly added for a symbol in the same package as the current file.
+* Debugging: Fixed issue where Step Over command did not behave correctly with SWF files.
+* Error Checking: Fixed issue where `swf-version` and `target-player` compiler options were incorrectly ignored.
+* Goto definition: Fixed issue where null pointer exception would be displayed if goto definition were used on an MXML tag that could not be resolved to a class.
+* Goto definition: Fixed issue where goto definition did not work with `super()` calls.
+* Rename Symbol: fixed issue where renaming a getter did not also rename a setter with the same name (and vice versa).
+* Syntax highlighting: fixed issue where metadata like `[Bindable]` was not colored in interface files.
+* Syntax highlighting: fixed issue where code in MXML `Script` blocks with `mx` prefix was not colored (it only worked with `fx` prefix).
+* Workspace symbol: improved search for class names by making unqualified name more important than package name.
+
 ## 0.5.1
 
 * Fixed that hover and signature help did not work inside event added to the root element of an MXML component.
