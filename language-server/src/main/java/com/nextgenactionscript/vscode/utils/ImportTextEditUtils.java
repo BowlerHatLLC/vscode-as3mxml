@@ -25,7 +25,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.flex.compiler.definitions.IDefinition;
-import org.apache.flex.compiler.definitions.IPackageDefinition;
 import org.apache.flex.compiler.projects.ICompilerProject;
 import org.apache.flex.compiler.tree.as.IASNode;
 import org.apache.flex.compiler.tree.as.IIdentifierNode;
@@ -37,11 +36,12 @@ import org.eclipse.lsp4j.TextEdit;
 
 public class ImportTextEditUtils
 {
-    private static final Pattern organizeImportPattern = Pattern.compile("(?m)^([ \\t]*)import ([\\w\\.]+);?");
+    private static final Pattern organizeImportPattern = Pattern.compile("(?m)^([ \\t]*)import ((\\w+\\.)+\\w+(\\.\\*)?);?");
     private static final Pattern importPattern = Pattern.compile("(?m)^([ \\t]*)import ([\\w\\.]+)");
     private static final Pattern indentPattern = Pattern.compile("(?m)^([ \\t]*)\\w");
     private static final Pattern packagePattern = Pattern.compile("(?m)^package( [\\w\\.]+)*\\s*\\{[\\r\\n]+([ \\t]*)");
     private static final String UNDERSCORE_UNDERSCORE_AS3_PACKAGE = "__AS3__.";
+    private static final String DOT_STAR = ".*";
 
     public static Set<IImportNode> findImportsToRemove(IASNode node, ICompilerProject project)
     {
@@ -87,7 +87,23 @@ public class ImportTextEditUtils
                 {
                     return true;
                 }
-                return referencedDefinitions.contains(importNode.getImportName());
+                String importName = importNode.getImportName();
+                if (importName.endsWith(DOT_STAR))
+                {
+                    String importPackage = importName.substring(0, importName.length() - 2);
+                    for (String reference : referencedDefinitions)
+                    {
+                        if(reference.startsWith(importPackage)
+                            && !reference.substring(importPackage.length() + 1).contains("."))
+                        {
+                            //an entire package is imported, so check if any
+                            //references are in that package
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+                return referencedDefinitions.contains(importName);
             });
             importsToRemove.addAll(childImports);
         }
