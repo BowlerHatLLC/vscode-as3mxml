@@ -6311,7 +6311,7 @@ suite("imports", () =>
 								let importText = editor.document.getText(range);
 								assert.strictEqual(importText, "\timport com.example.PackageClass;\n\n", "nextgenas.addImport failed to add import for class: " + uri);
 								resolve();
-							}, 100);
+							}, 250);
 						})
 					}, (err) =>
 					{
@@ -6340,7 +6340,7 @@ suite("imports", () =>
 								let importText = editor.document.getText(range);
 								assert.strictEqual(importText, "import com.example.PackageClass;\n\n", "nextgenas.addImport failed to add import for class: " + uri);
 								resolve();
-							}, 100);
+							}, 250);
 						})
 					}, (err) =>
 					{
@@ -6387,7 +6387,7 @@ suite("mxml namespaces", () =>
 								let importText = editor.document.getText(range);
 								assert.strictEqual(importText, " xmlns:mx=\"library://ns.adobe.com/flex/mx\"", "nextgenas.addMXMLNamespace failed to add MXML namspace in file: " + uri);
 								resolve();
-							}, 100);
+							}, 250);
 						})
 					}, (err) =>
 					{
@@ -6418,7 +6418,7 @@ suite("mxml namespaces", () =>
 								let newText = editor.document.getText();
 								assert.strictEqual(newText, originalText, "nextgenas.addMXMLNamespace incorrectly added duplicate MXML namespace in file: " + uri);
 								resolve();
-							}, 100);
+							}, 250);
 						})
 					}, (err) =>
 					{
