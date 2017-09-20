@@ -760,9 +760,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             switch (code)
             {
-                case ICommandHintCodes.GENERATE_ACCESSOR:
+                case ICommandHintCodes.GENERATE_GETTER_AND_SETTER:
                 {
-                    createCodeActionForGenerateAccessor(textDocument, diagnostic, commands);
+                    createCodeActionForGenerateGetterAndSetter(textDocument, diagnostic, commands);
                     break;
                 }
                 case "1120": //AccessUndefinedPropertyProblem
@@ -807,11 +807,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return CompletableFuture.completedFuture(commands);
     }
 
-    private void createCodeActionForGenerateAccessor(TextDocumentIdentifier textDocument, Diagnostic diagnostic, List<Command> commands)
+    private void createCodeActionForGenerateGetterAndSetter(TextDocumentIdentifier textDocument, Diagnostic diagnostic, List<Command> commands)
     {
-        Command generateAccessorCommand = new Command();
-        generateAccessorCommand.setTitle("Generate Getter and Setter");
-        generateAccessorCommand.setCommand(ICommandConstants.GENERATE_ACCESSOR);
         IASNode offsetNode = getOffsetNode(textDocument, diagnostic.getRange().getStart());
         IVariableNode variableNode = null;
         if (offsetNode instanceof IVariableNode)
@@ -834,7 +831,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             assignedValue = source.substring(assignedValueNode.getAbsoluteStart(),
                 assignedValueNode.getAbsoluteEnd());
         }
-        generateAccessorCommand.setArguments(Arrays.asList(
+
+        Command generateGetterAndSetterCommand = new Command();
+        generateGetterAndSetterCommand.setTitle("Generate Getter and Setter");
+        generateGetterAndSetterCommand.setCommand(ICommandConstants.GENERATE_GETTER_AND_SETTER);
+        generateGetterAndSetterCommand.setArguments(Arrays.asList(
             diagnostic.getSource(),
             diagnostic.getRange().getStart().getLine(),
             diagnostic.getRange().getStart().getCharacter(),
@@ -846,7 +847,41 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             variableNode.getVariableType(),
             assignedValue
         ));
-        commands.add(generateAccessorCommand);
+        commands.add(generateGetterAndSetterCommand);
+        
+        Command generateGetterCommand = new Command();
+        generateGetterCommand.setTitle("Generate Getter");
+        generateGetterCommand.setCommand(ICommandConstants.GENERATE_GETTER);
+        generateGetterCommand.setArguments(Arrays.asList(
+            diagnostic.getSource(),
+            diagnostic.getRange().getStart().getLine(),
+            diagnostic.getRange().getStart().getCharacter(),
+            diagnostic.getRange().getEnd().getLine(),
+            diagnostic.getRange().getEnd().getCharacter(),
+            variableNode.getName(),
+            variableNode.getNamespace(),
+            variableNode.hasModifier(ASModifier.STATIC),
+            variableNode.getVariableType(),
+            assignedValue
+        ));
+        commands.add(generateGetterCommand);
+
+        Command generateSetterCommand = new Command();
+        generateSetterCommand.setTitle("Generate Setter");
+        generateSetterCommand.setCommand(ICommandConstants.GENERATE_SETTER);
+        generateSetterCommand.setArguments(Arrays.asList(
+            diagnostic.getSource(),
+            diagnostic.getRange().getStart().getLine(),
+            diagnostic.getRange().getStart().getCharacter(),
+            diagnostic.getRange().getEnd().getLine(),
+            diagnostic.getRange().getEnd().getCharacter(),
+            variableNode.getName(),
+            variableNode.getNamespace(),
+            variableNode.hasModifier(ASModifier.STATIC),
+            variableNode.getVariableType(),
+            assignedValue
+        ));
+        commands.add(generateSetterCommand);
     }
 
     private void createCodeActionForMissingField(TextDocumentIdentifier textDocument, Diagnostic diagnostic, List<Command> commands)
@@ -1107,9 +1142,17 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             {
                 return executeOrganizeImportsInDirectoryCommand(params);
             }
-            case ICommandConstants.GENERATE_ACCESSOR:
+            case ICommandConstants.GENERATE_GETTER_AND_SETTER:
             {
-                return executeGenerateAccessorCommand(params);
+                return executeGenerateGetterAndSetterCommand(params, true, true);
+            }
+            case ICommandConstants.GENERATE_GETTER:
+            {
+                return executeGenerateGetterAndSetterCommand(params, true, false);
+            }
+            case ICommandConstants.GENERATE_SETTER:
+            {
+                return executeGenerateGetterAndSetterCommand(params, false, true);
             }
             case ICommandConstants.GENERATE_LOCAL_VARIABLE:
             {
@@ -4676,12 +4719,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 IVariableDefinition variableDefinition = (IVariableDefinition) definition;
                 if (variableDefinition.getVariableClassification().equals(VariableClassification.CLASS_MEMBER))
                 {
-                    Diagnostic generateGetterHint = new Diagnostic();
-                    generateGetterHint.setSeverity(DiagnosticSeverity.Hint);
-                    generateGetterHint.setSource(node.getSourcePath());
-                    generateGetterHint.setRange(LanguageServerUtils.getRangeFromSourceLocation(node));
-                    generateGetterHint.setCode(ICommandHintCodes.GENERATE_ACCESSOR);
-                    diagnostics.add(generateGetterHint);
+                    Diagnostic generateGetterAndSetterHint = new Diagnostic();
+                    generateGetterAndSetterHint.setSeverity(DiagnosticSeverity.Hint);
+                    generateGetterAndSetterHint.setSource(node.getSourcePath());
+                    generateGetterAndSetterHint.setRange(LanguageServerUtils.getRangeFromSourceLocation(node));
+                    generateGetterAndSetterHint.setCode(ICommandHintCodes.GENERATE_GETTER_AND_SETTER);
+                    diagnostics.add(generateGetterAndSetterHint);
                 }
             }
         }
@@ -5265,7 +5308,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             IDefinition parentDefinition = variableDefinition.getParent();
             if (parentDefinition instanceof ITypeDefinition)
             {
-                //an IAccessoryDefinition actually extends both
+                //an IAccessorDefinition actually extends both
                 //IVariableDefinition and IFunctionDefinition 
                 if (variableDefinition instanceof IAccessorDefinition)
                 {
@@ -6143,7 +6186,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return CompletableFuture.completedFuture(new Object());
     }
 
-    private CompletableFuture<Object> executeGenerateAccessorCommand(ExecuteCommandParams params)
+    private CompletableFuture<Object> executeGenerateGetterAndSetterCommand(ExecuteCommandParams params, boolean generateGetter, boolean generateSetter)
     {
         List<Object> args = params.getArguments();
         String path = (String) args.get(0);
@@ -6186,35 +6229,43 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             builder.append(" = " + assignedValue);
         }
-        builder.append(";\n\n");
-        builder.append("\t\t" + namespace + " ");
-        if(isStatic)
+        builder.append(";");
+        if (generateGetter)
         {
-            builder.append("static ");
+            builder.append("\n\n");
+            builder.append("\t\t" + namespace + " ");
+            if(isStatic)
+            {
+                builder.append("static ");
+            }
+            builder.append("function get " + name + "()");
+            if(type != null && type.length() > 0)
+            {
+                builder.append(":" + type);
+            }
+            builder.append("\n");
+            builder.append("\t\t{\n");
+            builder.append("\t\t\treturn _" + name +";\n");
+            builder.append("\t\t}");
         }
-        builder.append("function get " + name + "()");
-        if(type != null && type.length() > 0)
+        if (generateSetter)
         {
-            builder.append(":" + type);
+            builder.append("\n\n");
+            builder.append("\t\t" + namespace + " ");
+            if(isStatic)
+            {
+                builder.append("static ");
+            }
+            builder.append("function set " + name + "(value");
+            if(type != null && type.length() > 0)
+            {
+                builder.append(":" + type);
+            }
+            builder.append("):void\n");
+            builder.append("\t\t{\n");
+            builder.append("\t\t\t_" + name + " = value;\n");
+            builder.append("\t\t}");
         }
-        builder.append("\n");
-        builder.append("\t\t{\n");
-        builder.append("\t\t\treturn _" + name +";\n");
-        builder.append("\t\t}\n\n");
-        builder.append("\t\t" + namespace + " ");
-        if(isStatic)
-        {
-            builder.append("static ");
-        }
-        builder.append("function set " + name + "(value");
-        if(type != null && type.length() > 0)
-        {
-            builder.append(":" + type);
-        }
-        builder.append("):void\n");
-        builder.append("\t\t{\n");
-        builder.append("\t\t\t_" + name + " = value;\n");
-        builder.append("\t\t}");
         edit.setNewText(builder.toString());
         edit.setRange(new Range(new Position(startLine, startChar), new Position(endLine, endChar)));
 

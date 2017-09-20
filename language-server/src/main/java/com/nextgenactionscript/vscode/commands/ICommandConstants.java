@@ -17,7 +17,9 @@ package com.nextgenactionscript.vscode.commands;
 
 public interface ICommandConstants
 {
-	public static final String GENERATE_ACCESSOR = "nextgenas.generateAccessor";
+	public static final String GENERATE_GETTER = "nextgenas.generateGetter";
+	public static final String GENERATE_SETTER = "nextgenas.generateSetter";
+	public static final String GENERATE_GETTER_AND_SETTER = "nextgenas.generateGetterAndSetter";
 	public static final String GENERATE_LOCAL_VARIABLE = "nextgenas.generateLocalVariable";
 	public static final String GENERATE_FIELD_VARIABLE = "nextgenas.generateFieldVariable";
 	public static final String GENERATE_METHOD = "nextgenas.generateMethod";

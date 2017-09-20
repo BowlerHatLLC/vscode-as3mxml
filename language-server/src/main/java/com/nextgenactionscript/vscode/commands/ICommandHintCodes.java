@@ -17,5 +17,5 @@ package com.nextgenactionscript.vscode.commands;
 
 public interface ICommandHintCodes
 {
-	public static final String GENERATE_ACCESSOR = "vscode-nextgenas__generateAccessor";
+	public static final String GENERATE_GETTER_AND_SETTER = "hint__vscode-nextgenas--generateGetterAndSetter";
 }
