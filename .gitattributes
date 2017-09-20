@@ -1,0 +1,3 @@
+#ensure that test fixtures have the correct line endings
+*.as text eol=lf
+*.mxml text eol=lf
