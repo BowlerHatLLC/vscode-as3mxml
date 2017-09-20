@@ -8,7 +8,7 @@
 * Completion: now includes language keywords in completion list when in certain contexts.
 * Debugging: Some fields in *launch.json* for SWF now provide a helpful completion list.
 * Documentation: If asdoc comments are defined in *.as* and *.mxml* source files, they will be displayed in UI. Supported in both completion list and in hover popup.
-* Organize imports: Added support for removing unused imports.
+* Organize imports: In addition to sorting, will now also remove unused imports and add missing imports.
 * Rename Symbol: Added support for renaming classes and interfaces.
 * Syntax highlighting: CSS in `<mx:Style>` or `<fx:Style>` blocks is now colored.
 * UI: On startup, displays initializing message in status bar until extension is ready.
