@@ -32,6 +32,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.ConcurrentModificationException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -151,6 +152,7 @@ import com.nextgenactionscript.vscode.project.CompilerOptions;
 import com.nextgenactionscript.vscode.project.IProjectConfigStrategy;
 import com.nextgenactionscript.vscode.project.ProjectOptions;
 import com.nextgenactionscript.vscode.project.ProjectType;
+import com.nextgenactionscript.vscode.utils.ASTUtils;
 import com.nextgenactionscript.vscode.utils.ImportTextEditUtils;
 import com.nextgenactionscript.vscode.utils.LanguageServerUtils;
 import com.nextgenactionscript.vscode.utils.ProblemTracker;
@@ -995,43 +997,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         int end = message.length() - 1;
         String typeString = message.substring(start, end);
 
-        ArrayList<IDefinition> types = new ArrayList<>();
-        for (ICompilationUnit unit : compilationUnits)
-        {
-            if (unit == null)
-            {
-                continue;
-            }
-            try
-            {
-                Collection<IDefinition> definitions = unit.getFileScopeRequest().get().getExternallyVisibleDefinitions();
-                if (definitions == null)
-                {
-                    continue;
-                }
-                for (IDefinition definition : definitions)
-                {
-                    if (definition instanceof ITypeDefinition)
-                    {
-                        ITypeDefinition typeDefinition = (ITypeDefinition) definition;
-                        String baseName = typeDefinition.getBaseName();
-                        if (typeDefinition.getQualifiedName().equals(baseName))
-                        {
-                            //this definition is top-level. no import required.
-                            continue;
-                        }
-                        if (baseName.equals(typeString))
-                        {
-                            types.add(typeDefinition);
-                        }
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                //safe to ignore
-            }
-        }
+        List<IDefinition> types = ASTUtils.findTypesThatMatchName(typeString, compilationUnits);
         for (IDefinition definitionToImport : types)
         {
             Command command = createImportCommand(definitionToImport);
@@ -5824,13 +5790,29 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return;
         }
 
+        Set<String> missingNames = null;
+        Set<String> importsToAdd = null;
         Set<IImportNode> importsToRemove = null;
         IASNode ast = getAST(pathForImport);
         if (ast != null)
         {
-            importsToRemove = ImportTextEditUtils.findImportsToRemove(ast, currentProject);
+            missingNames = ASTUtils.findUnresolvedIdentifiersToImport(ast, currentProject);
+            importsToRemove = ASTUtils.findImportNodesToRemove(ast, currentProject);
         }
-        List<TextEdit> edits = ImportTextEditUtils.organizeImports(text, importsToRemove);
+        if (missingNames != null)
+        {
+            importsToAdd = new HashSet<>();
+            for (String missingName : missingNames)
+            {
+                List<IDefinition> types = ASTUtils.findTypesThatMatchName(missingName, compilationUnits);
+                if (types.size() == 1)
+                {
+                    //add an import only if exactly one type is found
+                    importsToAdd.add(types.get(0).getQualifiedName());
+                }
+            }
+        }
+        List<TextEdit> edits = ImportTextEditUtils.organizeImports(text, importsToRemove, importsToAdd);
         if(edits == null || edits.size() == 0)
         {
             //no edit required

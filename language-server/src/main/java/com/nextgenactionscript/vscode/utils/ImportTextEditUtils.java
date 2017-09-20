@@ -24,12 +24,13 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.flex.compiler.definitions.IDefinition;
 import org.apache.flex.compiler.projects.ICompilerProject;
 import org.apache.flex.compiler.tree.as.IASNode;
+import org.apache.flex.compiler.tree.as.IFunctionCallNode;
 import org.apache.flex.compiler.tree.as.IIdentifierNode;
 import org.apache.flex.compiler.tree.as.IImportNode;
 import org.apache.flex.compiler.tree.as.IScopedNode;
+import org.apache.flex.compiler.tree.as.IVariableNode;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
@@ -41,82 +42,21 @@ public class ImportTextEditUtils
     private static final Pattern indentPattern = Pattern.compile("(?m)^([ \\t]*)\\w");
     private static final Pattern packagePattern = Pattern.compile("(?m)^package( [\\w\\.]+)*\\s*\\{[\\r\\n]+([ \\t]*)");
     private static final String UNDERSCORE_UNDERSCORE_AS3_PACKAGE = "__AS3__.";
-    private static final String DOT_STAR = ".*";
 
-    public static Set<IImportNode> findImportsToRemove(IASNode node, ICompilerProject project)
-    {
-        HashSet<IImportNode> importsToRemove = new HashSet<>();
-        findImportsToRemove(node, project, new HashSet<>(), importsToRemove);
-        return importsToRemove;
-    }
-    
-    protected static void findImportsToRemove(IASNode node, ICompilerProject project, Set<String> referencedDefinitions, Set<IImportNode> importsToRemove)
-    {
-        Set<IImportNode> childImports = null;
-        if (node instanceof IScopedNode)
-        {
-            childImports = new HashSet<>();
-        }
-        for (int i = 0, count = node.getChildCount(); i < count; i++)
-        {
-            IASNode child = node.getChild(i);
-            if (childImports != null && child instanceof IImportNode)
-            {
-                IImportNode importNode = (IImportNode) child;
-                childImports.add(importNode);
-                continue;
-            }
-            if (child instanceof IIdentifierNode)
-            {
-                IIdentifierNode identifierNode = (IIdentifierNode) child;
-                IDefinition definition = identifierNode.resolve(project);
-                if (definition != null
-                        && definition.getPackageName().length() > 0
-                        && definition.getQualifiedName().startsWith(definition.getPackageName()))
-                {
-                    referencedDefinitions.add(definition.getQualifiedName());
-                }
-            }
-            findImportsToRemove(child, project, referencedDefinitions, importsToRemove);
-        }
-        if (childImports != null)
-        {
-            childImports.removeIf(importNode ->
-            {
-                if (importNode.getAbsoluteStart() == -1)
-                {
-                    return true;
-                }
-                String importName = importNode.getImportName();
-                if (importName.endsWith(DOT_STAR))
-                {
-                    String importPackage = importName.substring(0, importName.length() - 2);
-                    for (String reference : referencedDefinitions)
-                    {
-                        if(reference.startsWith(importPackage)
-                            && !reference.substring(importPackage.length() + 1).contains("."))
-                        {
-                            //an entire package is imported, so check if any
-                            //references are in that package
-                            return true;
-                        }
-                    }
-                    return false;
-                }
-                return referencedDefinitions.contains(importName);
-            });
-            importsToRemove.addAll(childImports);
-        }
-    }
-
-    protected static int organizeImportsFromStartIndex(String text, int startIndex, Set<IImportNode> importsToRemove, List<TextEdit> edits)
+    protected static int organizeImportsFromStartIndex(String text, int startIndex, Set<IImportNode> importsToRemove, Set<String> importsToAdd, List<TextEdit> edits)
     {
         Matcher importMatcher = organizeImportPattern.matcher(text);
         if(startIndex != -1)
         {
             importMatcher.region(startIndex, text.length());
         }
-        List<String> names = new ArrayList<>();
+        //use a Set to avoid adding duplicate names
+        Set<String> nameSet = new HashSet<>();
+        if (importsToAdd != null && startIndex == 0)
+        {
+            //add our extra imports at the first available opportunity
+            nameSet.addAll(importsToAdd);
+        }
         String indent = "";
         int startImportsIndex = -1;
         int endImportsIndex = -1;
@@ -158,15 +98,16 @@ public class ImportTextEditUtils
             }
             if (!removeImport)
             {
-                names.add(importName);
+                nameSet.add(importName);
             }
         }
-        if(names.size() == 0)
+        if(nameSet.size() == 0)
         {
             //nothing to organize
             return endIndex;
         }
-        //put them in alphabetical order
+        //make the Set a List and put them in alphabetical order
+        List<String> names = new ArrayList<>(nameSet);
         Collections.sort(names);
         StringBuilder result = new StringBuilder();
         String previousFirstPart = null;
@@ -207,16 +148,16 @@ public class ImportTextEditUtils
     
     public static List<TextEdit> organizeImports(String text)
     {
-        return organizeImports(text, null);
+        return organizeImports(text, null, null);
     }
 
-    public static List<TextEdit> organizeImports(String text, Set<IImportNode> importsToRemove)
+    public static List<TextEdit> organizeImports(String text, Set<IImportNode> importsToRemove, Set<String> importsToAdd)
     {
         List<TextEdit> edits = new ArrayList<>();
         int index = 0;
         do
         {
-            index = organizeImportsFromStartIndex(text, index, importsToRemove, edits);
+            index = organizeImportsFromStartIndex(text, index, importsToRemove, importsToAdd, edits);
         }
         while(index != -1);
         return edits;
