@@ -6189,7 +6189,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private CompletableFuture<Object> executeGenerateGetterAndSetterCommand(ExecuteCommandParams params, boolean generateGetter, boolean generateSetter)
     {
         List<Object> args = params.getArguments();
-        String path = (String) args.get(0);
+        String filePath = (String) args.get(0);
         int startLine = ((Double) args.get(1)).intValue();
         int startChar = ((Double) args.get(2)).intValue();
         int endLine = ((Double) args.get(3)).intValue();
@@ -6209,7 +6209,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         workspaceEdit.setChanges(changes);
 
         List<TextEdit> edits = new ArrayList<>();
-        changes.put(Paths.get(path).toUri().toString(), edits);
+        Path path = Paths.get(filePath);
+        changes.put(path.toUri().toString(), edits);
 
         TextEdit edit = new TextEdit();
         edits.add(edit);
@@ -6267,7 +6268,26 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             builder.append("\t\t}");
         }
         edit.setNewText(builder.toString());
-        edit.setRange(new Range(new Position(startLine, startChar), new Position(endLine, endChar)));
+
+        Position startPosition = new Position(startLine, startChar);
+        Position endPosition = new Position(endLine, endChar);
+
+        //we may need to adjust the end position to include the semi-colon
+        try
+        {
+            String text = IOUtils.toString(getReaderForPath(path));
+            int offset = LanguageServerUtils.getOffsetFromPosition(new StringReader(text), endPosition);
+            if (offset < text.length() && text.charAt(offset) == ';')
+            {
+                endPosition.setCharacter(endChar + 1);
+            }
+        }
+        catch (IOException e)
+        {
+            //ignore
+        }
+
+        edit.setRange(new Range(startPosition, endPosition));
 
         languageClient.applyEdit(editParams);
         return CompletableFuture.completedFuture(new Object());
