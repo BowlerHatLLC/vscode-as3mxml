@@ -19,7 +19,9 @@ import * as path from "path";
 import * as vscode from "vscode";
 import getFrameworkSDKPathWithFallbacks from "./getFrameworkSDKPathWithFallbacks";
 
-const ASCONFIG_JSON = "asconfig.json";
+const ASCONFIG_JSON = "asconfig.json"
+const FILE_EXTENSION_AS = ".as";;
+const FILE_EXTENSION_MXML = ".mxml";
 
 interface ActionScriptTaskDefinition extends vscode.TaskDefinition
 {
@@ -36,8 +38,24 @@ export default class ActionScriptTaskProvider implements vscode.TaskProvider
 			return Promise.resolve([]);
 		}
 
+		let provideTask = false;
 		let asconfigJson = path.join(workspaceRoot, ASCONFIG_JSON);
-		if(!fs.existsSync(asconfigJson))
+		if(fs.existsSync(asconfigJson))
+		{
+			//if asconfig.json exists in the root, always provide the tasks
+			provideTask = true;
+		}
+		if(!provideTask && vscode.window.activeTextEditor)
+		{
+			let fileName = vscode.window.activeTextEditor.document.fileName;
+			if(fileName.endsWith(FILE_EXTENSION_AS) || fileName.endsWith(FILE_EXTENSION_MXML))
+			{
+				//we couldn't find asconfig.json, but an .as or .mxml file is
+				//currently open, so might as well provide the tasks
+				provideTask = true;
+			}
+		}
+		if(!provideTask)
 		{
 			return Promise.resolve([]);
 		}
