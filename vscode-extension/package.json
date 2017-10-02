@@ -319,7 +319,21 @@
         "label": "SWF",
         "adapterExecutableCommand": "nextgenas.adapterExecutableCommandSWF",
         "configurationAttributes": {
-          "attach": {},
+          "attach": {
+            "properties": {
+              "connect": {
+                "type": "boolean",
+                "description": "Indicates if the debugger should connect to the runtime instead of listening. May be used for USB debugging on mobile.",
+                "default": false
+              },
+              "port": {
+                "type": "number",
+                "description": "If the \"connect\" attribute is true, the debugger will connect on the specified port.",
+                "multipleOf": 1,
+                "default": 7936
+              }
+            }
+          },
           "launch": {
             "required": [
               "program"

@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Type;
+import java.net.ConnectException;
 import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -33,6 +34,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.nextgenactionscript.vscode.debug.DebugSession;
 import com.nextgenactionscript.vscode.debug.events.BreakpointEvent;
@@ -42,6 +44,7 @@ import com.nextgenactionscript.vscode.debug.events.StoppedEvent;
 import com.nextgenactionscript.vscode.debug.events.TerminatedEvent;
 import com.nextgenactionscript.vscode.debug.protocol.Request;
 import com.nextgenactionscript.vscode.debug.protocol.Response;
+import com.nextgenactionscript.vscode.debug.requests.AttachRequest;
 import com.nextgenactionscript.vscode.debug.requests.InitializeRequest;
 import com.nextgenactionscript.vscode.debug.requests.LaunchRequest;
 import com.nextgenactionscript.vscode.debug.requests.ScopesRequest;
@@ -252,7 +255,7 @@ public class SWFDebugSession extends DebugSession
 
     public void launch(Response response, LaunchRequest.LaunchRequestArguments args)
     {
-        LaunchRequestArguments swfArgs = (LaunchRequestArguments) args;
+        SWFLaunchRequestArguments swfArgs = (SWFLaunchRequestArguments) args;
         ThreadSafeSessionManager manager = ThreadSafeBootstrap.sessionManager();
         swfSession = null;
         try
@@ -453,40 +456,56 @@ public class SWFDebugSession extends DebugSession
         return null;
     }
 
-    public void attach(Response response, Request.RequestArguments args)
+    public void attach(Response response, AttachRequest.AttachRequestArguments args)
     {
+        SWFAttachRequestArguments swfArgs = (SWFAttachRequestArguments) args;
         ThreadSafeSessionManager manager = ThreadSafeBootstrap.sessionManager();
         swfSession = null;
         try
         {
             manager.startListening();
-            swfSession = (ThreadSafeSession) manager.accept(null);
+            if (swfArgs.connect)
+            {
+                swfSession = (ThreadSafeSession) manager.connect(swfArgs.port, null);
+            }
+            else
+            {
+                swfSession = (ThreadSafeSession) manager.accept(null);
+            }
+        }
+        catch (ConnectException e)
+        {
+            response.success = false;
+            sendResponse(response);
         }
         catch (IOException e)
         {
-            e.printStackTrace(System.err);
-            return;
-        }
-        try
-        {
-            swfSession.bind();
-        }
-        catch (VersionException e)
-        {
+            response.success = false;
             e.printStackTrace(System.err);
         }
-        try
+        if(response.success)
         {
-            manager.stopListening();
+            try
+            {
+                swfSession.bind();
+            }
+            catch (VersionException e)
+            {
+                e.printStackTrace(System.err);
+            }
+            try
+            {
+                manager.stopListening();
+            }
+            catch (IOException e)
+            {
+                e.printStackTrace(System.err);
+            }
+
+            cancelRunner = false;
+            sessionThread = new java.lang.Thread(new SessionRunner());
+            sessionThread.start();
         }
-        catch (IOException e)
-        {
-            e.printStackTrace(System.err);
-        }
-        sendResponse(response);
-        cancelRunner = false;
-        sessionThread = new java.lang.Thread(new SessionRunner());
-        sessionThread.start();
         sendResponse(response);
     }
 
@@ -902,16 +921,26 @@ public class SWFDebugSession extends DebugSession
     {
         GsonBuilder builder = new GsonBuilder();
         return builder.registerTypeAdapter(Request.class, new DebugSession.RequestDeserializer())
-                .registerTypeAdapter(LaunchRequest.LaunchRequestArguments.class, new LaunchRequestDeserializer())
+                .registerTypeAdapter(LaunchRequest.LaunchRequestArguments.class, new SWFLaunchRequestDeserializer())
+                .registerTypeAdapter(AttachRequest.AttachRequestArguments.class, new SWFAttachRequestDeserializer())
                 .create();
     }
 
-    public static class LaunchRequestDeserializer implements JsonDeserializer<LaunchRequest.LaunchRequestArguments>
+    public static class SWFLaunchRequestDeserializer implements JsonDeserializer<LaunchRequest.LaunchRequestArguments>
     {
         public LaunchRequest.LaunchRequestArguments deserialize(JsonElement je, Type type, JsonDeserializationContext jdc)
                 throws JsonParseException
         {
-            return gson.fromJson(je, LaunchRequestArguments.class);
+            return gson.fromJson(je, SWFLaunchRequestArguments.class);
+        }
+    }
+    
+    public static class SWFAttachRequestDeserializer implements JsonDeserializer<AttachRequest.AttachRequestArguments>
+    {
+        public AttachRequest.AttachRequestArguments deserialize(JsonElement je, Type type, JsonDeserializationContext jdc)
+                throws JsonParseException
+        {
+            return gson.fromJson(je, SWFAttachRequestArguments.class);
         }
     }
 }

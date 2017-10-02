@@ -15,18 +15,10 @@ limitations under the License.
 */
 package com.nextgenactionscript.vscode;
 
-import com.nextgenactionscript.vscode.debug.requests.LaunchRequest;
+import com.nextgenactionscript.vscode.debug.requests.AttachRequest;
 
-public class LaunchRequestArguments extends LaunchRequest.LaunchRequestArguments
+public class SWFAttachRequestArguments extends AttachRequest.AttachRequestArguments
 {
-    public String program;
-    public String request;
-    public String profile;
-    public String[] args;
-    public String screensize;
-    public int screenDPI;
-    public String versionPlatform;
-    public String runtimeExecutable;
-    public String[] runtimeArgs;
-    public String extdir;
+	public boolean connect = false;
+	public int port = 7936;
 }

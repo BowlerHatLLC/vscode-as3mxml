@@ -13,17 +13,20 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package com.nextgenactionscript.vscode.debug.requests;
+package com.nextgenactionscript.vscode;
 
-import com.nextgenactionscript.vscode.debug.protocol.Request;
+import com.nextgenactionscript.vscode.debug.requests.LaunchRequest;
 
-public class AttachRequest extends Request
+public class SWFLaunchRequestArguments extends LaunchRequest.LaunchRequestArguments
 {
-    public static final String REQUEST_COMMAND = "attach";
-
-    public AttachRequest.AttachRequestArguments arguments;
-	
-	public static class AttachRequestArguments extends RequestArguments
-	{
-	}
+    public String program;
+    public String request;
+    public String profile;
+    public String[] args;
+    public String screensize;
+    public int screenDPI;
+    public String versionPlatform;
+    public String runtimeExecutable;
+    public String[] runtimeArgs;
+    public String extdir;
 }

@@ -145,7 +145,7 @@ public abstract class DebugSession extends ProtocolServer
                 }
                 case "attach":
                 {
-                    attach(response, arguments);
+                    attach(response, (AttachRequest.AttachRequestArguments) arguments);
                     break;
                 }
                 case "disconnect":
@@ -243,7 +243,7 @@ public abstract class DebugSession extends ProtocolServer
 
     public abstract void launch(Response response, LaunchRequest.LaunchRequestArguments arguments);
 
-    public abstract void attach(Response response, Request.RequestArguments arguments);
+    public abstract void attach(Response response, AttachRequest.AttachRequestArguments arguments);
 
     public abstract void disconnect(Response response, Request.RequestArguments arguments);
 
