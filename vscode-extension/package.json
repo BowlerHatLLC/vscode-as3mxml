@@ -319,6 +319,7 @@
         "label": "SWF",
         "adapterExecutableCommand": "nextgenas.adapterExecutableCommandSWF",
         "configurationAttributes": {
+          "attach": {},
           "launch": {
             "required": [
               "program"

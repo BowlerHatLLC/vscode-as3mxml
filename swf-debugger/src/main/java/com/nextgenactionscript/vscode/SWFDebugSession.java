@@ -455,6 +455,38 @@ public class SWFDebugSession extends DebugSession
 
     public void attach(Response response, Request.RequestArguments args)
     {
+        ThreadSafeSessionManager manager = ThreadSafeBootstrap.sessionManager();
+        swfSession = null;
+        try
+        {
+            manager.startListening();
+            swfSession = (ThreadSafeSession) manager.accept(null);
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace(System.err);
+            return;
+        }
+        try
+        {
+            swfSession.bind();
+        }
+        catch (VersionException e)
+        {
+            e.printStackTrace(System.err);
+        }
+        try
+        {
+            manager.stopListening();
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace(System.err);
+        }
+        sendResponse(response);
+        cancelRunner = false;
+        sessionThread = new java.lang.Thread(new SessionRunner());
+        sessionThread.start();
         sendResponse(response);
     }
 

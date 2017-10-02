@@ -28,6 +28,7 @@ import com.google.gson.JsonParseException;
 import com.nextgenactionscript.vscode.debug.protocol.ProtocolServer;
 import com.nextgenactionscript.vscode.debug.protocol.Request;
 import com.nextgenactionscript.vscode.debug.protocol.Response;
+import com.nextgenactionscript.vscode.debug.requests.AttachRequest;
 import com.nextgenactionscript.vscode.debug.requests.InitializeRequest;
 import com.nextgenactionscript.vscode.debug.requests.LaunchRequest;
 import com.nextgenactionscript.vscode.debug.requests.ScopesRequest;
@@ -394,6 +395,10 @@ public abstract class DebugSession extends ProtocolServer
                 case LaunchRequest.REQUEST_COMMAND:
                 {
                     return gson.fromJson(je, LaunchRequest.class);
+                }
+                case AttachRequest.REQUEST_COMMAND:
+                {
+                    return gson.fromJson(je, AttachRequest.class);
                 }
                 case StackTraceRequest.REQUEST_COMMAND:
                 {
