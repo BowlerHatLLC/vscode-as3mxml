@@ -14,13 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 import organizeImportsInTextEditor from "./commands/organizeImportsInTextEditor";
-import createInitialConfigurationsForSWFDebug from "./commands/createInitialConfigurationsForSWFDebug";
 import findPort from "./utils/findPort";
 import findJava from "./utils/findJava";
 import validateJava from "./utils/validateJava";
 import validateEditorSDK from "./utils/validateEditorSDK";
 import ActionScriptSourcePathDataProvider from "./utils/ActionScriptSourcePathDataProvider";
 import ActionScriptTaskProvider from "./utils/ActionScriptTaskProvider";
+import SWFDebugConfigurationProvider from "./utils/SWFDebugConfigurationProvider";
 import getJavaClassPathDelimiter from "./utils/getJavaClassPathDelimiter";
 import findSDKShortName from "./utils/findSDKShortName";
 import getFrameworkSDKPathWithFallbacks from "./utils/getFrameworkSDKPathWithFallbacks";
@@ -57,6 +57,7 @@ let hasShownFrameworkSDKWarning = false;
 let sdkStatusBarItem: vscode.StatusBarItem;
 let sourcePathDataProvider: ActionScriptSourcePathDataProvider = null;
 let actionScriptTaskProvider: ActionScriptTaskProvider = null;
+let debugConfigurationProvider: SWFDebugConfigurationProvider = null;
 
 function killJavaProcess()
 {
@@ -138,6 +139,8 @@ export function activate(context: vscode.ExtensionContext)
 	editorSDKHome = getValidatedEditorSDKConfiguration(javaExecutablePath);
 	frameworkSDKHome = getFrameworkSDKPathWithFallbacks();
 	vscode.workspace.onDidChangeConfiguration(onDidChangeConfiguration);
+	
+	//this command is deprecated and will be removed in the future
 	vscode.commands.registerCommand("nextgenas.createASConfigTaskRunner", () =>
 	{
 		let asconfigPath = path.resolve(vscode.workspace.rootPath, "asconfig.json");
@@ -146,19 +149,18 @@ export function activate(context: vscode.ExtensionContext)
 			vscode.window.showErrorMessage("Failed to configure task runner. No asconfig.json file found at root of project.");
 			return;
 		}
-		//this command is deprecated
 		vscode.commands.executeCommand("workbench.action.tasks.configureDefaultBuildTask");
 	});
+
 	vscode.commands.registerCommand("nextgenas.adapterExecutableCommandSWF", () =>
 	{
 		return adapterExecutableCommandSWF(javaExecutablePath, editorSDKHome, frameworkSDKHome);
 	});
-	vscode.commands.registerCommand("nextgenas.createInitialConfigurationsForSWFDebug", createInitialConfigurationsForSWFDebug);
 	vscode.commands.registerCommand("nextgenas.selectWorkspaceSDK", selectWorkspaceSDK);
 	vscode.commands.registerTextEditorCommand("nextgenas.organizeImportsInTextEditor", organizeImportsInTextEditor);
 	
 	//don't activate these things unless we're in a workspace
-	if(vscode.workspace.rootPath)
+	if(vscode.workspace.workspaceFolders !== undefined)
 	{
 		sdkStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
 		updateSDKStatusBarItem();
@@ -166,11 +168,15 @@ export function activate(context: vscode.ExtensionContext)
 		sdkStatusBarItem.command = "nextgenas.selectWorkspaceSDK";
 		sdkStatusBarItem.show();
 
-		sourcePathDataProvider = new ActionScriptSourcePathDataProvider(vscode.workspace.rootPath);
+		let rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
+		sourcePathDataProvider = new ActionScriptSourcePathDataProvider(rootPath);
 		vscode.window.registerTreeDataProvider("actionScriptSourcePaths", sourcePathDataProvider);
 
 		actionScriptTaskProvider = new ActionScriptTaskProvider();
 		vscode.workspace.registerTaskProvider("actionscript", actionScriptTaskProvider);
+
+		debugConfigurationProvider = new SWFDebugConfigurationProvider();
+		vscode.debug.registerDebugConfigurationProvider("swf", debugConfigurationProvider);
 	}
 	startClient();
 }

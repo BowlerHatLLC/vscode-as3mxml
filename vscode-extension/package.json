@@ -26,7 +26,7 @@
     "build-debug": "mvn package"
   },
   "engines": {
-    "vscode": "^1.16.0"
+    "vscode": "^1.17.0"
   },
   "devDependencies": {
     "@types/json5": "0.0.29",
@@ -48,7 +48,6 @@
     "workspaceContains:asconfig.json",
     "onView:actionScriptSourcePaths",
     "onCommand:nextgenas.createASConfigTaskRunner",
-    "onCommand:nextgenas.createInitialConfigurationsForSWFDebug",
     "onCommand:nextgenas.adapterExecutableCommandSWF",
     "onCommand:nextgenas.organizeImportsInTextEditor",
     "onCommand:nextgenas.organizeImportsInUri",
@@ -410,7 +409,6 @@
             }
           }
         },
-        "initialConfigurations": "nextgenas.createInitialConfigurationsForSWFDebug",
         "configurationSnippets": [
           {
             "label": "SWF: Launch Standalone SWF",
@@ -418,8 +416,8 @@
             "body": {
               "type": "swf",
               "request": "launch",
-              "name": "${2:Launch SWF}",
-              "program": "^\"\\${workspaceRoot}/${1:app.swf}\""
+              "name": "${1:Launch SWF}",
+              "program": "^\"\\${swf}\""
             }
           },
           {
@@ -438,8 +436,8 @@
             "body": {
               "type": "swf",
               "request": "launch",
-              "name": "${2:Launch AIR desktop}",
-              "program": "^\"\\${workspaceRoot}/${1:application.xml}\""
+              "name": "${1:Launch AIR desktop}",
+              "program": "^\"\\${swf}\""
             }
           },
           {
@@ -448,12 +446,12 @@
             "body": {
               "type": "swf",
               "request": "launch",
-              "name": "${5:Launch AIR mobile}",
-              "program": "^\"\\${workspaceRoot}/${1:application.xml}\"",
+              "name": "${4:Launch AIR mobile}",
+              "program": "^\"\\${swf}\"",
               "profile": "mobileDevice",
-              "screensize": "${2|iPhoneRetina,iPhone,iPhone5Retina,iPhone6,iPhone6Plus,iPad,iPadRetina,Droid,NexusOne,SamsungGalaxyS,SamsungGalaxyTab,480,720,1080,WVGA,WQVGA,QVGA,HVGA,FWVGA,FWQVGA|}",
-              "screenDPI": "^${3:326}",
-              "versionPlatform": "${4|IOS,AND|}"
+              "screensize": "${1|iPhoneRetina,iPhone,iPhone5Retina,iPhone6,iPhone6Plus,iPad,iPadRetina,Droid,NexusOne,SamsungGalaxyS,SamsungGalaxyTab,480,720,1080,WVGA,WQVGA,QVGA,HVGA,FWVGA,FWQVGA|}",
+              "screenDPI": "^${2:326}",
+              "versionPlatform": "${3|IOS,AND|}"
             }
           }
         ]
