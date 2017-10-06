@@ -1,0 +1,273 @@
+{
+	"Constructor": {
+		"prefix": "ctor",
+		"body": [
+			"public function ${1:${TM_FILENAME_BASE}}()",
+			"{",
+			"\t$0",
+			"}"
+		],
+		"description": "Constructor"
+	},
+	"Class Definition": {
+		"prefix": "class",
+		"body": [
+			"public class ${1:${TM_FILENAME_BASE}}",
+			"{",
+			"\tpublic function ${1:${TM_FILENAME_BASE}}(${2:parameters})",
+			"\t{",
+			"\t\t$0",
+			"\t}",
+			"}"
+		],
+		"description": "Class Definition"
+	},
+	"Public Method Definition": {
+		"prefix": "public method",
+		"body": [
+			"public function ${1:name}(${2:parameters}):${3:void}",
+			"{",
+			"\t$0",
+			"}"
+		],
+		"description": "Public Method Definition"
+	},
+	"Private Method Definition": {
+		"prefix": "private method",
+		"body": [
+			"private function ${1:name}(${2:parameters}):${3:void}",
+			"{",
+			"\t$0",
+			"}"
+		],
+		"description": "Private Method Definition"
+	},
+	"Public Variable Definition": {
+		"prefix": "public variable",
+		"body": [
+			"public var ${1:name}:${3:Object}$0;"
+		],
+		"description": "Public Variable Definition"
+	},
+	"Private Variable Definition": {
+		"prefix": "private variable",
+		"body": [
+			"private var ${1:name}:${3:Object}$0;"
+		],
+		"description": "Private Variable Definition"
+	},
+	"Interface Definition": {
+		"prefix": "interface",
+		"body": [
+			"public interface ${1:${TM_FILENAME_BASE}}",
+			"{",
+			"\t$0",
+			"}"
+		],
+		"description": "Interface Definition"
+	},
+	"Return false": {
+		"prefix": "ret0",
+		"body": [
+			"return false;$0"
+		],
+		"description": "Return false"
+	},
+	"Return true": {
+		"prefix": "ret1",
+		"body": [
+			"return true;$0"
+		],
+		"description": "Return true"
+	},
+	"Return statement": {
+		"prefix": "ret",
+		"body": [
+			"return $1;$0"
+		],
+		"description": "Return statement"
+	},
+	"Define a full property": {
+		"prefix": "prop",
+		"body": [
+			"private var _${1:name}:${2:Object};",
+			"",
+			"public function get ${1:name}():${2:Object}",
+			"{",
+			"\treturn _${1:name};",
+			"}",
+			"",
+			"public function set ${1:name}(value:${2:Object}):void",
+			"{",
+			"\t_${1:name} = value;",
+			"}"
+		],
+		"description": "Define a full property"
+	},
+	"Property getter": {
+		"prefix": "get",
+		"body": [
+			"public function get ${1:name}():${2:Object}",
+			"{",
+			"\t${3:return $0}",
+			"}"
+		],
+		"description": "Property getter"
+	},
+	"Property setter": {
+		"prefix": "set",
+		"body": [
+			"public function set ${1:name}(value:${2:Object}):void",
+			"{",
+			"\t$3 = value;",
+			"}"
+		],
+		"description": "Property setter"
+	},
+	"Throw Exception": {
+		"prefix": "throw",
+		"body": [
+			"throw new Error(\"$1\");",
+			"$0"
+		],
+		"description": "Throw Exception"
+	},
+	"For Loop": {
+		"prefix": "for",
+		"body": [
+			"var len:int = ${2:array}.length",
+			"for(var ${1:index}:int = 0; ${1:index} < len; ${1:index}++)",
+			"{",
+			"\tvar ${3:element}:Object = ${2:array}[${1:index}];",
+			"\t$0",
+			"}"
+		],
+		"description": "For Loop"
+	},
+	"For-Each Loop": {
+		"prefix": "foreach",
+		"body": [
+			"for each(var ${1:value}:${2:Object} in ${3:object})",
+			"{",
+			"\t$0",
+			"}"
+		],
+		"description": "For-In Loop"
+	},
+	"For-In Loop": {
+		"prefix": "forin",
+		"body": [
+			"for(var ${1:key}:String in ${2:object})",
+			"{",
+			"\tvar ${3:element}:${4:Object} = ${2:object}[${1:key}];",
+			"\t$0",
+			"}"
+		],
+		"description": "For-In Loop"
+	},
+	"Function Statement": {
+		"prefix": "function",
+		"body": [
+			"function ${1:name}(${2:params}):${3:void}",
+			"{",
+			"\t$0",
+			"}"
+		],
+		"description": "Function Statement"
+	},
+	"If Statement": {
+		"prefix": "if",
+		"body": [
+			"if(${1:condition})",
+			"{",
+			"\t$0",
+			"}"
+		],
+		"description": "If Statement"
+	},
+	"If-Else Statement": {
+		"prefix": "ifelse",
+		"body": [
+			"if(${1:condition})",
+			"{",
+			"\t$0",
+			"}",
+			"else",
+			"{",
+			"\t",
+			"}"
+		],
+		"description": "If-Else Statement"
+	},
+	"New Statement": {
+		"prefix": "new",
+		"body": [
+			"var ${1:name}:${2:type} = new ${2:type}(${3:arguments});$0"
+		],
+		"description": "New Statement"
+	},
+	"Switch Statement": {
+		"prefix": "switch",
+		"body": [
+			"switch(${1:key})",
+			"{",
+			"\tcase ${2:value}:",
+			"\t\t$0",
+			"\t\tbreak;",
+			"",
+			"\tdefault:",
+			"\t\tbreak;",
+			"}"
+		],
+		"description": "Switch Statement"
+	},
+	"While Statement": {
+		"prefix": "while",
+		"body": [
+			"while(${1:condition})",
+			"{",
+			"\t$0",
+			"}"
+		],
+		"description": "While Statement"
+	},
+	"Do-While Statement": {
+		"prefix": "dowhile",
+		"body": [
+			"do",
+			"{",
+			"\t$0",
+			"}",
+			"while(${1:condition});"
+		],
+		"description": "Do-While Statement"
+	},
+	"Try-Catch Statement": {
+		"prefix": "trycatch",
+		"body": [
+			"try",
+			"{",
+			"\t$0",
+			"}",
+			"catch (${1:error:Error})",
+			"{",
+			"\t",
+			"}"
+		],
+		"description": "Try-Catch Statement"
+	},
+	"Region Start": {
+		"prefix": "#region",
+		"body": [
+			"//#region $0"
+		],
+		"description": "Folding Region Start"
+	},
+	"Region End": {
+		"prefix": "#endregion",
+		"body": [
+			"//#endregion"
+		],
+		"description": "Folding Region End"
+}
+}

@@ -312,6 +312,16 @@
         "language": "nextgenas"
       }
     ],
+    "snippets": [
+      {
+        "language": "nextgenas",
+        "path": "./snippets/actionscript.json"
+      },
+      {
+        "language": "mxml",
+        "path": "./snippets/mxml.json"
+      }
+    ],
     "debuggers": [
       {
         "type": "swf",

@@ -25,6 +25,7 @@
         <include>as3.png</include>
         <include>schemas/*</include>
         <include>syntaxes/*</include>
+        <include>snippets/*</include>
       </includes>
     </fileSet>
     <fileSet>
