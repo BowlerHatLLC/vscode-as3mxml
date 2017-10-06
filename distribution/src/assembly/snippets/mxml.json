@@ -2,6 +2,7 @@
 	"Spark Component Definition": {
 		"prefix": "spark component",
 		"body": [
+			"<?xml version=\"1.0\" encoding=\"utf-8\"?>",
 			"<s:${1:component} xmlns:fx=\"http://ns.adobe.com/mxml/2009\"",
 			"\txmlns:s=\"library://ns.adobe.com/flex/spark\">",
 			"\t$0",
@@ -12,6 +13,7 @@
 	"MX Component Definition": {
 		"prefix": "mx component",
 		"body": [
+			"<?xml version=\"1.0\" encoding=\"utf-8\"?>",
 			"<mx:${1:component} xmlns:fx=\"http://ns.adobe.com/mxml/2009\"",
 			"\txmlns:mx=\"library://ns.adobe.com/flex/mx\">",
 			"\t$0",
@@ -22,6 +24,7 @@
 	"Feathers Component Definition": {
 		"prefix": "feathers component",
 		"body": [
+			"<?xml version=\"1.0\" encoding=\"utf-8\"?>",
 			"<f:${1:component} xmlns:fx=\"http://ns.adobe.com/mxml/2009\"",
 			"\txmlns:f=\"library://ns.feathersui.com/mxml\">",
 			"\t$0",
@@ -32,6 +35,7 @@
 	"Express Component Definition": {
 		"prefix": "express component",
 		"body": [
+			"<?xml version=\"1.0\" encoding=\"utf-8\"?>",
 			"<js:${1:component} xmlns:fx=\"http://ns.adobe.com/mxml/2009\"",
 			"\txmlns:js=\"library://ns.apache.org/flexjs/express\">",
 			"\t$0",
@@ -42,6 +46,7 @@
 	"Basic Component Definition": {
 		"prefix": "basic component",
 		"body": [
+			"<?xml version=\"1.0\" encoding=\"utf-8\"?>",
 			"<js:${1:component} xmlns:fx=\"http://ns.adobe.com/mxml/2009\"",
 			"\txmlns:js=\"library://ns.apache.org/flexjs/basic\">",
 			"\t$0",
