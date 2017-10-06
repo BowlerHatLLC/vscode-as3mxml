@@ -5,7 +5,7 @@
 * Editor: New built-in snippets for ActionScript and MXML.
 * Editor: Added support for folding arbitrary regions in the editor with `//#region` and `//#endregion` comments.
 * Debugging: new "attach" request to connect to Flash Player or AIR that isn't launched by Visual Studio Code. Can be used for wi-fi or USB debugging on a mobile device.
-* Debugging: Simplified *launch.json* by allowing the "program" field to use a new `"${swf}"` token instead of a file path. When using this token, the extension automatically detects the location of the SWF or AIR application descriptor based on the output location in *asconfig.json* (or compiler defaults).
+* Debugging: Simplified *launch.json* by making the "program" field optional. When omitted, the extension automatically detects the location of the SWF or AIR application descriptor, using the output location in *asconfig.json* or compiler defaults.
 * Debugging: source location is shown on the right side of the debug console when a runtime error is thrown and displayed in the console.
 
 ### Fixed Issues

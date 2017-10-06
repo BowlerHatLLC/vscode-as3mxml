@@ -344,13 +344,13 @@
             }
           },
           "launch": {
-            "required": [
-              "program"
-            ],
             "properties": {
               "program": {
-                "type": "string",
-                "description": "Absolute path to a SWF or AIR application descriptor XML."
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "Absolute path to a SWF or AIR application descriptor XML. If omitted, will attempt to detect program automatically."
               },
               "profile": {
                 "type": [
@@ -426,8 +426,7 @@
             "body": {
               "type": "swf",
               "request": "launch",
-              "name": "${1:Launch SWF}",
-              "program": "^\"\\${swf}\""
+              "name": "${1:Launch SWF}"
             }
           },
           {
@@ -446,8 +445,7 @@
             "body": {
               "type": "swf",
               "request": "launch",
-              "name": "${1:Launch AIR desktop}",
-              "program": "^\"\\${swf}\""
+              "name": "${1:Launch AIR desktop}"
             }
           },
           {
@@ -457,7 +455,6 @@
               "type": "swf",
               "request": "launch",
               "name": "${4:Launch AIR mobile}",
-              "program": "^\"\\${swf}\"",
               "profile": "mobileDevice",
               "screensize": "${1|iPhoneRetina,iPhone,iPhone5Retina,iPhone6,iPhone6Plus,iPad,iPadRetina,Droid,NexusOne,SamsungGalaxyS,SamsungGalaxyTab,480,720,1080,WVGA,WQVGA,QVGA,HVGA,FWVGA,FWQVGA|}",
               "screenDPI": "^${2:326}",

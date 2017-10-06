@@ -23,8 +23,6 @@ const FILE_EXTENSION_SWF = ".swf";
 const CONFIG_AIR = "air";
 const CONFIG_AIRMOBILE = "airmobile";
 
-const TOKEN_PROGRAM = "${swf}";
-
 export default class SWFDebugConfigurationProvider implements vscode.DebugConfigurationProvider
 {
 	provideDebugConfigurations(folder: vscode.WorkspaceFolder | undefined, token?: vscode.CancellationToken): vscode.ProviderResult<vscode.DebugConfiguration[]>
@@ -35,10 +33,7 @@ export default class SWFDebugConfigurationProvider implements vscode.DebugConfig
 			{
 				type: "swf",
 				request: "launch",
-				name: "Launch SWF",
-				//vscode shows a warning if this is omitted, so we're using
-				//a placeholder that will be replaced instead.
-				program: TOKEN_PROGRAM
+				name: "Launch SWF"
 			}
 		];
 		return initialConfigurations;
@@ -46,7 +41,7 @@ export default class SWFDebugConfigurationProvider implements vscode.DebugConfig
 
 	resolveDebugConfiguration?(folder: vscode.WorkspaceFolder | undefined, debugConfiguration: vscode.DebugConfiguration, token?: vscode.CancellationToken): vscode.ProviderResult<vscode.DebugConfiguration>
 	{
-		if(debugConfiguration.program !== TOKEN_PROGRAM)
+		if(debugConfiguration.program)
 		{
 			return debugConfiguration;
 		}
