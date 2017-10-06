@@ -4845,6 +4845,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
         //calculate the location for automatically generated xmlns tags
         IMXMLTagData rootTag = mxmlData.getRootTag();
+        if (rootTag == null)
+        {
+            return null;
+        }
         IMXMLTagAttributeData[] attributeDatas = rootTag.getAttributeDatas();
         for (IMXMLTagAttributeData attributeData : attributeDatas)
         {
