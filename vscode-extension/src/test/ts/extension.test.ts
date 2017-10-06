@@ -93,11 +93,14 @@ function findCompletionItem(name: string, items: vscode.CompletionItem[]): vscod
 	});
 }
 
-function containsNonTextCompletionItems(items: vscode.CompletionItem[]): boolean
+function containsCompletionItemsOtherThanTextOrSnippet(items: vscode.CompletionItem[]): boolean
 {
 	return items.some((item: vscode.CompletionItem) =>
 	{
-		return item.kind !== vscode.CompletionItemKind.Text;
+		//vscode can automatically provide Text items based on other text in the editor
+		return item.kind !== vscode.CompletionItemKind.Text &&
+			//vscode simply include snippets everywhere in the file, without restriction
+			item.kind !== vscode.CompletionItemKind.Snippet;
 	})
 }
 
@@ -5586,7 +5589,7 @@ suite("completion item provider", () =>
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
 				.then((list: vscode.CompletionList) =>
 					{
-						assert.ok(!containsNonTextCompletionItems(list.items),
+						assert.ok(!containsCompletionItemsOtherThanTextOrSnippet(list.items),
 							"vscode.executeCompletionItemProvider incorrectly provides items inside a string literal");
 					}, (err) =>
 					{
@@ -5603,7 +5606,7 @@ suite("completion item provider", () =>
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
 				.then((list: vscode.CompletionList) =>
 					{
-						assert.ok(!containsNonTextCompletionItems(list.items),
+						assert.ok(!containsCompletionItemsOtherThanTextOrSnippet(list.items),
 							"vscode.executeCompletionItemProvider incorrectly provides items inside a RegExp literal");
 					}, (err) =>
 					{
