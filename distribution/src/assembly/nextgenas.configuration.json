@@ -50,11 +50,20 @@
 			]
 		}
 	],
-	"surroundingPairs": [
+	"surroundingPairs":
+	[
 		["(", ")"],
 		["[", "]"],
 		["{", "}"],
 		["'", "'"],
 		["\"", "\""]
-	]
+	],
+	"folding":
+	{
+		"markers":
+		{
+			"start": "^\\s*//\\s*#?region",
+			"end": "^\\s*//\\s*#?endregion"
+		}
+	}
 }
