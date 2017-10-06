@@ -176,21 +176,15 @@ public class ImportTextEditUtils
             return null;
         }
         Matcher importMatcher = importPattern.matcher(text);
-        if (startIndex != -1 || endIndex != -1)
+        if(startIndex == -1)
         {
-            if(startIndex == -1)
-            {
-                //if startIndex equals -1, but endIndex doesn't,
-                //and startIndex should default to 0
-                startIndex = 0;
-            }
-            int endRegion = endIndex;
-            if (endRegion == -1)
-            {
-                endRegion = text.length();
-            }
-            importMatcher.region(startIndex, endRegion);
+            startIndex = 0;
         }
+        if (endIndex == -1)
+        {
+            endIndex = text.length();
+        }
+        importMatcher.region(startIndex, endIndex);
         String indent = "";
         int importIndex = -1;
         while (importMatcher.find())
@@ -213,7 +207,21 @@ public class ImportTextEditUtils
         }
         else //no existing imports
         {
-            if(startIndex != -1) //we have a specific range
+            //start by looking for the package block
+            Matcher packageMatcher = packagePattern.matcher(text);
+            packageMatcher.region(startIndex, endIndex);
+            if (packageMatcher.find()) //found the package
+            {
+                position = LanguageServerUtils.getPositionFromOffset(
+                    new StringReader(text), packageMatcher.end());
+                if(position.getCharacter() > 0)
+                {
+                    //go to the beginning of the line, if we're not there
+                    position.setCharacter(0);
+                }
+                indent = packageMatcher.group(2);
+            }
+            else //couldn't find the start of a package or existing imports
             {
                 position = LanguageServerUtils.getPositionFromOffset(new StringReader(text), startIndex);
                 if (position.getCharacter() > 0)
@@ -224,35 +232,10 @@ public class ImportTextEditUtils
                 }
                 //try to use the same indent as whatever follows
                 Matcher indentMatcher = indentPattern.matcher(text);
-                int endRegion = endIndex;
-                if (endRegion == -1)
-                {
-                    endRegion = text.length();
-                }
-                indentMatcher.region(startIndex, endRegion);
+                indentMatcher.region(startIndex, endIndex);
                 if (indentMatcher.find())
                 {
                     indent = indentMatcher.group(1);
-                }
-            }
-            else //no range specified, so find the package block, if possible
-            {
-                Matcher packageMatcher = packagePattern.matcher(text);
-                if (packageMatcher.find()) //found the package
-                {
-					position = LanguageServerUtils.getPositionFromOffset(
-						new StringReader(text), packageMatcher.end());
-                    if(position.getCharacter() > 0)
-                    {
-                        //go to the beginning of the line, if we're not there
-                        position.setCharacter(0);
-                    }
-                    indent = packageMatcher.group(2);
-                }
-                else //couldn't find the start of a package or existing imports
-                {
-                    //just put it at the very beginning of the file
-                    position = new Position(0, 0);
                 }
             }
             lineBreaks += "\n"; //add an extra line break

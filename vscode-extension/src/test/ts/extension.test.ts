@@ -6290,13 +6290,42 @@ suite("imports", () =>
 			});
 		});
 	});
-	test("nextgenas.addImport adds import for qualified class", () =>
+	test("nextgenas.addImport adds import for qualified class with no range", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Imports.as"));
 		let qualifiedName = "com.example.PackageClass";
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("nextgenas.addImport", "com.example.PackageClass", uri.toString(), -1, -1)
+				.then(() =>
+					{
+						return new Promise((resolve, reject) =>
+						{
+							//the text edit is not applied immediately, so give
+							//it a short delay before we check
+							setTimeout(() =>
+							{
+								let start = new vscode.Position(2, 0);
+								let end = new vscode.Position(4, 0);
+								let range = new vscode.Range(start, end);
+								let importText = editor.document.getText(range);
+								assert.strictEqual(importText, "\timport com.example.PackageClass;\n\n", "nextgenas.addImport failed to add import for class: " + uri);
+								resolve();
+							}, 250);
+						})
+					}, (err) =>
+					{
+						assert(false, "Failed to execute add import command: " + uri);
+					});
+		});
+	});
+	test("nextgenas.addImport adds import for qualified class in specific range", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Imports.as"));
+		let qualifiedName = "com.example.PackageClass";
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("nextgenas.addImport", "com.example.PackageClass", uri.toString(), 0, 126)
 				.then(() =>
 					{
 						return new Promise((resolve, reject) =>

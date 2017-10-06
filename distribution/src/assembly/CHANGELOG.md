@@ -4,13 +4,14 @@
 
 * Editor: New built-in snippets for ActionScript and MXML.
 * Editor: Added support for folding arbitrary regions in the editor with `//#region` and `//#endregion` comments.
-* Debugging: new "attach" request to connect to Flash Player or AIR that isn't launched by Visual Studio Code. Can be used for wi-fi or USB debugging on a mobile device.
+* Debugging: new "attach" request to connect to Flash Player or AIR that is launched outside of Visual Studio Code. Can be used for Wi-Fi or USB debugging on a mobile device.
 * Debugging: Simplified *launch.json* by making the "program" field optional. When omitted, the extension automatically detects the location of the SWF or AIR application descriptor, using the output location in *asconfig.json* or compiler defaults.
 * Debugging: Source location is shown on the right side of the debug console when a runtime error is thrown and displayed in the console.
 
 ### Fixed Issues
 
 * Completion: Fixed issue where opening completion list in a completely empty MXML file would result in an exception.
+* Completion: Fixed issue where the first import added to a file could be incorrectly added before the package block.
 * Debugging: Migrated away from deprecated method for providing inital configurations for SWF debugger.
 * Debugging: If the "profile" field is missing in *launch.json*, but the "config" field in *asconfig.json* is set to "airmobile", will correctly use the "mobileDevice" profile.
 * Tasks: If *asconfig.json* is missing from workspace, the asconfigc task will be offered if an *.as* or *.mxml* is open in the active editor.
