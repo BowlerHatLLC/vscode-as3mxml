@@ -23,9 +23,24 @@ const FILE_EXTENSION_SWF = ".swf";
 const CONFIG_AIR = "air";
 const CONFIG_AIRMOBILE = "airmobile";
 
+const PROFILE_MOBILE_DEVICE = "mobileDevice";
+
+interface SWFDebugConfiguration extends vscode.DebugConfiguration
+{
+	program?: string;
+	profile?: string;
+	screenDPI?: number;
+	screensize?: string;
+	args?: string[];
+	versionPlatform?: string;
+	runtimeExecutable?: string;
+	runtimeArgs?: string[];
+	extdir?: string;
+}
+
 export default class SWFDebugConfigurationProvider implements vscode.DebugConfigurationProvider
 {
-	provideDebugConfigurations(folder: vscode.WorkspaceFolder | undefined, token?: vscode.CancellationToken): vscode.ProviderResult<vscode.DebugConfiguration[]>
+	provideDebugConfigurations(folder: vscode.WorkspaceFolder | undefined, token?: vscode.CancellationToken): vscode.ProviderResult<SWFDebugConfiguration[]>
 	{
 		const initialConfigurations = 
 		[
@@ -39,12 +54,8 @@ export default class SWFDebugConfigurationProvider implements vscode.DebugConfig
 		return initialConfigurations;
 	}
 
-	resolveDebugConfiguration?(folder: vscode.WorkspaceFolder | undefined, debugConfiguration: vscode.DebugConfiguration, token?: vscode.CancellationToken): vscode.ProviderResult<vscode.DebugConfiguration>
+	resolveDebugConfiguration?(folder: vscode.WorkspaceFolder | undefined, debugConfiguration: SWFDebugConfiguration, token?: vscode.CancellationToken): vscode.ProviderResult<SWFDebugConfiguration>
 	{
-		if(debugConfiguration.program)
-		{
-			return debugConfiguration;
-		}
 		if(vscode.workspace.workspaceFolders === undefined)
 		{
 			vscode.window.showErrorMessage("Failed to debug SWF. A workspace must be open.");
@@ -59,53 +70,65 @@ export default class SWFDebugConfigurationProvider implements vscode.DebugConfig
 			return null;
 		}
 		
-		let program: string = null;
+		let program: string = debugConfiguration.program;
+		let asconfigJSON: any = null;
 		try
 		{
 			let asconfigFile = fs.readFileSync(asconfigPath, "utf8");
-			let asconfigJSON = json5.parse(asconfigFile);
-			let appDescriptorPath: string = null;
-			let outputPath: string = null;
-			let mainClassPath: string = null;
-			let requireAIR = false;
-			if("config" in asconfigJSON)
+			asconfigJSON = json5.parse(asconfigFile);
+		}
+		catch(error)
+		{
+			//something went terribly wrong!
+			vscode.window.showErrorMessage("Failed to debug SWF. Error reading asconfig.json");
+			return null;
+		}
+		let appDescriptorPath: string = null;
+		let outputPath: string = null;
+		let mainClassPath: string = null;
+		let requireAIR = false;
+		let isMobile = false;
+		if("config" in asconfigJSON)
+		{
+			isMobile = asconfigJSON.config === CONFIG_AIRMOBILE;
+			requireAIR = isMobile || asconfigJSON.config === CONFIG_AIR;
+		}
+		if("application" in asconfigJSON)
+		{
+			appDescriptorPath = asconfigJSON.application;
+			requireAIR = true;
+		}
+		if("profile" in debugConfiguration ||
+			"screensize" in debugConfiguration ||
+			"screenDPI" in debugConfiguration ||
+			"versionPlatform" in debugConfiguration ||
+			"extdir" in debugConfiguration ||
+			"args" in debugConfiguration)
+		{
+			//if any of these fields are specified in the debug
+			//configuration, then AIR is required!
+			requireAIR = true;
+		}
+		if("compilerOptions" in asconfigJSON)
+		{
+			let compilerOptions = asconfigJSON.compilerOptions;
+			if("output" in compilerOptions)
 			{
-				requireAIR = asconfigJSON.config === CONFIG_AIR || asconfigJSON.config === CONFIG_AIRMOBILE;
+				outputPath = asconfigJSON.compilerOptions.output;
 			}
-			if("application" in asconfigJSON)
+		}
+		if("files" in asconfigJSON)
+		{
+			let files = asconfigJSON.files;
+			if(Array.isArray(files) && files.length > 0)
 			{
-				appDescriptorPath = asconfigJSON.application;
-				requireAIR = true;
+				//the last entry in the files field is the main
+				//class used as the entry point.
+				mainClassPath = files[files.length - 1];
 			}
-			if("profile" in debugConfiguration ||
-				"screensize" in debugConfiguration ||
-				"screenDPI" in debugConfiguration ||
-				"versionPlatform" in debugConfiguration ||
-				"extdir" in debugConfiguration ||
-				"args" in debugConfiguration)
-			{
-				//if any of these fields are specified in the debug
-				//configuration, then AIR is required!
-				requireAIR = true;
-			}
-			if("compilerOptions" in asconfigJSON)
-			{
-				let compilerOptions = asconfigJSON.compilerOptions;
-				if("output" in compilerOptions)
-				{
-					outputPath = asconfigJSON.compilerOptions.output;
-				}
-			}
-			if("files" in asconfigJSON)
-			{
-				let files = asconfigJSON.files;
-				if(Array.isArray(files) && files.length > 0)
-				{
-					//the last entry in the files field is the main
-					//class used as the entry point.
-					mainClassPath = files[files.length - 1];
-				}
-			}
+		}
+		if(!program)
+		{
 			if(appDescriptorPath !== null)
 			{
 				//start by checking if this is an AIR app
@@ -154,18 +177,17 @@ export default class SWFDebugConfigurationProvider implements vscode.DebugConfig
 				return null;
 			}
 		}
-		catch(error)
-		{
-			//something went terribly wrong!
-			console.error("Error resolving SWF debug configuration: " + error.toString());
-		}
-	
-		if(program === null)
+		if(!program)
 		{
 			///this shouldn't happen, but in case there's a bug,
 			//this will catch any missing programs
 			vscode.window.showErrorMessage("Failed to debug SWF. Program not found.");
 			return null;
+		}
+		if(isMobile && !debugConfiguration.profile)
+		{
+			//save the user from having to specify the profile manually
+			debugConfiguration.profile = PROFILE_MOBILE_DEVICE;
 		}
 		debugConfiguration.program = program;
 		return debugConfiguration;
