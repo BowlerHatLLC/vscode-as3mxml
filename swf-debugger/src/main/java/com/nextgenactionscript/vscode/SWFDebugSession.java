@@ -138,6 +138,9 @@ public class SWFDebugSession extends DebugSession
                                 output += '\n';
                             }
                             OutputEvent.OutputBody body = new OutputEvent.OutputBody();
+                            //we can't populate the location for a trace() to the
+                            //console because the result of getFrames() is empty
+                            //when the runtime isn't suspended
                             body.output = output;
                             sendEvent(new OutputEvent(body));
                         }
@@ -150,6 +153,7 @@ public class SWFDebugSession extends DebugSession
                                 output += '\n';
                             }
                             OutputEvent.OutputBody body = new OutputEvent.OutputBody();
+                            populateLocationInOutputBody(body);
                             body.output = output;
                             body.category = OutputEvent.CATEGORY_STDERR;
                             sendEvent(new OutputEvent(body));
@@ -225,6 +229,34 @@ public class SWFDebugSession extends DebugSession
                 catch (InterruptedException ie)
                 {
                 }
+            }
+        }
+        
+        private void populateLocationInOutputBody(OutputEvent.OutputBody body)
+        {
+            try
+            {
+                Frame[] swfFrames = swfSession.getFrames();
+                if (swfFrames.length > 0)
+                {
+                    Frame swfFrame = swfFrames[0];
+                    Location location = swfFrame.getLocation();
+                    SourceFile file = location.getFile();
+                    if (file != null)
+                    {
+                        Source source = new Source();
+                        source.name = file.getName();
+                        source.path = transformPath(file.getFullPath());
+                        body.source = source;
+                        body.line = location.getLine();
+                        body.column = 0;
+                    }
+                }
+            }
+            catch (NotConnectedException e)
+            {
+                System.err.println("not connected");
+                return;
             }
         }
     }

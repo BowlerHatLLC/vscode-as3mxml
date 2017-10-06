@@ -16,6 +16,7 @@ limitations under the License.
 package com.nextgenactionscript.vscode.debug.events;
 
 import com.nextgenactionscript.vscode.debug.protocol.Event;
+import com.nextgenactionscript.vscode.debug.requests.Source;
 
 public class OutputEvent extends Event<OutputEvent.OutputBody>
 {
@@ -36,6 +37,9 @@ public class OutputEvent extends Event<OutputEvent.OutputBody>
         public String output;
         public Long variablesReference = null;
         public Object data = null;
+        public Source source = null;
+        public Integer line = null;
+        public Integer column = null;
 
         public OutputBody()
         {
