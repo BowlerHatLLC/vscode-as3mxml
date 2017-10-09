@@ -16,6 +16,7 @@
 * Debugging: Migrated away from deprecated method for providing inital configurations for SWF debugger.
 * Debugging: If the "profile" field is missing in *launch.json*, but the "config" field in *asconfig.json* is set to "airmobile", will correctly use the "mobileDevice" profile.
 * Debugging: Fixed issue where *http:* and *https:* URLs could not be used in "program" field of *launch.json*.
+* Debugging: Improved detection of executable in *Contents/MacOS* when "runtimeExecutable" field in *launch.json* ends at *.app* file extension.
 * Tasks: If *asconfig.json* is missing from workspace, the asconfigc task will be offered if an *.as* or *.mxml* is open in the active editor.
 
 ## 0.6.0

@@ -46,14 +46,31 @@ public class CustomRuntimeLauncher implements ILauncher
             //for convenience, we'll automatically dig into .app packages on
             //macOS to find the real executable. easier than documenting the
             //whole "Show Package Contents" thing in Finder.
-            Path directoryPath = Paths.get(runtimeExecutable).resolve("./Contents/MacOS");
+            Path appPath = Paths.get(runtimeExecutable);
+            Path fileNamePath = appPath.getFileName();
+            String baseFileName = fileNamePath.toString();
+            baseFileName = baseFileName.substring(0, baseFileName.length() - EXTENSION_APP.length());
+            Path directoryPath = appPath.resolve("./Contents/MacOS");
             File directory = directoryPath.toFile();
             if (directory.exists() && directory.isDirectory())
             {
                 File[] files = directory.listFiles();
-                if (files.length > 0)
+                if (files.length >= 1)
                 {
                     runtimeExecutable = files[0].getAbsolutePath();
+                    for (int i = 1; i < files.length; i++)
+                    {
+                        File file = files[i];
+                        if(file.getName().equals(baseFileName))
+                        {
+                            //sometimes, there will be multiple executables,
+                            //and we need to guess which one is best. if the
+                            //name matches the name before .app, it's probably
+                            //the best one to use.
+                            runtimeExecutable = file.getAbsolutePath();
+                            break;
+                        }
+                    }
                 }
             }
         }
