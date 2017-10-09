@@ -296,16 +296,19 @@ public class SWFDebugSession extends DebugSession
             if (manager.supportsLaunch())
             {
                 String program = swfArgs.program;
-                Path programPath = Paths.get(program);
-                if (!programPath.isAbsolute())
+                if (!program.startsWith("http:") && !program.startsWith("https:"))
                 {
-                    //if it's not an absolute path, we'll treat it as a
-                    //relative path within the workspace
-                    String workspacePath = System.getProperty(WORKSPACE_PROPERTY);
-                    if (workspacePath != null)
+                    Path programPath = Paths.get(program);
+                    if (!programPath.isAbsolute())
                     {
-                        program = Paths.get(workspacePath)
-                                .resolve(programPath).toAbsolutePath().toString();
+                        //if it's not an absolute path, we'll treat it as a
+                        //relative path within the workspace
+                        String workspacePath = System.getProperty(WORKSPACE_PROPERTY);
+                        if (workspacePath != null)
+                        {
+                            program = Paths.get(workspacePath)
+                                    .resolve(programPath).toAbsolutePath().toString();
+                        }
                     }
                 }
                 Player player = null;
