@@ -28,19 +28,18 @@ public class CheckJavaVersion
     {
         String version = System.getProperty("java.specification.version");
         String[] versionParts = version.split("-")[0].split("\\.");
-        if(versionParts.length < 2)
-        {
-            System.exit(BAD_VERSION);
-        }
         int major = Integer.parseInt(versionParts[0]);
-        if(major > 1)
+        if (major > 1)
         {
             System.exit(GOOD_VERSION);
         }
-        int minor = Integer.parseInt(versionParts[1]);
-        if(major == 1 && minor >= 8)
+        if (versionParts.length > 1)
         {
-            System.exit(GOOD_VERSION);
+            int minor = Integer.parseInt(versionParts[1]);
+            if (major == 1 && minor >= 8)
+            {
+                System.exit(GOOD_VERSION);
+            }
         }
         System.exit(BAD_VERSION);
     }

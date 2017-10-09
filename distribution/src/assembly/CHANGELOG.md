@@ -10,6 +10,7 @@
 
 ### Fixed Issues
 
+* Java Compatibility: Fixed issue where extension would not work correctly with Java 9 because the version string format changed.
 * Completion: Fixed issue where opening completion list in a completely empty MXML file would result in an exception.
 * Completion: Fixed issue where the first import added to a file could be incorrectly added before the package block.
 * Debugging: Migrated away from deprecated method for providing inital configurations for SWF debugger.
