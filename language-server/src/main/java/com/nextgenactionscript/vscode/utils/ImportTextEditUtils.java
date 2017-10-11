@@ -24,13 +24,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.flex.compiler.projects.ICompilerProject;
-import org.apache.flex.compiler.tree.as.IASNode;
-import org.apache.flex.compiler.tree.as.IFunctionCallNode;
-import org.apache.flex.compiler.tree.as.IIdentifierNode;
 import org.apache.flex.compiler.tree.as.IImportNode;
-import org.apache.flex.compiler.tree.as.IScopedNode;
-import org.apache.flex.compiler.tree.as.IVariableNode;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
@@ -40,7 +34,7 @@ public class ImportTextEditUtils
     private static final Pattern organizeImportPattern = Pattern.compile("(?m)^([ \\t]*)import ((\\w+\\.)+\\w+(\\.\\*)?);?");
     private static final Pattern importPattern = Pattern.compile("(?m)^([ \\t]*)import ([\\w\\.]+)");
     private static final Pattern indentPattern = Pattern.compile("(?m)^([ \\t]*)\\w");
-    private static final Pattern packagePattern = Pattern.compile("(?m)^package( [\\w\\.]+)*\\s*\\{[\\r\\n]+([ \\t]*)");
+    private static final Pattern packagePattern = Pattern.compile("(?m)^package(?: [\\w\\.]+)*\\s*\\{(?:[ \\t]*[\\r\\n]+)+([ \\t]*)");
     private static final String UNDERSCORE_UNDERSCORE_AS3_PACKAGE = "__AS3__.";
 
     protected static int organizeImportsFromStartIndex(String text, int startIndex, Set<IImportNode> importsToRemove, Set<String> importsToAdd, List<TextEdit> edits)
@@ -106,6 +100,17 @@ public class ImportTextEditUtils
             //nothing to organize
             return endIndex;
         }
+        
+        if (startImportsIndex == -1)
+        {
+            Matcher packageMatcher = packagePattern.matcher(text);
+            packageMatcher.region(0, text.length());
+            if (packageMatcher.find()) //found the package
+            {
+                indent = packageMatcher.group(1);
+                startImportsIndex = packageMatcher.end() - indent.length();
+            }
+        }
         //make the Set a List and put them in alphabetical order
         List<String> names = new ArrayList<>(nameSet);
         Collections.sort(names);
@@ -135,6 +140,13 @@ public class ImportTextEditUtils
             result.append("import ");
             result.append(name);
             result.append(";");
+        }
+
+        if (endImportsIndex == -1)
+        {
+            endImportsIndex = startImportsIndex;
+            //we're only adding new imports, so add some extra whitespace
+            result.append("\n\n");
         }
 
         TextEdit edit = new TextEdit();
@@ -219,7 +231,7 @@ public class ImportTextEditUtils
                     //go to the beginning of the line, if we're not there
                     position.setCharacter(0);
                 }
-                indent = packageMatcher.group(2);
+                indent = packageMatcher.group(1);
             }
             else //couldn't find the start of a package or existing imports
             {
