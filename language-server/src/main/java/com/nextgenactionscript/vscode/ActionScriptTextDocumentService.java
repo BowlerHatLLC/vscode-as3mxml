@@ -780,7 +780,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 case "1120": //AccessUndefinedPropertyProblem
                 {
                     //see if there's anything we can import
-                    createCodeActionsForImport(diagnostic, commands);
+                    createCodeActionsForImport(textDocument, diagnostic, commands);
                     createCodeActionForMissingLocalVariable(textDocument, diagnostic, commands);
                     createCodeActionForMissingField(textDocument, diagnostic, commands);
                     break;
@@ -788,7 +788,19 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 case "1046": //UnknownTypeProblem
                 {
                     //see if there's anything we can import
-                    createCodeActionsForImport(diagnostic, commands);
+                    createCodeActionsForImport(textDocument, diagnostic, commands);
+                    break;
+                }
+                case "1017": //UnknownSuperclassProblem
+                {
+                    //see if there's anything we can import
+                    createCodeActionsForImport(textDocument, diagnostic, commands);
+                    break;
+                }
+                case "1045": //UnknownInterfaceProblem
+                {
+                    //see if there's anything we can import
+                    createCodeActionsForImport(textDocument, diagnostic, commands);
                     break;
                 }
                 case "1061": //StrictUndefinedMethodProblem
@@ -804,13 +816,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 case "1178": //InaccessiblePropertyReferenceProblem
                 {
                     //see if there's anything we can import
-                    createCodeActionsForImport(diagnostic, commands);
+                    createCodeActionsForImport(textDocument, diagnostic, commands);
                     break;
                 }
                 case "1180": //CallUndefinedMethodProblem
                 {
                     //see if there's anything we can import
-                    createCodeActionsForImport(diagnostic, commands);
+                    createCodeActionsForImport(textDocument, diagnostic, commands);
                     createCodeActionForMissingMethod(textDocument, diagnostic, commands);
                     break;
                 }
@@ -1037,12 +1049,15 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         commands.add(generateMethodCommand);
     }
 
-    private void createCodeActionsForImport(Diagnostic diagnostic, List<Command> commands)
+    private void createCodeActionsForImport(TextDocumentIdentifier textDocument, Diagnostic diagnostic, List<Command> commands)
     {
-        String message = diagnostic.getMessage();
-        int start = message.lastIndexOf(" ") + 1;
-        int end = message.length() - 1;
-        String typeString = message.substring(start, end);
+        IASNode offsetNode = getOffsetNode(textDocument, diagnostic.getRange().getStart());
+        if (offsetNode == null || !(offsetNode instanceof IIdentifierNode))
+        {
+            return;
+        }
+        IIdentifierNode identifierNode = (IIdentifierNode) offsetNode;
+        String typeString = identifierNode.getName();
 
         List<IDefinition> types = ASTUtils.findTypesThatMatchName(typeString, compilationUnits);
         for (IDefinition definitionToImport : types)

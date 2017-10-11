@@ -17,6 +17,8 @@ import * as assert from "assert";
 import * as path from "path";
 import * as vscode from "vscode";
 
+const COMMAND_ADD_IMPORT = "nextgenas.addImport"
+
 function openAndEditDocument(uri: vscode.Uri, callback: (editor: vscode.TextEditor) => PromiseLike<void>): PromiseLike<void>
 {
 	return vscode.workspace.openTextDocument(uri)
@@ -102,6 +104,22 @@ function containsCompletionItemsOtherThanTextOrSnippet(items: vscode.CompletionI
 			//vscode simply include snippets everywhere in the file, without restriction
 			item.kind !== vscode.CompletionItemKind.Snippet;
 	})
+}
+
+function findImportCommandForType(qualifiedName: string, codeActions: vscode.Command[])
+{
+	for(let i = 0, count = codeActions.length; i < count; i++)
+	{
+		let codeAction = codeActions[i];
+		if(codeAction.command === COMMAND_ADD_IMPORT)
+		{
+			if(codeAction.arguments[0] === qualifiedName)
+			{
+				return codeAction;
+			}
+		}
+	}
+	return null;
 }
 
 suite("NextGenAS extension", () =>
@@ -6455,6 +6473,201 @@ suite("mxml namespaces", () =>
 					}, (err) =>
 					{
 						assert(false, "Failed to execute add import command: " + uri);
+					});
+		});
+	});
+});
+
+suite("code action provider", () =>
+{
+	test("vscode.executeCodeActionProvider finds import for base class", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "CodeActions.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			let start = new vscode.Position(0, 0);
+			let end = new vscode.Position(editor.document.lineCount, 0);
+			let range = new vscode.Range(start, end);
+			return vscode.commands.executeCommand("vscode.executeCodeActionProvider", uri, range)
+				.then((codeActions: vscode.Command[]) =>
+					{
+						let typeToImport = "com.example.codeActions.CodeActionsBase";
+						let codeAction = findImportCommandForType(typeToImport, codeActions);
+						assert.notEqual(codeAction, null, "Code action not found");
+						assert.strictEqual(codeAction.command, COMMAND_ADD_IMPORT);
+						assert.strictEqual(codeAction.arguments[0], typeToImport, "Code action provided incorrect type to import");
+						assert.strictEqual(codeAction.arguments[1], uri.toString(), "Code action provided incorrect URI");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute code actions provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeCodeActionProvider finds import for implemented interface", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "CodeActions.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			let start = new vscode.Position(0, 0);
+			let end = new vscode.Position(editor.document.lineCount, 0);
+			let range = new vscode.Range(start, end);
+			return vscode.commands.executeCommand("vscode.executeCodeActionProvider", uri, range)
+				.then((codeActions: vscode.Command[]) =>
+					{
+						let typeToImport = "com.example.codeActions.ICodeActionsInterface";
+						let codeAction = findImportCommandForType(typeToImport, codeActions);
+						assert.notEqual(codeAction, null, "Code action not found");
+						assert.strictEqual(codeAction.command, COMMAND_ADD_IMPORT);
+						assert.strictEqual(codeAction.arguments[0], typeToImport, "Code action provided incorrect type to import");
+						assert.strictEqual(codeAction.arguments[1], uri.toString(), "Code action provided incorrect URI");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute code actions provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeCodeActionProvider finds import for new instance", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "CodeActions.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			let start = new vscode.Position(0, 0);
+			let end = new vscode.Position(editor.document.lineCount, 0);
+			let range = new vscode.Range(start, end);
+			return vscode.commands.executeCommand("vscode.executeCodeActionProvider", uri, range)
+				.then((codeActions: vscode.Command[]) =>
+					{
+						let typeToImport = "com.example.codeActions.CodeActionsNew";
+						let codeAction = findImportCommandForType(typeToImport, codeActions);
+						assert.notEqual(codeAction, null, "Code action not found");
+						assert.strictEqual(codeAction.command, COMMAND_ADD_IMPORT);
+						assert.strictEqual(codeAction.arguments[0], typeToImport, "Code action provided incorrect type to import");
+						assert.strictEqual(codeAction.arguments[1], uri.toString(), "Code action provided incorrect URI");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute code actions provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeCodeActionProvider finds import for variable type", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "CodeActions.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			let start = new vscode.Position(0, 0);
+			let end = new vscode.Position(editor.document.lineCount, 0);
+			let range = new vscode.Range(start, end);
+			return vscode.commands.executeCommand("vscode.executeCodeActionProvider", uri, range)
+				.then((codeActions: vscode.Command[]) =>
+					{
+						let typeToImport = "com.example.codeActions.CodeActionsVarType";
+						let codeAction = findImportCommandForType(typeToImport, codeActions);
+						assert.notEqual(codeAction, null, "Code action not found");
+						assert.strictEqual(codeAction.command, COMMAND_ADD_IMPORT);
+						assert.strictEqual(codeAction.arguments[0], typeToImport, "Code action provided incorrect type to import");
+						assert.strictEqual(codeAction.arguments[1], uri.toString(), "Code action provided incorrect URI");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute code actions provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeCodeActionProvider finds import for parameter type", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "CodeActions.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			let start = new vscode.Position(0, 0);
+			let end = new vscode.Position(editor.document.lineCount, 0);
+			let range = new vscode.Range(start, end);
+			return vscode.commands.executeCommand("vscode.executeCodeActionProvider", uri, range)
+				.then((codeActions: vscode.Command[]) =>
+					{
+						let typeToImport = "com.example.codeActions.CodeActionsParamType";
+						let codeAction = findImportCommandForType(typeToImport, codeActions);
+						assert.notEqual(codeAction, null, "Code action not found");
+						assert.strictEqual(codeAction.command, COMMAND_ADD_IMPORT);
+						assert.strictEqual(codeAction.arguments[0], typeToImport, "Code action provided incorrect type to import");
+						assert.strictEqual(codeAction.arguments[1], uri.toString(), "Code action provided incorrect URI");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute code actions provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeCodeActionProvider finds import for return type", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "CodeActions.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			let start = new vscode.Position(0, 0);
+			let end = new vscode.Position(editor.document.lineCount, 0);
+			let range = new vscode.Range(start, end);
+			return vscode.commands.executeCommand("vscode.executeCodeActionProvider", uri, range)
+				.then((codeActions: vscode.Command[]) =>
+					{
+						let typeToImport = "com.example.codeActions.CodeActionsReturnType";
+						let codeAction = findImportCommandForType(typeToImport, codeActions);
+						assert.notEqual(codeAction, null, "Code action not found");
+						assert.strictEqual(codeAction.command, COMMAND_ADD_IMPORT);
+						assert.strictEqual(codeAction.arguments[0], typeToImport, "Code action provided incorrect type to import");
+						assert.strictEqual(codeAction.arguments[1], uri.toString(), "Code action provided incorrect URI");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute code actions provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeCodeActionProvider finds import for type in assignment", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "CodeActions.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			let start = new vscode.Position(0, 0);
+			let end = new vscode.Position(editor.document.lineCount, 0);
+			let range = new vscode.Range(start, end);
+			return vscode.commands.executeCommand("vscode.executeCodeActionProvider", uri, range)
+				.then((codeActions: vscode.Command[]) =>
+					{
+						let typeToImport = "com.example.codeActions.CodeActionsAssign";
+						let codeAction = findImportCommandForType(typeToImport, codeActions);
+						assert.notEqual(codeAction, null, "Code action not found");
+						assert.strictEqual(codeAction.command, COMMAND_ADD_IMPORT);
+						assert.strictEqual(codeAction.arguments[0], typeToImport, "Code action provided incorrect type to import");
+						assert.strictEqual(codeAction.arguments[1], uri.toString(), "Code action provided incorrect URI");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute code actions provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeCodeActionProvider finds import for multiple types with the same base name", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "CodeActions.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			let start = new vscode.Position(0, 0);
+			let end = new vscode.Position(editor.document.lineCount, 0);
+			let range = new vscode.Range(start, end);
+			return vscode.commands.executeCommand("vscode.executeCodeActionProvider", uri, range)
+				.then((codeActions: vscode.Command[]) =>
+					{
+						let typeToImport1 = "com.example.codeActions.CodeActionsMultiple";
+						let codeAction1 = findImportCommandForType(typeToImport1, codeActions);
+						assert.notEqual(codeAction1, null, "Code action 1 not found");
+						assert.strictEqual(codeAction1.command, COMMAND_ADD_IMPORT);
+						assert.strictEqual(codeAction1.arguments[0], typeToImport1, "Code action 1 provided incorrect type to import");
+						assert.strictEqual(codeAction1.arguments[1], uri.toString(), "Code action 1 provided incorrect URI");
+
+						let typeToImport2 = "com.example.codeActions.more.CodeActionsMultiple";
+						let codeAction2 = findImportCommandForType(typeToImport2, codeActions);
+						assert.notEqual(codeAction2, null, "Code action 2 not found");
+						assert.strictEqual(codeAction2.command, COMMAND_ADD_IMPORT);
+						assert.strictEqual(codeAction2.arguments[0], typeToImport2, "Code action 2 provided incorrect type to import");
+						assert.strictEqual(codeAction2.arguments[1], uri.toString(), "Code action 2 provided incorrect URI");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute code actions provider: " + uri);
 					});
 		});
 	});
