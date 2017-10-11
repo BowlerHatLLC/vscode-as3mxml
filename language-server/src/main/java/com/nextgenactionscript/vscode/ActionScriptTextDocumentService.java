@@ -45,6 +45,7 @@ import org.apache.flex.abc.ABCParser;
 import org.apache.flex.abc.Pool;
 import org.apache.flex.abc.PoolingABCVisitor;
 import org.apache.flex.compiler.asdoc.IASDocComment;
+import org.apache.flex.compiler.asdoc.IASDocTag;
 import org.apache.flex.compiler.clients.MXMLJSC;
 import org.apache.flex.compiler.common.ASModifier;
 import org.apache.flex.compiler.common.ISourceLocation;
@@ -235,6 +236,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private static final String FLEXLIB = "flexlib";
     private static final String UNDERSCORE_UNDERSCORE_AS3_PACKAGE = "__AS3__.";
     private static final String VECTOR_HIDDEN_PREFIX = "Vector$";
+    private static final String ASDOC_TAG_PARAM = "param";
 
     private static final String[] LANGUAGE_TYPE_NAMES =
             {
@@ -547,12 +549,22 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
             SignatureInformation signatureInfo = new SignatureInformation();
             signatureInfo.setLabel(getSignatureLabel(functionDefinition));
+            String docs = getDocumentationForDefinition(functionDefinition, true);
+            if (docs != null)
+            {
+                signatureInfo.setDocumentation(docs);
+            }
 
             List<ParameterInformation> parameters = new ArrayList<>();
             for (IParameterDefinition param : functionDefinition.getParameters())
             {
                 ParameterInformation paramInfo = new ParameterInformation();
                 paramInfo.setLabel(param.getBaseName());
+                String paramDocs = getDocumentationForParameter(param, true);
+                if (paramDocs != null)
+                {
+                    paramInfo.setDocumentation(paramDocs);
+                }
                 parameters.add(paramInfo);
             }
             signatureInfo.setParameters(parameters);
@@ -3387,6 +3399,37 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
         }
         result.getItems().add(item);
+    }
+    
+    private String getDocumentationForParameter(IParameterDefinition definition, boolean useMarkdown)
+    {
+        IDefinition parentDefinition = definition.getParent();
+        if (!(parentDefinition instanceof IFunctionDefinition))
+        {
+            return null;
+        }
+        IFunctionDefinition functionDefinition = (IFunctionDefinition) parentDefinition;
+        VSCodeASDocComment comment = (VSCodeASDocComment) functionDefinition.getExplicitSourceComment();
+        if (comment == null)
+        {
+            return null;
+        }
+        comment.compile(useMarkdown);
+        Collection<IASDocTag> paramTags = comment.getTagsByName(ASDOC_TAG_PARAM);
+        if (paramTags == null)
+        {
+            return null;
+        }
+        String paramName = definition.getBaseName();
+        for (IASDocTag paramTag : paramTags)
+        {
+            String description = paramTag.getDescription();
+            if (description.startsWith(paramName + " "))
+            {
+                return description.substring(paramName.length() + 1);
+            }
+        }
+        return null;
     }
     
     private String getDocumentationForDefinition(IDefinition definition, boolean useMarkdown)

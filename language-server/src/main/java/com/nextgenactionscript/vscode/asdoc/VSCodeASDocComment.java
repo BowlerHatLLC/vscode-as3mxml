@@ -107,8 +107,9 @@ public class VSCodeASDocComment implements IASDocComment
             		{
             			tags = new ArrayList<IASDocTag>();
             			tagMap.put(tagName, tags);
-            		}
-            		tags.add(new ASDocTag(tagName, line.substring(after + 1)));
+					}
+					String tagDescription = reformatLine(line.substring(after + 1), false);
+            		tags.add(new ASDocTag(tagName, tagDescription));
             	}            		
             }
         }
@@ -178,12 +179,17 @@ public class VSCodeASDocComment implements IASDocComment
 	
 	private String reformatLine(String line)
 	{
+		return reformatLine(line, usingMarkdown);
+	}
+	
+	private String reformatLine(String line, boolean useMarkdown)
+	{
 		if(!insidePreformatted)
 		{
 			line = line.trim();
 		}
 		int beforeLength = line.length();
-		if(usingMarkdown)
+		if(useMarkdown)
 		{
 			line = line.replaceAll("<(pre|listing)( \\w+=(\"|\')([\\w\\. ]+)?(\"|\'))*>", "\n\n```\n");
 		}
@@ -196,7 +202,7 @@ public class VSCodeASDocComment implements IASDocComment
 			insidePreformatted = true;
 		}
 		beforeLength = line.length();
-		if(usingMarkdown)
+		if(useMarkdown)
 		{
 			line = line.replaceAll("</(pre|listing)>", "\n```\n");
 		}
@@ -208,7 +214,7 @@ public class VSCodeASDocComment implements IASDocComment
 		{
 			insidePreformatted = false;
 		}
-		if(usingMarkdown)
+		if(useMarkdown)
 		{
 			line = line.replaceAll("</?em>", "*");
 			line = line.replaceAll("</?strong>", "**");
