@@ -860,7 +860,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         generateGetterAndSetterCommand.setTitle("Generate Getter and Setter");
         generateGetterAndSetterCommand.setCommand(ICommandConstants.GENERATE_GETTER_AND_SETTER);
         generateGetterAndSetterCommand.setArguments(Arrays.asList(
-            diagnostic.getSource(),
+            textDocument.getUri(),
             diagnostic.getRange().getStart().getLine(),
             diagnostic.getRange().getStart().getCharacter(),
             diagnostic.getRange().getEnd().getLine(),
@@ -877,7 +877,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         generateGetterCommand.setTitle("Generate Getter");
         generateGetterCommand.setCommand(ICommandConstants.GENERATE_GETTER);
         generateGetterCommand.setArguments(Arrays.asList(
-            diagnostic.getSource(),
+            textDocument.getUri(),
             diagnostic.getRange().getStart().getLine(),
             diagnostic.getRange().getStart().getCharacter(),
             diagnostic.getRange().getEnd().getLine(),
@@ -894,7 +894,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         generateSetterCommand.setTitle("Generate Setter");
         generateSetterCommand.setCommand(ICommandConstants.GENERATE_SETTER);
         generateSetterCommand.setArguments(Arrays.asList(
-            diagnostic.getSource(),
+            textDocument.getUri(),
             diagnostic.getRange().getStart().getLine(),
             diagnostic.getRange().getStart().getCharacter(),
             diagnostic.getRange().getEnd().getLine(),
@@ -6251,7 +6251,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private CompletableFuture<Object> executeGenerateGetterAndSetterCommand(ExecuteCommandParams params, boolean generateGetter, boolean generateSetter)
     {
         List<Object> args = params.getArguments();
-        String filePath = (String) args.get(0);
+        String uri = (String) args.get(0);
         int startLine = ((Double) args.get(1)).intValue();
         int startChar = ((Double) args.get(2)).intValue();
         int endLine = ((Double) args.get(3)).intValue();
@@ -6271,8 +6271,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         workspaceEdit.setChanges(changes);
 
         List<TextEdit> edits = new ArrayList<>();
-        Path path = Paths.get(filePath);
-        changes.put(path.toUri().toString(), edits);
+        changes.put(uri, edits);
 
         TextEdit edit = new TextEdit();
         edits.add(edit);
@@ -6337,6 +6336,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         //we may need to adjust the end position to include the semi-colon
         try
         {
+            Path path = Paths.get(URI.create(uri));
             String text = IOUtils.toString(getReaderForPath(path));
             int offset = LanguageServerUtils.getOffsetFromPosition(new StringReader(text), endPosition);
             if (offset < text.length() && text.charAt(offset) == ';')

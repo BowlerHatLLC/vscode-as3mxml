@@ -1,8 +1,8 @@
 package
 {
-	public class CodeActions extends CodeActionsBase implements ICodeActionsInterface
+	public class CodeActionsImports extends CodeActionsBase implements ICodeActionsInterface
 	{
-		public function CodeActions()
+		public function CodeActionsImports()
 		{
 			var typeToFind:CodeActionsVarType;
 			var constructorToFind:Object = new CodeActionsNew();

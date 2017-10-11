@@ -17,7 +17,13 @@ import * as assert from "assert";
 import * as path from "path";
 import * as vscode from "vscode";
 
-const COMMAND_ADD_IMPORT = "nextgenas.addImport"
+const COMMAND_ADD_IMPORT = "nextgenas.addImport";
+const COMMAND_GENERATE_GETTER = "nextgenas.generateGetter";
+const COMMAND_GENERATE_SETTER = "nextgenas.generateSetter";
+const COMMAND_GENERATE_GETTER_AND_SETTER = "nextgenas.generateGetterAndSetter";
+const COMMAND_GENERATE_LOCAL_VARIABLE = "nextgenas.generateLocalVariable";
+const COMMAND_GENERATE_FIELD_VARIABLE = "nextgenas.generateFieldVariable";
+const COMMAND_GENERATE_METHOD = "nextgenas.generateMethod";
 
 function openAndEditDocument(uri: vscode.Uri, callback: (editor: vscode.TextEditor) => PromiseLike<void>): PromiseLike<void>
 {
@@ -6482,7 +6488,7 @@ suite("code action provider", () =>
 {
 	test("vscode.executeCodeActionProvider finds import for base class", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "CodeActions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "CodeActionsImports.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			let start = new vscode.Position(0, 0);
@@ -6505,7 +6511,7 @@ suite("code action provider", () =>
 	});
 	test("vscode.executeCodeActionProvider finds import for implemented interface", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "CodeActions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "CodeActionsImports.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			let start = new vscode.Position(0, 0);
@@ -6528,7 +6534,7 @@ suite("code action provider", () =>
 	});
 	test("vscode.executeCodeActionProvider finds import for new instance", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "CodeActions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "CodeActionsImports.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			let start = new vscode.Position(0, 0);
@@ -6551,7 +6557,7 @@ suite("code action provider", () =>
 	});
 	test("vscode.executeCodeActionProvider finds import for variable type", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "CodeActions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "CodeActionsImports.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			let start = new vscode.Position(0, 0);
@@ -6574,7 +6580,7 @@ suite("code action provider", () =>
 	});
 	test("vscode.executeCodeActionProvider finds import for parameter type", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "CodeActions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "CodeActionsImports.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			let start = new vscode.Position(0, 0);
@@ -6597,7 +6603,7 @@ suite("code action provider", () =>
 	});
 	test("vscode.executeCodeActionProvider finds import for return type", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "CodeActions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "CodeActionsImports.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			let start = new vscode.Position(0, 0);
@@ -6620,7 +6626,7 @@ suite("code action provider", () =>
 	});
 	test("vscode.executeCodeActionProvider finds import for type in assignment", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "CodeActions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "CodeActionsImports.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			let start = new vscode.Position(0, 0);
@@ -6643,7 +6649,7 @@ suite("code action provider", () =>
 	});
 	test("vscode.executeCodeActionProvider finds import for multiple types with the same base name", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "CodeActions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "CodeActionsImports.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			let start = new vscode.Position(0, 0);
@@ -6665,6 +6671,267 @@ suite("code action provider", () =>
 						assert.strictEqual(codeAction2.command, COMMAND_ADD_IMPORT);
 						assert.strictEqual(codeAction2.arguments[0], typeToImport2, "Code action 2 provided incorrect type to import");
 						assert.strictEqual(codeAction2.arguments[1], uri.toString(), "Code action 2 provided incorrect URI");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute code actions provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeCodeActionProvider can generate local variable without this member access", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "CodeActionsGeneration.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			let start = new vscode.Position(0, 0);
+			let end = new vscode.Position(editor.document.lineCount, 0);
+			let range = new vscode.Range(start, end);
+			return vscode.commands.executeCommand("vscode.executeCodeActionProvider", uri, range)
+				.then((codeActions: vscode.Command[]) =>
+					{
+						let variableName = "variableWithoutThis";
+						let codeAction = codeActions.find((codeAction) =>
+						{
+							return codeAction.command === COMMAND_GENERATE_LOCAL_VARIABLE &&
+								codeAction.arguments[codeAction.arguments.length - 1] === variableName;
+						});
+						assert.notEqual(codeAction, undefined, "Code action not found");
+						assert.strictEqual(codeAction.command, COMMAND_GENERATE_LOCAL_VARIABLE);
+						assert.strictEqual(codeAction.arguments[codeAction.arguments.length - 1], variableName, "Code action provided incorrect variable name");
+						assert.strictEqual(codeAction.arguments[0], uri.toString(), "Code action provided incorrect URI");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute code actions provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeCodeActionProvider can generate member variable without this member access", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "CodeActionsGeneration.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			let start = new vscode.Position(0, 0);
+			let end = new vscode.Position(editor.document.lineCount, 0);
+			let range = new vscode.Range(start, end);
+			return vscode.commands.executeCommand("vscode.executeCodeActionProvider", uri, range)
+				.then((codeActions: vscode.Command[]) =>
+					{
+						let variableName = "variableWithoutThis";
+						let codeAction = codeActions.find((codeAction) =>
+						{
+							return codeAction.command === COMMAND_GENERATE_FIELD_VARIABLE &&
+								codeAction.arguments[codeAction.arguments.length - 1] === variableName;
+						});
+						assert.notEqual(codeAction, undefined, "Code action not found");
+						assert.strictEqual(codeAction.command, COMMAND_GENERATE_FIELD_VARIABLE);
+						assert.strictEqual(codeAction.arguments[codeAction.arguments.length - 1], variableName, "Code action provided incorrect variable name");
+						assert.strictEqual(codeAction.arguments[0], uri.toString(), "Code action provided incorrect URI");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute code actions provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeCodeActionProvider can generate member variable with this member access", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "CodeActionsGeneration.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			let start = new vscode.Position(0, 0);
+			let end = new vscode.Position(editor.document.lineCount, 0);
+			let range = new vscode.Range(start, end);
+			return vscode.commands.executeCommand("vscode.executeCodeActionProvider", uri, range)
+				.then((codeActions: vscode.Command[]) =>
+					{
+						let variableName = "variableWithThis";
+						let codeAction = codeActions.find((codeAction) =>
+						{
+							return codeAction.command === COMMAND_GENERATE_FIELD_VARIABLE &&
+								codeAction.arguments[codeAction.arguments.length - 1] === variableName;
+						});
+						assert.notEqual(codeAction, undefined, "Code action not found");
+						assert.strictEqual(codeAction.command, COMMAND_GENERATE_FIELD_VARIABLE);
+						assert.strictEqual(codeAction.arguments[codeAction.arguments.length - 1], variableName, "Code action provided incorrect variable name");
+						assert.strictEqual(codeAction.arguments[0], uri.toString(), "Code action provided incorrect URI");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute code actions provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeCodeActionProvider can generate method without this member access", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "CodeActionsGeneration.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			let start = new vscode.Position(0, 0);
+			let end = new vscode.Position(editor.document.lineCount, 0);
+			let range = new vscode.Range(start, end);
+			return vscode.commands.executeCommand("vscode.executeCodeActionProvider", uri, range)
+				.then((codeActions: vscode.Command[]) =>
+					{
+						let methodName = "methodWithoutThis";
+						let codeAction = codeActions.find((codeAction) =>
+						{
+							return codeAction.command === COMMAND_GENERATE_METHOD &&
+								codeAction.arguments[codeAction.arguments.length - 2] === methodName;
+						});
+						assert.notEqual(codeAction, undefined, "Code action not found");
+						assert.strictEqual(codeAction.command, COMMAND_GENERATE_METHOD);
+						assert.strictEqual(codeAction.arguments[codeAction.arguments.length - 2], methodName, "Code action provided incorrect method name");
+						assert.deepStrictEqual(codeAction.arguments[codeAction.arguments.length - 1], ["String", "Number"], "Code action provided incorrect argument types for method");
+						assert.strictEqual(codeAction.arguments[0], uri.toString(), "Code action provided incorrect URI");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute code actions provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeCodeActionProvider can generate method with this member access", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "CodeActionsGeneration.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			let start = new vscode.Position(0, 0);
+			let end = new vscode.Position(editor.document.lineCount, 0);
+			let range = new vscode.Range(start, end);
+			return vscode.commands.executeCommand("vscode.executeCodeActionProvider", uri, range)
+				.then((codeActions: vscode.Command[]) =>
+					{
+						let methodName = "methodWithThis";
+						let codeAction = codeActions.find((codeAction) =>
+						{
+							return codeAction.command === COMMAND_GENERATE_METHOD &&
+								codeAction.arguments[codeAction.arguments.length - 2] === methodName;
+						});
+						assert.notEqual(codeAction, undefined, "Code action not found");
+						assert.strictEqual(codeAction.command, COMMAND_GENERATE_METHOD);
+						assert.strictEqual(codeAction.arguments[codeAction.arguments.length - 2], methodName, "Code action provided incorrect method name");
+						assert.deepStrictEqual(codeAction.arguments[codeAction.arguments.length - 1], ["Number"], "Code action provided incorrect argument types for method");
+						assert.strictEqual(codeAction.arguments[0], uri.toString(), "Code action provided incorrect URI");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute code actions provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeCodeActionProvider can generate getter", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "CodeActionsGeneration.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			let start = new vscode.Position(0, 0);
+			let end = new vscode.Position(editor.document.lineCount, 0);
+			let range = new vscode.Range(start, end);
+			return vscode.commands.executeCommand("vscode.executeCodeActionProvider", uri, range)
+				.then((codeActions: vscode.Command[]) =>
+					{
+						let methodName = "getterAndSetter";
+						let codeAction = codeActions.find((codeAction) =>
+						{
+							return codeAction.command === COMMAND_GENERATE_GETTER &&
+								codeAction.arguments[codeAction.arguments.length - 5] === methodName;
+						});
+						assert.notEqual(codeAction, undefined, "Code action not found");
+						assert.strictEqual(codeAction.command, COMMAND_GENERATE_GETTER);
+						assert.strictEqual(codeAction.arguments[codeAction.arguments.length - 5], methodName, "Code action provided incorrect name");
+						assert.strictEqual(codeAction.arguments[codeAction.arguments.length - 4], "protected", "Code action provided incorrect namespace");
+						assert.strictEqual(codeAction.arguments[codeAction.arguments.length - 3], false, "Code action provided incorrect static modifier");
+						assert.deepStrictEqual(codeAction.arguments[codeAction.arguments.length - 2], "String", "Code action provided incorrect type");
+						assert.deepStrictEqual(codeAction.arguments[codeAction.arguments.length - 1], "\"getAndSet\"", "Code action provided incorrect assignment");
+						assert.strictEqual(codeAction.arguments[0], uri.toString(), "Code action provided incorrect URI");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute code actions provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeCodeActionProvider can generate setter", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "CodeActionsGeneration.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			let start = new vscode.Position(0, 0);
+			let end = new vscode.Position(editor.document.lineCount, 0);
+			let range = new vscode.Range(start, end);
+			return vscode.commands.executeCommand("vscode.executeCodeActionProvider", uri, range)
+				.then((codeActions: vscode.Command[]) =>
+					{
+						let methodName = "getterAndSetter";
+						let codeAction = codeActions.find((codeAction) =>
+						{
+							return codeAction.command === COMMAND_GENERATE_SETTER &&
+								codeAction.arguments[codeAction.arguments.length - 5] === methodName;
+						});
+						assert.notEqual(codeAction, undefined, "Code action not found");
+						assert.strictEqual(codeAction.command, COMMAND_GENERATE_SETTER);
+						assert.strictEqual(codeAction.arguments[codeAction.arguments.length - 5], methodName, "Code action provided incorrect name");
+						assert.strictEqual(codeAction.arguments[codeAction.arguments.length - 4], "protected", "Code action provided incorrect namespace");
+						assert.strictEqual(codeAction.arguments[codeAction.arguments.length - 3], false, "Code action provided incorrect static modifier");
+						assert.deepStrictEqual(codeAction.arguments[codeAction.arguments.length - 2], "String", "Code action provided incorrect type");
+						assert.deepStrictEqual(codeAction.arguments[codeAction.arguments.length - 1], "\"getAndSet\"", "Code action provided incorrect assignment");
+						assert.strictEqual(codeAction.arguments[0], uri.toString(), "Code action provided incorrect URI");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute code actions provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeCodeActionProvider can generate getter and setter", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "CodeActionsGeneration.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			let start = new vscode.Position(0, 0);
+			let end = new vscode.Position(editor.document.lineCount, 0);
+			let range = new vscode.Range(start, end);
+			return vscode.commands.executeCommand("vscode.executeCodeActionProvider", uri, range)
+				.then((codeActions: vscode.Command[]) =>
+					{
+						let methodName = "getterAndSetter";
+						let codeAction = codeActions.find((codeAction) =>
+						{
+							return codeAction.command === COMMAND_GENERATE_GETTER_AND_SETTER &&
+								codeAction.arguments[codeAction.arguments.length - 5] === methodName;
+						});
+						assert.notEqual(codeAction, undefined, "Code action not found");
+						assert.strictEqual(codeAction.command, COMMAND_GENERATE_GETTER_AND_SETTER);
+						assert.strictEqual(codeAction.arguments[codeAction.arguments.length - 5], methodName, "Code action provided incorrect name");
+						assert.strictEqual(codeAction.arguments[codeAction.arguments.length - 4], "protected", "Code action provided incorrect namespace");
+						assert.strictEqual(codeAction.arguments[codeAction.arguments.length - 3], false, "Code action provided incorrect static modifier");
+						assert.deepStrictEqual(codeAction.arguments[codeAction.arguments.length - 2], "String", "Code action provided incorrect type");
+						assert.deepStrictEqual(codeAction.arguments[codeAction.arguments.length - 1], "\"getAndSet\"", "Code action provided incorrect assignment");
+						assert.strictEqual(codeAction.arguments[0], uri.toString(), "Code action provided incorrect URI");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute code actions provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeCodeActionProvider can generate static getter and setter", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "CodeActionsGeneration.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			let start = new vscode.Position(0, 0);
+			let end = new vscode.Position(editor.document.lineCount, 0);
+			let range = new vscode.Range(start, end);
+			return vscode.commands.executeCommand("vscode.executeCodeActionProvider", uri, range)
+				.then((codeActions: vscode.Command[]) =>
+					{
+						let methodName = "staticGetterAndSetter";
+						let codeAction = codeActions.find((codeAction) =>
+						{
+							return codeAction.command === COMMAND_GENERATE_GETTER_AND_SETTER &&
+								codeAction.arguments[codeAction.arguments.length - 5] === methodName;
+						});
+						assert.notEqual(codeAction, undefined, "Code action not found");
+						assert.strictEqual(codeAction.command, COMMAND_GENERATE_GETTER_AND_SETTER);
+						assert.strictEqual(codeAction.arguments[codeAction.arguments.length - 5], methodName, "Code action provided incorrect name");
+						assert.strictEqual(codeAction.arguments[codeAction.arguments.length - 4], "private", "Code action provided incorrect namespace");
+						assert.strictEqual(codeAction.arguments[codeAction.arguments.length - 3], true, "Code action provided incorrect static modifier");
+						assert.deepStrictEqual(codeAction.arguments[codeAction.arguments.length - 2], "Number", "Code action provided incorrect type");
+						assert.deepStrictEqual(codeAction.arguments[codeAction.arguments.length - 1], null, "Code action provided incorrect assignment");
+						assert.strictEqual(codeAction.arguments[0], uri.toString(), "Code action provided incorrect URI");
 					}, (err) =>
 					{
 						assert(false, "Failed to execute code actions provider: " + uri);
