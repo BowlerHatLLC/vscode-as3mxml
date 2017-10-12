@@ -39,7 +39,7 @@ public class VSCodeASDocComment implements IASDocComment
 
     private Token token;
     private String description = null;
-	private Map<String, List<IASDocTag>> tagMap;
+	private Map<String, List<IASDocTag>> tagMap = new HashMap<String, List<IASDocTag>>();
 	private boolean insidePreformatted = false;
 	private boolean usingMarkdown = false;
     
@@ -88,12 +88,7 @@ public class VSCodeASDocComment implements IASDocComment
 	            }
             }
             else //tag
-            {
-				if (tagMap == null)
-				{
-					tagMap = new HashMap<String, List<IASDocTag>>();
-				}
-            	
+            {	
             	int after = line.indexOf(" ", at + 1);
             	if (after == -1)
             	{
