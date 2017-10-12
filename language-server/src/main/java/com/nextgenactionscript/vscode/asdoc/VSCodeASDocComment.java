@@ -165,9 +165,10 @@ public class VSCodeASDocComment implements IASDocComment
 		{
 			sb.append("\n");
 		}
-		else
+		else if(sb.charAt(sb.length() - 1) != '\n')
 		{
-			//if not adding a new line, put a space between lines
+			//if we don't currently end with a new line, add an extra
+			//space before the next line is appended
 			sb.append(" ");
 		}
 	}
@@ -216,7 +217,18 @@ public class VSCodeASDocComment implements IASDocComment
 			line = line.replaceAll("</?code>", "`");
 		}
 		line = line.replaceAll("<(p|ul|ol|li|table|tr|div)( \\w+=(\"|\')([\\w\\. ]+)?(\"|\'))*>", "\n\n");
-		line = line.replaceAll("<br ?/>", "\n");
+		
+		//note: we allow <br/>, but not <br> because asdoc expects XHTML
+		if(useMarkdown)
+		{
+			//to add a line break to markdown, there needs to be at least two
+			//spaces at the end of the line
+			line = line.replaceAll("<br ?\\/>\\s*", "  \n");
+		}
+		else
+		{
+			line = line.replaceAll("<br ?\\/>\\s*", "\n");
+		}
 		line = line.replaceAll("<\\/{0,1}\\w+\\/{0,1}>", "");
 		return line;
 	}
