@@ -141,7 +141,7 @@ suite("NextGenAS extension", () =>
 		{
 			assert.ok(extension.isActive, `Extension "${extensionName}" not active!`);
 			done();
-		}, 3500);
+		}, 5000);
 	});
 });
 
