@@ -6502,7 +6502,7 @@ suite("code action provider", () =>
 						assert.notEqual(codeAction, null, "Code action not found");
 						assert.strictEqual(codeAction.command, COMMAND_ADD_IMPORT);
 						assert.strictEqual(codeAction.arguments[0], typeToImport, "Code action provided incorrect type to import");
-						assert.strictEqual(codeAction.arguments[1], uri.toString(), "Code action provided incorrect URI");
+						assert.strictEqual(vscode.Uri.parse(codeAction.arguments[1]).fsPath, uri.fsPath, "Code action provided incorrect URI");
 					}, (err) =>
 					{
 						assert(false, "Failed to execute code actions provider: " + uri);
@@ -6525,7 +6525,7 @@ suite("code action provider", () =>
 						assert.notEqual(codeAction, null, "Code action not found");
 						assert.strictEqual(codeAction.command, COMMAND_ADD_IMPORT);
 						assert.strictEqual(codeAction.arguments[0], typeToImport, "Code action provided incorrect type to import");
-						assert.strictEqual(codeAction.arguments[1], uri.toString(), "Code action provided incorrect URI");
+						assert.strictEqual(vscode.Uri.parse(codeAction.arguments[1]).fsPath, uri.fsPath, "Code action provided incorrect URI");
 					}, (err) =>
 					{
 						assert(false, "Failed to execute code actions provider: " + uri);
@@ -6548,7 +6548,7 @@ suite("code action provider", () =>
 						assert.notEqual(codeAction, null, "Code action not found");
 						assert.strictEqual(codeAction.command, COMMAND_ADD_IMPORT);
 						assert.strictEqual(codeAction.arguments[0], typeToImport, "Code action provided incorrect type to import");
-						assert.strictEqual(codeAction.arguments[1], uri.toString(), "Code action provided incorrect URI");
+						assert.strictEqual(vscode.Uri.parse(codeAction.arguments[1]).fsPath, uri.fsPath, "Code action provided incorrect URI");
 					}, (err) =>
 					{
 						assert(false, "Failed to execute code actions provider: " + uri);
@@ -6571,7 +6571,7 @@ suite("code action provider", () =>
 						assert.notEqual(codeAction, null, "Code action not found");
 						assert.strictEqual(codeAction.command, COMMAND_ADD_IMPORT);
 						assert.strictEqual(codeAction.arguments[0], typeToImport, "Code action provided incorrect type to import");
-						assert.strictEqual(codeAction.arguments[1], uri.toString(), "Code action provided incorrect URI");
+						assert.strictEqual(vscode.Uri.parse(codeAction.arguments[1]).fsPath, uri.fsPath, "Code action provided incorrect URI");
 					}, (err) =>
 					{
 						assert(false, "Failed to execute code actions provider: " + uri);
@@ -6594,7 +6594,7 @@ suite("code action provider", () =>
 						assert.notEqual(codeAction, null, "Code action not found");
 						assert.strictEqual(codeAction.command, COMMAND_ADD_IMPORT);
 						assert.strictEqual(codeAction.arguments[0], typeToImport, "Code action provided incorrect type to import");
-						assert.strictEqual(codeAction.arguments[1], uri.toString(), "Code action provided incorrect URI");
+						assert.strictEqual(vscode.Uri.parse(codeAction.arguments[1]).fsPath, uri.fsPath, "Code action provided incorrect URI");
 					}, (err) =>
 					{
 						assert(false, "Failed to execute code actions provider: " + uri);
@@ -6617,7 +6617,7 @@ suite("code action provider", () =>
 						assert.notEqual(codeAction, null, "Code action not found");
 						assert.strictEqual(codeAction.command, COMMAND_ADD_IMPORT);
 						assert.strictEqual(codeAction.arguments[0], typeToImport, "Code action provided incorrect type to import");
-						assert.strictEqual(codeAction.arguments[1], uri.toString(), "Code action provided incorrect URI");
+						assert.strictEqual(vscode.Uri.parse(codeAction.arguments[1]).fsPath, uri.fsPath, "Code action provided incorrect URI");
 					}, (err) =>
 					{
 						assert(false, "Failed to execute code actions provider: " + uri);
@@ -6640,7 +6640,7 @@ suite("code action provider", () =>
 						assert.notEqual(codeAction, null, "Code action not found");
 						assert.strictEqual(codeAction.command, COMMAND_ADD_IMPORT);
 						assert.strictEqual(codeAction.arguments[0], typeToImport, "Code action provided incorrect type to import");
-						assert.strictEqual(codeAction.arguments[1], uri.toString(), "Code action provided incorrect URI");
+						assert.strictEqual(vscode.Uri.parse(codeAction.arguments[1]).fsPath, uri.fsPath, "Code action provided incorrect URI");
 					}, (err) =>
 					{
 						assert(false, "Failed to execute code actions provider: " + uri);
@@ -6663,14 +6663,14 @@ suite("code action provider", () =>
 						assert.notEqual(codeAction1, null, "Code action 1 not found");
 						assert.strictEqual(codeAction1.command, COMMAND_ADD_IMPORT);
 						assert.strictEqual(codeAction1.arguments[0], typeToImport1, "Code action 1 provided incorrect type to import");
-						assert.strictEqual(codeAction1.arguments[1], uri.toString(), "Code action 1 provided incorrect URI");
+						assert.strictEqual(vscode.Uri.parse(codeAction1.arguments[1]).fsPath, uri.fsPath, "Code action 1 provided incorrect URI");
 
 						let typeToImport2 = "com.example.codeActions.more.CodeActionsMultiple";
 						let codeAction2 = findImportCommandForType(typeToImport2, codeActions);
 						assert.notEqual(codeAction2, null, "Code action 2 not found");
 						assert.strictEqual(codeAction2.command, COMMAND_ADD_IMPORT);
 						assert.strictEqual(codeAction2.arguments[0], typeToImport2, "Code action 2 provided incorrect type to import");
-						assert.strictEqual(codeAction2.arguments[1], uri.toString(), "Code action 2 provided incorrect URI");
+						assert.strictEqual(vscode.Uri.parse(codeAction2.arguments[1]).fsPath, uri.fsPath, "Code action 2 provided incorrect URI");
 					}, (err) =>
 					{
 						assert(false, "Failed to execute code actions provider: " + uri);
@@ -6697,7 +6697,7 @@ suite("code action provider", () =>
 						assert.notEqual(codeAction, undefined, "Code action not found");
 						assert.strictEqual(codeAction.command, COMMAND_GENERATE_LOCAL_VARIABLE);
 						assert.strictEqual(codeAction.arguments[codeAction.arguments.length - 1], variableName, "Code action provided incorrect variable name");
-						assert.strictEqual(codeAction.arguments[0], uri.toString(), "Code action provided incorrect URI");
+						assert.strictEqual(vscode.Uri.parse(codeAction.arguments[0]).fsPath, uri.fsPath, "Code action provided incorrect URI");
 					}, (err) =>
 					{
 						assert(false, "Failed to execute code actions provider: " + uri);
@@ -6724,7 +6724,7 @@ suite("code action provider", () =>
 						assert.notEqual(codeAction, undefined, "Code action not found");
 						assert.strictEqual(codeAction.command, COMMAND_GENERATE_FIELD_VARIABLE);
 						assert.strictEqual(codeAction.arguments[codeAction.arguments.length - 1], variableName, "Code action provided incorrect variable name");
-						assert.strictEqual(codeAction.arguments[0], uri.toString(), "Code action provided incorrect URI");
+						assert.strictEqual(vscode.Uri.parse(codeAction.arguments[0]).fsPath, uri.fsPath, "Code action provided incorrect URI");
 					}, (err) =>
 					{
 						assert(false, "Failed to execute code actions provider: " + uri);
@@ -6751,7 +6751,7 @@ suite("code action provider", () =>
 						assert.notEqual(codeAction, undefined, "Code action not found");
 						assert.strictEqual(codeAction.command, COMMAND_GENERATE_FIELD_VARIABLE);
 						assert.strictEqual(codeAction.arguments[codeAction.arguments.length - 1], variableName, "Code action provided incorrect variable name");
-						assert.strictEqual(codeAction.arguments[0], uri.toString(), "Code action provided incorrect URI");
+						assert.strictEqual(vscode.Uri.parse(codeAction.arguments[0]).fsPath, uri.fsPath, "Code action provided incorrect URI");
 					}, (err) =>
 					{
 						assert(false, "Failed to execute code actions provider: " + uri);
@@ -6779,7 +6779,7 @@ suite("code action provider", () =>
 						assert.strictEqual(codeAction.command, COMMAND_GENERATE_METHOD);
 						assert.strictEqual(codeAction.arguments[codeAction.arguments.length - 2], methodName, "Code action provided incorrect method name");
 						assert.deepStrictEqual(codeAction.arguments[codeAction.arguments.length - 1], ["String", "Number"], "Code action provided incorrect argument types for method");
-						assert.strictEqual(codeAction.arguments[0], uri.toString(), "Code action provided incorrect URI");
+						assert.strictEqual(vscode.Uri.parse(codeAction.arguments[0]).fsPath, uri.fsPath, "Code action provided incorrect URI");
 					}, (err) =>
 					{
 						assert(false, "Failed to execute code actions provider: " + uri);
@@ -6807,7 +6807,7 @@ suite("code action provider", () =>
 						assert.strictEqual(codeAction.command, COMMAND_GENERATE_METHOD);
 						assert.strictEqual(codeAction.arguments[codeAction.arguments.length - 2], methodName, "Code action provided incorrect method name");
 						assert.deepStrictEqual(codeAction.arguments[codeAction.arguments.length - 1], ["Number"], "Code action provided incorrect argument types for method");
-						assert.strictEqual(codeAction.arguments[0], uri.toString(), "Code action provided incorrect URI");
+						assert.strictEqual(vscode.Uri.parse(codeAction.arguments[0]).fsPath, uri.fsPath, "Code action provided incorrect URI");
 					}, (err) =>
 					{
 						assert(false, "Failed to execute code actions provider: " + uri);
@@ -6838,7 +6838,7 @@ suite("code action provider", () =>
 						assert.strictEqual(codeAction.arguments[codeAction.arguments.length - 3], false, "Code action provided incorrect static modifier");
 						assert.deepStrictEqual(codeAction.arguments[codeAction.arguments.length - 2], "String", "Code action provided incorrect type");
 						assert.deepStrictEqual(codeAction.arguments[codeAction.arguments.length - 1], "\"getAndSet\"", "Code action provided incorrect assignment");
-						assert.strictEqual(codeAction.arguments[0], uri.toString(), "Code action provided incorrect URI");
+						assert.strictEqual(vscode.Uri.parse(codeAction.arguments[0]).fsPath, uri.fsPath, "Code action provided incorrect URI");
 					}, (err) =>
 					{
 						assert(false, "Failed to execute code actions provider: " + uri);
@@ -6869,7 +6869,7 @@ suite("code action provider", () =>
 						assert.strictEqual(codeAction.arguments[codeAction.arguments.length - 3], false, "Code action provided incorrect static modifier");
 						assert.deepStrictEqual(codeAction.arguments[codeAction.arguments.length - 2], "String", "Code action provided incorrect type");
 						assert.deepStrictEqual(codeAction.arguments[codeAction.arguments.length - 1], "\"getAndSet\"", "Code action provided incorrect assignment");
-						assert.strictEqual(codeAction.arguments[0], uri.toString(), "Code action provided incorrect URI");
+						assert.strictEqual(vscode.Uri.parse(codeAction.arguments[0]).fsPath, uri.fsPath, "Code action provided incorrect URI");
 					}, (err) =>
 					{
 						assert(false, "Failed to execute code actions provider: " + uri);
@@ -6900,7 +6900,7 @@ suite("code action provider", () =>
 						assert.strictEqual(codeAction.arguments[codeAction.arguments.length - 3], false, "Code action provided incorrect static modifier");
 						assert.deepStrictEqual(codeAction.arguments[codeAction.arguments.length - 2], "String", "Code action provided incorrect type");
 						assert.deepStrictEqual(codeAction.arguments[codeAction.arguments.length - 1], "\"getAndSet\"", "Code action provided incorrect assignment");
-						assert.strictEqual(codeAction.arguments[0], uri.toString(), "Code action provided incorrect URI");
+						assert.strictEqual(vscode.Uri.parse(codeAction.arguments[0]).fsPath, uri.fsPath, "Code action provided incorrect URI");
 					}, (err) =>
 					{
 						assert(false, "Failed to execute code actions provider: " + uri);
@@ -6931,7 +6931,7 @@ suite("code action provider", () =>
 						assert.strictEqual(codeAction.arguments[codeAction.arguments.length - 3], true, "Code action provided incorrect static modifier");
 						assert.deepStrictEqual(codeAction.arguments[codeAction.arguments.length - 2], "Number", "Code action provided incorrect type");
 						assert.deepStrictEqual(codeAction.arguments[codeAction.arguments.length - 1], null, "Code action provided incorrect assignment");
-						assert.strictEqual(codeAction.arguments[0], uri.toString(), "Code action provided incorrect URI");
+						assert.strictEqual(vscode.Uri.parse(codeAction.arguments[0]).fsPath, uri.fsPath, "Code action provided incorrect URI");
 					}, (err) =>
 					{
 						assert(false, "Failed to execute code actions provider: " + uri);
