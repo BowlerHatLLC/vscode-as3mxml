@@ -15,6 +15,8 @@ limitations under the License.
 */
 package com.nextgenactionscript.vscode;
 
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.Socket;
 
 import org.eclipse.lsp4j.jsonrpc.Launcher;
@@ -26,7 +28,6 @@ import org.eclipse.lsp4j.services.LanguageClient;
  */
 public class Main
 {
-    private static final int MISSING_PORT = 100;
     private static final int SERVER_CONNECT_ERROR = 101;
     private static final String SYSTEM_PROPERTY_PORT = "nextgeas.vscode.port";
     private static final String SOCKET_HOST = "localhost";
@@ -43,17 +44,19 @@ public class Main
     public static void main(String[] args)
     {
         String port = System.getProperty(SYSTEM_PROPERTY_PORT);
-        if (port == null)
-        {
-            System.err.println("ActionScript and MXML language server encountered an error: System property nextgeas.vscode.port is required.");
-            System.exit(MISSING_PORT);
-        }
         try
         {
-            Socket socket = new Socket(SOCKET_HOST, Integer.parseInt(port));
+            InputStream inputStream = System.in;
+            OutputStream outputStream = System.out;
+            if (port != null)
+            {
+                Socket socket = new Socket(SOCKET_HOST, Integer.parseInt(port));
+                inputStream = socket.getInputStream();
+                outputStream = socket.getOutputStream();
+            }
             ActionScriptLanguageServer server = new ActionScriptLanguageServer();
             Launcher<LanguageClient> launcher = LSPLauncher.createServerLauncher(
-                    server, socket.getInputStream(), socket.getOutputStream());
+                    server, inputStream, outputStream);
             server.connect(launcher.getRemoteProxy());
             launcher.startListening();
         }
