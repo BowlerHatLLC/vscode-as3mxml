@@ -22,9 +22,6 @@ import findSDKInLocalNodeModule from "../utils/findSDKInLocalNodeModule";
 import findSDKInFlexHomeEnvironmentVariable from "../utils/findSDKInFlexHomeEnvironmentVariable";
 import findSDKsInPathEnvironmentVariable from "../utils/findSDKsInPathEnvironmentVariable";
 
-const COMMAND_GLOBAL_SETTINGS = "workbench.action.openGlobalSettings";
-const COMMAND_WORKSPACE_SETTINGS = "workbench.action.openWorkspaceSettings";
-const INSTRUCTIONS_SEARCH_PATHS = "Add more SDKs using the nextgenas.sdk.searchPaths setting";
 const DESCRIPTION_FLEX_HOME = "FLEX_HOME environment variable";
 const DESCRIPTION_PATH = "PATH environment variable";
 const DESCRIPTION_CURRENT = "Current SDK";
@@ -66,30 +63,50 @@ interface SDKQuickPickItem extends vscode.QuickPickItem
 
 function openSettingsForSearchPaths()
 {
-	let searchPaths = vscode.workspace.getConfiguration("nextgenas").inspect("sdk.searchPaths");
-	if(searchPaths.workspaceValue)
+	vscode.window.showOpenDialog(
 	{
-		//the search paths have already been defined in this workspace,
-		//so that's what we should open.
-		vscode.commands.executeCommand(COMMAND_WORKSPACE_SETTINGS);
-		vscode.window.showInformationMessage(INSTRUCTIONS_SEARCH_PATHS);
-	}
-	else if(searchPaths.globalValue)
-	{
-		//the search paths have already been defined globally,
-		//so that's what we should open.
-		vscode.commands.executeCommand(COMMAND_GLOBAL_SETTINGS);
-		vscode.window.showInformationMessage(INSTRUCTIONS_SEARCH_PATHS);
-	}
-	else
-	{
-		//search paths haven't been defined yet, so add a global value
-		//and then open the settings
-		vscode.workspace.getConfiguration("nextgenas").update("sdk.searchPaths", [], true).then(() =>
+		canSelectFiles: false,
+		canSelectFolders: true
+	}).then(
+		(folders: vscode.Uri[] | undefined) =>
 		{
-			openSettingsForSearchPaths();
+			if(folders === undefined || folders.length === 0)
+			{
+				return;
+			}
+			let config = vscode.workspace.getConfiguration("nextgenas");
+			let searchPaths: string[] = config.get("sdk.searchPaths");
+			if(!searchPaths)
+			{
+				searchPaths = [];
+			}
+			let beforeLength = searchPaths.length;
+			folders.forEach((folder) =>
+			{
+				let path = folder.fsPath;
+				if(searchPaths.indexOf(path) !== -1)
+				{
+					return;
+				}
+				searchPaths.push(path);
+			});
+			if(searchPaths.length > beforeLength)
+			{
+				let searchPathsInspection = vscode.workspace.getConfiguration("nextgenas").inspect("sdk.searchPaths");
+				if(searchPathsInspection.workspaceValue)
+				{
+					config.update("sdk.searchPaths", searchPaths, vscode.ConfigurationTarget.Workspace);
+				}
+				else
+				{
+					config.update("sdk.searchPaths", searchPaths, vscode.ConfigurationTarget.Global);
+				}
+			}
+		},
+		() =>
+		{
+			return vscode.window.showErrorMessage("Failed to add folder to SDK search paths");
 		});
-	}
 }
 
 function addSDKItem(path: string, description: string, items: SDKQuickPickItem[], allPaths: string[], require: boolean): void
@@ -141,18 +158,13 @@ function checkSearchPath(searchPath: string, description: string, items: SDKQuic
 
 function createSearchPathsItem(): SDKQuickPickItem
 {
-	let item =
+	let item: SDKQuickPickItem =
 	{
 		label: "Add more SDKs to this list...",
-		description: "Opens User Settings",
-		detail: "Define nextgenas.sdk.searchPaths in settings to add more SDKs",
+		description: null,
+		detail: "Choose a folder containing one or more ActionScript SDKs",
 		custom: true
 	};
-	let searchPaths = vscode.workspace.getConfiguration("nextgenas").inspect("sdk.searchPaths");
-	if(searchPaths.workspaceValue)
-	{
-		item.description = "Opens Workspace Settings";
-	}
 	return item;
 }
 
@@ -244,5 +256,9 @@ export default function selectWorkspaceSDK(): void
 		//if they chose an SDK, save it to the workspace settings
 		let newFrameworkPath = value.detail;
 		vscode.workspace.getConfiguration("nextgenas").update("sdk.framework", newFrameworkPath);
+	},
+	() =>
+	{
+		//do nothing
 	});
 }
