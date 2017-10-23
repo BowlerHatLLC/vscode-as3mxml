@@ -42,6 +42,7 @@ import org.eclipse.lsp4j.SignatureHelpOptions;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.TextDocumentSyncKind;
 import org.eclipse.lsp4j.WorkspaceSymbolParams;
+import org.eclipse.lsp4j.jsonrpc.services.JsonNotification;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.LanguageClientAware;
 import org.eclipse.lsp4j.services.LanguageServer;
@@ -235,6 +236,12 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
                 public CompletableFuture<Object> executeCommand(ExecuteCommandParams params)
                 {
                     return textDocumentService.executeCommand(params);
+                }
+                
+                @JsonNotification("$/setTraceNotification")
+                public void setTraceNotification(Object params)
+                {
+                    //this may be ignored. see: eclipse/lsp4j#22
                 }
             };
         }
