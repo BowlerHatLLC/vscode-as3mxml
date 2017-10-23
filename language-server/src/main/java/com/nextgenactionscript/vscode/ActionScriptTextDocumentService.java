@@ -851,7 +851,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         String assignedValue = null;
         if (assignedValueNode != null)
         {
-            String source = sourceByPath.get(Paths.get(diagnostic.getSource()));
+            Path path = LanguageServerUtils.getPathFromLanguageServerURI(textDocument.getUri());
+            if (path == null)
+            {
+                return;
+            }
+            String source = sourceByPath.get(path);
             assignedValue = source.substring(assignedValueNode.getAbsoluteStart(),
                 assignedValueNode.getAbsoluteEnd());
         }
@@ -4779,7 +4784,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 {
                     Diagnostic generateGetterAndSetterHint = new Diagnostic();
                     generateGetterAndSetterHint.setSeverity(DiagnosticSeverity.Hint);
-                    generateGetterAndSetterHint.setSource(node.getSourcePath());
+                    generateGetterAndSetterHint.setMessage("A variable may be converted into a getter and setter");
                     generateGetterAndSetterHint.setRange(LanguageServerUtils.getRangeFromSourceLocation(node));
                     generateGetterAndSetterHint.setCode(ICommandHintCodes.GENERATE_GETTER_AND_SETTER);
                     diagnostics.add(generateGetterAndSetterHint);
