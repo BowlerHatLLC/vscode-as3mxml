@@ -4939,6 +4939,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 namespaceEndIndex = end;
             }
         }
+        namespaceUri = textDocument.getUri();
 
         IMXMLUnitData unitData = mxmlData.findContainmentReferenceUnit(currentOffset);
         IMXMLUnitData currentUnitData = unitData;
@@ -4961,7 +4962,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             currentUnitData = currentUnitData.getParentUnitData();
         }
-        namespaceUri = textDocument.getUri();
         return null;
     }
 
