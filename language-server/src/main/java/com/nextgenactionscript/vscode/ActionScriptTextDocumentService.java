@@ -44,7 +44,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.flex.abc.ABCParser;
 import org.apache.flex.abc.Pool;
 import org.apache.flex.abc.PoolingABCVisitor;
-import org.apache.flex.compiler.asdoc.IASDocComment;
 import org.apache.flex.compiler.asdoc.IASDocTag;
 import org.apache.flex.compiler.clients.MXMLJSC;
 import org.apache.flex.compiler.common.ASModifier;
@@ -86,7 +85,6 @@ import org.apache.flex.compiler.internal.driver.js.node.NodeModuleBackend;
 import org.apache.flex.compiler.internal.mxml.MXMLData;
 import org.apache.flex.compiler.internal.parsing.as.ASParser;
 import org.apache.flex.compiler.internal.parsing.as.ASToken;
-import org.apache.flex.compiler.internal.parsing.as.FlexJSASDocDelegate;
 import org.apache.flex.compiler.internal.parsing.as.RepairingTokenBuffer;
 import org.apache.flex.compiler.internal.parsing.as.StreamingASTokenizer;
 import org.apache.flex.compiler.internal.projects.CompilerProject;
@@ -2424,6 +2422,14 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return STAR;
     }
     
+    private void autoCompleteValue(String value, CompletionList result)
+    {
+        CompletionItem item = new CompletionItem();
+        item.setKind(CompletionItemKind.Value);
+        item.setLabel(value);
+        result.getItems().add(item);
+    }
+    
     private void autoCompleteKeyword(String keyword, CompletionList result)
     {
         CompletionItem item = new CompletionItem();
@@ -2804,6 +2810,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         autoCompleteKeyword(IASKeywordConstants.VAR, result);
         autoCompleteKeyword(IASKeywordConstants.WHILE, result);
         autoCompleteKeyword(IASKeywordConstants.WITH, result);
+
+        autoCompleteValue(IASKeywordConstants.TRUE, result);
+        autoCompleteValue(IASKeywordConstants.FALSE, result);
+        autoCompleteValue(IASKeywordConstants.NULL, result);
     }
 
     private void autoCompleteMemberAccess(IMemberAccessExpressionNode node, CompletionList result)
