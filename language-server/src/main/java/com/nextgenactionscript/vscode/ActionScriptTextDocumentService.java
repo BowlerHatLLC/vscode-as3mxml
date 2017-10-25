@@ -151,6 +151,7 @@ import com.nextgenactionscript.vscode.project.CompilerOptions;
 import com.nextgenactionscript.vscode.project.IProjectConfigStrategy;
 import com.nextgenactionscript.vscode.project.ProjectOptions;
 import com.nextgenactionscript.vscode.project.ProjectType;
+import com.nextgenactionscript.vscode.project.VSCodeConfiguration;
 import com.nextgenactionscript.vscode.utils.ASTUtils;
 import com.nextgenactionscript.vscode.utils.ImportTextEditUtils;
 import com.nextgenactionscript.vscode.utils.LanguageServerUtils;
@@ -4458,7 +4459,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         else //swf only
         {
-            configurator = new Configurator(Configuration.class);
+            configurator = new Configurator(VSCodeConfiguration.class);
         }
         configurator.setToken(TOKEN_CONFIGNAME, currentProjectOptions.config);
         ProjectType type = currentProjectOptions.type;
