@@ -4015,7 +4015,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             {
                 parser = null;
                 System.err.println("Failed to parse file (" + path.toString() + "): " + e);
-                e.printStackTrace();
+                e.printStackTrace(System.err);
             }
             //if an error occurred above, parser will be null
             if (parser != null)
@@ -4661,7 +4661,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         catch (Exception e)
         {
             System.err.println("Exception during build: " + e);
-            e.printStackTrace();
+            e.printStackTrace(System.err);
             return false;
         }
         if (languageClient != null)
@@ -4691,7 +4691,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         catch (Exception e)
         {
             System.err.println("Exception during waitForBuildFinish(): " + e);
-            e.printStackTrace();
+            e.printStackTrace(System.err);
 
             Diagnostic diagnostic = createDiagnosticWithoutRange();
             diagnostic.setSeverity(DiagnosticSeverity.Error);
