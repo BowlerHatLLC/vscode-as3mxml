@@ -28,7 +28,7 @@ import org.apache.flex.compiler.tree.as.IASNode;
 import com.google.gson.internal.LinkedTreeMap;
 import com.nextgenactionscript.vscode.commands.ICommandConstants;
 import com.nextgenactionscript.vscode.project.ASConfigProjectConfigStrategy;
-import com.nextgenactionscript.vscode.utils.LanguageServerUtils;
+import com.nextgenactionscript.vscode.utils.LanguageServerCompilerUtils;
 import org.eclipse.lsp4j.CompletionOptions;
 import org.eclipse.lsp4j.DidChangeConfigurationParams;
 import org.eclipse.lsp4j.DidChangeWatchedFilesParams;
@@ -212,7 +212,7 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
                 {
                     for (FileEvent event : params.getChanges())
                     {
-                        Path path = LanguageServerUtils.getPathFromLanguageServerURI(event.getUri());
+                        Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(event.getUri());
                         if (path == null)
                         {
                             continue;

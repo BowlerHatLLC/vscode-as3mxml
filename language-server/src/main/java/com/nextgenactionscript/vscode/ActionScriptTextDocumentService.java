@@ -145,7 +145,6 @@ import com.google.gson.internal.LinkedTreeMap;
 import com.nextgenactionscript.vscode.asdoc.VSCodeASDocComment;
 import com.nextgenactionscript.vscode.asdoc.VSCodeASDocDelegate;
 import com.nextgenactionscript.vscode.commands.ICommandConstants;
-import com.nextgenactionscript.vscode.commands.ICommandHintCodes;
 import com.nextgenactionscript.vscode.mxml.IMXMLLibraryConstants;
 import com.nextgenactionscript.vscode.project.CompilerOptions;
 import com.nextgenactionscript.vscode.project.IProjectConfigStrategy;
@@ -154,7 +153,8 @@ import com.nextgenactionscript.vscode.project.ProjectType;
 import com.nextgenactionscript.vscode.project.VSCodeConfiguration;
 import com.nextgenactionscript.vscode.utils.ASTUtils;
 import com.nextgenactionscript.vscode.utils.ImportTextEditUtils;
-import com.nextgenactionscript.vscode.utils.LanguageServerUtils;
+import com.nextgenactionscript.vscode.utils.LSPUtils;
+import com.nextgenactionscript.vscode.utils.LanguageServerCompilerUtils;
 import com.nextgenactionscript.vscode.utils.ProblemTracker;
 
 import org.eclipse.lsp4j.ApplyWorkspaceEditParams;
@@ -277,6 +277,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private IProjectConfigStrategy projectConfigStrategy;
     private Path workspaceRoot;
     private Map<Path, String> sourceByPath = new HashMap<>();
+    private Map<Path, List<SavedCodeAction>> codeActionsByPath = new HashMap<>();
     private Collection<ICompilationUnit> compilationUnits;
     private ArrayList<IInvisibleCompilationUnit> invisibleUnits = new ArrayList<>();
     private ICompilationUnit currentUnit;
@@ -306,6 +307,18 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
         public String prefix;
         public String uri;
+    }
+
+    private class SavedCodeAction
+    {
+        public SavedCodeAction(Command command, Range range)
+        {
+            this.command = command;
+            this.range = range;
+        }
+        
+        public Command command;
+        public Range range;
     }
 
     public ActionScriptTextDocumentService()
@@ -718,7 +731,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     public CompletableFuture<List<? extends SymbolInformation>> documentSymbol(DocumentSymbolParams params)
     {
         TextDocumentIdentifier textDocument = params.getTextDocument();
-        Path path = LanguageServerUtils.getPathFromLanguageServerURI(textDocument.getUri());
+        Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocument.getUri());
         if (path == null)
         {
             return CompletableFuture.completedFuture(Collections.emptyList());
@@ -755,7 +768,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     {
         List<? extends Diagnostic> diagnostics = params.getContext().getDiagnostics();
         TextDocumentIdentifier textDocument = params.getTextDocument();
-        Path path = LanguageServerUtils.getPathFromLanguageServerURI(textDocument.getUri());
+        Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocument.getUri());
         if (path == null || !sourceByPath.containsKey(path))
         {
             return CompletableFuture.completedFuture(Collections.emptyList());
@@ -771,11 +784,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             switch (code)
             {
-                case ICommandHintCodes.GENERATE_GETTER_AND_SETTER:
-                {
-                    createCodeActionForGenerateGetterAndSetter(textDocument, diagnostic, commands);
-                    break;
-                }
                 case "1120": //AccessUndefinedPropertyProblem
                 {
                     //see if there's anything we can import
@@ -827,89 +835,20 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 }
             }
         }
-        return CompletableFuture.completedFuture(commands);
-    }
-
-    private void createCodeActionForGenerateGetterAndSetter(TextDocumentIdentifier textDocument, Diagnostic diagnostic, List<Command> commands)
-    {
-        IASNode offsetNode = getOffsetNode(textDocument, diagnostic.getRange().getStart());
-        IVariableNode variableNode = null;
-        if (offsetNode instanceof IVariableNode)
+        if (codeActionsByPath.containsKey(path))
         {
-            variableNode = (IVariableNode) offsetNode;
-        }
-        if (offsetNode.getParent() instanceof IVariableNode)
-        {
-            variableNode = (IVariableNode) offsetNode.getParent();
-        }
-        if (variableNode == null)
-        {
-            return;
-        }
-        IExpressionNode assignedValueNode = variableNode.getAssignedValueNode();
-        String assignedValue = null;
-        if (assignedValueNode != null)
-        {
-            Path path = LanguageServerUtils.getPathFromLanguageServerURI(textDocument.getUri());
-            if (path == null)
+            List<SavedCodeAction> codeActionsForPath = codeActionsByPath.get(path);
+            for (SavedCodeAction codeAction : codeActionsForPath)
             {
-                return;
+                Range savedRange = codeAction.range;
+                Range paramRange = params.getRange();
+                if (LSPUtils.rangesIntersect(savedRange, paramRange))
+                {
+                    commands.add(codeAction.command);
+                }
             }
-            String source = sourceByPath.get(path);
-            assignedValue = source.substring(assignedValueNode.getAbsoluteStart(),
-                assignedValueNode.getAbsoluteEnd());
         }
-
-        Command generateGetterAndSetterCommand = new Command();
-        generateGetterAndSetterCommand.setTitle("Generate Getter and Setter");
-        generateGetterAndSetterCommand.setCommand(ICommandConstants.GENERATE_GETTER_AND_SETTER);
-        generateGetterAndSetterCommand.setArguments(Arrays.asList(
-            textDocument.getUri(),
-            diagnostic.getRange().getStart().getLine(),
-            diagnostic.getRange().getStart().getCharacter(),
-            diagnostic.getRange().getEnd().getLine(),
-            diagnostic.getRange().getEnd().getCharacter(),
-            variableNode.getName(),
-            variableNode.getNamespace(),
-            variableNode.hasModifier(ASModifier.STATIC),
-            variableNode.getVariableType(),
-            assignedValue
-        ));
-        commands.add(generateGetterAndSetterCommand);
-        
-        Command generateGetterCommand = new Command();
-        generateGetterCommand.setTitle("Generate Getter");
-        generateGetterCommand.setCommand(ICommandConstants.GENERATE_GETTER);
-        generateGetterCommand.setArguments(Arrays.asList(
-            textDocument.getUri(),
-            diagnostic.getRange().getStart().getLine(),
-            diagnostic.getRange().getStart().getCharacter(),
-            diagnostic.getRange().getEnd().getLine(),
-            diagnostic.getRange().getEnd().getCharacter(),
-            variableNode.getName(),
-            variableNode.getNamespace(),
-            variableNode.hasModifier(ASModifier.STATIC),
-            variableNode.getVariableType(),
-            assignedValue
-        ));
-        commands.add(generateGetterCommand);
-
-        Command generateSetterCommand = new Command();
-        generateSetterCommand.setTitle("Generate Setter");
-        generateSetterCommand.setCommand(ICommandConstants.GENERATE_SETTER);
-        generateSetterCommand.setArguments(Arrays.asList(
-            textDocument.getUri(),
-            diagnostic.getRange().getStart().getLine(),
-            diagnostic.getRange().getStart().getCharacter(),
-            diagnostic.getRange().getEnd().getLine(),
-            diagnostic.getRange().getEnd().getCharacter(),
-            variableNode.getName(),
-            variableNode.getNamespace(),
-            variableNode.hasModifier(ASModifier.STATIC),
-            variableNode.getVariableType(),
-            assignedValue
-        ));
-        commands.add(generateSetterCommand);
+        return CompletableFuture.completedFuture(commands);
     }
 
     private void createCodeActionForMissingField(TextDocumentIdentifier textDocument, Diagnostic diagnostic, List<Command> commands)
@@ -1224,11 +1163,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return;
         }
-        Path path = LanguageServerUtils.getPathFromLanguageServerURI(textDocumentUri);
+        Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocumentUri);
         if (path != null)
         {
             String text = textDocument.getText();
             sourceByPath.put(path, text);
+            codeActionsByPath.put(path, new ArrayList<>());
 
             if (currentWorkspace != null)
             {
@@ -1258,7 +1198,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return;
         }
-        Path path = LanguageServerUtils.getPathFromLanguageServerURI(textDocumentUri);
+        Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocumentUri);
         if (path != null)
         {
             for (TextDocumentContentChangeEvent change : params.getContentChanges())
@@ -1301,10 +1241,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return;
         }
-        Path path = LanguageServerUtils.getPathFromLanguageServerURI(textDocumentUri);
+        Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocumentUri);
         if (path != null)
         {
             sourceByPath.remove(path);
+            codeActionsByPath.remove(path);
         }
     }
 
@@ -1329,7 +1270,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         boolean needsFullCheck = false;
         for (FileEvent event : params.getChanges())
         {
-            Path path = LanguageServerUtils.getPathFromLanguageServerURI(event.getUri());
+            Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(event.getUri());
             if (path == null)
             {
                 continue;
@@ -2128,7 +2069,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             //definition referenced at the current position.
             return CompletableFuture.completedFuture(Collections.emptyList());
         }
-        Path path = LanguageServerUtils.getPathFromLanguageServerURI(params.getTextDocument().getUri());
+        Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(params.getTextDocument().getUri());
         if (path == null)
         {
             //this probably shouldn't happen, but check just to be safe
@@ -2263,7 +2204,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 findMXMLUnits(mxmlData.getRootTag(), definition, units);
                 for (ISourceLocation otherUnit : units)
                 {
-                    Location location = LanguageServerUtils.getLocationFromSourceLocation(otherUnit);
+                    Location location = LanguageServerCompilerUtils.getLocationFromSourceLocation(otherUnit);
                     if (location == null)
                     {
                         continue;
@@ -2285,7 +2226,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         findIdentifiers(ast, definition, identifiers);
         for (IIdentifierNode otherNode : identifiers)
         {
-            Location location = LanguageServerUtils.getLocationFromSourceLocation(otherNode);
+            Location location = LanguageServerCompilerUtils.getLocationFromSourceLocation(otherNode);
             if (location == null)
             {
                 continue;
@@ -3651,7 +3592,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 return;
             }
 
-            Position position = LanguageServerUtils.getPositionFromOffset(reader, nameOffset);
+            Position position = LanguageServerCompilerUtils.getPositionFromOffset(reader, nameOffset);
             nameLine = position.getLine();
             nameColumn = position.getCharacter();
         }
@@ -3774,7 +3715,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                         TextEdit textEdit = new TextEdit();
                         textEdit.setNewText(newName);
 
-                        Range range = LanguageServerUtils.getRangeFromSourceLocation(otherUnit);
+                        Range range = LanguageServerCompilerUtils.getRangeFromSourceLocation(otherUnit);
                         if (range == null)
                         {
                             continue;
@@ -3803,7 +3744,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     TextEdit textEdit = new TextEdit();
                     textEdit.setNewText(newName);
 
-                    Range range = LanguageServerUtils.getRangeFromSourceLocation(identifierNode);
+                    Range range = LanguageServerCompilerUtils.getRangeFromSourceLocation(identifierNode);
                     if (range == null)
                     {
                         continue;
@@ -3991,7 +3932,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         Range range = change.getRange();
         Position start = range.getStart();
         StringReader reader = new StringReader(sourceText);
-        int offset = LanguageServerUtils.getOffsetFromPosition(reader, start);
+        int offset = LanguageServerCompilerUtils.getOffsetFromPosition(reader, start);
         return sourceText.substring(0, offset) + change.getText() + sourceText.substring(offset + change.getRangeLength());
     }
 
@@ -4010,10 +3951,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         Diagnostic diagnostic = new Diagnostic();
 
-        DiagnosticSeverity severity = LanguageServerUtils.getDiagnosticSeverityFromCompilerProblem(problem);
+        DiagnosticSeverity severity = LanguageServerCompilerUtils.getDiagnosticSeverityFromCompilerProblem(problem);
         diagnostic.setSeverity(severity);
 
-        Range range = LanguageServerUtils.getRangeFromSourceLocation(problem);
+        Range range = LanguageServerCompilerUtils.getRangeFromSourceLocation(problem);
         if (range == null)
         {
             //fall back to an empty range
@@ -4758,7 +4699,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             diagnostics.add(diagnostic);
         }
 
-        if (sourceByPath.containsKey(Paths.get(uri)))
+        Path unitPath = Paths.get(uri);
+        if (sourceByPath.containsKey(unitPath) && codeActionsByPath.containsKey(unitPath))
         {
             IASNode ast = null;
             try
@@ -4771,19 +4713,21 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             if (ast != null)
             {
-                addCodeGenerationHints(ast, diagnostics);
+                List<SavedCodeAction> codeActions = codeActionsByPath.get(unitPath);
+                codeActions.clear();
+                saveCodeActionsForLater(ast, unitPath, codeActions);
             }
         }
 
         return publish;
     }
 
-    private void addCodeGenerationHints(IASNode node, ArrayList<Diagnostic> diagnostics)
+    private void saveCodeActionsForLater(IASNode node, Path path, List<SavedCodeAction> codeActions)
     {
         if (node instanceof IVariableNode)
         {
-            IVariableNode definitionNode = (IVariableNode) node;
-            IExpressionNode expressionNode = definitionNode.getNameExpressionNode();
+            IVariableNode variableNode = (IVariableNode) node;
+            IExpressionNode expressionNode = variableNode.getNameExpressionNode();
             IDefinition definition = expressionNode.resolve(currentProject);
             if (definition instanceof IVariableDefinition
                 && !(definition instanceof IConstantDefinition)
@@ -4793,12 +4737,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 IVariableDefinition variableDefinition = (IVariableDefinition) definition;
                 if (variableDefinition.getVariableClassification().equals(VariableClassification.CLASS_MEMBER))
                 {
-                    Diagnostic generateGetterAndSetterHint = new Diagnostic();
-                    generateGetterAndSetterHint.setSeverity(DiagnosticSeverity.Hint);
-                    generateGetterAndSetterHint.setMessage("A variable may be converted into a getter and setter");
-                    generateGetterAndSetterHint.setRange(LanguageServerUtils.getRangeFromSourceLocation(node));
-                    generateGetterAndSetterHint.setCode(ICommandHintCodes.GENERATE_GETTER_AND_SETTER);
-                    diagnostics.add(generateGetterAndSetterHint);
+                    createCommandsForGenerateGetterAndSetter(variableNode, path, codeActions);
                 }
             }
         }
@@ -4810,8 +4749,74 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         for (int i = 0, childCount = node.getChildCount(); i < childCount; i++)
         {
             IASNode child = node.getChild(i);
-            addCodeGenerationHints(child, diagnostics);
+            saveCodeActionsForLater(child, path, codeActions);
         }
+    }
+
+    private void createCommandsForGenerateGetterAndSetter(IVariableNode variableNode, Path path, List<SavedCodeAction> codeActions)
+    {
+        Range range = LanguageServerCompilerUtils.getRangeFromSourceLocation(variableNode);
+        IExpressionNode assignedValueNode = variableNode.getAssignedValueNode();
+        String assignedValue = null;
+        if (assignedValueNode != null)
+        {
+            String source = sourceByPath.get(path);
+            assignedValue = source.substring(assignedValueNode.getAbsoluteStart(),
+                assignedValueNode.getAbsoluteEnd());
+        }
+        Command generateGetterAndSetterCommand = new Command();
+        generateGetterAndSetterCommand.setTitle("Generate Getter and Setter");
+        generateGetterAndSetterCommand.setCommand(ICommandConstants.GENERATE_GETTER_AND_SETTER);
+        generateGetterAndSetterCommand.setArguments(Arrays.asList(
+            path.toUri().toString(),
+            range.getStart().getLine(),
+            range.getStart().getCharacter(),
+            range.getEnd().getLine(),
+            range.getEnd().getCharacter(),
+            variableNode.getName(),
+            variableNode.getNamespace(),
+            variableNode.hasModifier(ASModifier.STATIC),
+            variableNode.getVariableType(),
+            assignedValue
+        ));
+        SavedCodeAction getterSetterCodeAction = new SavedCodeAction(generateGetterAndSetterCommand, range);
+        codeActions.add(getterSetterCodeAction);
+        
+        Command generateGetterCommand = new Command();
+        generateGetterCommand.setTitle("Generate Getter");
+        generateGetterCommand.setCommand(ICommandConstants.GENERATE_GETTER);
+        generateGetterCommand.setArguments(Arrays.asList(
+            path.toUri().toString(),
+            range.getStart().getLine(),
+            range.getStart().getCharacter(),
+            range.getEnd().getLine(),
+            range.getEnd().getCharacter(),
+            variableNode.getName(),
+            variableNode.getNamespace(),
+            variableNode.hasModifier(ASModifier.STATIC),
+            variableNode.getVariableType(),
+            assignedValue
+        ));
+        SavedCodeAction getterCodeAction = new SavedCodeAction(generateGetterCommand, range);
+        codeActions.add(getterCodeAction);
+
+        Command generateSetterCommand = new Command();
+        generateSetterCommand.setTitle("Generate Setter");
+        generateSetterCommand.setCommand(ICommandConstants.GENERATE_SETTER);
+        generateSetterCommand.setArguments(Arrays.asList(
+            path.toUri().toString(),
+            range.getStart().getLine(),
+            range.getStart().getCharacter(),
+            range.getEnd().getLine(),
+            range.getEnd().getCharacter(),
+            variableNode.getName(),
+            variableNode.getNamespace(),
+            variableNode.hasModifier(ASModifier.STATIC),
+            variableNode.getVariableType(),
+            assignedValue
+        ));
+        SavedCodeAction setterCodeAction = new SavedCodeAction(generateSetterCommand, range);
+        codeActions.add(setterCodeAction);
     }
 
     private Reader getReaderForPath(Path path)
@@ -4872,7 +4877,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         importRange.uri = null;
         importRange.startIndex = -1;
         importRange.endIndex = -1;
-        Path path = LanguageServerUtils.getPathFromLanguageServerURI(uri);
+        Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(uri);
         if (path == null)
         {
             return null;
@@ -4910,7 +4915,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return null;
         }
 
-        currentOffset = LanguageServerUtils.getOffsetFromPosition(new StringReader(code), position);
+        currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(new StringReader(code), position);
         if (currentOffset == -1)
         {
             System.err.println("Could not find code at position " + position.getLine() + ":" + position.getCharacter() + " in file " + path.toAbsolutePath().toString());
@@ -4992,7 +4997,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             importRange.startIndex = -1;
             importRange.endIndex = -1;
         }
-        Path path = LanguageServerUtils.getPathFromLanguageServerURI(textDocument.getUri());
+        Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocument.getUri());
         if (path == null)
         {
             return null;
@@ -5020,7 +5025,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return null;
         }
 
-        currentOffset = LanguageServerUtils.getOffsetFromPosition(new StringReader(code), position);
+        currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(new StringReader(code), position);
         if (currentOffset == -1)
         {
             System.err.println("Could not find code at position " + position.getLine() + ":" + position.getCharacter() + " in file " + path.toAbsolutePath().toString());
@@ -5590,7 +5595,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private boolean isInActionScriptComment(TextDocumentPositionParams params)
     {
         TextDocumentIdentifier textDocument = params.getTextDocument();
-        Path path = LanguageServerUtils.getPathFromLanguageServerURI(textDocument.getUri());
+        Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocument.getUri());
         if (path == null || !sourceByPath.containsKey(path))
         {
             return false;
@@ -5618,7 +5623,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private boolean isInXMLComment(TextDocumentPositionParams params)
     {
         TextDocumentIdentifier textDocument = params.getTextDocument();
-        Path path = LanguageServerUtils.getPathFromLanguageServerURI(textDocument.getUri());
+        Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocument.getUri());
         if (path == null || !sourceByPath.containsKey(path))
         {
             return false;
@@ -5837,7 +5842,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             //node associated with them, so we need to figure this out from the
             //offset instead of a pre-calculated line and column -JT
             Reader definitionReader = getReaderForPath(definitionPath);
-            LanguageServerUtils.getPositionFromOffset(definitionReader, definition.getNameStart(), start);
+            LanguageServerCompilerUtils.getPositionFromOffset(definitionReader, definition.getNameStart(), start);
             end.setLine(start.getLine());
             end.setCharacter(start.getCharacter());
         }
@@ -6354,7 +6359,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             Path path = Paths.get(URI.create(uri));
             String text = IOUtils.toString(getReaderForPath(path));
-            int offset = LanguageServerUtils.getOffsetFromPosition(new StringReader(text), endPosition);
+            int offset = LanguageServerCompilerUtils.getOffsetFromPosition(new StringReader(text), endPosition);
             if (offset < text.length() && text.charAt(offset) == ';')
             {
                 endPosition.setCharacter(endChar + 1);

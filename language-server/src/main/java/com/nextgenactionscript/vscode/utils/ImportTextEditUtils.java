@@ -151,8 +151,8 @@ public class ImportTextEditUtils
 
         TextEdit edit = new TextEdit();
         edit.setNewText(result.toString());
-        Position start = LanguageServerUtils.getPositionFromOffset(new StringReader(text), startImportsIndex);
-        Position end = LanguageServerUtils.getPositionFromOffset(new StringReader(text), endImportsIndex);
+        Position start = LanguageServerCompilerUtils.getPositionFromOffset(new StringReader(text), startImportsIndex);
+        Position end = LanguageServerCompilerUtils.getPositionFromOffset(new StringReader(text), endImportsIndex);
         edit.setRange(new Range(start, end));
         edits.add(edit);
         return endIndex;
@@ -213,7 +213,7 @@ public class ImportTextEditUtils
         String lineBreaks = "\n";
         if(importIndex != -1) //found existing imports
         {
-			position = LanguageServerUtils.getPositionFromOffset(new StringReader(text), importIndex);
+			position = LanguageServerCompilerUtils.getPositionFromOffset(new StringReader(text), importIndex);
             position.setLine(position.getLine() + 1);
             position.setCharacter(0);
         }
@@ -224,7 +224,7 @@ public class ImportTextEditUtils
             packageMatcher.region(startIndex, endIndex);
             if (packageMatcher.find()) //found the package
             {
-                position = LanguageServerUtils.getPositionFromOffset(
+                position = LanguageServerCompilerUtils.getPositionFromOffset(
                     new StringReader(text), packageMatcher.end());
                 if(position.getCharacter() > 0)
                 {
@@ -235,7 +235,7 @@ public class ImportTextEditUtils
             }
             else //couldn't find the start of a package or existing imports
             {
-                position = LanguageServerUtils.getPositionFromOffset(new StringReader(text), startIndex);
+                position = LanguageServerCompilerUtils.getPositionFromOffset(new StringReader(text), startIndex);
                 if (position.getCharacter() > 0)
                 {
                     //go to the next line, if we're not at the start
@@ -271,7 +271,7 @@ public class ImportTextEditUtils
         {
             return null;
         }
-        Position position = LanguageServerUtils.getPositionFromOffset(new StringReader(text), endIndex);
+        Position position = LanguageServerCompilerUtils.getPositionFromOffset(new StringReader(text), endIndex);
     
         TextEdit edit = new TextEdit();
         edit.setNewText(" " + textToInsert);

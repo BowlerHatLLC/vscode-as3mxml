@@ -36,7 +36,7 @@ import org.eclipse.lsp4j.Range;
  * Utility functions for converting between language server types and Flex
  * compiler types.
  */
-public class LanguageServerUtils
+public class LanguageServerCompilerUtils
 {
     /**
      * Converts an URI from the language server protocol to a Path.
