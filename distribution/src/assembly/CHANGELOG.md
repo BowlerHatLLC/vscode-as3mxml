@@ -1,3 +1,22 @@
+## 0.7.1
+
+### New Features
+
+* Workspace: ActionScript SDK picker will show an open folder dialog when adding new SDKs instead of opening the settings to edit manually.
+
+### Fixed Issues
+
+* Code generation: Fixed issue where generate getter/setter light bulb suggestions did not appear unless the entire variable definition was selected.
+* Editor: Fixed issue where automatic MXML namespace insertion would fail sometimes.
+* Editor: Values of `true`, `false`, and `null` are now displayed in the completion list with other keywords.
+* Fixed issue where language server could automatically detect an incorrect `swf-version` value, if omitted.
+* Fixed issue where closing a workspace would leave the language server running with high CPU and memory usage because it wasn't shutting down correctly.
+* Fixed issue where changing the "editor" SDK would require a restart. The language server is now restarted automatically.
+* Fixed issue where Output panel would display useless "Unsupported notification method: $/setTraceNotification" warning.
+* Fixed issue where Output panel would display useless warning about SLFJ library.
+* Fixed issue where Output panel would display useless warning about invalid *asconfig.json* file, when the editor also displays the validation errors in context.
+* Fixed issue where creating the root MXML file would sometimes fail because the compilation unit could not be found.
+
 ## 0.7.0
 
 ### New Features
