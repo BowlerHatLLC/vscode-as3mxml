@@ -4165,10 +4165,26 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     }
                     continue;
                 }
+                if (currentProject.getSourcePath().size() == 0
+                        && i == (files.length - 1))
+                {
+                    //if the main file didn't exist at first, it's possible
+                    //that the project won't have a source path yet. when the
+                    //file is created later, the compilation unit can only be
+                    //created successfully if we set the source path manually
+                    File mainFile = new File(file);
+                    ArrayList<File> sourcePaths = new ArrayList<>();
+                    sourcePaths.add(mainFile.getParentFile());
+                    currentProject.setSourcePath(sourcePaths);
+                }
                 IInvisibleCompilationUnit unit = currentProject.createInvisibleCompilationUnit(file, fileSpecGetter);
                 if (unit == null)
                 {
-                    System.err.println("Could not create compilation unit for file: " + file);
+                    if (sourceByPath.containsKey(path) || (new File(absolutePath)).exists())
+                    {
+                        //only display an error if the compilation unit should definitely exist
+                        System.err.println("Could not create compilation unit for file: " + file);
+                    }
                     continue;
                 }
                 invisibleUnits.add(unit);
@@ -4203,7 +4219,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             IInvisibleCompilationUnit unit = currentProject.createInvisibleCompilationUnit(absolutePath, fileSpecGetter);
             if (unit == null)
             {
-                System.err.println("Could not create compilation unit for file: " + absolutePath);
+                if (sourceByPath.containsKey(path) || (new File(absolutePath)).exists())
+                {
+                    //only display an error if the compilation unit should definitely exist
+                    System.err.println("Could not create compilation unit for file (final fallback): " + absolutePath);
+                }
                 return null;
             }
             invisibleUnits.add(unit);
