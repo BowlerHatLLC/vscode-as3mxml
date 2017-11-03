@@ -18,6 +18,7 @@ import * as path from "path";
 
 const PATH_SDK_DESCRIPTION_AIR = "air-sdk-description.xml"
 const PATH_SDK_DESCRIPTION_FLEX = "flex-sdk-description.xml"
+const PATH_SDK_DESCRIPTION_ROYALE = "royale-sdk-description.xml";
 const XML_NAME_START = "<name>";
 const XML_NAME_END = "</name>";
 const XML_BUILD_START = "<build>";
@@ -55,11 +56,20 @@ function readName(fileContents: string, includeBuild: boolean): string
 export default function findSDKName(sdkPath: string): string
 {
 	let sdkName: string = null;
-	let flexDescriptionPath = path.join(sdkPath, PATH_SDK_DESCRIPTION_FLEX);
-	if(fs.existsSync(flexDescriptionPath))
+	let royaleDescriptionPath = path.join(sdkPath, PATH_SDK_DESCRIPTION_ROYALE);
+	if(fs.existsSync(royaleDescriptionPath))
 	{
-		let flexDescription = fs.readFileSync(flexDescriptionPath, "utf8");
-		sdkName = readName(flexDescription, false);
+		let royaleDescription = fs.readFileSync(royaleDescriptionPath, "utf8");
+		sdkName = readName(royaleDescription, false);
+	}
+	if(sdkName === null)
+	{
+		let flexDescriptionPath = path.join(sdkPath, PATH_SDK_DESCRIPTION_FLEX);
+		if(fs.existsSync(flexDescriptionPath))
+		{
+			let flexDescription = fs.readFileSync(flexDescriptionPath, "utf8");
+			sdkName = readName(flexDescription, false);
+		}
 	}
 	if(sdkName === null)
 	{
