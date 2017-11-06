@@ -1805,6 +1805,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             {
                 return mxmlAttributeCompletion(offsetTag, result);
             }
+            attribute = getMXMLTagAttributeWithNameAtOffset(offsetTag, currentOffset, true);
+            if (attribute != null
+                    && currentOffset > (attribute.getAbsoluteStart() + attribute.getXMLName().toString().length()))
+            {
+                return mxmlStatesCompletion(offsetTag, result);
+            }
 
             IClassDefinition classDefinition = (IClassDefinition) offsetDefinition;
             addMembersForMXMLTypeToAutoComplete(classDefinition, offsetTag, !isAttribute, result);
@@ -1840,6 +1846,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return result;
         }
         System.err.println("Unknown definition for MXML completion: " + offsetDefinition.getClass());
+        return result;
+    }
+
+    private CompletionList mxmlStatesCompletion(IMXMLTagData offsetTag, CompletionList result)
+    {
+        List<CompletionItem> items = result.getItems();
         return result;
     }
 
@@ -5164,15 +5176,21 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return null;
     }
 
-    private IMXMLTagAttributeData getMXMLTagAttributeWithNameAtOffset(IMXMLTagData tag, int offset)
+    private IMXMLTagAttributeData getMXMLTagAttributeWithNameAtOffset(IMXMLTagData tag, int offset, boolean includeEnd)
     {
         IMXMLTagAttributeData[] attributes = tag.getAttributeDatas();
         for (IMXMLTagAttributeData attributeData : attributes)
         {
-            if (offset >= attributeData.getAbsoluteStart()
-                    && offset < attributeData.getAbsoluteEnd())
+            if (offset >= attributeData.getAbsoluteStart())
             {
-                return attributeData;
+                if(includeEnd && offset <= attributeData.getAbsoluteEnd())
+                {
+                    return attributeData;
+                }
+                else if(offset < attributeData.getAbsoluteEnd())
+                {
+                    return attributeData;
+                }
             }
         }
         return null;
@@ -5285,7 +5303,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         else
         {
-            attributeData = getMXMLTagAttributeWithNameAtOffset(tag, offset);
+            attributeData = getMXMLTagAttributeWithNameAtOffset(tag, offset, false);
         }
         if (attributeData == null)
         {
