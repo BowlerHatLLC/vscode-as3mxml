@@ -50,7 +50,6 @@ import org.apache.flex.compiler.common.ASModifier;
 import org.apache.flex.compiler.common.ISourceLocation;
 import org.apache.flex.compiler.common.PrefixMap;
 import org.apache.flex.compiler.common.XMLName;
-import org.apache.flex.compiler.config.Configuration;
 import org.apache.flex.compiler.config.Configurator;
 import org.apache.flex.compiler.config.ICompilerSettingsConstants;
 import org.apache.flex.compiler.constants.IASKeywordConstants;
@@ -92,6 +91,7 @@ import org.apache.flex.compiler.internal.projects.FlexJSProject;
 import org.apache.flex.compiler.internal.projects.FlexProject;
 import org.apache.flex.compiler.internal.scopes.ASScope;
 import org.apache.flex.compiler.internal.scopes.TypeScope;
+import org.apache.flex.compiler.internal.scopes.ASProjectScope.DefinitionPromise;
 import org.apache.flex.compiler.internal.tree.as.FileNode;
 import org.apache.flex.compiler.internal.tree.as.FullNameNode;
 import org.apache.flex.compiler.internal.units.SWCCompilationUnit;
@@ -1851,7 +1851,31 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private CompletionList mxmlStatesCompletion(IMXMLTagData offsetTag, CompletionList result)
     {
-        List<CompletionItem> items = result.getItems();
+        List<IDefinition> definitions = currentUnit.getDefinitionPromises();
+        if (definitions.size() == 0)
+        {
+            return result;
+        }
+        IDefinition definition = definitions.get(0);
+        if (definition instanceof DefinitionPromise)
+        {
+            DefinitionPromise definitionPromise = (DefinitionPromise) definition;
+            definition = definitionPromise.getActualDefinition();
+        }
+        if (definition instanceof IClassDefinition)
+        {
+            List<CompletionItem> items = result.getItems();
+            IClassDefinition classDefinition = (IClassDefinition) definition;
+            Set<String> stateNames = classDefinition.getStateNames();
+            for (String stateName : stateNames)
+            {
+                CompletionItem stateItem = new CompletionItem();
+                stateItem.setKind(CompletionItemKind.Field);
+                stateItem.setLabel(stateName);
+                items.add(stateItem);
+            }
+            return result;
+        }
         return result;
     }
 
