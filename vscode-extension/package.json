@@ -52,7 +52,8 @@
     "onCommand:nextgenas.organizeImportsInTextEditor",
     "onCommand:nextgenas.organizeImportsInUri",
     "onCommand:nextgenas.organizeImportsInDirectory",
-    "onCommand:nextgenas.selectWorkspaceSDK"
+    "onCommand:nextgenas.selectWorkspaceSDK",
+    "onCommand:nextgenas.restartServer"
   ],
   "contributes": {
     "commands": [
@@ -63,6 +64,10 @@
       {
         "command": "nextgenas.selectWorkspaceSDK",
         "title": "ActionScript: Select Workspace SDK"
+      },
+      {
+        "command": "nextgenas.restartServer",
+        "title": "ActionScript: Restart ActionScript/MXML server"
       },
       {
         "command": "nextgenas.organizeImportsInTextEditor",

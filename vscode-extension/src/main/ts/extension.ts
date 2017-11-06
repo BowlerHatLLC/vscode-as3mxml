@@ -40,9 +40,10 @@ const MISSING_FRAMEWORK_SDK_ERROR = "You must configure an SDK to enable all Act
 const INVALID_JAVA_ERROR = "nextgenas.java in settings does not point to a valid executable. It cannot be a directory, and Java 1.8 or newer is required.";
 const MISSING_JAVA_ERROR = "Could not locate valid Java executable. To configure Java manually, use the nextgenas.java setting.";
 const MISSING_WORKSPACE_ROOT_ERROR = "Open a folder and create a file named asconfig.json to enable all ActionScript and MXML language features.";
-const RESTART_MESSAGE = "To apply new settings for ActionScript and MXML, please restart Visual Studio Code.";
 const INITIALIZING_MESSAGE = "Initializing ActionScript and MXML language server...";
-const RESTART_BUTTON_LABEL = "Restart Now";
+const RESTART_FAIL_MESSAGE = "Failed to restart ActionScript/MXML server. Please reload the window to continue.";
+const RELOAD_WINDOW_MESSAGE = "To apply new settings for ActionScript and MXML, please reload the window.";
+const RELOAD_WINDOW_BUTTON_LABEL = "Reload Window";
 const CONFIGURE_SDK_LABEL = "Configure SDK";
 const NO_SDK = "$(alert) No SDK";
 let savedContext: vscode.ExtensionContext;
@@ -80,25 +81,10 @@ function onDidChangeConfiguration(event)
 	let newFrameworkSDKHome = getFrameworkSDKPathWithFallbacks();
 	if(editorSDKHome != newEditorSDKHome ||
 		javaExecutablePath != newJavaExecutablePath)
-		{
-			//we're going to try to kill the language server and then restart
-			//it with the new settings
-			savedLanguageClient.stop().then(() =>
-			{
-				startClient();
-			}, () =>
-			{
-				//something went wrong restarting the language server...
-				//this shouldn't happen, but if it does, the user can manually
-				//restart
-				vscode.window.showWarningMessage(RESTART_MESSAGE, RESTART_BUTTON_LABEL).then((action) =>
-				{
-					if(action === RESTART_BUTTON_LABEL)
-					{
-						vscode.commands.executeCommand("workbench.action.reloadWindow");
-					}
-				});
-			});
+	{
+		//we're going to try to kill the language server and then restart
+		//it with the new settings
+		restartServer();
 	}
 	if(editorSDKHome != newEditorSDKHome ||
 		frameworkSDKHome != newFrameworkSDKHome)
@@ -117,6 +103,39 @@ function updateSDKStatusBarItem()
 		sdkShortName = findSDKShortName(frameworkSDKHome);
 	}
 	sdkStatusBarItem.text = sdkShortName;
+}
+
+function restartServer()
+{
+	if(!savedLanguageClient)
+	{
+		vscode.window.showErrorMessage(RESTART_FAIL_MESSAGE, RELOAD_WINDOW_BUTTON_LABEL).then((action) =>
+		{
+			if(action === RELOAD_WINDOW_BUTTON_LABEL)
+			{
+				vscode.commands.executeCommand("workbench.action.reloadWindow");
+			}
+		});
+		return;
+	}
+	let languageClient = savedLanguageClient;
+	savedLanguageClient = null;
+	languageClient.stop().then(() =>
+	{
+		startClient();
+	}, () =>
+	{
+		//something went wrong restarting the language server...
+		//this shouldn't happen, but if it does, the user can manually
+		//restart
+		vscode.window.showWarningMessage(RELOAD_WINDOW_MESSAGE, RELOAD_WINDOW_BUTTON_LABEL).then((action) =>
+		{
+			if(action === RELOAD_WINDOW_BUTTON_LABEL)
+			{
+				vscode.commands.executeCommand("workbench.action.reloadWindow");
+			}
+		});
+	});
 }
 
 export function activate(context: vscode.ExtensionContext)
@@ -209,6 +228,7 @@ export function activate(context: vscode.ExtensionContext)
 		return adapterExecutableCommandSWF(javaExecutablePath, editorSDKHome, frameworkSDKHome);
 	});
 	vscode.commands.registerCommand("nextgenas.selectWorkspaceSDK", selectWorkspaceSDK);
+	vscode.commands.registerCommand("nextgenas.restartServer", restartServer);
 	vscode.commands.registerTextEditorCommand("nextgenas.organizeImportsInTextEditor", organizeImportsInTextEditor);
 	
 	//don't activate these things unless we're in a workspace
