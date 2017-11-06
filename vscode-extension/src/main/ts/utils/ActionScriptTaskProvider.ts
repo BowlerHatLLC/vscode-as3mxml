@@ -22,10 +22,23 @@ import getFrameworkSDKPathWithFallbacks from "./getFrameworkSDKPathWithFallbacks
 const ASCONFIG_JSON = "asconfig.json"
 const FILE_EXTENSION_AS = ".as";;
 const FILE_EXTENSION_MXML = ".mxml";
+const CONFIG_AIR = "air";
+const CONFIG_AIRMOBILE = "airmobile";
+const FIELD_CONFIG = "config";
+const FIELD_APPLICATION = "application";
+const FIELD_AIR_OPTIONS = "airOptions";
+const FIELD_TARGET = "target";
+const PLATFORM_IOS = "ios";
+const PLATFORM_ANDROID = "android";
+const PLATFORM_AIR = "air";
+const PLATFORM_WINDOWS = "windows";
+const PLATFORM_MAC = "mac";
+const TARGET_BUNDLE = "bundle";
 
 interface ActionScriptTaskDefinition extends vscode.TaskDefinition
 {
 	debug: boolean;
+	air?: string;
 }
 
 export default class ActionScriptTaskProvider implements vscode.TaskProvider
@@ -39,11 +52,26 @@ export default class ActionScriptTaskProvider implements vscode.TaskProvider
 		}
 
 		let provideTask = false;
-		let asconfigJson = path.join(workspaceRoot, ASCONFIG_JSON);
-		if(fs.existsSync(asconfigJson))
+		let isAIRMobile = false;
+		let isBundleWindows = false;
+		let isBundleMac = false;
+		let isAIRSharedRuntime = false;
+		let asconfigJsonPath = path.join(workspaceRoot, ASCONFIG_JSON);
+		if(fs.existsSync(asconfigJsonPath))
 		{
 			//if asconfig.json exists in the root, always provide the tasks
 			provideTask = true;
+			let asconfigJson = this.readASConfigJSON(asconfigJsonPath);
+			if(asconfigJson !== null)
+			{
+				isAIRMobile = this.isAIRMobile(asconfigJson);
+				isBundleWindows = this.isBundleWindows(asconfigJson);
+				isBundleMac = this.isBundleMac(asconfigJson);
+				if(!isAIRMobile && !isBundleWindows && !isBundleMac)
+				{
+					isAIRSharedRuntime = this.isAIRSharedRuntime(asconfigJson);
+				}
+			}
 		}
 		if(!provideTask && vscode.window.activeTextEditor)
 		{
@@ -63,23 +91,66 @@ export default class ActionScriptTaskProvider implements vscode.TaskProvider
 		let command = this.getCommand();
 		let frameworkSDK = getFrameworkSDKPathWithFallbacks();
 
-		let debugIdentifier: ActionScriptTaskDefinition = { type: "actionscript", debug: true };
-		let debugOptions = ["--debug=true", "--flexHome", frameworkSDK];
-		let debugBuildTask = new vscode.Task(debugIdentifier, "debug build using asconfig.json", "ActionScript",
-			new vscode.ProcessExecution(command, debugOptions), ["$nextgenas_nomatch"]);
-		debugBuildTask.group = vscode.TaskGroup.Build;
+		let result =
+		[
+			this.getTask("debug build using asconfig.json",
+				command, frameworkSDK, true, null),
+			this.getTask("release build using asconfig.json",
+				command, frameworkSDK, false, null),
+		];
 
-		let releaseIdentifier: ActionScriptTaskDefinition = { type: "actionscript", debug: false };
-		let releaseOptions = ["--debug=false", "--flexHome", frameworkSDK];
-		let releaseBuildTask = new vscode.Task(releaseIdentifier, "release build using asconfig.json", "ActionScript",
-			new vscode.ProcessExecution(command, releaseOptions), ["$nextgenas_nomatch"]);
-		releaseBuildTask.group = vscode.TaskGroup.Build;
-		return Promise.resolve([debugBuildTask, releaseBuildTask]);
+		if(isAIRMobile)
+		{
+			result.push(this.getTask("iOS debug package using asconfig.json",
+				command, frameworkSDK, true, PLATFORM_IOS));
+			result.push(this.getTask("iOS release package using asconfig.json",
+				command, frameworkSDK, false, PLATFORM_IOS));
+			result.push(this.getTask("Android debug package using asconfig.json",
+				command, frameworkSDK, true, PLATFORM_ANDROID));
+			result.push(this.getTask("Android release package using asconfig.json",
+				command, frameworkSDK, false, PLATFORM_ANDROID));
+		}
+		if(isBundleWindows)
+		{
+			result.push(this.getTask("Windows captive runtime package using asconfig.json",
+				command, frameworkSDK, false, PLATFORM_WINDOWS));
+		}
+		if(isBundleMac)
+		{
+			result.push(this.getTask("macOS captive runtime package using asconfig.json",
+				command, frameworkSDK, false, PLATFORM_MAC));
+		}
+		if(isAIRSharedRuntime)
+		{
+			result.push(this.getTask("shared runtime debug package using asconfig.json", command, frameworkSDK, true, PLATFORM_AIR));
+			result.push(this.getTask("shared runtime debug package using asconfig.json", command, frameworkSDK, false, PLATFORM_AIR));
+		}
+
+		return Promise.resolve(result);
 	}
 
 	resolveTask(task: vscode.Task): vscode.Task | undefined
 	{
 		return undefined;
+	}
+
+	private getTask(description: string, command: string, sdk: string, debug: boolean, airPlatform: string|null): vscode.Task
+	{
+		let airIdentifier: ActionScriptTaskDefinition = { type: "actionscript", debug: debug, air: airPlatform };
+		let airOptions = ["--flexHome", sdk];
+		if(debug)
+		{
+			airOptions.push("--debug=true");
+		}
+		if(airPlatform !== null)
+		{
+			airOptions.push("--air", airPlatform);
+		}
+		let source = airPlatform === null ? "ActionScript" : "Adobe AIR";
+		let airTask = new vscode.Task(airIdentifier, description, source,
+			new vscode.ProcessExecution(command, airOptions), ["$nextgenas_nomatch"]);
+		airTask.group = vscode.TaskGroup.Build;
+		return airTask;
 	}
 
 	private getCommand(): string
@@ -105,5 +176,91 @@ export default class ActionScriptTaskProvider implements vscode.TaskProvider
 			return unixPath;
 		}
 		return executableName;
+	}
+	
+	private readASConfigJSON(filePath: string): string
+	{
+		try
+		{
+			let contents = fs.readFileSync(filePath, "utf8");
+			return json5.parse(contents);
+		}
+		catch(error)
+		{
+
+		}
+		return null;
+	}
+
+	private isAIRSharedRuntime(asconfigJson: any): boolean
+	{
+		if(FIELD_APPLICATION in asconfigJson)
+		{
+			return true;
+		}
+		if(FIELD_AIR_OPTIONS in asconfigJson)
+		{
+			return true;
+		}
+		if(FIELD_CONFIG in asconfigJson)
+		{
+			let config = asconfigJson[FIELD_CONFIG];
+			if(config === CONFIG_AIR || config === CONFIG_AIRMOBILE)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	private isAIRMobile(asconfigJson: any): boolean
+	{
+		if(FIELD_CONFIG in asconfigJson)
+		{
+			let config = asconfigJson[FIELD_CONFIG];
+			if(config === CONFIG_AIRMOBILE)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	private isBundleWindows(asconfigJson: any): boolean
+	{
+		if(process.platform !== "win32")
+		{
+			return false;
+		}
+		if(!(PLATFORM_WINDOWS in asconfigJson))
+		{
+			return false;
+		}
+		let windows = asconfigJson[PLATFORM_WINDOWS];
+		if(!(FIELD_TARGET in windows))
+		{
+			return false;
+		}
+		let target = windows[FIELD_TARGET];
+		return target === TARGET_BUNDLE;
+	}
+	
+	private isBundleMac(asconfigJson: any): boolean
+	{
+		if(process.platform !== "darwin")
+		{
+			return false;
+		}
+		if(!(PLATFORM_MAC in asconfigJson))
+		{
+			return false;
+		}
+		let mac = asconfigJson[PLATFORM_MAC];
+		if(!(FIELD_TARGET in mac))
+		{
+			return false;
+		}
+		let target = mac[FIELD_TARGET];
+		return target === TARGET_BUNDLE;
 	}
 }
