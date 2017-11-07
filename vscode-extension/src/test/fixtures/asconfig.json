@@ -1,5 +1,5 @@
 {
-	"config": "flex",
+	"config": "royale",
 	"compilerOptions": {
 		"targets": [
 			"JSRoyale"
