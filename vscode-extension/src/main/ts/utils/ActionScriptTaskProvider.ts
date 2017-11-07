@@ -34,6 +34,8 @@ const PLATFORM_AIR = "air";
 const PLATFORM_WINDOWS = "windows";
 const PLATFORM_MAC = "mac";
 const TARGET_BUNDLE = "bundle";
+const MATCHER = "$nextgenas_nomatch";
+const TASK_TYPE = "actionscript";
 
 interface ActionScriptTaskDefinition extends vscode.TaskDefinition
 {
@@ -45,18 +47,18 @@ export default class ActionScriptTaskProvider implements vscode.TaskProvider
 {
 	provideTasks(token: vscode.CancellationToken): Promise<vscode.Task[]>
 	{
-		let workspaceRoot = vscode.workspace.rootPath;
-		if(!workspaceRoot)
+		if(vscode.workspace.workspaceFolders === undefined)
 		{
 			return Promise.resolve([]);
 		}
+		let workspaceRoot = vscode.workspace.workspaceFolders[0];
 
 		let provideTask = false;
 		let isAIRMobile = false;
 		let isBundleWindows = false;
 		let isBundleMac = false;
 		let isAIRSharedRuntime = false;
-		let asconfigJsonPath = path.join(workspaceRoot, ASCONFIG_JSON);
+		let asconfigJsonPath = path.join(workspaceRoot.uri.fsPath, ASCONFIG_JSON);
 		if(fs.existsSync(asconfigJsonPath))
 		{
 			//if asconfig.json exists in the root, always provide the tasks
@@ -94,36 +96,38 @@ export default class ActionScriptTaskProvider implements vscode.TaskProvider
 		let result =
 		[
 			this.getTask("debug build using asconfig.json",
-				command, frameworkSDK, true, null),
+				workspaceRoot, command, frameworkSDK, true, null),
 			this.getTask("release build using asconfig.json",
-				command, frameworkSDK, false, null),
+				workspaceRoot, command, frameworkSDK, false, null),
 		];
 
 		if(isAIRMobile)
 		{
 			result.push(this.getTask("iOS debug package using asconfig.json",
-				command, frameworkSDK, true, PLATFORM_IOS));
+				workspaceRoot, command, frameworkSDK, true, PLATFORM_IOS));
 			result.push(this.getTask("iOS release package using asconfig.json",
-				command, frameworkSDK, false, PLATFORM_IOS));
+				workspaceRoot, command, frameworkSDK, false, PLATFORM_IOS));
 			result.push(this.getTask("Android debug package using asconfig.json",
-				command, frameworkSDK, true, PLATFORM_ANDROID));
+				workspaceRoot, command, frameworkSDK, true, PLATFORM_ANDROID));
 			result.push(this.getTask("Android release package using asconfig.json",
-				command, frameworkSDK, false, PLATFORM_ANDROID));
+				workspaceRoot, command, frameworkSDK, false, PLATFORM_ANDROID));
 		}
 		if(isBundleWindows)
 		{
 			result.push(this.getTask("Windows captive runtime package using asconfig.json",
-				command, frameworkSDK, false, PLATFORM_WINDOWS));
+				workspaceRoot, command, frameworkSDK, false, PLATFORM_WINDOWS));
 		}
 		if(isBundleMac)
 		{
 			result.push(this.getTask("macOS captive runtime package using asconfig.json",
-				command, frameworkSDK, false, PLATFORM_MAC));
+				workspaceRoot, command, frameworkSDK, false, PLATFORM_MAC));
 		}
 		if(isAIRSharedRuntime)
 		{
-			result.push(this.getTask("shared runtime debug package using asconfig.json", command, frameworkSDK, true, PLATFORM_AIR));
-			result.push(this.getTask("shared runtime debug package using asconfig.json", command, frameworkSDK, false, PLATFORM_AIR));
+			result.push(this.getTask("shared runtime debug package using asconfig.json",
+				workspaceRoot, command, frameworkSDK, true, PLATFORM_AIR));
+			result.push(this.getTask("shared runtime debug package using asconfig.json",
+				workspaceRoot, command, frameworkSDK, false, PLATFORM_AIR));
 		}
 
 		return Promise.resolve(result);
@@ -131,26 +135,37 @@ export default class ActionScriptTaskProvider implements vscode.TaskProvider
 
 	resolveTask(task: vscode.Task): vscode.Task | undefined
 	{
+		console.error("resolve task", task);
 		return undefined;
 	}
 
-	private getTask(description: string, command: string, sdk: string, debug: boolean, airPlatform: string|null): vscode.Task
+	private getTask(description: string, workspaceFolder: vscode.WorkspaceFolder,
+		command: string, sdk: string, debug: boolean, airPlatform: string): vscode.Task
 	{
-		let airIdentifier: ActionScriptTaskDefinition = { type: "actionscript", debug: debug, air: airPlatform };
-		let airOptions = ["--flexHome", sdk];
+		let definition: ActionScriptTaskDefinition = { type: TASK_TYPE, debug: debug };
+		if(airPlatform)
+		{
+			definition.air = airPlatform;
+		}
+		let options = ["--flexHome", sdk];
 		if(debug)
 		{
-			airOptions.push("--debug=true");
+			options.push("--debug=true");
 		}
-		if(airPlatform !== null)
+		else
 		{
-			airOptions.push("--air", airPlatform);
+			options.push("--debug=false");
+		}
+		if(airPlatform)
+		{
+			options.push("--air", airPlatform);
 		}
 		let source = airPlatform === null ? "ActionScript" : "Adobe AIR";
-		let airTask = new vscode.Task(airIdentifier, description, source,
-			new vscode.ProcessExecution(command, airOptions), ["$nextgenas_nomatch"]);
-		airTask.group = vscode.TaskGroup.Build;
-		return airTask;
+		let execution = new vscode.ProcessExecution(command, options);
+		let task = new vscode.Task(definition, workspaceFolder, description,
+			source, execution, MATCHER);
+		task.group = vscode.TaskGroup.Build;
+		return task;
 	}
 
 	private getCommand(): string

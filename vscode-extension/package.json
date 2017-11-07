@@ -262,10 +262,17 @@
     "taskDefinitions": [
       {
         "type": "actionscript",
+        "required": [
+          "debug"
+        ],
         "properties": {
           "debug": {
             "type": "boolean",
             "description": "Indicates if the output is a debug or release build"
+          },
+          "air": {
+            "type": "string",
+            "description": "Optionally indicates the platform name of the Adobe AIR package"
           }
         }
       }
