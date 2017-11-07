@@ -18,6 +18,7 @@ package com.nextgenactionscript.vscode.project;
 import java.io.File;
 import java.io.InputStream;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -32,12 +33,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.networknt.schema.JsonSchema;
 import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.ValidationMessage;
+import com.nextgenactionscript.vscode.utils.ActionScriptSDKUtils;
 
 /**
  * Configures a project using an asconfig.json file.
  */
 public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy
 {
+    private static final String PROPERTY_FRAMEWORK_LIB = "royalelib";
+    private static final String CONFIG_ROYALE = "royale";
+    private static final String CONFIG_FLEX = "flex";
+
     private Path asconfigPath;
     private boolean changed = true;
 
@@ -78,9 +84,15 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy
         {
             return null;
         }
+        Path sdkPath = Paths.get(System.getProperty(PROPERTY_FRAMEWORK_LIB));
+        boolean isRoyale = ActionScriptSDKUtils.isRoyaleFramework(sdkPath);
         Path projectRoot = asconfigPath.getParent();
         ProjectType type = ProjectType.APP;
-        String config = "flex";
+        String config = CONFIG_FLEX;
+        if(isRoyale)
+        {
+            config = CONFIG_ROYALE;
+        }
         String[] files = null;
         String additionalOptions = null;
         CompilerOptions compilerOptions = new CompilerOptions();

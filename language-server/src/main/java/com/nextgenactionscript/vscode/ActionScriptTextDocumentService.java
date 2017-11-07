@@ -152,6 +152,7 @@ import com.nextgenactionscript.vscode.project.ProjectOptions;
 import com.nextgenactionscript.vscode.project.ProjectType;
 import com.nextgenactionscript.vscode.project.VSCodeConfiguration;
 import com.nextgenactionscript.vscode.utils.ASTUtils;
+import com.nextgenactionscript.vscode.utils.ActionScriptSDKUtils;
 import com.nextgenactionscript.vscode.utils.ImportTextEditUtils;
 import com.nextgenactionscript.vscode.utils.LSPUtils;
 import com.nextgenactionscript.vscode.utils.LanguageServerCompilerUtils;
@@ -225,6 +226,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private static final String MARKDOWN_CODE_BLOCK_MXML_START = "```mxml\n";
     private static final String MARKDOWN_CODE_BLOCK_END = "\n```";
     private static final String TOKEN_CONFIGNAME = "configname";
+    private static final String CONFIG_ROYALE = "royale";
     private static final String CONFIG_JS = "js";
     private static final String CONFIG_NODE = "node";
     private static final String SDK_FRAMEWORKS_PATH_SIGNATURE = "/frameworks/";
@@ -297,6 +299,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private LanguageServerFileSpecGetter fileSpecGetter;
     private boolean frameworkSDKContainsFalconCompiler = false;
     private boolean frameworkSDKIsRoyale = false;
+    private boolean frameworkSDKIsFlexJS = false;
     private ProblemTracker codeProblemTracker = new ProblemTracker();
     private ProblemTracker configProblemTracker = new ProblemTracker();
     private Pattern additionalOptionsPattern = Pattern.compile("[^\\s]*'([^'])*?'|[^\\s]*\"([^\"])*?\"|[^\\s]+");
@@ -332,9 +335,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         Path sdkPath = Paths.get(System.getProperty(PROPERTY_FRAMEWORK_LIB));
         sdkPath = sdkPath.resolve("../lib/falcon-mxmlc.jar");
         frameworkSDKContainsFalconCompiler = sdkPath.toFile().exists();
+
+        sdkPath = Paths.get(System.getProperty(PROPERTY_FRAMEWORK_LIB));
+        frameworkSDKIsRoyale = ActionScriptSDKUtils.isRoyaleFramework(sdkPath);
+
         sdkPath = Paths.get(System.getProperty(PROPERTY_FRAMEWORK_LIB));
         sdkPath = sdkPath.resolve("../js/bin/asjsc");
-        frameworkSDKIsRoyale = sdkPath.toFile().exists();
+        frameworkSDKIsFlexJS = !frameworkSDKIsRoyale && sdkPath.toFile().exists();
 
         isWindows = System.getProperty("os.name").toLowerCase().startsWith("windows");
     }
@@ -4290,12 +4297,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private boolean isJSConfig(ProjectOptions projectOptions)
     {
-        if(frameworkSDKIsRoyale)
+        if(frameworkSDKIsRoyale || frameworkSDKIsFlexJS)
         {
             return true;
         }
         String config = projectOptions.config;
-        if (config.equals(CONFIG_JS) || config.equals(CONFIG_NODE))
+        if (config.equals(CONFIG_ROYALE) || config.equals(CONFIG_JS)
+                || config.equals(CONFIG_NODE))
         {
             return true;
         }
@@ -4409,6 +4417,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 }
             }
             //if no targets are specified, we can guess JS from some configs
+            else if (currentProjectOptions.config.equals(CONFIG_ROYALE))
+            {
+                backend = new RoyaleBackend();
+            }
             else if (currentProjectOptions.config.equals(CONFIG_JS))
             {
                 backend = new JSCBackend();
