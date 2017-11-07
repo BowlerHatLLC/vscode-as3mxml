@@ -22,10 +22,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 
-import org.apache.flex.compiler.clients.problems.CompilerProblemCategorizer;
-import org.apache.flex.compiler.common.ISourceLocation;
-import org.apache.flex.compiler.problems.CompilerProblemSeverity;
-import org.apache.flex.compiler.problems.ICompilerProblem;
+import org.apache.royale.compiler.clients.problems.CompilerProblemCategorizer;
+import org.apache.royale.compiler.common.ISourceLocation;
+import org.apache.royale.compiler.problems.CompilerProblemSeverity;
+import org.apache.royale.compiler.problems.ICompilerProblem;
 
 import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.eclipse.lsp4j.Location;

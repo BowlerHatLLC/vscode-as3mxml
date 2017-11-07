@@ -15,7 +15,8 @@
 * **Organize Imports** sorts imports alphabetically and removes unused imports.
 * **Code Generation** supports adding getters/setters, methods, and both local and member variables.
 * **Build** a project with `Ctrl+Shift+B`.
-* **Debug** Apache FlexJS projects in web browsers and Node.js and SWF projects in Adobe AIR and Flash Player.
+* **Debug** Apache Royale (formerly known as FlexJS) projects in web browsers and Node.js.
+* **Debug** SWF projects in Adobe AIR and Flash Player.
 
 ## Help and Support
 
@@ -31,17 +32,17 @@
 
 Add a file named [`asconfig.json`](https://github.com/BowlerHatLLC/vscode-nextgenas/wiki/asconfig.json) to the root of your project to enable the ActionScript and MXML extension.
 
-A sample `asconfig.json` file for an Apache FlexJS project appears below:
+A sample `asconfig.json` file for an Apache Royale project appears below:
 
 	{
 		"compilerOptions": {
 			"targets": [
-				"JSFlex"
+				"JSRoyale"
 			]
 		},
 		"files":
 		[
-			"src/HelloFlexJS.mxml"
+			"src/HelloRoyale.mxml"
 		]
 	}
 

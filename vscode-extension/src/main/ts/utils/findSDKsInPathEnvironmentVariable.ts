@@ -48,8 +48,8 @@ export default function findSDKsInPathEnvironmentVariable(): string[]
 			if(fs.existsSync(mxmlcPath))
 			{
 				//this may a symbolic link rather than the actual file, such as
-				//when Apache FlexJS is installed with NPM on macOS, so get the
-				//real path.
+				//when an SDK is installed with npm on macOS, so get the real
+				//path.
 				mxmlcPath = fs.realpathSync(mxmlcPath);
 				//first, check for bin/mxmlc
 				let frameworksPath = path.join(path.dirname(mxmlcPath), "..", "frameworks");

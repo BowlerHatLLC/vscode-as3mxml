@@ -23,7 +23,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-import org.apache.flex.compiler.tree.as.IASNode;
+import org.apache.royale.compiler.tree.as.IASNode;
 
 import com.google.gson.internal.LinkedTreeMap;
 import com.nextgenactionscript.vscode.commands.ICommandConstants;
@@ -55,9 +55,9 @@ import org.eclipse.lsp4j.services.WorkspaceService;
  */
 public class ActionScriptLanguageServer implements LanguageServer, LanguageClientAware
 {
-    private static final int MISSING_FLEXLIB = 200;
-    private static final int INVALID_FLEXLIB = 201;
-    private static final String FLEXLIB = "flexlib";
+    private static final int MISSING_FRAMEWORK_LIB = 200;
+    private static final int INVALID_FRAMEWORK_LIB = 201;
+    private static final String PROPERTY_FRAMEWORK_LIB = "royalelib";
     private static final String FRAMEWORKS_RELATIVE_PATH_CHILD = "./frameworks";
     private static final String FRAMEWORKS_RELATIVE_PATH_PARENT = "../frameworks";
     private static final String ASCONFIG_JSON = "asconfig.json";
@@ -70,21 +70,21 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
     public ActionScriptLanguageServer()
     {
         projectConfigStrategy = new ASConfigProjectConfigStrategy();
-        //the flexlib system property may be configured in the command line
-        //options, but if it isn't, use the framework included with FlexJS
-        if (System.getProperty(FLEXLIB) == null)
+        //the royalelib system property may be configured in the command line
+        //options, but if it isn't, use the framework included with Royale
+        if (System.getProperty(PROPERTY_FRAMEWORK_LIB) == null)
         {
-            String flexLib = findFlexLibDirectoryPath();
-            if (flexLib == null)
+            String frameworksPath = findFrameworksPath();
+            if (frameworksPath == null)
             {
-                System.exit(MISSING_FLEXLIB);
+                System.exit(MISSING_FRAMEWORK_LIB);
             }
-            File flexLibFile = new File(flexLib);
-            if (!flexLibFile.exists() || !flexLibFile.isDirectory())
+            File frameworkLibFile = new File(frameworksPath);
+            if (!frameworkLibFile.exists() || !frameworkLibFile.isDirectory())
             {
-                System.exit(INVALID_FLEXLIB);
+                System.exit(INVALID_FRAMEWORK_LIB);
             }
-            System.setProperty(FLEXLIB, flexLib);
+            System.setProperty(PROPERTY_FRAMEWORK_LIB, frameworksPath);
         }
     }
 
@@ -195,14 +195,14 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
                         //keep using the existing framework for now
                         return;
                     }
-                    String flexlib = Paths.get(frameworkSDK).resolve(FRAMEWORKS_RELATIVE_PATH_CHILD).toAbsolutePath().normalize().toString();
-                    String oldFlexlib = System.getProperty(FLEXLIB);
-                    if (oldFlexlib.equals(flexlib))
+                    String frameworkLib = Paths.get(frameworkSDK).resolve(FRAMEWORKS_RELATIVE_PATH_CHILD).toAbsolutePath().normalize().toString();
+                    String oldFrameworkLib = System.getProperty(PROPERTY_FRAMEWORK_LIB);
+                    if (oldFrameworkLib.equals(frameworkLib))
                     {
-                        //flexlib has not changed
+                        //frameworks library has not changed
                         return;
                     }
-                    System.setProperty(FLEXLIB, flexlib);
+                    System.setProperty(PROPERTY_FRAMEWORK_LIB, frameworkLib);
                     projectConfigStrategy.setChanged(true);
                     textDocumentService.checkForProblemsNow();
                 }
@@ -278,11 +278,11 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
     }
 
     /**
-     * Using a Java class from the Apache FlexJS compiler, we can check where
+     * Using a Java class from the Apache Royale compiler, we can check where
      * its JAR file is located on the file system, and then we can find the
      * frameworks directory.
      */
-    private String findFlexLibDirectoryPath()
+    private String findFrameworksPath()
     {
         try
         {

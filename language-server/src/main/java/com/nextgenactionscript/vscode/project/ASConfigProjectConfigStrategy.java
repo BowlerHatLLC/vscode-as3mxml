@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.flex.compiler.internal.mxml.MXMLNamespaceMapping;
+import org.apache.royale.compiler.internal.mxml.MXMLNamespaceMapping;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonNode;

@@ -25,8 +25,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.flex.compiler.asdoc.IASDocComment;
-import org.apache.flex.compiler.asdoc.IASDocTag;
+import org.apache.royale.compiler.asdoc.IASDocComment;
+import org.apache.royale.compiler.asdoc.IASDocTag;
 
 import antlr.Token;
 

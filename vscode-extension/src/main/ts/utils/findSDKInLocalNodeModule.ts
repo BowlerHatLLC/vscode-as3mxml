@@ -17,18 +17,16 @@ import * as path from "path";
 import * as vscode from "vscode";
 import validateFrameworkSDK from "./validateFrameworkSDK";
 
-const ENVIRONMENT_VARIABLE_FLEX_HOME = "FLEX_HOME";
-
 export default function findSDKInLocalNodeModule(): string
 {
 	if(!vscode.workspace.rootPath)
 	{
 		return null;
 	}
-	let flexjsModule = path.join(vscode.workspace.rootPath, "node_modules", "flexjs");
-	if(validateFrameworkSDK(flexjsModule))
+	let nodeModule = path.join(vscode.workspace.rootPath, "node_modules", "flexjs");
+	if(validateFrameworkSDK(nodeModule))
 	{
-		return flexjsModule;
+		return nodeModule;
 	}
 	return null;
 }

@@ -206,8 +206,8 @@
         }
       },
       {
-        "name": "flexjs",
-        "label": "Apache FlexJS",
+        "name": "royale",
+        "label": "Apache Royale",
         "owner": "nextgenas",
         "applyTo": "closedDocuments",
         "fileLocation": [
@@ -287,7 +287,7 @@
             "null"
           ],
           "default": null,
-          "description": "(Advanced) Specifies the folder path of the Apache FlexJS SDK used internally by the extension for code intelligence. Unless you know what you're doing, you should probably set nextgenas.sdk.framework instead."
+          "description": "(Advanced) Specifies the folder path of the Apache Royale SDK used internally by the extension for code intelligence. Unless you know what you're doing, you should probably set nextgenas.sdk.framework instead."
         },
         "nextgenas.sdk.framework": {
           "type": [

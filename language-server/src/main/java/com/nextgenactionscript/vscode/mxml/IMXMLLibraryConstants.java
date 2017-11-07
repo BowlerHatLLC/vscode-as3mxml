@@ -23,9 +23,14 @@ public interface IMXMLLibraryConstants
     //Flex
     String MX = "library://ns.adobe.com/flex/mx";
     String SPARK = "library://ns.adobe.com/flex/spark";
+    
+    //Royale
+    String FLEXJS_BASIC = "library://ns.apache.org/flexjs/basic";
+    String FLEXJS_EXPRESS = "library://ns.apache.org/flexjs/express";
 
-    //FlexJS
-    String BASIC = "library://ns.apache.org/flexjs/basic";
+    //Royale
+    String ROYALE_BASIC = "library://ns.apache.org/royale/basic";
+    String ROYALE_EXPRESS = "library://ns.apache.org/royale/express";
     
     //Feathers
     String FEATHERS = "library://ns.feathersui.com/mxml";

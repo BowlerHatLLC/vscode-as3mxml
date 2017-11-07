@@ -1,10 +1,10 @@
 {
 	//0.8.0
-	//"nextgenas.sdk.editor": "/Users/joshtynjala/Development/Flex/sdks/flexjs-0.8.0"
+	//"nextgenas.sdk.editor": "/Users/joshtynjala/Development/Flex/sdks/royale-0.9.0"
 
 	//nightly
-	//"nextgenas.sdk.editor": "/Users/joshtynjala/Development/Flex/sdks/flexjs-nightly"
+	//"nextgenas.sdk.editor": "/Users/joshtynjala/Development/Flex/sdks/royale-nightly"
 
 	//maven local
-	//"nextgenas.sdk.editor": "/Users/joshtynjala/Development/apache-flex/maven-flex-asjs/distribution/target/apache-flex-flexjs-0.9.0-SNAPSHOT"
+	//"nextgenas.sdk.editor": "/Users/joshtynjala/Development/apache/maven-royale-asjs/distribution/target/apache-royale-0.9.0-SNAPSHOT"
 }

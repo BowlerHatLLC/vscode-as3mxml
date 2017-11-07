@@ -19,16 +19,16 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 
-import org.apache.flex.compiler.common.IFileSpecificationGetter;
-import org.apache.flex.compiler.constants.IASKeywordConstants;
-import org.apache.flex.compiler.constants.IMXMLCoreConstants;
-import org.apache.flex.compiler.filespecs.FileSpecification;
-import org.apache.flex.compiler.filespecs.IFileSpecification;
-import org.apache.flex.compiler.internal.filespecs.StringFileSpecification;
-import org.apache.flex.compiler.workspaces.IWorkspace;
+import org.apache.royale.compiler.common.IFileSpecificationGetter;
+import org.apache.royale.compiler.constants.IASKeywordConstants;
+import org.apache.royale.compiler.constants.IMXMLCoreConstants;
+import org.apache.royale.compiler.filespecs.FileSpecification;
+import org.apache.royale.compiler.filespecs.IFileSpecification;
+import org.apache.royale.compiler.internal.filespecs.StringFileSpecification;
+import org.apache.royale.compiler.workspaces.IWorkspace;
 
 /**
- * Returns instances of IFileSpecification to be used by the Apache FlexJS
+ * Returns instances of IFileSpecification to be used by the Apache Royale
  * compiler to get the contents of files. If a file is open, and it is being
  * edited (possibly with changes not saved to the file system), returns a
  * StringFileSpecification. StringFileSpecification stores the code in a String.
@@ -71,13 +71,6 @@ public class LanguageServerFileSpecGetter implements IFileSpecificationGetter
             if (filePath.endsWith(FILE_EXTENSION_AS))
             {
                 code = fixPackageWithoutBraces(code);
-            }
-            else if (filePath.endsWith(FILE_EXTENSION_MXML))
-            {
-                //these workaround are for FlexJS 0.7.0 and can be removed when
-                //that version is no longer supported
-                code = fixUnclosedXMLComment(code);
-                code = fixUnclosedScriptCDATA(code);
             }
             return new StringFileSpecification(filePath, code);
         }

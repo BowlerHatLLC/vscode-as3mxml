@@ -29,7 +29,7 @@
       </includes>
     </fileSet>
     <fileSet>
-      <directory>../check-flexjs-version/target</directory>
+      <directory>../check-royale-version/target</directory>
       <outputDirectory>bin</outputDirectory>
       <includes>
         <include>*.jar</include>

@@ -6,13 +6,13 @@ This README file is intended for contributors to the extension. If you simply wa
 
 This project is divided into several modules.
 
-1. **language-server** provides ActionScript and MXML code intelligence for Visual Studio Code or another editor that supports the Language Server Protocol. It integrates with the compiler from Apache FlexJS and is written in Java.
+1. **language-server** provides ActionScript and MXML code intelligence for Visual Studio Code or another editor that supports the Language Server Protocol. It integrates with the compiler from Apache Royale and is written in Java.
 
-1. **swf-debugger** provides SWF debugging for Visual Studio Code or another editor that supports the VSCode Debugging Protocol. It integrates with the debugger from Apache FlexJS and is written in Java.
+1. **swf-debugger** provides SWF debugging for Visual Studio Code or another editor that supports the VSCode Debugging Protocol. It integrates with the debugger from Apache Royale and is written in Java.
 
 1. **check-java-version** creates an executable JAR file that will verify that the current version of Java meets the minimum requirements for the language server.
 
-1. **check-flexjs-version** creates an executable JAR file that will verify that the current version of Apache FlexJS meets the minimum requirements for the language server.
+1. **check-royale-version** creates an executable JAR file that will verify that the current version of Apache Royale meets the minimum requirements for the language server.
 
 1. **vscode-extension** initializes the Java language-server process from inside Visual Studio Code and handles a few features that the Language Server Protocol does not support.
 

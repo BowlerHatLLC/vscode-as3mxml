@@ -1,7 +1,9 @@
 {
 	"config": "flex",
 	"compilerOptions": {
-		"js-output-type": "flexjs"
+		"targets": [
+			"JSRoyale"
+		]
 	},
 	"files": [
 		"src/Main.as"

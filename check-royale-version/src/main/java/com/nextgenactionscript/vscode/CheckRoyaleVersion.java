@@ -15,13 +15,13 @@ limitations under the License.
 */
 package com.nextgenactionscript.vscode;
 
-import org.apache.flex.compiler.tree.as.IASNode;
+import org.apache.royale.compiler.tree.as.IASNode;
 
 /**
- * Checks that the Apache FlexJS version is compatible with the NextGenAS
- * language server.
+ * Checks that the Apache Royale version is compatible with the
+ * ActionScript/MXML language server.
  */
-public class CheckFlexJSVersion
+public class CheckRoyaleVersion
 {
     public static final int GOOD_VERSION = 0;
     public static final int BAD_VERSION = 100;
@@ -49,7 +49,7 @@ public class CheckFlexJSVersion
             }
             else if (major == 0)
             {
-                if (minor >= 8)
+                if (minor >= 9)
                 {
                     //minor version is valid
                     System.exit(GOOD_VERSION);

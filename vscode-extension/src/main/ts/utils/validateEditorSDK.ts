@@ -57,8 +57,8 @@ export default function(extensionPath: string, javaPath: string, sdkPath: string
 		"-cp",
 		path.resolve(sdkPath, "lib", "compiler.jar") + cpDelimiter +
 		path.resolve(sdkPath, "js", "lib", "jsc.jar") + cpDelimiter +
-		path.resolve(extensionPath, "bin", "check-flexjs-version.jar"),
-		"com.nextgenactionscript.vscode.CheckFlexJSVersion",
+		path.resolve(extensionPath, "bin", "check-royale-version.jar"),
+		"com.nextgenactionscript.vscode.CheckRoyaleVersion",
 	];
 	let result = child_process.spawnSync(javaPath, args);
 	return result.status === 0;

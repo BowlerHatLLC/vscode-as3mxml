@@ -15,7 +15,6 @@ limitations under the License.
 */
 package com.nextgenactionscript.vscode.utils;
 
-import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 
 /**

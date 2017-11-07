@@ -35,7 +35,7 @@ import {LanguageClient, LanguageClientOptions, SettingMonitor,
 	CloseAction, Executable, ExecutableOptions} from "vscode-languageclient";
 import { Message } from "vscode-jsonrpc";
 
-const INVALID_SDK_ERROR = "nextgenas.sdk.editor in settings does not point to a valid SDK. Requires Apache FlexJS 0.8.0 or newer.";
+const INVALID_SDK_ERROR = "nextgenas.sdk.editor in settings does not point to a valid SDK. Requires Apache Royale 0.9.0 or newer.";
 const MISSING_FRAMEWORK_SDK_ERROR = "You must configure an SDK to enable all ActionScript and MXML features.";
 const INVALID_JAVA_ERROR = "nextgenas.java in settings does not point to a valid executable. It cannot be a directory, and Java 1.8 or newer is required.";
 const MISSING_JAVA_ERROR = "Could not locate valid Java executable. To configure Java manually, use the nextgenas.java setting.";
@@ -52,8 +52,6 @@ let bundledCompilerPath: string;
 let editorSDKHome: string;
 let javaExecutablePath: string;
 let frameworkSDKHome: string;
-let hasShownFlexJSSDKWarning = false;
-let hasShownFrameworkSDKWarning = false;
 let sdkStatusBarItem: vscode.StatusBarItem;
 let sourcePathDataProvider: ActionScriptSourcePathDataProvider = null;
 let actionScriptTaskProvider: ActionScriptTaskProvider = null;
@@ -370,7 +368,7 @@ function startClient()
 			{
 				//use the nextgenas.sdk.editor configuration
 				cp += cpDelimiter +
-					//the following jars come from apache flexjs
+					//the following jars come from apache royale
 					path.resolve(editorSDKHome, "lib", "*") +
 					cpDelimiter +
 					path.resolve(editorSDKHome, "lib", "external", "*") +
@@ -390,7 +388,7 @@ function startClient()
 			];
 			if(frameworkSDKHome)
 			{
-				args.unshift("-Dflexlib=" + path.join(frameworkSDKHome, "frameworks"));
+				args.unshift("-Droyalelib=" + path.join(frameworkSDKHome, "frameworks"));
 			}
 			let executable: Executable =
 			{

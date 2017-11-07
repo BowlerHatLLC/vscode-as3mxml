@@ -20,14 +20,14 @@ package com.nextgenactionscript.vscode.asdoc;
 
 import antlr.Token;
 
-import org.apache.flex.compiler.asdoc.IASDocComment;
-import org.apache.flex.compiler.asdoc.IASDocDelegate;
-import org.apache.flex.compiler.asdoc.IASParserASDocDelegate;
-import org.apache.flex.compiler.asdoc.IMetadataParserASDocDelegate;
-import org.apache.flex.compiler.asdoc.IPackageDITAParser;
-import org.apache.flex.compiler.common.ISourceLocation;
-import org.apache.flex.compiler.definitions.IDocumentableDefinition;
-import org.apache.flex.compiler.tree.as.IDocumentableDefinitionNode;
+import org.apache.royale.compiler.asdoc.IASDocComment;
+import org.apache.royale.compiler.asdoc.IASDocDelegate;
+import org.apache.royale.compiler.asdoc.IASParserASDocDelegate;
+import org.apache.royale.compiler.asdoc.IMetadataParserASDocDelegate;
+import org.apache.royale.compiler.asdoc.IPackageDITAParser;
+import org.apache.royale.compiler.common.ISourceLocation;
+import org.apache.royale.compiler.definitions.IDocumentableDefinition;
+import org.apache.royale.compiler.tree.as.IDocumentableDefinitionNode;
 
 /**
  * A custom implementation of IASDocDelegate for vscode-nextgenas.

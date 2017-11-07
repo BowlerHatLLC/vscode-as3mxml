@@ -20,7 +20,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.flex.compiler.internal.mxml.MXMLNamespaceMapping;
+import org.apache.royale.compiler.internal.mxml.MXMLNamespaceMapping;
 
 /**
  * Defines constants for the fields from the "compilerOptions" field of an
