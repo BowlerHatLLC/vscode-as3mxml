@@ -77,19 +77,26 @@ function onDidChangeConfiguration(event)
 	});
 	let newEditorSDKHome = getValidatedEditorSDKConfiguration(newJavaExecutablePath);
 	let newFrameworkSDKHome = getFrameworkSDKPathWithFallbacks();
+	let restarting = false;
 	if(editorSDKHome != newEditorSDKHome ||
 		javaExecutablePath != newJavaExecutablePath)
 	{
 		//we're going to try to kill the language server and then restart
 		//it with the new settings
+		restarting = true;
 		restartServer();
 	}
+	let frameworkChanged = frameworkSDKHome != newFrameworkSDKHome;
 	if(editorSDKHome != newEditorSDKHome ||
-		frameworkSDKHome != newFrameworkSDKHome)
+		frameworkChanged)
 	{
 		editorSDKHome = newEditorSDKHome;
 		frameworkSDKHome = newFrameworkSDKHome;
 		updateSDKStatusBarItem();
+		if(!savedLanguageClient && !restarting && frameworkChanged)
+		{
+			restartServer();
+		}
 	}
 }
 
@@ -107,13 +114,7 @@ function restartServer()
 {
 	if(!savedLanguageClient)
 	{
-		vscode.window.showErrorMessage(RESTART_FAIL_MESSAGE, RELOAD_WINDOW_BUTTON_LABEL).then((action) =>
-		{
-			if(action === RELOAD_WINDOW_BUTTON_LABEL)
-			{
-				vscode.commands.executeCommand("workbench.action.reloadWindow");
-			}
-		});
+		startClient();
 		return;
 	}
 	let languageClient = savedLanguageClient;
