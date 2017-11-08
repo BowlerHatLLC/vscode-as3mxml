@@ -5026,6 +5026,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     IMXMLTextData textUnitData = (IMXMLTextData) unitData;
                     if (textUnitData.getTextType() == IMXMLTextData.TextType.CDATA)
                     {
+                        importRange.uri = Paths.get(textUnitData.getSourcePath()).toUri().toString();
                         importRange.startIndex = textUnitData.getCompilableTextStart();
                         importRange.endIndex = textUnitData.getCompilableTextEnd();
                     }
@@ -5088,7 +5089,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return null;
         }
         IASNode offsetNode = getContainingNodeIncludingStart(ast, currentOffset);
-        importRange = getImportRange(offsetNode);
+        if (!textDocument.getUri().endsWith(MXML_EXTENSION))
+        {
+            importRange = getImportRange(offsetNode);
+        }
         return offsetNode;
     }
     
