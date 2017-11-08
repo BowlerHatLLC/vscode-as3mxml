@@ -3,6 +3,10 @@
     xmlns:js="library://ns.apache.org/flexjs/basic">
     <fx:Declarations>
     </fx:Declarations>
+    <js:states>
+        <js:State name="stateOne"/>
+        <js:State name="stateTwo"/>
+    </js:states>
     <js:View >
         <
     </js:View >
@@ -15,4 +19,5 @@
         <fx:
     </js:View >
     <fx:
+    <js:View transitions./>
 </js:View>
