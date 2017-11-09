@@ -1716,6 +1716,35 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return result;
         }
 
+        //an implicit offset tag may mean that we're trying to close a tag
+        if (parentTag != null && offsetTag.isImplicit())
+        {
+            IMXMLTagData nextTag = offsetTag.getNextTag();
+            if (nextTag != null
+                    && nextTag.isImplicit()
+                    && nextTag.isCloseTag()
+                    && nextTag.getName().equals(parentTag.getName())
+                    && parentTag.getShortName().startsWith(offsetTag.getShortName()))
+            {
+                String closeTagText = "</" + nextTag.getName() + ">";
+                CompletionItem closeTagItem = new CompletionItem();
+                //display the full close tag
+                closeTagItem.setLabel(closeTagText);
+                //strip </ from the insert text
+                String insertText = closeTagText.substring(2);
+                int prefixLength = offsetTag.getPrefix().length();
+                if (prefixLength > 0)
+                {
+                    //if the prefix already exists, strip it away so that the
+                    //editor won't duplicate it.
+                    insertText = insertText.substring(prefixLength + 1);
+                }
+                closeTagItem.setInsertText(insertText);
+                closeTagItem.setSortText(offsetTag.getShortName());
+                result.getItems().add(closeTagItem);
+            }
+        }
+
         //inside <fx:Declarations>
         if (isDeclarationsTag(offsetTag))
         {
