@@ -4767,7 +4767,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         ArrayList<ICompilerProblem> problems = new ArrayList<>();
         try
         {
-            unit.waitForBuildFinish(problems, ITarget.TargetType.SWF);
+            //if we pass in null, it's designed to ignore certain errors that
+            //don't matter for IDE code intelligence.
+            unit.waitForBuildFinish(problems, null);
             for (ICompilerProblem problem : problems)
             {
                 addCompilerProblem(problem, publish);
