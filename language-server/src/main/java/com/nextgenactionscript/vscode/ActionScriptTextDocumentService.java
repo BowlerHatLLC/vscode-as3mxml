@@ -1713,6 +1713,35 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return result;
         }
 
+        //an implicit offset tag may mean that we're trying to close a tag
+        if (parentTag != null && offsetTag.isImplicit())
+        {
+            IMXMLTagData nextTag = offsetTag.getNextTag();
+            if (nextTag != null
+                    && nextTag.isImplicit()
+                    && nextTag.isCloseTag()
+                    && nextTag.getName().equals(parentTag.getName())
+                    && parentTag.getShortName().startsWith(offsetTag.getShortName()))
+            {
+                String closeTagText = "</" + nextTag.getName() + ">";
+                CompletionItem closeTagItem = new CompletionItem();
+                //display the full close tag
+                closeTagItem.setLabel(closeTagText);
+                //strip </ from the insert text
+                String insertText = closeTagText.substring(2);
+                int prefixLength = offsetTag.getPrefix().length();
+                if (prefixLength > 0)
+                {
+                    //if the prefix already exists, strip it away so that the
+                    //editor won't duplicate it.
+                    insertText = insertText.substring(prefixLength + 1);
+                }
+                closeTagItem.setInsertText(insertText);
+                closeTagItem.setSortText(offsetTag.getShortName());
+                result.getItems().add(closeTagItem);
+            }
+        }
+
         //inside <fx:Declarations>
         if (isDeclarationsTag(offsetTag))
         {
@@ -4740,7 +4769,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         ArrayList<ICompilerProblem> problems = new ArrayList<>();
         try
         {
-            unit.waitForBuildFinish(problems, ITarget.TargetType.SWF);
+            //if we pass in null, it's designed to ignore certain errors that
+            //don't matter for IDE code intelligence.
+            unit.waitForBuildFinish(problems, null);
             for (ICompilerProblem problem : problems)
             {
                 addCompilerProblem(problem, publish);
@@ -5024,6 +5055,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     IMXMLTextData textUnitData = (IMXMLTextData) unitData;
                     if (textUnitData.getTextType() == IMXMLTextData.TextType.CDATA)
                     {
+                        importRange.uri = Paths.get(textUnitData.getSourcePath()).toUri().toString();
                         importRange.startIndex = textUnitData.getCompilableTextStart();
                         importRange.endIndex = textUnitData.getCompilableTextEnd();
                     }
@@ -5086,7 +5118,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return null;
         }
         IASNode offsetNode = getContainingNodeIncludingStart(ast, currentOffset);
-        importRange = getImportRange(offsetNode);
+        if (!textDocument.getUri().endsWith(MXML_EXTENSION))
+        {
+            importRange = getImportRange(offsetNode);
+        }
         return offsetNode;
     }
     

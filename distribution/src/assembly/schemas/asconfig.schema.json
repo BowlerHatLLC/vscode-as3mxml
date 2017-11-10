@@ -108,6 +108,22 @@
 			"type": "string",
 			"description": "The output file name of the application package."
 		},
+		"airOptionsConnect":
+		{
+			"type": [
+				"string",
+				"boolean"
+			],
+			"description": "Specifies if the app will attempt to connect to a remote debugger (usually over Wi-Fi). Set to true or false, or optionally specify the host string of the computer running the debugger."
+		},
+		"airOptionsListen":
+		{
+			"type": [
+				"number",
+				"boolean"
+			],
+			"description": "Specifies if the app will listen for an incoming connection to a debugger over USB. Set to true or false, or optionally specify the port to listen on."
+		},
 		"airOptionsPlatformSDK":
 		{
 			"type": "string",
@@ -178,6 +194,8 @@
 							"type": "boolean",
 							"description": "Enables the telemetry-based ActionScript sampler in iOS applications."
 						},
+						"connect": { "$ref": "#/definitions/airOptionsConnect" },
+						"listen": { "$ref": "#/definitions/airOptionsListen" },
 						"platformsdk": { "$ref": "#/definitions/airOptionsPlatformSDK" },
 						"target":
 						{
@@ -209,6 +227,8 @@
 						},
 						"files": { "$ref": "#/definitions/airOptionsFiles" },
 						"output": { "$ref": "#/definitions/airOptionsOutput" },
+						"connect": { "$ref": "#/definitions/airOptionsConnect" },
+						"listen": { "$ref": "#/definitions/airOptionsListen" },
 						"platformsdk": { "$ref": "#/definitions/airOptionsPlatformSDK" },
 						"signingOptions": { "$ref": "#/definitions/signingOptions" },
 						"target":

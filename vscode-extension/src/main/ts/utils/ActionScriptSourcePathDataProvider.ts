@@ -189,7 +189,47 @@ export default class ActionScriptSourcePathDataProvider implements vscode.TreeDa
 		{
 			//we'll ignore this one
 		}
+		this.handleDuplicateRootPathNames();
 		this._onDidChangeTreeData.fire();
+	}
+
+	private removeDuplicateLabel(duplicatePaths: string[], rootPath: ActionScriptSourcePath, otherRootPath?: ActionScriptSourcePath)
+	{
+		let rootPathLabel = rootPath.label;
+		let duplicateIndex = duplicatePaths.indexOf(rootPathLabel);
+		if(duplicateIndex === -1 && otherRootPath && rootPathLabel === otherRootPath.label)
+		{
+			duplicateIndex = duplicatePaths.length;
+			duplicatePaths[duplicateIndex] = rootPathLabel;
+		}
+		if(duplicateIndex === -1)
+		{
+			return;
+		}
+		let count = rootPathLabel.split(path.sep).length;
+		let resolved = path.resolve(rootPath.path, "..".repeat(count));
+		rootPath.label = path.basename(resolved) + path.sep + rootPathLabel;
+	}
+
+	private handleDuplicateRootPathNames()
+	{
+		let duplicatePaths: string[] = [];
+		let pathCount = this._rootPaths.length;
+		for(let i = 0; i < pathCount; i++)
+		{
+			let rootPath = this._rootPaths[i];
+			let j = i + 1;
+			if(j === pathCount)
+			{
+				this.removeDuplicateLabel(duplicatePaths, rootPath);
+				break;
+			}
+			for(; j < pathCount; j++)
+			{
+				let otherRootPath = this._rootPaths[j];
+				this.removeDuplicateLabel(duplicatePaths, rootPath, otherRootPath);
+			}
+		}
 	}
 
 	private asconfigFileSystemWatcher_onEvent(uri: vscode.Uri)

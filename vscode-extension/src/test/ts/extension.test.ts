@@ -5721,7 +5721,7 @@ suite("MXML completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes property as attribute", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
-		let position = new vscode.Position(5, 13);
+		let position = new vscode.Position(9, 13);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -5741,7 +5741,7 @@ suite("MXML completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes property as child element", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
-		let position = new vscode.Position(6, 9);
+		let position = new vscode.Position(10, 9);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -5761,7 +5761,7 @@ suite("MXML completion item provider", () =>
 	test("vscode.executeCompletionItemProvider omits property as attribute of closing element", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
-		let position = new vscode.Position(7, 14);
+		let position = new vscode.Position(11, 14);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -5779,7 +5779,7 @@ suite("MXML completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes event as attribute", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
-		let position = new vscode.Position(5, 13);
+		let position = new vscode.Position(9, 13);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -5799,7 +5799,7 @@ suite("MXML completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes event as child element", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
-		let position = new vscode.Position(6, 9);
+		let position = new vscode.Position(10, 9);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -5819,7 +5819,7 @@ suite("MXML completion item provider", () =>
 	test("vscode.executeCompletionItemProvider omits event as attribute of closing element", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
-		let position = new vscode.Position(7, 14);
+		let position = new vscode.Position(11, 14);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -5837,7 +5837,7 @@ suite("MXML completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes class as child element", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
-		let position = new vscode.Position(6, 9);
+		let position = new vscode.Position(10, 9);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -5857,7 +5857,7 @@ suite("MXML completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes <fx:Binding> as child element of root", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
-		let position = new vscode.Position(8, 5);
+		let position = new vscode.Position(12, 5);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -5876,7 +5876,7 @@ suite("MXML completion item provider", () =>
 	test("vscode.executeCompletionItemProvider omits <fx:Binding> as child of non-root element", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
-		let position = new vscode.Position(6, 9);
+		let position = new vscode.Position(10, 9);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -5894,7 +5894,7 @@ suite("MXML completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes <fx:Binding> as child element of root with existing prefix", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
-		let position = new vscode.Position(16, 8);
+		let position = new vscode.Position(20, 8);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -5913,7 +5913,7 @@ suite("MXML completion item provider", () =>
 	test("vscode.executeCompletionItemProvider omits <fx:Binding> as child of non-root element with existing prefix", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
-		let position = new vscode.Position(14, 12);
+		let position = new vscode.Position(18, 12);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -5931,7 +5931,7 @@ suite("MXML completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes <fx:Component> as child element of root", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
-		let position = new vscode.Position(8, 5);
+		let position = new vscode.Position(12, 5);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -5950,7 +5950,7 @@ suite("MXML completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes <fx:Component> as child of non-root element", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
-		let position = new vscode.Position(6, 9);
+		let position = new vscode.Position(10, 9);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -5969,7 +5969,7 @@ suite("MXML completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes <fx:Component> as child element of root with existing prefix", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
-		let position = new vscode.Position(16, 8);
+		let position = new vscode.Position(20, 8);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -5988,7 +5988,7 @@ suite("MXML completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes <fx:Component> as child of non-root element with existing prefix", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
-		let position = new vscode.Position(14, 12);
+		let position = new vscode.Position(18, 12);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -6007,7 +6007,7 @@ suite("MXML completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes <fx:Declarations> as child element of root", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
-		let position = new vscode.Position(8, 5);
+		let position = new vscode.Position(12, 5);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -6026,7 +6026,7 @@ suite("MXML completion item provider", () =>
 	test("vscode.executeCompletionItemProvider omits <fx:Declarations> as child of non-root element", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
-		let position = new vscode.Position(6, 9);
+		let position = new vscode.Position(10, 9);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -6044,7 +6044,7 @@ suite("MXML completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes <fx:Declarations> as child element of root with existing prefix", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
-		let position = new vscode.Position(16, 8);
+		let position = new vscode.Position(20, 8);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -6063,7 +6063,7 @@ suite("MXML completion item provider", () =>
 	test("vscode.executeCompletionItemProvider omits <fx:Declarations> as child of non-root element with existing prefix", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
-		let position = new vscode.Position(14, 12);
+		let position = new vscode.Position(18, 12);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -6081,7 +6081,7 @@ suite("MXML completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes <fx:Metadata> as child element of root", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
-		let position = new vscode.Position(8, 5);
+		let position = new vscode.Position(12, 5);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -6100,7 +6100,7 @@ suite("MXML completion item provider", () =>
 	test("vscode.executeCompletionItemProvider omits <fx:Metadata> as child of non-root element", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
-		let position = new vscode.Position(6, 9);
+		let position = new vscode.Position(10, 9);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -6118,7 +6118,7 @@ suite("MXML completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes <fx:Metadata> as child element of root with existing prefix", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
-		let position = new vscode.Position(16, 8);
+		let position = new vscode.Position(20, 8);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -6137,7 +6137,7 @@ suite("MXML completion item provider", () =>
 	test("vscode.executeCompletionItemProvider omits <fx:Metadata> as child of non-root element with existing prefix", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
-		let position = new vscode.Position(14, 12);
+		let position = new vscode.Position(18, 12);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -6155,7 +6155,7 @@ suite("MXML completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes <fx:Script> as child element of root", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
-		let position = new vscode.Position(8, 5);
+		let position = new vscode.Position(12, 5);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -6174,7 +6174,7 @@ suite("MXML completion item provider", () =>
 	test("vscode.executeCompletionItemProvider omits <fx:Script> as child of non-root element", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
-		let position = new vscode.Position(6, 9);
+		let position = new vscode.Position(10, 9);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -6192,7 +6192,7 @@ suite("MXML completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes <fx:Script> as child element of root with existing prefix", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
-		let position = new vscode.Position(16, 8);
+		let position = new vscode.Position(20, 8);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -6211,7 +6211,7 @@ suite("MXML completion item provider", () =>
 	test("vscode.executeCompletionItemProvider omits <fx:Script> as child of non-root element with existing prefix", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
-		let position = new vscode.Position(14, 12);
+		let position = new vscode.Position(18, 12);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -6229,7 +6229,7 @@ suite("MXML completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes <fx:Style> as child element of root", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
-		let position = new vscode.Position(8, 5);
+		let position = new vscode.Position(12, 5);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -6248,7 +6248,7 @@ suite("MXML completion item provider", () =>
 	test("vscode.executeCompletionItemProvider omits <fx:Style> as child of non-root element", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
-		let position = new vscode.Position(6, 9);
+		let position = new vscode.Position(10, 9);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -6266,7 +6266,7 @@ suite("MXML completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes <fx:Style> as child element of root with existing prefix", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
-		let position = new vscode.Position(16, 8);
+		let position = new vscode.Position(20, 8);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -6285,7 +6285,7 @@ suite("MXML completion item provider", () =>
 	test("vscode.executeCompletionItemProvider omits <fx:Style> as child of non-root element with existing prefix", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
-		let position = new vscode.Position(14, 12);
+		let position = new vscode.Position(18, 12);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
@@ -6294,6 +6294,26 @@ suite("MXML completion item provider", () =>
 						let items = list.items;
 						let mxmlItem = findCompletionItemOfKind("Style", vscode.CompletionItemKind.Keyword, items);
 						assert.equal(mxmlItem, null, "vscode.executeCompletionItemProvider failed to omit <fx:Style> in non-root element existing prefix: " + uri);
+					}, (err) =>
+					{
+						assert(false, "Failed to execute completion item provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeCompletionItemProvider includes state for property attribute", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
+		let position = new vscode.Position(21, 25);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
+				.then((list: vscode.CompletionList) =>
+					{
+						let items = list.items;
+						let stateItem = findCompletionItemOfKind("stateOne", vscode.CompletionItemKind.Field, items);
+						assert.notEqual(stateItem, null, "vscode.executeCompletionItemProvider failed to provide state for property attribute: " + uri);
+						assert.strictEqual(stateItem.kind, vscode.CompletionItemKind.Field, "vscode.executeCompletionItemProvider failed to provide correct kind of state: " + uri);
+						assert.strictEqual(stateItem.insertText, "stateOne", "vscode.executeCompletionItemProvider failed to provide correct insert text for state for property attribute: " + uri);
 					}, (err) =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
