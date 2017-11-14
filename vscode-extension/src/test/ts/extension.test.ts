@@ -149,7 +149,7 @@ suite("document symbol provider", () =>
 {
 	test("vscode.executeDocumentSymbolProvider not empty", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Main.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Main.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeDocumentSymbolProvider", uri)
@@ -165,7 +165,7 @@ suite("document symbol provider", () =>
 	});
 	test("vscode.executeDocumentSymbolProvider includes class", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Main.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Main.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeDocumentSymbolProvider", uri)
@@ -186,7 +186,7 @@ suite("document symbol provider", () =>
 	});
 	test("vscode.executeDocumentSymbolProvider includes constructor", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Main.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Main.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeDocumentSymbolProvider", uri)
@@ -207,7 +207,7 @@ suite("document symbol provider", () =>
 	});
 	test("vscode.executeDocumentSymbolProvider includes member variable", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Main.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Main.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeDocumentSymbolProvider", uri)
@@ -228,7 +228,7 @@ suite("document symbol provider", () =>
 	});
 	test("vscode.executeDocumentSymbolProvider includes member function", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Main.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Main.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeDocumentSymbolProvider", uri)
@@ -249,7 +249,7 @@ suite("document symbol provider", () =>
 	});
 	test("vscode.executeDocumentSymbolProvider includes static variable", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Main.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Main.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeDocumentSymbolProvider", uri)
@@ -270,7 +270,7 @@ suite("document symbol provider", () =>
 	});
 	test("vscode.executeDocumentSymbolProvider includes static constant", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Main.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Main.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeDocumentSymbolProvider", uri)
@@ -291,7 +291,7 @@ suite("document symbol provider", () =>
 	});
 	test("vscode.executeDocumentSymbolProvider includes static function", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Main.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Main.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeDocumentSymbolProvider", uri)
@@ -312,7 +312,7 @@ suite("document symbol provider", () =>
 	});
 	test("vscode.executeDocumentSymbolProvider includes internal class", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Main.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Main.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeDocumentSymbolProvider", uri)
@@ -333,7 +333,7 @@ suite("document symbol provider", () =>
 	});
 	test("vscode.executeDocumentSymbolProvider includes member variable in internal class", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Main.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Main.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeDocumentSymbolProvider", uri)
@@ -358,7 +358,7 @@ suite("workspace symbol provider", () =>
 {
 	test("vscode.executeWorkspaceSymbolProvider includes class", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Main.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Main.as"));
 		let query = "Main";
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -379,7 +379,7 @@ suite("workspace symbol provider", () =>
 	});
 	test("vscode.executeWorkspaceSymbolProvider includes constructor", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Main.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Main.as"));
 		let query = "Main";
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -400,10 +400,10 @@ suite("workspace symbol provider", () =>
 	});
 	test("vscode.executeWorkspaceSymbolProvider includes class in package", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Main.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Main.as"));
 		let query = "PackageClass";
 		let packageName = "com.example";
-		let classUri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "PackageClass.as"));
+		let classUri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "PackageClass.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeWorkspaceSymbolProvider", query)
@@ -424,7 +424,7 @@ suite("workspace symbol provider", () =>
 	});
 	test("vscode.executeWorkspaceSymbolProvider includes member variable", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Main.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Main.as"));
 		let query = "memberVar";
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -445,7 +445,7 @@ suite("workspace symbol provider", () =>
 	});
 	test("vscode.executeWorkspaceSymbolProvider includes member function", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Main.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Main.as"));
 		let query = "memberFunction";
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -466,7 +466,7 @@ suite("workspace symbol provider", () =>
 	});
 	test("vscode.executeWorkspaceSymbolProvider includes static variable", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Main.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Main.as"));
 		let query = "staticVar";
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -487,7 +487,7 @@ suite("workspace symbol provider", () =>
 	});
 	test("vscode.executeWorkspaceSymbolProvider includes static constant", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Main.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Main.as"));
 		let query = "STATIC_CONST";
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -508,7 +508,7 @@ suite("workspace symbol provider", () =>
 	});
 	test("vscode.executeWorkspaceSymbolProvider includes static function", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Main.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Main.as"));
 		let query = "staticFunction";
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -529,7 +529,7 @@ suite("workspace symbol provider", () =>
 	});
 	test("vscode.executeWorkspaceSymbolProvider includes internal class", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Main.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Main.as"));
 		let query = "MainInternalClass";
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -551,7 +551,7 @@ suite("workspace symbol provider", () =>
 	});
 	test("vscode.executeWorkspaceSymbolProvider includes member variable in internal class", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Main.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Main.as"));
 		let query = "internalClassMemberVar";
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -572,12 +572,12 @@ suite("workspace symbol provider", () =>
 	});
 	test("vscode.executeWorkspaceSymbolProvider includes symbols in unreferenced files", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Main.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Main.as"));
 		let query = "Unreferenced";
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			let qualifiedClassName = "com.example.UnreferencedClass";
-			let classUri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "UnreferencedClass.as"));
+			let classUri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "UnreferencedClass.as"));
 			return vscode.commands.executeCommand("vscode.executeWorkspaceSymbolProvider", query)
 				.then((symbols: vscode.SymbolInformation[]) =>
 					{
@@ -591,13 +591,13 @@ suite("workspace symbol provider", () =>
 	});
 	test("vscode.executeWorkspaceSymbolProvider includes class in unreferenced file", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Main.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Main.as"));
 		let query = "Unreferenced";
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			let symbolName = "UnreferencedClass";
 			let packageName = "com.example";
-			let classUri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "UnreferencedClass.as"));
+			let classUri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "UnreferencedClass.as"));
 			return vscode.commands.executeCommand("vscode.executeWorkspaceSymbolProvider", query)
 				.then((symbols: vscode.SymbolInformation[]) =>
 					{
@@ -615,13 +615,13 @@ suite("workspace symbol provider", () =>
 	});
 	test("vscode.executeWorkspaceSymbolProvider includes constructor in unreferenced file", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Main.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Main.as"));
 		let query = "Unreferenced";
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			let symbolName = "UnreferencedClass";
 			let packageName = "com.example";
-			let classUri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "UnreferencedClass.as"));
+			let classUri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "UnreferencedClass.as"));
 			return vscode.commands.executeCommand("vscode.executeWorkspaceSymbolProvider", query)
 				.then((symbols: vscode.SymbolInformation[]) =>
 					{
@@ -639,13 +639,13 @@ suite("workspace symbol provider", () =>
 	});
 	test("vscode.executeWorkspaceSymbolProvider includes interface in unreferenced file", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Main.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Main.as"));
 		let query = "Unreferenced";
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			let symbolName = "UnreferencedInterface";
 			let packageName = "com.example.core";
-			let interfaceUri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "core", "UnreferencedInterface.as"));
+			let interfaceUri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "core", "UnreferencedInterface.as"));
 			return vscode.commands.executeCommand("vscode.executeWorkspaceSymbolProvider", query)
 				.then((symbols: vscode.SymbolInformation[]) =>
 					{
@@ -667,7 +667,7 @@ suite("signature help provider", () =>
 {
 	test("vscode.executeSignatureHelpProvider provides help for local function", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "SignatureHelp.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "SignatureHelp.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeSignatureHelpProvider",
@@ -688,7 +688,7 @@ suite("signature help provider", () =>
 	});
 	test("vscode.executeSignatureHelpProvider provides help for member function", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "SignatureHelp.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "SignatureHelp.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeSignatureHelpProvider",
@@ -709,7 +709,7 @@ suite("signature help provider", () =>
 	});
 	test("vscode.executeSignatureHelpProvider provides help for member function with member access operator on this", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "SignatureHelp.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "SignatureHelp.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeSignatureHelpProvider",
@@ -730,7 +730,7 @@ suite("signature help provider", () =>
 	});
 	test("vscode.executeSignatureHelpProvider provides help for static function", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "SignatureHelp.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "SignatureHelp.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeSignatureHelpProvider",
@@ -751,7 +751,7 @@ suite("signature help provider", () =>
 	});
 	test("vscode.executeSignatureHelpProvider provides help for static function with member access operator on class", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "SignatureHelp.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "SignatureHelp.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeSignatureHelpProvider",
@@ -772,7 +772,7 @@ suite("signature help provider", () =>
 	});
 	test("vscode.executeSignatureHelpProvider provides help for package function", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "SignatureHelp.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "SignatureHelp.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeSignatureHelpProvider",
@@ -793,7 +793,7 @@ suite("signature help provider", () =>
 	});
 	test("vscode.executeSignatureHelpProvider provides help for fully-qualified package function", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "SignatureHelp.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "SignatureHelp.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeSignatureHelpProvider",
@@ -814,7 +814,7 @@ suite("signature help provider", () =>
 	});
 	test("vscode.executeSignatureHelpProvider provides help for internal function", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "SignatureHelp.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "SignatureHelp.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeSignatureHelpProvider",
@@ -835,7 +835,7 @@ suite("signature help provider", () =>
 	});
 	test("vscode.executeSignatureHelpProvider provides help for super constructor", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "SignatureHelp.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "SignatureHelp.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeSignatureHelpProvider",
@@ -856,7 +856,7 @@ suite("signature help provider", () =>
 	});
 	test("vscode.executeSignatureHelpProvider provides help for super member method", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "SignatureHelp.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "SignatureHelp.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeSignatureHelpProvider",
@@ -877,7 +877,7 @@ suite("signature help provider", () =>
 	});
 	test("vscode.executeSignatureHelpProvider must not provide help for private super member method", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "SignatureHelp.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "SignatureHelp.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeSignatureHelpProvider",
@@ -894,7 +894,7 @@ suite("signature help provider", () =>
 	});
 	test("vscode.executeSignatureHelpProvider provides help for constructor of new instance", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "SignatureHelp.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "SignatureHelp.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeSignatureHelpProvider",
@@ -919,7 +919,7 @@ suite("definition provider", () =>
 {
 	test("vscode.executeDefinitionProvider finds definition of local variable", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
 		let position = new vscode.Position(90, 5);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -940,7 +940,7 @@ suite("definition provider", () =>
 	});
 	test("vscode.executeDefinitionProvider finds definition of local function", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
 		let position = new vscode.Position(92, 5);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -961,7 +961,7 @@ suite("definition provider", () =>
 	});
 	test("vscode.executeDefinitionProvider finds definition of member variable", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
 		let position = new vscode.Position(54, 5);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -982,7 +982,7 @@ suite("definition provider", () =>
 	});
 	test("vscode.executeDefinitionProvider finds definition of member variable with member access operator on this", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
 		let position = new vscode.Position(55, 10);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -1003,7 +1003,7 @@ suite("definition provider", () =>
 	});
 	test("vscode.executeDefinitionProvider finds definition of member function", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
 		let position = new vscode.Position(45, 5);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -1024,7 +1024,7 @@ suite("definition provider", () =>
 	});
 	test("vscode.executeDefinitionProvider finds definition of member function with member access operator on this", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
 		let position = new vscode.Position(46, 10);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -1045,7 +1045,7 @@ suite("definition provider", () =>
 	});
 	test("vscode.executeDefinitionProvider finds definition of member property", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
 		let position = new vscode.Position(57, 5);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -1066,7 +1066,7 @@ suite("definition provider", () =>
 	});
 	test("vscode.executeDefinitionProvider finds definition of member property with member access operator on this", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
 		let position = new vscode.Position(58, 10);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -1087,7 +1087,7 @@ suite("definition provider", () =>
 	});
 	test("vscode.executeDefinitionProvider finds definition of static variable", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
 		let position = new vscode.Position(51, 5);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -1108,7 +1108,7 @@ suite("definition provider", () =>
 	});
 	test("vscode.executeDefinitionProvider finds definition of static variable with member access operator on class", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
 		let position = new vscode.Position(52, 17);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -1129,7 +1129,7 @@ suite("definition provider", () =>
 	});
 	test("vscode.executeDefinitionProvider finds definition of static function", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
 		let position = new vscode.Position(48, 5);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -1150,7 +1150,7 @@ suite("definition provider", () =>
 	});
 	test("vscode.executeDefinitionProvider finds definition of static function with member access operator on class", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
 		let position = new vscode.Position(49, 17);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -1171,7 +1171,7 @@ suite("definition provider", () =>
 	});
 	test("vscode.executeDefinitionProvider finds definition of static property", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
 		let position = new vscode.Position(60, 5);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -1192,7 +1192,7 @@ suite("definition provider", () =>
 	});
 	test("vscode.executeDefinitionProvider finds definition of static property with member access operator on class", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
 		let position = new vscode.Position(61, 17);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -1213,8 +1213,8 @@ suite("definition provider", () =>
 	});
 	test("vscode.executeDefinitionProvider finds definition of package function", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
-		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "packageFunction.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "packageFunction.as"));
 		let position = new vscode.Position(84, 5);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -1235,8 +1235,8 @@ suite("definition provider", () =>
 	});
 	test("vscode.executeDefinitionProvider finds definition of fully-qualified package function", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
-		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "packageFunction.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "packageFunction.as"));
 		let position = new vscode.Position(85, 17);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -1257,8 +1257,8 @@ suite("definition provider", () =>
 	});
 	test("vscode.executeDefinitionProvider finds definition of package variable", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
-		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "packageVar.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "packageVar.as"));
 		let position = new vscode.Position(87, 5);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -1279,8 +1279,8 @@ suite("definition provider", () =>
 	});
 	test("vscode.executeDefinitionProvider finds definition of fully-qualified package variable", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
-		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "packageVar.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "packageVar.as"));
 		let position = new vscode.Position(88, 17);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -1301,8 +1301,8 @@ suite("definition provider", () =>
 	});
 	test("vscode.executeDefinitionProvider finds definition of super static variable", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
-		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "SuperDefinitions.as"));
 		let position = new vscode.Position(74, 5);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -1323,8 +1323,8 @@ suite("definition provider", () =>
 	});
 	test("vscode.executeDefinitionProvider finds definition of super static variable with member access operator on superclass", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
-		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "SuperDefinitions.as"));
 		let position = new vscode.Position(75, 22);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -1345,8 +1345,8 @@ suite("definition provider", () =>
 	});
 	test("vscode.executeDefinitionProvider finds definition of super static property", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
-		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "SuperDefinitions.as"));
 		let position = new vscode.Position(81, 5);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -1367,8 +1367,8 @@ suite("definition provider", () =>
 	});
 	test("vscode.executeDefinitionProvider finds definition of super static property with member access operator on superclass", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
-		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "SuperDefinitions.as"));
 		let position = new vscode.Position(82, 22);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -1389,8 +1389,8 @@ suite("definition provider", () =>
 	});
 	test("vscode.executeDefinitionProvider finds definition of super static function", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
-		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "SuperDefinitions.as"));
 		let position = new vscode.Position(67, 5);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -1411,8 +1411,8 @@ suite("definition provider", () =>
 	});
 	test("vscode.executeDefinitionProvider finds definition of super static function with member access operator on superclass", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
-		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "SuperDefinitions.as"));
 		let position = new vscode.Position(68, 22);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -1433,8 +1433,8 @@ suite("definition provider", () =>
 	});
 	test("vscode.executeDefinitionProvider finds definition of super member function", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
-		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "SuperDefinitions.as"));
 		let position = new vscode.Position(63, 5);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -1455,8 +1455,8 @@ suite("definition provider", () =>
 	});
 	test("vscode.executeDefinitionProvider finds definition of super member function with member access operator on this", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
-		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "SuperDefinitions.as"));
 		let position = new vscode.Position(64, 10);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -1477,8 +1477,8 @@ suite("definition provider", () =>
 	});
 	test("vscode.executeDefinitionProvider finds definition of super member function with member access operator on super", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
-		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "SuperDefinitions.as"));
 		let position = new vscode.Position(65, 11);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -1499,8 +1499,8 @@ suite("definition provider", () =>
 	});
 	test("vscode.executeDefinitionProvider finds definition of super member variable", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
-		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "SuperDefinitions.as"));
 		let position = new vscode.Position(70, 5);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -1521,8 +1521,8 @@ suite("definition provider", () =>
 	});
 	test("vscode.executeDefinitionProvider finds definition of super member variable with member access operator on this", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
-		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "SuperDefinitions.as"));
 		let position = new vscode.Position(71, 10);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -1543,8 +1543,8 @@ suite("definition provider", () =>
 	});
 	test("vscode.executeDefinitionProvider finds definition of super member variable with member access operator on super", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
-		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "SuperDefinitions.as"));
 		let position = new vscode.Position(72, 11);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -1565,8 +1565,8 @@ suite("definition provider", () =>
 	});
 	test("vscode.executeDefinitionProvider finds definition of super member property", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
-		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "SuperDefinitions.as"));
 		let position = new vscode.Position(77, 5);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -1587,8 +1587,8 @@ suite("definition provider", () =>
 	});
 	test("vscode.executeDefinitionProvider finds definition of super member property with member access operator on this", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
-		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "SuperDefinitions.as"));
 		let position = new vscode.Position(78, 10);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -1609,8 +1609,8 @@ suite("definition provider", () =>
 	});
 	test("vscode.executeDefinitionProvider finds definition of super member property with member access operator on super", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
-		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "SuperDefinitions.as"));
 		let position = new vscode.Position(79, 11);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -1631,7 +1631,7 @@ suite("definition provider", () =>
 	});
 	test("vscode.executeDefinitionProvider finds definition of file-internal variable", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
 		let position = new vscode.Position(94, 5);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -1652,7 +1652,7 @@ suite("definition provider", () =>
 	});
 	test("vscode.executeDefinitionProvider finds definition of file-internal function", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
 		let position = new vscode.Position(95, 5);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -1673,7 +1673,7 @@ suite("definition provider", () =>
 	});
 	test("vscode.executeDefinitionProvider finds definition of file-internal class", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
 		let position = new vscode.Position(97, 37);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -1694,7 +1694,7 @@ suite("definition provider", () =>
 	});
 	test("vscode.executeDefinitionProvider finds definition of file-internal member function", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
 		let position = new vscode.Position(99, 33);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -1715,7 +1715,7 @@ suite("definition provider", () =>
 	});
 	test("vscode.executeDefinitionProvider finds definition of file-internal member variable", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
 		let position = new vscode.Position(100, 33);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -1736,7 +1736,7 @@ suite("definition provider", () =>
 	});
 	test("vscode.executeDefinitionProvider finds definition of file-internal member property", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
 		let position = new vscode.Position(101, 33);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -1757,7 +1757,7 @@ suite("definition provider", () =>
 	});
 	test("vscode.executeDefinitionProvider finds definition of file-internal static property", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
 		let position = new vscode.Position(105, 25);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -1778,7 +1778,7 @@ suite("definition provider", () =>
 	});
 	test("vscode.executeDefinitionProvider finds definition of file-internal static variable", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
 		let position = new vscode.Position(104, 25);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -1799,7 +1799,7 @@ suite("definition provider", () =>
 	});
 	test("vscode.executeDefinitionProvider finds definition of file-internal static function", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
 		let position = new vscode.Position(103, 25);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -1824,7 +1824,7 @@ suite("hover provider", () =>
 {
 	test("vscode.executeHoverProvider displays hover for local variable", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
 		let position = new vscode.Position(90, 5);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -1858,7 +1858,7 @@ suite("hover provider", () =>
 	});
 	test("vscode.executeHoverProvider displays hover of local function", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
 		let position = new vscode.Position(92, 5);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -1892,7 +1892,7 @@ suite("hover provider", () =>
 	});
 	test("vscode.executeHoverProvider displays hover of member variable", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
 		let position = new vscode.Position(54, 5);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -1927,7 +1927,7 @@ suite("hover provider", () =>
 
 	test("vscode.executeHoverProvider displays hover of member variable with member access operator on this", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
 		let position = new vscode.Position(55, 10);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -1961,7 +1961,7 @@ suite("hover provider", () =>
 	});
 	test("vscode.executeHoverProvider displays hover of member function", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
 		let position = new vscode.Position(45, 5);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -1995,7 +1995,7 @@ suite("hover provider", () =>
 	});
 	test("vscode.executeHoverProvider displays hover of member function with member access operator on this", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
 		let position = new vscode.Position(46, 10);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -2029,7 +2029,7 @@ suite("hover provider", () =>
 	});
 	test("vscode.executeHoverProvider displays hover of member property", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
 		let position = new vscode.Position(57, 5);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -2063,7 +2063,7 @@ suite("hover provider", () =>
 	});
 	test("vscode.executeHoverProvider displays hover of member property with member access operator on this", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
 		let position = new vscode.Position(58, 10);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -2097,7 +2097,7 @@ suite("hover provider", () =>
 	});
 	test("vscode.executeHoverProvider displays hover of static variable", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
 		let position = new vscode.Position(51, 5);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -2131,7 +2131,7 @@ suite("hover provider", () =>
 	});
 	test("vscode.executeHoverProvider displays hover of static variable with member access operator on class", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
 		let position = new vscode.Position(52, 17);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -2165,7 +2165,7 @@ suite("hover provider", () =>
 	});
 	test("vscode.executeHoverProvider displays hover of static function", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
 		let position = new vscode.Position(48, 5);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -2199,7 +2199,7 @@ suite("hover provider", () =>
 	});
 	test("vscode.executeHoverProvider displays hover of static function with member access operator on class", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
 		let position = new vscode.Position(49, 17);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -2233,7 +2233,7 @@ suite("hover provider", () =>
 	});
 	test("vscode.executeHoverProvider displays hover of static property", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
 		let position = new vscode.Position(60, 5);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -2267,7 +2267,7 @@ suite("hover provider", () =>
 	});
 	test("vscode.executeHoverProvider displays hover of static property with member access operator on class", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
 		let position = new vscode.Position(61, 17);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -2301,8 +2301,8 @@ suite("hover provider", () =>
 	});
 	test("vscode.executeHoverProvider displays hover of package function", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
-		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "packageFunction.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "packageFunction.as"));
 		let position = new vscode.Position(84, 5);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -2336,8 +2336,8 @@ suite("hover provider", () =>
 	});
 	test("vscode.executeHoverProvider displays hover of fully-qualified package function", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
-		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "packageFunction.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "packageFunction.as"));
 		let position = new vscode.Position(85, 17);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -2371,8 +2371,8 @@ suite("hover provider", () =>
 	});
 	test("vscode.executeHoverProvider displays hover of package variable", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
-		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "packageVar.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "packageVar.as"));
 		let position = new vscode.Position(87, 5);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -2406,8 +2406,8 @@ suite("hover provider", () =>
 	});
 	test("vscode.executeHoverProvider displays hover of fully-qualified package variable", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
-		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "packageVar.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "packageVar.as"));
 		let position = new vscode.Position(88, 17);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -2441,8 +2441,8 @@ suite("hover provider", () =>
 	});
 	test("vscode.executeHoverProvider displays hover of super static variable", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
-		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "SuperDefinitions.as"));
 		let position = new vscode.Position(74, 5);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -2476,8 +2476,8 @@ suite("hover provider", () =>
 	});
 	test("vscode.executeHoverProvider displays hover of super static variable with member access operator on superclass", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
-		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "SuperDefinitions.as"));
 		let position = new vscode.Position(75, 22);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -2511,8 +2511,8 @@ suite("hover provider", () =>
 	});
 	test("vscode.executeHoverProvider displays hover of super static property", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
-		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "SuperDefinitions.as"));
 		let position = new vscode.Position(81, 5);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -2546,8 +2546,8 @@ suite("hover provider", () =>
 	});
 	test("vscode.executeHoverProvider displays hover of super static property with member access operator on superclass", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
-		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "SuperDefinitions.as"));
 		let position = new vscode.Position(82, 22);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -2581,8 +2581,8 @@ suite("hover provider", () =>
 	});
 	test("vscode.executeHoverProvider displays hover of super static function", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
-		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "SuperDefinitions.as"));
 		let position = new vscode.Position(67, 5);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -2616,8 +2616,8 @@ suite("hover provider", () =>
 	});
 	test("vscode.executeHoverProvider displays hover of super static function with member access operator on superclass", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
-		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "SuperDefinitions.as"));
 		let position = new vscode.Position(68, 22);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -2651,8 +2651,8 @@ suite("hover provider", () =>
 	});
 	test("vscode.executeHoverProvider displays hover of super member function", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
-		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "SuperDefinitions.as"));
 		let position = new vscode.Position(63, 5);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -2686,8 +2686,8 @@ suite("hover provider", () =>
 	});
 	test("vscode.executeHoverProvider displays hover of super member function with member access operator on this", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
-		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "SuperDefinitions.as"));
 		let position = new vscode.Position(64, 10);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -2721,8 +2721,8 @@ suite("hover provider", () =>
 	});
 	test("vscode.executeHoverProvider displays hover of super member function with member access operator on super", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
-		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "SuperDefinitions.as"));
 		let position = new vscode.Position(65, 11);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -2756,8 +2756,8 @@ suite("hover provider", () =>
 	});
 	test("vscode.executeHoverProvider displays hover of super member variable", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
-		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "SuperDefinitions.as"));
 		let position = new vscode.Position(70, 5);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -2791,8 +2791,8 @@ suite("hover provider", () =>
 	});
 	test("vscode.executeHoverProvider displays hover of super member variable with member access operator on this", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
-		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "SuperDefinitions.as"));
 		let position = new vscode.Position(71, 10);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -2826,8 +2826,8 @@ suite("hover provider", () =>
 	});
 	test("vscode.executeHoverProvider displays hover of super member variable with member access operator on super", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
-		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "SuperDefinitions.as"));
 		let position = new vscode.Position(72, 11);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -2861,8 +2861,8 @@ suite("hover provider", () =>
 	});
 	test("vscode.executeHoverProvider displays hover of super member property", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
-		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "SuperDefinitions.as"));
 		let position = new vscode.Position(77, 5);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -2896,8 +2896,8 @@ suite("hover provider", () =>
 	});
 	test("vscode.executeHoverProvider displays hover of super member property with member access operator on this", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
-		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "SuperDefinitions.as"));
 		let position = new vscode.Position(78, 10);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -2931,8 +2931,8 @@ suite("hover provider", () =>
 	});
 	test("vscode.executeHoverProvider displays hover of super member property with member access operator on super", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
-		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "SuperDefinitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "SuperDefinitions.as"));
 		let position = new vscode.Position(79, 11);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -2966,7 +2966,7 @@ suite("hover provider", () =>
 	});
 	test("vscode.executeHoverProvider displays hover of file-internal variable", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
 		let position = new vscode.Position(94, 5);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -3000,7 +3000,7 @@ suite("hover provider", () =>
 	});
 	test("vscode.executeHoverProvider displays hover of file-internal function", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
 		let position = new vscode.Position(95, 5);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -3034,7 +3034,7 @@ suite("hover provider", () =>
 	});
 	test("vscode.executeHoverProvider displays hover of file-internal class", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
 		let position = new vscode.Position(97, 37);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -3068,7 +3068,7 @@ suite("hover provider", () =>
 	});
 	test("vscode.executeHoverProvider displays hover of file-internal member function", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
 		let position = new vscode.Position(99, 33);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -3102,7 +3102,7 @@ suite("hover provider", () =>
 	});
 	test("vscode.executeHoverProvider displays hover of file-internal member variable", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
 		let position = new vscode.Position(100, 33);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -3136,7 +3136,7 @@ suite("hover provider", () =>
 	});
 	test("vscode.executeHoverProvider displays hover of file-internal member property", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
 		let position = new vscode.Position(101, 33);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -3170,7 +3170,7 @@ suite("hover provider", () =>
 	});
 	test("vscode.executeHoverProvider displays hover of file-internal static property", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
 		let position = new vscode.Position(105, 25);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -3204,7 +3204,7 @@ suite("hover provider", () =>
 	});
 	test("vscode.executeHoverProvider displays hover of file-internal static variable", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
 		let position = new vscode.Position(104, 25);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -3238,7 +3238,7 @@ suite("hover provider", () =>
 	});
 	test("vscode.executeHoverProvider displays hover of file-internal static function", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Definitions.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
 		let position = new vscode.Position(103, 25);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -3276,7 +3276,7 @@ suite("completion item provider", () =>
 {
 	test("vscode.executeCompletionItemProvider includes local variable", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(46, 3);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -3295,7 +3295,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits local variable with member access operator on class", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(49, 14);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -3313,7 +3313,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits local variable with member access operator on this", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(47, 8);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -3331,7 +3331,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits local variable with member access operator on super", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(48, 9);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -3349,7 +3349,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits local variable with member access operator on fully-qualified package", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(51, 15);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -3367,7 +3367,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits local variable from type annotation", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(55, 13);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -3386,7 +3386,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes local function", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(46, 3);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -3405,7 +3405,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits local function with member access operator on class", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(49, 14);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -3423,7 +3423,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits local function with member access operator on this", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(47, 8);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -3441,7 +3441,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits local function with member access operator on super", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(48, 9);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -3459,7 +3459,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits local function with member access operator on fully-qualified package", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(51, 51);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -3477,7 +3477,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits local function from type annotation", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(55, 13);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -3496,7 +3496,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes member variable", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(46, 3);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -3515,7 +3515,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits member variable with member access operator on class", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(49, 14);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -3533,7 +3533,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes member variable with member access operator on this", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(47, 8);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -3553,7 +3553,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits member variable with member access operator on super", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(48, 9);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -3571,7 +3571,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits member variable with member access operator on fully-qualified package", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(51, 15);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -3589,7 +3589,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits member variable from type annotation", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(55, 13);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -3608,7 +3608,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes member function", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(46, 3);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -3627,7 +3627,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits member function with member access operator on class", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(49, 14);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -3645,7 +3645,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes member function with member access operator on this", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(47, 8);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -3665,7 +3665,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits member function with member access operator on super", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(48, 9);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -3683,7 +3683,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits member function with member access operator on fully-qualified package", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(51, 15);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -3701,7 +3701,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits member function from type annotation", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(55, 13);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -3720,7 +3720,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes member property", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(46, 3);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -3739,7 +3739,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits member property with member access operator on class", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(49, 14);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -3757,7 +3757,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes member property with member access operator on this", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(47, 8);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -3777,7 +3777,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits member property with member access operator on super", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(48, 9);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -3795,7 +3795,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits member property with member access operator on fully-qualified package", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(51, 15);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -3813,7 +3813,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits member property from type annotation", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(55, 13);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -3832,7 +3832,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes static variable", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(46, 3);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -3851,7 +3851,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes static variable with member access operator on class", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(49, 14);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -3871,7 +3871,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits static variable with member access operator on this", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(47, 8);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -3890,7 +3890,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits static variable with member access operator on super", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(48, 9);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -3908,7 +3908,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits static variable with member access operator on fully-qualified package", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(51, 15);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -3926,7 +3926,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits static variable from type annotation", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(55, 13);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -3945,7 +3945,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes static function", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(46, 3);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -3964,7 +3964,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes static function with member access operator on class", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(49, 14);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -3984,7 +3984,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits static function with member access operator on this", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(47, 8);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -4003,7 +4003,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits static function with member access operator on super", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(48, 9);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -4021,7 +4021,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits static function with member access operator on fully-qualified package", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(51, 15);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -4039,7 +4039,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits static function from type annotation", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(55, 13);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -4058,7 +4058,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes static property", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(46, 3);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -4077,7 +4077,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes static property with member access operator on class", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(49, 14);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -4097,7 +4097,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits static property with member access operator on this", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(47, 8);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -4116,7 +4116,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits static property with member access operator on super", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(48, 9);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -4134,7 +4134,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits static property with member access operator on fully-qualified package", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(51, 15);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -4152,7 +4152,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits static property from type annotation", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(55, 13);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -4171,7 +4171,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes package class", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(46, 3);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -4190,7 +4190,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes package class with member access on fully-qualified package", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(50, 15);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -4209,7 +4209,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits package class with member access operator on this", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(47, 8);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -4227,7 +4227,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits package class with member access operator on super", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(48, 9);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -4245,7 +4245,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes package class as type annotation", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(55, 13);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -4264,7 +4264,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes package variable", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(46, 3);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -4283,7 +4283,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes package variable with member access on fully-qualified package", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(50, 15);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -4302,7 +4302,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits package variable with member access operator on this", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(47, 8);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -4320,7 +4320,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits package variable with member access operator on super", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(48, 9);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -4338,7 +4338,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits package variable as type annotation", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(55, 13);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -4356,7 +4356,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes package function", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(46, 3);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -4375,7 +4375,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes package function with member access on fully-qualified package", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(50, 15);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -4394,7 +4394,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits package function with member access operator on this", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(47, 8);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -4412,7 +4412,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits package function with member access operator on super", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(48, 9);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -4430,7 +4430,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits package function as type annotation", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(55, 13);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -4448,7 +4448,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes super member variable", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(46, 3);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -4467,7 +4467,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes super member variable with member access operator on this", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(47, 8);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -4487,7 +4487,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits super member variable from type annotation", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(55, 13);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -4506,7 +4506,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes super member variable with member access operator on super", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(48, 9);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -4526,7 +4526,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes super member property", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(46, 3);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -4545,7 +4545,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes super member property with member access operator on this", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(47, 8);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -4565,7 +4565,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes super member property with member access operator on super", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(48, 9);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -4585,7 +4585,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits super member property from type annotation", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(55, 13);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -4604,7 +4604,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes super member function", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(46, 3);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -4623,7 +4623,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes super member function with member access operator on this", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(47, 8);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -4643,7 +4643,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes super member function with member access operator on super", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(48, 9);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -4663,7 +4663,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits super member function from type annotation", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(55, 13);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -4682,7 +4682,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes super static variable", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(46, 3);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -4701,7 +4701,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits super static variable with member access operator on class", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(49, 15);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -4720,7 +4720,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes super static variable with member access operator on superclass", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(50, 20);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -4740,7 +4740,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes super static variable with member access operator on this", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(47, 8);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -4759,7 +4759,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits super static variable with member access operator on super", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(48, 9);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -4778,7 +4778,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits super static variable from type annotation", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(55, 13);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -4797,7 +4797,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes super static property", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(46, 3);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -4816,7 +4816,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits super static property with member access operator on class", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(49, 15);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -4835,7 +4835,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes super static property with member access operator on superclass", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(50, 20);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -4855,7 +4855,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes super static property with member access operator on this", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(47, 8);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -4874,7 +4874,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits super static property with member access operator on super", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(48, 9);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -4893,7 +4893,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits super static property from type annotation", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(55, 13);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -4912,7 +4912,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes super static function", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(46, 3);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -4931,7 +4931,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits super static function with member access operator on class", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(49, 15);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -4950,7 +4950,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes super static function with member access operator on superclass", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(50, 20);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -4970,7 +4970,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes super static function with member access operator on this", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(47, 8);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -4989,7 +4989,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits super static function with member access operator on super", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(48, 9);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -5008,7 +5008,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits super static function from type annotation", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(55, 13);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -5027,7 +5027,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes file-internal variable", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(46, 3);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -5046,7 +5046,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits file-internal variable with member access operator on this", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(47, 8);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -5064,7 +5064,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits file-internal variable from type annotation", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(55, 13);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -5083,7 +5083,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes file-internal function", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(46, 3);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -5102,7 +5102,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits file-internal function with member access operator on this", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(47, 8);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -5120,7 +5120,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits file-internal function from type annotation", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(55, 13);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -5139,7 +5139,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes file-internal class", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(46, 3);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -5158,7 +5158,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes file-internal class as type annotation", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(55, 13);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -5177,7 +5177,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes file-internal member variable", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(53, 12);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -5196,7 +5196,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes file-internal member function", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(53, 12);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -5215,7 +5215,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes file-internal member property", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(53, 12);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -5234,7 +5234,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes file-internal static variable", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(54, 26);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -5253,7 +5253,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes file-internal static function", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(54, 26);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -5272,7 +5272,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes file-internal static property", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(54, 26);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -5291,7 +5291,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits protected member variable not in superclass", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(53, 12);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -5309,7 +5309,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits protected member function not in superclass", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(53, 12);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -5327,7 +5327,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits protected member property not in superclass", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(53, 12);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -5345,7 +5345,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits protected static variable not in superclass", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(54, 26);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -5363,7 +5363,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits protected static function not in superclass", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(54, 26);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -5381,7 +5381,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits protected static property not in superclass", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(54, 26);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -5399,7 +5399,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes class on left side of member access for static constant", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(56, 21);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -5418,7 +5418,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes package interface with member access on fully-qualified package", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(50, 15);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -5437,7 +5437,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits package interface with member access operator on this", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(47, 8);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -5455,7 +5455,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits package interface with member access operator on super", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(48, 9);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -5473,7 +5473,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes package interface as type annotation", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(55, 13);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -5492,7 +5492,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes interface member property", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(58, 13);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -5511,7 +5511,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes interface member function", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(58, 13);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -5530,7 +5530,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes interface super member property", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(58, 13);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -5549,7 +5549,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes interface super member function", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(58, 13);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -5568,7 +5568,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes interface super super member property", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(58, 13);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -5587,7 +5587,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes interface super super member function", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(58, 13);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -5606,7 +5606,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider empty inside string literal", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(59, 33);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -5623,7 +5623,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider empty inside RegExp literal", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Completion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
 		let position = new vscode.Position(60, 33);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -5640,7 +5640,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes package name for package block", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "PackageCompletion.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "PackageCompletion.as"));
 		let position = new vscode.Position(0, 8);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -5659,7 +5659,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes package name at end of package keyword", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "PackageCompletion4.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "PackageCompletion4.as"));
 		let position = new vscode.Position(0, 7);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -5678,7 +5678,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes package name for unfinished package block", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "PackageCompletion2.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "PackageCompletion2.as"));
 		let position = new vscode.Position(0, 8);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -5697,7 +5697,7 @@ suite("completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes package name for empty file", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "com", "example", "PackageCompletion3.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "PackageCompletion3.as"));
 		let position = new vscode.Position(0, 0);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -5720,7 +5720,7 @@ suite("MXML completion item provider", () =>
 {
 	test("vscode.executeCompletionItemProvider includes property as attribute", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "MXMLCompletion.mxml"));
 		let position = new vscode.Position(9, 13);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -5740,7 +5740,7 @@ suite("MXML completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes property as child element", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "MXMLCompletion.mxml"));
 		let position = new vscode.Position(10, 9);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -5760,7 +5760,7 @@ suite("MXML completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits property as attribute of closing element", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "MXMLCompletion.mxml"));
 		let position = new vscode.Position(11, 14);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -5778,7 +5778,7 @@ suite("MXML completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes event as attribute", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "MXMLCompletion.mxml"));
 		let position = new vscode.Position(9, 13);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -5798,7 +5798,7 @@ suite("MXML completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes event as child element", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "MXMLCompletion.mxml"));
 		let position = new vscode.Position(10, 9);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -5818,7 +5818,7 @@ suite("MXML completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits event as attribute of closing element", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "MXMLCompletion.mxml"));
 		let position = new vscode.Position(11, 14);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -5836,7 +5836,7 @@ suite("MXML completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes class as child element", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "MXMLCompletion.mxml"));
 		let position = new vscode.Position(10, 9);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -5856,7 +5856,7 @@ suite("MXML completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes <fx:Binding> as child element of root", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "MXMLCompletion.mxml"));
 		let position = new vscode.Position(12, 5);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -5875,7 +5875,7 @@ suite("MXML completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits <fx:Binding> as child of non-root element", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "MXMLCompletion.mxml"));
 		let position = new vscode.Position(10, 9);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -5893,7 +5893,7 @@ suite("MXML completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes <fx:Binding> as child element of root with existing prefix", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "MXMLCompletion.mxml"));
 		let position = new vscode.Position(20, 8);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -5912,7 +5912,7 @@ suite("MXML completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits <fx:Binding> as child of non-root element with existing prefix", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "MXMLCompletion.mxml"));
 		let position = new vscode.Position(18, 12);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -5930,7 +5930,7 @@ suite("MXML completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes <fx:Component> as child element of root", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "MXMLCompletion.mxml"));
 		let position = new vscode.Position(12, 5);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -5949,7 +5949,7 @@ suite("MXML completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes <fx:Component> as child of non-root element", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "MXMLCompletion.mxml"));
 		let position = new vscode.Position(10, 9);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -5968,7 +5968,7 @@ suite("MXML completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes <fx:Component> as child element of root with existing prefix", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "MXMLCompletion.mxml"));
 		let position = new vscode.Position(20, 8);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -5987,7 +5987,7 @@ suite("MXML completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes <fx:Component> as child of non-root element with existing prefix", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "MXMLCompletion.mxml"));
 		let position = new vscode.Position(18, 12);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -6006,7 +6006,7 @@ suite("MXML completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes <fx:Declarations> as child element of root", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "MXMLCompletion.mxml"));
 		let position = new vscode.Position(12, 5);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -6025,7 +6025,7 @@ suite("MXML completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits <fx:Declarations> as child of non-root element", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "MXMLCompletion.mxml"));
 		let position = new vscode.Position(10, 9);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -6043,7 +6043,7 @@ suite("MXML completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes <fx:Declarations> as child element of root with existing prefix", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "MXMLCompletion.mxml"));
 		let position = new vscode.Position(20, 8);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -6062,7 +6062,7 @@ suite("MXML completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits <fx:Declarations> as child of non-root element with existing prefix", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "MXMLCompletion.mxml"));
 		let position = new vscode.Position(18, 12);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -6080,7 +6080,7 @@ suite("MXML completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes <fx:Metadata> as child element of root", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "MXMLCompletion.mxml"));
 		let position = new vscode.Position(12, 5);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -6099,7 +6099,7 @@ suite("MXML completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits <fx:Metadata> as child of non-root element", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "MXMLCompletion.mxml"));
 		let position = new vscode.Position(10, 9);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -6117,7 +6117,7 @@ suite("MXML completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes <fx:Metadata> as child element of root with existing prefix", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "MXMLCompletion.mxml"));
 		let position = new vscode.Position(20, 8);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -6136,7 +6136,7 @@ suite("MXML completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits <fx:Metadata> as child of non-root element with existing prefix", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "MXMLCompletion.mxml"));
 		let position = new vscode.Position(18, 12);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -6154,7 +6154,7 @@ suite("MXML completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes <fx:Script> as child element of root", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "MXMLCompletion.mxml"));
 		let position = new vscode.Position(12, 5);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -6173,7 +6173,7 @@ suite("MXML completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits <fx:Script> as child of non-root element", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "MXMLCompletion.mxml"));
 		let position = new vscode.Position(10, 9);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -6191,7 +6191,7 @@ suite("MXML completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes <fx:Script> as child element of root with existing prefix", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "MXMLCompletion.mxml"));
 		let position = new vscode.Position(20, 8);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -6210,7 +6210,7 @@ suite("MXML completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits <fx:Script> as child of non-root element with existing prefix", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "MXMLCompletion.mxml"));
 		let position = new vscode.Position(18, 12);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -6228,7 +6228,7 @@ suite("MXML completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes <fx:Style> as child element of root", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "MXMLCompletion.mxml"));
 		let position = new vscode.Position(12, 5);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -6247,7 +6247,7 @@ suite("MXML completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits <fx:Style> as child of non-root element", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "MXMLCompletion.mxml"));
 		let position = new vscode.Position(10, 9);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -6265,7 +6265,7 @@ suite("MXML completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes <fx:Style> as child element of root with existing prefix", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "MXMLCompletion.mxml"));
 		let position = new vscode.Position(20, 8);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -6284,7 +6284,7 @@ suite("MXML completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider omits <fx:Style> as child of non-root element with existing prefix", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "MXMLCompletion.mxml"));
 		let position = new vscode.Position(18, 12);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -6302,7 +6302,7 @@ suite("MXML completion item provider", () =>
 	});
 	test("vscode.executeCompletionItemProvider includes state for property attribute", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLCompletion.mxml"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "MXMLCompletion.mxml"));
 		let position = new vscode.Position(21, 25);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -6339,7 +6339,7 @@ suite("imports", () =>
 	});
 	test("nextgenas.addImport adds import for qualified class with no range", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Imports.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Imports.as"));
 		let qualifiedName = "com.example.PackageClass";
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -6368,7 +6368,7 @@ suite("imports", () =>
 	});
 	test("nextgenas.addImport adds import for qualified class in specific range", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Imports.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Imports.as"));
 		let qualifiedName = "com.example.PackageClass";
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -6397,7 +6397,7 @@ suite("imports", () =>
 	});
 	test("nextgenas.addImport adds import for qualified class after package block", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "Imports.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Imports.as"));
 		let qualifiedName = "com.example.PackageClass";
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
@@ -6443,7 +6443,7 @@ suite("mxml namespaces", () =>
 	});
 	test("nextgenas.addMXMLNamespace adds new namespace", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLNamespace.mxml"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "MXMLNamespace.mxml"));
 		let nsPrefix = "mx";
 		let nsUri = "library://ns.adobe.com/flex/mx";
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
@@ -6473,7 +6473,7 @@ suite("mxml namespaces", () =>
 	});
 	test("nextgenas.addMXMLNamespace skips duplicate namespace", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "MXMLNamespace.mxml"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "MXMLNamespace.mxml"));
 		let nsPrefix = "fx";
 		let nsUri = "http://ns.adobe.com/mxml/2009";
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
@@ -6508,7 +6508,7 @@ suite("code action provider", () =>
 {
 	test("vscode.executeCodeActionProvider finds import for base class", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "CodeActionsImports.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "CodeActionsImports.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			let start = new vscode.Position(0, 0);
@@ -6531,7 +6531,7 @@ suite("code action provider", () =>
 	});
 	test("vscode.executeCodeActionProvider finds import for implemented interface", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "CodeActionsImports.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "CodeActionsImports.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			let start = new vscode.Position(0, 0);
@@ -6554,7 +6554,7 @@ suite("code action provider", () =>
 	});
 	test("vscode.executeCodeActionProvider finds import for new instance", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "CodeActionsImports.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "CodeActionsImports.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			let start = new vscode.Position(0, 0);
@@ -6577,7 +6577,7 @@ suite("code action provider", () =>
 	});
 	test("vscode.executeCodeActionProvider finds import for variable type", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "CodeActionsImports.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "CodeActionsImports.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			let start = new vscode.Position(0, 0);
@@ -6600,7 +6600,7 @@ suite("code action provider", () =>
 	});
 	test("vscode.executeCodeActionProvider finds import for parameter type", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "CodeActionsImports.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "CodeActionsImports.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			let start = new vscode.Position(0, 0);
@@ -6623,7 +6623,7 @@ suite("code action provider", () =>
 	});
 	test("vscode.executeCodeActionProvider finds import for return type", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "CodeActionsImports.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "CodeActionsImports.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			let start = new vscode.Position(0, 0);
@@ -6646,7 +6646,7 @@ suite("code action provider", () =>
 	});
 	test("vscode.executeCodeActionProvider finds import for type in assignment", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "CodeActionsImports.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "CodeActionsImports.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			let start = new vscode.Position(0, 0);
@@ -6669,7 +6669,7 @@ suite("code action provider", () =>
 	});
 	test("vscode.executeCodeActionProvider finds import for multiple types with the same base name", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "CodeActionsImports.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "CodeActionsImports.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			let start = new vscode.Position(0, 0);
@@ -6699,7 +6699,7 @@ suite("code action provider", () =>
 	});
 	test("vscode.executeCodeActionProvider can generate local variable without this member access", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "CodeActionsGeneration.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "CodeActionsGeneration.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			let start = new vscode.Position(0, 0);
@@ -6726,7 +6726,7 @@ suite("code action provider", () =>
 	});
 	test("vscode.executeCodeActionProvider can generate member variable without this member access", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "CodeActionsGeneration.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "CodeActionsGeneration.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			let start = new vscode.Position(0, 0);
@@ -6753,7 +6753,7 @@ suite("code action provider", () =>
 	});
 	test("vscode.executeCodeActionProvider can generate member variable with this member access", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "CodeActionsGeneration.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "CodeActionsGeneration.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			let start = new vscode.Position(0, 0);
@@ -6780,7 +6780,7 @@ suite("code action provider", () =>
 	});
 	test("vscode.executeCodeActionProvider can generate method without this member access", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "CodeActionsGeneration.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "CodeActionsGeneration.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			let start = new vscode.Position(0, 0);
@@ -6808,7 +6808,7 @@ suite("code action provider", () =>
 	});
 	test("vscode.executeCodeActionProvider can generate method with this member access", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "CodeActionsGeneration.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "CodeActionsGeneration.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			let start = new vscode.Position(0, 0);
@@ -6836,7 +6836,7 @@ suite("code action provider", () =>
 	});
 	test("vscode.executeCodeActionProvider can generate getter", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "CodeActionsGeneration.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "CodeActionsGeneration.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			let start = new vscode.Position(0, 0);
@@ -6867,7 +6867,7 @@ suite("code action provider", () =>
 	});
 	test("vscode.executeCodeActionProvider can generate setter", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "CodeActionsGeneration.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "CodeActionsGeneration.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			let start = new vscode.Position(0, 0);
@@ -6898,7 +6898,7 @@ suite("code action provider", () =>
 	});
 	test("vscode.executeCodeActionProvider can generate getter and setter", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "CodeActionsGeneration.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "CodeActionsGeneration.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			let start = new vscode.Position(0, 0);
@@ -6929,7 +6929,7 @@ suite("code action provider", () =>
 	});
 	test("vscode.executeCodeActionProvider can generate static getter and setter", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.rootPath, "src", "CodeActionsGeneration.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "CodeActionsGeneration.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			let start = new vscode.Position(0, 0);

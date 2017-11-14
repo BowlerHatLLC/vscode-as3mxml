@@ -29,9 +29,9 @@ export default function(javaPath: string, editorSDKPath: string, frameworkSDKPat
 		getClassPath(editorSDKPath),
 		"com.nextgenactionscript.vscode.SWFDebug"
 	];
-	if(vscode.workspace.rootPath)
+	if(vscode.workspace.workspaceFolders !== undefined)
 	{
-		args.unshift("-Dworkspace=" + vscode.workspace.rootPath);
+		args.unshift("-Dworkspace=" + vscode.workspace.workspaceFolders[0].uri.fsPath);
 	}
 	let result: any =
 	{

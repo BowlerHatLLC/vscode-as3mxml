@@ -25,7 +25,7 @@ const ENVIRONMENT_VARIABLE_PATH = "PATH";
 
 export default function getFrameworkSDKPathWithFallbacks(): string
 {
-	if(!vscode.workspace.rootPath)
+	if(vscode.workspace.workspaceFolders === undefined)
 	{
 		//no open workspace means no SDK
 		return null;

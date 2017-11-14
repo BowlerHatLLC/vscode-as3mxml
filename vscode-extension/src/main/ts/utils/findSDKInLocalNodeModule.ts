@@ -21,11 +21,11 @@ const ENVIRONMENT_VARIABLE_FLEX_HOME = "FLEX_HOME";
 
 export default function findSDKInLocalNodeModule(): string
 {
-	if(!vscode.workspace.rootPath)
+	if(vscode.workspace.workspaceFolders === undefined)
 	{
 		return null;
 	}
-	let flexjsModule = path.join(vscode.workspace.rootPath, "node_modules", "flexjs");
+	let flexjsModule = path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "node_modules", "flexjs");
 	if(validateFrameworkSDK(flexjsModule))
 	{
 		return flexjsModule;

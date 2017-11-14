@@ -215,7 +215,12 @@ export function activate(context: vscode.ExtensionContext)
 	//this command is deprecated and will be removed in the future
 	vscode.commands.registerCommand("nextgenas.createASConfigTaskRunner", () =>
 	{
-		let asconfigPath = path.resolve(vscode.workspace.rootPath, "asconfig.json");
+		if(vscode.workspace.workspaceFolders === undefined)
+		{
+			vscode.window.showErrorMessage("Failed to configure task runner. No workspace is open.");
+			return;
+		}
+		let asconfigPath = path.resolve(vscode.workspace.workspaceFolders[0].uri.fsPath, "asconfig.json");
 		if(!fs.existsSync(asconfigPath))
 		{
 			vscode.window.showErrorMessage("Failed to configure task runner. No asconfig.json file found at root of project.");
@@ -306,7 +311,7 @@ function startClient()
 		//something very bad happened!
 		return;
 	}
-	if(!vscode.workspace.rootPath)
+	if(vscode.workspace.workspaceFolders === undefined)
 	{
 		vscode.window.showInformationMessage(MISSING_WORKSPACE_ROOT_ERROR,
 			{ title: "Help", href: "https://github.com/BowlerHatLLC/vscode-nextgenas/wiki" }
@@ -399,7 +404,7 @@ function startClient()
 				args: args,
 				options:
 				{
-					cwd: vscode.workspace.rootPath
+					cwd: vscode.workspace.workspaceFolders[0].uri.fsPath
 				}
 			};
 			let options: ExecutableOptions;

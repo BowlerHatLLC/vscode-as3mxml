@@ -90,7 +90,7 @@ export default class ActionScriptTaskProvider implements vscode.TaskProvider
 			return Promise.resolve([]);
 		}
 
-		let command = this.getCommand();
+		let command = this.getCommand(workspaceRoot);
 		let frameworkSDK = getFrameworkSDKPathWithFallbacks();
 
 		let result =
@@ -171,9 +171,9 @@ export default class ActionScriptTaskProvider implements vscode.TaskProvider
 		return task;
 	}
 
-	private getCommand(): string
+	private getCommand(workspaceRoot: vscode.WorkspaceFolder): string
 	{
-		let nodeModulesBin = path.join(vscode.workspace.rootPath, "node_modules", ".bin");
+		let nodeModulesBin = path.join(workspaceRoot.uri.fsPath, "node_modules", ".bin");
 		if(process.platform === "win32")
 		{
 			let executableName = "asconfigc.cmd";

@@ -17,7 +17,7 @@ import * as vscode from "vscode";
 
 export default function organizeImportsInTextEditor(editor: vscode.TextEditor, edit: vscode.TextEditorEdit)
 {
-	if(!vscode.workspace.rootPath)
+	if(vscode.workspace.workspaceFolders === undefined)
 	{
 		vscode.window.showErrorMessage("Cannot organize imports because no workspace is currently open.");
 		return;
