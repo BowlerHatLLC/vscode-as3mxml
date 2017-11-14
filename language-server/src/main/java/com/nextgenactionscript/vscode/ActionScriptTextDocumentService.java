@@ -327,12 +327,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         String[] versionParts = sdkVersion.split("-")[0].split("\\.");
         int major = 0;
         int minor = 0;
-        int revision = 0;
         if (versionParts.length >= 3)
         {
             major = Integer.parseInt(versionParts[0]);
             minor = Integer.parseInt(versionParts[1]);
-            revision = Integer.parseInt(versionParts[2]);
+            //we don't actually care about the revision
+            //revision = Integer.parseInt(versionParts[2]);
         }
         //FlexJS 0.7 has a bug in parsing MXML and we need a workaround
         brokenMXMLValueEnd = major == 0 && minor == 7;
@@ -5314,8 +5314,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                             }
                             if (propertyChild instanceof IMXMLSingleDataBindingNode)
                             {
-                                IMXMLSingleDataBindingNode dataBinding = (IMXMLSingleDataBindingNode) propertyChild;
-                                IASNode containingNode = dataBinding.getExpressionNode().getContainingNode(currentOffset);
+                                //IMXMLSingleDataBindingNode dataBinding = (IMXMLSingleDataBindingNode) propertyChild;
+                                //IASNode containingNode = dataBinding.getExpressionNode().getContainingNode(currentOffset);
                                 //we found the correct expression, but due to a bug
                                 //in the compiler its line and column positions
                                 //will be wrong. the resulting completion is too
@@ -6143,8 +6143,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         String uri = (String) args.get(0);
         int startLine = ((Double) args.get(1)).intValue();
         int startChar = ((Double) args.get(2)).intValue();
-        int endLine = ((Double) args.get(3)).intValue();
-        int endChar = ((Double) args.get(4)).intValue();
+        //int endLine = ((Double) args.get(3)).intValue();
+        //int endChar = ((Double) args.get(4)).intValue();
         String name = (String) args.get(5);
 
         TextDocumentIdentifier identifier = new TextDocumentIdentifier(uri);
@@ -6205,8 +6205,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         String uri = (String) args.get(0);
         int startLine = ((Double) args.get(1)).intValue();
         int startChar = ((Double) args.get(2)).intValue();
-        int endLine = ((Double) args.get(3)).intValue();
-        int endChar = ((Double) args.get(4)).intValue();
+        //int endLine = ((Double) args.get(3)).intValue();
+        //int endChar = ((Double) args.get(4)).intValue();
         String name = (String) args.get(5);
         
         TextDocumentIdentifier identifier = new TextDocumentIdentifier(uri);
@@ -6268,8 +6268,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         String uri = (String) args.get(0);
         int startLine = ((Double) args.get(1)).intValue();
         int startChar = ((Double) args.get(2)).intValue();
-        int endLine = ((Double) args.get(3)).intValue();
-        int endChar = ((Double) args.get(4)).intValue();
+        //int endLine = ((Double) args.get(3)).intValue();
+        //int endChar = ((Double) args.get(4)).intValue();
         String name = (String) args.get(5);
         Object uncastArgs = args.get(6);
         ArrayList<?> methodArgs = null;

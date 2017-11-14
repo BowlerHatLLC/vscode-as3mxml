@@ -41,19 +41,11 @@ import com.nextgenactionscript.vscode.debug.responses.Message;
 public abstract class DebugSession extends ProtocolServer
 {
     private boolean _debuggerLinesStartAt1;
-    private boolean _debuggerPathsAreURI;
     private boolean _clientLinesStartAt1 = true;
-    private boolean _clientPathsAreURI = true;
 
     public DebugSession(boolean debuggerLinesStartAt1)
     {
-        this(debuggerLinesStartAt1, false);
-    }
-
-    public DebugSession(boolean debuggerLinesStartAt1, boolean debuggerPathsAreURI)
-    {
         _debuggerLinesStartAt1 = debuggerLinesStartAt1;
-        _debuggerPathsAreURI = debuggerPathsAreURI;
     }
 
     public void sendResponse(Response response)

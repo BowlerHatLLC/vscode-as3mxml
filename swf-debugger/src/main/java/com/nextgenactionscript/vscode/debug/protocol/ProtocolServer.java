@@ -98,7 +98,7 @@ public abstract class ProtocolServer
         _stopRequested = true;
     }
 
-    public void sendEvent(Event e)
+    public void sendEvent(Event<?> e)
     {
         sendMessage(e);
     }
@@ -182,7 +182,7 @@ public abstract class ProtocolServer
         }
         if (TRACE && message.type.equals(Event.PROTOCOL_MESSAGE_TYPE))
         {
-            Event e = (Event) message;
+            Event<?> e = (Event<?>) message;
             System.err.print(String.format("\r\n\r\n-----E %1$s: %2$s", e.event, gson.toJson(e.body)));
         }
 

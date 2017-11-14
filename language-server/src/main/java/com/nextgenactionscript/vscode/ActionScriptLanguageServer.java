@@ -182,9 +182,9 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
                     {
                         return;
                     }
-                    LinkedTreeMap settings = (LinkedTreeMap) params.getSettings();
-                    LinkedTreeMap nextgenas = (LinkedTreeMap) settings.get("nextgenas");
-                    LinkedTreeMap sdk = (LinkedTreeMap) nextgenas.get("sdk");
+                    LinkedTreeMap<?,?> settings = (LinkedTreeMap<?,?>) params.getSettings();
+                    LinkedTreeMap<?,?> nextgenas = (LinkedTreeMap<?,?>) settings.get("nextgenas");
+                    LinkedTreeMap<?,?> sdk = (LinkedTreeMap<?,?>) nextgenas.get("sdk");
                     String frameworkSDK = (String) sdk.get("framework");
                     if (frameworkSDK == null)
                     {
