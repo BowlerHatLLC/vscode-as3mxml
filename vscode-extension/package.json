@@ -425,7 +425,7 @@
                   "string",
                   "null"
                 ],
-                "description": "Path to directory containing unpackaged AIR native extensions for debugging.",
+                "description": "Path to directory containing unpackaged AIR native extensions for debugging. Relative paths are based on workspace root.",
                 "default": null
               }
             }
