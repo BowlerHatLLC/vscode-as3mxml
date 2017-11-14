@@ -1,4 +1,4 @@
-# NextGen ActionScript extension for Visual Studio Code
+# ActionScript and MXML extension for Visual Studio Code
 
 This README file is intended for contributors to the extension. If you simply want to install the latest stable version of the extension, please visit the [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=bowlerhatllc.vscode-nextgenas). For help using the extension, visit the [wiki](https://github.com/BowlerHatLLC/vscode-nextgenas/wiki) for detailed instructions.
 
