@@ -291,7 +291,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private int namespaceEndIndex = -1;
     private String namespaceUri;
     private LanguageServerFileSpecGetter fileSpecGetter;
-    private boolean brokenMXMLValueEnd;
     private boolean flexLibSDKContainsFalconCompiler = false;
     private boolean flexLibSDKIsFlexJS = false;
     private ProblemTracker codeProblemTracker = new ProblemTracker();
@@ -324,22 +323,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     public ActionScriptTextDocumentService()
     {
-        String sdkVersion = IASNode.class.getPackage().getImplementationVersion();
-        String[] versionParts = sdkVersion.split("-")[0].split("\\.");
-        int major = 0;
-        int minor = 0;
-        if (versionParts.length >= 3)
-        {
-            major = Integer.parseInt(versionParts[0]);
-            minor = Integer.parseInt(versionParts[1]);
-            //we don't actually care about the revision
-            //revision = Integer.parseInt(versionParts[2]);
-        }
-        //FlexJS 0.7 has a bug in parsing MXML and we need a workaround
-        brokenMXMLValueEnd = major == 0 && minor == 7;
-
         updateFrameworkSDK();
-
         isWindows = System.getProperty("os.name").toLowerCase().startsWith("windows");
     }
 
@@ -5042,10 +5026,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             int start = attributeData.getAbsoluteStart();
             int end = attributeData.getValueEnd() + 1;
-            if (brokenMXMLValueEnd)
-            {
-                end--;
-            }
             if (namespaceStartIndex == -1 || namespaceStartIndex > start)
             {
                 namespaceStartIndex = start;
