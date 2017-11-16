@@ -275,6 +275,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private LanguageClient languageClient;
     private IProjectConfigStrategy projectConfigStrategy;
+    private String oldFrameworkSDKPath;
     private Path workspaceRoot;
     private Map<Path, String> sourceByPath = new HashMap<>();
     private Map<Path, List<SavedCodeAction>> codeActionsByPath = new HashMap<>();
@@ -337,14 +338,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         //FlexJS 0.7 has a bug in parsing MXML and we need a workaround
         brokenMXMLValueEnd = major == 0 && minor == 7;
 
-        //if the framework SDK doesn't include the Falcon compiler, we can
-        //ignore certain errors from the editor SDK, which includes Falcon.
-        Path sdkPath = Paths.get(System.getProperty(FLEXLIB));
-        sdkPath = sdkPath.resolve("../lib/falcon-mxmlc.jar");
-        flexLibSDKContainsFalconCompiler = sdkPath.toFile().exists();
-        sdkPath = Paths.get(System.getProperty(FLEXLIB));
-        sdkPath = sdkPath.resolve("../js/bin/asjsc");
-        flexLibSDKIsFlexJS = sdkPath.toFile().exists();
+        updateFrameworkSDK();
 
         isWindows = System.getProperty("os.name").toLowerCase().startsWith("windows");
     }
@@ -1310,10 +1304,29 @@ public class ActionScriptTextDocumentService implements TextDocumentService
      */
     public void checkForProblemsNow()
     {
+        updateFrameworkSDK();
         if (projectConfigStrategy.getChanged())
         {
             checkProjectForProblems();
         }
+    }
+
+    private void updateFrameworkSDK()
+    {
+        String frameworkSDKPath = System.getProperty(FLEXLIB);
+        if(frameworkSDKPath.equals(oldFrameworkSDKPath))
+        {
+            return;
+        }
+        oldFrameworkSDKPath = frameworkSDKPath;
+        //if the framework SDK doesn't include the Falcon compiler, we can
+        //ignore certain errors from the editor SDK, which includes Falcon.
+        Path sdkPath = Paths.get(frameworkSDKPath);
+        sdkPath = sdkPath.resolve("../lib/falcon-mxmlc.jar");
+        flexLibSDKContainsFalconCompiler = sdkPath.toFile().exists();
+        sdkPath = Paths.get(System.getProperty(FLEXLIB));
+        sdkPath = sdkPath.resolve("../js/bin/asjsc");
+        flexLibSDKIsFlexJS = sdkPath.toFile().exists();
     }
 
     private void cleanupCurrentProject()
