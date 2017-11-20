@@ -1,3 +1,21 @@
+## 0.8.0
+
+### New Features
+
+* Build: Package Adobe AIR applications using a new `airOptions` field in *asconfig.json*. Supports both desktop and mobile, including both debug and release packages.
+* Editor: If an MXML tag is unclosed, a suggestion to close it will appear in the completion list.
+* Editor: Now supports completion of state names in MXML.
+* Editor: Fixed issue where the first import added to a `<fx:Script>` element in MXML would incorrectly be added at the beginning of the file.
+* Command: Added "Restart ActionScript/MXML server" command to restart the language server without reloading the entire window.
+* Debugging: If *launch.json* does not exist, the generated initial debug configurations for SWF now includes both `launch` and `attach` requests to better match the behavior of other debug extensions.
+
+### Fixed Issues
+
+* Debugging: Fixed issue where `extdir` option for AIR debugger could not use a relative path.
+* Fixed issue where starting with the SDK set to Apache FlexJS and later switching to another SDK could cause an invalid embedded fonts error to be displayed in the Problems view.
+* Fixed issue where "Internal error in ABC generator subsystem" error could be displayed in Apache FlexJS projects using CSS.
+* ActionScript Source Path view now displays parent directories, if necessary, to make it easier to differentiate between source paths that have the same directory name.
+
 ## 0.7.1
 
 ### New Features
