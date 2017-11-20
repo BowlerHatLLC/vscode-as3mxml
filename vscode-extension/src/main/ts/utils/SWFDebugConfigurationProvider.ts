@@ -49,6 +49,11 @@ export default class SWFDebugConfigurationProvider implements vscode.DebugConfig
 				type: "swf",
 				request: "launch",
 				name: "Launch SWF"
+			},
+			{
+				type: "swf",
+				request: "attach",
+				name: "Attach SWF"
 			}
 		];
 		return initialConfigurations;
