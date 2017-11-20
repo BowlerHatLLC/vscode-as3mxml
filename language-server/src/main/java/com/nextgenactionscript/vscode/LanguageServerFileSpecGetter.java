@@ -21,7 +21,6 @@ import java.util.Map;
 
 import org.apache.flex.compiler.common.IFileSpecificationGetter;
 import org.apache.flex.compiler.constants.IASKeywordConstants;
-import org.apache.flex.compiler.constants.IMXMLCoreConstants;
 import org.apache.flex.compiler.filespecs.FileSpecification;
 import org.apache.flex.compiler.filespecs.IFileSpecification;
 import org.apache.flex.compiler.internal.filespecs.StringFileSpecification;
@@ -37,10 +36,7 @@ import org.apache.flex.compiler.workspaces.IWorkspace;
  */
 public class LanguageServerFileSpecGetter implements IFileSpecificationGetter
 {
-    private static final String SCRIPT_START = "<fx:Script>";
-    private static final String SCRIPT_END = "</fx:Script>";
     private static final String PACKAGE_WITHOUT_BRACES = "package ";
-    private static final String FILE_EXTENSION_MXML = ".mxml";
     private static final String FILE_EXTENSION_AS = ".as";
 
     public LanguageServerFileSpecGetter(IWorkspace workspace, Map<Path, String> sourceByPath)
