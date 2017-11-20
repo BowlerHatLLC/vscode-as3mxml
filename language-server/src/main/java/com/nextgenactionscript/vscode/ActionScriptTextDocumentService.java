@@ -282,6 +282,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private LanguageClient languageClient;
     private IProjectConfigStrategy projectConfigStrategy;
+    private String oldFrameworkSDKPath;
     private Path workspaceRoot;
     private Map<Path, String> sourceByPath = new HashMap<>();
     private Map<Path, List<SavedCodeAction>> codeActionsByPath = new HashMap<>();
@@ -330,19 +331,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     public ActionScriptTextDocumentService()
     {
-        //if the framework SDK doesn't include the Falcon compiler, we can
-        //ignore certain errors from the editor SDK, which includes Falcon.
-        Path sdkPath = Paths.get(System.getProperty(PROPERTY_FRAMEWORK_LIB));
-        sdkPath = sdkPath.resolve("../lib/falcon-mxmlc.jar");
-        frameworkSDKContainsFalconCompiler = sdkPath.toFile().exists();
-
-        sdkPath = Paths.get(System.getProperty(PROPERTY_FRAMEWORK_LIB));
-        frameworkSDKIsRoyale = ActionScriptSDKUtils.isRoyaleFramework(sdkPath);
-
-        sdkPath = Paths.get(System.getProperty(PROPERTY_FRAMEWORK_LIB));
-        sdkPath = sdkPath.resolve("../js/bin/asjsc");
-        frameworkSDKIsFlexJS = !frameworkSDKIsRoyale && sdkPath.toFile().exists();
-
+        updateFrameworkSDK();
         isWindows = System.getProperty("os.name").toLowerCase().startsWith("windows");
     }
 
@@ -1307,10 +1296,34 @@ public class ActionScriptTextDocumentService implements TextDocumentService
      */
     public void checkForProblemsNow()
     {
+        updateFrameworkSDK();
         if (projectConfigStrategy.getChanged())
         {
             checkProjectForProblems();
         }
+    }
+
+    private void updateFrameworkSDK()
+    {
+        String frameworkSDKPath = System.getProperty(PROPERTY_FRAMEWORK_LIB);
+        if(frameworkSDKPath.equals(oldFrameworkSDKPath))
+        {
+            return;
+        }
+        oldFrameworkSDKPath = frameworkSDKPath;
+
+        //if the framework SDK doesn't include the Falcon compiler, we can
+        //ignore certain errors from the editor SDK, which includes Falcon.
+        Path sdkPath = Paths.get(frameworkSDKPath);
+        sdkPath = sdkPath.resolve("../lib/falcon-mxmlc.jar");
+        frameworkSDKContainsFalconCompiler = sdkPath.toFile().exists();
+
+        sdkPath = Paths.get(System.getProperty(PROPERTY_FRAMEWORK_LIB));
+        frameworkSDKIsRoyale = ActionScriptSDKUtils.isRoyaleFramework(sdkPath);
+
+        sdkPath = Paths.get(System.getProperty(PROPERTY_FRAMEWORK_LIB));
+        sdkPath = sdkPath.resolve("../js/bin/asjsc");
+        frameworkSDKIsFlexJS = !frameworkSDKIsRoyale && sdkPath.toFile().exists();
     }
 
     private void cleanupCurrentProject()
@@ -5312,8 +5325,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                             }
                             if (propertyChild instanceof IMXMLSingleDataBindingNode)
                             {
-                                IMXMLSingleDataBindingNode dataBinding = (IMXMLSingleDataBindingNode) propertyChild;
-                                IASNode containingNode = dataBinding.getExpressionNode().getContainingNode(currentOffset);
+                                //IMXMLSingleDataBindingNode dataBinding = (IMXMLSingleDataBindingNode) propertyChild;
+                                //IASNode containingNode = dataBinding.getExpressionNode().getContainingNode(currentOffset);
                                 //we found the correct expression, but due to a bug
                                 //in the compiler its line and column positions
                                 //will be wrong. the resulting completion is too
@@ -6141,8 +6154,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         String uri = (String) args.get(0);
         int startLine = ((Double) args.get(1)).intValue();
         int startChar = ((Double) args.get(2)).intValue();
-        int endLine = ((Double) args.get(3)).intValue();
-        int endChar = ((Double) args.get(4)).intValue();
+        //int endLine = ((Double) args.get(3)).intValue();
+        //int endChar = ((Double) args.get(4)).intValue();
         String name = (String) args.get(5);
 
         TextDocumentIdentifier identifier = new TextDocumentIdentifier(uri);
@@ -6203,8 +6216,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         String uri = (String) args.get(0);
         int startLine = ((Double) args.get(1)).intValue();
         int startChar = ((Double) args.get(2)).intValue();
-        int endLine = ((Double) args.get(3)).intValue();
-        int endChar = ((Double) args.get(4)).intValue();
+        //int endLine = ((Double) args.get(3)).intValue();
+        //int endChar = ((Double) args.get(4)).intValue();
         String name = (String) args.get(5);
         
         TextDocumentIdentifier identifier = new TextDocumentIdentifier(uri);
@@ -6266,8 +6279,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         String uri = (String) args.get(0);
         int startLine = ((Double) args.get(1)).intValue();
         int startChar = ((Double) args.get(2)).intValue();
-        int endLine = ((Double) args.get(3)).intValue();
-        int endChar = ((Double) args.get(4)).intValue();
+        //int endLine = ((Double) args.get(3)).intValue();
+        //int endChar = ((Double) args.get(4)).intValue();
         String name = (String) args.get(5);
         Object uncastArgs = args.get(6);
         ArrayList<?> methodArgs = null;

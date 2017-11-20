@@ -35,12 +35,12 @@ public class CheckRoyaleVersion
             String[] versionParts = sdkVersion.split("-")[0].split("\\.");
             int major = 0;
             int minor = 0;
-            int revision = 0;
             if (versionParts.length >= 3)
             {
                 major = Integer.parseInt(versionParts[0]);
                 minor = Integer.parseInt(versionParts[1]);
-                revision = Integer.parseInt(versionParts[2]);
+                //we don't actually care about the revision
+                //revision = Integer.parseInt(versionParts[2]);
             }
             if (major > 0)
             {

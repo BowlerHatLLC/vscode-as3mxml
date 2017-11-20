@@ -170,7 +170,7 @@ function createSearchPathsItem(): SDKQuickPickItem
 
 export default function selectWorkspaceSDK(): void
 {
-	if(!vscode.workspace.rootPath)
+	if(vscode.workspace.workspaceFolders === undefined)
 	{
 		vscode.window.showErrorMessage("Cannot change ActionScript SDK because no workspace is currently open.");
 		return;

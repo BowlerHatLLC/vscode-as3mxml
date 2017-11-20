@@ -1,4 +1,4 @@
-# NextGen ActionScript extension for Visual Studio Code
+# ActionScript and MXML extension for Visual Studio Code by NextGen ActionScript
 
 ## Features
 
@@ -20,7 +20,7 @@
 
 ## Help and Support
 
-* [Documentation](https://github.com/BowlerHatLLC/vscode-nextgenas/wiki)
+* [Help & Documentation](https://github.com/BowlerHatLLC/vscode-nextgenas/wiki)
 * [Issue Tracker](https://github.com/BowlerHatLLC/vscode-nextgenas/issues)
 
 ## Minimum Requirements

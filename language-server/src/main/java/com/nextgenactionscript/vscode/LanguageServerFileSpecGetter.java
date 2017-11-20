@@ -21,7 +21,6 @@ import java.util.Map;
 
 import org.apache.royale.compiler.common.IFileSpecificationGetter;
 import org.apache.royale.compiler.constants.IASKeywordConstants;
-import org.apache.royale.compiler.constants.IMXMLCoreConstants;
 import org.apache.royale.compiler.filespecs.FileSpecification;
 import org.apache.royale.compiler.filespecs.IFileSpecification;
 import org.apache.royale.compiler.internal.filespecs.StringFileSpecification;
@@ -37,10 +36,7 @@ import org.apache.royale.compiler.workspaces.IWorkspace;
  */
 public class LanguageServerFileSpecGetter implements IFileSpecificationGetter
 {
-    private static final String SCRIPT_START = "<fx:Script>";
-    private static final String SCRIPT_END = "</fx:Script>";
     private static final String PACKAGE_WITHOUT_BRACES = "package ";
-    private static final String FILE_EXTENSION_MXML = ".mxml";
     private static final String FILE_EXTENSION_AS = ".as";
 
     public LanguageServerFileSpecGetter(IWorkspace workspace, Map<Path, String> sourceByPath)
@@ -92,58 +88,5 @@ public class LanguageServerFileSpecGetter implements IFileSpecificationGetter
             return code + "{}";
         }
         return code;
-    }
-
-    /**
-     * If an XML comment is not closed, the compiler will get into an infinite
-     * loop!
-     */
-    private String fixUnclosedXMLComment(String code)
-    {
-        int startComment = code.lastIndexOf(IMXMLCoreConstants.commentStart);
-        if (startComment == -1)
-        {
-            return code;
-        }
-        int endComment = code.indexOf(IMXMLCoreConstants.commentEnd, startComment);
-        if (endComment == -1)
-        {
-            return code + IMXMLCoreConstants.commentEnd;
-        }
-        return code;
-    }
-
-    /**
-     * If a <![CDATA[ inside <fx:Script></fx:Script> is not closed, the compiler
-     * will get into an infinite loop!
-     */
-    private String fixUnclosedScriptCDATA(String code)
-    {
-        int startIndex = 0;
-        do
-        {
-            int startScript = code.indexOf(SCRIPT_START, startIndex);
-            if (startScript == -1)
-            {
-                return code;
-            }
-            int endScript = code.indexOf(SCRIPT_END, startScript);
-            if (endScript == -1)
-            {
-                endScript = code.length();
-            }
-            int startCDATA = code.indexOf(IMXMLCoreConstants.cDataStart, startScript);
-            if (startCDATA != -1)
-            {
-                int endCDATA = code.lastIndexOf(IMXMLCoreConstants.cDataEnd, endScript);
-                if (endCDATA < startCDATA)
-                {
-                    code = code.substring(0, endScript) + IMXMLCoreConstants.cDataEnd + code.substring(endScript);
-                    endScript += IMXMLCoreConstants.cDataEnd.length();
-                }
-            }
-            startIndex = endScript;
-        }
-        while (true);
     }
 }

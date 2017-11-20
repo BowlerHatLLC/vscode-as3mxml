@@ -34,7 +34,6 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.nextgenactionscript.vscode.debug.DebugSession;
 import com.nextgenactionscript.vscode.debug.events.BreakpointEvent;
@@ -367,13 +366,28 @@ public class SWFDebugSession extends DebugSession
                     }
                     if (isAIR && adlPath != null)
                     {
+
+                        String extdir = swfArgs.extdir;
+                        if (extdir != null)
+                        {
+                            Path extdirPath = Paths.get(extdir);
+                            if (!extdirPath.isAbsolute())
+                            {
+                                String workspacePath = System.getProperty(WORKSPACE_PROPERTY);
+                                if (workspacePath != null)
+                                {
+                                    extdir = Paths.get(workspacePath)
+                                            .resolve(extdirPath).toAbsolutePath().toString();
+                                }
+                            }
+                        }
                         launchInfo = new AIRLaunchInfo();
                         launchInfo.profile = swfArgs.profile;
                         launchInfo.screenSize = swfArgs.screensize;
                         launchInfo.dpi = swfArgs.screenDPI;
                         launchInfo.versionPlatform = swfArgs.versionPlatform;
                         launchInfo.airDebugLauncher = adlPath.toFile();
-                        launchInfo.extDir = swfArgs.extdir;
+                        launchInfo.extDir = extdir;
                         launchInfo.applicationArgumentsArray = swfArgs.args;
                         if (launcher != null)
                         {

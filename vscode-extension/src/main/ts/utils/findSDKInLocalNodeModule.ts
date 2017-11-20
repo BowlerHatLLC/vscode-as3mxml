@@ -19,11 +19,11 @@ import validateFrameworkSDK from "./validateFrameworkSDK";
 
 export default function findSDKInLocalNodeModule(): string
 {
-	if(!vscode.workspace.rootPath)
+	if(vscode.workspace.workspaceFolders === undefined)
 	{
 		return null;
 	}
-	let nodeModule = path.join(vscode.workspace.rootPath, "node_modules", "flexjs");
+	let nodeModule = path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "node_modules", "flexjs");
 	if(validateFrameworkSDK(nodeModule))
 	{
 		return nodeModule;

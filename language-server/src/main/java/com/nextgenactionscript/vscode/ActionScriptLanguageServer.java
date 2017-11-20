@@ -94,7 +94,8 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
     @Override
     public CompletableFuture<InitializeResult> initialize(InitializeParams params)
     {
-        Path workspaceRoot = Paths.get(params.getRootPath()).toAbsolutePath().normalize();
+        URI rootURI = URI.create(params.getRootUri());
+        Path workspaceRoot = Paths.get(rootURI).toAbsolutePath().normalize();
         projectConfigStrategy.setASConfigPath(workspaceRoot.resolve(ASCONFIG_JSON));
         textDocumentService.setWorkspaceRoot(workspaceRoot);
 
@@ -181,9 +182,9 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
                     {
                         return;
                     }
-                    LinkedTreeMap settings = (LinkedTreeMap) params.getSettings();
-                    LinkedTreeMap nextgenas = (LinkedTreeMap) settings.get("nextgenas");
-                    LinkedTreeMap sdk = (LinkedTreeMap) nextgenas.get("sdk");
+                    LinkedTreeMap<?,?> settings = (LinkedTreeMap<?,?>) params.getSettings();
+                    LinkedTreeMap<?,?> nextgenas = (LinkedTreeMap<?,?>) settings.get("nextgenas");
+                    LinkedTreeMap<?,?> sdk = (LinkedTreeMap<?,?>) nextgenas.get("sdk");
                     String frameworkSDK = (String) sdk.get("framework");
                     if (frameworkSDK == null)
                     {

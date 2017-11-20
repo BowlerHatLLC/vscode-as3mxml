@@ -1,8 +1,8 @@
 {
   "name": "vscode-nextgenas",
-  "displayName": "NextGen ActionScript",
+  "displayName": "ActionScript & MXML",
   "description": "Language support for ActionScript and MXML provided by NextGen ActionScript",
-  "version": "0.8.0-SNAPSHOT",
+  "version": "0.8.0",
   "publisher": "bowlerhatllc",
   "homepage": "http://nextgenactionscript.com/vscode/",
   "repository": {
@@ -425,7 +425,7 @@
                   "string",
                   "null"
                 ],
-                "description": "Path to directory containing unpackaged AIR native extensions for debugging.",
+                "description": "Path to directory containing unpackaged AIR native extensions for debugging. Relative paths are based on workspace root.",
                 "default": null
               }
             }

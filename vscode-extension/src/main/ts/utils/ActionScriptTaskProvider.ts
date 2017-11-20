@@ -57,7 +57,7 @@ export default class ActionScriptTaskProvider implements vscode.TaskProvider
 		let isAIRMobile = false;
 		let isBundleWindows = false;
 		let isBundleMac = false;
-		let isAIRSharedRuntime = false;
+		let isAIRDesktop = false;
 		let asconfigJsonPath = path.join(workspaceRoot.uri.fsPath, ASCONFIG_JSON);
 		if(fs.existsSync(asconfigJsonPath))
 		{
@@ -69,9 +69,9 @@ export default class ActionScriptTaskProvider implements vscode.TaskProvider
 				isAIRMobile = this.isAIRMobile(asconfigJson);
 				isBundleWindows = this.isBundleWindows(asconfigJson);
 				isBundleMac = this.isBundleMac(asconfigJson);
-				if(!isAIRMobile && !isBundleWindows && !isBundleMac)
+				if(!isAIRMobile)
 				{
-					isAIRSharedRuntime = this.isAIRSharedRuntime(asconfigJson);
+					isAIRDesktop = this.isAIRDesktop(asconfigJson);
 				}
 			}
 		}
@@ -90,43 +90,46 @@ export default class ActionScriptTaskProvider implements vscode.TaskProvider
 			return Promise.resolve([]);
 		}
 
-		let command = this.getCommand();
+		let command = this.getCommand(workspaceRoot);
 		let frameworkSDK = getFrameworkSDKPathWithFallbacks();
 
 		let result =
 		[
-			this.getTask("debug build using asconfig.json",
+			//compile SWF or Royale JS
+			this.getTask("compile debug build",
 				workspaceRoot, command, frameworkSDK, true, null),
-			this.getTask("release build using asconfig.json",
+			this.getTask("compile release build",
 				workspaceRoot, command, frameworkSDK, false, null),
 		];
 
 		if(isAIRMobile)
 		{
-			result.push(this.getTask("iOS debug package using asconfig.json",
+			result.push(this.getTask("package debug iOS application",
 				workspaceRoot, command, frameworkSDK, true, PLATFORM_IOS));
-			result.push(this.getTask("iOS release package using asconfig.json",
+			result.push(this.getTask("package release iOS application",
 				workspaceRoot, command, frameworkSDK, false, PLATFORM_IOS));
-			result.push(this.getTask("Android debug package using asconfig.json",
+			result.push(this.getTask("package debug Android application",
 				workspaceRoot, command, frameworkSDK, true, PLATFORM_ANDROID));
-			result.push(this.getTask("Android release package using asconfig.json",
+			result.push(this.getTask("package release Android application",
 				workspaceRoot, command, frameworkSDK, false, PLATFORM_ANDROID));
 		}
-		if(isBundleWindows)
+		if((isAIRDesktop && process.platform === "win32") || isBundleWindows)
 		{
-			result.push(this.getTask("Windows captive runtime package using asconfig.json",
+			result.push(this.getTask("package release Windows application (captive runtime)",
 				workspaceRoot, command, frameworkSDK, false, PLATFORM_WINDOWS));
 		}
-		if(isBundleMac)
+		if((isAIRDesktop && process.platform === "darwin") || isBundleMac)
 		{
-			result.push(this.getTask("macOS captive runtime package using asconfig.json",
+			result.push(this.getTask("package release macOS application (captive runtime)",
 				workspaceRoot, command, frameworkSDK, false, PLATFORM_MAC));
 		}
-		if(isAIRSharedRuntime)
+		if(isAIRDesktop && (process.platform !== "win32" || !isBundleWindows) && (process.platform !== "darwin" || !isBundleMac))
 		{
-			result.push(this.getTask("shared runtime debug package using asconfig.json",
+			//it's an AIR desktop application and the bundle target is not
+			//specified explicitly
+			result.push(this.getTask("package debug desktop application (shared runtime)",
 				workspaceRoot, command, frameworkSDK, true, PLATFORM_AIR));
-			result.push(this.getTask("shared runtime debug package using asconfig.json",
+			result.push(this.getTask("package release desktop application (shared runtime)",
 				workspaceRoot, command, frameworkSDK, false, PLATFORM_AIR));
 		}
 
@@ -168,11 +171,10 @@ export default class ActionScriptTaskProvider implements vscode.TaskProvider
 		return task;
 	}
 
-	private getCommand(): string
+	private getCommand(workspaceRoot: vscode.WorkspaceFolder): string
 	{
-		let nodeModulesBin = path.join(vscode.workspace.rootPath, "node_modules", ".bin");
-		const platform = process.platform;
-		if(platform === "win32")
+		let nodeModulesBin = path.join(workspaceRoot.uri.fsPath, "node_modules", ".bin");
+		if(process.platform === "win32")
 		{
 			let executableName = "asconfigc.cmd";
 			//start out by looking for asconfigc in the workspace's local Node modules
@@ -207,7 +209,7 @@ export default class ActionScriptTaskProvider implements vscode.TaskProvider
 		return null;
 	}
 
-	private isAIRSharedRuntime(asconfigJson: any): boolean
+	private isAIRDesktop(asconfigJson: any): boolean
 	{
 		if(FIELD_APPLICATION in asconfigJson)
 		{
@@ -220,7 +222,7 @@ export default class ActionScriptTaskProvider implements vscode.TaskProvider
 		if(FIELD_CONFIG in asconfigJson)
 		{
 			let config = asconfigJson[FIELD_CONFIG];
-			if(config === CONFIG_AIR || config === CONFIG_AIRMOBILE)
+			if(config === CONFIG_AIR)
 			{
 				return true;
 			}

@@ -283,6 +283,16 @@
 					"type": "boolean",
 					"description": "In a SWF project, enables accessibility features. The default value is false."
 				},
+				"advanced-telemetry":
+				{
+					"type": "boolean",
+					"description": "In a SWF project, enables advanced telemetry for Adobe Scout. The default value is false."
+				},
+				"benchmark":
+				{
+					"type": "boolean",
+					"description": "Prints detailed compile times to the standard output. The default value is true."
+				},
 				"debug":
 				{
 					"type": "boolean",
@@ -441,6 +451,11 @@
 					{
 						"type": "string"
 					}
+				},
+				"keep-generated-actionscript":
+				{
+					"type": "boolean",
+					"description": "Determines whether to keep the generated ActionScript class files. The default value is false."
 				},
 				"library-path":
 				{
