@@ -550,15 +550,20 @@
 					"type": "string",
 					"description": "The path where the generated output should be saved."
 				},
+				"preloader":
+				{
+					"type": "string",
+					"description": "In a Flex project, specify a download progress bar for your application. The value must be the name of a class that implements the IPreloaderDisplay interface."
+				},
 				"remove-circulars":
 				{
 					"type": "boolean",
 					"description": "In an Apache Royale project, removes circular references for a release build."
 				},
-				"strict":
+				"size-report":
 				{
-					"type": "boolean",
-					"description": "Performs compile-time type checking on assignments and options supplied to method calls. The default value is true."
+					"type": "string",
+					"description": "Generates a report that summarizes the size of each type of data in the application and saves it to the specified output file."
 				},
 				"source-map":
 				{
@@ -573,6 +578,16 @@
 					{
 						"type": "string"
 					}
+				},
+				"static-link-runtime-shared-libraries":
+				{
+					"type": "boolean",
+					"description": "In a SWF project, determines whether to compile against libraries statically or use RSLs."
+				},
+				"strict":
+				{
+					"type": "boolean",
+					"description": "Performs compile-time type checking on assignments and options supplied to method calls. The default value is true."
 				},
 				"swf-version":
 				{
@@ -626,6 +641,11 @@
 				{
 					"type": "boolean",
 					"description": "In a SWF project, includes line numbers in the generated output, but results in a larger SWF file. When a run-time error occurs, the stacktrace shows line numbers. The default value is false." 
+				},
+				"warnings":
+				{
+					"type": "boolean",
+					"description": "Enables or disables all warnings." 
 				}
 			}
 		},
