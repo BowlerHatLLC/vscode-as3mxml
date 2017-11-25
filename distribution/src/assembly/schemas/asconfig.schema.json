@@ -147,12 +147,12 @@
 					"file":
 					{
 						"type": "string",
-						"description": "Source path of a file to include in the application package."
+						"description": "Source path of a file or directory to include in the application package."
 					},
 					"path":
 					{
 						"type": "string",
-						"description": "Destination path of the file inside the application package."
+						"description": "Destination directory of the file inside the application package."
 					}
 				},
 				"required":
