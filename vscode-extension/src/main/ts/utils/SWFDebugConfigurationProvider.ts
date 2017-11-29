@@ -40,8 +40,12 @@ interface SWFDebugConfiguration extends vscode.DebugConfiguration
 
 export default class SWFDebugConfigurationProvider implements vscode.DebugConfigurationProvider
 {
-	provideDebugConfigurations(folder: vscode.WorkspaceFolder | undefined, token?: vscode.CancellationToken): vscode.ProviderResult<SWFDebugConfiguration[]>
+	provideDebugConfigurations(workspaceFolder: vscode.WorkspaceFolder | undefined, token?: vscode.CancellationToken): vscode.ProviderResult<SWFDebugConfiguration[]>
 	{
+		if(workspaceFolder === undefined)
+		{
+			return [];
+		}
 		const initialConfigurations = 
 		[
 			//this is enough to resolve the rest based on asconfig.json
@@ -59,16 +63,16 @@ export default class SWFDebugConfigurationProvider implements vscode.DebugConfig
 		return initialConfigurations;
 	}
 
-	resolveDebugConfiguration?(folder: vscode.WorkspaceFolder | undefined, debugConfiguration: SWFDebugConfiguration, token?: vscode.CancellationToken): vscode.ProviderResult<SWFDebugConfiguration>
+	resolveDebugConfiguration?(workspaceFolder: vscode.WorkspaceFolder | undefined, debugConfiguration: SWFDebugConfiguration, token?: vscode.CancellationToken): vscode.ProviderResult<SWFDebugConfiguration>
 	{
-		if(vscode.workspace.workspaceFolders === undefined)
+		if(workspaceFolder === undefined)
 		{
 			vscode.window.showErrorMessage("Failed to debug SWF. A workspace must be open.");
 			return null;
 		}
 		//see if we can find the SWF file
-		let rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
-		let asconfigPath = path.resolve(rootPath, "asconfig.json");
+		let workspaceFolderPath = workspaceFolder.uri.fsPath;
+		let asconfigPath = path.resolve(workspaceFolderPath, "asconfig.json");
 		if(!fs.existsSync(asconfigPath))
 		{
 			vscode.window.showErrorMessage("Failed to debug SWF. Workspace does not contain asconfig.json.");

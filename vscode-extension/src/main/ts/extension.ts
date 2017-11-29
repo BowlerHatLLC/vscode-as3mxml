@@ -229,9 +229,9 @@ export function activate(context: vscode.ExtensionContext)
 		vscode.commands.executeCommand("workbench.action.tasks.configureDefaultBuildTask");
 	});
 
-	vscode.commands.registerCommand("nextgenas.adapterExecutableCommandSWF", () =>
+	vscode.commands.registerCommand("nextgenas.adapterExecutableCommandSWF", function(workspaceUri)
 	{
-		return adapterExecutableCommandSWF(javaExecutablePath, editorSDKHome, frameworkSDKHome);
+		return adapterExecutableCommandSWF(workspaceUri, javaExecutablePath, editorSDKHome, frameworkSDKHome);
 	});
 	vscode.commands.registerCommand("nextgenas.selectWorkspaceSDK", selectWorkspaceSDK);
 	vscode.commands.registerCommand("nextgenas.restartServer", restartServer);

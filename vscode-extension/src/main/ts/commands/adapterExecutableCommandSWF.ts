@@ -17,9 +17,11 @@ import * as path from "path";
 import * as vscode from "vscode";
 import getJavaClassPathDelimiter from "../utils/getJavaClassPathDelimiter";
 
-export default function(javaPath: string, editorSDKPath: string, frameworkSDKPath: string)
+export default function(workspaceUri: string, javaPath: string, editorSDKPath: string, frameworkSDKPath: string)
 {
+	let uri = vscode.Uri.parse(workspaceUri);
 	let args = [
+		"-Dworkspace=" + uri.fsPath,
 
 		//uncomment to debug the SWF debugger JAR
 		//"-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005",
@@ -29,10 +31,6 @@ export default function(javaPath: string, editorSDKPath: string, frameworkSDKPat
 		getClassPath(editorSDKPath),
 		"com.nextgenactionscript.vscode.SWFDebug"
 	];
-	if(vscode.workspace.workspaceFolders !== undefined)
-	{
-		args.unshift("-Dworkspace=" + vscode.workspace.workspaceFolders[0].uri.fsPath);
-	}
 	let result: any =
 	{
 		command: javaPath,
