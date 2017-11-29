@@ -51,14 +51,23 @@ export default class ActionScriptTaskProvider implements vscode.TaskProvider
 		{
 			return Promise.resolve([]);
 		}
-		let workspaceRoot = vscode.workspace.workspaceFolders[0];
 
+		let result: vscode.Task[] = [];
+		vscode.workspace.workspaceFolders.forEach((workspaceFolder) =>
+		{
+			this.provideTasksForWorkspace(workspaceFolder, result);
+		});
+		return Promise.resolve(result);
+	}
+
+	private provideTasksForWorkspace(workspaceFolder: vscode.WorkspaceFolder, result: vscode.Task[])
+	{
 		let provideTask = false;
 		let isAIRMobile = false;
 		let isBundleWindows = false;
 		let isBundleMac = false;
 		let isAIRDesktop = false;
-		let asconfigJsonPath = path.join(workspaceRoot.uri.fsPath, ASCONFIG_JSON);
+		let asconfigJsonPath = path.join(workspaceFolder.uri.fsPath, ASCONFIG_JSON);
 		if(fs.existsSync(asconfigJsonPath))
 		{
 			//if asconfig.json exists in the root, always provide the tasks
@@ -87,53 +96,48 @@ export default class ActionScriptTaskProvider implements vscode.TaskProvider
 		}
 		if(!provideTask)
 		{
-			return Promise.resolve([]);
+			return;
 		}
 
-		let command = this.getCommand(workspaceRoot);
+		let command = this.getCommand(workspaceFolder);
 		let frameworkSDK = getFrameworkSDKPathWithFallbacks();
 
-		let result =
-		[
-			//compile SWF or Royale JS
-			this.getTask("compile debug build",
-				workspaceRoot, command, frameworkSDK, true, null),
-			this.getTask("compile release build",
-				workspaceRoot, command, frameworkSDK, false, null),
-		];
+		//compile SWF or Royale JS
+		result.push(this.getTask("compile debug build",
+			workspaceFolder, command, frameworkSDK, true, null));
+		result.push(this.getTask("compile release build",
+			workspaceFolder, command, frameworkSDK, false, null));
 
 		if(isAIRMobile)
 		{
 			result.push(this.getTask("package debug iOS application",
-				workspaceRoot, command, frameworkSDK, true, PLATFORM_IOS));
+				workspaceFolder, command, frameworkSDK, true, PLATFORM_IOS));
 			result.push(this.getTask("package release iOS application",
-				workspaceRoot, command, frameworkSDK, false, PLATFORM_IOS));
+				workspaceFolder, command, frameworkSDK, false, PLATFORM_IOS));
 			result.push(this.getTask("package debug Android application",
-				workspaceRoot, command, frameworkSDK, true, PLATFORM_ANDROID));
+				workspaceFolder, command, frameworkSDK, true, PLATFORM_ANDROID));
 			result.push(this.getTask("package release Android application",
-				workspaceRoot, command, frameworkSDK, false, PLATFORM_ANDROID));
+				workspaceFolder, command, frameworkSDK, false, PLATFORM_ANDROID));
 		}
 		if((isAIRDesktop && process.platform === "win32") || isBundleWindows)
 		{
 			result.push(this.getTask("package release Windows application (captive runtime)",
-				workspaceRoot, command, frameworkSDK, false, PLATFORM_WINDOWS));
+				workspaceFolder, command, frameworkSDK, false, PLATFORM_WINDOWS));
 		}
 		if((isAIRDesktop && process.platform === "darwin") || isBundleMac)
 		{
 			result.push(this.getTask("package release macOS application (captive runtime)",
-				workspaceRoot, command, frameworkSDK, false, PLATFORM_MAC));
+				workspaceFolder, command, frameworkSDK, false, PLATFORM_MAC));
 		}
 		if(isAIRDesktop && (process.platform !== "win32" || !isBundleWindows) && (process.platform !== "darwin" || !isBundleMac))
 		{
 			//it's an AIR desktop application and the bundle target is not
 			//specified explicitly
 			result.push(this.getTask("package debug desktop application (shared runtime)",
-				workspaceRoot, command, frameworkSDK, true, PLATFORM_AIR));
+				workspaceFolder, command, frameworkSDK, true, PLATFORM_AIR));
 			result.push(this.getTask("package release desktop application (shared runtime)",
-				workspaceRoot, command, frameworkSDK, false, PLATFORM_AIR));
+				workspaceFolder, command, frameworkSDK, false, PLATFORM_AIR));
 		}
-
-		return Promise.resolve(result);
 	}
 
 	resolveTask(task: vscode.Task): vscode.Task | undefined
