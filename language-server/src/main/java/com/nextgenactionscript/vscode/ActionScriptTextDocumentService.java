@@ -4303,9 +4303,16 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             System.err.println("Interrupted while getting AST");
         }
-        if (ast instanceof IFileNode)
+        if (ast instanceof FileNode)
+        {
+            FileNode fileNode = (FileNode) ast;
+            fileNode.parseRequiredFunctionBodies();
+        }
+        else if (ast instanceof IFileNode)
         {
             IFileNode fileNode = (IFileNode) ast;
+            //ideally, we'd use parseRequiredFunctionBodies(), but if we don't
+            //necessarily know that it exists, this fallback is almost as good
             fileNode.populateFunctionNodes();
         }
         return currentUnit;
