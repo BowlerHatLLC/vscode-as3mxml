@@ -101,5 +101,12 @@
         <include>extension.js</include>
       </includes>
     </fileSet>
+    <fileSet>
+      <directory>../asconfigc/target</directory>
+      <outputDirectory>asconfigc</outputDirectory>
+      <includes>
+        <include>*.jar</include>
+      </includes>
+    </fileSet>
   </fileSets>
 </assembly>

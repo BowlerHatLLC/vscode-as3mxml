@@ -10,6 +10,8 @@ This project is divided into several modules.
 
 1. **swf-debugger** provides SWF debugging for Visual Studio Code or another editor that supports the VSCode Debugging Protocol. It integrates with the debugger from Apache FlexJS and is written in Java.
 
+1. **asconfigc** parses *asconfig.json* and executes the compiler with the specified options.
+
 1. **check-java-version** creates an executable JAR file that will verify that the current version of Java meets the minimum requirements for the language server.
 
 1. **check-flexjs-version** creates an executable JAR file that will verify that the current version of Apache FlexJS meets the minimum requirements for the language server.

@@ -27,6 +27,7 @@ limitations under the License.
   <modules>
     <module>check-java-version</module>
     <module>check-flexjs-version</module>
+    <module>asconfigc</module>
     <module>language-server</module>
     <module>swf-debugger</module>
     <module>vscode-extension</module>
