@@ -15,9 +15,9 @@ limitations under the License.
 */
 package com.nextgenactionscript.asconfigc;
 
-public class ConfigurationException extends Exception
+public class ASConfigCException extends Exception
 {
-	public ConfigurationException(String message)
+	public ASConfigCException(String message)
 	{
 		super(message);
 	}

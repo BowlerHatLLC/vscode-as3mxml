@@ -13,16 +13,22 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package com.nextgenactionscript.asconfigc.air;
+package com.nextgenactionscript.asconfigc.utils;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-public class AIROptionsParser
+public class JsonUtils
 {
-	public static void parse(JsonNode options, List<String> result)
+	public static List<String> jsonNodeToListOfStrings(JsonNode node)
 	{
-
+		ArrayList<String> result = new ArrayList<>();
+		for(int i = 0, size = node.size(); i < size; i++)
+		{
+			result.add(node.get(i).asText());
+		}
+		return result;
 	}
 }

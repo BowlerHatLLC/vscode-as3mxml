@@ -67,4 +67,12 @@ public class CompilerOptions
 	public static final String INCLUDE_CLASSES = "include-classes";
 	public static final String INCLUDE_NAMESPACES = "include-namespace";
 	public static final String INCLUDE_SOURCES = "include-sources";
+
+	//sub-values
+	public static final String DEFAULT_SIZE__WIDTH = "width";
+	public static final String DEFAULT_SIZE__HEIGHT = "height";
+	public static final String DEFINE__NAME = "name";
+	public static final String DEFINE__VALUE = "value";
+	public static final String NAMESPACE__URI = "uri";
+	public static final String NAMESPACE__MANIFEST = "manifest";
 }

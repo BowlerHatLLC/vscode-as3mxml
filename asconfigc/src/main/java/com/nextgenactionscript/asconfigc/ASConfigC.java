@@ -16,6 +16,13 @@ limitations under the License.
 package com.nextgenactionscript.asconfigc;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -25,6 +32,22 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.UnrecognizedOptionException;
+
+import com.fasterxml.jackson.core.JsonLocation;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.networknt.schema.JsonSchema;
+import com.networknt.schema.JsonSchemaFactory;
+import com.networknt.schema.ValidationMessage;
+import com.nextgenactionscript.asconfigc.compiler.CompilerOptions;
+import com.nextgenactionscript.asconfigc.compiler.CompilerOptionsParser;
+import com.nextgenactionscript.asconfigc.compiler.ConfigName;
+import com.nextgenactionscript.asconfigc.compiler.JSOutputType;
+import com.nextgenactionscript.asconfigc.compiler.ProjectType;
+import com.nextgenactionscript.asconfigc.compiler.RoyaleTarget;
+import com.nextgenactionscript.asconfigc.utils.JsonUtils;
 
 /**
  * Parses asconfig.json and executes the compiler with the specified options.
@@ -62,7 +85,8 @@ public class ASConfigC
 			if(line.hasOption("h"))
 			{
 				String syntax = "asconfigc [options]\n\n" +
-								"Examples: asconfigc -p .\n" +
+								"Examples: asconfigc\n" +
+								"          asconfigc -p .\n" +
 								"          asconfigc -p path/to/custom.json\n\n" +
 								"Options:";
 				HelpFormatter formatter = new HelpFormatter();
@@ -94,24 +118,25 @@ public class ASConfigC
 		{
 			new ASConfigC(asconfigcOptions);
 		}
-		catch(ConfigurationException e)
+		catch(ASConfigCException e)
 		{
-			System.err.println("Failed to parse asconfigc options.");
-			e.printStackTrace(System.err);
+			System.err.println(e.getMessage());
 			System.exit(1);
 		}
 	}
 
 	private static final String ASCONFIG_JSON = "asconfig.json";
 
-	public ASConfigC(ASConfigCOptions options) throws ConfigurationException
+	public ASConfigC(ASConfigCOptions options) throws ASConfigCException
 	{
+		this.options = options;
 		File configFile = findConfigurationFile(options.project);
 
 		//the current working directory must be where asconfig.json is located
 		System.setProperty("user.dir", configFile.getParent());
 
-		parseConfig();
+		JsonNode json = loadConfig(configFile);
+		parseConfig(json);
 		validateSDK();
 		compileProject();
 		copySourcePathAssets();
@@ -119,7 +144,24 @@ public class ASConfigC
 		packageAIR();
 	}
 
-	private File findConfigurationFile(String projectPath) throws ConfigurationException
+	private ASConfigCOptions options;
+	private List<String> compilerOptions;
+	private List<String> airOptions;
+	private String projectType;
+	private boolean debugBuild;
+	private boolean copySourcePathAssets;
+	private String jsOutputType;
+	private String outputPath;
+	private String mainFile;
+	private String additionalOptions;
+	private String airDescriptorPath;
+	private List<String> sourcePaths;
+	private boolean configRequiresRoyale;
+	private boolean configRequiresRoyaleOrFlexJS;
+	private boolean configRequiresFlexJS;
+	private boolean isSWFTargetOnly;
+
+	private File findConfigurationFile(String projectPath) throws ASConfigCException
 	{
 		File configFile = null;
 		if(projectPath != null)
@@ -132,22 +174,253 @@ public class ASConfigC
 		}
 		if(!configFile.exists())
 		{
-			throw new ConfigurationException("Project directory or JSON file not found: " + projectPath);
+			throw new ASConfigCException("Project directory or JSON file not found: " + projectPath);
 		}
 		if(configFile.isDirectory())
 		{
 			configFile = new File(configFile, ASCONFIG_JSON);
 			if(!configFile.exists())
 			{
-				throw new ConfigurationException("asconfig.json not found in directory: " + projectPath);
+				throw new ASConfigCException("asconfig.json not found in directory: " + projectPath);
 			}
 		}
 		return configFile;
 	}
 
-	private void parseConfig()
+	private JsonNode loadConfig(File configFile) throws ASConfigCException
 	{
+        JsonSchema schema = null;
+        try (InputStream schemaInputStream = getClass().getResourceAsStream("/schemas/asconfig.schema.json"))
+        {
+            JsonSchemaFactory factory = new JsonSchemaFactory();
+            schema = factory.getSchema(schemaInputStream);
+        }
+        catch(Exception e)
+        {
+            //this exception is unexpected, so it should be reported
+            throw new ASConfigCException("Failed to load asconfig.json schema: " + e);
+        }
+        JsonNode json = null;
+        try
+        {
+            String contents = new String(Files.readAllBytes(configFile.toPath()));
+            ObjectMapper mapper = new ObjectMapper();
+            //VSCode allows comments, so we should too
+            mapper.configure(JsonParser.Feature.ALLOW_COMMENTS, true);
+            json = mapper.readTree(contents);
+            Set<ValidationMessage> errors = schema.validate(json);
+            if (!errors.isEmpty())
+            {
+				StringBuilder combinedMessage = new StringBuilder();
+				combinedMessage.append("Invalid asconfig.json:\n");
+				for(ValidationMessage error : errors)
+				{
+					combinedMessage.append(error.getMessage() + "\n");
+				}
+            	throw new ASConfigCException(combinedMessage.toString());
+            }
+		}
+		catch(JsonProcessingException e)
+		{
+			//this exception is expected sometimes if the JSON is invalid
+			JsonLocation location = e.getLocation();
+			throw new ASConfigCException("Invalid asconfig.json:\n" + e.getOriginalMessage() + " (line " + location.getLineNr() + ", column " + location.getColumnNr() + ")");
+		}
+        catch(IOException e)
+        {
+			throw new ASConfigCException("Failed to read asconfig.json: " + e);
+		}
+		return json;
+	}
+	
+	private void parseConfig(JsonNode json) throws ASConfigCException
+	{
+		debugBuild = options.debug != null && options.debug.equals(true);
+		compilerOptions = new ArrayList<>();
+		airOptions = new ArrayList<>();
+		jsOutputType = null;
+		projectType = ProjectType.APP;
+		if(json.has(TopLevelFields.TYPE))
+		{
+			projectType = json.get(TopLevelFields.TYPE).asText();
+		}
+		if(json.has(TopLevelFields.CONFIG))
+		{
+			String configName = json.get(TopLevelFields.CONFIG).asText();
+			detectJavaScript(configName);
+			compilerOptions.add("+configname=" + configName);
+		}
+		if(json.has(TopLevelFields.COMPILER_OPTIONS))
+		{
+			JsonNode compilerOptions = json.get(TopLevelFields.COMPILER_OPTIONS);
+			readCompilerOptions(compilerOptions);
+			if(options.debug == null && compilerOptions.has(CompilerOptions.DEBUG) &&
+				compilerOptions.get(CompilerOptions.DEBUG).asBoolean() == true)
+			{
+				debugBuild = true;
+			}
+			if(compilerOptions.has(CompilerOptions.SOURCE_PATH))
+			{
+				JsonNode sourcePath = compilerOptions.get(CompilerOptions.SOURCE_PATH);
+				sourcePaths = JsonUtils.jsonNodeToListOfStrings(sourcePath);
+			}
+			if(compilerOptions.has(CompilerOptions.OUTPUT))
+			{
+				outputPath = compilerOptions.get(CompilerOptions.OUTPUT).asText();
+			}
+		}
+		if(json.has(TopLevelFields.ADDITIONAL_OPTIONS))
+		{
+			additionalOptions = json.get(TopLevelFields.ADDITIONAL_OPTIONS).asText();
+		}
+		if(json.has(TopLevelFields.APPLICATION))
+		{
+			airDescriptorPath = json.get(TopLevelFields.APPLICATION).asText();
+			File airDescriptor = new File(airDescriptorPath);
+			if(!airDescriptor.isAbsolute())
+			{
+				airDescriptor = new File(System.getProperty("user.dir"), airDescriptorPath);
+			}
+			if(!airDescriptor.exists() || airDescriptor.isDirectory())
+			{
+				throw new ASConfigCException("Adobe AIR application descriptor not found: " + airDescriptor);
+			}
+		}
+		//parse files before airOptions because the mainFile may be
+		//needed to generate some file paths
+		if(json.has(TopLevelFields.FILES))
+		{
+			JsonNode files = json.get(TopLevelFields.FILES);
+			if(projectType.equals(ProjectType.LIB))
+			{
+				for(int i = 0, size = files.size(); i < size; i++)
+				{
+					String file = files.get(i).asText();
+					compilerOptions.add("--include-sources+=" + file);
+				}
+			}
+			else
+			{
+				int size = files.size();
+				for(int i = 0; i < size; i++)
+				{
+					String file = files.get(i).asText();
+					compilerOptions.add(file);
+				}
+				if(size > 0)
+				{
+					mainFile = files.get(size - 1).asText();
+				}
+			}
+		}
+		if(json.has(TopLevelFields.AIR_OPTIONS))
+		{
+			if(airDescriptorPath == null)
+			{
+				throw new ASConfigCException("Adobe AIR packaging options found, but the \"application\" field is empty.");
+			}
+			JsonNode airOptions = json.get(TopLevelFields.AIR_OPTIONS);
+			readAIROptions(airOptions);
+		}
+		if(json.has(TopLevelFields.COPY_SOURCE_PATH_ASSETS))
+		{
+			copySourcePathAssets = json.get(TopLevelFields.COPY_SOURCE_PATH_ASSETS).asBoolean();
+		}
+		//if js-output-type was not specified, use the default
+		//swf projects won't have a js-output-type
+		if(jsOutputType != null)
+		{
+			compilerOptions.add("--" + CompilerOptions.JS_OUTPUT_TYPE + "=" + jsOutputType);
+		}
+	}
 
+	private void detectJavaScript(String configName)
+	{
+		switch(configName)
+		{
+			case ConfigName.JS:
+			{
+				jsOutputType = JSOutputType.JSC;
+				configRequiresRoyaleOrFlexJS = true;
+				break;
+			}
+			case ConfigName.NODE:
+			{
+				jsOutputType = JSOutputType.NODE;
+				configRequiresRoyaleOrFlexJS = true;
+				break;
+			}
+			case ConfigName.ROYALE:
+			{
+				//this option is not supported by FlexJS
+				configRequiresRoyale = true;
+				break;
+			}
+		}
+	}
+	
+	private void readCompilerOptions(JsonNode options) throws ASConfigCException
+	{
+		CompilerOptionsParser parser = new CompilerOptionsParser();
+		try
+		{
+			parser.parse(options, compilerOptions);
+		}
+		catch(FileNotFoundException e)
+		{
+			throw new ASConfigCException("Error with file specified in compiler options. " + e.getMessage());
+		}
+		catch(Exception e)
+		{
+			throw new ASConfigCException("Error: Failed to parse compiler options.\n" + e);
+		}
+		//make sure that we require Royale (or FlexJS) depending on which options are specified
+		if(options.has(CompilerOptions.JS_OUTPUT_TYPE))
+		{
+			//this option was used in FlexJS 0.7, but it was replaced with
+			//targets in FlexJS 0.8.
+			configRequiresFlexJS = true;
+			//if it is set explicitly, then clear the default
+			jsOutputType = null;
+		}
+		if(options.has(CompilerOptions.TARGETS))
+		{
+			JsonNode targets = options.get(CompilerOptions.TARGETS);
+			boolean foundRoyaleTarget = false;
+			for(JsonNode target : targets)
+			{
+				String targetAsText = target.asText();
+				if(targetAsText.equals(RoyaleTarget.JS_ROYALE) ||
+					targetAsText.equals(RoyaleTarget.JS_ROYALE_CORDOVA))
+				{
+					//these targets definitely don't work with FlexJS
+					configRequiresRoyale = true;
+					foundRoyaleTarget = true;
+				}
+				if(targetAsText.equals(RoyaleTarget.SWF))
+				{
+					isSWFTargetOnly = targets.size() == 1;
+				}
+			}
+			if(!foundRoyaleTarget)
+			{
+				//remaining targets are supported by both Royale and FlexJS
+				configRequiresRoyaleOrFlexJS = true;
+			}
+			//if targets is set explicitly, then we're using a newer SDK
+			//that doesn't need js-output-type
+			jsOutputType = null;
+		}
+		if(options.has(CompilerOptions.SOURCE_MAP))
+		{
+			//source-map compiler option is supported by both Royale and FlexJS
+			configRequiresRoyaleOrFlexJS = true;
+		}
+	}
+	
+	private void readAIROptions(JsonNode options)
+	{
+		
 	}
 
 	private void validateSDK()
