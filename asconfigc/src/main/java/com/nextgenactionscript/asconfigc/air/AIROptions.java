@@ -26,9 +26,6 @@ public class AIROptions
 
 	public static final String PLATFORMSDK = "platformsdk";
 
-	public static final String FILES_FILE = "file";
-	public static final String FILES_PATH = "path";
-
 	public static final String CONNECT = "connect";
 	public static final String LISTEN = "listen";
 
@@ -40,4 +37,8 @@ public class AIROptions
 	//android
 	public static final String AIR_DOWNLOAD_URL = "airDownloadURL";
 	public static final String ARCH = "arch";
+	
+	//sub-values
+	public static final String FILES__FILE = "file";
+	public static final String FILES__PATH = "path";
 }

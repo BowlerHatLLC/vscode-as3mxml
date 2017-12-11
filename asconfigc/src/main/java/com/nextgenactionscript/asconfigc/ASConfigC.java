@@ -41,12 +41,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.networknt.schema.JsonSchema;
 import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.ValidationMessage;
+import com.nextgenactionscript.asconfigc.air.AIROptionsParser;
 import com.nextgenactionscript.asconfigc.compiler.CompilerOptions;
 import com.nextgenactionscript.asconfigc.compiler.CompilerOptionsParser;
 import com.nextgenactionscript.asconfigc.compiler.ConfigName;
 import com.nextgenactionscript.asconfigc.compiler.JSOutputType;
 import com.nextgenactionscript.asconfigc.compiler.ProjectType;
 import com.nextgenactionscript.asconfigc.compiler.RoyaleTarget;
+import com.nextgenactionscript.asconfigc.utils.ApacheFlexJSUtils;
+import com.nextgenactionscript.asconfigc.utils.ApacheRoyaleUtils;
+import com.nextgenactionscript.asconfigc.utils.GenericSDKUtils;
 import com.nextgenactionscript.asconfigc.utils.JsonUtils;
 
 /**
@@ -359,12 +363,12 @@ public class ASConfigC
 		}
 	}
 	
-	private void readCompilerOptions(JsonNode options) throws ASConfigCException
+	private void readCompilerOptions(JsonNode compilerOptionsJson) throws ASConfigCException
 	{
 		CompilerOptionsParser parser = new CompilerOptionsParser();
 		try
 		{
-			parser.parse(options, compilerOptions);
+			parser.parse(compilerOptionsJson, compilerOptions);
 		}
 		catch(FileNotFoundException e)
 		{
@@ -375,7 +379,7 @@ public class ASConfigC
 			throw new ASConfigCException("Error: Failed to parse compiler options.\n" + e);
 		}
 		//make sure that we require Royale (or FlexJS) depending on which options are specified
-		if(options.has(CompilerOptions.JS_OUTPUT_TYPE))
+		if(compilerOptionsJson.has(CompilerOptions.JS_OUTPUT_TYPE))
 		{
 			//this option was used in FlexJS 0.7, but it was replaced with
 			//targets in FlexJS 0.8.
@@ -383,9 +387,9 @@ public class ASConfigC
 			//if it is set explicitly, then clear the default
 			jsOutputType = null;
 		}
-		if(options.has(CompilerOptions.TARGETS))
+		if(compilerOptionsJson.has(CompilerOptions.TARGETS))
 		{
-			JsonNode targets = options.get(CompilerOptions.TARGETS);
+			JsonNode targets = compilerOptionsJson.get(CompilerOptions.TARGETS);
 			boolean foundRoyaleTarget = false;
 			for(JsonNode target : targets)
 			{
@@ -411,21 +415,61 @@ public class ASConfigC
 			//that doesn't need js-output-type
 			jsOutputType = null;
 		}
-		if(options.has(CompilerOptions.SOURCE_MAP))
+		if(compilerOptionsJson.has(CompilerOptions.SOURCE_MAP))
 		{
 			//source-map compiler option is supported by both Royale and FlexJS
 			configRequiresRoyaleOrFlexJS = true;
 		}
 	}
 	
-	private void readAIROptions(JsonNode options)
+	private void readAIROptions(JsonNode airOptionsJson) throws ASConfigCException
 	{
-		
+		AIROptionsParser parser = new AIROptionsParser();
+		/*try
+		{
+			parser.parse(options.air, debugBuild, airDescriptorPath, applicationContentPath, airOptionsJson, airOptions);
+		}
+		catch(FileNotFoundException e)
+		{
+			throw new ASConfigCException("Error with file specified in Adobe AIR options. " + e.getMessage());
+		}
+		catch(Exception e)
+		{
+			throw new ASConfigCException("Error: Failed to parse Adobe AIR options.\n" + e);
+		}*/
 	}
 
-	private void validateSDK()
+	private void validateSDK() throws ASConfigCException
 	{
-		
+		String sdkHome = options.sdk;
+		if(sdkHome == null)
+		{
+			sdkHome = ApacheRoyaleUtils.findSDK();
+		}
+		if(sdkHome == null && !configRequiresRoyale)
+		{
+			sdkHome = ApacheFlexJSUtils.findSDK();
+		}
+		if(sdkHome == null &&
+			!configRequiresRoyale &&
+			!configRequiresRoyaleOrFlexJS &&
+			!configRequiresFlexJS)
+		{
+			sdkHome = GenericSDKUtils.findSDK();
+		}
+		if(sdkHome == null)
+		{
+			String envHome = "FLEX_HOME";
+			if(configRequiresRoyale)
+			{
+				envHome = "ROYALE_HOME";
+			}
+			else if(configRequiresRoyaleOrFlexJS)
+			{
+				envHome = "ROYALE_HOME for Apache Royale, FLEX_HOME for Apache FlexJS";
+			}
+			throw new ASConfigCException("SDK not found. Set " + envHome + ", add SDK to PATH environment variable, or use --sdk option.");
+		}
 	}
 	
 	private void compileProject()
