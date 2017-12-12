@@ -214,7 +214,7 @@ public class AIROptionsParser
 		if(!applicationContentPath.equals(applicationContentFile.getName()))
 		{
 			result.add("-C");
-			String dirname = applicationContentFile.getParentFile().getAbsolutePath();
+			String dirname = applicationContentFile.getParentFile().getPath();
 			dirname = PathUtils.escapePath(dirname, false);
 			result.add(dirname);
 			String basename = applicationContentFile.getName();
@@ -333,7 +333,7 @@ public class AIROptionsParser
 			return;
 		}
 		result.add("-e");
-		result.add(PathUtils.escapePath(srcFile.getAbsolutePath(), false));
+		result.add(PathUtils.escapePath(srcFile.getPath(), false));
 		result.add(PathUtils.escapePath(destPath, false));
 	}
 	
