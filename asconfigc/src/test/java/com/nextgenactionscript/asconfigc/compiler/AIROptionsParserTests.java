@@ -892,4 +892,275 @@ class AIROptionsParserTests
 	}
 
 	//----- debug vs release
+
+	@Test
+	void testSigningOptionsDebug()
+	{
+		String debugKeystore = "path/to/debug_keystore.p12";
+		String debugStoretype = "pkcs12";
+		String releaseKeystore = "path/to/keystore.keystore";
+		String releaseStoretype = "jks";
+
+		ObjectNode options = JsonNodeFactory.instance.objectNode();
+
+		ObjectNode signingOptions = JsonNodeFactory.instance.objectNode();
+
+		ObjectNode debugSigningOptions = JsonNodeFactory.instance.objectNode();
+		debugSigningOptions.set(AIRSigningOptions.KEYSTORE, JsonNodeFactory.instance.textNode(debugKeystore));
+		debugSigningOptions.set(AIRSigningOptions.STORETYPE, JsonNodeFactory.instance.textNode(debugStoretype));
+		signingOptions.set("debug", debugSigningOptions);
+
+		ObjectNode releaseSigningOptions = JsonNodeFactory.instance.objectNode();
+		releaseSigningOptions.set(AIRSigningOptions.KEYSTORE, JsonNodeFactory.instance.textNode(releaseKeystore));
+		releaseSigningOptions.set(AIRSigningOptions.STORETYPE, JsonNodeFactory.instance.textNode(releaseStoretype));
+		signingOptions.set("release", releaseSigningOptions);
+
+		options.set(AIROptions.SIGNING_OPTIONS, signingOptions);
+		ArrayList<String> result = new ArrayList<>();
+		try
+		{
+			parser.parse(AIRPlatform.ANDROID, true, "application.xml", "content.swf", options, result);
+		}
+		catch(FileNotFoundException e)
+		{
+			Assertions.fail("AIROptionsParser.parse() incorrectly threw a FileNotFoundException.");
+		}
+		int optionIndex1 = result.indexOf("-" + AIRSigningOptions.STORETYPE);
+		Assertions.assertNotEquals(-1, optionIndex1);
+		Assertions.assertEquals(optionIndex1 + 1, result.indexOf(debugStoretype));
+		int optionIndex2 = optionIndex1 + 1 + result.subList(optionIndex1 + 1, result.size()).indexOf("-" + AIRSigningOptions.KEYSTORE);
+		Assertions.assertEquals(optionIndex1 + 2, optionIndex2);
+		Assertions.assertEquals(optionIndex2 + 1, result.indexOf(debugKeystore));
+	}
+
+	@Test
+	void testSigningOptionsRelease()
+	{
+		String debugKeystore = "path/to/debug_keystore.p12";
+		String debugStoretype = "pkcs12";
+		String releaseKeystore = "path/to/keystore.keystore";
+		String releaseStoretype = "jks";
+
+		ObjectNode options = JsonNodeFactory.instance.objectNode();
+
+		ObjectNode signingOptions = JsonNodeFactory.instance.objectNode();
+
+		ObjectNode debugSigningOptions = JsonNodeFactory.instance.objectNode();
+		debugSigningOptions.set(AIRSigningOptions.KEYSTORE, JsonNodeFactory.instance.textNode(debugKeystore));
+		debugSigningOptions.set(AIRSigningOptions.STORETYPE, JsonNodeFactory.instance.textNode(debugStoretype));
+		signingOptions.set("debug", debugSigningOptions);
+
+		ObjectNode releaseSigningOptions = JsonNodeFactory.instance.objectNode();
+		releaseSigningOptions.set(AIRSigningOptions.KEYSTORE, JsonNodeFactory.instance.textNode(releaseKeystore));
+		releaseSigningOptions.set(AIRSigningOptions.STORETYPE, JsonNodeFactory.instance.textNode(releaseStoretype));
+		signingOptions.set("release", releaseSigningOptions);
+
+		options.set(AIROptions.SIGNING_OPTIONS, signingOptions);
+		ArrayList<String> result = new ArrayList<>();
+		try
+		{
+			parser.parse(AIRPlatform.ANDROID, false, "application.xml", "content.swf", options, result);
+		}
+		catch(FileNotFoundException e)
+		{
+			Assertions.fail("AIROptionsParser.parse() incorrectly threw a FileNotFoundException.");
+		}
+		int optionIndex1 = result.indexOf("-" + AIRSigningOptions.STORETYPE);
+		Assertions.assertNotEquals(-1, optionIndex1);
+		Assertions.assertEquals(optionIndex1 + 1, result.indexOf(releaseStoretype));
+		int optionIndex2 = optionIndex1 + 1 + result.subList(optionIndex1 + 1, result.size()).indexOf("-" + AIRSigningOptions.KEYSTORE);
+		Assertions.assertEquals(optionIndex1 + 2, optionIndex2);
+		Assertions.assertEquals(optionIndex2 + 1, result.indexOf(releaseKeystore));
+	}
+
+	@Test
+	void testConnectDebugAndroid()
+	{
+		boolean value = true;
+		ObjectNode options = JsonNodeFactory.instance.objectNode();
+		ObjectNode android = JsonNodeFactory.instance.objectNode();
+		android.set(AIROptions.CONNECT, JsonNodeFactory.instance.booleanNode(value));
+		options.set(AIRPlatform.ANDROID, android);
+		ArrayList<String> result = new ArrayList<>();
+		try
+		{
+			parser.parse(AIRPlatform.ANDROID, true, "application.xml", "content.swf", options, result);
+		}
+		catch(FileNotFoundException e)
+		{
+			Assertions.fail("AIROptionsParser.parse() incorrectly threw a FileNotFoundException.");
+		}
+		int optionIndex = result.indexOf("-" + AIROptions.CONNECT);
+		Assertions.assertNotEquals(-1, optionIndex);
+	}
+
+	@Test
+	void testConnectHostStringDebugAndroid()
+	{
+		String value = "192.168.1.100";
+		ObjectNode options = JsonNodeFactory.instance.objectNode();
+		ObjectNode android = JsonNodeFactory.instance.objectNode();
+		android.set(AIROptions.CONNECT, JsonNodeFactory.instance.textNode(value));
+		options.set(AIRPlatform.ANDROID, android);
+		ArrayList<String> result = new ArrayList<>();
+		try
+		{
+			parser.parse(AIRPlatform.ANDROID, true, "application.xml", "content.swf", options, result);
+		}
+		catch(FileNotFoundException e)
+		{
+			Assertions.fail("AIROptionsParser.parse() incorrectly threw a FileNotFoundException.");
+		}
+		int optionIndex = result.indexOf("-" + AIROptions.CONNECT);
+		Assertions.assertNotEquals(-1, optionIndex);
+		Assertions.assertEquals(optionIndex + 1, result.indexOf(value));
+	}
+
+	@Test
+	void testNoConnectDebugAndroid()
+	{
+		boolean value = false;
+		ObjectNode options = JsonNodeFactory.instance.objectNode();
+		ObjectNode android = JsonNodeFactory.instance.objectNode();
+		android.set(AIROptions.CONNECT, JsonNodeFactory.instance.booleanNode(value));
+		options.set(AIRPlatform.ANDROID, android);
+		ArrayList<String> result = new ArrayList<>();
+		try
+		{
+			parser.parse(AIRPlatform.ANDROID, true, "application.xml", "content.swf", options, result);
+		}
+		catch(FileNotFoundException e)
+		{
+			Assertions.fail("AIROptionsParser.parse() incorrectly threw a FileNotFoundException.");
+		}
+		int optionIndex = result.indexOf("-" + AIROptions.CONNECT);
+		Assertions.assertEquals(-1, optionIndex);
+	}
+
+	@Test
+	void testConnectReleaseAndroid()
+	{
+		boolean value = true;
+		ObjectNode options = JsonNodeFactory.instance.objectNode();
+		ObjectNode android = JsonNodeFactory.instance.objectNode();
+		android.set(AIROptions.CONNECT, JsonNodeFactory.instance.booleanNode(value));
+		options.set(AIRPlatform.ANDROID, android);
+		ArrayList<String> result = new ArrayList<>();
+		try
+		{
+			parser.parse(AIRPlatform.ANDROID, false, "application.xml", "content.swf", options, result);
+		}
+		catch(FileNotFoundException e)
+		{
+			Assertions.fail("AIROptionsParser.parse() incorrectly threw a FileNotFoundException.");
+		}
+		int optionIndex = result.indexOf("-" + AIROptions.CONNECT);
+		Assertions.assertEquals(-1, optionIndex);
+	}
+
+	@Test
+	void testListenDebugAndroid()
+	{
+		boolean value = true;
+		ObjectNode options = JsonNodeFactory.instance.objectNode();
+		ObjectNode android = JsonNodeFactory.instance.objectNode();
+		android.set(AIROptions.LISTEN, JsonNodeFactory.instance.booleanNode(value));
+		options.set(AIRPlatform.ANDROID, android);
+		ArrayList<String> result = new ArrayList<>();
+		try
+		{
+			parser.parse(AIRPlatform.ANDROID, true, "application.xml", "content.swf", options, result);
+		}
+		catch(FileNotFoundException e)
+		{
+			Assertions.fail("AIROptionsParser.parse() incorrectly threw a FileNotFoundException.");
+		}
+		int optionIndex = result.indexOf("-" + AIROptions.LISTEN);
+		Assertions.assertNotEquals(-1, optionIndex);
+	}
+
+	@Test
+	void testListenPortDebugAndroid()
+	{
+		int value = 9000;
+		ObjectNode options = JsonNodeFactory.instance.objectNode();
+		ObjectNode android = JsonNodeFactory.instance.objectNode();
+		android.set(AIROptions.LISTEN, JsonNodeFactory.instance.numberNode(value));
+		options.set(AIRPlatform.ANDROID, android);
+		ArrayList<String> result = new ArrayList<>();
+		try
+		{
+			parser.parse(AIRPlatform.ANDROID, true, "application.xml", "content.swf", options, result);
+		}
+		catch(FileNotFoundException e)
+		{
+			Assertions.fail("AIROptionsParser.parse() incorrectly threw a FileNotFoundException.");
+		}
+		int optionIndex = result.indexOf("-" + AIROptions.LISTEN);
+		Assertions.assertNotEquals(-1, optionIndex);
+		Assertions.assertEquals(optionIndex + 1, result.indexOf(Integer.toString(value)));
+	}
+
+	@Test
+	void testNoListenDebugAndroid()
+	{
+		boolean value = false;
+		ObjectNode options = JsonNodeFactory.instance.objectNode();
+		ObjectNode android = JsonNodeFactory.instance.objectNode();
+		android.set(AIROptions.LISTEN, JsonNodeFactory.instance.booleanNode(value));
+		options.set(AIRPlatform.ANDROID, android);
+		ArrayList<String> result = new ArrayList<>();
+		try
+		{
+			parser.parse(AIRPlatform.ANDROID, true, "application.xml", "content.swf", options, result);
+		}
+		catch(FileNotFoundException e)
+		{
+			Assertions.fail("AIROptionsParser.parse() incorrectly threw a FileNotFoundException.");
+		}
+		int optionIndex = result.indexOf("-" + AIROptions.LISTEN);
+		Assertions.assertEquals(-1, optionIndex);
+	}
+
+	@Test
+	void testListenReleaseAndroid()
+	{
+		boolean value = true;
+		ObjectNode options = JsonNodeFactory.instance.objectNode();
+		ObjectNode android = JsonNodeFactory.instance.objectNode();
+		android.set(AIROptions.LISTEN, JsonNodeFactory.instance.booleanNode(value));
+		options.set(AIRPlatform.ANDROID, android);
+		ArrayList<String> result = new ArrayList<>();
+		try
+		{
+			parser.parse(AIRPlatform.ANDROID, false, "application.xml", "content.swf", options, result);
+		}
+		catch(FileNotFoundException e)
+		{
+			Assertions.fail("AIROptionsParser.parse() incorrectly threw a FileNotFoundException.");
+		}
+		int optionIndex = result.indexOf("-" + AIROptions.LISTEN);
+		Assertions.assertEquals(-1, optionIndex);
+	}
+
+	@Test
+	void testConnectListenDebugDefaultsAndroid()
+	{
+		ObjectNode options = JsonNodeFactory.instance.objectNode();
+		ObjectNode android = JsonNodeFactory.instance.objectNode();
+		options.set(AIRPlatform.ANDROID, android);
+		ArrayList<String> result = new ArrayList<>();
+		try
+		{
+			parser.parse(AIRPlatform.ANDROID, true, "application.xml", "content.swf", options, result);
+		}
+		catch(FileNotFoundException e)
+		{
+			Assertions.fail("AIROptionsParser.parse() incorrectly threw a FileNotFoundException.");
+		}
+		int optionIndex1 = result.indexOf("-" + AIROptions.CONNECT);
+		Assertions.assertNotEquals(-1, optionIndex1);
+		int optionIndex2 = result.indexOf("-" + AIROptions.LISTEN);
+		Assertions.assertEquals(-1, optionIndex2);
+	}
 }
