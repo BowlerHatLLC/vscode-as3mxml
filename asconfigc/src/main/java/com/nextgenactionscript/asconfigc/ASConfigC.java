@@ -15,12 +15,10 @@ limitations under the License.
 */
 package com.nextgenactionscript.asconfigc;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.file.Files;
@@ -60,6 +58,7 @@ import com.nextgenactionscript.asconfigc.utils.GenericSDKUtils;
 import com.nextgenactionscript.asconfigc.utils.JsonUtils;
 import com.nextgenactionscript.asconfigc.utils.PathUtils;
 import com.nextgenactionscript.asconfigc.utils.ProjectUtils;
+import com.nextgenactionscript.asconfigc.utils.StreamGobbler;
 
 /**
  * Parses asconfig.json and executes the compiler with the specified options.
@@ -546,14 +545,22 @@ public class ASConfigC
 			compilerOptions.add(0, "-Dflexcompiler=" + PathUtils.escapePath(sdkHome.toString()));
 		}
 		Path javaExecutablePath = Paths.get(System.getProperty("java.home"), "bin", "java");
-		//String command = PathUtils.escapePath(javaExecutablePath.toString()) + " " + String.join(" ", compilerOptions);
-		compilerOptions.add(0, javaExecutablePath.toString());
+		StringBuilder command = new StringBuilder();
+		command.append(PathUtils.escapePath(javaExecutablePath.toString()));
+		command.append(" ");
+		command.append(String.join(" ", compilerOptions));
+		if(additionalOptions != null)
+		{
+			command.append(" ");
+			command.append(additionalOptions);
+		}
 		try
 		{
-			ProcessBuilder builder = new ProcessBuilder(compilerOptions);
-			builder.directory(new File(System.getProperty("user.dir")));
-			builder.inheritIO();
-			Process process = builder.start();
+			Process process = Runtime.getRuntime().exec(command.toString(), null, new File(System.getProperty("user.dir")));
+			StreamGobbler outGobbler = new StreamGobbler(process.getInputStream(), System.out);
+			outGobbler.start();
+			StreamGobbler errGobbler = new StreamGobbler(process.getErrorStream(), System.err);
+			errGobbler.start();
 			int status = process.waitFor();
 			if(status != 0)
 			{
