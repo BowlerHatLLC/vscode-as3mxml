@@ -21,4 +21,12 @@ public class ASConfigCException extends Exception
 	{
 		super(message);
 	}
+
+	public ASConfigCException(int status)
+	{
+		super();
+		this.status = status;
+	}
+
+	int status = 0;
 }

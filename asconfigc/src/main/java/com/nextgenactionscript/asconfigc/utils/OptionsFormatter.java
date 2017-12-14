@@ -38,6 +38,10 @@ public class OptionsFormatter
 		if(checkIfExists)
 		{
 			File file = new File(value);
+			if(!file.isAbsolute())
+			{
+				file = new File(System.getProperty("user.dir"), value);
+			}
 			if(!file.exists())
 			{
 				throw new FileNotFoundException("Path for option \"" + optionName + "\" not found: " + value);
@@ -96,6 +100,10 @@ public class OptionsFormatter
 			if(checkIfExists)
 			{
 				File file = new File(currentPath);
+				if(!file.isAbsolute())
+				{
+					file = new File(System.getProperty("user.dir"), currentPath);
+				}
 				if(!file.exists())
 				{
 					throw new FileNotFoundException("Path for option \"" + optionName + "\" not found: " + currentPath);

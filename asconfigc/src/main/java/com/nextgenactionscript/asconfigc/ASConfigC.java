@@ -15,11 +15,17 @@ limitations under the License.
 */
 package com.nextgenactionscript.asconfigc;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -52,6 +58,8 @@ import com.nextgenactionscript.asconfigc.utils.ApacheFlexJSUtils;
 import com.nextgenactionscript.asconfigc.utils.ApacheRoyaleUtils;
 import com.nextgenactionscript.asconfigc.utils.GenericSDKUtils;
 import com.nextgenactionscript.asconfigc.utils.JsonUtils;
+import com.nextgenactionscript.asconfigc.utils.PathUtils;
+import com.nextgenactionscript.asconfigc.utils.ProjectUtils;
 
 /**
  * Parses asconfig.json and executes the compiler with the specified options.
@@ -124,6 +132,10 @@ public class ASConfigC
 		}
 		catch(ASConfigCException e)
 		{
+			if(e.status != 0)
+			{
+				System.exit(e.status);
+			}
 			System.err.println(e.getMessage());
 			System.exit(1);
 		}
@@ -163,7 +175,11 @@ public class ASConfigC
 	private boolean configRequiresRoyale;
 	private boolean configRequiresRoyaleOrFlexJS;
 	private boolean configRequiresFlexJS;
+	private boolean sdkIsRoyale;
+	private boolean sdkIsFlexJS;
 	private boolean isSWFTargetOnly;
+	private boolean outputIsJS;
+	private String sdkHome;
 
 	private File findConfigurationFile(String projectPath) throws ASConfigCException
 	{
@@ -376,7 +392,9 @@ public class ASConfigC
 		}
 		catch(Exception e)
 		{
-			throw new ASConfigCException("Error: Failed to parse compiler options.\n" + e);
+			StringWriter stackTrace = new StringWriter();
+			e.printStackTrace(new PrintWriter(stackTrace));
+			throw new ASConfigCException("Error: Failed to parse compiler options.\n" + stackTrace.toString());
 		}
 		//make sure that we require Royale (or FlexJS) depending on which options are specified
 		if(compilerOptionsJson.has(CompilerOptions.JS_OUTPUT_TYPE))
@@ -424,10 +442,20 @@ public class ASConfigC
 	
 	private void readAIROptions(JsonNode airOptionsJson) throws ASConfigCException
 	{
-		AIROptionsParser parser = new AIROptionsParser();
-		/*try
+		if(options.air == null)
 		{
-			parser.parse(options.air, debugBuild, airDescriptorPath, applicationContentPath, airOptionsJson, airOptions);
+			return;
+		}
+		AIROptionsParser parser = new AIROptionsParser();
+		try
+		{
+			parser.parse(
+				options.air,
+				debugBuild,
+				ProjectUtils.findAIRDescriptorOutputPath(mainFile, airDescriptorPath, outputPath, !outputIsJS),
+				ProjectUtils.findApplicationContentOutputPath(mainFile, outputPath, !outputIsJS),
+				airOptionsJson,
+				airOptions);
 		}
 		catch(FileNotFoundException e)
 		{
@@ -435,13 +463,15 @@ public class ASConfigC
 		}
 		catch(Exception e)
 		{
-			throw new ASConfigCException("Error: Failed to parse Adobe AIR options.\n" + e);
-		}*/
+			StringWriter stackTrace = new StringWriter();
+			e.printStackTrace(new PrintWriter(stackTrace));
+			throw new ASConfigCException("Error: Failed to parse Adobe AIR options.\n" + stackTrace.toString());
+		}
 	}
 
 	private void validateSDK() throws ASConfigCException
 	{
-		String sdkHome = options.sdk;
+		sdkHome = options.sdk;
 		if(sdkHome == null)
 		{
 			sdkHome = ApacheRoyaleUtils.findSDK();
@@ -470,11 +500,74 @@ public class ASConfigC
 			}
 			throw new ASConfigCException("SDK not found. Set " + envHome + ", add SDK to PATH environment variable, or use --sdk option.");
 		}
+		Path sdkHomePath = Paths.get(sdkHome);
+		sdkIsRoyale = ApacheRoyaleUtils.isValidSDK(sdkHomePath);
+		if(configRequiresRoyale && !sdkIsRoyale)
+		{
+			throw new ASConfigCException("Configuration options in asconfig.json require Apache Royale. Path to SDK is not valid: " + sdkHome);
+		}
+		sdkIsFlexJS = ApacheRoyaleUtils.isValidSDK(sdkHomePath);
+		if(configRequiresRoyaleOrFlexJS && !sdkIsRoyale && !sdkIsFlexJS)
+		{
+			throw new ASConfigCException("Configuration options in asconfig.json require Apache Royale or FlexJS. Path to SDK is not valid: " + sdkHome);
+		}
+		if(configRequiresFlexJS && !sdkIsFlexJS)
+		{
+			throw new ASConfigCException("Configuration options in asconfig.json require Apache FlexJS. Path to SDK is not valid: " + sdkHome);
+		}
+		outputIsJS = (sdkIsRoyale || sdkIsFlexJS) && !isSWFTargetOnly;
 	}
 	
-	private void compileProject()
+	private void compileProject() throws ASConfigCException
 	{
-		
+		Path jarPath = ProjectUtils.findCompilerJarPath(projectType, sdkHome, !outputIsJS);
+		if(jarPath == null)
+		{
+			throw new ASConfigCException("Compiler not found in SDK. Expected in SDK: " + sdkHome);
+		}
+		Path frameworkPath = Paths.get(sdkHome, "frameworks");
+		if(sdkIsRoyale)
+		{
+			//royale is a special case that has renamed many of the common
+			//configuration options for the compiler
+			compilerOptions.add(0, "+royalelib=" + PathUtils.escapePath(frameworkPath.toString()));
+			compilerOptions.add(0, PathUtils.escapePath(jarPath.toString()));
+			compilerOptions.add(0, "-jar");
+			compilerOptions.add(0, "-Droyalelib=" + PathUtils.escapePath(frameworkPath.toString()));
+			compilerOptions.add(0, "-Droyalecompiler=" + PathUtils.escapePath(sdkHome.toString()));
+		}
+		else
+		{
+			//other SDKs all use the same options
+			compilerOptions.add(0, "+flexlib=" + PathUtils.escapePath(frameworkPath.toString()));
+			compilerOptions.add(0, PathUtils.escapePath(jarPath.toString()));
+			compilerOptions.add(0, "-jar");
+			compilerOptions.add(0, "-Dflexlib=" + PathUtils.escapePath(frameworkPath.toString()));
+			compilerOptions.add(0, "-Dflexcompiler=" + PathUtils.escapePath(sdkHome.toString()));
+		}
+		Path javaExecutablePath = Paths.get(System.getProperty("java.home"), "bin", "java");
+		//String command = PathUtils.escapePath(javaExecutablePath.toString()) + " " + String.join(" ", compilerOptions);
+		compilerOptions.add(0, javaExecutablePath.toString());
+		try
+		{
+			ProcessBuilder builder = new ProcessBuilder(compilerOptions);
+			builder.directory(new File(System.getProperty("user.dir")));
+			builder.inheritIO();
+			Process process = builder.start();
+			int status = process.waitFor();
+			if(status != 0)
+			{
+				throw new ASConfigCException(status);
+			}
+		}
+		catch(InterruptedException e)
+		{
+			throw new ASConfigCException("Failed to execute compiler: " + e.getMessage());
+		}
+		catch(IOException e)
+		{
+			throw new ASConfigCException("Failed to execute compiler: " + e.getMessage());
+		}
 	}
 	
 	private void copySourcePathAssets()
