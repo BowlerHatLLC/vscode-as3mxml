@@ -1666,6 +1666,22 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
 
         //function overrides
+        if (parentNode != null
+            && parentNode instanceof IFunctionNode
+            && offsetNode instanceof IIdentifierNode)
+        {
+            IFunctionNode functionNode = (IFunctionNode) parentNode;
+            if (offsetNode == functionNode.getNameExpressionNode())
+            {
+                if (functionNode.hasModifier(ASModifier.OVERRIDE)
+                    && functionNode.getParametersContainerNode().getAbsoluteStart() == -1
+                    && functionNode.getReturnTypeNode() == null)
+                {
+                    autoCompleteFunctionOverrides(functionNode, result);
+                    return result;
+                }
+            }
+        }
         if (nodeAtPreviousOffset != null
                 && nodeAtPreviousOffset instanceof IKeywordNode
                 && (nodeAtPreviousOffset.getNodeID() == ASTNodeID.KeywordFunctionID
