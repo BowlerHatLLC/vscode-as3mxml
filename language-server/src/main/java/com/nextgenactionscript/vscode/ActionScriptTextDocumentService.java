@@ -41,6 +41,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.flex.abc.ABCConstants;
 import org.apache.flex.abc.ABCParser;
 import org.apache.flex.abc.Pool;
 import org.apache.flex.abc.PoolingABCVisitor;
@@ -2865,10 +2866,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         while (classDefinition instanceof IClassDefinition);
 
+        List<CompletionItem> resultItems = result.getItems();
         ArrayList<String> functionNames = new ArrayList<>();
-        for(IDefinition definition : propertyDefinitions)
+        for (IDefinition definition : propertyDefinitions)
         {
-            if(!(definition instanceof IFunctionDefinition) || definition.isStatic())
+            if (!(definition instanceof IFunctionDefinition)
+                    || definition.isStatic())
             {
                 continue;
             }
@@ -2876,17 +2879,82 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             boolean otherIsGetter = functionDefinition instanceof IGetterDefinition;
             boolean otherIsSetter = functionDefinition instanceof ISetterDefinition;
             String otherNamespace = functionDefinition.getNamespaceReference().getBaseName();
-            if(isGetter != otherIsGetter || isSetter != otherIsSetter || !namespace.equals(otherNamespace))
+            if (isGetter != otherIsGetter
+                    || isSetter != otherIsSetter
+                    || !namespace.equals(otherNamespace))
             {
                 continue;
             }
             String functionName = functionDefinition.getBaseName();
-            if(functionNames.contains(functionName))
+            if (functionNames.contains(functionName))
             {
                 continue;
             }
             functionNames.add(functionName);
-            addDefinitionAutoCompleteActionScript(definition, null, result);
+
+            StringBuilder insertText = new StringBuilder();
+            insertText.append(functionName);
+            insertText.append("(");
+            IParameterDefinition[] params = functionDefinition.getParameters();
+            for (int i = 0, length = params.length; i < length; i++)
+            {
+                if (i > 0)
+                {
+                    insertText.append(", ");
+                }
+                IParameterDefinition param = params[i];
+                if (param.isRest())
+                {
+                    insertText.append(IASLanguageConstants.REST);
+                }
+                insertText.append(param.getBaseName());
+                String paramType = param.getTypeAsDisplayString();
+                if(paramType.length() != 0)
+                {
+                    insertText.append(":");
+                    insertText.append(paramType);
+                }
+                if (param.hasDefaultValue())
+                {
+                    insertText.append(" = ");
+                    Object defaultValue = param.resolveDefaultValue(currentProject);
+                    if (defaultValue instanceof String)
+                    {
+                        insertText.append("\"" + defaultValue + "\"");
+                    }
+                    else if(defaultValue == ABCConstants.UNDEFINED_VALUE)
+                    {
+                        insertText.append(IASLanguageConstants.UNDEFINED);
+                    }
+                    else if(defaultValue == ABCConstants.NULL_VALUE)
+                    {
+                        insertText.append(IASLanguageConstants.NULL);
+                    }
+                    else
+                    {
+                        insertText.append(defaultValue);
+                    }
+                }
+            }
+            insertText.append(")");
+            String returnType = functionDefinition.getReturnTypeAsDisplayString();
+            if(returnType.length() != 0)
+            {
+                insertText.append(":");
+                insertText.append(returnType);
+            }
+
+            CompletionItem item = new CompletionItem();
+            item.setKind(getDefinitionKind(functionDefinition));
+            item.setDetail(getDefinitionDetail(functionDefinition));
+            item.setLabel(functionDefinition.getBaseName());
+            item.setInsertText(insertText.toString());
+            String docs = getDocumentationForDefinition(functionDefinition, false);
+            if (docs != null)
+            {
+                item.setDocumentation(docs);
+            }
+            resultItems.add(item);
         }
     }
 
