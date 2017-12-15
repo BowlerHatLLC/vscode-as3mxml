@@ -5714,6 +5714,43 @@ suite("completion item provider", () =>
 					});
 		});
 	});
+	test("vscode.executeCompletionItemProvider includes protected member function on protected override", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
+		let position = new vscode.Position(63, 30);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
+				.then((list: vscode.CompletionList) =>
+					{
+						let items = list.items;
+						let functionItem = findCompletionItem("superMemberFunction", items);
+						assert.notEqual(functionItem, null, "vscode.executeCompletionItemProvider failed to provide protected member function on protected override " + uri);
+						assert.strictEqual(functionItem.kind, vscode.CompletionItemKind.Function, "vscode.executeCompletionItemProvider failed to provide correct kind of override: " + uri);
+					}, (err) =>
+					{
+						assert(false, "Failed to execute completion item provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeCompletionItemProvider excludes public member function on protected override", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
+		let position = new vscode.Position(63, 30);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
+				.then((list: vscode.CompletionList) =>
+					{
+						let items = list.items;
+						let functionItem = findCompletionItem("superMemberFunction2", items);
+						assert.equal(functionItem, null, "vscode.executeCompletionItemProvider incorrectly provided public member function on protected override: " + uri);
+					}, (err) =>
+					{
+						assert(false, "Failed to execute completion item provider: " + uri);
+					});
+		});
+	});
 });
 
 suite("MXML completion item provider", () =>

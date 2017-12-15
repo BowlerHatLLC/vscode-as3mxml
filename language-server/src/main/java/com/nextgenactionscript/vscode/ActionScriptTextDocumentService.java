@@ -1664,6 +1664,27 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
         }
 
+        //function overrides
+        if (nodeAtPreviousOffset != null
+                && nodeAtPreviousOffset instanceof IKeywordNode
+                && (nodeAtPreviousOffset.getNodeID() == ASTNodeID.KeywordFunctionID
+                        || nodeAtPreviousOffset.getNodeID() == ASTNodeID.KeywordGetID
+                        || nodeAtPreviousOffset.getNodeID() == ASTNodeID.KeywordSetID))
+        {
+            IASNode previousNodeParent = (IASNode) nodeAtPreviousOffset.getParent();
+            if (previousNodeParent instanceof IFunctionNode)
+            {
+                IFunctionNode functionNode = (IFunctionNode) previousNodeParent;
+                if (functionNode.hasModifier(ASModifier.OVERRIDE)
+                        && functionNode.getParametersContainerNode().getAbsoluteStart() == -1
+                        && functionNode.getReturnTypeNode() == null)
+                {
+                    autoCompleteFunctionOverrides(functionNode, result);
+                    return result;
+                }
+            }
+        }
+
         //local scope
         IASNode currentNodeForScope = offsetNode;
         do
@@ -1682,7 +1703,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 IDefinition definitionToSkip = scope.getDefinition();
                 autoCompleteDefinitions(result, false, false, null, definitionToSkip, containingPackageName);
                 autoCompleteKeywords(scopedNode, result);
-                return result;                
+                return result;
             }
             currentNodeForScope = currentNodeForScope.getParent();
         }
@@ -2818,6 +2839,55 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         autoCompleteValue(IASKeywordConstants.TRUE, result);
         autoCompleteValue(IASKeywordConstants.FALSE, result);
         autoCompleteValue(IASKeywordConstants.NULL, result);
+    }
+
+    private void autoCompleteFunctionOverrides(IFunctionNode node, CompletionList result)
+    {
+        String namespace = node.getNamespace();
+        boolean isGetter = node.isGetter();
+        boolean isSetter = node.isSetter();
+        IClassNode classNode = (IClassNode) node.getAncestorOfType(IClassNode.class);
+        IClassDefinition classDefinition = classNode.getDefinition();
+
+        ArrayList<IDefinition> propertyDefinitions = new ArrayList<>();
+        TypeScope typeScope = (TypeScope) classDefinition.getContainedScope();
+        Set<INamespaceDefinition> namespaceSet = typeScope.getNamespaceSet(currentProject);
+        do
+        {
+            classDefinition = classDefinition.resolveBaseClass(currentProject);
+            if (classDefinition == null)
+            {
+                break;
+            }
+            typeScope = (TypeScope) classDefinition.getContainedScope();
+            INamespaceDefinition protectedNamespace = classDefinition.getProtectedNamespaceReference();
+            typeScope.getAllLocalProperties(currentProject, propertyDefinitions, namespaceSet, protectedNamespace);
+        }
+        while (classDefinition instanceof IClassDefinition);
+
+        ArrayList<String> functionNames = new ArrayList<>();
+        for(IDefinition definition : propertyDefinitions)
+        {
+            if(!(definition instanceof IFunctionDefinition) || definition.isStatic())
+            {
+                continue;
+            }
+            IFunctionDefinition functionDefinition = (IFunctionDefinition) definition;
+            boolean otherIsGetter = functionDefinition instanceof IGetterDefinition;
+            boolean otherIsSetter = functionDefinition instanceof ISetterDefinition;
+            String otherNamespace = functionDefinition.getNamespaceReference().getBaseName();
+            if(isGetter != otherIsGetter || isSetter != otherIsSetter || !namespace.equals(otherNamespace))
+            {
+                continue;
+            }
+            String functionName = functionDefinition.getBaseName();
+            if(functionNames.contains(functionName))
+            {
+                continue;
+            }
+            functionNames.add(functionName);
+            addDefinitionAutoCompleteActionScript(definition, null, result);
+        }
     }
 
     private void autoCompleteMemberAccess(IMemberAccessExpressionNode node, CompletionList result)
