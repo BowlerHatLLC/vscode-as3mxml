@@ -280,6 +280,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private Path workspaceRoot;
     private Map<Path, String> sourceByPath = new HashMap<>();
     private Map<Path, List<SavedCodeAction>> codeActionsByPath = new HashMap<>();
+    private List<String> completionTypes = new ArrayList<>();
     private Collection<ICompilationUnit> compilationUnits;
     private ArrayList<IInvisibleCompilationUnit> invisibleUnits = new ArrayList<>();
     private ICompilationUnit currentUnit;
@@ -367,6 +368,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     @Override
     public CompletableFuture<Either<List<CompletionItem>, CompletionList>> completion(TextDocumentPositionParams position)
     {
+        //this shouldn't be necessary, but if we ever forget to do this
+        //somewhere, completion results might be missing items.
+        completionTypes.clear();
         String textDocumentUri = position.getTextDocument().getUri();
         if (!textDocumentUri.endsWith(AS_EXTENSION)
                 && !textDocumentUri.endsWith(MXML_EXTENSION))
@@ -382,13 +386,17 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             IASNode embeddedNode = getEmbeddedActionScriptNodeInMXMLTag(offsetTag, currentOffset, position);
             if (embeddedNode != null)
             {
-                return CompletableFuture.completedFuture(Either.forRight(actionScriptCompletionWithNode(position, embeddedNode)));
+                CompletionList result = actionScriptCompletionWithNode(position, embeddedNode);
+                completionTypes.clear();
+                return CompletableFuture.completedFuture(Either.forRight(result));
             }
             //if we're inside an <fx:Script> tag, we want ActionScript completion,
             //so that's why we call isMXMLTagValidForCompletion()
             if (isMXMLTagValidForCompletion(offsetTag))
             {
-                return CompletableFuture.completedFuture(Either.forRight(mxmlCompletion(position, offsetTag)));
+                CompletionList result = mxmlCompletion(position, offsetTag);
+                completionTypes.clear();
+                return CompletableFuture.completedFuture(Either.forRight(result));
             }
         }
         if (offsetTag == null && position.getTextDocument().getUri().endsWith(MXML_EXTENSION))
@@ -403,7 +411,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             result.setItems(new ArrayList<>());
             return CompletableFuture.completedFuture(Either.forRight(result));
         }
-        return CompletableFuture.completedFuture(Either.forRight(actionScriptCompletion(position)));
+        CompletionList result = actionScriptCompletion(position);
+        completionTypes.clear();
+        return CompletableFuture.completedFuture(Either.forRight(result));
     }
 
     /**
@@ -3536,11 +3546,30 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return prefix;
     }
 
+    private boolean isDuplicateTypeDefinition(IDefinition definition)
+    {
+        if (definition instanceof ITypeDefinition)
+        {
+            String qualifiedName = definition.getQualifiedName();
+            return completionTypes.contains(qualifiedName);
+        }
+        return false;
+    }
+
     private void addDefinitionAutoCompleteActionScript(IDefinition definition, String containingPackageName, CompletionList result)
     {
         if (definition.getBaseName().startsWith(VECTOR_HIDDEN_PREFIX))
         {
             return;
+        }
+        if (isDuplicateTypeDefinition(definition))
+        {
+            return;
+        }
+        if (definition instanceof ITypeDefinition)
+        {
+            String qualifiedName = definition.getQualifiedName();
+            completionTypes.add(qualifiedName);
         }
         CompletionItem item = new CompletionItem();
         item.setKind(getDefinitionKind(definition));
@@ -3568,6 +3597,15 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         if (definition.getBaseName().startsWith(VECTOR_HIDDEN_PREFIX))
         {
             return;
+        }
+        if (isDuplicateTypeDefinition(definition))
+        {
+            return;
+        }
+        if (definition instanceof ITypeDefinition)
+        {
+            String qualifiedName = definition.getQualifiedName();
+            completionTypes.add(qualifiedName);
         }
         CompletionItem item = new CompletionItem();
         item.setKind(getDefinitionKind(definition));
