@@ -15,12 +15,10 @@ limitations under the License.
 */
 package com.nextgenactionscript.asconfigc.utils;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -28,15 +26,25 @@ import com.nextgenactionscript.asconfigc.compiler.ProjectType;
 
 public class ProjectUtils
 {
-	public static String findAIRDescriptorOutputPath(String mainFile, String airDescriptor, String outputPath, boolean isSWF)
+	public static String findAIRDescriptorOutputPath(String mainFile, String airDescriptor, String outputPath, boolean isSWF, boolean debugBuild)
 	{
 		String outputDir = ProjectUtils.findOutputDirectory(mainFile, outputPath, isSWF);
 		Path path = Paths.get(airDescriptor);
-		Path outputDirPath = Paths.get(outputDir);
+		if(isSWF)
+		{
+			Path outputDirPath = Paths.get(outputDir);
+			return outputDirPath.resolve(path.getFileName().toString()).toString();
+		}
+		String jsDir = "js-release";
+		if(debugBuild)
+		{
+			jsDir = "js-debug";
+		}
+		Path outputDirPath = Paths.get(outputDir, "bin", jsDir);
 		return outputDirPath.resolve(path.getFileName().toString()).toString();
 	}
 
-	public static String findApplicationContentOutputPath(String mainFile, String outputPath, boolean isSWF)
+	public static String findApplicationContentOutputPath(String mainFile, String outputPath, boolean isSWF, boolean debugBuild)
 	{
 		String outputDirectory = ProjectUtils.findOutputDirectory(mainFile, outputPath, isSWF);
 		String applicationContentName = ProjectUtils.findApplicationContent(mainFile, outputPath, isSWF);
@@ -44,32 +52,51 @@ public class ProjectUtils
 		{
 			return null;
 		}
-		Path outputDirPath = Paths.get(outputDirectory);
+		if(isSWF)
+		{
+			Path outputDirPath = Paths.get(outputDirectory);
+			return outputDirPath.resolve(applicationContentName).toString();
+		}
+		String jsDir = "js-release";
+		if(debugBuild)
+		{
+			jsDir = "js-debug";
+		}
+		Path outputDirPath = Paths.get(outputDirectory, "bin", jsDir);
 		return outputDirPath.resolve(applicationContentName).toString();
 	}
 
-	public static String findOutputDirectory(String mainFile, String outputPath, boolean isSWF)
+	public static String findOutputDirectory(String mainFile, String outputValue, boolean isSWF)
 	{
-		if(outputPath == null)
+		if(outputValue == null)
 		{
 			if(mainFile == null)
 			{
 				return System.getProperty("user.dir");
 			}
 			Path mainFilePath = Paths.get(mainFile);
+			if(!mainFilePath.isAbsolute())
+			{
+				mainFilePath = Paths.get(System.getProperty("user.dir"), mainFile);
+			}
+			Path mainFileParentPath = mainFilePath.getParent();
+			if(mainFileParentPath == null)
+			{
+				return System.getProperty("user.dir");
+			}
 			if(!isSWF)
 			{
-				Path mainFileParentPath = mainFilePath.getParent();
 				//Royale treats these directory structures as a special case
-				if(mainFileParentPath.endsWith("/src") ||
-					mainFileParentPath.endsWith("\\src"))
+				String mainFileParentPathAsString = mainFileParentPath.toString();
+				if(mainFileParentPathAsString.endsWith("/src") ||
+					mainFileParentPathAsString.endsWith("\\src"))
 				{
 					mainFileParentPath = mainFileParentPath.resolve("../");
 				}
-				else if(mainFileParentPath.endsWith("/src/main/flex") ||
-					mainFileParentPath.endsWith("\\src\\main\\flex") ||
-					mainFileParentPath.endsWith("/src/main/royale") ||
-					mainFileParentPath.endsWith("\\src\\main\\royale"))
+				else if(mainFileParentPathAsString.endsWith("/src/main/flex") ||
+					mainFileParentPathAsString.endsWith("\\src\\main\\flex") ||
+					mainFileParentPathAsString.endsWith("/src/main/royale") ||
+					mainFileParentPathAsString.endsWith("\\src\\main\\royale"))
 				{
 					mainFileParentPath = mainFileParentPath.resolve("../../../");
 				}
@@ -82,42 +109,44 @@ public class ProjectUtils
 					return null;
 				}
 			}
+			return mainFileParentPath.toString();
 		}
-		Path mainFilePath = Paths.get(mainFile);
-		File mainFileParentFile = mainFilePath.getParent().toFile();
-		try
+		Path outputPath = Paths.get(outputValue);
+		if(!outputPath.isAbsolute())
 		{
-			return mainFileParentFile.getCanonicalPath();
+			outputPath = Paths.get(System.getProperty("user.dir"), outputValue);
 		}
-		catch(IOException e)
+		if(!isSWF)
 		{
-			return null;
+			return outputPath.toString();
 		}
+		Path outputValueParentPath = outputPath.getParent();
+		return outputValueParentPath.toString();
 	}
 
 	public static String findApplicationContent(String mainFile, String outputPath, boolean isSWF)
 	{
+		if(!isSWF)
+		{
+			//An Adobe AIR app for Royale will load an HTML file as its main content
+			return "index.html";
+		}
 		if(outputPath == null)
 		{
-			if(isSWF)
+			if(mainFile == null)
 			{
-				if(mainFile == null)
-				{
-					return null;
-				}
-				//replace .as or .mxml with .swf
-				Path mainFilePath = Paths.get(mainFile);
-				String fileName = mainFilePath.getFileName().toString();
-				String extension = "";
-				int extensionIndex = fileName.lastIndexOf(".");
-				if(extensionIndex != -1)
-				{
-					extension = fileName.substring(extensionIndex + 1);
-				}
-				return fileName.substring(0, fileName.length() - extension.length()) + ".swf";
+				return null;
 			}
-			//An AIR app will load an HTML file as its main content if there's no SWF
-			return "index.html";
+			//replace .as or .mxml with .swf
+			Path mainFilePath = Paths.get(mainFile);
+			String fileName = mainFilePath.getFileName().toString();
+			String extension = "";
+			int extensionIndex = fileName.lastIndexOf(".");
+			if(extensionIndex != -1)
+			{
+				extension = fileName.substring(extensionIndex);
+			}
+			return fileName.substring(0, fileName.length() - extension.length()) + ".swf";
 		}
 		return Paths.get(outputPath).getFileName().toString();
 	}

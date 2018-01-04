@@ -451,8 +451,8 @@ public class ASConfigC
 			parser.parse(
 				options.air,
 				debugBuild,
-				ProjectUtils.findAIRDescriptorOutputPath(mainFile, airDescriptorPath, outputPath, !outputIsJS),
-				ProjectUtils.findApplicationContentOutputPath(mainFile, outputPath, !outputIsJS),
+				ProjectUtils.findAIRDescriptorOutputPath(mainFile, airDescriptorPath, outputPath, !outputIsJS, debugBuild),
+				ProjectUtils.findApplicationContentOutputPath(mainFile, outputPath, !outputIsJS, debugBuild),
 				airOptionsJson,
 				airOptions);
 		}
@@ -579,12 +579,82 @@ public class ASConfigC
 	
 	private void copySourcePathAssets()
 	{
-		
+		if(!copySourcePathAssets)
+		{
+			return;
+		}
+		List<String> pathsToSearch = new ArrayList<>();
+		if(sourcePaths != null)
+		{
+			pathsToSearch.addAll(sourcePaths);
+		}
+		String outputDirectory = ProjectUtils.findOutputDirectory(mainFile, outputPath, !outputIsJS);
+		ArrayList<String> excludes = new ArrayList<>();
+		if(airDescriptorPath != null)
+		{
+			excludes.add(airDescriptorPath);
+		}
 	}
 	
-	private void processAdobeAIRDescriptor()
+	private void processAdobeAIRDescriptor() throws ASConfigCException
 	{
-		
+		if(airDescriptorPath == null)
+		{
+			return;
+		}
+		String outputDirectory = ProjectUtils.findOutputDirectory(mainFile, outputPath, !outputIsJS);
+		String contentValue = ProjectUtils.findApplicationContent(mainFile, outputPath, !outputIsJS);
+		if(contentValue == null)
+		{
+			throw new ASConfigCException("Failed to find content for Adobe AIR application descriptor.");
+		}
+		String descriptorContents = null;
+		try
+		{
+			descriptorContents = new String(Files.readAllBytes(Paths.get(airDescriptorPath)));
+		}
+		catch(IOException e)
+		{
+			throw new ASConfigCException("Failed to read Adobe AIR application descriptor at path: " + airDescriptorPath);
+		}
+		descriptorContents = descriptorContents.replaceFirst("<content>.+<\\/content>", "<content>" + contentValue + "</content>");
+		if(outputIsJS)
+		{
+			String debugDescriptorOutputPath = ProjectUtils.findAIRDescriptorOutputPath(mainFile, airDescriptorPath, outputDirectory, false, true);
+			try
+			{
+				Files.write(Paths.get(debugDescriptorOutputPath), descriptorContents.getBytes());
+			}
+			catch(IOException e)
+			{
+				throw new ASConfigCException("Failed to copy Adobe AIR application descriptor to path: " + debugDescriptorOutputPath);
+			}
+			if(!debugBuild)
+			{
+				String releaseDescriptorOutputPath = ProjectUtils.findAIRDescriptorOutputPath(mainFile, airDescriptorPath, outputDirectory, false, false);
+				try
+				{
+					Files.write(Paths.get(releaseDescriptorOutputPath), descriptorContents.getBytes());
+				}
+				catch(IOException e)
+				{
+					throw new ASConfigCException("Failed to copy Adobe AIR application descriptor to path: " + releaseDescriptorOutputPath);
+				}
+			}
+			
+		}
+		else //swf
+		{
+			String descriptorOutputPath = ProjectUtils.findAIRDescriptorOutputPath(mainFile, airDescriptorPath, outputPath, true, debugBuild);
+			try
+			{
+				Files.write(Paths.get(descriptorOutputPath), descriptorContents.getBytes());
+			}
+			catch(IOException e)
+			{
+				throw new ASConfigCException("Failed to copy Adobe AIR application descriptor to path: " + descriptorOutputPath);
+			}
+		}
 	}
 	
 	private void packageAIR()
