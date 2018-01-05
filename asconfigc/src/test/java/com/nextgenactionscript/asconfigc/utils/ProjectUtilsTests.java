@@ -59,6 +59,20 @@ class ProjectUtilsTests
 	}
 
 	@Test
+	void testFindOutputDirectoryForSWFWithAbsoluteMainFileWithoutOutputPath()
+	{
+		String mainFile = "/path/to/Test.as";
+		if(System.getProperty("os.name").toLowerCase().startsWith("windows"))
+		{
+			mainFile = "c:\\path\\to\\Test.as";
+		}
+		String path = ProjectUtils.findOutputDirectory(mainFile, null, true);
+		File file = new File(mainFile);
+		Assertions.assertEquals(file.getParent(), path,
+			"ProjectUtils.findOutputDirectory() returned incorrect value.");
+	}
+
+	@Test
 	void testFindOutputDirectoryForJS()
 	{
 		String path = ProjectUtils.findOutputDirectory("src/Test.as", "output", false);
@@ -108,6 +122,62 @@ class ProjectUtilsTests
 			"ProjectUtils.findOutputDirectory() returned incorrect value.");
 	}
 
+	@Test
+	void testFindOutputDirectoryForJSWithAbsoluteMainFileWithoutOutputPath()
+	{
+		String mainFile = "/path/to/Test.as";
+		if(System.getProperty("os.name").toLowerCase().startsWith("windows"))
+		{
+			mainFile = "c:\\path\\to\\Test.as";
+		}
+		String path = ProjectUtils.findOutputDirectory(mainFile, null, false);
+		File file = new File(mainFile);
+		Assertions.assertEquals(file.getParent(), path,
+			"ProjectUtils.findOutputDirectory() returned incorrect value.");
+	}
+
+	@Test
+	void testFindOutputDirectoryForJSWithAbsoluteMainFileInSrcWithoutOutputPath()
+	{
+		String mainFile = "/path/to/src/Test.as";
+		if(System.getProperty("os.name").toLowerCase().startsWith("windows"))
+		{
+			mainFile = "c:\\path\\to\\src\\Test.as";
+		}
+		String path = ProjectUtils.findOutputDirectory(mainFile, null, false);
+		File file = new File(mainFile);
+		Assertions.assertEquals(file.getParentFile().getParent(), path,
+			"ProjectUtils.findOutputDirectory() returned incorrect value.");
+	}
+
+	@Test
+	void testFindOutputDirectoryForJSWithAbsoluteMainFileInSrcMainRoyaleWithoutOutputPath()
+	{
+		String mainFile = "/path/to/src/main/royale/Test.as";
+		if(System.getProperty("os.name").toLowerCase().startsWith("windows"))
+		{
+			mainFile = "c:\\path\\to\\src\\main\\royale\\Test.as";
+		}
+		String path = ProjectUtils.findOutputDirectory(mainFile, null, false);
+		File file = new File(mainFile);
+		Assertions.assertEquals(file.getParentFile().getParentFile().getParentFile().getParent(), path,
+			"ProjectUtils.findOutputDirectory() returned incorrect value.");
+	}
+
+	@Test
+	void testFindOutputDirectoryForJSWithAbsoluteMainFileInSrcMainFlexWithoutOutputPath()
+	{
+		String mainFile = "/path/to/src/main/flex/Test.as";
+		if(System.getProperty("os.name").toLowerCase().startsWith("windows"))
+		{
+			mainFile = "c:\\path\\to\\src\\main\\flex\\Test.as";
+		}
+		String path = ProjectUtils.findOutputDirectory(mainFile, null, false);
+		File file = new File(mainFile);
+		Assertions.assertEquals(file.getParentFile().getParentFile().getParentFile().getParent(), path,
+			"ProjectUtils.findOutputDirectory() returned incorrect value.");
+	}
+
 	//--- findAIRDescriptorOutputPath
 	
 	@Test
@@ -115,6 +185,30 @@ class ProjectUtilsTests
 	{
 		String path = ProjectUtils.findAIRDescriptorOutputPath("src/Test.as", "src/Test-app.xml", "bin/Test.swf", true, false);
 		File file = new File(System.getProperty("user.dir"), "bin/Test-app.xml");
+		Assertions.assertEquals(file.toPath().toString(), path,
+			"ProjectUtils.findAIRDescriptorOutputPath() returned incorrect value.");
+	}
+	
+	@Test
+	void testFindAIRDescriptorOutputPathForSWFWithoutOutputPath()
+	{
+		String path = ProjectUtils.findAIRDescriptorOutputPath("src/Test.as", "src/Test-app.xml", null, true, false);
+		File file = new File(System.getProperty("user.dir"), "src/Test-app.xml");
+		Assertions.assertEquals(file.toPath().toString(), path,
+			"ProjectUtils.findAIRDescriptorOutputPath() returned incorrect value.");
+	}
+	
+	@Test
+	void testFindAIRDescriptorOutputPathForSWFWithAbsoluteMainFileWithoutOutputPath()
+	{
+		String mainFile = "/path/to/Test.as";
+		if(System.getProperty("os.name").toLowerCase().startsWith("windows"))
+		{
+			mainFile = "c:\\path\\to\\Test.as";
+		}
+		String path = ProjectUtils.findAIRDescriptorOutputPath(mainFile, "src/Test-app.xml", null, true, false);
+		File file = new File(mainFile);
+		file = new File(file.getParent(), "Test-app.xml");
 		Assertions.assertEquals(file.toPath().toString(), path,
 			"ProjectUtils.findAIRDescriptorOutputPath() returned incorrect value.");
 	}
@@ -174,6 +268,21 @@ class ProjectUtilsTests
 	}
 	
 	@Test
+	void testFindAIRDescriptorOutputPathForJSDebugWithAbsoluteMainFileWithoutOutputPath()
+	{
+		String mainFile = "/path/to/Test.as";
+		if(System.getProperty("os.name").toLowerCase().startsWith("windows"))
+		{
+			mainFile = "c:\\path\\to\\Test.as";
+		}
+		String path = ProjectUtils.findAIRDescriptorOutputPath(mainFile, "src/Test-app.xml", null, false, true);
+		File file = new File(mainFile);
+		file = new File(file.getParent(), "bin/js-debug/Test-app.xml");
+		Assertions.assertEquals(file.toPath().toString(), path,
+			"ProjectUtils.findAIRDescriptorOutputPath() returned incorrect value.");
+	}
+	
+	@Test
 	void testFindAIRDescriptorOutputPathForJSRelease()
 	{
 		String path = ProjectUtils.findAIRDescriptorOutputPath("src/Test.as", "src/Test-app.xml", "output", false, false);
@@ -223,6 +332,21 @@ class ProjectUtilsTests
 	{
 		String path = ProjectUtils.findAIRDescriptorOutputPath("Test.as", "Test-app.xml", null, false, false);
 		File file = new File(System.getProperty("user.dir"), "bin/js-release/Test-app.xml");
+		Assertions.assertEquals(file.toPath().toString(), path,
+			"ProjectUtils.findAIRDescriptorOutputPath() returned incorrect value.");
+	}
+	
+	@Test
+	void testFindAIRDescriptorOutputPathForJSReleaseWithAbsoluteMainFileWithoutOutputPath()
+	{
+		String mainFile = "/path/to/Test.as";
+		if(System.getProperty("os.name").toLowerCase().startsWith("windows"))
+		{
+			mainFile = "c:\\path\\to\\Test.as";
+		}
+		String path = ProjectUtils.findAIRDescriptorOutputPath(mainFile, "src/Test-app.xml", null, false, false);
+		File file = new File(mainFile);
+		file = new File(file.getParent(), "bin/js-release/Test-app.xml");
 		Assertions.assertEquals(file.toPath().toString(), path,
 			"ProjectUtils.findAIRDescriptorOutputPath() returned incorrect value.");
 	}
@@ -329,6 +453,21 @@ class ProjectUtilsTests
 		Assertions.assertNull(path,
 			"ProjectUtils.findApplicationContentOutputPath() returned incorrect value.");
 	}
+	
+	@Test
+	void testFindApplicationContentOutputPathForSWFWithAbsoluteMainFileWithoutOutputPath()
+	{
+		String mainFile = "/path/to/Test.as";
+		if(System.getProperty("os.name").toLowerCase().startsWith("windows"))
+		{
+			mainFile = "c:\\path\\to\\Test.as";
+		}
+		String path = ProjectUtils.findApplicationContentOutputPath(mainFile, null, true, false);
+		File file = new File(mainFile);
+		file = new File(file.getParent(), "Test.swf");
+		Assertions.assertEquals(file.toPath().toString(), path,
+			"ProjectUtils.findApplicationContentOutputPath() returned incorrect value.");
+	}
 
 	@Test
 	void testFindApplicationContentOutputPathForJSRelease()
@@ -401,6 +540,21 @@ class ProjectUtilsTests
 		Assertions.assertEquals(file.toPath().toString(), path,
 			"ProjectUtils.findApplicationContentOutputPath() returned incorrect value.");
 	}
+	
+	@Test
+	void testFindApplicationContentOutputPathForJSReleaseWithAbsoluteMainFileWithoutOutputPath()
+	{
+		String mainFile = "/path/to/Test.as";
+		if(System.getProperty("os.name").toLowerCase().startsWith("windows"))
+		{
+			mainFile = "c:\\path\\to\\Test.as";
+		}
+		String path = ProjectUtils.findApplicationContentOutputPath(mainFile, null, false, false);
+		File file = new File(mainFile);
+		file = new File(file.getParent(), "bin/js-release/index.html");
+		Assertions.assertEquals(file.toPath().toString(), path,
+			"ProjectUtils.findApplicationContentOutputPath() returned incorrect value.");
+	}
 
 	@Test
 	void testFindApplicationContentOutputPathForJSDebug()
@@ -470,6 +624,21 @@ class ProjectUtilsTests
 	{
 		String path = ProjectUtils.findApplicationContentOutputPath(null, null, false, true);
 		File file = new File(System.getProperty("user.dir"), "bin/js-debug/index.html");
+		Assertions.assertEquals(file.toPath().toString(), path,
+			"ProjectUtils.findApplicationContentOutputPath() returned incorrect value.");
+	}
+	
+	@Test
+	void testFindApplicationContentOutputPathForJSDebugWithAbsoluteMainFileWithoutOutputPath()
+	{
+		String mainFile = "/path/to/Test.as";
+		if(System.getProperty("os.name").toLowerCase().startsWith("windows"))
+		{
+			mainFile = "c:\\path\\to\\Test.as";
+		}
+		String path = ProjectUtils.findApplicationContentOutputPath(mainFile, null, false, true);
+		File file = new File(mainFile);
+		file = new File(file.getParent(), "bin/js-debug/index.html");
 		Assertions.assertEquals(file.toPath().toString(), path,
 			"ProjectUtils.findApplicationContentOutputPath() returned incorrect value.");
 	}
