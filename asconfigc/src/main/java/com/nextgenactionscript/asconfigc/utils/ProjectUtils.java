@@ -15,10 +15,12 @@ limitations under the License.
 */
 package com.nextgenactionscript.asconfigc.utils;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -26,6 +28,9 @@ import com.nextgenactionscript.asconfigc.compiler.ProjectType;
 
 public class ProjectUtils
 {
+	private static final String FILE_EXTENSION_AS = ".mxml";
+	private static final String FILE_EXTENSION_MXML = ".mxml";
+
 	public static String findAIRDescriptorOutputPath(String mainFile, String airDescriptor, String outputPath, boolean isSWF, boolean debugBuild)
 	{
 		String outputDir = ProjectUtils.findOutputDirectory(mainFile, outputPath, isSWF);
@@ -189,5 +194,127 @@ public class ProjectUtils
 			return null;
 		}
 		return jarPath;
+	}
+
+	public static List<String> findSourcePathAssets(String mainFile, List<String> sourcePaths, String outputDirectory, List<String> excludes)
+	{
+		List<String> result = new ArrayList<>();
+		List<String> sourcePathsCopy = new ArrayList<>();
+		if(sourcePaths != null)
+		{
+			//we don't want to modify the original list, so copy the items over
+			sourcePathsCopy.addAll(sourcePaths);
+		}
+		if(mainFile != null)
+		{
+			//the parent directory of the main file is automatically added as a
+			//source path by the compiler
+			Path mainFileParent = Paths.get(mainFile).getParent();
+			sourcePathsCopy.add(mainFileParent.toString());
+		}
+		for(int i = 0, size = sourcePathsCopy.size(); i < size; i++)
+		{
+			String sourcePath = sourcePathsCopy.get(i);
+			Path path = Paths.get(sourcePath);
+			if(!path.isAbsolute())
+			{
+				//force all source paths into absolute paths
+				path = Paths.get(System.getProperty("user.dir"), sourcePath);
+				sourcePathsCopy.set(i, path.toString());
+			}
+		}
+		if(sourcePathsCopy.contains(outputDirectory))
+		{
+			//assets in source path will not be copied because the output
+			//directory is a source path
+			return result;
+		}
+		if(excludes != null)
+		{
+			for(int i = 0, size = excludes.size(); i < size; i++)
+			{
+				String exclude = excludes.get(i);
+				Path path = Paths.get(exclude);
+				if(!path.isAbsolute())
+				{
+					//force all excludes into absolute paths
+					path = Paths.get(System.getProperty("user.dir"), exclude);
+					sourcePathsCopy.set(i, path.toString());
+				}
+			}
+		}
+		for(int i = 0, size = sourcePathsCopy.size(); i < size; i++)
+		{
+			String sourcePath = sourcePathsCopy.get(i);
+			File file = new File(sourcePath);
+			for(File innerFile : file.listFiles())
+			{
+				String innerFilePath = innerFile.getAbsolutePath();
+				if(innerFile.isDirectory())
+				{
+					sourcePathsCopy.add(innerFilePath);
+					size++;
+					continue;
+				}
+				String extension = null;
+				int index = innerFilePath.lastIndexOf(".");
+				if(index != -1)
+				{
+					extension = innerFilePath.substring(index);
+				}
+				if(extension != null && (extension.equals(FILE_EXTENSION_AS) || extension.equals(FILE_EXTENSION_MXML)))
+				{
+					continue;
+				}
+				if(excludes != null && excludes.contains(innerFilePath))
+				{
+					continue;
+				}
+				result.add(innerFilePath);
+			}
+		}
+		return result;
+	}
+
+	public static String assetPathToOutputPath(String assetPath, String mainFile, List<String> sourcePaths, String outputDirectory) throws Error
+	{
+		List<String> sourcePathsCopy = new ArrayList<>();
+		if(sourcePaths != null)
+		{
+			//we don't want to modify the original list, so copy the items over
+			sourcePathsCopy.addAll(sourcePaths);
+		}
+		if(mainFile != null)
+		{
+			//the parent directory of the main file is automatically added as a
+			//source path by the compiler
+			Path mainFileParent = Paths.get(mainFile).getParent();
+			sourcePathsCopy.add(mainFileParent.toString());
+		}
+		Path assetPathPath = Paths.get(assetPath);
+		if(!assetPathPath.isAbsolute())
+		{
+			assetPathPath = Paths.get(System.getProperty("user.dir"), assetPath);
+			assetPath = assetPathPath.toString();
+		}
+		String relativePath = null;
+		for(int i = 0, size = sourcePathsCopy.size(); i < size; i++)
+		{
+			String sourcePath = sourcePathsCopy.get(i);
+			Path path = Paths.get(sourcePath);
+			if(!path.isAbsolute())
+			{
+				path = Paths.get(System.getProperty("user.dir"), sourcePath);
+			}
+			if(assetPath.startsWith(path.toString()))
+			{
+				relativePath = path.relativize(Paths.get(assetPath)).toString();
+			}
+		}
+		if(relativePath == null)
+		{
+			throw new Error("Could not find asset in source path: " + assetPath);
+		}
+		return new File(outputDirectory, relativePath).getAbsolutePath();
 	}
 }

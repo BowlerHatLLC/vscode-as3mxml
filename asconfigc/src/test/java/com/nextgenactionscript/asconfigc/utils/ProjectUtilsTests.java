@@ -16,6 +16,8 @@ limitations under the License.
 package com.nextgenactionscript.asconfigc.utils;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -641,5 +643,47 @@ class ProjectUtilsTests
 		file = new File(file.getParent(), "bin/js-debug/index.html");
 		Assertions.assertEquals(file.toPath().toString(), path,
 			"ProjectUtils.findApplicationContentOutputPath() returned incorrect value.");
+	}
+
+	//--- assetPathToOutputPath
+
+	@Test
+	void testOutputPathForAssetAtRootOfImplicitSourcePathForMainFile()
+	{
+		String result = ProjectUtils.assetPathToOutputPath("src/asset.txt", "src/Test.as", null, "bin");
+		File file = new File(System.getProperty("user.dir"), "bin/asset.txt");
+		Assertions.assertEquals(file.getAbsolutePath(), result,
+			"ProjectUtils.assetPathToOutputPath() returned incorrect value.");
+	}
+
+	@Test
+	void testOutputPathForAssetInSubDirectoryOfImplicitSourcePathForMainFile()
+	{
+		String result = ProjectUtils.assetPathToOutputPath("src/sub-directory/asset.txt", "src/Test.as", null, "bin");
+		File file = new File(System.getProperty("user.dir"), "bin/sub-directory/asset.txt");
+		Assertions.assertEquals(file.getAbsolutePath(), result,
+			"ProjectUtils.assetPathToOutputPath() returned incorrect value.");
+	}
+
+	@Test
+	void testOutputPathForAssetAtRootOfExplicitSourcePath()
+	{
+		List<String> sourcePaths = new ArrayList<>();
+		sourcePaths.add("custom-src");
+		String result = ProjectUtils.assetPathToOutputPath("custom-src/asset.txt", null, sourcePaths, "bin");
+		File file = new File(System.getProperty("user.dir"), "bin/asset.txt");
+		Assertions.assertEquals(file.getAbsolutePath(), result,
+			"ProjectUtils.assetPathToOutputPath() returned incorrect value.");
+	}
+
+	@Test
+	void testOutputPathForAssetInSubDirectoryOfExplicitSourcePath()
+	{
+		List<String> sourcePaths = new ArrayList<>();
+		sourcePaths.add("custom-src");
+		String result = ProjectUtils.assetPathToOutputPath("custom-src/sub-directory/asset.txt", null, sourcePaths, "bin");
+		File file = new File(System.getProperty("user.dir"), "bin/sub-directory/asset.txt");
+		Assertions.assertEquals(file.getAbsolutePath(), result,
+			"ProjectUtils.assetPathToOutputPath() returned incorrect value.");
 	}
 }

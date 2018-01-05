@@ -577,7 +577,7 @@ public class ASConfigC
 		}
 	}
 	
-	private void copySourcePathAssets()
+	private void copySourcePathAssets() throws ASConfigCException
 	{
 		if(!copySourcePathAssets)
 		{
@@ -593,6 +593,36 @@ public class ASConfigC
 		if(airDescriptorPath != null)
 		{
 			excludes.add(airDescriptorPath);
+		}
+		List<String> assetPaths = ProjectUtils.findSourcePathAssets(mainFile, sourcePaths, outputDirectory, excludes);
+		for(String assetPath : assetPaths)
+		{
+			String targetPath = ProjectUtils.assetPathToOutputPath(assetPath, mainFile, sourcePaths, outputDirectory);
+			File sourceFile = new File(assetPath);
+			File targetFile = new File(targetPath);
+			try
+			{
+				String contents = new String(Files.readAllBytes(sourceFile.toPath()));
+				byte[] bytes = contents.getBytes();
+				if(outputIsJS)
+				{
+					File targetFileJSDebug = new File(targetFile, "bin/js-debug");
+					Files.write(targetFileJSDebug.toPath(), bytes);
+					if(!debugBuild)
+					{
+						File targetFileJSRelease = new File(targetFile, "bin/js-release");
+						Files.write(targetFileJSRelease.toPath(), bytes);
+					}
+				}
+				else //swf
+				{
+					Files.write(targetFile.toPath(), bytes);
+				}
+			}
+			catch(IOException e)
+			{
+				throw new ASConfigCException("Failed to copy file from source " + assetPath + " to destination " + targetPath);
+			}
 		}
 	}
 	
