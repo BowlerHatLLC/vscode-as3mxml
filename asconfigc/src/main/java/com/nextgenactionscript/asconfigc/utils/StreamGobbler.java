@@ -43,10 +43,11 @@ public class StreamGobbler extends Thread
 		try
 		{
 			BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
-			String line = null;
-			while((line = reader.readLine()) != null)
+			int b;
+			while((b = reader.read()) != -1)
 			{
-				target.println(line);
+				target.print((char) b);
+				target.flush();
 			}
 			reader.close();
 		}

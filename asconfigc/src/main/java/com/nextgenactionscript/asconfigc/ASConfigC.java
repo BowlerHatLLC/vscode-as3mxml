@@ -19,6 +19,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.file.Files;
@@ -157,6 +158,8 @@ public class ASConfigC
 		copySourcePathAssets();
 		processAdobeAIRDescriptor();
 		packageAIR();
+		//force an exit in case a thread gets stuck
+		System.exit(0);
 	}
 
 	private ASConfigCOptions options;
@@ -706,12 +709,17 @@ public class ASConfigC
 		Path javaExecutablePath = Paths.get(System.getProperty("java.home"), "bin", "java");
 		StringBuilder command = new StringBuilder();
 		command.append(PathUtils.escapePath(javaExecutablePath.toString()));
-		command.append(" -jar ");
+		command.append(" ");
+		command.append("-jar");
+		command.append(" ");
 		command.append(jarPath);
+		command.append(" ");
 		command.append(String.join(" ", airOptions));
 		try
 		{
 			Process process = Runtime.getRuntime().exec(command.toString(), null, new File(System.getProperty("user.dir")));
+			StreamGobbler inGobbler = new StreamGobbler(System.in, new PrintStream(process.getOutputStream()));
+			inGobbler.start();
 			StreamGobbler outGobbler = new StreamGobbler(process.getInputStream(), System.out);
 			outGobbler.start();
 			StreamGobbler errGobbler = new StreamGobbler(process.getErrorStream(), System.err);
