@@ -638,10 +638,15 @@ public class ASConfigC
 		{
 			throw new ASConfigCException("Failed to find content for Adobe AIR application descriptor.");
 		}
+		Path finalDescriptorPath = Paths.get(airDescriptorPath);
+		if(!finalDescriptorPath.isAbsolute())
+		{
+			finalDescriptorPath = Paths.get(System.getProperty("user.dir"), airDescriptorPath);
+		}
 		String descriptorContents = null;
 		try
 		{
-			descriptorContents = new String(Files.readAllBytes(Paths.get(airDescriptorPath)));
+			descriptorContents = new String(Files.readAllBytes(finalDescriptorPath));
 		}
 		catch(IOException e)
 		{
@@ -687,8 +692,43 @@ public class ASConfigC
 		}
 	}
 	
-	private void packageAIR()
+	private void packageAIR() throws ASConfigCException
 	{
-		
+		if(options.air == null)
+		{
+			return;
+		}
+		Path jarPath = ProjectUtils.findAdobeAIRPackagerJarPath(sdkHome);
+		if(jarPath == null)
+		{
+			throw new ASConfigCException("AIR ADT not found in SDK. Expected: " + Paths.get(sdkHome, "lib", "adt.jar"));
+		}
+		Path javaExecutablePath = Paths.get(System.getProperty("java.home"), "bin", "java");
+		StringBuilder command = new StringBuilder();
+		command.append(PathUtils.escapePath(javaExecutablePath.toString()));
+		command.append(" -jar ");
+		command.append(jarPath);
+		command.append(String.join(" ", airOptions));
+		try
+		{
+			Process process = Runtime.getRuntime().exec(command.toString(), null, new File(System.getProperty("user.dir")));
+			StreamGobbler outGobbler = new StreamGobbler(process.getInputStream(), System.out);
+			outGobbler.start();
+			StreamGobbler errGobbler = new StreamGobbler(process.getErrorStream(), System.err);
+			errGobbler.start();
+			int status = process.waitFor();
+			if(status != 0)
+			{
+				throw new ASConfigCException(status);
+			}
+		}
+		catch(InterruptedException e)
+		{
+			throw new ASConfigCException("Failed to execute Adobe AIR packager: " + e.getMessage());
+		}
+		catch(IOException e)
+		{
+			throw new ASConfigCException("Failed to execute Adobe AIR Packager: " + e.getMessage());
+		}
 	}
 }

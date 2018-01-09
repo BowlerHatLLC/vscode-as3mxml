@@ -28,8 +28,9 @@ import com.nextgenactionscript.asconfigc.compiler.ProjectType;
 
 public class ProjectUtils
 {
-	private static final String FILE_EXTENSION_AS = ".mxml";
+	private static final String FILE_EXTENSION_AS = ".as";
 	private static final String FILE_EXTENSION_MXML = ".mxml";
+	private static final String JAR_NAME_ADT = "adt.jar";
 
 	public static String findAIRDescriptorOutputPath(String mainFile, String airDescriptor, String outputPath, boolean isSWF, boolean debugBuild)
 	{
@@ -181,7 +182,7 @@ public class ProjectUtils
 			}
 			else //js
 			{
-				jarPath = Paths.get(sdkPath, "lib", jarName);
+				jarPath = Paths.get(sdkPath, "js", "lib", jarName);
 			}
 			if(Files.exists(jarPath))
 			{
@@ -194,6 +195,16 @@ public class ProjectUtils
 			return null;
 		}
 		return jarPath;
+	}
+
+	public static Path findAdobeAIRPackagerJarPath(String sdkPath)
+	{
+		Path jarPath = Paths.get(sdkPath, "lib", JAR_NAME_ADT);
+		if(Files.exists(jarPath))
+		{
+			return jarPath;
+		}
+		return null;
 	}
 
 	public static List<String> findSourcePathAssets(String mainFile, List<String> sourcePaths, String outputDirectory, List<String> excludes)
