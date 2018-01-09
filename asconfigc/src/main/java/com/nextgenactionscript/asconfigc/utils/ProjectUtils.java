@@ -317,4 +317,9 @@ public class ProjectUtils
 		}
 		return new File(outputDirectory, relativePath).getAbsolutePath();
 	}
+
+	public static String populateAdobeAIRDescriptorContent(String descriptor, String contentValue)
+	{
+		return descriptor.replaceFirst("<content>.+<\\/content>", "<content>" + contentValue + "</content>");
+	}
 }

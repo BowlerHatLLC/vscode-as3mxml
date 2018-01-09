@@ -647,7 +647,7 @@ public class ASConfigC
 		{
 			throw new ASConfigCException("Failed to read Adobe AIR application descriptor at path: " + airDescriptorPath);
 		}
-		descriptorContents = descriptorContents.replaceFirst("<content>.+<\\/content>", "<content>" + contentValue + "</content>");
+		descriptorContents = ProjectUtils.populateAdobeAIRDescriptorContent(descriptorContents, contentValue);
 		if(outputIsJS)
 		{
 			String debugDescriptorOutputPath = ProjectUtils.findAIRDescriptorOutputPath(mainFile, airDescriptorPath, outputDirectory, false, true);

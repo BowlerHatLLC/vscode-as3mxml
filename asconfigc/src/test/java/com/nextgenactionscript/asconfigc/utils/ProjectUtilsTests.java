@@ -686,4 +686,36 @@ class ProjectUtilsTests
 		Assertions.assertEquals(file.getAbsolutePath(), result,
 			"ProjectUtils.assetPathToOutputPath() returned incorrect value.");
 	}
+
+	//--- populateAdobeAIRDescriptorContent
+
+	@Test
+	void testPopulateAdobeAIRDescriptorContent()
+	{
+		String descriptorContent = "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n" +
+			"<application xmlns=\"http://ns.adobe.com/air/application/24.0\">\n" +
+			"\t<id>com.example.Main</id>\n" + 
+			"\t<versionNumber>0.0.0</versionNumber>\n" +
+			"\t<filename>Main</filename>\n" +
+			"\t<name>Main</name>\n" +
+			"\t<initialWindow>\n" +
+			"\t\t<content>[Path to content will be replaced by asconfigc]</content>\n" +
+			"\t\t<visible>true</visible>\n" +
+			"\t</initialWindow>\n" +
+			"</application>";
+		String expected = "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n" +
+			"<application xmlns=\"http://ns.adobe.com/air/application/24.0\">\n" +
+			"\t<id>com.example.Main</id>\n" + 
+			"\t<versionNumber>0.0.0</versionNumber>\n" +
+			"\t<filename>Main</filename>\n" +
+			"\t<name>Main</name>\n" +
+			"\t<initialWindow>\n" +
+			"\t\t<content>Test.swf</content>\n" +
+			"\t\t<visible>true</visible>\n" +
+			"\t</initialWindow>\n" +
+			"</application>";
+		String result = ProjectUtils.populateAdobeAIRDescriptorContent(descriptorContent, "Test.swf");
+		Assertions.assertEquals(expected, result,
+			"ProjectUtils.populateAdobeAIRDescriptorContent() returned incorrect value.");
+	}
 }
