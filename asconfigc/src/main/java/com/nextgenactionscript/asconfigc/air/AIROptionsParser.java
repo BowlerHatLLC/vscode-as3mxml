@@ -342,6 +342,10 @@ public class AIROptionsParser
 		if(checkIfExists)
 		{
 			File file = new File(value);
+			if(!file.isAbsolute())
+			{
+				file = new File(System.getProperty("user.dir"), value);
+			}
 			if(!file.exists())
 			{
 				throw new FileNotFoundException("Path for Adobe AIR option \"" + optionName + "\" not found: " + value);
