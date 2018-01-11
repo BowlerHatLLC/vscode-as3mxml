@@ -17,6 +17,8 @@ package com.nextgenactionscript.asconfigc.air;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.List;
 
@@ -210,14 +212,14 @@ public class AIROptionsParser
 		{
 			parseFiles(options.get(AIROptions.FILES), result);
 		}
-		File applicationContentFile = new File(applicationContentPath);
-		if(!applicationContentPath.equals(applicationContentFile.getName()))
+		Path applicationContentFilePath = Paths.get(applicationContentPath);
+		if(!applicationContentPath.equals(applicationContentFilePath.getFileName().toString()))
 		{
 			result.add("-C");
-			String dirname = applicationContentFile.getParentFile().getPath();
+			String dirname = applicationContentFilePath.getParent().toString();
 			dirname = PathUtils.escapePath(dirname, false);
 			result.add(dirname);
-			String basename = applicationContentFile.getName();
+			String basename = applicationContentFilePath.getFileName().toString();
 			basename = PathUtils.escapePath(basename, false);
 			result.add(basename);
 		}

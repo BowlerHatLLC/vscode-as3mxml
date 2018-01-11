@@ -16,6 +16,7 @@ limitations under the License.
 package com.nextgenactionscript.asconfigc.compiler;
 
 import java.io.FileNotFoundException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 
 import org.junit.jupiter.api.AfterEach;
@@ -74,6 +75,7 @@ class AIROptionsParserTests
 		String filename = "content.swf";
 		String dirPath = "path/to";
 		String value = dirPath + "/" + filename;
+		String formattedDirPath = Paths.get(dirPath).toString();
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		ArrayList<String> result = new ArrayList<>();
 		try
@@ -88,7 +90,7 @@ class AIROptionsParserTests
 			"AIROptionsParser.parse() incorrectly contains application content path.");
 		int optionIndex = result.indexOf("-C");
 		Assertions.assertNotEquals(-1, optionIndex);
-		Assertions.assertEquals(optionIndex + 1, result.indexOf(dirPath));
+		Assertions.assertEquals(optionIndex + 1, result.indexOf(formattedDirPath));
 		Assertions.assertEquals(optionIndex + 2, result.indexOf(filename));
 	}
 
@@ -256,6 +258,7 @@ class AIROptionsParserTests
 		String path2 = "images";
 		String file3 = "file3 with spaces.jpg";
 		String path3 = "path/with spaces/";
+		String formattedFile1 = Paths.get(file1).toString();
 		String formattedFile3 = PathUtils.escapePath(file3);
 		String formattedPath3 = PathUtils.escapePath(path3);
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
@@ -284,7 +287,7 @@ class AIROptionsParserTests
 		}
 		int optionIndex1 = result.indexOf("-e");
 		Assertions.assertNotEquals(-1, optionIndex1);
-		Assertions.assertEquals(optionIndex1 + 1, result.indexOf(file1));
+		Assertions.assertEquals(optionIndex1 + 1, result.indexOf(formattedFile1));
 		Assertions.assertEquals(optionIndex1 + 2, result.indexOf(path1));
 		int optionIndex2 = optionIndex1 + 1 + result.subList(optionIndex1 + 1, result.size()).indexOf("-e");
 		Assertions.assertEquals(optionIndex1 + 3, optionIndex2);
