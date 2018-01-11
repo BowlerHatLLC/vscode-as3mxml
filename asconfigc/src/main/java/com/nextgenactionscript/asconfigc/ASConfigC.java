@@ -15,6 +15,7 @@ limitations under the License.
 */
 package com.nextgenactionscript.asconfigc;
 
+import java.io.Console;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -47,6 +48,7 @@ import com.networknt.schema.JsonSchema;
 import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.ValidationMessage;
 import com.nextgenactionscript.asconfigc.air.AIROptionsParser;
+import com.nextgenactionscript.asconfigc.air.AIRSigningOptions;
 import com.nextgenactionscript.asconfigc.compiler.CompilerOptions;
 import com.nextgenactionscript.asconfigc.compiler.CompilerOptionsParser;
 import com.nextgenactionscript.asconfigc.compiler.ConfigName;
@@ -158,8 +160,6 @@ public class ASConfigC
 		copySourcePathAssets();
 		processAdobeAIRDescriptor();
 		packageAIR();
-		//force an exit in case a thread gets stuck
-		System.exit(0);
 	}
 
 	private ASConfigCOptions options;
@@ -706,6 +706,18 @@ public class ASConfigC
 		{
 			throw new ASConfigCException("AIR ADT not found in SDK. Expected: " + Paths.get(sdkHome, "lib", "adt.jar"));
 		}
+
+		//if the certificate password isn't already specified, ask for it and add it
+		int passwordIndex = airOptions.indexOf("-" + AIRSigningOptions.STOREPASS);
+		if(passwordIndex == -1)
+		{
+			Console console = System.console();
+			char[] password = console.readPassword("Adobe AIR code signing password: ");
+			int keystoreIndex = airOptions.indexOf("-" + AIRSigningOptions.KEYSTORE);
+			airOptions.add(keystoreIndex + 2, "-" + AIRSigningOptions.STOREPASS);
+			airOptions.add(keystoreIndex + 3, new String(password));
+		}
+
 		Path javaExecutablePath = Paths.get(System.getProperty("java.home"), "bin", "java");
 		StringBuilder command = new StringBuilder();
 		command.append(PathUtils.escapePath(javaExecutablePath.toString()));
@@ -718,8 +730,6 @@ public class ASConfigC
 		try
 		{
 			Process process = Runtime.getRuntime().exec(command.toString(), null, new File(System.getProperty("user.dir")));
-			StreamGobbler inGobbler = new StreamGobbler(System.in, new PrintStream(process.getOutputStream()));
-			inGobbler.start();
 			StreamGobbler outGobbler = new StreamGobbler(process.getInputStream(), System.out);
 			outGobbler.start();
 			StreamGobbler errGobbler = new StreamGobbler(process.getErrorStream(), System.err);

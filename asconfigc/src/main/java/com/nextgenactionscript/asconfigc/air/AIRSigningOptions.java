@@ -19,6 +19,7 @@ public class AIRSigningOptions
 {
 	public static final String ALIAS = "alias";
 	public static final String STORETYPE = "storetype";
+	public static final String STOREPASS = "storepass";
 	public static final String KEYSTORE = "keystore";
 	public static final String PROVIDER_NAME = "providerName";
 	public static final String TSA = "tsa";
