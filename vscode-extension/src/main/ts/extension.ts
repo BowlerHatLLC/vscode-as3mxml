@@ -250,7 +250,7 @@ export function activate(context: vscode.ExtensionContext)
 		sourcePathDataProvider = new ActionScriptSourcePathDataProvider(rootPath);
 		vscode.window.registerTreeDataProvider("actionScriptSourcePaths", sourcePathDataProvider);
 
-		actionScriptTaskProvider = new ActionScriptTaskProvider();
+		actionScriptTaskProvider = new ActionScriptTaskProvider(context, javaExecutablePath);
 		vscode.workspace.registerTaskProvider("actionscript", actionScriptTaskProvider);
 
 		debugConfigurationProvider = new SWFDebugConfigurationProvider();

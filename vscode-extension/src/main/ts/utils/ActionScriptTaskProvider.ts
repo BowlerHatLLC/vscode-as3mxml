@@ -45,6 +45,13 @@ interface ActionScriptTaskDefinition extends vscode.TaskDefinition
 
 export default class ActionScriptTaskProvider implements vscode.TaskProvider
 {
+	constructor(context: vscode.ExtensionContext, public javaExecutablePath: string)
+	{
+		this._context = context;
+	}
+
+	private _context: vscode.ExtensionContext;
+
 	provideTasks(token: vscode.CancellationToken): Promise<vscode.Task[]>
 	{
 		if(vscode.workspace.workspaceFolders === undefined)
@@ -147,14 +154,14 @@ export default class ActionScriptTaskProvider implements vscode.TaskProvider
 	}
 
 	private getTask(description: string, workspaceFolder: vscode.WorkspaceFolder,
-		command: string, sdk: string, debug: boolean, airPlatform: string): vscode.Task
+		command: string[], sdk: string, debug: boolean, airPlatform: string): vscode.Task
 	{
 		let definition: ActionScriptTaskDefinition = { type: TASK_TYPE, debug: debug };
 		if(airPlatform)
 		{
 			definition.air = airPlatform;
 		}
-		let options = ["--flexHome", sdk];
+		let options = ["--sdk", sdk];
 		if(debug)
 		{
 			options.push("--debug=true");
@@ -167,15 +174,24 @@ export default class ActionScriptTaskProvider implements vscode.TaskProvider
 		{
 			options.push("--air", airPlatform);
 		}
+		if(command.length > 1)
+		{
+			options.unshift(...command.slice(1));
+		}
 		let source = airPlatform === null ? "ActionScript" : "Adobe AIR";
-		let execution = new vscode.ProcessExecution(command, options);
+		let execution = new vscode.ProcessExecution(command[0], options);
 		let task = new vscode.Task(definition, workspaceFolder, description,
 			source, execution, MATCHER);
 		task.group = vscode.TaskGroup.Build;
 		return task;
 	}
 
-	private getCommand(workspaceRoot: vscode.WorkspaceFolder): string
+	private getDefaultCommand(): string[]
+	{
+		return [this.javaExecutablePath, "-jar", path.join(this._context.extensionPath, "asconfigc", "asconfigc.jar")];
+	}
+
+	private getCommand(workspaceRoot: vscode.WorkspaceFolder): string[]
 	{
 		let nodeModulesBin = path.join(workspaceRoot.uri.fsPath, "node_modules", ".bin");
 		if(process.platform === "win32")
@@ -185,18 +201,18 @@ export default class ActionScriptTaskProvider implements vscode.TaskProvider
 			let winPath = path.join(nodeModulesBin, executableName);
 			if(fs.existsSync(winPath))
 			{
-				return winPath;
+				return [winPath];
 			}
 			//otherwise, try to use a global executable
-			return executableName;
+			return this.getDefaultCommand();
 		}
 		let executableName = "asconfigc";
 		let unixPath = path.join(nodeModulesBin, executableName);
 		if(fs.existsSync(unixPath))
 		{
-			return unixPath;
+			return [unixPath];
 		}
-		return executableName;
+		return this.getDefaultCommand();
 	}
 	
 	private readASConfigJSON(filePath: string): string
