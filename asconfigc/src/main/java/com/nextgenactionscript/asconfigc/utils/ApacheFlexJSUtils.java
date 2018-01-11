@@ -25,6 +25,7 @@ public class ApacheFlexJSUtils
 	private static final String ENV_FLEX_HOME = "FLEX_HOME";
 	private static final String ENV_PATH = "PATH";
 	private static final String NPM_FLEXJS = "flexjs";
+	private static final String JS = "js";
 	private static final String BIN = "bin";
 	private static final String ASJSC = "asjsc";
 	private static final String FLEX_SDK_DESCRIPTION = "flex-sdk-description.xml";
@@ -49,7 +50,7 @@ public class ApacheFlexJSUtils
 		{
 			return false;
 		}
-		Path compilerPath = absolutePath.resolve(BIN).resolve(ASJSC);
+		Path compilerPath = absolutePath.resolve(JS).resolve(BIN).resolve(ASJSC);
 		file = compilerPath.toFile();
 		if(!file.exists() || file.isDirectory())
 		{
