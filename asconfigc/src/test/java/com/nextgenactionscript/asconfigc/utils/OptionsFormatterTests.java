@@ -74,6 +74,7 @@ class OptionsFormatterTests
 	{
 		String optionName = "optionName";
 		String value = "path/to/file with spaces.txt";
+		String formattedValue = PathUtils.escapePath(value, true);
 		ArrayList<String> result = new ArrayList<>();
 		try
 		{
@@ -83,14 +84,9 @@ class OptionsFormatterTests
 		{
 			Assertions.fail("OptionsFormatter.setPathValue() incorrectly threw a FileNotFoundException.");
 		}
-		String expectedOption = "--optionName=path/to/file\\ with\\ spaces.txt";
-		if(System.getProperty("os.name").startsWith("Windows"))
-		{
-			expectedOption = "--optionName=\"path/to/file with spaces.txt\"";
-		}
 		Assertions.assertEquals(1, result.size(),
 			"OptionsFormatter.setPathValue() created incorrect number of options.");
-		Assertions.assertEquals(expectedOption, result.get(0),
+		Assertions.assertEquals("--optionName=" + formattedValue, result.get(0),
 			"OptionsFormatter.setPathValue() incorrectly formatted option.");
 	}
 	
@@ -154,10 +150,14 @@ class OptionsFormatterTests
 	void testAppendPaths()
 	{
 		String optionName = "optionName";
+		String value1 = "path/to/file1.txt";
+		String value2 = "path/to/file2 with spaces.txt";
+		String value3 = "path/to/file3.txt";
 		ArrayList<String> values = new ArrayList<>();
-		values.add("path/to/file1.txt");
-		values.add("path/to/file2 with spaces.txt");
-		values.add("path/to/file3.txt");
+		values.add(value1);
+		values.add(value2);
+		values.add(value3);
+		String formattedValue2 = PathUtils.escapePath(value2, true);
 		ArrayList<String> result = new ArrayList<>();
 		try
 		{
@@ -167,16 +167,11 @@ class OptionsFormatterTests
 		{
 			Assertions.fail("OptionsFormatter.appendPaths() incorrectly threw a FileNotFoundException.");
 		}
-		String expectedFile2 = "--optionName+=path/to/file2\\ with\\ spaces.txt";
-		if(System.getProperty("os.name").startsWith("Windows"))
-		{
-			expectedFile2 = "--optionName=\"path/to/file2 with spaces.txt\"";
-		}
 		Assertions.assertEquals(3, result.size(),
 			"OptionsFormatter.testAppendPaths() created incorrect number of options.");
 		Assertions.assertEquals("--optionName+=path/to/file1.txt", result.get(0),
 			"OptionsFormatter.testAppendPaths() incorrectly formatted option.");
-		Assertions.assertEquals(expectedFile2, result.get(1),
+		Assertions.assertEquals("--optionName+=" + formattedValue2, result.get(1),
 			"OptionsFormatter.testAppendPaths() incorrectly formatted option.");
 		Assertions.assertEquals("--optionName+=path/to/file3.txt", result.get(2),
 			"OptionsFormatter.testAppendPaths() incorrectly formatted option.");
