@@ -327,7 +327,7 @@ public class CompilerOptionsParser
 			String manifest = currentValue.get(CompilerOptions.NAMESPACE__MANIFEST).asText();
 			result.add("--" + CompilerOptions.NAMESPACE);
 			result.add(uri);
-			result.add(PathUtils.escapePath(manifest));
+			result.add(PathUtils.escapePath(manifest, false));
 		}
 	}
 
