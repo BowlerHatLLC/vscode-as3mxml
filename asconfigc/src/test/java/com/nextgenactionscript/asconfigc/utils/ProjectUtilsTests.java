@@ -66,7 +66,7 @@ class ProjectUtilsTests
 		String mainFile = "/path/to/Test.as";
 		if(System.getProperty("os.name").toLowerCase().startsWith("windows"))
 		{
-			mainFile = "c:\\path\\to\\Test.as";
+			mainFile = "C:\\path\\to\\Test.as";
 		}
 		String path = ProjectUtils.findOutputDirectory(mainFile, null, true);
 		File file = new File(mainFile);
@@ -130,7 +130,7 @@ class ProjectUtilsTests
 		String mainFile = "/path/to/Test.as";
 		if(System.getProperty("os.name").toLowerCase().startsWith("windows"))
 		{
-			mainFile = "c:\\path\\to\\Test.as";
+			mainFile = "C:\\path\\to\\Test.as";
 		}
 		String path = ProjectUtils.findOutputDirectory(mainFile, null, false);
 		File file = new File(mainFile);
@@ -144,7 +144,7 @@ class ProjectUtilsTests
 		String mainFile = "/path/to/src/Test.as";
 		if(System.getProperty("os.name").toLowerCase().startsWith("windows"))
 		{
-			mainFile = "c:\\path\\to\\src\\Test.as";
+			mainFile = "C:\\path\\to\\src\\Test.as";
 		}
 		String path = ProjectUtils.findOutputDirectory(mainFile, null, false);
 		File file = new File(mainFile);
@@ -158,7 +158,7 @@ class ProjectUtilsTests
 		String mainFile = "/path/to/src/main/royale/Test.as";
 		if(System.getProperty("os.name").toLowerCase().startsWith("windows"))
 		{
-			mainFile = "c:\\path\\to\\src\\main\\royale\\Test.as";
+			mainFile = "C:\\path\\to\\src\\main\\royale\\Test.as";
 		}
 		String path = ProjectUtils.findOutputDirectory(mainFile, null, false);
 		File file = new File(mainFile);
@@ -172,7 +172,7 @@ class ProjectUtilsTests
 		String mainFile = "/path/to/src/main/flex/Test.as";
 		if(System.getProperty("os.name").toLowerCase().startsWith("windows"))
 		{
-			mainFile = "c:\\path\\to\\src\\main\\flex\\Test.as";
+			mainFile = "C:\\path\\to\\src\\main\\flex\\Test.as";
 		}
 		String path = ProjectUtils.findOutputDirectory(mainFile, null, false);
 		File file = new File(mainFile);
@@ -206,7 +206,7 @@ class ProjectUtilsTests
 		String mainFile = "/path/to/Test.as";
 		if(System.getProperty("os.name").toLowerCase().startsWith("windows"))
 		{
-			mainFile = "c:\\path\\to\\Test.as";
+			mainFile = "C:\\path\\to\\Test.as";
 		}
 		String path = ProjectUtils.findAIRDescriptorOutputPath(mainFile, "src/Test-app.xml", null, true, false);
 		File file = new File(mainFile);
@@ -275,7 +275,7 @@ class ProjectUtilsTests
 		String mainFile = "/path/to/Test.as";
 		if(System.getProperty("os.name").toLowerCase().startsWith("windows"))
 		{
-			mainFile = "c:\\path\\to\\Test.as";
+			mainFile = "C:\\path\\to\\Test.as";
 		}
 		String path = ProjectUtils.findAIRDescriptorOutputPath(mainFile, "src/Test-app.xml", null, false, true);
 		File file = new File(mainFile);
@@ -344,7 +344,7 @@ class ProjectUtilsTests
 		String mainFile = "/path/to/Test.as";
 		if(System.getProperty("os.name").toLowerCase().startsWith("windows"))
 		{
-			mainFile = "c:\\path\\to\\Test.as";
+			mainFile = "C:\\path\\to\\Test.as";
 		}
 		String path = ProjectUtils.findAIRDescriptorOutputPath(mainFile, "src/Test-app.xml", null, false, false);
 		File file = new File(mainFile);
@@ -462,7 +462,7 @@ class ProjectUtilsTests
 		String mainFile = "/path/to/Test.as";
 		if(System.getProperty("os.name").toLowerCase().startsWith("windows"))
 		{
-			mainFile = "c:\\path\\to\\Test.as";
+			mainFile = "C:\\path\\to\\Test.as";
 		}
 		String path = ProjectUtils.findApplicationContentOutputPath(mainFile, null, true, false);
 		File file = new File(mainFile);
@@ -549,7 +549,7 @@ class ProjectUtilsTests
 		String mainFile = "/path/to/Test.as";
 		if(System.getProperty("os.name").toLowerCase().startsWith("windows"))
 		{
-			mainFile = "c:\\path\\to\\Test.as";
+			mainFile = "C:\\path\\to\\Test.as";
 		}
 		String path = ProjectUtils.findApplicationContentOutputPath(mainFile, null, false, false);
 		File file = new File(mainFile);
@@ -636,7 +636,7 @@ class ProjectUtilsTests
 		String mainFile = "/path/to/Test.as";
 		if(System.getProperty("os.name").toLowerCase().startsWith("windows"))
 		{
-			mainFile = "c:\\path\\to\\Test.as";
+			mainFile = "C:\\path\\to\\Test.as";
 		}
 		String path = ProjectUtils.findApplicationContentOutputPath(mainFile, null, false, true);
 		File file = new File(mainFile);
