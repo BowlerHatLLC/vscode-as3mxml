@@ -51,7 +51,6 @@ import org.apache.royale.compiler.common.ASModifier;
 import org.apache.royale.compiler.common.ISourceLocation;
 import org.apache.royale.compiler.common.PrefixMap;
 import org.apache.royale.compiler.common.XMLName;
-import org.apache.royale.compiler.config.Configurator;
 import org.apache.royale.compiler.config.ICompilerSettingsConstants;
 import org.apache.royale.compiler.constants.IASKeywordConstants;
 import org.apache.royale.compiler.constants.IASLanguageConstants;
@@ -90,6 +89,7 @@ import org.apache.royale.compiler.internal.parsing.as.StreamingASTokenizer;
 import org.apache.royale.compiler.internal.projects.CompilerProject;
 import org.apache.royale.compiler.internal.projects.RoyaleJSProject;
 import org.apache.royale.compiler.internal.projects.RoyaleProject;
+import org.apache.royale.compiler.internal.projects.RoyaleProjectConfigurator;
 import org.apache.royale.compiler.internal.scopes.ASScope;
 import org.apache.royale.compiler.internal.scopes.TypeScope;
 import org.apache.royale.compiler.internal.scopes.ASProjectScope.DefinitionPromise;
@@ -4575,7 +4575,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
     }
     
-    private void publishConfigurationProblems(Configurator configurator)
+    private void publishConfigurationProblems(RoyaleProjectConfigurator configurator)
     {
         Collection<ICompilerProblem> problems = configurator.getConfigurationProblems();
         if (problems.size() > 0)
@@ -4692,14 +4692,14 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return currentProject;
         }
         CompilerOptions compilerOptions = currentProjectOptions.compilerOptions;
-        Configurator configurator = null;
+        RoyaleProjectConfigurator configurator = null;
         if (isJSConfig(currentProjectOptions))
         {
-            configurator = new Configurator(JSGoogConfiguration.class);
+            configurator = new RoyaleProjectConfigurator(JSGoogConfiguration.class);
         }
         else //swf only
         {
-            configurator = new Configurator(VSCodeConfiguration.class);
+            configurator = new RoyaleProjectConfigurator(VSCodeConfiguration.class);
         }
         configurator.setToken(TOKEN_CONFIGNAME, currentProjectOptions.config);
         ProjectType type = currentProjectOptions.type;
