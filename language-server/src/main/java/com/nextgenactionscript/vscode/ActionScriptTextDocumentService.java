@@ -41,6 +41,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.royale.abc.ABCConstants;
 import org.apache.royale.abc.ABCParser;
 import org.apache.royale.abc.Pool;
 import org.apache.royale.abc.PoolingABCVisitor;
@@ -286,6 +287,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private Path workspaceRoot;
     private Map<Path, String> sourceByPath = new HashMap<>();
     private Map<Path, List<SavedCodeAction>> codeActionsByPath = new HashMap<>();
+    private List<String> completionTypes = new ArrayList<>();
     private Collection<ICompilationUnit> compilationUnits;
     private ArrayList<IInvisibleCompilationUnit> invisibleUnits = new ArrayList<>();
     private ICompilationUnit currentUnit;
@@ -374,6 +376,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     @Override
     public CompletableFuture<Either<List<CompletionItem>, CompletionList>> completion(TextDocumentPositionParams position)
     {
+        //this shouldn't be necessary, but if we ever forget to do this
+        //somewhere, completion results might be missing items.
+        completionTypes.clear();
         String textDocumentUri = position.getTextDocument().getUri();
         if (!textDocumentUri.endsWith(AS_EXTENSION)
                 && !textDocumentUri.endsWith(MXML_EXTENSION))
@@ -389,13 +394,17 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             IASNode embeddedNode = getEmbeddedActionScriptNodeInMXMLTag(offsetTag, currentOffset, position);
             if (embeddedNode != null)
             {
-                return CompletableFuture.completedFuture(Either.forRight(actionScriptCompletionWithNode(position, embeddedNode)));
+                CompletionList result = actionScriptCompletionWithNode(position, embeddedNode);
+                completionTypes.clear();
+                return CompletableFuture.completedFuture(Either.forRight(result));
             }
             //if we're inside an <fx:Script> tag, we want ActionScript completion,
             //so that's why we call isMXMLTagValidForCompletion()
             if (isMXMLTagValidForCompletion(offsetTag))
             {
-                return CompletableFuture.completedFuture(Either.forRight(mxmlCompletion(position, offsetTag)));
+                CompletionList result = mxmlCompletion(position, offsetTag);
+                completionTypes.clear();
+                return CompletableFuture.completedFuture(Either.forRight(result));
             }
         }
         if (offsetTag == null && position.getTextDocument().getUri().endsWith(MXML_EXTENSION))
@@ -410,7 +419,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             result.setItems(new ArrayList<>());
             return CompletableFuture.completedFuture(Either.forRight(result));
         }
-        return CompletableFuture.completedFuture(Either.forRight(actionScriptCompletion(position)));
+        CompletionList result = actionScriptCompletion(position);
+        completionTypes.clear();
+        return CompletableFuture.completedFuture(Either.forRight(result));
     }
 
     /**
@@ -1677,6 +1688,43 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
         }
 
+        //function overrides
+        if (parentNode != null
+            && parentNode instanceof IFunctionNode
+            && offsetNode instanceof IIdentifierNode)
+        {
+            IFunctionNode functionNode = (IFunctionNode) parentNode;
+            if (offsetNode == functionNode.getNameExpressionNode())
+            {
+                if (functionNode.hasModifier(ASModifier.OVERRIDE)
+                    && functionNode.getParametersContainerNode().getAbsoluteStart() == -1
+                    && functionNode.getReturnTypeNode() == null)
+                {
+                    autoCompleteFunctionOverrides(functionNode, result);
+                    return result;
+                }
+            }
+        }
+        if (nodeAtPreviousOffset != null
+                && nodeAtPreviousOffset instanceof IKeywordNode
+                && (nodeAtPreviousOffset.getNodeID() == ASTNodeID.KeywordFunctionID
+                        || nodeAtPreviousOffset.getNodeID() == ASTNodeID.KeywordGetID
+                        || nodeAtPreviousOffset.getNodeID() == ASTNodeID.KeywordSetID))
+        {
+            IASNode previousNodeParent = (IASNode) nodeAtPreviousOffset.getParent();
+            if (previousNodeParent instanceof IFunctionNode)
+            {
+                IFunctionNode functionNode = (IFunctionNode) previousNodeParent;
+                if (functionNode.hasModifier(ASModifier.OVERRIDE)
+                        && functionNode.getParametersContainerNode().getAbsoluteStart() == -1
+                        && functionNode.getReturnTypeNode() == null)
+                {
+                    autoCompleteFunctionOverrides(functionNode, result);
+                    return result;
+                }
+            }
+        }
+
         //local scope
         IASNode currentNodeForScope = offsetNode;
         do
@@ -1695,7 +1743,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 IDefinition definitionToSkip = scope.getDefinition();
                 autoCompleteDefinitions(result, false, false, null, definitionToSkip, containingPackageName);
                 autoCompleteKeywords(scopedNode, result);
-                return result;                
+                return result;
             }
             currentNodeForScope = currentNodeForScope.getParent();
         }
@@ -2833,6 +2881,122 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         autoCompleteValue(IASKeywordConstants.NULL, result);
     }
 
+    private void autoCompleteFunctionOverrides(IFunctionNode node, CompletionList result)
+    {
+        String namespace = node.getNamespace();
+        boolean isGetter = node.isGetter();
+        boolean isSetter = node.isSetter();
+        IClassNode classNode = (IClassNode) node.getAncestorOfType(IClassNode.class);
+        IClassDefinition classDefinition = classNode.getDefinition();
+
+        ArrayList<IDefinition> propertyDefinitions = new ArrayList<>();
+        TypeScope typeScope = (TypeScope) classDefinition.getContainedScope();
+        Set<INamespaceDefinition> namespaceSet = typeScope.getNamespaceSet(currentProject);
+        do
+        {
+            classDefinition = classDefinition.resolveBaseClass(currentProject);
+            if (classDefinition == null)
+            {
+                break;
+            }
+            typeScope = (TypeScope) classDefinition.getContainedScope();
+            INamespaceDefinition protectedNamespace = classDefinition.getProtectedNamespaceReference();
+            typeScope.getAllLocalProperties(currentProject, propertyDefinitions, namespaceSet, protectedNamespace);
+        }
+        while (classDefinition instanceof IClassDefinition);
+
+        List<CompletionItem> resultItems = result.getItems();
+        ArrayList<String> functionNames = new ArrayList<>();
+        for (IDefinition definition : propertyDefinitions)
+        {
+            if (!(definition instanceof IFunctionDefinition)
+                    || definition.isStatic())
+            {
+                continue;
+            }
+            IFunctionDefinition functionDefinition = (IFunctionDefinition) definition;
+            boolean otherIsGetter = functionDefinition instanceof IGetterDefinition;
+            boolean otherIsSetter = functionDefinition instanceof ISetterDefinition;
+            String otherNamespace = functionDefinition.getNamespaceReference().getBaseName();
+            if (isGetter != otherIsGetter
+                    || isSetter != otherIsSetter
+                    || !namespace.equals(otherNamespace))
+            {
+                continue;
+            }
+            String functionName = functionDefinition.getBaseName();
+            if (functionNames.contains(functionName))
+            {
+                continue;
+            }
+            functionNames.add(functionName);
+
+            StringBuilder insertText = new StringBuilder();
+            insertText.append(functionName);
+            insertText.append("(");
+            IParameterDefinition[] params = functionDefinition.getParameters();
+            for (int i = 0, length = params.length; i < length; i++)
+            {
+                if (i > 0)
+                {
+                    insertText.append(", ");
+                }
+                IParameterDefinition param = params[i];
+                if (param.isRest())
+                {
+                    insertText.append(IASLanguageConstants.REST);
+                }
+                insertText.append(param.getBaseName());
+                String paramType = param.getTypeAsDisplayString();
+                if(paramType.length() != 0)
+                {
+                    insertText.append(":");
+                    insertText.append(paramType);
+                }
+                if (param.hasDefaultValue())
+                {
+                    insertText.append(" = ");
+                    Object defaultValue = param.resolveDefaultValue(currentProject);
+                    if (defaultValue instanceof String)
+                    {
+                        insertText.append("\"" + defaultValue + "\"");
+                    }
+                    else if(defaultValue == ABCConstants.UNDEFINED_VALUE)
+                    {
+                        insertText.append(IASLanguageConstants.UNDEFINED);
+                    }
+                    else if(defaultValue == ABCConstants.NULL_VALUE)
+                    {
+                        insertText.append(IASLanguageConstants.NULL);
+                    }
+                    else
+                    {
+                        insertText.append(defaultValue);
+                    }
+                }
+            }
+            insertText.append(")");
+            String returnType = functionDefinition.getReturnTypeAsDisplayString();
+            if(returnType.length() != 0)
+            {
+                insertText.append(":");
+                insertText.append(returnType);
+            }
+
+            CompletionItem item = new CompletionItem();
+            item.setKind(getDefinitionKind(functionDefinition));
+            item.setDetail(getDefinitionDetail(functionDefinition));
+            item.setLabel(functionDefinition.getBaseName());
+            item.setInsertText(insertText.toString());
+            String docs = getDocumentationForDefinition(functionDefinition, false);
+            if (docs != null)
+            {
+                item.setDocumentation(docs);
+            }
+            resultItems.add(item);
+        }
+    }
+
     private void autoCompleteMemberAccess(IMemberAccessExpressionNode node, CompletionList result)
     {
         ASScope scope = (ASScope) node.getContainingScope().getScope();
@@ -3395,11 +3559,30 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return prefix;
     }
 
+    private boolean isDuplicateTypeDefinition(IDefinition definition)
+    {
+        if (definition instanceof ITypeDefinition)
+        {
+            String qualifiedName = definition.getQualifiedName();
+            return completionTypes.contains(qualifiedName);
+        }
+        return false;
+    }
+
     private void addDefinitionAutoCompleteActionScript(IDefinition definition, String containingPackageName, CompletionList result)
     {
         if (definition.getBaseName().startsWith(VECTOR_HIDDEN_PREFIX))
         {
             return;
+        }
+        if (isDuplicateTypeDefinition(definition))
+        {
+            return;
+        }
+        if (definition instanceof ITypeDefinition)
+        {
+            String qualifiedName = definition.getQualifiedName();
+            completionTypes.add(qualifiedName);
         }
         CompletionItem item = new CompletionItem();
         item.setKind(getDefinitionKind(definition));
@@ -3427,6 +3610,15 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         if (definition.getBaseName().startsWith(VECTOR_HIDDEN_PREFIX))
         {
             return;
+        }
+        if (isDuplicateTypeDefinition(definition))
+        {
+            return;
+        }
+        if (definition instanceof ITypeDefinition)
+        {
+            String qualifiedName = definition.getQualifiedName();
+            completionTypes.add(qualifiedName);
         }
         CompletionItem item = new CompletionItem();
         item.setKind(getDefinitionKind(definition));

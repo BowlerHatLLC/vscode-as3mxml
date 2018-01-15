@@ -60,6 +60,8 @@ package
 			var s:String = "no completion in string";
 			var r:RegExp = /no completion in regexp/;
 		}
+
+		override protected function 
 	}
 }
 

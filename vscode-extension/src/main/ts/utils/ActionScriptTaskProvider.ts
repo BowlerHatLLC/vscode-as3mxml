@@ -45,20 +45,36 @@ interface ActionScriptTaskDefinition extends vscode.TaskDefinition
 
 export default class ActionScriptTaskProvider implements vscode.TaskProvider
 {
+	constructor(context: vscode.ExtensionContext, public javaExecutablePath: string)
+	{
+		this._context = context;
+	}
+
+	private _context: vscode.ExtensionContext;
+
 	provideTasks(token: vscode.CancellationToken): Promise<vscode.Task[]>
 	{
 		if(vscode.workspace.workspaceFolders === undefined)
 		{
 			return Promise.resolve([]);
 		}
-		let workspaceRoot = vscode.workspace.workspaceFolders[0];
 
+		let result: vscode.Task[] = [];
+		vscode.workspace.workspaceFolders.forEach((workspaceFolder) =>
+		{
+			this.provideTasksForWorkspace(workspaceFolder, result);
+		});
+		return Promise.resolve(result);
+	}
+
+	private provideTasksForWorkspace(workspaceFolder: vscode.WorkspaceFolder, result: vscode.Task[])
+	{
 		let provideTask = false;
 		let isAIRMobile = false;
 		let isBundleWindows = false;
 		let isBundleMac = false;
 		let isAIRDesktop = false;
-		let asconfigJsonPath = path.join(workspaceRoot.uri.fsPath, ASCONFIG_JSON);
+		let asconfigJsonPath = path.join(workspaceFolder.uri.fsPath, ASCONFIG_JSON);
 		if(fs.existsSync(asconfigJsonPath))
 		{
 			//if asconfig.json exists in the root, always provide the tasks
@@ -87,53 +103,48 @@ export default class ActionScriptTaskProvider implements vscode.TaskProvider
 		}
 		if(!provideTask)
 		{
-			return Promise.resolve([]);
+			return;
 		}
 
-		let command = this.getCommand(workspaceRoot);
+		let command = this.getCommand(workspaceFolder);
 		let frameworkSDK = getFrameworkSDKPathWithFallbacks();
 
-		let result =
-		[
-			//compile SWF or Royale JS
-			this.getTask("compile debug build",
-				workspaceRoot, command, frameworkSDK, true, null),
-			this.getTask("compile release build",
-				workspaceRoot, command, frameworkSDK, false, null),
-		];
+		//compile SWF or Royale JS
+		result.push(this.getTask("compile debug build",
+			workspaceFolder, command, frameworkSDK, true, null));
+		result.push(this.getTask("compile release build",
+			workspaceFolder, command, frameworkSDK, false, null));
 
 		if(isAIRMobile)
 		{
 			result.push(this.getTask("package debug iOS application",
-				workspaceRoot, command, frameworkSDK, true, PLATFORM_IOS));
+				workspaceFolder, command, frameworkSDK, true, PLATFORM_IOS));
 			result.push(this.getTask("package release iOS application",
-				workspaceRoot, command, frameworkSDK, false, PLATFORM_IOS));
+				workspaceFolder, command, frameworkSDK, false, PLATFORM_IOS));
 			result.push(this.getTask("package debug Android application",
-				workspaceRoot, command, frameworkSDK, true, PLATFORM_ANDROID));
+				workspaceFolder, command, frameworkSDK, true, PLATFORM_ANDROID));
 			result.push(this.getTask("package release Android application",
-				workspaceRoot, command, frameworkSDK, false, PLATFORM_ANDROID));
+				workspaceFolder, command, frameworkSDK, false, PLATFORM_ANDROID));
 		}
 		if((isAIRDesktop && process.platform === "win32") || isBundleWindows)
 		{
 			result.push(this.getTask("package release Windows application (captive runtime)",
-				workspaceRoot, command, frameworkSDK, false, PLATFORM_WINDOWS));
+				workspaceFolder, command, frameworkSDK, false, PLATFORM_WINDOWS));
 		}
 		if((isAIRDesktop && process.platform === "darwin") || isBundleMac)
 		{
 			result.push(this.getTask("package release macOS application (captive runtime)",
-				workspaceRoot, command, frameworkSDK, false, PLATFORM_MAC));
+				workspaceFolder, command, frameworkSDK, false, PLATFORM_MAC));
 		}
 		if(isAIRDesktop && (process.platform !== "win32" || !isBundleWindows) && (process.platform !== "darwin" || !isBundleMac))
 		{
 			//it's an AIR desktop application and the bundle target is not
 			//specified explicitly
 			result.push(this.getTask("package debug desktop application (shared runtime)",
-				workspaceRoot, command, frameworkSDK, true, PLATFORM_AIR));
+				workspaceFolder, command, frameworkSDK, true, PLATFORM_AIR));
 			result.push(this.getTask("package release desktop application (shared runtime)",
-				workspaceRoot, command, frameworkSDK, false, PLATFORM_AIR));
+				workspaceFolder, command, frameworkSDK, false, PLATFORM_AIR));
 		}
-
-		return Promise.resolve(result);
 	}
 
 	resolveTask(task: vscode.Task): vscode.Task | undefined
@@ -143,14 +154,14 @@ export default class ActionScriptTaskProvider implements vscode.TaskProvider
 	}
 
 	private getTask(description: string, workspaceFolder: vscode.WorkspaceFolder,
-		command: string, sdk: string, debug: boolean, airPlatform: string): vscode.Task
+		command: string[], sdk: string, debug: boolean, airPlatform: string): vscode.Task
 	{
 		let definition: ActionScriptTaskDefinition = { type: TASK_TYPE, debug: debug };
 		if(airPlatform)
 		{
 			definition.air = airPlatform;
 		}
-		let options = ["--flexHome", sdk];
+		let options = ["--sdk", sdk];
 		if(debug)
 		{
 			options.push("--debug=true");
@@ -163,15 +174,24 @@ export default class ActionScriptTaskProvider implements vscode.TaskProvider
 		{
 			options.push("--air", airPlatform);
 		}
+		if(command.length > 1)
+		{
+			options.unshift(...command.slice(1));
+		}
 		let source = airPlatform === null ? "ActionScript" : "Adobe AIR";
-		let execution = new vscode.ProcessExecution(command, options);
+		let execution = new vscode.ProcessExecution(command[0], options);
 		let task = new vscode.Task(definition, workspaceFolder, description,
 			source, execution, MATCHER);
 		task.group = vscode.TaskGroup.Build;
 		return task;
 	}
 
-	private getCommand(workspaceRoot: vscode.WorkspaceFolder): string
+	private getDefaultCommand(): string[]
+	{
+		return [this.javaExecutablePath, "-jar", path.join(this._context.extensionPath, "asconfigc", "asconfigc.jar")];
+	}
+
+	private getCommand(workspaceRoot: vscode.WorkspaceFolder): string[]
 	{
 		let nodeModulesBin = path.join(workspaceRoot.uri.fsPath, "node_modules", ".bin");
 		if(process.platform === "win32")
@@ -181,18 +201,18 @@ export default class ActionScriptTaskProvider implements vscode.TaskProvider
 			let winPath = path.join(nodeModulesBin, executableName);
 			if(fs.existsSync(winPath))
 			{
-				return winPath;
+				return [winPath];
 			}
 			//otherwise, try to use a global executable
-			return executableName;
+			return this.getDefaultCommand();
 		}
 		let executableName = "asconfigc";
 		let unixPath = path.join(nodeModulesBin, executableName);
 		if(fs.existsSync(unixPath))
 		{
-			return unixPath;
+			return [unixPath];
 		}
-		return executableName;
+		return this.getDefaultCommand();
 	}
 	
 	private readASConfigJSON(filePath: string): string
