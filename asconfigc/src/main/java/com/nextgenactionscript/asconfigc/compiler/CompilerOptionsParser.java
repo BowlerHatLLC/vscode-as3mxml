@@ -42,7 +42,7 @@ public class CompilerOptionsParser
 		checkPaths = value;
 	}
 
-	public void parse(JsonNode options, List<String> result) throws FileNotFoundException
+	public void parse(JsonNode options, Boolean debugBuild, List<String> result) throws FileNotFoundException
 	{
 		Iterator<String> iterator = options.fieldNames();
 		while(iterator.hasNext())
@@ -67,7 +67,11 @@ public class CompilerOptionsParser
 				}
 				case CompilerOptions.DEBUG:
 				{
-					OptionsFormatter.setBoolean(key, options.get(key).asBoolean(), result);
+					if(debugBuild == null)
+					{
+						//don't set -debug if it's been overridden
+						OptionsFormatter.setBoolean(key, options.get(key).asBoolean(), result);
+					}
 					break;
 				}
 				case CompilerOptions.DEBUG_PASSWORD:

@@ -54,7 +54,7 @@ class CompilerOptionsParserTests
 		ArrayList<String> result = new ArrayList<>();
 		try
 		{
-			parser.parse(options, result);
+			parser.parse(options, null, result);
 		}
 		catch(FileNotFoundException e)
 		{
@@ -75,7 +75,7 @@ class CompilerOptionsParserTests
 		ArrayList<String> result = new ArrayList<>();
 		try
 		{
-			parser.parse(options, result);
+			parser.parse(options, null, result);
 		}
 		catch(FileNotFoundException e)
 		{
@@ -96,7 +96,7 @@ class CompilerOptionsParserTests
 		ArrayList<String> result = new ArrayList<>();
 		try
 		{
-			parser.parse(options, result);
+			parser.parse(options, null, result);
 		}
 		catch(FileNotFoundException e)
 		{
@@ -109,6 +109,65 @@ class CompilerOptionsParserTests
 	}
 	
 	@Test
+	void testDebug()
+	{
+		boolean value = true;
+		ObjectNode options = JsonNodeFactory.instance.objectNode();
+		options.set(CompilerOptions.DEBUG, JsonNodeFactory.instance.booleanNode(value));
+		ArrayList<String> result = new ArrayList<>();
+		try
+		{
+			parser.parse(options, null, result);
+		}
+		catch(FileNotFoundException e)
+		{
+			Assertions.fail("CompilerOptionsParser.parse() incorrectly threw a FileNotFoundException.");
+		}
+		Assertions.assertEquals(1, result.size(),
+			"CompilerOptionsParser.parse() created incorrect number of options.");
+		Assertions.assertEquals("--" + CompilerOptions.DEBUG + "=" + value, result.get(0),
+			"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
+	}
+	
+	@Test
+	void testDebugWithTrueOverride()
+	{
+		boolean value = false;
+		ObjectNode options = JsonNodeFactory.instance.objectNode();
+		options.set(CompilerOptions.DEBUG, JsonNodeFactory.instance.booleanNode(value));
+		ArrayList<String> result = new ArrayList<>();
+		try
+		{
+			parser.parse(options, true, result);
+		}
+		catch(FileNotFoundException e)
+		{
+			Assertions.fail("CompilerOptionsParser.parse() incorrectly threw a FileNotFoundException.");
+		}
+		Assertions.assertEquals(0, result.size(),
+			"CompilerOptionsParser.parse() created incorrect number of options.");
+	}
+	
+	@Test
+	void testDebugWithFalseOverride()
+	{
+		boolean value = true;
+		ObjectNode options = JsonNodeFactory.instance.objectNode();
+		options.set(CompilerOptions.DEBUG, JsonNodeFactory.instance.booleanNode(value));
+		ArrayList<String> result = new ArrayList<>();
+		try
+		{
+			parser.parse(options, false, result);
+		}
+		catch(FileNotFoundException e)
+		{
+			Assertions.fail("CompilerOptionsParser.parse() incorrectly threw a FileNotFoundException.");
+		}
+		Assertions.assertEquals(0, result.size(),
+			"CompilerOptionsParser.parse() created incorrect number of options.");
+	}
+	
+	@Test
 	void testDebugPassword()
 	{
 		String value = "12345";
@@ -117,7 +176,7 @@ class CompilerOptionsParserTests
 		ArrayList<String> result = new ArrayList<>();
 		try
 		{
-			parser.parse(options, result);
+			parser.parse(options, null, result);
 		}
 		catch(FileNotFoundException e)
 		{
@@ -138,7 +197,7 @@ class CompilerOptionsParserTests
 		ArrayList<String> result = new ArrayList<>();
 		try
 		{
-			parser.parse(options, result);
+			parser.parse(options, null, result);
 		}
 		catch(FileNotFoundException e)
 		{
@@ -163,7 +222,7 @@ class CompilerOptionsParserTests
 		ArrayList<String> result = new ArrayList<>();
 		try
 		{
-			parser.parse(options, result);
+			parser.parse(options, null, result);
 		}
 		catch(FileNotFoundException e)
 		{
@@ -226,7 +285,7 @@ class CompilerOptionsParserTests
 		ArrayList<String> result = new ArrayList<>();
 		try
 		{
-			parser.parse(options, result);
+			parser.parse(options, null, result);
 		}
 		catch(FileNotFoundException e)
 		{
@@ -255,7 +314,7 @@ class CompilerOptionsParserTests
 		ArrayList<String> result = new ArrayList<>();
 		try
 		{
-			parser.parse(options, result);
+			parser.parse(options, null, result);
 		}
 		catch(FileNotFoundException e)
 		{
@@ -277,7 +336,7 @@ class CompilerOptionsParserTests
 		ArrayList<String> result = new ArrayList<>();
 		try
 		{
-			parser.parse(options, result);
+			parser.parse(options, null, result);
 		}
 		catch(FileNotFoundException e)
 		{
@@ -309,7 +368,7 @@ class CompilerOptionsParserTests
 		ArrayList<String> result = new ArrayList<>();
 		try
 		{
-			parser.parse(options, result);
+			parser.parse(options, null, result);
 		}
 		catch(FileNotFoundException e)
 		{
@@ -334,7 +393,7 @@ class CompilerOptionsParserTests
 		ArrayList<String> result = new ArrayList<>();
 		try
 		{
-			parser.parse(options, result);
+			parser.parse(options, null, result);
 		}
 		catch(FileNotFoundException e)
 		{
@@ -355,7 +414,7 @@ class CompilerOptionsParserTests
 		ArrayList<String> result = new ArrayList<>();
 		try
 		{
-			parser.parse(options, result);
+			parser.parse(options, null, result);
 		}
 		catch(FileNotFoundException e)
 		{
@@ -377,7 +436,7 @@ class CompilerOptionsParserTests
 		ArrayList<String> result = new ArrayList<>();
 		try
 		{
-			parser.parse(options, result);
+			parser.parse(options, null, result);
 		}
 		catch(FileNotFoundException e)
 		{
@@ -408,7 +467,7 @@ class CompilerOptionsParserTests
 		ArrayList<String> result = new ArrayList<>();
 		try
 		{
-			parser.parse(options, result);
+			parser.parse(options, null, result);
 		}
 		catch(FileNotFoundException e)
 		{
@@ -441,7 +500,7 @@ class CompilerOptionsParserTests
 		ArrayList<String> result = new ArrayList<>();
 		try
 		{
-			parser.parse(options, result);
+			parser.parse(options, null, result);
 		}
 		catch(FileNotFoundException e)
 		{
@@ -477,7 +536,7 @@ class CompilerOptionsParserTests
 		ArrayList<String> result = new ArrayList<>();
 		try
 		{
-			parser.parse(options, result);
+			parser.parse(options, null, result);
 		}
 		catch(FileNotFoundException e)
 		{
@@ -512,7 +571,7 @@ class CompilerOptionsParserTests
 		ArrayList<String> result = new ArrayList<>();
 		try
 		{
-			parser.parse(options, result);
+			parser.parse(options, null, result);
 		}
 		catch(FileNotFoundException e)
 		{
@@ -546,7 +605,7 @@ class CompilerOptionsParserTests
 		ArrayList<String> result = new ArrayList<>();
 		try
 		{
-			parser.parse(options, result);
+			parser.parse(options, null, result);
 		}
 		catch(FileNotFoundException e)
 		{
@@ -582,7 +641,7 @@ class CompilerOptionsParserTests
 		ArrayList<String> result = new ArrayList<>();
 		try
 		{
-			parser.parse(options, result);
+			parser.parse(options, null, result);
 		}
 		catch(FileNotFoundException e)
 		{
@@ -607,7 +666,7 @@ class CompilerOptionsParserTests
 		ArrayList<String> result = new ArrayList<>();
 		try
 		{
-			parser.parse(options, result);
+			parser.parse(options, null, result);
 		}
 		catch(FileNotFoundException e)
 		{
@@ -636,7 +695,7 @@ class CompilerOptionsParserTests
 		ArrayList<String> result = new ArrayList<>();
 		try
 		{
-			parser.parse(options, result);
+			parser.parse(options, null, result);
 		}
 		catch(FileNotFoundException e)
 		{
@@ -659,7 +718,7 @@ class CompilerOptionsParserTests
 		ArrayList<String> result = new ArrayList<>();
 		try
 		{
-			parser.parse(options, result);
+			parser.parse(options, null, result);
 		}
 		catch(FileNotFoundException e)
 		{
@@ -691,7 +750,7 @@ class CompilerOptionsParserTests
 		ArrayList<String> result = new ArrayList<>();
 		try
 		{
-			parser.parse(options, result);
+			parser.parse(options, null, result);
 		}
 		catch(FileNotFoundException e)
 		{
@@ -716,7 +775,7 @@ class CompilerOptionsParserTests
 		ArrayList<String> result = new ArrayList<>();
 		try
 		{
-			parser.parse(options, result);
+			parser.parse(options, null, result);
 		}
 		catch(FileNotFoundException e)
 		{
@@ -738,7 +797,7 @@ class CompilerOptionsParserTests
 		ArrayList<String> result = new ArrayList<>();
 		try
 		{
-			parser.parse(options, result);
+			parser.parse(options, null, result);
 		}
 		catch(FileNotFoundException e)
 		{
@@ -768,7 +827,7 @@ class CompilerOptionsParserTests
 		ArrayList<String> result = new ArrayList<>();
 		try
 		{
-			parser.parse(options, result);
+			parser.parse(options, null, result);
 		}
 		catch(FileNotFoundException e)
 		{
@@ -799,7 +858,7 @@ class CompilerOptionsParserTests
 		ArrayList<String> result = new ArrayList<>();
 		try
 		{
-			parser.parse(options, result);
+			parser.parse(options, null, result);
 		}
 		catch(FileNotFoundException e)
 		{
@@ -840,7 +899,7 @@ class CompilerOptionsParserTests
 		ArrayList<String> result = new ArrayList<>();
 		try
 		{
-			parser.parse(options, result);
+			parser.parse(options, null, result);
 		}
 		catch(FileNotFoundException e)
 		{
@@ -871,7 +930,7 @@ class CompilerOptionsParserTests
 		ArrayList<String> result = new ArrayList<>();
 		try
 		{
-			parser.parse(options, result);
+			parser.parse(options, null, result);
 		}
 		catch(FileNotFoundException e)
 		{
@@ -892,7 +951,7 @@ class CompilerOptionsParserTests
 		ArrayList<String> result = new ArrayList<>();
 		try
 		{
-			parser.parse(options, result);
+			parser.parse(options, null, result);
 		}
 		catch(FileNotFoundException e)
 		{
@@ -913,7 +972,7 @@ class CompilerOptionsParserTests
 		ArrayList<String> result = new ArrayList<>();
 		try
 		{
-			parser.parse(options, result);
+			parser.parse(options, null, result);
 		}
 		catch(FileNotFoundException e)
 		{
@@ -935,7 +994,7 @@ class CompilerOptionsParserTests
 		ArrayList<String> result = new ArrayList<>();
 		try
 		{
-			parser.parse(options, result);
+			parser.parse(options, null, result);
 		}
 		catch(FileNotFoundException e)
 		{
@@ -956,7 +1015,7 @@ class CompilerOptionsParserTests
 		ArrayList<String> result = new ArrayList<>();
 		try
 		{
-			parser.parse(options, result);
+			parser.parse(options, null, result);
 		}
 		catch(FileNotFoundException e)
 		{
@@ -977,7 +1036,7 @@ class CompilerOptionsParserTests
 		ArrayList<String> result = new ArrayList<>();
 		try
 		{
-			parser.parse(options, result);
+			parser.parse(options, null, result);
 		}
 		catch(FileNotFoundException e)
 		{
@@ -998,7 +1057,7 @@ class CompilerOptionsParserTests
 		ArrayList<String> result = new ArrayList<>();
 		try
 		{
-			parser.parse(options, result);
+			parser.parse(options, null, result);
 		}
 		catch(FileNotFoundException e)
 		{
@@ -1020,7 +1079,7 @@ class CompilerOptionsParserTests
 		ArrayList<String> result = new ArrayList<>();
 		try
 		{
-			parser.parse(options, result);
+			parser.parse(options, null, result);
 		}
 		catch(FileNotFoundException e)
 		{
@@ -1041,7 +1100,7 @@ class CompilerOptionsParserTests
 		ArrayList<String> result = new ArrayList<>();
 		try
 		{
-			parser.parse(options, result);
+			parser.parse(options, null, result);
 		}
 		catch(FileNotFoundException e)
 		{
@@ -1073,7 +1132,7 @@ class CompilerOptionsParserTests
 		ArrayList<String> result = new ArrayList<>();
 		try
 		{
-			parser.parse(options, result);
+			parser.parse(options, null, result);
 		}
 		catch(FileNotFoundException e)
 		{
@@ -1098,7 +1157,7 @@ class CompilerOptionsParserTests
 		ArrayList<String> result = new ArrayList<>();
 		try
 		{
-			parser.parse(options, result);
+			parser.parse(options, null, result);
 		}
 		catch(FileNotFoundException e)
 		{
@@ -1119,7 +1178,7 @@ class CompilerOptionsParserTests
 		ArrayList<String> result = new ArrayList<>();
 		try
 		{
-			parser.parse(options, result);
+			parser.parse(options, null, result);
 		}
 		catch(FileNotFoundException e)
 		{
@@ -1151,7 +1210,7 @@ class CompilerOptionsParserTests
 		ArrayList<String> result = new ArrayList<>();
 		try
 		{
-			parser.parse(options, result);
+			parser.parse(options, null, result);
 		}
 		catch(FileNotFoundException e)
 		{
@@ -1187,7 +1246,7 @@ class CompilerOptionsParserTests
 		ArrayList<String> result = new ArrayList<>();
 		try
 		{
-			parser.parse(options, result);
+			parser.parse(options, null, result);
 		}
 		catch(FileNotFoundException e)
 		{
@@ -1212,7 +1271,7 @@ class CompilerOptionsParserTests
 		ArrayList<String> result = new ArrayList<>();
 		try
 		{
-			parser.parse(options, result);
+			parser.parse(options, null, result);
 		}
 		catch(FileNotFoundException e)
 		{
@@ -1233,7 +1292,7 @@ class CompilerOptionsParserTests
 		ArrayList<String> result = new ArrayList<>();
 		try
 		{
-			parser.parse(options, result);
+			parser.parse(options, null, result);
 		}
 		catch(FileNotFoundException e)
 		{
@@ -1260,7 +1319,7 @@ class CompilerOptionsParserTests
 		ArrayList<String> result = new ArrayList<>();
 		try
 		{
-			parser.parse(options, result);
+			parser.parse(options, null, result);
 		}
 		catch(FileNotFoundException e)
 		{
@@ -1289,7 +1348,7 @@ class CompilerOptionsParserTests
 		ArrayList<String> result = new ArrayList<>();
 		try
 		{
-			parser.parse(options, result);
+			parser.parse(options, null, result);
 		}
 		catch(FileNotFoundException e)
 		{
@@ -1310,7 +1369,7 @@ class CompilerOptionsParserTests
 		ArrayList<String> result = new ArrayList<>();
 		try
 		{
-			parser.parse(options, result);
+			parser.parse(options, null, result);
 		}
 		catch(FileNotFoundException e)
 		{
@@ -1331,7 +1390,7 @@ class CompilerOptionsParserTests
 		ArrayList<String> result = new ArrayList<>();
 		try
 		{
-			parser.parse(options, result);
+			parser.parse(options, null, result);
 		}
 		catch(FileNotFoundException e)
 		{
@@ -1352,7 +1411,7 @@ class CompilerOptionsParserTests
 		ArrayList<String> result = new ArrayList<>();
 		try
 		{
-			parser.parse(options, result);
+			parser.parse(options, null, result);
 		}
 		catch(FileNotFoundException e)
 		{
@@ -1373,7 +1432,7 @@ class CompilerOptionsParserTests
 		ArrayList<String> result = new ArrayList<>();
 		try
 		{
-			parser.parse(options, result);
+			parser.parse(options, null, result);
 		}
 		catch(FileNotFoundException e)
 		{
@@ -1394,7 +1453,7 @@ class CompilerOptionsParserTests
 		ArrayList<String> result = new ArrayList<>();
 		try
 		{
-			parser.parse(options, result);
+			parser.parse(options, null, result);
 		}
 		catch(FileNotFoundException e)
 		{
@@ -1415,7 +1474,7 @@ class CompilerOptionsParserTests
 		ArrayList<String> result = new ArrayList<>();
 		try
 		{
-			parser.parse(options, result);
+			parser.parse(options, null, result);
 		}
 		catch(FileNotFoundException e)
 		{
@@ -1436,7 +1495,7 @@ class CompilerOptionsParserTests
 		ArrayList<String> result = new ArrayList<>();
 		try
 		{
-			parser.parse(options, result);
+			parser.parse(options, null, result);
 		}
 		catch(FileNotFoundException e)
 		{

@@ -59,6 +59,7 @@ import com.nextgenactionscript.asconfigc.utils.ApacheFlexJSUtils;
 import com.nextgenactionscript.asconfigc.utils.ApacheRoyaleUtils;
 import com.nextgenactionscript.asconfigc.utils.GenericSDKUtils;
 import com.nextgenactionscript.asconfigc.utils.JsonUtils;
+import com.nextgenactionscript.asconfigc.utils.OptionsFormatter;
 import com.nextgenactionscript.asconfigc.utils.PathUtils;
 import com.nextgenactionscript.asconfigc.utils.ProjectUtils;
 import com.nextgenactionscript.asconfigc.utils.StreamGobbler;
@@ -259,6 +260,10 @@ public class ASConfigC
 	{
 		debugBuild = options.debug != null && options.debug.equals(true);
 		compilerOptions = new ArrayList<>();
+		if(options.debug != null)
+		{
+			OptionsFormatter.setBoolean(CompilerOptions.DEBUG, options.debug, compilerOptions);
+		}
 		airOptions = new ArrayList<>();
 		jsOutputType = null;
 		projectType = ProjectType.APP;
@@ -386,7 +391,7 @@ public class ASConfigC
 		CompilerOptionsParser parser = new CompilerOptionsParser();
 		try
 		{
-			parser.parse(compilerOptionsJson, compilerOptions);
+			parser.parse(compilerOptionsJson, options.debug, compilerOptions);
 		}
 		catch(FileNotFoundException e)
 		{
