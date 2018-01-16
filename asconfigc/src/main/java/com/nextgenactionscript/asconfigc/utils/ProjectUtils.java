@@ -207,7 +207,7 @@ public class ProjectUtils
 		return null;
 	}
 
-	public static List<String> findSourcePathAssets(String mainFile, List<String> sourcePaths, String outputDirectory, List<String> excludes)
+	public static List<String> findSourcePathAssets(String mainFile, List<String> sourcePaths, String outputDirectory, List<String> excludes) throws IOException
 	{
 		List<String> result = new ArrayList<>();
 		List<String> sourcePathsCopy = new ArrayList<>();
@@ -250,7 +250,7 @@ public class ProjectUtils
 				{
 					//force all excludes into absolute paths
 					path = Paths.get(System.getProperty("user.dir"), exclude);
-					sourcePathsCopy.set(i, path.toString());
+					excludes.set(i, path.toString());
 				}
 			}
 		}
@@ -258,6 +258,12 @@ public class ProjectUtils
 		{
 			String sourcePath = sourcePathsCopy.get(i);
 			File file = new File(sourcePath);
+			File[] listedFiles = file.listFiles();
+			if(listedFiles == null)
+			{
+				//this file is invalid for some reason
+				throw new IOException("Invalid source path: " + sourcePath);
+			}
 			for(File innerFile : file.listFiles())
 			{
 				String innerFilePath = innerFile.getAbsolutePath();
@@ -287,7 +293,7 @@ public class ProjectUtils
 		return result;
 	}
 
-	public static String assetPathToOutputPath(String assetPath, String mainFile, List<String> sourcePaths, String outputDirectory) throws Error
+	public static String assetPathToOutputPath(String assetPath, String mainFile, List<String> sourcePaths, String outputDirectory) throws IOException
 	{
 		List<String> sourcePathsCopy = new ArrayList<>();
 		if(sourcePaths != null)
@@ -324,7 +330,7 @@ public class ProjectUtils
 		}
 		if(relativePath == null)
 		{
-			throw new Error("Could not find asset in source path: " + assetPath);
+			throw new IOException("Could not find asset in source path: " + assetPath);
 		}
 		return new File(outputDirectory, relativePath).getAbsolutePath();
 	}

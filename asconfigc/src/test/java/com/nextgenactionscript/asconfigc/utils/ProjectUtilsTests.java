@@ -16,6 +16,7 @@ limitations under the License.
 package com.nextgenactionscript.asconfigc.utils;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -648,7 +649,7 @@ class ProjectUtilsTests
 	//--- assetPathToOutputPath
 
 	@Test
-	void testOutputPathForAssetAtRootOfImplicitSourcePathForMainFile()
+	void testOutputPathForAssetAtRootOfImplicitSourcePathForMainFile() throws IOException
 	{
 		String result = ProjectUtils.assetPathToOutputPath("src/asset.txt", "src/Test.as", null, "bin");
 		File file = new File(System.getProperty("user.dir"), "bin/asset.txt");
@@ -657,7 +658,7 @@ class ProjectUtilsTests
 	}
 
 	@Test
-	void testOutputPathForAssetInSubDirectoryOfImplicitSourcePathForMainFile()
+	void testOutputPathForAssetInSubDirectoryOfImplicitSourcePathForMainFile() throws IOException
 	{
 		String result = ProjectUtils.assetPathToOutputPath("src/sub-directory/asset.txt", "src/Test.as", null, "bin");
 		File file = new File(System.getProperty("user.dir"), "bin/sub-directory/asset.txt");
@@ -666,7 +667,7 @@ class ProjectUtilsTests
 	}
 
 	@Test
-	void testOutputPathForAssetAtRootOfExplicitSourcePath()
+	void testOutputPathForAssetAtRootOfExplicitSourcePath() throws IOException
 	{
 		List<String> sourcePaths = new ArrayList<>();
 		sourcePaths.add("custom-src");
@@ -677,7 +678,7 @@ class ProjectUtilsTests
 	}
 
 	@Test
-	void testOutputPathForAssetInSubDirectoryOfExplicitSourcePath()
+	void testOutputPathForAssetInSubDirectoryOfExplicitSourcePath() throws IOException
 	{
 		List<String> sourcePaths = new ArrayList<>();
 		sourcePaths.add("custom-src");

@@ -597,10 +597,26 @@ public class ASConfigC
 		{
 			excludes.add(airDescriptorPath);
 		}
-		List<String> assetPaths = ProjectUtils.findSourcePathAssets(mainFile, sourcePaths, outputDirectory, excludes);
+		List<String> assetPaths = null;
+		try
+		{
+			assetPaths = ProjectUtils.findSourcePathAssets(mainFile, sourcePaths, outputDirectory, excludes);
+		}
+		catch(IOException e)
+		{
+			throw new ASConfigCException(e.getMessage());
+		}
 		for(String assetPath : assetPaths)
 		{
-			String targetPath = ProjectUtils.assetPathToOutputPath(assetPath, mainFile, sourcePaths, outputDirectory);
+			String targetPath = null;
+			try
+			{
+				targetPath = ProjectUtils.assetPathToOutputPath(assetPath, mainFile, sourcePaths, outputDirectory);
+			}
+			catch(IOException e)
+			{
+				throw new ASConfigCException(e.getMessage());
+			}
 			File sourceFile = new File(assetPath);
 			File targetFile = new File(targetPath);
 			try
