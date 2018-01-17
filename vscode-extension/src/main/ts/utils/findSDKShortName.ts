@@ -22,22 +22,26 @@ const ROYALE = "Royale ";
 const FEATHERS = "Feathers SDK ";
 const APACHE_FLEX = "Apache Flex ";
 const APACHE_FLEXJS = "Apache Flex (FlexJS) ";
-const APACHE_ROYALE = "Apache Flex (Royale) ";
+const APACHE_ROYALE = "Apache Royale ";
 const FP = " FP";
 
-function stripAfterNextSpace(sdkName: string, prefix: string, replacementPrefix?: String): string
+function stripAfterNextSpace(sdkName: string, prefix: string, replacementPrefix?: string): string
 {
+	//stop after the next space, which should be the version number
 	let index = sdkName.indexOf(" ", prefix.length);
-	if(index !== -1)
+	if(replacementPrefix)
 	{
-		//stop after the version number
-		if(replacementPrefix)
+		if(index === -1)
 		{
-			return replacementPrefix + sdkName.substr(prefix.length, index - prefix.length);
+			return replacementPrefix + sdkName.substr(prefix.length);
 		}
-		return sdkName.substr(0, index);
+		return replacementPrefix + sdkName.substr(prefix.length, index - prefix.length);
 	}
-	return sdkName;
+	if(index === -1)
+	{
+		return sdkName;
+	}
+	return sdkName.substr(0, index);
 }
 
 export default function findSDKShortName(sdkPath: string): string
