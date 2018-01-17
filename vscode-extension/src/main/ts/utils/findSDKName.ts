@@ -21,8 +21,11 @@ const PATH_SDK_DESCRIPTION_FLEX = "flex-sdk-description.xml"
 const PATH_SDK_DESCRIPTION_ROYALE = "royale-sdk-description.xml";
 const XML_NAME_START = "<name>";
 const XML_NAME_END = "</name>";
+const XML_VERSION_START = "<version>";
+const XML_VERSION_END = "</version>";
 const XML_BUILD_START = "<build>";
 const XML_BUILD_END = "</build>";
+const NAME_ROYALE = "Apache Royale"
 
 function readBetween(fileContents: string, startText: string, endText: string): string
 {
@@ -42,6 +45,11 @@ function readBetween(fileContents: string, startText: string, endText: string): 
 function readName(fileContents: string, includeBuild: boolean): string
 {
 	let sdkName = readBetween(fileContents, XML_NAME_START, XML_NAME_END);
+	if(sdkName === NAME_ROYALE)
+	{
+		//in royale-sdk-description.xml, the version appears in a different field
+		sdkName += " " + readBetween(fileContents, XML_VERSION_START, XML_VERSION_END);
+	}
 	if(sdkName !== null && includeBuild)
 	{
 		let build = readBetween(fileContents, XML_BUILD_START, XML_BUILD_END);
