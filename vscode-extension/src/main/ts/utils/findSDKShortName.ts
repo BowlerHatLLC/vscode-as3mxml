@@ -19,10 +19,11 @@ const AIR = "AIR ";
 const FLEX = "Flex ";
 const FLEXJS = "FlexJS ";
 const ROYALE = "Royale ";
-const FEATHERS = "Feathers SDK ";
+const FEATHERS = "Feathers ";
 const APACHE_FLEX = "Apache Flex ";
 const APACHE_FLEXJS = "Apache Flex (FlexJS) ";
 const APACHE_ROYALE = "Apache Royale ";
+const FEATHERS_SDK = "Feathers SDK ";
 const FP = " FP";
 
 function stripAfterNextSpace(sdkName: string, prefix: string, replacementPrefix?: string): string
@@ -56,9 +57,9 @@ export default function findSDKShortName(sdkPath: string): string
 		//it's already short enough
 		return sdkName;
 	}
-	if(sdkName.startsWith(FEATHERS))
+	if(sdkName.startsWith(FEATHERS_SDK))
 	{
-		return stripAfterNextSpace(sdkName, FEATHERS);
+		return stripAfterNextSpace(sdkName, FEATHERS_SDK, FEATHERS);
 	}
 	if(sdkName.startsWith(APACHE_ROYALE))
 	{
