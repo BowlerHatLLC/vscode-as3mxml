@@ -25,6 +25,8 @@ const XML_VERSION_START = "<version>";
 const XML_VERSION_END = "</version>";
 const XML_BUILD_START = "<build>";
 const XML_BUILD_END = "</build>";
+const XML_OUTPUT_TARGET_JS = "<output-target name=\"js\"";
+const XML_OUTPUT_TARGET_SWF = "<output-target name=\"swf\"";
 const NAME_ROYALE = "Apache Royale"
 
 function readBetween(fileContents: string, startText: string, endText: string): string
@@ -49,6 +51,21 @@ function readName(fileContents: string, includeBuild: boolean): string
 	{
 		//in royale-sdk-description.xml, the version appears in a different field
 		sdkName += " " + readBetween(fileContents, XML_VERSION_START, XML_VERSION_END);
+		//we should also display the output targets
+		let hasJS = fileContents.indexOf(XML_OUTPUT_TARGET_JS) !== -1;
+		let hasSWF = fileContents.indexOf(XML_OUTPUT_TARGET_SWF) !== -1;
+		if(hasJS && !hasSWF)
+		{
+			sdkName += " (JS Only)";
+		}
+		else if(hasJS && hasSWF)
+		{
+			sdkName += " (JS & SWF)";
+		}
+		else if(!hasJS && hasSWF)
+		{
+			sdkName += " (SWF Only)";
+		}
 	}
 	if(sdkName !== null && includeBuild)
 	{
