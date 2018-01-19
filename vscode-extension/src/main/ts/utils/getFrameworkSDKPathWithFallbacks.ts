@@ -34,12 +34,9 @@ export default function getFrameworkSDKPathWithFallbacks(): string
 	let frameworkSetting = <string> vscode.workspace.getConfiguration("nextgenas").get("sdk.framework");
 	if(frameworkSetting)
 	{
-		if(validateFrameworkSDK(frameworkSetting))
-		{
-			return frameworkSetting;
-		}
 		//no fallbacks if this SDK isn't valid!
-		return null;
+		//this may return null
+		return validateFrameworkSDK(frameworkSetting);
 	}
 	if(!sdkPath)
 	{
@@ -47,12 +44,9 @@ export default function getFrameworkSDKPathWithFallbacks(): string
 		let editorSetting = <string> vscode.workspace.getConfiguration("nextgenas").get("sdk.editor");
 		if(editorSetting)
 		{
-			if(validateFrameworkSDK(editorSetting))
-			{
-				return editorSetting;
-			}
 			//no fallbacks if this SDK isn't valid!
-			return null;
+			//this may return null
+			return validateFrameworkSDK(editorSetting);
 		}
 	}
 	//the following SDKs are all intelligent fallbacks

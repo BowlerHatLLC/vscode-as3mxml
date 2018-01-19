@@ -58,6 +58,7 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
     private static final int MISSING_FRAMEWORK_LIB = 200;
     private static final int INVALID_FRAMEWORK_LIB = 201;
     private static final String PROPERTY_FRAMEWORK_LIB = "royalelib";
+    private static final String ROYALE_ASJS_RELATIVE_PATH_CHILD = "./royale-asjs";
     private static final String FRAMEWORKS_RELATIVE_PATH_CHILD = "./frameworks";
     private static final String FRAMEWORKS_RELATIVE_PATH_PARENT = "../frameworks";
     private static final String ASCONFIG_JSON = "asconfig.json";
@@ -196,7 +197,29 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
                         //keep using the existing framework for now
                         return;
                     }
-                    String frameworkLib = Paths.get(frameworkSDK).resolve(FRAMEWORKS_RELATIVE_PATH_CHILD).toAbsolutePath().normalize().toString();
+                    String frameworkLib = null;
+                    Path frameworkLibPath = Paths.get(frameworkSDK).resolve(FRAMEWORKS_RELATIVE_PATH_CHILD).toAbsolutePath().normalize();
+                    if (frameworkLibPath.toFile().exists())
+                    {
+                        //if the frameworks directory exists, use it!
+                        frameworkLib = frameworkLibPath.toString();
+                    }
+                    else 
+                    {
+                        //if the frameworks directory doesn't exist, we also
+                        //need to check for Apache Royale's unique layout
+                        //with the royale-asjs directory
+                        Path royalePath = Paths.get(frameworkSDK).resolve(ROYALE_ASJS_RELATIVE_PATH_CHILD).resolve(FRAMEWORKS_RELATIVE_PATH_CHILD).toAbsolutePath().normalize();
+                        if(royalePath.toFile().exists())
+                        {
+                            frameworkLib = royalePath.toString();
+                        }
+                    }
+                    if (frameworkLib == null)
+                    {
+                        //keep using the existing framework for now
+                        return;
+                    }
                     String oldFrameworkLib = System.getProperty(PROPERTY_FRAMEWORK_LIB);
                     if (oldFrameworkLib.equals(frameworkLib))
                     {

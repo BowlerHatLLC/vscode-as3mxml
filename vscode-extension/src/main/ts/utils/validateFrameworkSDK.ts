@@ -16,7 +16,32 @@ limitations under the License.
 import * as fs from "fs";
 import * as path from "path";
 
-export default function validateFrameworkSDK(sdkPath: string): boolean
+/**
+ * Checks if the path contains a valid SDK. May return a modified path, in the
+ * case of an Apache Royale SDK where the real SDK appears in royale-asjs.
+ * Returns null if the SDK is not valid.
+ */
+export default function validateFrameworkSDK(sdkPath: string): string
+{
+	if(!sdkPath)
+	{
+		return null;
+	}
+	if(validatePossibleFrameworkSDK(sdkPath))
+	{
+		return sdkPath;
+	}
+	//if it's an Apache Royale SDK, the "real" SDK might be inside the
+	//royale-asjs directory instead of at the root
+	let royalePath = path.join(sdkPath, "royale-asjs");
+	if(validatePossibleFrameworkSDK(royalePath))
+	{
+		return royalePath;
+	}
+	return null;
+}
+
+function validatePossibleFrameworkSDK(sdkPath: string): boolean
 {
 	if(!sdkPath)
 	{

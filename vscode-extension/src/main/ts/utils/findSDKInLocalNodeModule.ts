@@ -24,9 +24,6 @@ export default function findSDKInLocalNodeModule(): string
 		return null;
 	}
 	let nodeModule = path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "node_modules", "flexjs");
-	if(validateFrameworkSDK(nodeModule))
-	{
-		return nodeModule;
-	}
-	return null;
+	//this may return null
+	return validateFrameworkSDK(nodeModule);
 }

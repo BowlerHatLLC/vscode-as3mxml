@@ -24,10 +24,8 @@ export default function findSDKInFlexHomeEnvironmentVariable(): string
 	if(ENVIRONMENT_VARIABLE_FLEX_HOME in process.env)
 	{
 		let flexHome = process.env.FLEX_HOME;
-		if(validateFrameworkSDK(flexHome))
-		{
-			return flexHome;
-		}
+		//this may return null
+		return validateFrameworkSDK(flexHome);
 	}
 	return null;
 }

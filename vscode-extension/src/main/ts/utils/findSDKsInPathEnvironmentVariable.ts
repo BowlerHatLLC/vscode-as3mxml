@@ -37,9 +37,10 @@ export default function findSDKsInPathEnvironmentVariable(): string[]
 		if(fs.existsSync(mxmlcPath))
 		{
 			let sdkPath = path.join(path.dirname(mxmlcPath), "node_modules", "flexjs");
-			if(fs.existsSync(sdkPath) && validateFrameworkSDK(sdkPath))
+			let validSDK = validateFrameworkSDK(sdkPath);
+			if(validSDK !== null)
 			{
-				result.push(sdkPath);
+				result.push(validSDK);
 			}
 		}
 		else
@@ -56,9 +57,10 @@ export default function findSDKsInPathEnvironmentVariable(): string[]
 				if(fs.existsSync(frameworksPath) && fs.statSync(frameworksPath).isDirectory())
 				{
 					let sdkPath = path.join(path.dirname(mxmlcPath), "..");
-					if(validateFrameworkSDK(sdkPath))
+					let validSDK = validateFrameworkSDK(sdkPath);
+					if(validSDK !== null)
 					{
-						result.push(sdkPath);
+						result.push(validSDK);
 					}
 				}
 				//then, check for js/bin/mxmlc
@@ -66,9 +68,10 @@ export default function findSDKsInPathEnvironmentVariable(): string[]
 				if(fs.existsSync(frameworksPath) && fs.statSync(frameworksPath).isDirectory())
 				{
 					let sdkPath = path.join(path.dirname(mxmlcPath), "..", "..");
-					if(validateFrameworkSDK(sdkPath))
+					let validSDK = validateFrameworkSDK(sdkPath);
+					if(validSDK !== null)
 					{
-						result.push(sdkPath);
+						result.push(validSDK);
 					}
 				}
 			}

@@ -138,9 +138,10 @@ function addSDKItem(path: string, description: string, items: SDKQuickPickItem[]
 
 function checkSearchPath(searchPath: string, description: string, items: SDKQuickPickItem[], allPaths: string[])
 {
-	if(validateFrameworkSDK(searchPath))
+	let validSDK = validateFrameworkSDK(searchPath);
+	if(validSDK !== null)
 	{
-		addSDKItem(searchPath, description, items, allPaths, false);
+		addSDKItem(validSDK, description, items, allPaths, false);
 	}
 	else if(fs.existsSync(searchPath) && fs.statSync(searchPath).isDirectory())
 	{
@@ -148,9 +149,10 @@ function checkSearchPath(searchPath: string, description: string, items: SDKQuic
 		files.forEach((file) =>
 		{
 			let filePath = path.join(searchPath, file);
-			if(validateFrameworkSDK(filePath))
+			let validSDK = validateFrameworkSDK(filePath);
+			if(validSDK !== null)
 			{
-				addSDKItem(filePath, description, items, allPaths, false);
+				addSDKItem(validSDK, description, items, allPaths, false);
 			}
 		});
 	}
@@ -181,7 +183,9 @@ export default function selectWorkspaceSDK(): void
 	items.push(createSearchPathsItem());
 	//start with the current framework and editor SDKs
 	let frameworkSDK = <string> vscode.workspace.getConfiguration("nextgenas").get("sdk.framework");
+	frameworkSDK = validateFrameworkSDK(frameworkSDK);
 	let editorSDK = <string> vscode.workspace.getConfiguration("nextgenas").get("sdk.editor");
+	editorSDK = validateFrameworkSDK(editorSDK);
 	let addedEditorSDK = false;
 	if(frameworkSDK)
 	{
