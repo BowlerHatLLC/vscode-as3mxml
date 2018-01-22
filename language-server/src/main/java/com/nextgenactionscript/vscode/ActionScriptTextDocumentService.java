@@ -137,6 +137,7 @@ import org.apache.royale.compiler.tree.mxml.IMXMLEventSpecifierNode;
 import org.apache.royale.compiler.tree.mxml.IMXMLNode;
 import org.apache.royale.compiler.tree.mxml.IMXMLPropertySpecifierNode;
 import org.apache.royale.compiler.tree.mxml.IMXMLSingleDataBindingNode;
+import org.apache.royale.compiler.tree.mxml.IMXMLSpecifierNode;
 import org.apache.royale.compiler.units.ICompilationUnit;
 import org.apache.royale.compiler.units.IInvisibleCompilationUnit;
 import org.apache.royale.compiler.workspaces.IWorkspace;
@@ -5896,10 +5897,18 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 return false;
             }
         }
-        return !isInActionScriptComment(params);
+        int minCommentStartIndex = 0;
+        if (offsetNode instanceof IMXMLSpecifierNode)
+        {
+            IMXMLSpecifierNode mxmlNode = (IMXMLSpecifierNode) offsetNode;
+            //start in the current MXML node and ignore the start of comments
+            //that appear in earlier MXML nodes
+            minCommentStartIndex = mxmlNode.getAbsoluteStart();
+        }
+        return !isInActionScriptComment(params, minCommentStartIndex);
     }
 
-    private boolean isInActionScriptComment(TextDocumentPositionParams params)
+    private boolean isInActionScriptComment(TextDocumentPositionParams params, int minCommentStartIndex)
     {
         TextDocumentIdentifier textDocument = params.getTextDocument();
         Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocument.getUri());
@@ -5909,7 +5918,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         String code = sourceByPath.get(path);
         int startComment = code.lastIndexOf("/*", currentOffset - 1);
-        if (startComment >= 0)
+        if (startComment != -1 && startComment >= minCommentStartIndex)
         {
             int endComment = code.indexOf("*/", startComment);
             if (endComment > currentOffset)
@@ -5923,8 +5932,22 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             //we're on the first line
             startLine = 0;
         }
-        startComment = code.indexOf("//", startLine);
-        return startComment != -1 && currentOffset > startComment;
+        //we need to stop searching after the end of the current line
+        int endLine = code.indexOf('\n', currentOffset);
+        do
+        {
+            //we need to check this in a loop because it's possible for
+            //the start of a single line comment to appear inside multiple
+            //MXML attributes on the same line
+            startComment = code.indexOf("//", startLine);
+            if(startComment != -1 && currentOffset > startComment && startComment >= minCommentStartIndex)
+            {
+                return true;
+            }
+            startLine = startComment + 2;
+        }
+        while(startComment != -1 && startLine < endLine);
+        return false;
     }
 
     private boolean isInXMLComment(TextDocumentPositionParams params)
