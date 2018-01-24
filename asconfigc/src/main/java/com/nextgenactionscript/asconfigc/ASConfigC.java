@@ -732,11 +732,15 @@ public class ASConfigC
 		int passwordIndex = airOptions.indexOf("-" + AIRSigningOptions.STOREPASS);
 		if(passwordIndex == -1)
 		{
-			Console console = System.console();
-			char[] password = console.readPassword("Adobe AIR code signing password: ");
 			int keystoreIndex = airOptions.indexOf("-" + AIRSigningOptions.KEYSTORE);
-			airOptions.add(keystoreIndex + 2, "-" + AIRSigningOptions.STOREPASS);
-			airOptions.add(keystoreIndex + 3, new String(password));
+			if(keystoreIndex != -1)
+			{
+				//only ask for password if -keystore is specified
+				Console console = System.console();
+				char[] password = console.readPassword("Adobe AIR code signing password: ");
+				airOptions.add(keystoreIndex + 2, "-" + AIRSigningOptions.STOREPASS);
+				airOptions.add(keystoreIndex + 3, new String(password));
+			}
 		}
 
 		Path javaExecutablePath = Paths.get(System.getProperty("java.home"), "bin", "java");
