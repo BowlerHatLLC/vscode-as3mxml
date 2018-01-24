@@ -17,11 +17,9 @@ import * as path from "path";
 import * as vscode from "vscode";
 import validateFrameworkSDK from "./validateFrameworkSDK";
 import findSDKInLocalNodeModule from "./findSDKInLocalNodeModule";
+import findSDKInRoyaleHomeEnvironmentVariable from "./findSDKInRoyaleHomeEnvironmentVariable";
 import findSDKInFlexHomeEnvironmentVariable from "./findSDKInFlexHomeEnvironmentVariable";
 import findSDKsInPathEnvironmentVariable from "./findSDKsInPathEnvironmentVariable";
-
-const ENVIRONMENT_VARIABLE_FLEX_HOME = "FLEX_HOME";
-const ENVIRONMENT_VARIABLE_PATH = "PATH";
 
 export default function getFrameworkSDKPathWithFallbacks(): string
 {
@@ -54,6 +52,11 @@ export default function getFrameworkSDKPathWithFallbacks(): string
 	{
 		//check if the FlexJS Node module is installed locally in the workspace
 		sdkPath = findSDKInLocalNodeModule();
+	}
+	if(!sdkPath)
+	{
+		//the ROYALE_HOME environment variable may point to an SDK
+		sdkPath = findSDKInRoyaleHomeEnvironmentVariable();
 	}
 	if(!sdkPath)
 	{
