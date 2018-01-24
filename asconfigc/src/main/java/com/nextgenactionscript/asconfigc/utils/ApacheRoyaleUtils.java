@@ -25,6 +25,7 @@ public class ApacheRoyaleUtils
 	private static final String ENV_ROYALE_HOME = "ROYALE_HOME";
 	private static final String ENV_PATH = "PATH";
 	private static final String NPM_ROYALE = "apache-royale";
+	private static final String JS = "js";
 	private static final String BIN = "bin";
 	private static final String ASJSC = "asjsc";
 	private static final String ROYALE_SDK_DESCRIPTION = "royale-sdk-description.xml";
@@ -49,7 +50,7 @@ public class ApacheRoyaleUtils
 		{
 			return false;
 		}
-		Path compilerPath = absolutePath.resolve(BIN).resolve(ASJSC);
+		Path compilerPath = absolutePath.resolve(JS).resolve(BIN).resolve(ASJSC);
 		file = compilerPath.toFile();
 		if(!file.exists() || file.isDirectory())
 		{
