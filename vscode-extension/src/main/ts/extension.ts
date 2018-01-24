@@ -60,12 +60,8 @@ let debugConfigurationProvider: SWFDebugConfigurationProvider = null;
 function getValidatedEditorSDKConfiguration(javaExecutablePath: string): string
 {
 	let result = <string> vscode.workspace.getConfiguration("nextgenas").get("sdk.editor");
-	if(result && !validateEditorSDK(savedContext.extensionPath, javaExecutablePath, result))
-	{
-		//this is not a valid SDK
-		return null;
-	}
-	return result;
+	//this may return null
+	return validateEditorSDK(savedContext.extensionPath, javaExecutablePath, result);
 }
 
 function onDidChangeConfiguration(event)

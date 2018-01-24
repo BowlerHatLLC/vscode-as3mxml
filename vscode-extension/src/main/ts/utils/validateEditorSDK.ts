@@ -18,36 +18,41 @@ import * as fs from "fs";
 import * as path from "path";
 import getJavaClassPathDelimiter from "./getJavaClassPathDelimiter";
 
-function hasRequiredFilesInSDK(absolutePath: string): boolean
+/**
+ * Checks if the path contains a valid Apache Royale SDK. May return a modified
+ * path, if the real SDK appears in royale-asjs.
+ * Returns null if the SDK is not valid.
+ */
+export default function validateEditorSDK(extensionPath: string, javaPath: string, sdkPath: string): string
 {
-	if(!absolutePath)
+	if(!sdkPath || !javaPath || !extensionPath)
 	{
-		return false;
+		return null;
 	}
-	//the following files are required to consider this a valid SDK
-	let filePaths =
-	[
-		path.join(absolutePath, "flex-sdk-description.xml"),
-		path.join(absolutePath, "js", "bin", "asjsc"),
-		path.join(absolutePath, "lib", "compiler.jar")
-	]
-	for(let i = 0, count = filePaths.length; i < count; i++)
-	{
-		let filePath = filePaths[i];	
-		if(!fs.existsSync(filePath) || fs.statSync(filePath).isDirectory())
-		{
-			return false;
-		}
-	}
-	return true;
-}
-
-export default function(extensionPath: string, javaPath: string, sdkPath: string): boolean
-{
 	if(!fs.existsSync(extensionPath) ||
 		!fs.existsSync(javaPath) ||
 		!fs.existsSync(sdkPath) ||
 		!fs.statSync(sdkPath).isDirectory())
+	{
+		return null;
+	}
+	if(validatePossibleEditorSDK(extensionPath, javaPath, sdkPath))
+	{
+		return sdkPath;
+	}
+	//if it's an Apache Royale SDK, the "real" SDK might be inside the
+	//royale-asjs directory instead of at the root
+	let royalePath = path.join(sdkPath, "royale-asjs");
+	if(validatePossibleEditorSDK(extensionPath, javaPath, royalePath))
+	{
+		return royalePath;
+	}
+	return null;
+}
+
+function validatePossibleEditorSDK(extensionPath: string, javaPath: string, sdkPath: string): boolean
+{
+	if(!hasRequiredFilesInSDK(sdkPath))
 	{
 		return false;
 	}
@@ -61,5 +66,50 @@ export default function(extensionPath: string, javaPath: string, sdkPath: string
 		"com.nextgenactionscript.vscode.CheckRoyaleVersion",
 	];
 	let result = child_process.spawnSync(javaPath, args);
-	return result.status === 0;
+	if(result.status !== 0)
+	{
+		return false;
+	}
+	return true;
+}
+
+function hasRequiredFilesInSDK(absolutePath: string): boolean
+{
+	if(!absolutePath)
+	{
+		return false;
+	}
+	//the following files are required to consider this a valid SDK
+	let folderPaths =
+	[
+		path.join(absolutePath, "frameworks"),
+		path.join(absolutePath, "bin"),
+		path.join(absolutePath, "lib"),
+		path.join(absolutePath, "js", "bin"),
+		path.join(absolutePath, "js", "lib"),
+	]
+	for(let i = 0, count = folderPaths.length; i < count; i++)
+	{
+		let folderPath = folderPaths[i];
+		if(!fs.existsSync(folderPath) || !fs.statSync(folderPath).isDirectory())
+		{
+			return false;
+		}
+	}
+	let filePaths =
+	[
+		path.join(absolutePath, "royale-sdk-description.xml"),
+		path.join(absolutePath, "js", "bin", "mxmlc"),
+		path.join(absolutePath, "js", "bin", "asjsc"),
+		path.join(absolutePath, "lib", "compiler.jar"),
+	]
+	for(let i = 0, count = filePaths.length; i < count; i++)
+	{
+		let filePath = filePaths[i];	
+		if(!fs.existsSync(filePath) || fs.statSync(filePath).isDirectory())
+		{
+			return false;
+		}
+	}
+	return true;
 }
