@@ -16,7 +16,8 @@ limitations under the License.
 import * as path from "path";
 import * as vscode from "vscode";
 import validateFrameworkSDK from "./validateFrameworkSDK";
-import findSDKInLocalNodeModule from "./findSDKInLocalNodeModule";
+import findSDKInLocalRoyaleNodeModule from "./findSDKInLocalRoyaleNodeModule";
+import findSDKInLocalFlexJSNodeModule from "./findSDKInLocalFlexJSNodeModule";
 import findSDKInRoyaleHomeEnvironmentVariable from "./findSDKInRoyaleHomeEnvironmentVariable";
 import findSDKInFlexHomeEnvironmentVariable from "./findSDKInFlexHomeEnvironmentVariable";
 import findSDKsInPathEnvironmentVariable from "./findSDKsInPathEnvironmentVariable";
@@ -50,8 +51,13 @@ export default function getFrameworkSDKPathWithFallbacks(): string
 	//the following SDKs are all intelligent fallbacks
 	if(!sdkPath)
 	{
-		//check if the FlexJS Node module is installed locally in the workspace
-		sdkPath = findSDKInLocalNodeModule();
+		//check if an Apache Royale Node module is installed locally in the workspace
+		sdkPath = findSDKInLocalRoyaleNodeModule();
+	}
+	if(!sdkPath)
+	{
+		//check if an Apache FlexJS Node module is installed locally in the workspace
+		sdkPath = findSDKInLocalFlexJSNodeModule();
 	}
 	if(!sdkPath)
 	{

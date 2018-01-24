@@ -18,11 +18,13 @@ import * as fs from "fs";
 import * as path from "path";
 import findSDKName from "../utils/findSDKName";
 import validateFrameworkSDK from "../utils/validateFrameworkSDK";
-import findSDKInLocalNodeModule from "../utils/findSDKInLocalNodeModule";
+import findSDKInLocalRoyaleNodeModule from "../utils/findSDKInLocalRoyaleNodeModule";
+import findSDKInLocalFlexJSNodeModule from "../utils/findSDKInLocalFlexJSNodeModule";
 import findSDKInRoyaleHomeEnvironmentVariable from "../utils/findSDKInRoyaleHomeEnvironmentVariable";
 import findSDKInFlexHomeEnvironmentVariable from "../utils/findSDKInFlexHomeEnvironmentVariable";
 import findSDKsInPathEnvironmentVariable from "../utils/findSDKsInPathEnvironmentVariable";
 
+const DESCRIPTION_NODE_MODULE = "Node.js Module";
 const DESCRIPTION_ROYALE_HOME = "ROYALE_HOME environment variable";
 const DESCRIPTION_FLEX_HOME = "FLEX_HOME environment variable";
 const DESCRIPTION_PATH = "PATH environment variable";
@@ -201,10 +203,15 @@ export default function selectWorkspaceSDK(): void
 		addSDKItem(editorSDK, DESCRIPTION_CURRENT, items, allPaths, true);
 	}
 	//then search for an SDK that's a locally installed Node.js module
-	let nodeModuleSDK = findSDKInLocalNodeModule();
-	if(nodeModuleSDK)
+	let royaleNodeModuleSDK = findSDKInLocalRoyaleNodeModule();
+	if(royaleNodeModuleSDK)
 	{
-		addSDKItem(nodeModuleSDK, "Node Module", items, allPaths, true);
+		addSDKItem(royaleNodeModuleSDK, DESCRIPTION_NODE_MODULE, items, allPaths, true);
+	}
+	let flexjsNodeModuleSDK = findSDKInLocalFlexJSNodeModule();
+	if(flexjsNodeModuleSDK)
+	{
+		addSDKItem(flexjsNodeModuleSDK, DESCRIPTION_NODE_MODULE, items, allPaths, true);
 	}
 	//if the user has defined search paths for SDKs, include them
 	let searchPaths = vscode.workspace.getConfiguration("nextgenas").get("sdk.searchPaths");

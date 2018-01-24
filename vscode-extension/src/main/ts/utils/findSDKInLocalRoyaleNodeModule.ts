@@ -17,13 +17,28 @@ import * as path from "path";
 import * as vscode from "vscode";
 import validateFrameworkSDK from "./validateFrameworkSDK";
 
-export default function findSDKInLocalNodeModule(): string
+const MODULE_NAMES =
+[
+	"apache-royale",
+	"apache-royale-swf",
+	"royale-swf",
+];
+
+export default function findSDKInLocalRoyaleNodeModule(): string
 {
 	if(vscode.workspace.workspaceFolders === undefined)
 	{
 		return null;
 	}
-	let nodeModule = path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "node_modules", "flexjs");
-	//this may return null
-	return validateFrameworkSDK(nodeModule);
+	for(let i = 0, count = MODULE_NAMES.length; i < count; i++)
+	{
+		let moduleName = MODULE_NAMES[i];
+		let nodeModule = path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "node_modules", moduleName);
+		nodeModule = validateFrameworkSDK(nodeModule);
+		if(nodeModule !== null)
+		{
+			return nodeModule;
+		}
+	}
+	return null;
 }
