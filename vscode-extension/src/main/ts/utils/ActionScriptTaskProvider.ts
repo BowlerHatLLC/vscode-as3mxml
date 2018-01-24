@@ -108,6 +108,11 @@ export default class ActionScriptTaskProvider implements vscode.TaskProvider
 
 		let command = this.getCommand(workspaceFolder);
 		let frameworkSDK = getFrameworkSDKPathWithFallbacks();
+		if(frameworkSDK === null)
+		{
+			//we don't have a valid SDK
+			return;
+		}
 
 		//compile SWF or Royale JS
 		result.push(this.getTask("compile debug build",
