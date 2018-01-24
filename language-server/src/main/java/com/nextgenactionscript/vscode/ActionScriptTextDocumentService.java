@@ -155,6 +155,7 @@ import com.nextgenactionscript.vscode.project.ProjectType;
 import com.nextgenactionscript.vscode.project.VSCodeConfiguration;
 import com.nextgenactionscript.vscode.utils.ASTUtils;
 import com.nextgenactionscript.vscode.utils.ActionScriptSDKUtils;
+import com.nextgenactionscript.vscode.utils.DefinitionTextUtils;
 import com.nextgenactionscript.vscode.utils.ImportTextEditUtils;
 import com.nextgenactionscript.vscode.utils.LSPUtils;
 import com.nextgenactionscript.vscode.utils.LanguageServerCompilerUtils;
@@ -558,7 +559,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             List<SignatureInformation> signatures = new ArrayList<>();
 
             SignatureInformation signatureInfo = new SignatureInformation();
-            signatureInfo.setLabel(getSignatureLabel(functionDefinition));
+            signatureInfo.setLabel(DefinitionTextUtils.functionDefinitionToSignature(functionDefinition, currentProject));
             String docs = getDocumentationForDefinition(functionDefinition, true);
             if (docs != null)
             {
@@ -2021,7 +2022,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
 
         Hover result = new Hover();
-        String detail = getDefinitionDetail(definition);
+        String detail = DefinitionTextUtils.definitionToDetail(definition, currentProject);
         List<Either<String,MarkedString>> contents = new ArrayList<>();
         contents.add(Either.forLeft(MARKDOWN_CODE_BLOCK_NEXTGENAS_START + detail + MARKDOWN_CODE_BLOCK_END));
         String docs = getDocumentationForDefinition(definition, true);
@@ -2064,7 +2065,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
 
         Hover result = new Hover();
-        String detail = getDefinitionDetail(definition);
+        String detail = DefinitionTextUtils.definitionToDetail(definition, currentProject);
         List<Either<String,MarkedString>> contents = new ArrayList<>();
         contents.add(Either.forLeft(MARKDOWN_CODE_BLOCK_NEXTGENAS_START + detail + MARKDOWN_CODE_BLOCK_END));
         result.setContents(contents);
@@ -2986,7 +2987,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
             CompletionItem item = new CompletionItem();
             item.setKind(getDefinitionKind(functionDefinition));
-            item.setDetail(getDefinitionDetail(functionDefinition));
+            item.setDetail(DefinitionTextUtils.definitionToDetail(functionDefinition, currentProject));
             item.setLabel(functionDefinition.getBaseName());
             item.setInsertText(insertText.toString());
             String docs = getDocumentationForDefinition(functionDefinition, false);
@@ -3474,7 +3475,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 {
                     item.setInsertText(prefix + IMXMLCoreConstants.colon + eventName);
                 }
-                item.setDetail(getDefinitionDetail(eventDefinition));
+                item.setDetail(DefinitionTextUtils.definitionToDetail(eventDefinition, currentProject));
                 result.getItems().add(item);
             }
             definition = classDefinition.resolveBaseClass(currentProject);
@@ -3527,7 +3528,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 {
                     item.setInsertText(prefix + IMXMLCoreConstants.colon + styleName);
                 }
-                item.setDetail(getDefinitionDetail(styleDefinition));
+                item.setDetail(DefinitionTextUtils.definitionToDetail(styleDefinition, currentProject));
                 items.add(item);
             }
             definition = classDefinition.resolveBaseClass(currentProject);
@@ -3587,7 +3588,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         CompletionItem item = new CompletionItem();
         item.setKind(getDefinitionKind(definition));
-        item.setDetail(getDefinitionDetail(definition));
+        item.setDetail(DefinitionTextUtils.definitionToDetail(definition, currentProject));
         item.setLabel(definition.getBaseName());
         String docs = getDocumentationForDefinition(definition, false);
         if (docs != null)
@@ -3623,7 +3624,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         CompletionItem item = new CompletionItem();
         item.setKind(getDefinitionKind(definition));
-        item.setDetail(getDefinitionDetail(definition));
+        item.setDetail(DefinitionTextUtils.definitionToDetail(definition, currentProject));
         item.setLabel(definition.getBaseName());
         String docs = getDocumentationForDefinition(definition, false);
         if (docs != null)
@@ -3829,10 +3830,31 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     //safe to ignore
                 }
             }
+            if (definitionPath.endsWith(SWC_EXTENSION))
+            {
+                System.err.println(DefinitionTextUtils.definitionToTextDocument(definition, currentProject));
+                //if we get here, we couldn't find a framework source file and
+                //the definition path still ends with .swc
+                //we're going to try our best to display "decompiled" content
+                Location location = new Location();
+                location.setUri("swc://" + definition.getQualifiedName());
+                Position start = new Position();
+                start.setLine(0);
+                start.setCharacter(0);
+                Position end = new Position();
+                end.setLine(0);
+                end.setCharacter(0);
+                Range range = new Range();
+                range.setStart(start);
+                range.setEnd(end);
+                location.setRange(range);
+                result.add(location);
+                return;
+            }
             if (!definitionPath.endsWith(AS_EXTENSION)
                     && !definitionPath.endsWith(MXML_EXTENSION))
             {
-                //if it's in a SWC or something, we don't know how to resolve
+                //if it's anything else, we don't know how to resolve
                 return;
             }
         }
@@ -5623,265 +5645,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         IClassDefinition classDefinition = (IClassDefinition) parentDefinition;
         return currentProject.resolveSpecifier(classDefinition, tag.getShortName());
-    }
-
-    private void appendInterfaceNamesToDetail(StringBuilder detailBuilder, IInterfaceDefinition[] interfaceDefinitions)
-    {
-        for (int i = 0, count = interfaceDefinitions.length; i < count; i++)
-        {
-            if (i > 0)
-            {
-                detailBuilder.append(", ");
-            }
-            IInterfaceDefinition baseInterface = interfaceDefinitions[i];
-            detailBuilder.append(baseInterface.getBaseName());
-        }
-    }
-
-    private String getDefinitionDetail(IDefinition definition)
-    {
-        StringBuilder detailBuilder = new StringBuilder();
-        if (definition instanceof IClassDefinition)
-        {
-            IClassDefinition classDefinition = (IClassDefinition) definition;
-            if (classDefinition.isDynamic())
-            {
-                detailBuilder.append(IASKeywordConstants.DYNAMIC);
-                detailBuilder.append(" ");
-            }
-            detailBuilder.append(IASKeywordConstants.CLASS);
-            detailBuilder.append(" ");
-            if (classDefinition.getPackageName().startsWith(UNDERSCORE_UNDERSCORE_AS3_PACKAGE))
-            {
-                //classes like __AS3__.vec.Vector should not include the
-                //package name
-                detailBuilder.append(classDefinition.getBaseName());
-            }
-            else
-            {
-                detailBuilder.append(classDefinition.getQualifiedName());
-            }
-            IClassDefinition baseClassDefinition = classDefinition.resolveBaseClass(currentProject);
-            if (baseClassDefinition != null && !baseClassDefinition.getQualifiedName().equals(IASLanguageConstants.Object))
-            {
-                detailBuilder.append(" ");
-                detailBuilder.append(IASKeywordConstants.EXTENDS);
-                detailBuilder.append(" ");
-                detailBuilder.append(baseClassDefinition.getBaseName());
-            }
-            IInterfaceDefinition[] interfaceDefinitions = classDefinition.resolveImplementedInterfaces(currentProject);
-            if (interfaceDefinitions.length > 0)
-            {
-                detailBuilder.append(" ");
-                detailBuilder.append(IASKeywordConstants.IMPLEMENTS);
-                detailBuilder.append(" ");
-                appendInterfaceNamesToDetail(detailBuilder, interfaceDefinitions);
-            }
-        }
-        else if (definition instanceof IInterfaceDefinition)
-        {
-            IInterfaceDefinition interfaceDefinition = (IInterfaceDefinition) definition;
-            detailBuilder.append(IASKeywordConstants.INTERFACE);
-            detailBuilder.append(" ");
-            detailBuilder.append(interfaceDefinition.getQualifiedName());
-            IInterfaceDefinition[] interfaceDefinitions = interfaceDefinition.resolveExtendedInterfaces(currentProject);
-            if (interfaceDefinitions.length > 0)
-            {
-                detailBuilder.append(" ");
-                detailBuilder.append(IASKeywordConstants.EXTENDS);
-                detailBuilder.append(" ");
-                appendInterfaceNamesToDetail(detailBuilder, interfaceDefinitions);
-            }
-        }
-        else if (definition instanceof IVariableDefinition)
-        {
-            IVariableDefinition variableDefinition = (IVariableDefinition) definition;
-            IDefinition parentDefinition = variableDefinition.getParent();
-            if (parentDefinition instanceof ITypeDefinition)
-            {
-                //an IAccessorDefinition actually extends both
-                //IVariableDefinition and IFunctionDefinition 
-                if (variableDefinition instanceof IAccessorDefinition)
-                {
-                    detailBuilder.append("(property) ");
-                }
-                else if (variableDefinition instanceof IConstantDefinition)
-                {
-                    detailBuilder.append("(const) ");
-                }
-                else
-                {
-                    detailBuilder.append("(variable) ");
-                }
-                detailBuilder.append(parentDefinition.getQualifiedName());
-                detailBuilder.append(".");
-            }
-            else if (parentDefinition instanceof IFunctionDefinition)
-            {
-                if (variableDefinition instanceof IParameterDefinition)
-                {
-                    detailBuilder.append("(parameter) ");
-                }
-                else
-                {
-                    detailBuilder.append("(local ");
-                    if (variableDefinition instanceof IConstantDefinition)
-                    {
-                        detailBuilder.append("const) ");
-                    }
-                    else
-                    {
-                        detailBuilder.append("var) ");
-                    }
-                }
-            }
-            else
-            {
-                if (variableDefinition instanceof IConstantDefinition)
-                {
-                    detailBuilder.append(IASKeywordConstants.CONST);
-                }
-                else
-                {
-                    detailBuilder.append(IASKeywordConstants.VAR);
-                }
-                detailBuilder.append(" ");
-            }
-            detailBuilder.append(variableDefinition.getBaseName());
-            detailBuilder.append(":");
-            detailBuilder.append(variableDefinition.getTypeAsDisplayString());
-        }
-        else if (definition instanceof IFunctionDefinition)
-        {
-            IFunctionDefinition functionDefinition = (IFunctionDefinition) definition;
-            IDefinition parentDefinition = functionDefinition.getParent();
-            if (parentDefinition instanceof ITypeDefinition)
-            {
-                if (functionDefinition.isConstructor())
-                {
-                    detailBuilder.append("(constructor) ");
-                }
-                else
-                {
-                    detailBuilder.append("(method) ");
-                }
-                detailBuilder.append(parentDefinition.getQualifiedName());
-                detailBuilder.append(".");
-            }
-            else if (parentDefinition instanceof IFunctionDefinition)
-            {
-                detailBuilder.append("(local function) ");
-            }
-            else
-            {
-                detailBuilder.append(IASKeywordConstants.FUNCTION);
-                detailBuilder.append(" ");
-            }
-            detailBuilder.append(getSignatureLabel(functionDefinition));
-        }
-        else if (definition instanceof IEventDefinition)
-        {
-            IEventDefinition eventDefinition = (IEventDefinition) definition;
-            detailBuilder.append("(event) ");
-            detailBuilder.append("[");
-            detailBuilder.append(IMetaAttributeConstants.ATTRIBUTE_EVENT);
-            detailBuilder.append("(");
-            detailBuilder.append(IMetaAttributeConstants.NAME_EVENT_NAME);
-            detailBuilder.append("=");
-            detailBuilder.append("\"");
-            detailBuilder.append(eventDefinition.getBaseName());
-            detailBuilder.append("\"");
-            detailBuilder.append(",");
-            detailBuilder.append(IMetaAttributeConstants.NAME_EVENT_TYPE);
-            detailBuilder.append("=");
-            detailBuilder.append("\"");
-            detailBuilder.append(eventDefinition.getTypeAsDisplayString());
-            detailBuilder.append("\"");
-            detailBuilder.append(")");
-            detailBuilder.append("]");
-        }
-        else if (definition instanceof IStyleDefinition)
-        {
-            IStyleDefinition styleDefinition = (IStyleDefinition) definition;
-            detailBuilder.append("(style) ");
-            detailBuilder.append("[");
-            detailBuilder.append(IMetaAttributeConstants.ATTRIBUTE_STYLE);
-            detailBuilder.append("(");
-            detailBuilder.append(IMetaAttributeConstants.NAME_STYLE_NAME);
-            detailBuilder.append("=");
-            detailBuilder.append("\"");
-            detailBuilder.append(styleDefinition.getBaseName());
-            detailBuilder.append("\"");
-            detailBuilder.append(",");
-            detailBuilder.append(IMetaAttributeConstants.NAME_STYLE_TYPE);
-            detailBuilder.append("=");
-            detailBuilder.append("\"");
-            detailBuilder.append(styleDefinition.getTypeAsDisplayString());
-            detailBuilder.append("\"");
-            detailBuilder.append(")");
-            detailBuilder.append("]");
-        }
-        return detailBuilder.toString();
-    }
-
-    private String getSignatureLabel(IFunctionDefinition functionDefinition)
-    {
-        StringBuilder labelBuilder = new StringBuilder();
-        labelBuilder.append(functionDefinition.getBaseName());
-        labelBuilder.append("(");
-        IParameterDefinition[] parameters = functionDefinition.getParameters();
-        for (int i = 0, count = parameters.length; i < count; i++)
-        {
-            if (i > 0)
-            {
-                labelBuilder.append(", ");
-            }
-            IParameterDefinition parameterDefinition = parameters[i];
-            if (parameterDefinition.isRest())
-            {
-                labelBuilder.append(IASLanguageConstants.REST);
-            }
-            labelBuilder.append(parameterDefinition.getBaseName());
-            labelBuilder.append(":");
-            labelBuilder.append(parameterDefinition.getTypeAsDisplayString());
-            if (parameterDefinition.hasDefaultValue())
-            {
-                labelBuilder.append(" = ");
-                Object defaultValue = parameterDefinition.resolveDefaultValue(currentProject);
-                if (defaultValue instanceof String)
-                {
-                    labelBuilder.append("\"");
-                    labelBuilder.append(defaultValue);
-                    labelBuilder.append("\"");
-                }
-                else if (defaultValue != null)
-                {
-                    if (defaultValue.getClass() == Object.class)
-                    {
-                        //for some reason, null is some strange random object
-                        labelBuilder.append(IASLanguageConstants.NULL);
-                    }
-                    else
-                    {
-                        //numeric values and everything else should be okay
-                        labelBuilder.append(defaultValue);
-                    }
-                }
-                else
-                {
-                    //I don't know how this might happen, but this is probably
-                    //a safe fallback value
-                    labelBuilder.append(IASLanguageConstants.NULL);
-                }
-            }
-        }
-        labelBuilder.append(")");
-        if (!functionDefinition.isConstructor())
-        {
-            labelBuilder.append(":");
-            labelBuilder.append(functionDefinition.getReturnTypeAsDisplayString());
-        }
-        return labelBuilder.toString();
     }
 
     private boolean isActionScriptCompletionAllowedInNode(TextDocumentPositionParams params, IASNode offsetNode)

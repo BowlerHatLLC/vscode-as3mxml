@@ -20,6 +20,7 @@ import validateEditorSDK from "./utils/validateEditorSDK";
 import ActionScriptSourcePathDataProvider from "./utils/ActionScriptSourcePathDataProvider";
 import ActionScriptTaskProvider from "./utils/ActionScriptTaskProvider";
 import SWFDebugConfigurationProvider from "./utils/SWFDebugConfigurationProvider";
+import SWCTextDocumentContentProvider from "./utils/SWCTextDocumentContentProvider";
 import getJavaClassPathDelimiter from "./utils/getJavaClassPathDelimiter";
 import findSDKShortName from "./utils/findSDKShortName";
 import getFrameworkSDKPathWithFallbacks from "./utils/getFrameworkSDKPathWithFallbacks";
@@ -56,6 +57,7 @@ let sdkStatusBarItem: vscode.StatusBarItem;
 let sourcePathDataProvider: ActionScriptSourcePathDataProvider = null;
 let actionScriptTaskProvider: ActionScriptTaskProvider = null;
 let debugConfigurationProvider: SWFDebugConfigurationProvider = null;
+let swcTextDocumentContentProvider: SWCTextDocumentContentProvider = null;
 
 function getValidatedEditorSDKConfiguration(javaExecutablePath: string): string
 {
@@ -253,6 +255,9 @@ export function activate(context: vscode.ExtensionContext)
 
 		debugConfigurationProvider = new SWFDebugConfigurationProvider();
 		vscode.debug.registerDebugConfigurationProvider("swf", debugConfigurationProvider);
+
+		swcTextDocumentContentProvider = new SWCTextDocumentContentProvider();
+		vscode.workspace.registerTextDocumentContentProvider("swc", swcTextDocumentContentProvider);
 	}
 	startClient();
 }
