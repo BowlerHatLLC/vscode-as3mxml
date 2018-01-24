@@ -507,7 +507,8 @@ public class ASConfigC
 			throw new ASConfigCException("SDK not found. Set " + envHome + ", add SDK to PATH environment variable, or use --sdk option.");
 		}
 		Path sdkHomePath = Paths.get(sdkHome);
-		sdkIsRoyale = ApacheRoyaleUtils.isValidSDK(sdkHomePath);
+		sdkHomePath = ApacheRoyaleUtils.isValidSDK(sdkHomePath);
+		sdkIsRoyale = sdkHomePath != null;
 		if(configRequiresRoyale && !sdkIsRoyale)
 		{
 			throw new ASConfigCException("Configuration options in asconfig.json require Apache Royale. Path to SDK is not valid: " + sdkHome);

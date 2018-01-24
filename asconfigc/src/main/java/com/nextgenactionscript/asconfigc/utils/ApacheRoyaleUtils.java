@@ -24,6 +24,7 @@ public class ApacheRoyaleUtils
 {
 	private static final String ENV_ROYALE_HOME = "ROYALE_HOME";
 	private static final String ENV_PATH = "PATH";
+	private static final String ROYALE_ASJS = "royale-asjs";
 	private static final String NODE_MODULES = "node_modules";
 	private static final String NPM_ROYALE = "apache-royale";
 	private static final String NPM_ROYALE_SWF = "apache-royale-swf";
@@ -33,9 +34,28 @@ public class ApacheRoyaleUtils
 	private static final String ROYALE_SDK_DESCRIPTION = "royale-sdk-description.xml";
 	
 	/**
-	 * Determines if a directory contains a valid Apache Royale SDK.
+	 * Determines if a directory contains a valid Apache Royale SDK. May modify
+	 * the path of the "real" SDK is in royale-asjs
 	 */
-	public static boolean isValidSDK(Path absolutePath)
+	public static Path isValidSDK(Path absolutePath)
+	{
+		if(absolutePath == null)
+		{
+			return null;
+		}
+		if(isValidSDKInternal(absolutePath))
+		{
+			return absolutePath;
+		}
+		Path royalePath = absolutePath.resolve(ROYALE_ASJS);
+		if(isValidSDKInternal(royalePath))
+		{
+			return royalePath;
+		}
+		return null;
+	}
+	
+	private static boolean isValidSDKInternal(Path absolutePath)
 	{
 		if(absolutePath == null || !absolutePath.isAbsolute())
 		{
@@ -63,15 +83,20 @@ public class ApacheRoyaleUtils
 	
 	/**
 	 * Attempts to find a valid Apache Royale SDK by searching for the
-	 * royale NPM module, testing the FLEX_HOME environment variable, and
+	 * royale NPM module, testing the ROYALE_HOME environment variable, and
 	 * finally, testing the PATH environment variable.
 	 */
 	public static String findSDK()
 	{
 		String royaleHome = System.getenv(ENV_ROYALE_HOME);
-		if(royaleHome != null && isValidSDK(Paths.get(royaleHome)))
+		if(royaleHome != null)
 		{
-			return royaleHome;
+			Path royaleHomePath = Paths.get(royaleHome);
+			royaleHomePath = isValidSDK(royaleHomePath);
+			if(royaleHomePath != null)
+			{
+				return royaleHomePath.toString();
+			}
 		}
 		String envPath = System.getenv(ENV_PATH);
 		if(envPath != null)
@@ -85,12 +110,14 @@ public class ApacheRoyaleUtils
 				if(file.exists() && !file.isDirectory())
 				{
 					Path npmPath = Paths.get(currentPath, NODE_MODULES, NPM_ROYALE);
-					if(isValidSDK(npmPath))
+					npmPath = isValidSDK(npmPath);
+					if(npmPath != null)
 					{
 						return npmPath.toString();
 					}
 					npmPath = Paths.get(currentPath, NODE_MODULES, NPM_ROYALE_SWF);
-					if(isValidSDK(npmPath))
+					npmPath = isValidSDK(npmPath);
+					if(npmPath != null)
 					{
 						return npmPath.toString();
 					}
@@ -112,7 +139,8 @@ public class ApacheRoyaleUtils
 						return null;
 					}
 					sdkPath = sdkPath.getParent().getParent().getParent();
-					if(isValidSDK(sdkPath))
+					sdkPath = isValidSDK(sdkPath);
+					if(sdkPath != null)
 					{
 						return sdkPath.toString();
 					}
