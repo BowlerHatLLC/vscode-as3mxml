@@ -19,12 +19,10 @@ import validateFrameworkSDK from "./validateFrameworkSDK";
 
 const ENVIRONMENT_VARIABLE_PATH = "PATH";
 
-
 const MODULE_NAMES =
 [
 	"apache-royale",
 	"apache-royale-swf",
-	"royale-swf",
 	"flexjs",
 ];
 

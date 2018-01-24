@@ -21,7 +21,6 @@ const MODULE_NAMES =
 [
 	"apache-royale",
 	"apache-royale-swf",
-	"royale-swf",
 ];
 
 export default function findSDKInLocalRoyaleNodeModule(): string
