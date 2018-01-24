@@ -19,9 +19,11 @@ import * as path from "path";
 import findSDKName from "../utils/findSDKName";
 import validateFrameworkSDK from "../utils/validateFrameworkSDK";
 import findSDKInLocalNodeModule from "../utils/findSDKInLocalNodeModule";
+import findSDKInRoyaleHomeEnvironmentVariable from "../utils/findSDKInRoyaleHomeEnvironmentVariable";
 import findSDKInFlexHomeEnvironmentVariable from "../utils/findSDKInFlexHomeEnvironmentVariable";
 import findSDKsInPathEnvironmentVariable from "../utils/findSDKsInPathEnvironmentVariable";
 
+const DESCRIPTION_ROYALE_HOME = "ROYALE_HOME environment variable";
 const DESCRIPTION_FLEX_HOME = "FLEX_HOME environment variable";
 const DESCRIPTION_PATH = "PATH environment variable";
 const DESCRIPTION_CURRENT = "Current SDK";
@@ -231,6 +233,12 @@ export default function selectWorkspaceSDK(): void
 	if(!addedEditorSDK && editorSDK)
 	{
 		addSDKItem(editorSDK, DESCRIPTION_EDITOR_SDK, items, allPaths, true);
+	}
+	//check if the ROYALE_HOME environment variable is defined
+	let royaleHome = findSDKInRoyaleHomeEnvironmentVariable();
+	if(royaleHome)
+	{
+		addSDKItem(royaleHome, DESCRIPTION_ROYALE_HOME, items, allPaths, false);
 	}
 	//check if the FLEX_HOME environment variable is defined
 	let flexHome = findSDKInFlexHomeEnvironmentVariable();
