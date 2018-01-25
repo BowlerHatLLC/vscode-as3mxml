@@ -1,3 +1,19 @@
+## 0.9.0
+
+### New Features
+
+* Apache Royale is now supported! The code intelligence features of the ActionScript & MXML extension are now powered by the latest Apache Royale compiler. SWF projects targeting Adobe AIR and Flash Player remain fully suported, but Apache FlexJS projects are considered deprecated, and updgrading to Royale is recommended.
+* Build: The **asconfigc** utility is now bundled with the ActionScript & MXML extension, and you don't need to install it manually anymore.
+* Editor: When overriding a method, the completion list will suggest method names from superclass that can be overridden.
+* Settings: added `nextgenas.asconfigc.useBundled` setting to disable the bundled version of **asconfigc** and use the globally installed npm version, if you prefer.
+* Workspaces: Tasks and SWF debugging are now supported in multi-root workspaces. Code intelligence features are supported only in the first root folder for now. Work on multi-root workspaces will be completed in a future update.
+
+### Fixed Issues
+
+* Editor: Fixed issue where completion list could sometimes contain duplicate entries for the same class because it was defined in multiple SWC files.
+* Editor: Fixed issue where completion sometimes would not work in MXML event handlers if an MXML namespace containing `//` were defined beforehand on the same line.
+* Editor: Fixed exception thrown when editing code in a conditional compilation block that is currently disabled.
+
 ## 0.8.0
 
 ### New Features
