@@ -30,39 +30,43 @@
 
 ## asconfig.json
 
-Add a file named [`asconfig.json`](https://github.com/BowlerHatLLC/vscode-nextgenas/wiki/asconfig.json) to the root of your project to enable the ActionScript and MXML extension.
+Add a file named [*asconfig.json*](https://github.com/BowlerHatLLC/vscode-nextgenas/wiki/asconfig.json) to the root of your project to enable the ActionScript and MXML extension.
 
-A sample `asconfig.json` file for an Apache Royale project appears below:
+A sample *asconfig.json* file for an Apache Royale project appears below:
 
-	{
-		"compilerOptions": {
-			"targets": [
-				"JSRoyale"
-			]
-		},
-		"files":
-		[
-			"src/HelloRoyale.mxml"
+``` json
+{
+	"compilerOptions": {
+		"targets": [
+			"JSRoyale"
 		]
-	}
+	},
+	"files":
+	[
+		"src/HelloRoyale.mxml"
+	]
+}
+```
 
-Here's another sample `asconfig.json` file that is for a pure ActionScript project targeting Adobe AIR on mobile:
+Here's another sample *asconfig.json* file that is for a pure ActionScript project targeting Adobe AIR on mobile:
 
-	{
-		"config": "airmobile",
-		"compilerOptions": {
-			"output": "bin/HelloAIR.swf"
-		},
-		"application": "src/HelloAIR-app.xml",
-		"files":
-		[
-			"src/HelloAIR.as"
-		]
-	}
+``` json
+{
+	"config": "airmobile",
+	"compilerOptions": {
+		"output": "bin/HelloAIR.swf"
+	},
+	"application": "src/HelloAIR-app.xml",
+	"files":
+	[
+		"src/HelloAIR.as"
+	]
+}
+```
 
 ## Support this project
 
-The [ActionScript and MXML extension for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=bowlerhatllc.vscode-nextgenas) and [`asconfigc`](https://www.npmjs.com/package/asconfigc) are developed by Josh Tynjala with the support of community members like you.
+The [ActionScript and MXML extension for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=bowlerhatllc.vscode-nextgenas) is developed by [Josh Tynjala](http://patreon.com/josht) with the support of community members like you.
 
 [Support Josh Tynjala on Patreon](http://patreon.com/josht)
 
