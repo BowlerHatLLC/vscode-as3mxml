@@ -208,7 +208,13 @@ export default class ActionScriptTaskProvider implements vscode.TaskProvider
 			{
 				return [winPath];
 			}
-			//otherwise, try to use a global executable
+			let useBundled = <string> vscode.workspace.getConfiguration("nextgenas").get("asconfigc.useBundled");
+			if(!useBundled)
+			{
+				//use an executable on the system path
+				return [executableName];
+			}
+			//use the version bundled with the extension
 			return this.getDefaultCommand();
 		}
 		let executableName = "asconfigc";
@@ -217,6 +223,13 @@ export default class ActionScriptTaskProvider implements vscode.TaskProvider
 		{
 			return [unixPath];
 		}
+		let useBundled = <string> vscode.workspace.getConfiguration("nextgenas").get("asconfigc.useBundled");
+		if(!useBundled)
+		{
+			//use an executable on the system path
+			return [executableName];
+		}
+		//use the version bundled with the extension
 		return this.getDefaultCommand();
 	}
 	

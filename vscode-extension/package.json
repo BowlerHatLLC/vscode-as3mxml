@@ -309,6 +309,11 @@
             "type": "string"
           }
         },
+        "nextgenas.asconfigc.useBundled": {
+          "type": "boolean",
+          "default": true,
+          "description": "(Advanced) Indicates if the extension will use the bundled version of asconfigc or another that is installed on the system path."
+        },
         "nextgenas.java": {
           "type": [
             "string",
