@@ -1,5 +1,5 @@
 /*
-Copyright 2016-2017 Bowler Hat LLC
+Copyright 2016-2018 Bowler Hat LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.file.Files;
@@ -81,7 +80,7 @@ public class ASConfigC
 		Option projectOption = new Option("p", "project", true, "Compile a project with the path to its configuration file or a directory containing asconfig.json. If omitted, will look for asconfig.json in current directory.");
 		projectOption.setArgName("FILE OR DIRECTORY");
 		options.addOption(projectOption);
-		Option sdkOption = new Option(null, "sdk", true, "Specify the directory where the ActionScript SDK is located. If omitted, defaults to checking FLEX_HOME and PATH environment variables.");
+		Option sdkOption = new Option(null, "sdk", true, "Specify the directory where the ActionScript SDK is located. If omitted, defaults to checking ROYALE_HOME, FLEX_HOME and PATH environment variables.");
 		sdkOption.setArgName("DIRECTORY");
 		options.addOption(sdkOption);
 		Option debugOption = new Option(null, "debug", true, "Specify debug or release mode. Overrides the debug compiler option, if specified in asconfig.json.");
@@ -508,7 +507,12 @@ public class ASConfigC
 			throw new ASConfigCException("SDK not found. Set " + envHome + ", add SDK to PATH environment variable, or use --sdk option.");
 		}
 		Path sdkHomePath = Paths.get(sdkHome);
-		sdkIsRoyale = ApacheRoyaleUtils.isValidSDK(sdkHomePath);
+		Path royalePath = ApacheRoyaleUtils.isValidSDK(sdkHomePath);
+		if(royalePath != null)
+		{
+			sdkHomePath = royalePath;
+			sdkIsRoyale = true;
+		}
 		if(configRequiresRoyale && !sdkIsRoyale)
 		{
 			throw new ASConfigCException("Configuration options in asconfig.json require Apache Royale. Path to SDK is not valid: " + sdkHome);
@@ -732,11 +736,15 @@ public class ASConfigC
 		int passwordIndex = airOptions.indexOf("-" + AIRSigningOptions.STOREPASS);
 		if(passwordIndex == -1)
 		{
-			Console console = System.console();
-			char[] password = console.readPassword("Adobe AIR code signing password: ");
 			int keystoreIndex = airOptions.indexOf("-" + AIRSigningOptions.KEYSTORE);
-			airOptions.add(keystoreIndex + 2, "-" + AIRSigningOptions.STOREPASS);
-			airOptions.add(keystoreIndex + 3, new String(password));
+			if(keystoreIndex != -1)
+			{
+				//only ask for password if -keystore is specified
+				Console console = System.console();
+				char[] password = console.readPassword("Adobe AIR code signing password: ");
+				airOptions.add(keystoreIndex + 2, "-" + AIRSigningOptions.STOREPASS);
+				airOptions.add(keystoreIndex + 3, new String(password));
+			}
 		}
 
 		Path javaExecutablePath = Paths.get(System.getProperty("java.home"), "bin", "java");

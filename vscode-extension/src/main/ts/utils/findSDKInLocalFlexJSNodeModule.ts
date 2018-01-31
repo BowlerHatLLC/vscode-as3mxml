@@ -1,5 +1,5 @@
 /*
-Copyright 2016-2017 Bowler Hat LLC
+Copyright 2016-2018 Bowler Hat LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@ import * as path from "path";
 import * as vscode from "vscode";
 import validateFrameworkSDK from "./validateFrameworkSDK";
 
-export default function findSDKInLocalNodeModule(): string
+export default function findSDKInLocalFlexJSNodeModule(): string
 {
 	if(vscode.workspace.workspaceFolders === undefined)
 	{

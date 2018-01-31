@@ -1,5 +1,5 @@
 /*
-Copyright 2016-2017 Bowler Hat LLC
+Copyright 2016-2018 Bowler Hat LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -62,12 +62,8 @@ let swcTextDocumentContentProvider: SWCTextDocumentContentProvider = null;
 function getValidatedEditorSDKConfiguration(javaExecutablePath: string): string
 {
 	let result = <string> vscode.workspace.getConfiguration("nextgenas").get("sdk.editor");
-	if(result && !validateEditorSDK(savedContext.extensionPath, javaExecutablePath, result))
-	{
-		//this is not a valid SDK
-		return null;
-	}
-	return result;
+	//this may return null
+	return validateEditorSDK(savedContext.extensionPath, javaExecutablePath, result);
 }
 
 function onDidChangeConfiguration(event)

@@ -1,5 +1,5 @@
 /*
-Copyright 2016-2017 Bowler Hat LLC
+Copyright 2016-2018 Bowler Hat LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -43,10 +43,10 @@ public class StreamGobbler extends Thread
 		try
 		{
 			BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
-			int b;
-			while((b = reader.read()) != -1)
+			String line = null;
+			while((line = reader.readLine()) != null)
 			{
-				target.print((char) b);
+				target.println(line);
 				target.flush();
 			}
 			reader.close();

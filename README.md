@@ -28,7 +28,7 @@ Requires [Apache Maven](https://maven.apache.org/). Run the following command in
 mvn clean package -s settings-template.xml
 ```
 
-The extension will be generated in `distribution/target/vscode-nextgenas/vscode-nextgenas`. This directory may be run inside Visual Studio Code's extension host. Additionally, a `vsix` file will be generated that may be installed in Visual Studio Code.
+The extension will be generated in *distribution/target/vscode-nextgenas/vscode-nextgenas*. This directory may be run inside Visual Studio Code's extension host. Additionally, a *.vsix* file will be generated that may be installed in Visual Studio Code.
 
 ## Running tests
 
@@ -41,9 +41,11 @@ Tests are run in the Visual Studio Code extension host.
 
 Results will appear in the **Output** view.
 
+Note: If the extension cannot find Apache Royale on your system automatically, you may need to configure the `nextgenas.sdk.framework` or `nextgenas.sdk.editor` setting in *vscode-extension/src/test/fixtures/.vscode/settings.json*.
+
 ## Support this project
 
-The [ActionScript and MXML extension for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=bowlerhatllc.vscode-nextgenas) and [`asconfigc`](https://www.npmjs.com/package/asconfigc) are developed by Josh Tynjala with the support of community members like you.
+The [ActionScript and MXML extension for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=bowlerhatllc.vscode-nextgenas) is developed by [Josh Tynjala](http://patreon.com/josht) with the support of community members like you.
 
 [Support Josh Tynjala on Patreon](http://patreon.com/josht)
 

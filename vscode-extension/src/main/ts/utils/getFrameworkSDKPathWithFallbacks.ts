@@ -1,5 +1,5 @@
 /*
-Copyright 2016-2017 Bowler Hat LLC
+Copyright 2016-2018 Bowler Hat LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -16,12 +16,11 @@ limitations under the License.
 import * as path from "path";
 import * as vscode from "vscode";
 import validateFrameworkSDK from "./validateFrameworkSDK";
-import findSDKInLocalNodeModule from "./findSDKInLocalNodeModule";
+import findSDKInLocalRoyaleNodeModule from "./findSDKInLocalRoyaleNodeModule";
+import findSDKInLocalFlexJSNodeModule from "./findSDKInLocalFlexJSNodeModule";
+import findSDKInRoyaleHomeEnvironmentVariable from "./findSDKInRoyaleHomeEnvironmentVariable";
 import findSDKInFlexHomeEnvironmentVariable from "./findSDKInFlexHomeEnvironmentVariable";
 import findSDKsInPathEnvironmentVariable from "./findSDKsInPathEnvironmentVariable";
-
-const ENVIRONMENT_VARIABLE_FLEX_HOME = "FLEX_HOME";
-const ENVIRONMENT_VARIABLE_PATH = "PATH";
 
 export default function getFrameworkSDKPathWithFallbacks(): string
 {
@@ -52,8 +51,18 @@ export default function getFrameworkSDKPathWithFallbacks(): string
 	//the following SDKs are all intelligent fallbacks
 	if(!sdkPath)
 	{
-		//check if the FlexJS Node module is installed locally in the workspace
-		sdkPath = findSDKInLocalNodeModule();
+		//check if an Apache Royale Node module is installed locally in the workspace
+		sdkPath = findSDKInLocalRoyaleNodeModule();
+	}
+	if(!sdkPath)
+	{
+		//check if an Apache FlexJS Node module is installed locally in the workspace
+		sdkPath = findSDKInLocalFlexJSNodeModule();
+	}
+	if(!sdkPath)
+	{
+		//the ROYALE_HOME environment variable may point to an SDK
+		sdkPath = findSDKInRoyaleHomeEnvironmentVariable();
 	}
 	if(!sdkPath)
 	{

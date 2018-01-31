@@ -2,7 +2,7 @@
   "name": "vscode-nextgenas",
   "displayName": "ActionScript & MXML",
   "description": "Language support for ActionScript and MXML provided by NextGen ActionScript",
-  "version": "0.9.0-SNAPSHOT",
+  "version": "0.9.0",
   "publisher": "bowlerhatllc",
   "homepage": "http://nextgenactionscript.com/vscode/",
   "repository": {
@@ -281,14 +281,6 @@
       "type": "object",
       "description": "ActionScript and MXML configuration",
       "properties": {
-        "nextgenas.sdk.editor": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "default": null,
-          "description": "(Advanced) Specifies the folder path of the Apache Royale SDK used internally by the extension for code intelligence. Unless you know what you're doing, you should probably set nextgenas.sdk.framework instead."
-        },
         "nextgenas.sdk.framework": {
           "type": [
             "string",
@@ -309,13 +301,26 @@
             "type": "string"
           }
         },
+        "nextgenas.asconfigc.useBundled": {
+          "type": "boolean",
+          "default": true,
+          "description": "(Advanced) Indicates if the extension will use the bundled version of asconfigc or a different version that is installed on the system path."
+        },
         "nextgenas.java": {
           "type": [
             "string",
             "null"
           ],
           "default": null,
-          "description": "Specifies the path to the java exectuable (Note: this must be an executable, and not a directory). Use this setting if the extension cannot find Java automatically."
+          "description": "(Advanced) Specifies the path to the java exectuable (Note: this must be an executable, and not a directory). Use this setting if the extension cannot find Java automatically."
+        },
+        "nextgenas.sdk.editor": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null,
+          "description": "(Advanced) Specifies the folder path of the Apache Royale SDK used internally by the extension for code intelligence. Unless you know what you're doing, you should probably set nextgenas.sdk.framework instead."
         }
       }
     },

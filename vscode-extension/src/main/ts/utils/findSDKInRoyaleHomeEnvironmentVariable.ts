@@ -13,20 +13,19 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package com.nextgenactionscript.asconfigc;
+import * as fs from "fs";
+import * as path from "path";
+import validateFrameworkSDK from "./validateFrameworkSDK";
 
-public class ASConfigCException extends Exception
+const ENVIRONMENT_VARIABLE_ROYALE_HOME = "ROYALE_HOME";
+
+export default function findSDKInRoyaleHomeEnvironmentVariable(): string
 {
-	public ASConfigCException(String message)
+	if(ENVIRONMENT_VARIABLE_ROYALE_HOME in process.env)
 	{
-		super(message);
+		let flexHome = process.env.ROYALE_HOME;
+		//this may return null
+		return validateFrameworkSDK(flexHome);
 	}
-
-	public ASConfigCException(int status)
-	{
-		super();
-		this.status = status;
-	}
-
-	int status = 0;
+	return null;
 }

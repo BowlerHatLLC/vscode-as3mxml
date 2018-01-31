@@ -1,5 +1,5 @@
 /*
-Copyright 2016-2017 Bowler Hat LLC
+Copyright 2016-2018 Bowler Hat LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,6 +19,13 @@ import validateFrameworkSDK from "./validateFrameworkSDK";
 
 const ENVIRONMENT_VARIABLE_PATH = "PATH";
 
+const MODULE_NAMES =
+[
+	"apache-royale",
+	"apache-royale-swf",
+	"flexjs",
+];
+
 export default function findSDKsInPathEnvironmentVariable(): string[]
 {
 	let result: string[] = [];
@@ -32,15 +39,20 @@ export default function findSDKsInPathEnvironmentVariable(): string[]
 	let paths = PATH.split(path.delimiter);
 	paths.forEach((currentPath) =>
 	{
-		//first check if this directory contains the NPM version of FlexJS for Windows
+		//first check if this directory contains the NPM version of either
+		//Apache Royale or Apache FlexJS for Windows
 		let mxmlcPath = path.join(currentPath, "mxmlc.cmd");
 		if(fs.existsSync(mxmlcPath))
 		{
-			let sdkPath = path.join(path.dirname(mxmlcPath), "node_modules", "flexjs");
-			let validSDK = validateFrameworkSDK(sdkPath);
-			if(validSDK !== null)
+			for(let i = 0, count = MODULE_NAMES.length; i < count; i++)
 			{
-				result.push(validSDK);
+				let moduleName = MODULE_NAMES[i];
+				let sdkPath = path.join(path.dirname(mxmlcPath), "node_modules", moduleName);
+				let validSDK = validateFrameworkSDK(sdkPath);
+				if(validSDK !== null)
+				{
+					result.push(validSDK);
+				}
 			}
 		}
 		else

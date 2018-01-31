@@ -13,21 +13,31 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+import * as path from "path";
 import * as vscode from "vscode";
+import validateFrameworkSDK from "./validateFrameworkSDK";
 
-export default function organizeImportsInTextEditor(editor: vscode.TextEditor, edit: vscode.TextEditorEdit)
+const MODULE_NAMES =
+[
+	"apache-royale",
+	"apache-royale-swf",
+];
+
+export default function findSDKInLocalRoyaleNodeModule(): string
 {
 	if(vscode.workspace.workspaceFolders === undefined)
 	{
-		vscode.window.showErrorMessage("Cannot organize imports because no workspace is currently open.");
-		return;
+		return null;
 	}
-	let document = editor.document;
-	let fileName = document.fileName;
-	if(!fileName.endsWith(".as") && !fileName.endsWith(".mxml"))
+	for(let i = 0, count = MODULE_NAMES.length; i < count; i++)
 	{
-		//we can't organize imports in this file
-		return;
+		let moduleName = MODULE_NAMES[i];
+		let nodeModule = path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "node_modules", moduleName);
+		nodeModule = validateFrameworkSDK(nodeModule);
+		if(nodeModule !== null)
+		{
+			return nodeModule;
+		}
 	}
-	vscode.commands.executeCommand("nextgenas.organizeImportsInUri", document.uri);
+	return null;
 }
