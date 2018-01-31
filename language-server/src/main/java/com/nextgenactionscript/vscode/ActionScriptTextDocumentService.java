@@ -3840,7 +3840,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 Location location = new Location();
                 definitionText = UrlEscapers.urlFragmentEscaper().escape(definitionText);
                 String path = definition.getQualifiedName();
-                path = path.replaceAll("\\.", "/");
+                //we add a prefix here because VSCode won't display the file
+                //name if it isn't in a directory
+                path = "generated/" + path.replaceAll("\\.", "/");
                 path += ".as";
                 URI uri = URI.create("swc://" + path + "?" + definitionText);
                 location.setUri(uri.toString());
