@@ -244,7 +244,7 @@
 		<key>class_declaration</key>
 		<dict>
 			<key>begin</key>
-			<string>(?x) (class) \s+ (\w+)</string>
+			<string>(?x) (class) \s+ ([\.\w]+)</string>
 			<key>beginCaptures</key>
 			<dict>
 				<key>1</key>
@@ -462,7 +462,7 @@
 				</dict>
 			</dict>
 			<key>match</key>
-			<string>(?x) \b(extends) \s+ (\w+) \s*</string>
+			<string>(?x) \b(extends) \s+ ([\.\w]+) \s*</string>
 			<key>name</key>
 			<string>meta.extends.actionscript.3</string>
 		</dict>
@@ -506,7 +506,7 @@
 						</dict>
 					</dict>
 					<key>match</key>
-					<string>(?x) (\w+) \s*(\:)\s* ( ((\w+)|(\*)) (\.&lt;(\w+)&gt;)? (\s*=\s* ([\w_]+))? )|(\.\.\.(\w+))</string>
+					<string>(?x) (\w+) \s*(\:)\s* ( (([\.\w]+)|(\*)) (\.&lt;([\.\w]+)&gt;)? (\s*=\s* ([\w_]+))? )|(\.\.\.(\w+))</string>
 				</dict>
 			</array>
 		</dict>
@@ -598,7 +598,7 @@
 				</dict>
 			</dict>
 			<key>match</key>
-			<string>(?x) \b(implements) \s+ (\w+) \s*</string>
+			<string>(?x) \b(implements) \s+ ([\.\w]+) \s*</string>
 			<key>name</key>
 			<string>meta.implements.actionscript.3</string>
 		</dict>
@@ -766,7 +766,7 @@
 				</dict>
 			</dict>
 			<key>end</key>
-			<string>(?&lt;=\})</string>
+			<string>(?&lt;=(;|\}))</string>
 			<key>name</key>
 			<string>meta.method.actionscript.3</string>
 			<key>patterns</key>
@@ -792,7 +792,7 @@
 				</dict>
 			</dict>
 			<key>match</key>
-			<string>,\s*(\w+)\s*</string>
+			<string>,\s*([\.\w]+)\s*</string>
 			<key>name</key>
 			<string>meta.implements.actionscript.3</string>
 		</dict>
@@ -1115,7 +1115,7 @@
 				</dict>
 			</dict>
 			<key>match</key>
-			<string>(\:)\s*((\w+)(\.&lt;(\w+)&gt;)?|\*)</string>
+			<string>(\:)\s*(([\.\w]+)(\.&lt;([\.\w]+)&gt;)?|\*)</string>
 		</dict>
 		<key>strings</key>
 		<dict>
