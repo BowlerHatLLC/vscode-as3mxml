@@ -107,6 +107,7 @@ public class DefinitionTextUtils
 	{
         String indent = "";
         StringBuilder textDocumentBuilder = new StringBuilder();
+        insertHeaderCommentIntoTextDocument(classDefinition, textDocumentBuilder);
         textDocumentBuilder.append(IASKeywordConstants.PACKAGE);
         String packageName = classDefinition.getPackageName();
         if(packageName != null && packageName.length() > 0)
@@ -203,6 +204,7 @@ public class DefinitionTextUtils
 	{
         String indent = "";
         StringBuilder textDocumentBuilder = new StringBuilder();
+        insertHeaderCommentIntoTextDocument(interfaceDefinition, textDocumentBuilder);
         textDocumentBuilder.append(IASKeywordConstants.PACKAGE);
         String packageName = interfaceDefinition.getPackageName();
         if(packageName != null && packageName.length() > 0)
@@ -275,6 +277,7 @@ public class DefinitionTextUtils
 	{
         String indent = "";
         StringBuilder textDocumentBuilder = new StringBuilder();
+        insertHeaderCommentIntoTextDocument(functionDefinition, textDocumentBuilder);
         textDocumentBuilder.append(IASKeywordConstants.PACKAGE);
         String packageName = functionDefinition.getPackageName();
         if(packageName != null && packageName.length() > 0)
@@ -293,10 +296,16 @@ public class DefinitionTextUtils
         return textDocumentBuilder.toString();
     }
 
+    private static void insertHeaderCommentIntoTextDocument(IDefinition definition, StringBuilder builder)
+    {
+        builder.append("//Generated from: " + definition.getContainingFilePath() + "\n");
+    }
+
     private static String variableDefinitionToTextDocument(IVariableDefinition variableDefinition, ICompilerProject currentProject)
 	{
         String indent = "";
         StringBuilder textDocumentBuilder = new StringBuilder();
+        insertHeaderCommentIntoTextDocument(variableDefinition, textDocumentBuilder);
         textDocumentBuilder.append(IASKeywordConstants.PACKAGE);
         String packageName = variableDefinition.getPackageName();
         if(packageName != null && packageName.length() > 0)
@@ -332,16 +341,13 @@ public class DefinitionTextUtils
             textDocumentBuilder.append(IASKeywordConstants.STATIC);
             textDocumentBuilder.append(" ");
         }
-        if (functionDefinition.isNative())
-        {
-            textDocumentBuilder.append(IASKeywordConstants.NATIVE);
-            textDocumentBuilder.append(" ");
-        }
         if (functionDefinition.isFinal())
         {
             textDocumentBuilder.append(IASKeywordConstants.FINAL);
             textDocumentBuilder.append(" ");
         }
+        textDocumentBuilder.append(IASKeywordConstants.NATIVE);
+        textDocumentBuilder.append(" ");
         textDocumentBuilder.append(IASKeywordConstants.FUNCTION);
         textDocumentBuilder.append(" ");
         if (functionDefinition instanceof IGetterDefinition)

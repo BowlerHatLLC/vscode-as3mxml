@@ -19,6 +19,6 @@ export default class SWCTextDocumentContentProvider implements vscode.TextDocume
 {
 	provideTextDocumentContent(uri: vscode.Uri, token: vscode.CancellationToken): vscode.ProviderResult<string>
 	{
-		return "Cannot View SWC Files";
+		return decodeURIComponent(uri.query);
 	}
 }

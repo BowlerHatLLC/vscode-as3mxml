@@ -143,6 +143,7 @@ import org.apache.royale.compiler.units.IInvisibleCompilationUnit;
 import org.apache.royale.compiler.workspaces.IWorkspace;
 
 import com.google.common.io.Files;
+import com.google.common.net.UrlEscapers;
 import com.google.gson.internal.LinkedTreeMap;
 import com.nextgenactionscript.vscode.asdoc.VSCodeASDocComment;
 import com.nextgenactionscript.vscode.asdoc.VSCodeASDocDelegate;
@@ -3832,12 +3833,17 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             if (definitionPath.endsWith(SWC_EXTENSION))
             {
-                System.err.println(DefinitionTextUtils.definitionToTextDocument(definition, currentProject));
+                String definitionText = DefinitionTextUtils.definitionToTextDocument(definition, currentProject);
                 //if we get here, we couldn't find a framework source file and
                 //the definition path still ends with .swc
                 //we're going to try our best to display "decompiled" content
                 Location location = new Location();
-                location.setUri("swc://" + definition.getQualifiedName());
+                definitionText = UrlEscapers.urlFragmentEscaper().escape(definitionText);
+                String path = definition.getQualifiedName();
+                path = path.replaceAll("\\.", "/");
+                path += ".as";
+                URI uri = URI.create("swc://" + path + "?" + definitionText);
+                location.setUri(uri.toString());
                 Position start = new Position();
                 start.setLine(0);
                 start.setCharacter(0);
