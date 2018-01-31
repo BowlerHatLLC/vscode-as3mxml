@@ -29,6 +29,7 @@ import com.nextgenactionscript.vscode.debug.protocol.ProtocolServer;
 import com.nextgenactionscript.vscode.debug.protocol.Request;
 import com.nextgenactionscript.vscode.debug.protocol.Response;
 import com.nextgenactionscript.vscode.debug.requests.AttachRequest;
+import com.nextgenactionscript.vscode.debug.requests.ExceptionInfoRequest;
 import com.nextgenactionscript.vscode.debug.requests.InitializeRequest;
 import com.nextgenactionscript.vscode.debug.requests.LaunchRequest;
 import com.nextgenactionscript.vscode.debug.requests.ScopesRequest;
@@ -205,6 +206,11 @@ public abstract class DebugSession extends ProtocolServer
                     evaluate(response, arguments);
                     break;
                 }
+                case "exceptionInfo":
+                {
+                    exceptionInfo(response, (ExceptionInfoRequest.ExceptionInfoArguments) arguments);
+                    break;
+                }
                 default:
                 {
                     System.err.println("unknown request command: " + command);
@@ -265,6 +271,8 @@ public abstract class DebugSession extends ProtocolServer
     public abstract void threads(Response response, Request.RequestArguments arguments);
 
     public abstract void evaluate(Response response, Request.RequestArguments arguments);
+
+    public abstract void exceptionInfo(Response response, ExceptionInfoRequest.ExceptionInfoArguments arguments);
 
     protected int convertDebuggerLineToClient(int line)
     {
@@ -403,6 +411,10 @@ public abstract class DebugSession extends ProtocolServer
                 case VariablesRequest.REQUEST_COMMAND:
                 {
                     return gson.fromJson(je, VariablesRequest.class);
+                }
+                case ExceptionInfoRequest.REQUEST_COMMAND:
+                {
+                    return gson.fromJson(je, ExceptionInfoRequest.class);
                 }
             }
             Gson newGson = new Gson();

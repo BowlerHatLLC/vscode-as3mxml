@@ -35,6 +35,8 @@ public class StoppedEvent extends Event<StoppedEvent.StoppedBody>
     {
         public String reason;
         public int threadId;
+        public String description;
+        public String text;
     }
 }
 

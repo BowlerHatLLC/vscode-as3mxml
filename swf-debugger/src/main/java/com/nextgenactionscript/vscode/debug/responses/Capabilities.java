@@ -108,4 +108,9 @@ public class Capabilities extends Response.ResponseBody
      * Available filters or options for the setExceptionBreakpoints request.
      */
     public Object[] exceptionBreakpointFilters;
+
+    /**
+     * The debug adapter supports the exceptionInfo request.
+     */
+    public boolean supportsExceptionInfoRequest;
 }

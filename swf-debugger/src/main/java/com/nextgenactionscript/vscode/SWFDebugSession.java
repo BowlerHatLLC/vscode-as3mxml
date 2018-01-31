@@ -44,6 +44,7 @@ import com.nextgenactionscript.vscode.debug.events.TerminatedEvent;
 import com.nextgenactionscript.vscode.debug.protocol.Request;
 import com.nextgenactionscript.vscode.debug.protocol.Response;
 import com.nextgenactionscript.vscode.debug.requests.AttachRequest;
+import com.nextgenactionscript.vscode.debug.requests.ExceptionInfoRequest;
 import com.nextgenactionscript.vscode.debug.requests.InitializeRequest;
 import com.nextgenactionscript.vscode.debug.requests.LaunchRequest;
 import com.nextgenactionscript.vscode.debug.requests.ScopesRequest;
@@ -54,6 +55,8 @@ import com.nextgenactionscript.vscode.debug.requests.StackTraceRequest;
 import com.nextgenactionscript.vscode.debug.requests.VariablesRequest;
 import com.nextgenactionscript.vscode.debug.responses.Breakpoint;
 import com.nextgenactionscript.vscode.debug.responses.Capabilities;
+import com.nextgenactionscript.vscode.debug.responses.ExceptionDetails;
+import com.nextgenactionscript.vscode.debug.responses.ExceptionInfoResponseBody;
 import com.nextgenactionscript.vscode.debug.responses.Scope;
 import com.nextgenactionscript.vscode.debug.responses.ScopesResponseBody;
 import com.nextgenactionscript.vscode.debug.responses.SetBreakpointsResponseBody;
@@ -81,6 +84,7 @@ import flash.tools.debugger.Value;
 import flash.tools.debugger.VariableType;
 import flash.tools.debugger.VersionException;
 import flash.tools.debugger.events.DebugEvent;
+import flash.tools.debugger.events.ExceptionFault;
 import flash.tools.debugger.events.FaultEvent;
 import flash.tools.debugger.events.TraceEvent;
 import flash.tools.debugger.threadsafe.ThreadSafeBootstrap;
@@ -102,6 +106,7 @@ public class SWFDebugSession extends DebugSession
     private java.lang.Thread sessionThread;
     private boolean cancelRunner = false;
     private boolean waitingForResume = false;
+    private FaultEvent previousFaultEvent = null;
     private Path flexlib;
     private Path flexHome;
     private Path adlPath;
@@ -156,6 +161,7 @@ public class SWFDebugSession extends DebugSession
                             body.output = output;
                             body.category = OutputEvent.CATEGORY_STDERR;
                             sendEvent(new OutputEvent(body));
+                            previousFaultEvent = faultEvent;
                         }
                     }
                     while (swfSession.isSuspended() && !waitingForResume)
@@ -194,6 +200,11 @@ public class SWFDebugSession extends DebugSession
                             {
                                 body = new StoppedEvent.StoppedBody();
                                 body.reason = StoppedEvent.REASON_EXCEPTION;
+                                body.description = "Paused on exception";
+                                if(previousFaultEvent != null)
+                                {
+                                    body.text = previousFaultEvent.information;
+                                }
                                 break;
                             }
                             default:
@@ -280,7 +291,11 @@ public class SWFDebugSession extends DebugSession
 
     public void initialize(Response response, InitializeRequest.InitializeRequestArguments args)
     {
+        OutputEvent.OutputBody body = new OutputEvent.OutputBody();
+        sendEvent(new OutputEvent(body));
+
         Capabilities capabilities = new Capabilities();
+        capabilities.supportsExceptionInfoRequest = true;
         sendResponse(response, capabilities);
     }
 
@@ -736,7 +751,7 @@ public class SWFDebugSession extends DebugSession
         try
         {
             swfSession.resume();
-            waitingForResume = false;
+            stopWaitingForResume();
         }
         catch (Exception e)
         {
@@ -750,7 +765,7 @@ public class SWFDebugSession extends DebugSession
         try
         {
             swfSession.stepOver();
-            waitingForResume = false;
+            stopWaitingForResume();
         }
         catch (Exception e)
         {
@@ -764,7 +779,7 @@ public class SWFDebugSession extends DebugSession
         try
         {
             swfSession.stepInto();
-            waitingForResume = false;
+            stopWaitingForResume();
         }
         catch (Exception e)
         {
@@ -778,7 +793,7 @@ public class SWFDebugSession extends DebugSession
         try
         {
             swfSession.stepOut();
-            waitingForResume = false;
+            stopWaitingForResume();
         }
         catch (Exception e)
         {
@@ -792,7 +807,7 @@ public class SWFDebugSession extends DebugSession
         try
         {
             swfSession.suspend();
-            waitingForResume = false;
+            stopWaitingForResume();
         }
         catch (Exception e)
         {
@@ -822,7 +837,10 @@ public class SWFDebugSession extends DebugSession
                     source.path = transformPath(file.getFullPath());
                     stackFrame.source = source;
                     stackFrame.line = location.getLine();
-                    stackFrame.column = 0;
+                    //location doesn't include column
+                    //use 1 as the default since that's required to show
+                    //exception info (0 won't work)
+                    stackFrame.column = 1;
                 }
                 stackFrames.add(stackFrame);
             }
@@ -843,6 +861,15 @@ public class SWFDebugSession extends DebugSession
             Frame[] swfFrames = swfSession.getFrames();
             if (frameId >= 0 && frameId < swfFrames.length)
             {
+                if(previousFaultEvent != null)
+                {
+                    ExceptionFault fault = (ExceptionFault) previousFaultEvent;
+                    Scope exceptionScope = new Scope();
+                    exceptionScope.name = "Exception";
+                    exceptionScope.variablesReference = fault.getThrownValue().getId();
+                    scopes.add(exceptionScope);
+                }
+
                 Scope localScope = new Scope();
                 localScope.name = "Locals";
                 //this is a hacky way to store the frameId
@@ -948,6 +975,39 @@ public class SWFDebugSession extends DebugSession
     public void evaluate(Response response, Request.RequestArguments arguments)
     {
         sendResponse(response);
+    }
+
+    public void exceptionInfo(Response response, ExceptionInfoRequest.ExceptionInfoArguments arguments)
+    {
+        if(previousFaultEvent == null)
+        {
+            sendResponse(response);
+            return;
+        }
+
+        String typeName = null;
+        if(previousFaultEvent instanceof ExceptionFault)
+        {
+            ExceptionFault exceptionFault = (ExceptionFault) previousFaultEvent;
+            Value thrownValue = exceptionFault.getThrownValue();
+            typeName = thrownValue.getTypeName();
+        }
+
+        ExceptionDetails details = new ExceptionDetails();
+        details.message = previousFaultEvent.information;
+        details.stackTrace = previousFaultEvent.stackTrace();
+        details.typeName = typeName;
+        sendResponse(response, new ExceptionInfoResponseBody(
+            null,
+            ExceptionInfoResponseBody.EXCEPTION_BREAK_MODE_ALWAYS,
+            previousFaultEvent.information,
+            details));
+    }
+
+    private void stopWaitingForResume()
+    {
+        waitingForResume = false;
+        previousFaultEvent = null;
     }
 
     protected String transformPath(String sourceFilePath)
