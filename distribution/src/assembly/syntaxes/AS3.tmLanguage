@@ -524,7 +524,7 @@
 				<key>4</key>
 				<dict>
 					<key>name</key>
-					<string>entity.name.function.actionscript.3</string>
+					<string>storage.type.actionscript.3</string>
 				</dict>
 				<key>5</key>
 				<dict>
