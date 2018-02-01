@@ -25,6 +25,7 @@ import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -588,6 +589,33 @@ public class ASConfigC
 			throw new ASConfigCException("Failed to execute compiler: " + e.getMessage());
 		}
 	}
+
+	private void copySourcePathAssetToOutputDirectory(String assetPath, String outputDirectory) throws ASConfigCException
+	{
+		String targetPath = null;
+		try
+		{
+			targetPath = ProjectUtils.assetPathToOutputPath(assetPath, mainFile, sourcePaths, outputDirectory);
+		}
+		catch(IOException e)
+		{
+			throw new ASConfigCException(e.getMessage());
+		}
+		File targetFile = new File(targetPath);
+		File targetParent = targetFile.getParentFile();
+		if(!targetParent.exists() && !targetParent.mkdirs())
+		{
+			throw new ASConfigCException("Failed to copy file from source " + assetPath + " to destination " + targetParent.getAbsolutePath() + " because the directories could not be created.");
+		}
+		try
+		{
+			Files.copy(Paths.get(assetPath), targetFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+		}
+		catch(IOException e)
+		{
+			throw new ASConfigCException("Failed to copy file from source " + assetPath + " to destination " + targetPath);
+		}
+	}
 	
 	private void copySourcePathAssets() throws ASConfigCException
 	{
@@ -617,39 +645,19 @@ public class ASConfigC
 		}
 		for(String assetPath : assetPaths)
 		{
-			String targetPath = null;
-			try
+			if(outputIsJS)
 			{
-				targetPath = ProjectUtils.assetPathToOutputPath(assetPath, mainFile, sourcePaths, outputDirectory);
-			}
-			catch(IOException e)
-			{
-				throw new ASConfigCException(e.getMessage());
-			}
-			File sourceFile = new File(assetPath);
-			File targetFile = new File(targetPath);
-			try
-			{
-				String contents = new String(Files.readAllBytes(sourceFile.toPath()));
-				byte[] bytes = contents.getBytes();
-				if(outputIsJS)
+				File outputDirectoryJSDebug = new File(outputDirectory, "bin/js-debug");
+				copySourcePathAssetToOutputDirectory(assetPath, outputDirectoryJSDebug.getAbsolutePath());
+				if(!debugBuild)
 				{
-					File targetFileJSDebug = new File(targetFile, "bin/js-debug");
-					Files.write(targetFileJSDebug.toPath(), bytes);
-					if(!debugBuild)
-					{
-						File targetFileJSRelease = new File(targetFile, "bin/js-release");
-						Files.write(targetFileJSRelease.toPath(), bytes);
-					}
-				}
-				else //swf
-				{
-					Files.write(targetFile.toPath(), bytes);
+					File outputDirectoryJSRelease = new File(outputDirectory, "bin/js-release");
+					copySourcePathAssetToOutputDirectory(assetPath, outputDirectoryJSRelease.getAbsolutePath());
 				}
 			}
-			catch(IOException e)
+			else //swf
 			{
-				throw new ASConfigCException("Failed to copy file from source " + assetPath + " to destination " + targetPath);
+				copySourcePathAssetToOutputDirectory(assetPath, outputDirectory);
 			}
 		}
 	}
