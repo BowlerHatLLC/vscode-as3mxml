@@ -355,18 +355,11 @@ function startClient()
 				documentSelector:
 				[
 					"nextgenas",
-					"mxml"
+					"mxml",
 				],
 				synchronize:
 				{
 					configurationSection: "nextgenas",
-					//the server will be notified when these files change
-					fileEvents:
-					[
-						vscode.workspace.createFileSystemWatcher("**/asconfig.json"),
-						vscode.workspace.createFileSystemWatcher("**/*.as"),
-						vscode.workspace.createFileSystemWatcher("**/*.mxml"),
-					]
 				}
 			};
 			let cpDelimiter = getJavaClassPathDelimiter();

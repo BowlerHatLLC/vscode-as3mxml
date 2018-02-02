@@ -19,16 +19,18 @@ import java.io.File;
 import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-import org.apache.royale.compiler.tree.as.IASNode;
-
 import com.google.gson.internal.LinkedTreeMap;
+import com.nextgenactionscript.vscode.DidChangeWatchedFilesRegistrationOptions.FileSystemWatcher;
 import com.nextgenactionscript.vscode.commands.ICommandConstants;
 import com.nextgenactionscript.vscode.project.ASConfigProjectConfigStrategy;
 import com.nextgenactionscript.vscode.utils.LanguageServerCompilerUtils;
+
+import org.apache.royale.compiler.tree.as.IASNode;
 import org.eclipse.lsp4j.CompletionOptions;
 import org.eclipse.lsp4j.DidChangeConfigurationParams;
 import org.eclipse.lsp4j.DidChangeWatchedFilesParams;
@@ -37,6 +39,9 @@ import org.eclipse.lsp4j.ExecuteCommandParams;
 import org.eclipse.lsp4j.FileEvent;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.InitializeResult;
+import org.eclipse.lsp4j.InitializedParams;
+import org.eclipse.lsp4j.Registration;
+import org.eclipse.lsp4j.RegistrationParams;
 import org.eclipse.lsp4j.ServerCapabilities;
 import org.eclipse.lsp4j.SignatureHelpOptions;
 import org.eclipse.lsp4j.SymbolInformation;
@@ -143,6 +148,24 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
         result.setCapabilities(serverCapabilities);
 
         return CompletableFuture.completedFuture(result);
+    }
+
+    @Override
+    public void initialized(InitializedParams params)
+    {
+        List<FileSystemWatcher> watchers = new ArrayList<>();
+        watchers.add(new FileSystemWatcher("**/asconfig.json"));
+        watchers.add(new FileSystemWatcher("**/*.as"));
+        watchers.add(new FileSystemWatcher("**/*.mxml"));
+
+        String id = "vscode-nextgenas-" + textDocumentService.getWorkspaceRoot().toString();
+        DidChangeWatchedFilesRegistrationOptions options = new DidChangeWatchedFilesRegistrationOptions(watchers);
+        Registration registration = new Registration(id, "workspace/didChangeWatchedFiles", options);
+        List<Registration> registrations = new ArrayList<>();
+        registrations.add(registration);
+
+        RegistrationParams registrationParams = new RegistrationParams(registrations);
+        languageClient.registerCapability(registrationParams);
     }
 
     @Override
