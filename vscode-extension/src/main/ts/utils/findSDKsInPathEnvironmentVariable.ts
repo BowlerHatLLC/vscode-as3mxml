@@ -18,13 +18,14 @@ import * as path from "path";
 import validateFrameworkSDK from "./validateFrameworkSDK";
 
 const ENVIRONMENT_VARIABLE_PATH = "PATH";
-
+const NODE_MODULES = "node_modules";
+const MODULE_ORG = "@apache-royale";
 const MODULE_NAMES =
 [
-	"apache-royale",
-	"apache-royale-swf",
-	"flexjs",
+	"royale-js",
+	"royale-js-swf",
 ];
+const MODULE_NAME_FLEXJS = "flexjs";
 
 export default function findSDKsInPathEnvironmentVariable(): string[]
 {
@@ -47,12 +48,18 @@ export default function findSDKsInPathEnvironmentVariable(): string[]
 			for(let i = 0, count = MODULE_NAMES.length; i < count; i++)
 			{
 				let moduleName = MODULE_NAMES[i];
-				let sdkPath = path.join(path.dirname(mxmlcPath), "node_modules", moduleName);
+				let sdkPath = path.join(path.dirname(mxmlcPath), NODE_MODULES, MODULE_ORG, moduleName);
 				let validSDK = validateFrameworkSDK(sdkPath);
 				if(validSDK !== null)
 				{
 					result.push(validSDK);
 				}
+			}
+			let sdkPath = path.join(path.dirname(mxmlcPath), NODE_MODULES, MODULE_NAME_FLEXJS);
+			let validSDK = validateFrameworkSDK(sdkPath);
+			if(validSDK !== null)
+			{
+				result.push(validSDK);
 			}
 		}
 		else

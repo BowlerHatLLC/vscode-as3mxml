@@ -17,10 +17,12 @@ import * as path from "path";
 import * as vscode from "vscode";
 import validateFrameworkSDK from "./validateFrameworkSDK";
 
+const NODE_MODULES = "node_modules";
+const MODULE_ORG = "@apache-royale";
 const MODULE_NAMES =
 [
-	"apache-royale",
-	"apache-royale-swf",
+	"royale-js",
+	"royale-js-swf",
 ];
 
 export default function findSDKInLocalRoyaleNodeModule(): string
@@ -32,7 +34,7 @@ export default function findSDKInLocalRoyaleNodeModule(): string
 	for(let i = 0, count = MODULE_NAMES.length; i < count; i++)
 	{
 		let moduleName = MODULE_NAMES[i];
-		let nodeModule = path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "node_modules", moduleName);
+		let nodeModule = path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, NODE_MODULES, MODULE_ORG, moduleName);
 		nodeModule = validateFrameworkSDK(nodeModule);
 		if(nodeModule !== null)
 		{
