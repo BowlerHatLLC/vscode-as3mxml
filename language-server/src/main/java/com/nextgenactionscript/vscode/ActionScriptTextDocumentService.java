@@ -2539,7 +2539,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     {
         IMXMLDataManager mxmlDataManager = currentWorkspace.getMXMLDataManager();
         MXMLData mxmlData = (MXMLData) mxmlDataManager.get(fileSpecGetter.getFileSpecification(currentUnit.getAbsoluteFilename()));
-        String tagStartShortName = offsetTag.getShortName();
+        String tagStartShortNameForComparison = offsetTag.getShortName().toLowerCase();
         String tagPrefix = offsetTag.getPrefix();
         PrefixMap prefixMap = mxmlData.getRootTagPrefixMap();
 
@@ -2569,7 +2569,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
                 //first check that the tag either doesn't have a short name yet
                 //or that the definition's base name matches the short name 
-                if (tagStartShortName.length() == 0 || typeDefinition.getBaseName().startsWith(tagStartShortName))
+                if (tagStartShortNameForComparison.length() == 0
+                    || typeDefinition.getBaseName().toLowerCase().startsWith(tagStartShortNameForComparison))
                 {
                     //if a prefix already exists, make sure the definition is
                     //in a namespace with that prefix
