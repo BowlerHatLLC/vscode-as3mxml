@@ -26,8 +26,9 @@ public class ApacheRoyaleUtils
 	private static final String ENV_PATH = "PATH";
 	private static final String ROYALE_ASJS = "royale-asjs";
 	private static final String NODE_MODULES = "node_modules";
-	private static final String NPM_ROYALE = "apache-royale";
-	private static final String NPM_ROYALE_SWF = "apache-royale-swf";
+	private static final String NPM_ORG_ROYALE = "@apache-royale";
+	private static final String NPM_PACKAGE_ROYALE_JS = "royale-js";
+	private static final String NPM_PACKAGE_ROYALE_SWF = "royale-js-swf";
 	private static final String JS = "js";
 	private static final String BIN = "bin";
 	private static final String ASJSC = "asjsc";
@@ -109,13 +110,13 @@ public class ApacheRoyaleUtils
 				File file = new File(currentPath, ASJSC + ".cmd");
 				if(file.exists() && !file.isDirectory())
 				{
-					Path npmPath = Paths.get(currentPath, NODE_MODULES, NPM_ROYALE);
+					Path npmPath = Paths.get(currentPath, NODE_MODULES, NPM_ORG_ROYALE, NPM_PACKAGE_ROYALE_JS);
 					npmPath = isValidSDK(npmPath);
 					if(npmPath != null)
 					{
 						return npmPath.toString();
 					}
-					npmPath = Paths.get(currentPath, NODE_MODULES, NPM_ROYALE_SWF);
+					npmPath = Paths.get(currentPath, NODE_MODULES, NPM_ORG_ROYALE, NPM_PACKAGE_ROYALE_SWF);
 					npmPath = isValidSDK(npmPath);
 					if(npmPath != null)
 					{
