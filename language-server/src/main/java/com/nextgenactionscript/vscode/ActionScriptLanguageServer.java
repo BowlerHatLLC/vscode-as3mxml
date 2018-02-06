@@ -154,10 +154,9 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
     public void initialized(InitializedParams params)
     {
         List<FileSystemWatcher> watchers = new ArrayList<>();
+        //ideally, we'd only check .as, .mxml, asconfig.json, and directories
+        //but there's no way to target directories without *
         watchers.add(new FileSystemWatcher("**/*"));
-        watchers.add(new FileSystemWatcher("**/asconfig.json"));
-        watchers.add(new FileSystemWatcher("**/*.as"));
-        watchers.add(new FileSystemWatcher("**/*.mxml"));
 
         String id = "vscode-nextgenas-" + textDocumentService.getWorkspaceRoot().toString();
         DidChangeWatchedFilesRegistrationOptions options = new DidChangeWatchedFilesRegistrationOptions(watchers);
