@@ -1288,12 +1288,17 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 {
                     IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(file.getAbsolutePath());
                     currentWorkspace.fileRemoved(fileSpec);
+                    //deleting a file may change errors in other existing files,
+                    //so we need to do a full check
                     needsFullCheck = true;
                 }
                 else if (event.getType().equals(FileChangeType.Created))
                 {
                     IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(file.getAbsolutePath());
                     currentWorkspace.fileAdded(fileSpec);
+                    //creating a file may change errors in other existing files,
+                    //so we need to do a full check
+                    needsFullCheck = true;
                 }
                 else if (event.getType().equals(FileChangeType.Changed))
                 {
@@ -1327,6 +1332,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 {
                     IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(fileToRemove);
                     currentWorkspace.fileRemoved(fileSpec);
+                }
+                if (filesToRemove.size() > 0)
+                {
+                    //deleting a file may change errors in other existing files,
+                    //so we need to do a full check
+                    needsFullCheck = true;
                 }
             }
         }
