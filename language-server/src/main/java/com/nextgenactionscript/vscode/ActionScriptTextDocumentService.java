@@ -1267,6 +1267,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
      */
     public void didChangeWatchedFiles(DidChangeWatchedFilesParams params)
     {
+        if(currentWorkspace == null)
+        {
+            //safe to ignore
+            return;
+        }
         boolean needsFullCheck = false;
         for (FileEvent event : params.getChanges())
         {
@@ -1277,8 +1282,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             File file = path.toFile();
             String fileName = file.getName();
-            if ((fileName.endsWith(AS_EXTENSION) || fileName.endsWith(MXML_EXTENSION))
-                    && currentWorkspace != null)
+            if (fileName.endsWith(AS_EXTENSION) || fileName.endsWith(MXML_EXTENSION))
             {
                 if (event.getType().equals(FileChangeType.Deleted))
                 {
@@ -1296,6 +1300,33 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(file.getAbsolutePath());
                     currentWorkspace.fileChanged(fileSpec);
                     checkFilePathForProblems(path, false);
+                }
+            }
+            else if (event.getType().equals(FileChangeType.Deleted))
+            {
+                //we don't get separate didChangeWatchedFiles notifications for
+                //each .as and .mxml in a directory when the directory is
+                //deleted. with that in mind, we need to manually check if any
+                //compilation units were in the directory that was deleted.
+                String deletedFilePath = file.getAbsolutePath();
+                deletedFilePath += File.separator;
+                List<String> filesToRemove = new ArrayList<>();
+                for (ICompilationUnit unit : compilationUnits)
+                {
+                    String unitFileName = unit.getAbsoluteFilename();
+                    if (unitFileName.startsWith(deletedFilePath)
+                            && (unitFileName.endsWith(AS_EXTENSION) || unitFileName.endsWith(MXML_EXTENSION)))
+                    {
+                        //if we call fileRemoved() here, it will change the
+                        //compilationUnits collection and throw an exception
+                        //so just save the paths to be removed after this loop.
+                        filesToRemove.add(unitFileName);
+                    }
+                }
+                for (String fileToRemove : filesToRemove)
+                {
+                    IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(fileToRemove);
+                    currentWorkspace.fileRemoved(fileSpec);
                 }
             }
         }

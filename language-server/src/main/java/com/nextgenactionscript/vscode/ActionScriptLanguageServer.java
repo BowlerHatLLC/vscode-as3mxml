@@ -154,6 +154,7 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
     public void initialized(InitializedParams params)
     {
         List<FileSystemWatcher> watchers = new ArrayList<>();
+        watchers.add(new FileSystemWatcher("**/*"));
         watchers.add(new FileSystemWatcher("**/asconfig.json"));
         watchers.add(new FileSystemWatcher("**/*.as"));
         watchers.add(new FileSystemWatcher("**/*.mxml"));
