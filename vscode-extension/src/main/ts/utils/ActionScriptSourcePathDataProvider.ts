@@ -23,21 +23,28 @@ const FILE_EXTENSION_MXML = ".mxml";
 
 export class ActionScriptSourcePath extends vscode.TreeItem
 {
-	constructor(label: string, filePath?: string)
+	constructor(file: vscode.Uri | string)
 	{
 		let contextValue: string = null;
 		let command: vscode.Command;
 		let collapsibleState = vscode.TreeItemCollapsibleState.None;
-		if(filePath)
+		let uri: vscode.Uri = undefined;
+		let label: string = undefined;
+		if(typeof file === "string")
 		{
-			if(fs.statSync(filePath).isDirectory())
+			label = file;
+		}
+		else //uri
+		{
+			uri = file;
+			if(fs.statSync(uri.fsPath).isDirectory())
 			{
 				collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
 				contextValue = "folder";
 			}
 			else
 			{
-				let extname = path.extname(filePath);
+				let extname = path.extname(uri.fsPath);
 				if(extname === FILE_EXTENSION_AS)
 				{
 					contextValue = "nextgenas";
@@ -52,18 +59,16 @@ export class ActionScriptSourcePath extends vscode.TreeItem
 					command: "vscode.open",
 					arguments:
 					[
-						vscode.Uri.file(filePath)
+						uri,
 					]
 				}
 			}
 		}
 		super(label, collapsibleState);
-		this.path = filePath;
+		this.resourceUri = uri;
 		this.command = command;
 		this.contextValue = contextValue;
 	}
-
-	path: string;
 }
 
 export default class ActionScriptSourcePathDataProvider implements vscode.TreeDataProvider<ActionScriptSourcePath>
@@ -105,7 +110,8 @@ export default class ActionScriptSourcePathDataProvider implements vscode.TreeDa
 		{
 			if(element)
 			{
-				let elementPath = element.path;
+				let elementUri = element.resourceUri;
+				let elementPath = elementUri.fsPath;
 				if(!fs.statSync(elementPath).isDirectory())
 				{
 					return resolve([]);
@@ -145,14 +151,8 @@ export default class ActionScriptSourcePathDataProvider implements vscode.TreeDa
 	private pathToSourcePath(pathToResolve: string): ActionScriptSourcePath
 	{
 		let rootPath = path.resolve(this._workspaceRoot, pathToResolve);
-		let name = path.basename(rootPath);
-		let extension = path.extname(name);
-		if(extension.length > 0)
-		{
-			//don't show the file extension
-			name = name.substr(0, name.length - extension.length);
-		}
-		return new ActionScriptSourcePath(name, rootPath);
+		let uri = vscode.Uri.file(rootPath);
+		return new ActionScriptSourcePath(uri);
 	}
 
 	private refreshSourcePaths()
@@ -179,6 +179,14 @@ export default class ActionScriptSourcePathDataProvider implements vscode.TreeDa
 						sourcePath.forEach((sourcePath: string) =>
 						{
 							let rootPath = this.pathToSourcePath(sourcePath);
+							let name = path.basename(rootPath.resourceUri.fsPath);
+							let extension = path.extname(name);
+							if(extension.length > 0)
+							{
+								//don't show the file extension
+								name = name.substr(0, name.length - extension.length);
+							}
+							rootPath.label = name;
 							this._rootPaths.push(rootPath);
 						});
 					}
@@ -207,7 +215,7 @@ export default class ActionScriptSourcePathDataProvider implements vscode.TreeDa
 			return;
 		}
 		let count = rootPathLabel.split(path.sep).length;
-		let resolved = path.resolve(rootPath.path, "..".repeat(count));
+		let resolved = path.resolve(rootPath.resourceUri.fsPath, "..".repeat(count));
 		rootPath.label = path.basename(resolved) + path.sep + rootPathLabel;
 	}
 
