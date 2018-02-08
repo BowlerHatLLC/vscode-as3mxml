@@ -26,6 +26,7 @@ import findSDKShortName from "./utils/findSDKShortName";
 import getFrameworkSDKPathWithFallbacks from "./utils/getFrameworkSDKPathWithFallbacks";
 import adapterExecutableCommandSWF from "./commands/adapterExecutableCommandSWF";
 import selectWorkspaceSDK from "./commands/selectWorkspaceSDK";
+import migrateFlashBuilderProject from "./commands/migrateFlashBuilderProject";
 import * as child_process from "child_process";
 import * as fs from "fs";
 import * as net from "net";
@@ -231,6 +232,13 @@ export function activate(context: vscode.ExtensionContext)
 	});
 	vscode.commands.registerCommand("nextgenas.selectWorkspaceSDK", selectWorkspaceSDK);
 	vscode.commands.registerCommand("nextgenas.restartServer", restartServer);
+	vscode.commands.registerCommand("nextgenas.migrateFlashBuilderProject", () =>
+	{
+		if(vscode.workspace.workspaceFolders)
+		{
+			migrateFlashBuilderProject(vscode.workspace.workspaceFolders[0].uri);
+		}
+	});
 	vscode.commands.registerTextEditorCommand("nextgenas.organizeImportsInTextEditor", organizeImportsInTextEditor);
 	
 	//don't activate these things unless we're in a workspace

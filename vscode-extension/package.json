@@ -38,6 +38,7 @@
     "vscode": "^1.1.9"
   },
   "dependencies": {
+    "@rgrove/parse-xml": "^1.1.1",
     "json5": "^0.5.1",
     "vscode-jsonrpc": "^3.5.0",
     "vscode-languageclient": "^3.5.0"
@@ -53,7 +54,8 @@
     "onCommand:nextgenas.organizeImportsInUri",
     "onCommand:nextgenas.organizeImportsInDirectory",
     "onCommand:nextgenas.selectWorkspaceSDK",
-    "onCommand:nextgenas.restartServer"
+    "onCommand:nextgenas.restartServer",
+    "onCommand:nextgenas.migrateFlashBuilderProject"
   ],
   "contributes": {
     "commands": [
@@ -68,6 +70,10 @@
       {
         "command": "nextgenas.restartServer",
         "title": "ActionScript: Restart ActionScript/MXML server"
+      },
+      {
+        "command": "nextgenas.migrateFlashBuilderProject",
+        "title": "ActionScript: Migrate Adobe Flash Builder Project (Experimental)"
       },
       {
         "command": "nextgenas.organizeImportsInTextEditor",
