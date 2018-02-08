@@ -1,3 +1,11 @@
+## 0.9.1
+
+### Fixed Issues
+
+* Apache Royale: Updated to search for npm moddules with new names: *@apache-royale/royale-js* and *@apache-royale/royale-js-swf*.
+* Build: Fixed issue where copying files from source paths could fail from nested directories.
+* Completion: Fixed issue where activating completion with `Ctrl+Space` after a partial MXML component name could omit some results due to incorrect case-sensitive comparison.
+
 ## 0.9.0
 
 ### New Features
