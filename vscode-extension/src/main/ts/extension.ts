@@ -36,12 +36,14 @@ import {LanguageClient, LanguageClientOptions, SettingMonitor,
 	ServerOptions, StreamInfo, ErrorHandler, ErrorAction,
 	CloseAction, Executable, ExecutableOptions} from "vscode-languageclient";
 import { Message } from "vscode-jsonrpc";
+import buildWithFlexCompilerShell from "./commands/buildWithFlexCompilerShell";
 
 const INVALID_SDK_ERROR = "nextgenas.sdk.editor in settings does not point to a valid SDK. Requires Apache Royale 0.9.0 or newer.";
 const MISSING_FRAMEWORK_SDK_ERROR = "You must configure an SDK to enable all ActionScript and MXML features.";
 const INVALID_JAVA_ERROR = "nextgenas.java in settings does not point to a valid executable. It cannot be a directory, and Java 1.8 or newer is required.";
 const MISSING_JAVA_ERROR = "Could not locate valid Java executable. To configure Java manually, use the nextgenas.java setting.";
 const MISSING_WORKSPACE_ROOT_ERROR = "Open a folder and create a file named asconfig.json to enable all ActionScript and MXML language features.";
+const CANNOT_LAUNCH_FCSH_FAILED_ERROR = "Build failed. Launch canceled.";
 const INITIALIZING_MESSAGE = "Initializing ActionScript and MXML language server...";
 const RESTART_FAIL_MESSAGE = "Failed to restart ActionScript/MXML server. Please reload the window to continue.";
 const RELOAD_WINDOW_MESSAGE = "To apply new settings for ActionScript and MXML, please reload the window.";
@@ -237,6 +239,37 @@ export function activate(context: vscode.ExtensionContext)
 		if(vscode.workspace.workspaceFolders)
 		{
 			migrateFlashBuilderProject(vscode.workspace.workspaceFolders[0].uri);
+		}
+	});
+	vscode.commands.registerCommand("nextgenas.compileDebugBuildWithFlexCompilerShell", () =>
+	{
+		if(vscode.workspace.workspaceFolders)
+		{
+			buildWithFlexCompilerShell(vscode.workspace.workspaceFolders[0], javaExecutablePath, frameworkSDKHome, true);
+		}
+	});
+	vscode.commands.registerCommand("nextgenas.compileDebugBuildWithFlexCompilerShellAndLaunch", () =>
+	{
+		if(vscode.workspace.workspaceFolders)
+		{
+			buildWithFlexCompilerShell(vscode.workspace.workspaceFolders[0], javaExecutablePath, frameworkSDKHome, true).then(() =>
+			{
+				//if the build succeeded, start a debug session
+				vscode.commands.executeCommand("workbench.action.debug.start");
+			}, 
+			() =>
+			{
+				//if the build failed, notify the user that we're not starting
+				//a debug session
+				vscode.window.showErrorMessage(CANNOT_LAUNCH_FCSH_FAILED_ERROR);
+			});
+		}
+	});
+	vscode.commands.registerCommand("nextgenas.compileReleaseBuildWithFlexCompilerShell", () =>
+	{
+		if(vscode.workspace.workspaceFolders)
+		{
+			buildWithFlexCompilerShell(vscode.workspace.workspaceFolders[0], javaExecutablePath, frameworkSDKHome, false);
 		}
 	});
 	vscode.commands.registerTextEditorCommand("nextgenas.organizeImportsInTextEditor", organizeImportsInTextEditor);
