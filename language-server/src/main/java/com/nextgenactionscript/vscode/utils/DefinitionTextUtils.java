@@ -16,7 +16,6 @@ limitations under the License.
 package com.nextgenactionscript.vscode.utils;
 
 import java.util.Collection;
-import java.util.Set;
 
 import org.apache.royale.compiler.constants.IASKeywordConstants;
 import org.apache.royale.compiler.constants.IASLanguageConstants;
@@ -29,32 +28,45 @@ import org.apache.royale.compiler.definitions.IEventDefinition;
 import org.apache.royale.compiler.definitions.IFunctionDefinition;
 import org.apache.royale.compiler.definitions.IGetterDefinition;
 import org.apache.royale.compiler.definitions.IInterfaceDefinition;
-import org.apache.royale.compiler.definitions.IPackageDefinition;
+import org.apache.royale.compiler.definitions.INamespaceDefinition;
 import org.apache.royale.compiler.definitions.IParameterDefinition;
 import org.apache.royale.compiler.definitions.ISetterDefinition;
 import org.apache.royale.compiler.definitions.IStyleDefinition;
 import org.apache.royale.compiler.definitions.ITypeDefinition;
 import org.apache.royale.compiler.definitions.IVariableDefinition;
 import org.apache.royale.compiler.projects.ICompilerProject;
-import org.apache.royale.compiler.tree.as.IFunctionNode;
 
 public class DefinitionTextUtils
 {
     private static final String UNDERSCORE_UNDERSCORE_AS3_PACKAGE = "__AS3__.";
+    private static final String NAMESPACE_URI_AS3 = "http://adobe.com/AS3/2006/builtin";
+    private static final String NAMESPACE_MX_INTERNAL = "http://www.adobe.com/2006/flex/mx/internal";
     private static final String NEW_LINE = "\n";
     private static final String INDENT = "\t";
+    private static final String FILE_EXTENSION_AS = ".as";
+    private static final String PATH_PREFIX_GENERATED = "generated/";
 
-    public static String definitionToTextDocument(IDefinition definition, ICompilerProject currentProject)
+    public static class DefinitionAsText
+	{
+		public int startLine = 0;
+		public int startColumn = 0;
+		public int endLine = 0;
+		public int endColumn = 0;
+        public String text;
+        public String path;
+	}
+
+    public static DefinitionAsText definitionToTextDocument(IDefinition definition, ICompilerProject currentProject)
 	{
 		if (definition instanceof IClassDefinition)
 		{
             IClassDefinition classDefinition = (IClassDefinition) definition;
-            return classDefinitionToTextDocument(classDefinition, currentProject);
+            return classDefinitionToTextDocument(classDefinition, currentProject, definition);
 		}
 		if (definition instanceof IInterfaceDefinition)
 		{
             IInterfaceDefinition interfaceDefinition = (IInterfaceDefinition) definition;
-            return interfaceDefinitionToTextDocument(interfaceDefinition, currentProject);
+            return interfaceDefinitionToTextDocument(interfaceDefinition, currentProject, definition);
 		}
 		if (definition instanceof IFunctionDefinition)
 		{
@@ -65,17 +77,17 @@ public class DefinitionTextUtils
                 if (parentDefinition instanceof IClassDefinition)
                 {
                     IClassDefinition classDefinition = (IClassDefinition) parentDefinition;
-                    return classDefinitionToTextDocument(classDefinition, currentProject);
+                    return classDefinitionToTextDocument(classDefinition, currentProject, definition);
                 }
                 else if (parentDefinition instanceof IInterfaceDefinition)
                 {
                     IInterfaceDefinition interfaceDefinition = (IInterfaceDefinition) parentDefinition;
-                    return interfaceDefinitionToTextDocument(interfaceDefinition, currentProject);
+                    return interfaceDefinitionToTextDocument(interfaceDefinition, currentProject, definition);
                 }
             }
             else
             {
-                return functionDefinitionToTextDocument(functionDefinition, currentProject);
+                return functionDefinitionToTextDocument(functionDefinition, currentProject, definition);
             }
 		}
 		if (definition instanceof IVariableDefinition)
@@ -87,24 +99,26 @@ public class DefinitionTextUtils
                 if (parentDefinition instanceof IClassDefinition)
                 {
                     IClassDefinition classDefinition = (IClassDefinition) parentDefinition;
-                    return classDefinitionToTextDocument(classDefinition, currentProject);
+                    return classDefinitionToTextDocument(classDefinition, currentProject, definition);
                 }
                 else if (parentDefinition instanceof IInterfaceDefinition)
                 {
                     IInterfaceDefinition interfaceDefinition = (IInterfaceDefinition) parentDefinition;
-                    return interfaceDefinitionToTextDocument(interfaceDefinition, currentProject);
+                    return interfaceDefinitionToTextDocument(interfaceDefinition, currentProject, definition);
                 }
             }
             else
             {
-                return variableDefinitionToTextDocument(variableDefinition, currentProject);
+                return variableDefinitionToTextDocument(variableDefinition, currentProject, definition);
             }
 		}
 		return null;
     }
 
-    private static String classDefinitionToTextDocument(IClassDefinition classDefinition, ICompilerProject currentProject)
+    private static DefinitionAsText classDefinitionToTextDocument(IClassDefinition classDefinition, ICompilerProject currentProject, IDefinition definitionToFind)
 	{
+        DefinitionAsText result = new DefinitionAsText();
+        result.path = definitionToGeneratedPath(classDefinition);
         String indent = "";
         StringBuilder textDocumentBuilder = new StringBuilder();
         insertHeaderCommentIntoTextDocument(classDefinition, textDocumentBuilder);
@@ -142,22 +156,22 @@ public class DefinitionTextUtils
         }
         textDocumentBuilder.append(IASKeywordConstants.CLASS);
         textDocumentBuilder.append(" ");
-        textDocumentBuilder.append(classDefinition.getBaseName());
-        IClassDefinition baseClassDefinition = classDefinition.resolveBaseClass(currentProject);
-        if (baseClassDefinition != null && !baseClassDefinition.getQualifiedName().equals(IASLanguageConstants.Object))
+        appendDefinitionName(classDefinition, textDocumentBuilder, definitionToFind, result);
+        String baseClassName = classDefinition.getBaseClassAsDisplayString();
+        if (baseClassName != null && !baseClassName.equals(IASLanguageConstants.Object))
         {
             textDocumentBuilder.append(" ");
             textDocumentBuilder.append(IASKeywordConstants.EXTENDS);
             textDocumentBuilder.append(" ");
-            textDocumentBuilder.append(classDefinition.getBaseClassAsDisplayString());
+            textDocumentBuilder.append(baseClassName);
         }
-        IInterfaceDefinition[] interfaceDefinitions = classDefinition.resolveImplementedInterfaces(currentProject);
-        if (interfaceDefinitions.length > 0)
+        String[] interfaceNames = classDefinition.getImplementedInterfacesAsDisplayStrings();
+        if (interfaceNames.length > 0)
         {
             textDocumentBuilder.append(" ");
             textDocumentBuilder.append(IASKeywordConstants.IMPLEMENTS);
             textDocumentBuilder.append(" ");
-            appendInterfaceNamesToDetail(textDocumentBuilder, interfaceDefinitions);
+            appendInterfaceNamesToDetail(textDocumentBuilder, interfaceNames);
         }
         textDocumentBuilder.append(NEW_LINE);
         textDocumentBuilder.append(indent);
@@ -176,19 +190,19 @@ public class DefinitionTextUtils
             {
                 IAccessorDefinition functionDefinition = (IAccessorDefinition) childDefinition;
                 textDocumentBuilder.append(indent);
-                insertFunctionDefinitionIntoTextDocument(functionDefinition, textDocumentBuilder, currentProject);
+                insertFunctionDefinitionIntoTextDocument(functionDefinition, textDocumentBuilder, currentProject, result, definitionToFind);
             }
             else if (childDefinition instanceof IFunctionDefinition)
             {
                 IFunctionDefinition functionDefinition = (IFunctionDefinition) childDefinition;
                 textDocumentBuilder.append(indent);
-                insertFunctionDefinitionIntoTextDocument(functionDefinition, textDocumentBuilder, currentProject);
+                insertFunctionDefinitionIntoTextDocument(functionDefinition, textDocumentBuilder, currentProject, result, definitionToFind);
             }
             else if (childDefinition instanceof IVariableDefinition)
             {
                 IVariableDefinition variableDefinition = (IVariableDefinition) childDefinition;
                 textDocumentBuilder.append(indent);
-                insertVariableDefinitionIntoTextDocument(variableDefinition, textDocumentBuilder, currentProject);
+                insertVariableDefinitionIntoTextDocument(variableDefinition, textDocumentBuilder, currentProject, result, definitionToFind);
             }
         }
         indent = decreaseIndent(indent);
@@ -197,11 +211,14 @@ public class DefinitionTextUtils
         textDocumentBuilder.append(NEW_LINE);
         indent = decreaseIndent(indent);
         textDocumentBuilder.append("}");
-        return textDocumentBuilder.toString();
+        result.text = textDocumentBuilder.toString();
+        return result;
     }
 
-    private static String interfaceDefinitionToTextDocument(IInterfaceDefinition interfaceDefinition, ICompilerProject currentProject)
+    private static DefinitionAsText interfaceDefinitionToTextDocument(IInterfaceDefinition interfaceDefinition, ICompilerProject currentProject, IDefinition definitionToFind)
 	{
+        DefinitionAsText result = new DefinitionAsText();
+        result.path = definitionToGeneratedPath(interfaceDefinition);
         String indent = "";
         StringBuilder textDocumentBuilder = new StringBuilder();
         insertHeaderCommentIntoTextDocument(interfaceDefinition, textDocumentBuilder);
@@ -229,14 +246,14 @@ public class DefinitionTextUtils
         }
         textDocumentBuilder.append(IASKeywordConstants.INTERFACE);
         textDocumentBuilder.append(" ");
-        textDocumentBuilder.append(interfaceDefinition.getBaseName());
-        IInterfaceDefinition[] interfaceDefinitions = interfaceDefinition.resolveExtendedInterfaces(currentProject);
-        if (interfaceDefinitions.length > 0)
+        appendDefinitionName(interfaceDefinition, textDocumentBuilder, definitionToFind, result);
+        String[] interfaceNames = interfaceDefinition.getExtendedInterfacesAsDisplayStrings();
+        if (interfaceNames.length > 0)
         {
             textDocumentBuilder.append(" ");
             textDocumentBuilder.append(IASKeywordConstants.EXTENDS);
             textDocumentBuilder.append(" ");
-            appendInterfaceNamesToDetail(textDocumentBuilder, interfaceDefinitions);
+            appendInterfaceNamesToDetail(textDocumentBuilder, interfaceNames);
         }
         textDocumentBuilder.append(NEW_LINE);
         textDocumentBuilder.append(indent);
@@ -255,13 +272,13 @@ public class DefinitionTextUtils
             {
                 IAccessorDefinition functionDefinition = (IAccessorDefinition) childDefinition;
                 textDocumentBuilder.append(indent);
-                insertFunctionDefinitionIntoTextDocument(functionDefinition, textDocumentBuilder, currentProject);
+                insertFunctionDefinitionIntoTextDocument(functionDefinition, textDocumentBuilder, currentProject, result, definitionToFind);
             }
             else if (childDefinition instanceof IFunctionDefinition)
             {
                 IFunctionDefinition functionDefinition = (IFunctionDefinition) childDefinition;
                 textDocumentBuilder.append(indent);
-                insertFunctionDefinitionIntoTextDocument(functionDefinition, textDocumentBuilder, currentProject);
+                insertFunctionDefinitionIntoTextDocument(functionDefinition, textDocumentBuilder, currentProject, result, definitionToFind);
             }
         }
         indent = decreaseIndent(indent);
@@ -270,11 +287,14 @@ public class DefinitionTextUtils
         textDocumentBuilder.append(NEW_LINE);
         indent = decreaseIndent(indent);
         textDocumentBuilder.append("}");
-        return textDocumentBuilder.toString();
+        result.text = textDocumentBuilder.toString();
+        return result;
     }
 
-    private static String functionDefinitionToTextDocument(IFunctionDefinition functionDefinition, ICompilerProject currentProject)
+    private static DefinitionAsText functionDefinitionToTextDocument(IFunctionDefinition functionDefinition, ICompilerProject currentProject, IDefinition definitionToFind)
 	{
+        DefinitionAsText result = new DefinitionAsText();
+        result.path = definitionToGeneratedPath(functionDefinition);
         String indent = "";
         StringBuilder textDocumentBuilder = new StringBuilder();
         insertHeaderCommentIntoTextDocument(functionDefinition, textDocumentBuilder);
@@ -290,19 +310,17 @@ public class DefinitionTextUtils
         textDocumentBuilder.append(NEW_LINE);
         indent = increaseIndent(indent);
         textDocumentBuilder.append(indent);
-        insertFunctionDefinitionIntoTextDocument(functionDefinition, textDocumentBuilder, currentProject);
+        insertFunctionDefinitionIntoTextDocument(functionDefinition, textDocumentBuilder, currentProject, result, definitionToFind);
         indent = decreaseIndent(indent);
         textDocumentBuilder.append("}");
-        return textDocumentBuilder.toString();
+        result.text = textDocumentBuilder.toString();
+        return result;
     }
 
-    private static void insertHeaderCommentIntoTextDocument(IDefinition definition, StringBuilder builder)
-    {
-        builder.append("//Generated from: " + definition.getContainingFilePath() + "\n");
-    }
-
-    private static String variableDefinitionToTextDocument(IVariableDefinition variableDefinition, ICompilerProject currentProject)
+    private static DefinitionAsText variableDefinitionToTextDocument(IVariableDefinition variableDefinition, ICompilerProject currentProject, IDefinition definitionToFind)
 	{
+        DefinitionAsText result = new DefinitionAsText();
+        result.path = definitionToGeneratedPath(variableDefinition);
         String indent = "";
         StringBuilder textDocumentBuilder = new StringBuilder();
         insertHeaderCommentIntoTextDocument(variableDefinition, textDocumentBuilder);
@@ -318,14 +336,20 @@ public class DefinitionTextUtils
         textDocumentBuilder.append(NEW_LINE);
         indent = increaseIndent(indent);
         textDocumentBuilder.append(indent);
-        insertVariableDefinitionIntoTextDocument(variableDefinition, textDocumentBuilder, currentProject);
+        insertVariableDefinitionIntoTextDocument(variableDefinition, textDocumentBuilder, currentProject, result, definitionToFind);
         indent = decreaseIndent(indent);
         textDocumentBuilder.append("}");
-        return textDocumentBuilder.toString();
+        result.text = textDocumentBuilder.toString();
+        return result;
     }
 
-    private static void insertFunctionDefinitionIntoTextDocument(IFunctionDefinition functionDefinition, StringBuilder textDocumentBuilder, ICompilerProject currentProject)
+    private static void insertFunctionDefinitionIntoTextDocument(IFunctionDefinition functionDefinition, StringBuilder textDocumentBuilder, ICompilerProject currentProject, DefinitionAsText result, IDefinition definitionToFind)
     {
+        if (functionDefinition.isOverride())
+        {
+            textDocumentBuilder.append(IASKeywordConstants.OVERRIDE);
+            textDocumentBuilder.append(" ");
+        }
         if (functionDefinition.isPublic() || functionDefinition.isConstructor())
         {
             textDocumentBuilder.append(IASKeywordConstants.PUBLIC);
@@ -335,6 +359,24 @@ public class DefinitionTextUtils
         {
             textDocumentBuilder.append(IASKeywordConstants.INTERNAL);
             textDocumentBuilder.append(" ");
+        }
+        else if (functionDefinition.isPrivate())
+        {
+            textDocumentBuilder.append(IASKeywordConstants.PRIVATE);
+            textDocumentBuilder.append(" ");
+        }
+        else if (functionDefinition.isProtected())
+        {
+            textDocumentBuilder.append(IASKeywordConstants.PROTECTED);
+            textDocumentBuilder.append(" ");
+        }
+        else
+        {
+            INamespaceDefinition ns = functionDefinition.resolveNamespace(currentProject);
+            if (ns != null)
+            {
+                appendNamespace(ns, textDocumentBuilder);
+            }
         }
         if (functionDefinition.isStatic())
         {
@@ -346,7 +388,10 @@ public class DefinitionTextUtils
             textDocumentBuilder.append(IASKeywordConstants.FINAL);
             textDocumentBuilder.append(" ");
         }
-        textDocumentBuilder.append(IASKeywordConstants.NATIVE);
+        if(!(functionDefinition.getParent() instanceof IInterfaceDefinition))
+        {
+            textDocumentBuilder.append(IASKeywordConstants.NATIVE);
+        }
         textDocumentBuilder.append(" ");
         textDocumentBuilder.append(IASKeywordConstants.FUNCTION);
         textDocumentBuilder.append(" ");
@@ -360,12 +405,13 @@ public class DefinitionTextUtils
             textDocumentBuilder.append(IASKeywordConstants.SET);
             textDocumentBuilder.append(" ");
         }
-        textDocumentBuilder.append(functionDefinitionToSignature(functionDefinition, currentProject));
+        appendDefinitionName(functionDefinition, textDocumentBuilder, definitionToFind, result);
+        textDocumentBuilder.append(functionDefinitionToParametersAndReturnValue(functionDefinition, currentProject));
         textDocumentBuilder.append(";");
         textDocumentBuilder.append(NEW_LINE);
     }
 
-    private static void insertVariableDefinitionIntoTextDocument(IVariableDefinition variableDefinition, StringBuilder textDocumentBuilder, ICompilerProject currentProject)
+    private static void insertVariableDefinitionIntoTextDocument(IVariableDefinition variableDefinition, StringBuilder textDocumentBuilder, ICompilerProject currentProject, DefinitionAsText result, IDefinition definitionToFind)
 	{
         if (variableDefinition.isPublic())
         {
@@ -376,6 +422,24 @@ public class DefinitionTextUtils
         {
             textDocumentBuilder.append(IASKeywordConstants.INTERNAL);
             textDocumentBuilder.append(" ");
+        }
+        else if (variableDefinition.isPrivate())
+        {
+            textDocumentBuilder.append(IASKeywordConstants.PRIVATE);
+            textDocumentBuilder.append(" ");
+        }
+        else if (variableDefinition.isProtected())
+        {
+            textDocumentBuilder.append(IASKeywordConstants.PROTECTED);
+            textDocumentBuilder.append(" ");
+        }
+        else
+        {
+            INamespaceDefinition ns = variableDefinition.resolveNamespace(currentProject);
+            if (ns != null)
+            {
+                appendNamespace(ns, textDocumentBuilder);
+            }
         }
         if (variableDefinition.isStatic())
         {
@@ -391,23 +455,22 @@ public class DefinitionTextUtils
             textDocumentBuilder.append(IASKeywordConstants.VAR);
         }
         textDocumentBuilder.append(" ");
-        textDocumentBuilder.append(variableDefinition.getBaseName());
+        appendDefinitionName(variableDefinition, textDocumentBuilder, definitionToFind, result);
         textDocumentBuilder.append(":");
         textDocumentBuilder.append(variableDefinition.getTypeAsDisplayString());
         textDocumentBuilder.append(";");
         textDocumentBuilder.append(NEW_LINE);
     }
 
-    public static void appendInterfaceNamesToDetail(StringBuilder detailBuilder, IInterfaceDefinition[] interfaceDefinitions)
+    private static void appendInterfaceNamesToDetail(StringBuilder detailBuilder, String[] interfaceNames)
     {
-        for (int i = 0, count = interfaceDefinitions.length; i < count; i++)
+        for (int i = 0, count = interfaceNames.length; i < count; i++)
         {
             if (i > 0)
             {
                 detailBuilder.append(", ");
             }
-            IInterfaceDefinition baseInterface = interfaceDefinitions[i];
-            detailBuilder.append(baseInterface.getBaseName());
+            detailBuilder.append(interfaceNames[i]);
         }
     }
 
@@ -434,21 +497,21 @@ public class DefinitionTextUtils
             {
                 detailBuilder.append(classDefinition.getQualifiedName());
             }
-            IClassDefinition baseClassDefinition = classDefinition.resolveBaseClass(currentProject);
-            if (baseClassDefinition != null && !baseClassDefinition.getQualifiedName().equals(IASLanguageConstants.Object))
+            String baseClassName = classDefinition.getBaseClassAsDisplayString();
+            if (baseClassName != null && !baseClassName.equals(IASLanguageConstants.Object))
             {
                 detailBuilder.append(" ");
                 detailBuilder.append(IASKeywordConstants.EXTENDS);
                 detailBuilder.append(" ");
-                detailBuilder.append(baseClassDefinition.getBaseClassAsDisplayString());
+                detailBuilder.append(baseClassName);
             }
-            IInterfaceDefinition[] interfaceDefinitions = classDefinition.resolveImplementedInterfaces(currentProject);
-            if (interfaceDefinitions.length > 0)
+            String[] interfaceNames = classDefinition.getImplementedInterfacesAsDisplayStrings();
+            if (interfaceNames.length > 0)
             {
                 detailBuilder.append(" ");
                 detailBuilder.append(IASKeywordConstants.IMPLEMENTS);
                 detailBuilder.append(" ");
-                DefinitionTextUtils.appendInterfaceNamesToDetail(detailBuilder, interfaceDefinitions);
+                appendInterfaceNamesToDetail(detailBuilder, interfaceNames);
             }
         }
         else if (definition instanceof IInterfaceDefinition)
@@ -457,13 +520,13 @@ public class DefinitionTextUtils
             detailBuilder.append(IASKeywordConstants.INTERFACE);
             detailBuilder.append(" ");
             detailBuilder.append(interfaceDefinition.getQualifiedName());
-            IInterfaceDefinition[] interfaceDefinitions = interfaceDefinition.resolveExtendedInterfaces(currentProject);
-            if (interfaceDefinitions.length > 0)
+            String[] interfaceNames = interfaceDefinition.getExtendedInterfacesAsDisplayStrings();
+            if (interfaceNames.length > 0)
             {
                 detailBuilder.append(" ");
                 detailBuilder.append(IASKeywordConstants.EXTENDS);
                 detailBuilder.append(" ");
-                DefinitionTextUtils.appendInterfaceNamesToDetail(detailBuilder, interfaceDefinitions);
+                DefinitionTextUtils.appendInterfaceNamesToDetail(detailBuilder, interfaceNames);
             }
         }
         else if (definition instanceof IVariableDefinition)
@@ -520,7 +583,7 @@ public class DefinitionTextUtils
                 }
                 detailBuilder.append(" ");
             }
-            detailBuilder.append(variableDefinition.getBaseName());
+            detailBuilder.append(variableDefinition.getQualifiedName());
             detailBuilder.append(":");
             detailBuilder.append(variableDefinition.getTypeAsDisplayString());
         }
@@ -538,7 +601,7 @@ public class DefinitionTextUtils
                 {
                     detailBuilder.append("(method) ");
                 }
-                detailBuilder.append(parentDefinition.getQualifiedName());
+                detailBuilder.append(parentDefinition.getBaseName());
                 detailBuilder.append(".");
             }
             else if (parentDefinition instanceof IFunctionDefinition)
@@ -601,6 +664,14 @@ public class DefinitionTextUtils
     {
         StringBuilder labelBuilder = new StringBuilder();
         labelBuilder.append(functionDefinition.getBaseName());
+        String parametersAndReturnValue = functionDefinitionToParametersAndReturnValue(functionDefinition, currentProject);
+        labelBuilder.append(parametersAndReturnValue);
+        return labelBuilder.toString();
+    }
+
+    private static String functionDefinitionToParametersAndReturnValue(IFunctionDefinition functionDefinition, ICompilerProject currentProject)
+    {
+        StringBuilder labelBuilder = new StringBuilder();
         labelBuilder.append("(");
         IParameterDefinition[] parameters = functionDefinition.getParameters();
         for (int i = 0, count = parameters.length; i < count; i++)
@@ -655,6 +726,50 @@ public class DefinitionTextUtils
             labelBuilder.append(functionDefinition.getReturnTypeAsDisplayString());
         }
         return labelBuilder.toString();
+    }
+
+    private static void insertHeaderCommentIntoTextDocument(IDefinition definition, StringBuilder builder)
+    {
+        builder.append("//Generated from: " + definition.getContainingFilePath() + "\n");
+    }
+
+    private static void appendDefinitionName(IDefinition definition, StringBuilder textDocumentBuilder, IDefinition definitionToFind, DefinitionAsText result)
+    {
+        String name = definition.getBaseName();
+        if(definition.equals(definitionToFind))
+        {
+            String[] lines = textDocumentBuilder.toString().split(NEW_LINE);
+            result.startLine = lines.length - 1;
+            result.startColumn = lines[lines.length - 1].length();
+            result.endLine = result.startLine;
+            result.endColumn = result.startColumn + name.length();
+        }
+        textDocumentBuilder.append(name);
+    }
+
+    private static void appendNamespace(INamespaceDefinition ns, StringBuilder textDocumentBuilder)
+    {
+        if (ns.getURI().equals(NAMESPACE_URI_AS3))
+        {
+            textDocumentBuilder.append("AS3 ");
+        }
+        else if (ns.getURI().equals(NAMESPACE_MX_INTERNAL))
+        {
+            textDocumentBuilder.append("mx_internal ");
+        }
+        else
+        {
+            //not ideal, but I can't figure out how to find the name
+            textDocumentBuilder.append(ns.getURI());
+            textDocumentBuilder.append(" ");
+        }
+    }
+
+    private static String definitionToGeneratedPath(IDefinition definition)
+    {
+        //we add a fake directory as a prefix here because VSCode won't display
+        //the file name if it isn't in a directory
+        return PATH_PREFIX_GENERATED + definition.getQualifiedName().replaceAll("\\.", "/") + FILE_EXTENSION_AS;
     }
     
     private static String increaseIndent(String indent)

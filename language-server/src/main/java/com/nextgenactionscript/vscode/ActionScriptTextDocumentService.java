@@ -161,6 +161,7 @@ import com.nextgenactionscript.vscode.utils.ImportTextEditUtils;
 import com.nextgenactionscript.vscode.utils.LSPUtils;
 import com.nextgenactionscript.vscode.utils.LanguageServerCompilerUtils;
 import com.nextgenactionscript.vscode.utils.ProblemTracker;
+import com.nextgenactionscript.vscode.utils.DefinitionTextUtils.DefinitionAsText;
 
 import org.eclipse.lsp4j.ApplyWorkspaceEditParams;
 import org.eclipse.lsp4j.CodeActionParams;
@@ -3876,25 +3877,21 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             if (definitionPath.endsWith(SWC_EXTENSION))
             {
-                String definitionText = DefinitionTextUtils.definitionToTextDocument(definition, currentProject);
+                DefinitionAsText definitionText = DefinitionTextUtils.definitionToTextDocument(definition, currentProject);
                 //if we get here, we couldn't find a framework source file and
                 //the definition path still ends with .swc
                 //we're going to try our best to display "decompiled" content
                 Location location = new Location();
-                definitionText = UrlEscapers.urlFragmentEscaper().escape(definitionText);
-                String path = definition.getQualifiedName();
-                //we add a prefix here because VSCode won't display the file
-                //name if it isn't in a directory
-                path = "generated/" + path.replaceAll("\\.", "/");
-                path += ".as";
-                URI uri = URI.create("swc://" + path + "?" + definitionText);
+                String text = UrlEscapers.urlFragmentEscaper().escape(definitionText.text);
+                String path = definitionText.path;
+                URI uri = URI.create("swc://" + path + "?" + text);
                 location.setUri(uri.toString());
                 Position start = new Position();
-                start.setLine(0);
-                start.setCharacter(0);
+                start.setLine(definitionText.startLine);
+                start.setCharacter(definitionText.startColumn);
                 Position end = new Position();
-                end.setLine(0);
-                end.setCharacter(0);
+                end.setLine(definitionText.endLine);
+                end.setCharacter(definitionText.endColumn);
                 Range range = new Range();
                 range.setStart(start);
                 range.setEnd(end);
