@@ -15,7 +15,9 @@ limitations under the License.
 */
 package com.nextgenactionscript.vscode.project;
 
+import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * Defines constants for all top-level fields of an asconfig.json file, and
@@ -23,23 +25,23 @@ import java.util.Arrays;
  */
 public class ProjectOptions
 {
-    public static final String TYPE = "type";
-    public static final String CONFIG = "config";
-    public static final String FILES = "files";
-    public static final String COMPILER_OPTIONS = "compilerOptions";
-    public static final String ADDITIONAL_OPTIONS = "additionalOptions";
-
-    public ProjectType type;
+    public String type;
     public String config;
     public String[] files;
-    public CompilerOptions compilerOptions;
+    public List<String> compilerOptions;
     public String additionalOptions;
+    //while targets and source-path are also included in the compiler options,
+    //we need them available for other things in the language server
+    public List<String> targets;
+    public List<Path> sourcePaths;
 
     public boolean equals(ProjectOptions other)
     {
         return other.type.equals(type)
                 && other.config.equals(config)
                 && Arrays.equals(other.files, files)
+                && other.targets.equals(targets)
+                && other.sourcePaths.equals(sourcePaths)
                 && other.compilerOptions.equals(compilerOptions)
                 && other.additionalOptions.equals(additionalOptions);
     }

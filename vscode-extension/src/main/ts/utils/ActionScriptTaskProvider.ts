@@ -193,7 +193,7 @@ export default class ActionScriptTaskProvider implements vscode.TaskProvider
 
 	private getDefaultCommand(): string[]
 	{
-		return [this.javaExecutablePath, "-jar", path.join(this._context.extensionPath, "asconfigc", "asconfigc.jar")];
+		return [this.javaExecutablePath, "-jar", path.join(this._context.extensionPath, "bin", "asconfigc.jar")];
 	}
 
 	private getCommand(workspaceRoot: vscode.WorkspaceFolder): string[]

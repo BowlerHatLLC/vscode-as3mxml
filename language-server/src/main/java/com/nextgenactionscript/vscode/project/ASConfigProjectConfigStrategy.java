@@ -20,12 +20,7 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Set;
-
-import org.apache.commons.io.FileUtils;
-import org.apache.royale.compiler.internal.mxml.MXMLNamespaceMapping;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -33,7 +28,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.networknt.schema.JsonSchema;
 import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.ValidationMessage;
+import com.nextgenactionscript.asconfigc.TopLevelFields;
+import com.nextgenactionscript.asconfigc.compiler.CompilerOptions;
+import com.nextgenactionscript.asconfigc.compiler.CompilerOptionsParser;
+import com.nextgenactionscript.asconfigc.compiler.ProjectType;
+import com.nextgenactionscript.asconfigc.utils.PathUtils;
 import com.nextgenactionscript.vscode.utils.ActionScriptSDKUtils;
+
+import org.apache.commons.io.FileUtils;
 
 /**
  * Configures a project using an asconfig.json file.
@@ -87,7 +89,7 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy
         Path sdkPath = Paths.get(System.getProperty(PROPERTY_FRAMEWORK_LIB));
         boolean isRoyale = ActionScriptSDKUtils.isRoyaleFramework(sdkPath);
         Path projectRoot = asconfigPath.getParent();
-        ProjectType type = ProjectType.APP;
+        String projectType = ProjectType.APP;
         String config = CONFIG_FLEX;
         if(isRoyale)
         {
@@ -95,7 +97,9 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy
         }
         String[] files = null;
         String additionalOptions = null;
-        CompilerOptions compilerOptions = new CompilerOptions();
+        ArrayList<String> compilerOptions = null;
+        ArrayList<String> targets = null;
+        ArrayList<Path> sourcePaths = null;
         JsonSchema schema = null;
         try (InputStream schemaInputStream = getClass().getResourceAsStream("/schemas/asconfig.schema.json"))
         {
@@ -132,18 +136,17 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy
         }
         try
         {
-            if (json.has(ProjectOptions.TYPE)) //optional, defaults to "app"
+            if (json.has(TopLevelFields.TYPE)) //optional, defaults to "app"
             {
-                String typeString = json.get(ProjectOptions.TYPE).asText();
-                type = ProjectType.fromToken(typeString);
+                projectType = json.get(TopLevelFields.TYPE).asText();
             }
-            if (json.has(ProjectOptions.CONFIG)) //optional, defaults to "flex"
+            if (json.has(TopLevelFields.CONFIG)) //optional, defaults to "flex"
             {
-                config = json.get(ProjectOptions.CONFIG).asText();
+                config = json.get(TopLevelFields.CONFIG).asText();
             }
-            if (json.has(ProjectOptions.FILES)) //optional
+            if (json.has(TopLevelFields.FILES)) //optional
             {
-                JsonNode jsonFiles = json.get(ProjectOptions.FILES);
+                JsonNode jsonFiles = json.get(TopLevelFields.FILES);
                 int fileCount = jsonFiles.size();
                 files = new String[fileCount];
                 for (int i = 0; i < fileCount; i++)
@@ -153,140 +156,41 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy
                     files[i] = filePath.toString();
                 }
             }
-            if (json.has(ProjectOptions.COMPILER_OPTIONS)) //optional
+            if (json.has(TopLevelFields.COMPILER_OPTIONS)) //optional
             {
-                JsonNode jsonCompilerOptions = json.get(ProjectOptions.COMPILER_OPTIONS);
-                if (jsonCompilerOptions.has(CompilerOptions.DEBUG))
-                {
-                    compilerOptions.debug = jsonCompilerOptions.get(CompilerOptions.DEBUG).asBoolean();
-                }
-                if (jsonCompilerOptions.has(CompilerOptions.DEFINE))
-                {
-                    HashMap<String, String> defines = new HashMap<>();
-                    JsonNode jsonDefine = jsonCompilerOptions.get(CompilerOptions.DEFINE);
-                    for (int i = 0, count = jsonDefine.size(); i < count; i++)
-                    {
-                        JsonNode jsonNamespace = jsonDefine.get(i);
-                        String name = jsonNamespace.get(CompilerOptions.DEFINE_NAME).asText();
-                        JsonNode jsonValue = jsonNamespace.get(CompilerOptions.DEFINE_VALUE);
-                        String value = jsonValue.asText();
-                        if (jsonValue.isTextual())
-                        {
-                            value = "\"" + value + "\"";
-                        }
-                        defines.put(name, value.toString());
-                    }
-                    compilerOptions.defines = defines;
-                }
-                if (jsonCompilerOptions.has(CompilerOptions.EXTERNAL_LIBRARY_PATH))
-                {
-                    JsonNode jsonExternalLibraryPath = jsonCompilerOptions.get(CompilerOptions.EXTERNAL_LIBRARY_PATH);
-                    compilerOptions.externalLibraryPath = jsonPathsToList(jsonExternalLibraryPath, projectRoot);
-                }
-                if (jsonCompilerOptions.has(CompilerOptions.JS_EXTERNAL_LIBRARY_PATH))
-                {
-                    JsonNode jsonExternalLibraryPath = jsonCompilerOptions.get(CompilerOptions.JS_EXTERNAL_LIBRARY_PATH);
-                    compilerOptions.jsExternalLibraryPath = jsonPathsToList(jsonExternalLibraryPath, projectRoot);
-                }
-                if (jsonCompilerOptions.has(CompilerOptions.SWF_EXTERNAL_LIBRARY_PATH))
-                {
-                    JsonNode jsonExternalLibraryPath = jsonCompilerOptions.get(CompilerOptions.SWF_EXTERNAL_LIBRARY_PATH);
-                    compilerOptions.swfExternalLibraryPath = jsonPathsToList(jsonExternalLibraryPath, projectRoot);
-                }
-                if (jsonCompilerOptions.has(CompilerOptions.INCLUDE_CLASSES))
-                {
-                    JsonNode jsonIncludeClasses = jsonCompilerOptions.get(CompilerOptions.INCLUDE_CLASSES);
-                    ArrayList<String> includeClasses = new ArrayList<>();
-                    for (int i = 0, count = jsonIncludeClasses.size(); i < count; i++)
-                    {
-                        String qualifiedName = jsonIncludeClasses.get(i).asText();
-                        includeClasses.add(qualifiedName);
-                    }
-                    compilerOptions.includeClasses = includeClasses;
-                }
-                if (jsonCompilerOptions.has(CompilerOptions.INCLUDE_NAMESPACES))
-                {
-                    JsonNode jsonIncludeNamespaces = jsonCompilerOptions.get(CompilerOptions.INCLUDE_NAMESPACES);
-                    ArrayList<String> includeNamespaces = new ArrayList<>();
-                    for (int i = 0, count = jsonIncludeNamespaces.size(); i < count; i++)
-                    {
-                        String namespaceURI = jsonIncludeNamespaces.get(i).asText();
-                        includeNamespaces.add(namespaceURI);
-                    }
-                    compilerOptions.includeNamespaces = includeNamespaces;
-                }
-                if (jsonCompilerOptions.has(CompilerOptions.INCLUDE_SOURCES))
-                {
-                    JsonNode jsonIncludeSources = jsonCompilerOptions.get(CompilerOptions.INCLUDE_SOURCES);
-                    compilerOptions.includeSources = jsonPathsToList(jsonIncludeSources, projectRoot);
-                }
-                if (jsonCompilerOptions.has(CompilerOptions.JS_OUTPUT_TYPE))
-                {
-                    String jsonJSOutputType = jsonCompilerOptions.get(CompilerOptions.JS_OUTPUT_TYPE).asText();
-                    compilerOptions.jsOutputType = jsonJSOutputType;
-                }
-                if (jsonCompilerOptions.has(CompilerOptions.NAMESPACE))
-                {
-                    JsonNode jsonLibraryPath = jsonCompilerOptions.get(CompilerOptions.NAMESPACE);
-                    ArrayList<MXMLNamespaceMapping> namespaceMappings = new ArrayList<>();
-                    for (int i = 0, count = jsonLibraryPath.size(); i < count; i++)
-                    {
-                        JsonNode jsonNamespace = jsonLibraryPath.get(i);
-                        String uri = jsonNamespace.get(CompilerOptions.NAMESPACE_URI).asText();
-                        String manifest = jsonNamespace.get(CompilerOptions.NAMESPACE_MANIFEST).asText();
-                        MXMLNamespaceMapping mapping = new MXMLNamespaceMapping(uri, manifest);
-                        namespaceMappings.add(mapping);
-                    }
-                    compilerOptions.namespaceMappings = namespaceMappings;
-                }
-                if (jsonCompilerOptions.has(CompilerOptions.LIBRARY_PATH))
-                {
-                    JsonNode jsonLibraryPath = jsonCompilerOptions.get(CompilerOptions.LIBRARY_PATH);
-                    compilerOptions.libraryPath = jsonPathsToList(jsonLibraryPath, projectRoot);
-                }
-                if (jsonCompilerOptions.has(CompilerOptions.JS_LIBRARY_PATH))
-                {
-                    JsonNode jsonLibraryPath = jsonCompilerOptions.get(CompilerOptions.JS_LIBRARY_PATH);
-                    compilerOptions.jsLibraryPath = jsonPathsToList(jsonLibraryPath, projectRoot);
-                }
-                if (jsonCompilerOptions.has(CompilerOptions.SWF_LIBRARY_PATH))
-                {
-                    JsonNode jsonLibraryPath = jsonCompilerOptions.get(CompilerOptions.SWF_LIBRARY_PATH);
-                    compilerOptions.swfLibraryPath = jsonPathsToList(jsonLibraryPath, projectRoot);
-                }
-                if (jsonCompilerOptions.has(CompilerOptions.SOURCE_PATH))
-                {
-                    JsonNode jsonSourcePath = jsonCompilerOptions.get(CompilerOptions.SOURCE_PATH);
-                    compilerOptions.sourcePath = jsonPathsToList(jsonSourcePath, projectRoot);
-                }
+                compilerOptions = new ArrayList<>();
+                JsonNode jsonCompilerOptions = json.get(TopLevelFields.COMPILER_OPTIONS);
+                CompilerOptionsParser parser = new CompilerOptionsParser();
+                parser.parse(jsonCompilerOptions, null, compilerOptions);
+                
+                //while the targets and source-path will be included in the
+                //result above, we need to parse them separately because the
+                //language server cares about their values.
                 if (jsonCompilerOptions.has(CompilerOptions.TARGETS))
                 {
+                    targets = new ArrayList<>();
                     JsonNode jsonTargets = jsonCompilerOptions.get(CompilerOptions.TARGETS);
-                    ArrayList<String> targets = new ArrayList<>();
                     for (int i = 0, count = jsonTargets.size(); i < count; i++)
                     {
                         String target = jsonTargets.get(i).asText();
                         targets.add(target);
                     }
-                    compilerOptions.targets = targets;
                 }
-                if (jsonCompilerOptions.has(CompilerOptions.WARNINGS))
+                if (jsonCompilerOptions.has(CompilerOptions.SOURCE_PATH))
                 {
-                    compilerOptions.warnings = jsonCompilerOptions.get(CompilerOptions.WARNINGS).asBoolean();
-                }
-                if (jsonCompilerOptions.has(CompilerOptions.SWF_VERSION))
-                {
-                    compilerOptions.swfVersion = jsonCompilerOptions.get(CompilerOptions.SWF_VERSION).asInt();
-                }
-                if (jsonCompilerOptions.has(CompilerOptions.TARGET_PLAYER))
-                {
-                    compilerOptions.targetPlayer = jsonCompilerOptions.get(CompilerOptions.TARGET_PLAYER).asText();
+                    sourcePaths = new ArrayList<>();
+                    JsonNode jsonSourcePath = jsonCompilerOptions.get(CompilerOptions.SOURCE_PATH);
+                    for (int i = 0, count = jsonSourcePath.size(); i < count; i++)
+                    {
+                        String sourcePath = jsonSourcePath.get(i).asText();
+                        sourcePaths.add(projectRoot.resolve(sourcePath));
+                    }
                 }
             }
             //these options are formatted as if sent in through the command line
-            if (json.has(ProjectOptions.ADDITIONAL_OPTIONS)) //optional
+            if (json.has(TopLevelFields.ADDITIONAL_OPTIONS)) //optional
             {
-                additionalOptions = json.get(ProjectOptions.ADDITIONAL_OPTIONS).asText();
+                additionalOptions = json.get(TopLevelFields.ADDITIONAL_OPTIONS).asText();
             }
         }
         catch (Exception e)
@@ -298,37 +202,23 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy
         }
         //in a library project, the files field will be treated the same as the
         //include-sources compiler option
-        if (type == ProjectType.LIB && files != null)
+        if (projectType.equals(ProjectType.LIB) && files != null)
         {
-            if (compilerOptions.includeSources == null)
-            {
-                compilerOptions.includeSources = new ArrayList<>();
-            }
             for (int i = 0, count = files.length; i < count; i++)
             {
                 String filePath = files[i];
-                compilerOptions.includeSources.add(new File(filePath));
+                compilerOptions.add("--include-sources+=" + PathUtils.escapePath(filePath));
             }
             files = null;
         }
         ProjectOptions options = new ProjectOptions();
-        options.type = type;
+        options.type = projectType;
         options.config = config;
         options.files = files;
         options.compilerOptions = compilerOptions;
         options.additionalOptions = additionalOptions;
+        options.targets = targets;
+        options.sourcePaths = sourcePaths;
         return options;
-    }
-
-    private List<File> jsonPathsToList(JsonNode paths, Path projectRoot)
-    {
-        List<File> result = new ArrayList<>();
-        for (int i = 0, count = paths.size(); i < count; i++)
-        {
-            String pathString = paths.get(i).asText();
-            Path filePath = projectRoot.resolve(pathString);
-            result.add(filePath.toFile());
-        }
-        return result;
     }
 }

@@ -145,14 +145,13 @@ import org.apache.royale.compiler.workspaces.IWorkspace;
 import com.google.common.io.Files;
 import com.google.common.net.UrlEscapers;
 import com.google.gson.internal.LinkedTreeMap;
+import com.nextgenactionscript.asconfigc.compiler.ProjectType;
 import com.nextgenactionscript.vscode.asdoc.VSCodeASDocComment;
 import com.nextgenactionscript.vscode.asdoc.VSCodeASDocDelegate;
 import com.nextgenactionscript.vscode.commands.ICommandConstants;
 import com.nextgenactionscript.vscode.mxml.IMXMLLibraryConstants;
-import com.nextgenactionscript.vscode.project.CompilerOptions;
 import com.nextgenactionscript.vscode.project.IProjectConfigStrategy;
 import com.nextgenactionscript.vscode.project.ProjectOptions;
-import com.nextgenactionscript.vscode.project.ProjectType;
 import com.nextgenactionscript.vscode.project.VSCodeConfiguration;
 import com.nextgenactionscript.vscode.utils.ASTUtils;
 import com.nextgenactionscript.vscode.utils.ActionScriptSDKUtils;
@@ -4606,45 +4605,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         invisibleUnits.clear();
     }
-
-    private boolean isJSConfig(ProjectOptions projectOptions)
-    {
-        if(frameworkSDKIsRoyale || frameworkSDKIsFlexJS)
-        {
-            return true;
-        }
-        String config = projectOptions.config;
-        if (config.equals(CONFIG_ROYALE) || config.equals(CONFIG_JS)
-                || config.equals(CONFIG_NODE))
-        {
-            return true;
-        }
-        CompilerOptions compilerOptions = projectOptions.compilerOptions;
-        if (compilerOptions.jsOutputType != null)
-        {
-            return true;
-        }
-        if (compilerOptions.targets != null
-                && compilerOptions.targets.size() > 0)
-        {
-            return true;
-        }
-        return false;
-    }
-
-    private void appendPathCompilerOptions(String prefix, Collection<File> files, List<String> options)
-    {
-        for(File file : files)
-        {
-            String path = file.getAbsolutePath();
-            if (path.indexOf(' ') != -1)
-            {
-                //wrap in quotes, if required
-                path = "\"" + path + "\"";
-            }
-            options.add(prefix + file.getAbsolutePath());
-        }
-    }
     
     private void publishConfigurationProblems(RoyaleProjectConfigurator configurator)
     {
@@ -4691,7 +4651,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             //we're going to try to determine if we need a JS project or a SWF one
             IBackend backend = null;
-            List<String> targets = currentProjectOptions.compilerOptions.targets;
+            List<String> targets = currentProjectOptions.targets;
             if (targets != null && targets.size() > 0)
             {
                 //first, check if any targets are specified
@@ -4741,6 +4701,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             {
                 backend = new NodeBackend();
             }
+            else if (frameworkSDKIsRoyale || frameworkSDKIsFlexJS)
+            {
+                //finally, we can guess based on the framework SDK
+                backend = new RoyaleBackend();
+            }
             if (backend != null)
             {
                 //if we created a backend, it's a JS project
@@ -4762,9 +4727,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             currentProject.getProblems().clear();
             return currentProject;
         }
-        CompilerOptions compilerOptions = currentProjectOptions.compilerOptions;
+        List<String> compilerOptions = currentProjectOptions.compilerOptions;
         RoyaleProjectConfigurator configurator = null;
-        if (isJSConfig(currentProjectOptions))
+        if (project instanceof RoyaleJSProject)
         {
             configurator = new RoyaleProjectConfigurator(JSGoogConfiguration.class);
         }
@@ -4773,34 +4738,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             configurator = new RoyaleProjectConfigurator(VSCodeConfiguration.class);
         }
         configurator.setToken(TOKEN_CONFIGNAME, currentProjectOptions.config);
-        ProjectType type = currentProjectOptions.type;
+        String projectType = currentProjectOptions.type;
         String[] files = currentProjectOptions.files;
         String additionalOptions = currentProjectOptions.additionalOptions;
         ArrayList<String> combinedOptions = new ArrayList<>();
-        if (compilerOptions.swfExternalLibraryPath != null)
+        if (compilerOptions != null)
         {
-            //this isn't available in the configurator, so add it like the additionalOptions
-            appendPathCompilerOptions("--swf-external-library-path+=", compilerOptions.swfExternalLibraryPath, combinedOptions);
-        }
-        if (compilerOptions.swfLibraryPath != null)
-        {
-            appendPathCompilerOptions("--swf-library-path+=", compilerOptions.swfLibraryPath, combinedOptions);
-        }
-        if (compilerOptions.jsExternalLibraryPath != null)
-        {
-            appendPathCompilerOptions("--js-external-library-path+=", compilerOptions.jsExternalLibraryPath, combinedOptions);
-        }
-        if (compilerOptions.jsLibraryPath != null)
-        {
-            appendPathCompilerOptions("--js-library-path+=", compilerOptions.jsLibraryPath, combinedOptions);
-        }
-        if (compilerOptions.swfVersion != -1)
-        {
-            combinedOptions.add("--swf-version=" + compilerOptions.swfVersion);
-        }
-        if (compilerOptions.targetPlayer != null)
-        {
-            combinedOptions.add("--target-player=" + compilerOptions.targetPlayer);
+            combinedOptions.addAll(compilerOptions);
         }
         if (additionalOptions != null)
         {
@@ -4816,7 +4760,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         //not all framework SDKs support a theme (such as Adobe's AIR SDK), so
         //we clear it for the editor to avoid a missing spark.css file.
         combinedOptions.add("-theme=");
-        if (type.equals(ProjectType.LIB))
+        if (projectType.equals(ProjectType.LIB))
         {
             configurator.setConfiguration(combinedOptions.toArray(new String[combinedOptions.size()]),
                     ICompilerSettingsConstants.INCLUDE_CLASSES_VAR, false);
@@ -4838,52 +4782,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             configurator.addConfiguration(appendConfigFile);
         }
         boolean result = configurator.applyToProject(project);
-        publishConfigurationProblems(configurator);
-        configProblemTracker.cleanUpStaleProblems();
-        if (!result)
-        {
-            return null;
-        }
-        //set things after the first applyToProject() so that cfgbuf is not null
-        //because setting some values checks the cfgbuf
-        if (compilerOptions.sourcePath != null)
-        {
-            configurator.addSourcePath(compilerOptions.sourcePath);
-        }
-        if (compilerOptions.libraryPath != null)
-        {
-            configurator.addLibraryPath(compilerOptions.libraryPath);
-        }
-        if (compilerOptions.externalLibraryPath != null)
-        {
-            configurator.addExternalLibraryPath(compilerOptions.externalLibraryPath);
-        }
-        if (compilerOptions.namespaceMappings != null)
-        {
-            configurator.setNamespaceMappings(compilerOptions.namespaceMappings);
-        }
-        if (compilerOptions.defines != null)
-        {
-            configurator.setDefineDirectives(compilerOptions.defines);
-        }
-        if (currentProjectOptions.type.equals(ProjectType.LIB))
-        {
-            if (compilerOptions.includeClasses != null)
-            {
-                configurator.setIncludeClasses(compilerOptions.includeClasses);
-            }
-            if (compilerOptions.includeNamespaces != null)
-            {
-                configurator.setIncludeNamespaces(compilerOptions.includeNamespaces);
-            }
-            if (compilerOptions.includeSources != null)
-            {
-                configurator.setIncludeSources(compilerOptions.includeSources);
-            }
-        }
-        configurator.enableDebugging(compilerOptions.debug, null);
-        configurator.showActionScriptWarnings(compilerOptions.warnings);
-        result = configurator.applyToProject(project);
         publishConfigurationProblems(configurator);
         configProblemTracker.cleanUpStaleProblems();
         if (!result)
@@ -5810,15 +5708,14 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return false;
         }
-        List<File> sourcePaths = currentProjectOptions.compilerOptions.sourcePath;
+        List<Path> sourcePaths = currentProjectOptions.sourcePaths;
         if (sourcePaths != null)
         {
-            for (File sourcePathFile : sourcePaths)
+            for (Path sourcePath : sourcePaths)
             {
                 try
                 {
-                    Path sourcePathPath = sourcePathFile.getCanonicalFile().toPath();
-                    if (path.startsWith(sourcePathPath))
+                    if (path.startsWith(sourcePath.toRealPath()))
                     {
                         return true;
                     }

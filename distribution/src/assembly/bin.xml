@@ -43,6 +43,14 @@
       </includes>
     </fileSet>
     <fileSet>
+      <directory>../asconfigc/target</directory>
+      <outputDirectory>bin</outputDirectory>
+      <includes>
+        <include>asconfigc*.jar</include>
+        <include>commons-cli*.jar</include>
+      </includes>
+    </fileSet>
+    <fileSet>
       <directory>../language-server/target</directory>
       <outputDirectory>bin</outputDirectory>
       <includes>
@@ -99,13 +107,6 @@
         <include>commands/*.js</include>
         <include>utils/*.js</include>
         <include>extension.js</include>
-      </includes>
-    </fileSet>
-    <fileSet>
-      <directory>../asconfigc/target</directory>
-      <outputDirectory>asconfigc</outputDirectory>
-      <includes>
-        <include>*.jar</include>
       </includes>
     </fileSet>
   </fileSets>
