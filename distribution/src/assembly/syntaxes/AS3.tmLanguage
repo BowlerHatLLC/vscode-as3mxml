@@ -477,43 +477,39 @@
 			<key>patterns</key>
 			<array>
 				<dict>
-					<key>captures</key>
-					<dict>
-						<key>1</key>
-						<dict>
-							<key>name</key>
-							<string>variable.parameter.actionscript.3</string>
-						</dict>
-						<key>10</key>
-						<dict>
-							<key>name</key>
-							<string>constant.other.actionscript.3</string>
-						</dict>
-						<key>11</key>
-						<dict>
-							<key>name</key>
-							<string>variable.parameter.actionscript.3</string>
-						</dict>
-						<key>4</key>
-						<dict>
-							<key>name</key>
-							<string>storage.type.actionscript.3</string>
-						</dict>
-						<key>8</key>
-						<dict>
-							<key>name</key>
-							<string>storage.type.actionscript.3</string>
-						</dict>
-					</dict>
-					<key>match</key>
-					<string>(?x) (\w+) \s*(\:)\s* ( (([\.\w]+)|(\*)) (\.&lt;([\.\w]+)&gt;)? (\s*=\s* ([\w_]+))? )|(\.\.\.(\w+))</string>
+					<key>include</key>
+					<string>#strings</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#numbers</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#language_constants</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#comments</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#primitive_types</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#dynamic_type</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#guess_type</string>
 				</dict>
 			</array>
 		</dict>
 		<key>functions</key>
 		<dict>
 			<key>begin</key>
-			<string>(?x) (^|\s+) (function) (\s+(get|set)\s+)? \s* ([a-zA-Z0-9_\$]+)?</string>
+			<string>(?x) (^|\s+) (function) (\s+(get|set))? (\s+[a-zA-Z0-9_\$]+)? \s* (?=\()</string>
 			<key>beginCaptures</key>
 			<dict>
 				<key>2</key>
