@@ -250,7 +250,7 @@
 				<key>1</key>
 				<dict>
 					<key>name</key>
-					<string>storage.type.actionscript.3</string>
+					<string>storage.type.class.actionscript.3</string>
 				</dict>
 				<key>2</key>
 				<dict>
@@ -433,7 +433,7 @@
 				<key>1</key>
 				<dict>
 					<key>name</key>
-					<string>storage.type.actionscript.3</string>
+					<string>support.type.actionscript.3</string>
 				</dict>
 			</dict>
 			<key>match</key>
@@ -515,12 +515,12 @@
 				<key>2</key>
 				<dict>
 					<key>name</key>
-					<string>storage.type.actionscript.3</string>
+					<string>storage.type.function.actionscript.3</string>
 				</dict>
 				<key>4</key>
 				<dict>
 					<key>name</key>
-					<string>storage.type.actionscript.3</string>
+					<string>storage.modifier.actionscript.3</string>
 				</dict>
 				<key>5</key>
 				<dict>
@@ -570,7 +570,7 @@
 				<key>1</key>
 				<dict>
 					<key>name</key>
-					<string>storage.type.actionscript.3</string>
+					<string>support.type.actionscript.3</string>
 				</dict>
 			</dict>
 			<key>comment</key>
@@ -605,12 +605,12 @@
 				<key>2</key>
 				<dict>
 					<key>name</key>
-					<string>keyword.other.actionscript.3</string>
+					<string>keyword.control.import.actionscript.3</string>
 				</dict>
 				<key>4</key>
 				<dict>
 					<key>name</key>
-					<string>storage.type.actionscript.3</string>
+					<string>support.type.actionscript.3</string>
 				</dict>
 			</dict>
 			<key>match</key>
@@ -663,7 +663,7 @@
 				<key>1</key>
 				<dict>
 					<key>name</key>
-					<string>storage.type.actionscript.3</string>
+					<string>storage.type.interface.actionscript.3</string>
 				</dict>
 				<key>2</key>
 				<dict>
@@ -1073,7 +1073,7 @@
 				<key>1</key>
 				<dict>
 					<key>name</key>
-					<string>storage.type.actionscript.3</string>
+					<string>support.type.actionscript.3</string>
 				</dict>
 			</dict>
 			<key>match</key>
@@ -1102,12 +1102,12 @@
 				<key>3</key>
 				<dict>
 					<key>name</key>
-					<string>storage.type.actionscript.3</string>
+					<string>support.type.actionscript.3</string>
 				</dict>
 				<key>5</key>
 				<dict>
 					<key>name</key>
-					<string>storage.type.actionscript.3</string>
+					<string>support.type.actionscript.3</string>
 				</dict>
 			</dict>
 			<key>match</key>
@@ -1218,7 +1218,7 @@
 				<key>7</key>
 				<dict>
 					<key>name</key>
-					<string>storage.type.actionscript.3</string>
+					<string>storage.modifier.actionscript.3</string>
 				</dict>
 			</dict>
 			<key>match</key>
