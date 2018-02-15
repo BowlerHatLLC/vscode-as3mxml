@@ -194,6 +194,12 @@
           "mxml"
         ],
         "configuration": "./mxml.configuration.json"
+      },
+      {
+        "id": "jsonc",
+        "filenames": [
+          "asconfig.json"
+        ]
       }
     ],
     "grammars": [
