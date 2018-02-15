@@ -574,9 +574,9 @@
 				</dict>
 			</dict>
 			<key>comment</key>
-			<string>Following convention, let's guess that any word starting with a capital letter or digit, and at least one lower case letter, refers to a class/type.</string>
+			<string>Following convention, let's guess that any word starting with one or more capital letters (that contains at least some lower-case letters so that constants aren't detected) refers to a class/type. May be fully-qualified.</string>
 			<key>match</key>
-			<string>\b([A-Z0-9]+[a-z]+[a-zA-Z0-9]*)\b</string>
+			<string>\b((?:[A-Za-z0-9_\$]+\.)*[A-Z]+[a-z]+[A-Za-z0-9_\$]*)\b</string>
 		</dict>
 		<key>implements</key>
 		<dict>
@@ -607,14 +607,14 @@
 					<key>name</key>
 					<string>keyword.control.import.actionscript.3</string>
 				</dict>
-				<key>4</key>
+				<key>3</key>
 				<dict>
 					<key>name</key>
 					<string>support.type.actionscript.3</string>
 				</dict>
 			</dict>
 			<key>match</key>
-			<string>(?x) (^|\s+|;) (import) \s+ ([\w\.]*?)? ((\*)|(\w+)) \s* (?=;|$)</string>
+			<string>(?x) (^|\s+|;) (import) \s+ ((?:[A-Za-z0-9\$_]+\.)*(?:\*|(?:[A-Za-z0-9\$_]+))) \s* (?=;|$)</string>
 			<key>name</key>
 			<string>meta.import.actionscript.3</string>
 		</dict>
