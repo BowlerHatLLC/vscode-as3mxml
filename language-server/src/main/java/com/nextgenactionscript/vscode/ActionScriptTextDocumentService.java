@@ -155,7 +155,9 @@ import com.nextgenactionscript.vscode.project.ProjectOptions;
 import com.nextgenactionscript.vscode.project.VSCodeConfiguration;
 import com.nextgenactionscript.vscode.utils.ASTUtils;
 import com.nextgenactionscript.vscode.utils.ActionScriptSDKUtils;
+import com.nextgenactionscript.vscode.utils.CodeGenerationUtils;
 import com.nextgenactionscript.vscode.utils.DefinitionTextUtils;
+import com.nextgenactionscript.vscode.utils.ImportRange;
 import com.nextgenactionscript.vscode.utils.ImportTextEditUtils;
 import com.nextgenactionscript.vscode.utils.LSPUtils;
 import com.nextgenactionscript.vscode.utils.LanguageServerCompilerUtils;
@@ -5306,13 +5308,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return offsetNode;
     }
     
-    private class ImportRange
-    {
-        public String uri = null;
-        public int startIndex = -1;
-        public int endIndex = -1;
-    }
-    
     private ImportRange getImportRange(IASNode offsetNode)
     {
         ImportRange range = new ImportRange();
@@ -6106,35 +6101,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return CompletableFuture.completedFuture(new Object());
         }
 
-        String newLine = "\n";
-        String indent = "\t\t\t";
-        StringBuilder builder = new StringBuilder();
-        builder.append(newLine);
-        builder.append(indent);
-        builder.append("var ");
-        builder.append(name);
-        builder.append(":");
-        builder.append(IASLanguageConstants.Object);
-        builder.append(";");
-        
         ApplyWorkspaceEditParams editParams = new ApplyWorkspaceEditParams();
         
-        WorkspaceEdit workspaceEdit = new WorkspaceEdit();
+        int endLine = scopedNode.getLine();
+        int endChar = scopedNode.getColumn() + 1;
+        WorkspaceEdit workspaceEdit = CodeGenerationUtils.createGenerateLocalVariableWorkspaceEdit(
+            uri, startLine, startChar, endLine, endChar, name);
         editParams.setEdit(workspaceEdit);
-
-        HashMap<String,List<TextEdit>> changes = new HashMap<>();
-        workspaceEdit.setChanges(changes);
-
-        List<TextEdit> edits = new ArrayList<>();
-        changes.put(uri, edits);
-
-        TextEdit edit = new TextEdit();
-        edits.add(edit);
-
-        edit.setNewText(builder.toString());
-        Position editPosition = new Position(scopedNode.getLine(), scopedNode.getColumn() + 1);
-        edit.setRange(new Range(editPosition, editPosition));
-
         languageClient.applyEdit(editParams);
 
         return CompletableFuture.completedFuture(new Object());
@@ -6167,36 +6140,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return CompletableFuture.completedFuture(new Object());
         }
-
-        String indent = "\t\t";
-        String newLine = "\n";
-        StringBuilder builder = new StringBuilder();
-        builder.append(newLine);
-        builder.append(indent);
-        builder.append("public var ");
-        builder.append(name);
-        builder.append(":");
-        builder.append(IASLanguageConstants.Object);
-        builder.append(";");
-        builder.append(newLine);
         
+        int endLine = scopedNode.getEndLine();
+        int endChar = 0;
         ApplyWorkspaceEditParams editParams = new ApplyWorkspaceEditParams();
-        
-        WorkspaceEdit workspaceEdit = new WorkspaceEdit();
+        WorkspaceEdit workspaceEdit = CodeGenerationUtils.createGenerateFieldWorkspaceEdit(
+            uri, startLine, startChar, endLine, endChar, name);
         editParams.setEdit(workspaceEdit);
-
-        HashMap<String,List<TextEdit>> changes = new HashMap<>();
-        workspaceEdit.setChanges(changes);
-
-        List<TextEdit> edits = new ArrayList<>();
-        changes.put(uri, edits);
-
-        TextEdit edit = new TextEdit();
-        edits.add(edit);
-
-        edit.setNewText(builder.toString());
-        Position editPosition = new Position(scopedNode.getEndLine(), 0);
-        edit.setRange(new Range(editPosition, editPosition));
 
         languageClient.applyEdit(editParams);
 
@@ -6236,71 +6186,17 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return CompletableFuture.completedFuture(new Object());
         }
-        
-        ApplyWorkspaceEditParams editParams = new ApplyWorkspaceEditParams();
-        
-        WorkspaceEdit workspaceEdit = new WorkspaceEdit();
-        editParams.setEdit(workspaceEdit);
-
-        HashMap<String,List<TextEdit>> changes = new HashMap<>();
-        workspaceEdit.setChanges(changes);
-
-        List<TextEdit> edits = new ArrayList<>();
-        changes.put(uri, edits);
-
-        TextEdit edit = new TextEdit();
-        edits.add(edit);
-
-        String newLine = "\n";
-        String indent = "\t\t";
-        StringBuilder builder = new StringBuilder();
-        builder.append(newLine);
-        builder.append(indent);
-        builder.append("private function ");
-        builder.append(name);
-        builder.append("(");
         ImportRange importRange = getImportRange(offsetNode);
+        
+        int endLine = scopedNode.getEndLine();
+        int endChar = 0;
         Path pathForImport = Paths.get(URI.create(uri));
         String fileText = sourceByPath.get(pathForImport);
-        for (int i = 0, count = methodArgs.size(); i < count; i++)
-        {
-            if(i > 0)
-            {
-                builder.append(", ");
-            }
-            String type = (String) methodArgs.get(i);
-            builder.append("param");
-            builder.append(i);
-            builder.append(":");
-            int index = type.lastIndexOf(".");
-            if (index == -1)
-            {
-                builder.append(type);
-            }
-            else
-            {
-                builder.append(type.substring(index + 1));
-            }
-            TextEdit importEdit = ImportTextEditUtils.createTextEditForImport(type, fileText, importRange.startIndex, importRange.endIndex);
-            if (importEdit != null)
-            {
-                edits.add(importEdit);
-            }
-        }
-        builder.append(")");
-        builder.append(":");
-        builder.append(IASLanguageConstants.void_);
-        builder.append(newLine);
-        builder.append(indent);
-        builder.append("{");
-        builder.append(newLine);
-        builder.append(indent);
-        builder.append("}");
-        builder.append(newLine);
-
-        edit.setNewText(builder.toString());
-        Position editPosition = new Position(scopedNode.getEndLine(), 0);
-        edit.setRange(new Range(editPosition, editPosition));
+        ApplyWorkspaceEditParams editParams = new ApplyWorkspaceEditParams();
+        WorkspaceEdit workspaceEdit = CodeGenerationUtils.createGenerateMethodWorkspaceEdit(
+            uri, startLine, startChar, endLine, endChar,
+            name, methodArgs, importRange, fileText);
+        editParams.setEdit(workspaceEdit);
 
         languageClient.applyEdit(editParams);
 
@@ -6321,96 +6217,24 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         String type = (String) args.get(8);
         String assignedValue = (String) args.get(9);
 
-        ApplyWorkspaceEditParams editParams = new ApplyWorkspaceEditParams();
-
-        WorkspaceEdit workspaceEdit = new WorkspaceEdit();
-        editParams.setEdit(workspaceEdit);
-
-        HashMap<String,List<TextEdit>> changes = new HashMap<>();
-        workspaceEdit.setChanges(changes);
-
-        List<TextEdit> edits = new ArrayList<>();
-        changes.put(uri, edits);
-
-        TextEdit edit = new TextEdit();
-        edits.add(edit);
-
-        StringBuilder builder = new StringBuilder();
-        builder.append("private ");
-        if(isStatic)
-        {
-            builder.append("static ");
-        }
-        builder.append("var _" + name);
-        if(type != null && type.length() > 0)
-        {
-            builder.append(":" + type);
-        }
-        if(assignedValue != null)
-        {
-            builder.append(" = " + assignedValue);
-        }
-        builder.append(";");
-        if (generateGetter)
-        {
-            builder.append("\n\n");
-            builder.append("\t\t" + namespace + " ");
-            if(isStatic)
-            {
-                builder.append("static ");
-            }
-            builder.append("function get " + name + "()");
-            if(type != null && type.length() > 0)
-            {
-                builder.append(":" + type);
-            }
-            builder.append("\n");
-            builder.append("\t\t{\n");
-            builder.append("\t\t\treturn _" + name +";\n");
-            builder.append("\t\t}");
-        }
-        if (generateSetter)
-        {
-            builder.append("\n\n");
-            builder.append("\t\t" + namespace + " ");
-            if(isStatic)
-            {
-                builder.append("static ");
-            }
-            builder.append("function set " + name + "(value");
-            if(type != null && type.length() > 0)
-            {
-                builder.append(":" + type);
-            }
-            builder.append("):void\n");
-            builder.append("\t\t{\n");
-            builder.append("\t\t\t_" + name + " = value;\n");
-            builder.append("\t\t}");
-        }
-        edit.setNewText(builder.toString());
-
-        Position startPosition = new Position(startLine, startChar);
-        Position endPosition = new Position(endLine, endChar);
-
-        //we may need to adjust the end position to include the semi-colon
+        Path path = Paths.get(URI.create(uri));
+        String fileText = "";
         try
         {
-            Path path = Paths.get(URI.create(uri));
-            String text = IOUtils.toString(getReaderForPath(path));
-            int offset = LanguageServerCompilerUtils.getOffsetFromPosition(new StringReader(text), endPosition);
-            if (offset < text.length() && text.charAt(offset) == ';')
-            {
-                endPosition.setCharacter(endChar + 1);
-            }
+            fileText = IOUtils.toString(getReaderForPath(path));
         }
-        catch (IOException e)
+        catch(IOException e)
         {
-            //ignore
+            //just ignore it
         }
-
-        edit.setRange(new Range(startPosition, endPosition));
-
+        ApplyWorkspaceEditParams editParams = new ApplyWorkspaceEditParams();
+        WorkspaceEdit workspaceEdit = CodeGenerationUtils.createGenerateGetterAndSetterWorkspaceEdit(
+            uri, startLine, startChar, endLine, endChar,
+            name, namespace, isStatic, type, assignedValue,
+            fileText, generateGetter, generateSetter);
+        editParams.setEdit(workspaceEdit);
         languageClient.applyEdit(editParams);
+
         return CompletableFuture.completedFuture(new Object());
     }
 }
