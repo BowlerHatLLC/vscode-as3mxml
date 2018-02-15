@@ -41,6 +41,29 @@ public class ASTUtils
 {
     private static final String DOT_STAR = ".*";
 
+    public static boolean containsWithStart(IASNode node, int offset)
+    {
+        return offset >= node.getAbsoluteStart() && offset <= node.getAbsoluteEnd();
+    }
+
+    public static IASNode getContainingNodeIncludingStart(IASNode node, int offset)
+    {
+        if (!containsWithStart(node, offset))
+        {
+            return null;
+        }
+        for (int i = 0, count = node.getChildCount(); i < count; i++)
+        {
+            IASNode child = node.getChild(i);
+            IASNode result = getContainingNodeIncludingStart(child, offset);
+            if (result != null)
+            {
+                return result;
+            }
+        }
+        return node;
+    }
+
 	public static Set<String> findUnresolvedIdentifiersToImport(IASNode node, ICompilerProject project)
     {
         HashSet<String> importsToAdd = new HashSet<>();

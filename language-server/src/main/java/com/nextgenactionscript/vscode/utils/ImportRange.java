@@ -15,9 +15,55 @@ limitations under the License.
 */
 package com.nextgenactionscript.vscode.utils;
 
+import java.nio.file.Paths;
+
+import org.apache.royale.compiler.tree.as.IASNode;
+import org.apache.royale.compiler.tree.as.IFileNode;
+import org.apache.royale.compiler.tree.as.IPackageNode;
+
 public class ImportRange
 {
 	public String uri = null;
 	public int startIndex = -1;
 	public int endIndex = -1;
+
+    public static ImportRange fromOffsetNode(IASNode offsetNode)
+    {
+        ImportRange range = new ImportRange();
+        if (offsetNode != null)
+        {
+            //if we have an offset node, try to find where imports may be added
+            IPackageNode packageNode = (IPackageNode) offsetNode.getAncestorOfType(IPackageNode.class);
+            if (packageNode == null)
+            {
+                IFileNode fileNode = (IFileNode) offsetNode.getAncestorOfType(IFileNode.class);
+                if (fileNode != null)
+                {
+                    boolean foundPackage = false;
+                    for (int i = 0; i < fileNode.getChildCount(); i++)
+                    {
+                        IASNode childNode = fileNode.getChild(i);
+                        if (foundPackage)
+                        {
+                            //this is the node following the package
+                            range.startIndex = childNode.getAbsoluteStart();
+                            break;
+                        }
+                        if (childNode instanceof IPackageNode)
+                        {
+                            //use the start of the the next node after the
+                            //package as the place where the import can be added
+                            foundPackage = true;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                range.endIndex = packageNode.getAbsoluteEnd();
+            }
+            range.uri = Paths.get(offsetNode.getSourcePath()).toUri().toString();
+        }
+        return range;
+    }
 }

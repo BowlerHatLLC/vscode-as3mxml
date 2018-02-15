@@ -161,6 +161,7 @@ import com.nextgenactionscript.vscode.utils.ImportRange;
 import com.nextgenactionscript.vscode.utils.ImportTextEditUtils;
 import com.nextgenactionscript.vscode.utils.LSPUtils;
 import com.nextgenactionscript.vscode.utils.LanguageServerCompilerUtils;
+import com.nextgenactionscript.vscode.utils.MXMLDataUtils;
 import com.nextgenactionscript.vscode.utils.ProblemTracker;
 import com.nextgenactionscript.vscode.utils.DefinitionTextUtils.DefinitionAsText;
 
@@ -244,22 +245,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private static final String UNDERSCORE_UNDERSCORE_AS3_PACKAGE = "__AS3__.";
     private static final String VECTOR_HIDDEN_PREFIX = "Vector$";
     private static final String ASDOC_TAG_PARAM = "param";
-
-    private static final String[] LANGUAGE_TYPE_NAMES =
-            {
-                    IMXMLLanguageConstants.ARRAY,
-                    IMXMLLanguageConstants.BOOLEAN,
-                    IMXMLLanguageConstants.CLASS,
-                    IMXMLLanguageConstants.DATE,
-                    IMXMLLanguageConstants.FUNCTION,
-                    IMXMLLanguageConstants.INT,
-                    IMXMLLanguageConstants.NUMBER,
-                    IMXMLLanguageConstants.OBJECT,
-                    IMXMLLanguageConstants.STRING,
-                    IMXMLLanguageConstants.XML,
-                    IMXMLLanguageConstants.XML_LIST,
-                    IMXMLLanguageConstants.UINT
-            };
 
     private static final HashMap<String, String> NAMESPACE_TO_PREFIX = new HashMap<>();
 
@@ -490,7 +475,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         IMXMLTagData offsetTag = getOffsetMXMLTag(position);
         if (offsetTag != null)
         {
-            IMXMLTagAttributeData attributeData = getMXMLTagAttributeWithValueAtOffset(offsetTag, currentOffset);
+            IMXMLTagAttributeData attributeData = MXMLDataUtils.getMXMLTagAttributeWithValueAtOffset(offsetTag, currentOffset);
             if (attributeData != null)
             {
                 //some attributes can have ActionScript completion, such as
@@ -503,7 +488,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     IMXMLEventSpecifierNode eventNode = mxmlNode.getEventSpecifierNode(attributeData.getShortName());
                     for (IASNode asNode : eventNode.getASNodes())
                     {
-                        IASNode containingNode = getContainingNodeIncludingStart(asNode, currentOffset);
+                        IASNode containingNode = ASTUtils.getContainingNodeIncludingStart(asNode, currentOffset);
                         if (containingNode != null)
                         {
                             offsetNode = containingNode;
@@ -1851,7 +1836,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
 
         //inside <fx:Declarations>
-        if (isDeclarationsTag(offsetTag))
+        if (MXMLDataUtils.isDeclarationsTag(offsetTag))
         {
             if (!isAttribute)
             {
@@ -1860,13 +1845,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return result;
         }
 
-        IDefinition offsetDefinition = getDefinitionForMXMLTag(offsetTag);
+        IDefinition offsetDefinition = MXMLDataUtils.getDefinitionForMXMLTag(offsetTag, currentProject);
         if (offsetDefinition == null)
         {
             IDefinition parentDefinition = null;
             if (parentTag != null)
             {
-                parentDefinition = getDefinitionForMXMLTag(parentTag);
+                parentDefinition = MXMLDataUtils.getDefinitionForMXMLTag(parentTag, currentProject);
             }
             if (parentDefinition != null)
             {
@@ -1925,7 +1910,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 }
                 return result;
             }
-            else if (isDeclarationsTag(parentTag))
+            else if (MXMLDataUtils.isDeclarationsTag(parentTag))
             {
                 autoCompleteTypesForMXMLFromExistingTag(result, offsetTag);
                 return result;
@@ -1934,12 +1919,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         if (offsetDefinition instanceof IClassDefinition)
         {
-            IMXMLTagAttributeData attribute = getMXMLTagAttributeWithValueAtOffset(offsetTag, currentOffset);
+            IMXMLTagAttributeData attribute = MXMLDataUtils.getMXMLTagAttributeWithValueAtOffset(offsetTag, currentOffset);
             if (attribute != null)
             {
                 return mxmlAttributeCompletion(offsetTag, result);
             }
-            attribute = getMXMLTagAttributeWithNameAtOffset(offsetTag, currentOffset, true);
+            attribute = MXMLDataUtils.getMXMLTagAttributeWithNameAtOffset(offsetTag, currentOffset, true);
             if (attribute != null
                     && currentOffset > (attribute.getAbsoluteStart() + attribute.getXMLName().toString().length()))
             {
@@ -2016,7 +2001,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private CompletionList mxmlAttributeCompletion(IMXMLTagData offsetTag, CompletionList result)
     {
         List<CompletionItem> items = result.getItems();
-        IDefinition attributeDefinition = getDefinitionForMXMLTagAttribute(offsetTag, currentOffset, true);
+        IDefinition attributeDefinition = MXMLDataUtils.getDefinitionForMXMLTagAttribute(offsetTag, currentOffset, true, currentProject);
         if (attributeDefinition instanceof IVariableDefinition)
         {
             IVariableDefinition variableDefinition = (IVariableDefinition) attributeDefinition;
@@ -2081,13 +2066,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private CompletableFuture<Hover> mxmlHover(TextDocumentPositionParams position, IMXMLTagData offsetTag)
     {
-        IDefinition definition = getDefinitionForMXMLNameAtOffset(offsetTag, currentOffset);
+        IDefinition definition = MXMLDataUtils.getDefinitionForMXMLNameAtOffset(offsetTag, currentOffset, currentProject);
         if (definition == null)
         {
             return CompletableFuture.completedFuture(new Hover(Collections.emptyList(), null));
         }
 
-        if (isInsideTagPrefix(offsetTag, currentOffset))
+        if (MXMLDataUtils.isInsideTagPrefix(offsetTag, currentOffset))
         {
             //inside the prefix
             String prefix = offsetTag.getPrefix();
@@ -2165,7 +2150,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private CompletableFuture<List<? extends Location>> mxmlDefinition(TextDocumentPositionParams position, IMXMLTagData offsetTag)
     {
-        IDefinition definition = getDefinitionForMXMLNameAtOffset(offsetTag, currentOffset);
+        IDefinition definition = MXMLDataUtils.getDefinitionForMXMLNameAtOffset(offsetTag, currentOffset, currentProject);
         if (definition == null)
         {
             //VSCode may call definition() when there isn't necessarily a
@@ -2173,7 +2158,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return CompletableFuture.completedFuture(Collections.emptyList());
         }
 
-        if (isInsideTagPrefix(offsetTag, currentOffset))
+        if (MXMLDataUtils.isInsideTagPrefix(offsetTag, currentOffset))
         {
             //ignore the tag's prefix
             return CompletableFuture.completedFuture(Collections.emptyList());
@@ -2218,10 +2203,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private CompletableFuture<List<? extends Location>> mxmlReferences(ReferenceParams params, IMXMLTagData offsetTag)
     {
-        IDefinition definition = getDefinitionForMXMLNameAtOffset(offsetTag, currentOffset);
+        IDefinition definition = MXMLDataUtils.getDefinitionForMXMLNameAtOffset(offsetTag, currentOffset, currentProject);
         if (definition != null)
         {
-            if (isInsideTagPrefix(offsetTag, currentOffset))
+            if (MXMLDataUtils.isInsideTagPrefix(offsetTag, currentOffset))
             {
                 //ignore the tag's prefix
                 return CompletableFuture.completedFuture(Collections.emptyList());
@@ -2232,7 +2217,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
 
         //finally, check if we're looking for references to a tag's id
-        IMXMLTagAttributeData attributeData = getMXMLTagAttributeWithValueAtOffset(offsetTag, currentOffset);
+        IMXMLTagAttributeData attributeData = MXMLDataUtils.getMXMLTagAttributeWithValueAtOffset(offsetTag, currentOffset);
         if (attributeData == null || !attributeData.getName().equals(IMXMLLanguageConstants.ATTRIBUTE_ID))
         {
             //VSCode may call definition() when there isn't necessarily a
@@ -2339,10 +2324,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private CompletableFuture<WorkspaceEdit> mxmlRename(RenameParams params, IMXMLTagData offsetTag)
     {
-        IDefinition definition = getDefinitionForMXMLNameAtOffset(offsetTag, currentOffset);
+        IDefinition definition = MXMLDataUtils.getDefinitionForMXMLNameAtOffset(offsetTag, currentOffset, currentProject);
         if (definition != null)
         {
-            if (isInsideTagPrefix(offsetTag, currentOffset))
+            if (MXMLDataUtils.isInsideTagPrefix(offsetTag, currentOffset))
             {
                 //ignore the tag's prefix
                 return CompletableFuture.completedFuture(new WorkspaceEdit(new HashMap<>()));
@@ -5300,138 +5285,17 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             System.err.println("Could not find code at position " + position.getLine() + ":" + position.getCharacter() + " in file " + path.toAbsolutePath().toString());
             return null;
         }
-        IASNode offsetNode = getContainingNodeIncludingStart(ast, currentOffset);
+        IASNode offsetNode = ASTUtils.getContainingNodeIncludingStart(ast, currentOffset);
         if (!textDocument.getUri().endsWith(MXML_EXTENSION))
         {
-            importRange = getImportRange(offsetNode);
+            importRange = ImportRange.fromOffsetNode(offsetNode);
         }
         return offsetNode;
-    }
-    
-    private ImportRange getImportRange(IASNode offsetNode)
-    {
-        ImportRange range = new ImportRange();
-        if (offsetNode != null)
-        {
-            //if we have an offset node, try to find where imports may be added
-            IPackageNode packageNode = (IPackageNode) offsetNode.getAncestorOfType(IPackageNode.class);
-            if (packageNode == null)
-            {
-                IFileNode fileNode = (IFileNode) offsetNode.getAncestorOfType(IFileNode.class);
-                if (fileNode != null)
-                {
-                    boolean foundPackage = false;
-                    for (int i = 0; i < fileNode.getChildCount(); i++)
-                    {
-                        IASNode childNode = fileNode.getChild(i);
-                        if (foundPackage)
-                        {
-                            //this is the node following the package
-                            range.startIndex = childNode.getAbsoluteStart();
-                            break;
-                        }
-                        if (childNode instanceof IPackageNode)
-                        {
-                            //use the start of the the next node after the
-                            //package as the place where the import can be added
-                            foundPackage = true;
-                        }
-                    }
-                }
-            }
-            else
-            {
-                range.endIndex = packageNode.getAbsoluteEnd();
-            }
-            range.uri = Paths.get(offsetNode.getSourcePath()).toUri().toString();
-        }
-        return range;
-    }
-
-    private boolean containsWithStart(IASNode node, int offset)
-    {
-        return offset >= node.getAbsoluteStart() && offset <= node.getAbsoluteEnd();
-    }
-
-    private IASNode getContainingNodeIncludingStart(IASNode node, int offset)
-    {
-        if (!containsWithStart(node, offset))
-        {
-            return null;
-        }
-        for (int i = 0, count = node.getChildCount(); i < count; i++)
-        {
-            IASNode child = node.getChild(i);
-            IASNode result = getContainingNodeIncludingStart(child, offset);
-            if (result != null)
-            {
-                return result;
-            }
-        }
-        return node;
-    }
-
-    private boolean isInsideTagPrefix(IMXMLTagData tag, int offset)
-    {
-        //next, check that we're after the prefix
-        //one extra for bracket
-        int maxOffset = tag.getAbsoluteStart() + 1;
-        String prefix = tag.getPrefix();
-        int prefixLength = prefix.length();
-        if (prefixLength > 0)
-        {
-            //one extra for colon
-            maxOffset += prefixLength + 1;
-        }
-        return offset > tag.getAbsoluteStart() && offset < maxOffset;
-    }
-
-    private IDefinition getDefinitionForMXMLNameAtOffset(IMXMLTagData tag, int offset)
-    {
-        if (tag.isOffsetInAttributeList(offset))
-        {
-            return getDefinitionForMXMLTagAttribute(tag, offset, false);
-        }
-        return getDefinitionForMXMLTag(tag);
-    }
-
-    private IMXMLTagAttributeData getMXMLTagAttributeAtOffset(IMXMLTagData tag, int offset)
-    {
-        IMXMLTagAttributeData[] attributes = tag.getAttributeDatas();
-        for (IMXMLTagAttributeData attributeData : attributes)
-        {
-            if (offset >= attributeData.getAbsoluteStart()
-                    && offset <= attributeData.getValueEnd())
-            {
-                return attributeData;
-            }
-        }
-        return null;
-    }
-
-    private IMXMLTagAttributeData getMXMLTagAttributeWithNameAtOffset(IMXMLTagData tag, int offset, boolean includeEnd)
-    {
-        IMXMLTagAttributeData[] attributes = tag.getAttributeDatas();
-        for (IMXMLTagAttributeData attributeData : attributes)
-        {
-            if (offset >= attributeData.getAbsoluteStart())
-            {
-                if(includeEnd && offset <= attributeData.getAbsoluteEnd())
-                {
-                    return attributeData;
-                }
-                else if(offset < attributeData.getAbsoluteEnd())
-                {
-                    return attributeData;
-                }
-            }
-        }
-        return null;
     }
 
     private IASNode getEmbeddedActionScriptNodeInMXMLTag(IMXMLTagData tag, int offset, TextDocumentPositionParams position)
     {
-        IMXMLTagAttributeData attributeData = getMXMLTagAttributeWithValueAtOffset(tag, currentOffset);
+        IMXMLTagAttributeData attributeData = MXMLDataUtils.getMXMLTagAttributeWithValueAtOffset(tag, currentOffset);
         if (attributeData != null)
         {
             //some attributes can have ActionScript completion, such as
@@ -5450,7 +5314,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 IMXMLEventSpecifierNode eventNode = mxmlNode.getEventSpecifierNode(attributeData.getShortName());
                 for (IASNode asNode : eventNode.getASNodes())
                 {
-                    IASNode containingNode = getContainingNodeIncludingStart(asNode, currentOffset);
+                    IASNode containingNode = ASTUtils.getContainingNodeIncludingStart(asNode, currentOffset);
                     if (containingNode != null)
                     {
                         return containingNode;
@@ -5511,81 +5375,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         textDocumentPosition.setTextDocument(textDocument);
         textDocumentPosition.setPosition(position);
         return getEmbeddedActionScriptNodeInMXMLTag(tag, offset, textDocumentPosition);
-    }
-
-    private IMXMLTagAttributeData getMXMLTagAttributeWithValueAtOffset(IMXMLTagData tag, int offset)
-    {
-        IMXMLTagAttributeData[] attributes = tag.getAttributeDatas();
-        for (IMXMLTagAttributeData attributeData : attributes)
-        {
-            if (offset >= attributeData.getValueStart()
-                    && offset <= attributeData.getValueEnd())
-            {
-                return attributeData;
-            }
-        }
-        return null;
-    }
-
-    private IDefinition getDefinitionForMXMLTagAttribute(IMXMLTagData tag, int offset, boolean includeValue)
-    {
-        IMXMLTagAttributeData attributeData = null;
-        if (includeValue)
-        {
-            attributeData = getMXMLTagAttributeAtOffset(tag, offset);
-        }
-        else
-        {
-            attributeData = getMXMLTagAttributeWithNameAtOffset(tag, offset, false);
-        }
-        if (attributeData == null)
-        {
-            return null;
-        }
-        IDefinition tagDefinition = getDefinitionForMXMLTag(tag);
-        if (tagDefinition != null
-                && tagDefinition instanceof IClassDefinition)
-        {
-            IClassDefinition classDefinition = (IClassDefinition) tagDefinition;
-            return currentProject.resolveSpecifier(classDefinition, attributeData.getShortName());
-        }
-        return null;
-    }
-
-    private IDefinition getDefinitionForMXMLTag(IMXMLTagData tag)
-    {
-        if (tag == null)
-        {
-            return null;
-        }
-
-        IDefinition offsetDefinition = currentProject.resolveXMLNameToDefinition(tag.getXMLName(), tag.getMXMLDialect());
-        if (offsetDefinition != null)
-        {
-            return offsetDefinition;
-        }
-        if (tag.getXMLName().getXMLNamespace().equals(tag.getMXMLDialect().getLanguageNamespace()))
-        {
-            for (String typeName : LANGUAGE_TYPE_NAMES)
-            {
-                if (tag.getShortName().equals(typeName))
-                {
-                    return currentProject.resolveQNameToDefinition(typeName);
-                }
-            }
-        }
-        IMXMLTagData parentTag = tag.getParentTag();
-        if (parentTag == null)
-        {
-            return null;
-        }
-        IDefinition parentDefinition = currentProject.resolveXMLNameToDefinition(parentTag.getXMLName(), parentTag.getMXMLDialect());
-        if (parentDefinition == null || !(parentDefinition instanceof IClassDefinition))
-        {
-            return null;
-        }
-        IClassDefinition classDefinition = (IClassDefinition) parentDefinition;
-        return currentProject.resolveSpecifier(classDefinition, tag.getShortName());
     }
 
     private boolean isActionScriptCompletionAllowedInNode(TextDocumentPositionParams params, IASNode offsetNode)
@@ -5670,25 +5459,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         int endComment = code.indexOf("-->", startComment);
         return endComment > currentOffset;
-    }
-
-    private boolean isDeclarationsTag(IMXMLTagData tag)
-    {
-        if (tag == null)
-        {
-            return false;
-        }
-        String shortName = tag.getShortName();
-        if (shortName == null || !shortName.equals(IMXMLLanguageConstants.DECLARATIONS))
-        {
-            return false;
-        }
-        String uri = tag.getURI();
-        if (uri == null || !uri.equals(IMXMLLanguageConstants.NAMESPACE_MXML_2009))
-        {
-            return false;
-        }
-        return true;
     }
 
     private boolean isInWorkspaceOrSourcePath(Path path)
@@ -6185,7 +5955,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return CompletableFuture.completedFuture(new Object());
         }
-        ImportRange importRange = getImportRange(offsetNode);
+        ImportRange importRange = ImportRange.fromOffsetNode(offsetNode);
         
         int endLine = scopedNode.getEndLine();
         int endChar = 0;
