@@ -32,7 +32,6 @@ import com.nextgenactionscript.asconfigc.TopLevelFields;
 import com.nextgenactionscript.asconfigc.compiler.CompilerOptions;
 import com.nextgenactionscript.asconfigc.compiler.CompilerOptionsParser;
 import com.nextgenactionscript.asconfigc.compiler.ProjectType;
-import com.nextgenactionscript.asconfigc.utils.PathUtils;
 import com.nextgenactionscript.vscode.utils.ActionScriptSDKUtils;
 
 import org.apache.commons.io.FileUtils;
@@ -207,7 +206,7 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy
             for (int i = 0, count = files.length; i < count; i++)
             {
                 String filePath = files[i];
-                compilerOptions.add("--include-sources+=" + PathUtils.escapePath(filePath));
+                compilerOptions.add("--include-sources+=" + filePath);
             }
             files = null;
         }
