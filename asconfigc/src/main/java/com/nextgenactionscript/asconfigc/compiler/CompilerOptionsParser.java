@@ -21,7 +21,6 @@ import java.util.List;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.nextgenactionscript.asconfigc.utils.OptionsFormatter;
-import com.nextgenactionscript.asconfigc.utils.PathUtils;
 import com.nextgenactionscript.asconfigc.utils.JsonUtils;
 
 public class CompilerOptionsParser
@@ -331,7 +330,7 @@ public class CompilerOptionsParser
 			String manifest = currentValue.get(CompilerOptions.NAMESPACE__MANIFEST).asText();
 			result.add("--" + CompilerOptions.NAMESPACE);
 			result.add(uri);
-			result.add(PathUtils.escapePath(manifest, false));
+			result.add(manifest);
 		}
 	}
 

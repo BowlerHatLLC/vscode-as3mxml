@@ -23,7 +23,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.nextgenactionscript.asconfigc.utils.PathUtils;
 
 public class AIROptionsParser
 {
@@ -182,17 +181,15 @@ public class AIROptionsParser
 		if(overridesOptionForPlatform(options, AIROptions.OUTPUT, platform))
 		{
 			String outputPath = options.get(platform).get(AIROptions.OUTPUT).asText();
-			outputPath = PathUtils.escapePath(outputPath, false);
 			result.add(outputPath);
 		}
 		else if(options.has(AIROptions.OUTPUT))
 		{
 			String outputPath = options.get(AIROptions.OUTPUT).asText();
-			outputPath = PathUtils.escapePath(outputPath, false);
 			result.add(outputPath);
 		}
 		
-		result.add(PathUtils.escapePath(applicationDescriptorPath, false));
+		result.add(applicationDescriptorPath);
 
 		if(overridesOptionForPlatform(options, AIROptions.PLATFORMSDK, platform))
 		{
@@ -217,15 +214,13 @@ public class AIROptionsParser
 		{
 			result.add("-C");
 			String dirname = applicationContentFilePath.getParent().toString();
-			dirname = PathUtils.escapePath(dirname, false);
 			result.add(dirname);
 			String basename = applicationContentFilePath.getFileName().toString();
-			basename = PathUtils.escapePath(basename, false);
 			result.add(basename);
 		}
 		else
 		{
-			result.add(PathUtils.escapePath(applicationContentPath, false));
+			result.add(applicationContentPath);
 		}
 
 		if(overridesOptionForPlatform(options, AIROptions.EXTDIR, platform))
@@ -335,8 +330,8 @@ public class AIROptionsParser
 			return;
 		}
 		result.add("-e");
-		result.add(PathUtils.escapePath(srcFile.getPath(), false));
-		result.add(PathUtils.escapePath(destPath, false));
+		result.add(srcFile.getPath());
+		result.add(destPath);
 	}
 	
 	private void setPathValueWithoutAssignment(String optionName, String value, boolean checkIfExists, List<String> result) throws FileNotFoundException
@@ -353,9 +348,8 @@ public class AIROptionsParser
 				throw new FileNotFoundException("Path for Adobe AIR option \"" + optionName + "\" not found: " + value);
 			}
 		}
-		String pathValue = PathUtils.escapePath(value.toString(), false);
 		result.add("-" + optionName);
-		result.add(pathValue);
+		result.add(value);
 	}
 	
 	private void parseDebugOptions(JsonNode airOptions, String platform, List<String> result)

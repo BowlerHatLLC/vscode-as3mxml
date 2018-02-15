@@ -19,8 +19,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.List;
 
-import com.nextgenactionscript.asconfigc.utils.PathUtils;
-
 public class OptionsFormatter
 {
 	public static void setValue(String optionName, String value, List<String> result)
@@ -47,7 +45,6 @@ public class OptionsFormatter
 				throw new FileNotFoundException("Path for option \"" + optionName + "\" not found: " + value);
 			}
 		}
-		value = PathUtils.escapePath(value, false);
 		result.add("--" + optionName + "=" + value);
 	}
 
@@ -109,7 +106,6 @@ public class OptionsFormatter
 					throw new FileNotFoundException("Path for option \"" + optionName + "\" not found: " + currentPath);
 				}
 			}
-			currentPath = PathUtils.escapePath(currentPath, false);
 			result.add("--" + optionName + "+=" + currentPath);
 		}
 	}

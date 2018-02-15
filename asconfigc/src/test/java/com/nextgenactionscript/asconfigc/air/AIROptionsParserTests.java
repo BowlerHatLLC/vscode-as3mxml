@@ -32,7 +32,6 @@ import com.nextgenactionscript.asconfigc.air.AIROptionsParser;
 import com.nextgenactionscript.asconfigc.air.AIRPlatform;
 import com.nextgenactionscript.asconfigc.air.AIRSigningOptions;
 import com.nextgenactionscript.asconfigc.air.AIRTarget;
-import com.nextgenactionscript.asconfigc.utils.PathUtils;
 
 class AIROptionsParserTests
 {
@@ -95,32 +94,6 @@ class AIROptionsParserTests
 	}
 
 	@Test
-	void testApplicationContentWithSpacesInPath()
-	{
-		String filename = "content with spaces.swf";
-		String dirPath = "path to";
-		String value = dirPath + "/" + filename;
-		String formattedFilename = PathUtils.escapePath(filename);
-		String formattedDirPath = PathUtils.escapePath(dirPath);
-		ObjectNode options = JsonNodeFactory.instance.objectNode();
-		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			parser.parse(AIRPlatform.AIR, false, "application.xml", value, options, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("AIROptionsParser.parse() incorrectly threw a FileNotFoundException.");
-		}
-		Assertions.assertFalse(result.contains(value),
-			"AIROptionsParser.parse() incorrectly contains application content path.");
-		int optionIndex = result.indexOf("-C");
-		Assertions.assertNotEquals(-1, optionIndex);
-		Assertions.assertEquals(optionIndex + 1, result.indexOf(formattedDirPath));
-		Assertions.assertEquals(optionIndex + 2, result.indexOf(formattedFilename));
-	}
-
-	@Test
 	void testDescriptor()
 	{
 		String value = "path/to/application.xml";
@@ -135,24 +108,6 @@ class AIROptionsParserTests
 			Assertions.fail("AIROptionsParser.parse() incorrectly threw a FileNotFoundException.");
 		}
 		Assertions.assertEquals(3, result.indexOf(value));
-	}
-
-	@Test
-	void testDescriptorWithSpacesInPath()
-	{
-		String value = "path to/application.xml";
-		String formatted = PathUtils.escapePath(value);
-		ObjectNode options = JsonNodeFactory.instance.objectNode();
-		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			parser.parse(AIRPlatform.AIR, false, value, "content.swf", options, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("AIROptionsParser.parse() incorrectly threw a FileNotFoundException.");
-		}
-		Assertions.assertEquals(3, result.indexOf(formatted));
 	}
 
 	@Test
@@ -226,7 +181,6 @@ class AIROptionsParserTests
 	{
 		String value1 = "path/to/subpath1";
 		String value2 = "path to/subpath2";
-		String formattedValue2 = PathUtils.escapePath(value2);
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		ArrayNode extdir = JsonNodeFactory.instance.arrayNode();
 		extdir.add(value1);
@@ -246,7 +200,7 @@ class AIROptionsParserTests
 		Assertions.assertEquals(optionIndex1 + 1, result.indexOf(value1));
 		int optionIndex2 = optionIndex1 + 1 + result.subList(optionIndex1 + 1, result.size()).indexOf("-" + AIROptions.EXTDIR);
 		Assertions.assertEquals(optionIndex1 + 2, optionIndex2);
-		Assertions.assertEquals(optionIndex2 + 1, result.indexOf(formattedValue2));
+		Assertions.assertEquals(optionIndex2 + 1, result.indexOf(value2));
 	}
 
 	@Test
@@ -259,8 +213,6 @@ class AIROptionsParserTests
 		String file3 = "file3 with spaces.jpg";
 		String path3 = "path/with spaces/";
 		String formattedFile1 = Paths.get(file1).toString();
-		String formattedFile3 = PathUtils.escapePath(file3);
-		String formattedPath3 = PathUtils.escapePath(path3);
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		ArrayNode files = JsonNodeFactory.instance.arrayNode();
 		ObjectNode f1 = JsonNodeFactory.instance.objectNode();
@@ -295,8 +247,8 @@ class AIROptionsParserTests
 		Assertions.assertEquals(optionIndex2 + 2, result.indexOf(path2));
 		int optionIndex3 = optionIndex2 + 1 + result.subList(optionIndex2 + 1, result.size()).indexOf("-e");
 		Assertions.assertEquals(optionIndex2 + 3, optionIndex3);
-		Assertions.assertEquals(optionIndex3 + 1, result.indexOf(formattedFile3));
-		Assertions.assertEquals(optionIndex3 + 2, result.indexOf(formattedPath3));
+		Assertions.assertEquals(optionIndex3 + 1, result.indexOf(file3));
+		Assertions.assertEquals(optionIndex3 + 2, result.indexOf(path3));
 	}
 
 	@Test
@@ -339,27 +291,6 @@ class AIROptionsParserTests
 		int optionIndex = result.indexOf("-" + AIROptions.OUTPUT);
 		Assertions.assertEquals(-1, optionIndex);
 		Assertions.assertNotEquals(-1, result.indexOf(value));
-	}
-
-	@Test
-	void testOutputWithSpacesInPath()
-	{
-		String value = "path/to/file with spaces.air";
-		ObjectNode options = JsonNodeFactory.instance.objectNode();
-		options.set(AIROptions.OUTPUT, JsonNodeFactory.instance.textNode(value));
-		String formatted = PathUtils.escapePath(value);
-		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			parser.parse(AIRPlatform.AIR, false, value, "content.swf", options, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("AIROptionsParser.parse() incorrectly threw a FileNotFoundException.");
-		}
-		int optionIndex = result.indexOf("-" + AIROptions.OUTPUT);
-		Assertions.assertEquals(-1, optionIndex);
-		Assertions.assertNotEquals(-1, result.indexOf(formatted));
 	}
 
 	@Test
@@ -464,52 +395,6 @@ class AIROptionsParserTests
 		Assertions.assertNotEquals(-1, optionIndex);
 		Assertions.assertEquals(optionIndex + 1, result.indexOf(iOSValue));
 		Assertions.assertEquals(-1, result.indexOf(androidValue));
-	}
-	
-	@Test
-	void testAndroidPlatformSDKWithSpacesInPath()
-	{
-		String androidValue = "path to/android_sdk";
-		String formatted = PathUtils.escapePath(androidValue);
-		ObjectNode options = JsonNodeFactory.instance.objectNode();
-		ObjectNode android = JsonNodeFactory.instance.objectNode();
-		android.set(AIROptions.PLATFORMSDK, JsonNodeFactory.instance.textNode(androidValue));
-		options.set(AIRPlatform.ANDROID, android);
-		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			parser.parse(AIRPlatform.ANDROID, false, "application.xml", "content.swf", options, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("AIROptionsParser.parse() incorrectly threw a FileNotFoundException.");
-		}
-		int optionIndex = result.indexOf("-" + AIROptions.PLATFORMSDK);
-		Assertions.assertNotEquals(-1, optionIndex);
-		Assertions.assertEquals(optionIndex + 1, result.indexOf(formatted));
-	}
-
-	@Test
-	void testIOSPlatformSDKWithSpacesInPath()
-	{
-		String iOSValue = "path to/ios_sdk";
-		String formatted = PathUtils.escapePath(iOSValue);
-		ObjectNode options = JsonNodeFactory.instance.objectNode();
-		ObjectNode ios = JsonNodeFactory.instance.objectNode();
-		ios.set(AIROptions.PLATFORMSDK, JsonNodeFactory.instance.textNode(iOSValue));
-		options.set(AIRPlatform.IOS, ios);
-		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			parser.parse(AIRPlatform.IOS, false, "application.xml", "content.swf", options, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("AIROptionsParser.parse() incorrectly threw a FileNotFoundException.");
-		}
-		int optionIndex = result.indexOf("-" + AIROptions.PLATFORMSDK);
-		Assertions.assertNotEquals(-1, optionIndex);
-		Assertions.assertEquals(optionIndex + 1, result.indexOf(formatted));
 	}
 
 	@Test
@@ -655,29 +540,6 @@ class AIROptionsParserTests
 	}
 
 	@Test
-	void testSigningOptionsKeystoreWithSpacesInPath()
-	{
-		String value = "path to/keystore.p12";
-		String formatted = PathUtils.escapePath(value);
-		ObjectNode options = JsonNodeFactory.instance.objectNode();
-		ObjectNode signingOptions = JsonNodeFactory.instance.objectNode();
-		signingOptions.set(AIRSigningOptions.KEYSTORE, JsonNodeFactory.instance.textNode(value));
-		options.set(AIROptions.SIGNING_OPTIONS, signingOptions);
-		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			parser.parse(AIRPlatform.AIR, false, "application.xml", "content.swf", options, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("AIROptionsParser.parse() incorrectly threw a FileNotFoundException.");
-		}
-		int optionIndex = result.indexOf("-" + AIRSigningOptions.KEYSTORE);
-		Assertions.assertNotEquals(-1, optionIndex);
-		Assertions.assertEquals(optionIndex + 1, result.indexOf(formatted));
-	}
-
-	@Test
 	void testSigningOptionsProviderName()
 	{
 		String value = "className";
@@ -741,29 +603,6 @@ class AIROptionsParserTests
 		int optionIndex = result.indexOf("-" + AIRSigningOptions.PROVISIONING_PROFILE);
 		Assertions.assertNotEquals(-1, optionIndex);
 		Assertions.assertEquals(optionIndex + 1, result.indexOf(value));
-	}
-
-	@Test
-	void testSigningOptionsProvisioningProfileWithSpacesInPath()
-	{
-		String value = "path to/file.mobileprovision";
-		String formatted = PathUtils.escapePath(value);
-		ObjectNode options = JsonNodeFactory.instance.objectNode();
-		ObjectNode signingOptions = JsonNodeFactory.instance.objectNode();
-		signingOptions.set(AIRSigningOptions.PROVISIONING_PROFILE, JsonNodeFactory.instance.textNode(value));
-		options.set(AIROptions.SIGNING_OPTIONS, signingOptions);
-		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			parser.parse(AIRPlatform.AIR, false, "application.xml", "content.swf", options, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("AIROptionsParser.parse() incorrectly threw a FileNotFoundException.");
-		}
-		int optionIndex = result.indexOf("-" + AIRSigningOptions.PROVISIONING_PROFILE);
-		Assertions.assertNotEquals(-1, optionIndex);
-		Assertions.assertEquals(optionIndex + 1, result.indexOf(formatted));
 	}
 
 	//----- overrides

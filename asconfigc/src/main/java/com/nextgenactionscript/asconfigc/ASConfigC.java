@@ -29,6 +29,8 @@ import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -60,9 +62,7 @@ import com.nextgenactionscript.asconfigc.utils.ApacheRoyaleUtils;
 import com.nextgenactionscript.asconfigc.utils.GenericSDKUtils;
 import com.nextgenactionscript.asconfigc.utils.JsonUtils;
 import com.nextgenactionscript.asconfigc.utils.OptionsFormatter;
-import com.nextgenactionscript.asconfigc.utils.PathUtils;
 import com.nextgenactionscript.asconfigc.utils.ProjectUtils;
-import com.nextgenactionscript.asconfigc.utils.StreamGobbler;
 
 /**
  * Parses asconfig.json and executes the compiler with the specified options.
@@ -145,6 +145,7 @@ public class ASConfigC
 	}
 
 	private static final String ASCONFIG_JSON = "asconfig.json";
+	private static final Pattern ADDITIONAL_OPTIONS_PATTERN = Pattern.compile("\"([^\"]*)\"|(\\S+)");
 
 	public ASConfigC(ASConfigCOptions options) throws ASConfigCException
 	{
@@ -542,38 +543,50 @@ public class ASConfigC
 		{
 			//royale is a special case that has renamed many of the common
 			//configuration options for the compiler
-			compilerOptions.add(0, "+royalelib=" + PathUtils.escapePath(frameworkPath.toString()));
-			compilerOptions.add(0, PathUtils.escapePath(jarPath.toString()));
+			compilerOptions.add(0, "+royalelib=" + frameworkPath.toString());
+			compilerOptions.add(0, jarPath.toString());
 			compilerOptions.add(0, "-jar");
-			compilerOptions.add(0, "-Droyalelib=" + PathUtils.escapePath(frameworkPath.toString()));
-			compilerOptions.add(0, "-Droyalecompiler=" + PathUtils.escapePath(sdkHome.toString()));
+			compilerOptions.add(0, "-Droyalelib=" + frameworkPath.toString());
+			compilerOptions.add(0, "-Droyalecompiler=" + sdkHome.toString());
 		}
 		else
 		{
 			//other SDKs all use the same options
-			compilerOptions.add(0, "+flexlib=" + PathUtils.escapePath(frameworkPath.toString()));
-			compilerOptions.add(0, PathUtils.escapePath(jarPath.toString()));
+			compilerOptions.add(0, "+flexlib=" + frameworkPath.toString());
+			compilerOptions.add(0, jarPath.toString());
 			compilerOptions.add(0, "-jar");
-			compilerOptions.add(0, "-Dflexlib=" + PathUtils.escapePath(frameworkPath.toString()));
-			compilerOptions.add(0, "-Dflexcompiler=" + PathUtils.escapePath(sdkHome.toString()));
+			compilerOptions.add(0, "-Dflexlib=" + frameworkPath.toString());
+			compilerOptions.add(0, "-Dflexcompiler=" + sdkHome.toString());
 		}
 		Path javaExecutablePath = Paths.get(System.getProperty("java.home"), "bin", "java");
-		StringBuilder command = new StringBuilder();
-		command.append(PathUtils.escapePath(javaExecutablePath.toString()));
-		command.append(" ");
-		command.append(String.join(" ", compilerOptions));
+		compilerOptions.add(0, javaExecutablePath.toString());
+
 		if(additionalOptions != null)
 		{
-			command.append(" ");
-			command.append(additionalOptions);
+			//parse the additional options by splitting on whitespace
+			//except when an option is wrapped in quotes
+			Matcher matcher = ADDITIONAL_OPTIONS_PATTERN.matcher(additionalOptions);
+			while(matcher.find())
+			{
+				String quotedOption = matcher.group(1);
+				if(quotedOption != null)
+				{
+					compilerOptions.add(quotedOption);
+				}
+				else //not quoted
+				{
+					compilerOptions.add(matcher.group(2));
+				}
+			}
 		}
 		try
 		{
-			Process process = Runtime.getRuntime().exec(command.toString(), null, new File(System.getProperty("user.dir")));
-			StreamGobbler outGobbler = new StreamGobbler(process.getInputStream(), System.out);
-			outGobbler.start();
-			StreamGobbler errGobbler = new StreamGobbler(process.getErrorStream(), System.err);
-			errGobbler.start();
+			File cwd = new File(System.getProperty("user.dir"));
+			Process process = new ProcessBuilder()
+				.command(compilerOptions)
+				.directory(cwd)
+				.inheritIO()
+				.start();
 			int status = process.waitFor();
 			if(status != 0)
 			{
@@ -753,21 +766,17 @@ public class ASConfigC
 		}
 
 		Path javaExecutablePath = Paths.get(System.getProperty("java.home"), "bin", "java");
-		StringBuilder command = new StringBuilder();
-		command.append(PathUtils.escapePath(javaExecutablePath.toString()));
-		command.append(" ");
-		command.append("-jar");
-		command.append(" ");
-		command.append(jarPath);
-		command.append(" ");
-		command.append(String.join(" ", airOptions));
+		airOptions.add(0, jarPath.toString());
+		airOptions.add(0, "-jar");
+		airOptions.add(0, javaExecutablePath.toString());
 		try
 		{
-			Process process = Runtime.getRuntime().exec(command.toString(), null, new File(System.getProperty("user.dir")));
-			StreamGobbler outGobbler = new StreamGobbler(process.getInputStream(), System.out);
-			outGobbler.start();
-			StreamGobbler errGobbler = new StreamGobbler(process.getErrorStream(), System.err);
-			errGobbler.start();
+			File cwd = new File(System.getProperty("user.dir"));
+			Process process = new ProcessBuilder()
+				.command(airOptions)
+				.directory(cwd)
+				.inheritIO()
+				.start();
 			int status = process.waitFor();
 			if(status != 0)
 			{

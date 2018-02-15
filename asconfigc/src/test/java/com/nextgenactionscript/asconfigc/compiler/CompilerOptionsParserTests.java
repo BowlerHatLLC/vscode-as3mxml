@@ -26,7 +26,6 @@ import org.junit.jupiter.api.Test;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.nextgenactionscript.asconfigc.utils.PathUtils;
 
 class CompilerOptionsParserTests
 {
@@ -327,34 +326,11 @@ class CompilerOptionsParserTests
 	}
 	
 	@Test
-	void testDumpConfigWithSpacesInPath()
-	{
-		String value = "path/to/file with spaces.xml";
-		String formattedValue = PathUtils.escapePath(value);
-		ObjectNode options = JsonNodeFactory.instance.objectNode();
-		options.set(CompilerOptions.DUMP_CONFIG, JsonNodeFactory.instance.textNode(value));
-		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			parser.parse(options, null, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("CompilerOptionsParser.parse() incorrectly threw a FileNotFoundException.");
-		}
-		Assertions.assertEquals(1, result.size(),
-			"CompilerOptionsParser.parse() created incorrect number of options.");
-		Assertions.assertEquals("--" + CompilerOptions.DUMP_CONFIG + "=" + formattedValue, result.get(0),
-			"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
-	}
-	
-	@Test
 	void testExternalLibraryPath()
 	{
 		String value1 = "external/library/path1";
 		String value2 = "external/library/path2 with spaces";
-		String value3 = "external/library/path3";
-		String formattedValue2 = PathUtils.escapePath(value2);
+		String value3 = "./external/library/path3";
 
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		ArrayNode externalLibraryPath = JsonNodeFactory.instance.arrayNode();
@@ -378,7 +354,7 @@ class CompilerOptionsParserTests
 			"CompilerOptionsParser.parse() created incorrect number of options.");
 		Assertions.assertEquals("--" + CompilerOptions.EXTERNAL_LIBRARY_PATH + "+=" + value1, result.get(0),
 			"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
-		Assertions.assertEquals("--" + CompilerOptions.EXTERNAL_LIBRARY_PATH + "+=" + formattedValue2, result.get(1),
+		Assertions.assertEquals("--" + CompilerOptions.EXTERNAL_LIBRARY_PATH + "+=" + value2, result.get(1),
 			"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
 		Assertions.assertEquals("--" + CompilerOptions.EXTERNAL_LIBRARY_PATH + "+=" + value3, result.get(2),
 			"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
@@ -423,28 +399,6 @@ class CompilerOptionsParserTests
 		Assertions.assertEquals(1, result.size(),
 			"CompilerOptionsParser.parse() created incorrect number of options.");
 		Assertions.assertEquals("--" + CompilerOptions.HTML_TEMPLATE + "=" + value, result.get(0),
-			"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
-	}
-	
-	@Test
-	void testHTMLTemplateWithSpacesInPath()
-	{
-		String value = "path/with spaces/to/html-template.html";
-		String formattedValue = PathUtils.escapePath(value);
-		ObjectNode options = JsonNodeFactory.instance.objectNode();
-		options.set(CompilerOptions.HTML_TEMPLATE, JsonNodeFactory.instance.textNode(value));
-		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			parser.parse(options, null, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("CompilerOptionsParser.parse() incorrectly threw a FileNotFoundException.");
-		}
-		Assertions.assertEquals(1, result.size(),
-			"CompilerOptionsParser.parse() created incorrect number of options.");
-		Assertions.assertEquals("--" + CompilerOptions.HTML_TEMPLATE + "=" + formattedValue, result.get(0),
 			"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
 	}
 	
@@ -521,7 +475,6 @@ class CompilerOptionsParserTests
 		String value2 = "./relative/path";
 		String value3 = "src";
 		String value4 = "path/with spaces";
-		String formattedValue4 = PathUtils.escapePath(value4);
 
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		ArrayNode includeSources = JsonNodeFactory.instance.arrayNode();
@@ -550,7 +503,7 @@ class CompilerOptionsParserTests
 			"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
 		Assertions.assertEquals("--" + CompilerOptions.INCLUDE_SOURCES + "+=" + value3, result.get(2),
 			"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
-		Assertions.assertEquals("--" + CompilerOptions.INCLUDE_SOURCES + "+=" + formattedValue4, result.get(3),
+		Assertions.assertEquals("--" + CompilerOptions.INCLUDE_SOURCES + "+=" + value4, result.get(3),
 			"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
 	}
 	
@@ -590,8 +543,7 @@ class CompilerOptionsParserTests
 	{
 		String value1 = "js/external/library/path1";
 		String value2 = "js/external/library/path2 with spaces";
-		String value3 = "js/external/library/path3";
-		String formattedValue2 = PathUtils.escapePath(value2);
+		String value3 = "./js/external/library/path3";
 
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		ArrayNode externalLibraryPath = JsonNodeFactory.instance.arrayNode();
@@ -615,7 +567,7 @@ class CompilerOptionsParserTests
 			"CompilerOptionsParser.parse() created incorrect number of options.");
 		Assertions.assertEquals("--" + CompilerOptions.JS_EXTERNAL_LIBRARY_PATH + "+=" + value1, result.get(0),
 			"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
-		Assertions.assertEquals("--" + CompilerOptions.JS_EXTERNAL_LIBRARY_PATH + "+=" + formattedValue2, result.get(1),
+		Assertions.assertEquals("--" + CompilerOptions.JS_EXTERNAL_LIBRARY_PATH + "+=" + value2, result.get(1),
 			"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
 		Assertions.assertEquals("--" + CompilerOptions.JS_EXTERNAL_LIBRARY_PATH + "+=" + value3, result.get(2),
 			"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
@@ -626,8 +578,7 @@ class CompilerOptionsParserTests
 	{
 		String value1 = "js/library/path1";
 		String value2 = "js/library/path2 with spaces";
-		String value3 = "js/library/path3";
-		String formattedValue2 = PathUtils.escapePath(value2);
+		String value3 = "./js/library/path3";
 
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		ArrayNode libraryPath = JsonNodeFactory.instance.arrayNode();
@@ -651,7 +602,7 @@ class CompilerOptionsParserTests
 			"CompilerOptionsParser.parse() created incorrect number of options.");
 		Assertions.assertEquals("--" + CompilerOptions.JS_LIBRARY_PATH + "+=" + value1, result.get(0),
 			"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
-		Assertions.assertEquals("--" + CompilerOptions.JS_LIBRARY_PATH + "+=" + formattedValue2, result.get(1),
+		Assertions.assertEquals("--" + CompilerOptions.JS_LIBRARY_PATH + "+=" + value2, result.get(1),
 			"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
 		Assertions.assertEquals("--" + CompilerOptions.JS_LIBRARY_PATH + "+=" + value3, result.get(2),
 			"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
@@ -735,8 +686,7 @@ class CompilerOptionsParserTests
 	{
 		String value1 = "library/path1";
 		String value2 = "library/path2 with spaces";
-		String value3 = "library/path3";
-		String formattedValue2 = PathUtils.escapePath(value2);
+		String value3 = "./library/path3";
 
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		ArrayNode libraryPath = JsonNodeFactory.instance.arrayNode();
@@ -760,7 +710,7 @@ class CompilerOptionsParserTests
 			"CompilerOptionsParser.parse() created incorrect number of options.");
 		Assertions.assertEquals("--" + CompilerOptions.LIBRARY_PATH + "+=" + value1, result.get(0),
 			"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
-		Assertions.assertEquals("--" + CompilerOptions.LIBRARY_PATH + "+=" + formattedValue2, result.get(1),
+		Assertions.assertEquals("--" + CompilerOptions.LIBRARY_PATH + "+=" + value2, result.get(1),
 			"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
 		Assertions.assertEquals("--" + CompilerOptions.LIBRARY_PATH + "+=" + value3, result.get(2),
 			"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
@@ -788,33 +738,10 @@ class CompilerOptionsParserTests
 	}
 	
 	@Test
-	void testLinkReportWithSpacesInPath()
-	{
-		String value = "path/to/file with spaces.xml";
-		String formattedValue = PathUtils.escapePath(value);
-		ObjectNode options = JsonNodeFactory.instance.objectNode();
-		options.set(CompilerOptions.LINK_REPORT, JsonNodeFactory.instance.textNode(value));
-		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			parser.parse(options, null, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("CompilerOptionsParser.parse() incorrectly threw a FileNotFoundException.");
-		}
-		Assertions.assertEquals(1, result.size(),
-			"CompilerOptionsParser.parse() created incorrect number of options.");
-		Assertions.assertEquals("--" + CompilerOptions.LINK_REPORT + "=" + formattedValue, result.get(0),
-			"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
-	}
-	
-	@Test
 	void testLoadConfig()
 	{
 		String value1 = "path/to/config.xml";
 		String value2 = "path/with spaces/to/config.xml";
-		String formattedValue2 = PathUtils.escapePath(value2);
 
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		ArrayNode loadConfig = JsonNodeFactory.instance.arrayNode();
@@ -837,7 +764,7 @@ class CompilerOptionsParserTests
 			"CompilerOptionsParser.parse() created incorrect number of options.");
 		Assertions.assertEquals("--" + CompilerOptions.LOAD_CONFIG + "+=" + value1, result.get(0),
 			"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
-		Assertions.assertEquals("--" + CompilerOptions.LOAD_CONFIG + "+=" + formattedValue2, result.get(1),
+		Assertions.assertEquals("--" + CompilerOptions.LOAD_CONFIG + "+=" + value2, result.get(1),
 			"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
 	}
 	
@@ -879,7 +806,6 @@ class CompilerOptionsParserTests
 		String manifest1 = "path/to/manifest.xml";
 		String uri2 = "library://example.com/library";
 		String manifest2 = "path/with spaces/to/manifest.xml";
-		String formattedManifest2 = PathUtils.escapePath(manifest2);
 
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		ArrayNode namespace = JsonNodeFactory.instance.arrayNode();
@@ -917,7 +843,7 @@ class CompilerOptionsParserTests
 			"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
 		Assertions.assertEquals(uri2, result.get(4),
 			"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
-		Assertions.assertEquals(formattedManifest2, result.get(5),
+		Assertions.assertEquals(manifest2, result.get(5),
 			"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
 	}
 	
@@ -985,28 +911,6 @@ class CompilerOptionsParserTests
 	}
 	
 	@Test
-	void testOutputWithSpacesInPath()
-	{
-		String value = "path/to/output with spaces.swf";
-		String formattedValue = PathUtils.escapePath(value);
-		ObjectNode options = JsonNodeFactory.instance.objectNode();
-		options.set(CompilerOptions.OUTPUT, JsonNodeFactory.instance.textNode(value));
-		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			parser.parse(options, null, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("CompilerOptionsParser.parse() incorrectly threw a FileNotFoundException.");
-		}
-		Assertions.assertEquals(1, result.size(),
-			"CompilerOptionsParser.parse() created incorrect number of options.");
-		Assertions.assertEquals("--" + CompilerOptions.OUTPUT + "=" + formattedValue, result.get(0),
-			"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
-	}
-	
-	@Test
 	void testPreloader()
 	{
 		String value = "mx.preloaders.SparkDownloadProgressBar";
@@ -1070,28 +974,6 @@ class CompilerOptionsParserTests
 	}
 	
 	@Test
-	void testSizeReportWithSpacesInPath()
-	{
-		String value = "path/to/file with spaces.xml";
-		String formattedValue = PathUtils.escapePath(value);
-		ObjectNode options = JsonNodeFactory.instance.objectNode();
-		options.set(CompilerOptions.SIZE_REPORT, JsonNodeFactory.instance.textNode(value));
-		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			parser.parse(options, null, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("CompilerOptionsParser.parse() incorrectly threw a FileNotFoundException.");
-		}
-		Assertions.assertEquals(1, result.size(),
-			"CompilerOptionsParser.parse() created incorrect number of options.");
-		Assertions.assertEquals("--" + CompilerOptions.SIZE_REPORT + "=" + formattedValue, result.get(0),
-			"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
-	}
-	
-	@Test
 	void testSourceMap()
 	{
 		boolean value = true;
@@ -1117,8 +999,7 @@ class CompilerOptionsParserTests
 	{
 		String value1 = "source/path1";
 		String value2 = "source/path2 with spaces";
-		String value3 = "source/path3";
-		String formattedValue2 = PathUtils.escapePath(value2);
+		String value3 = "./source/path3";
 
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		ArrayNode sourcePath = JsonNodeFactory.instance.arrayNode();
@@ -1142,7 +1023,7 @@ class CompilerOptionsParserTests
 			"CompilerOptionsParser.parse() created incorrect number of options.");
 		Assertions.assertEquals("--" + CompilerOptions.SOURCE_PATH + "+=" + value1, result.get(0),
 			"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
-		Assertions.assertEquals("--" + CompilerOptions.SOURCE_PATH + "+=" + formattedValue2, result.get(1),
+		Assertions.assertEquals("--" + CompilerOptions.SOURCE_PATH + "+=" + value2, result.get(1),
 			"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
 		Assertions.assertEquals("--" + CompilerOptions.SOURCE_PATH + "+=" + value3, result.get(2),
 			"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
@@ -1195,8 +1076,7 @@ class CompilerOptionsParserTests
 	{
 		String value1 = "swf/external/library/path1";
 		String value2 = "swf/external/library/path2 with spaces";
-		String value3 = "swf/external/library/path3";
-		String formattedValue2 = PathUtils.escapePath(value2);
+		String value3 = "./swf/external/library/path3";
 
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		ArrayNode externalLibraryPath = JsonNodeFactory.instance.arrayNode();
@@ -1220,7 +1100,7 @@ class CompilerOptionsParserTests
 			"CompilerOptionsParser.parse() created incorrect number of options.");
 		Assertions.assertEquals("--" + CompilerOptions.SWF_EXTERNAL_LIBRARY_PATH + "+=" + value1, result.get(0),
 			"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
-		Assertions.assertEquals("--" + CompilerOptions.SWF_EXTERNAL_LIBRARY_PATH + "+=" + formattedValue2, result.get(1),
+		Assertions.assertEquals("--" + CompilerOptions.SWF_EXTERNAL_LIBRARY_PATH + "+=" + value2, result.get(1),
 			"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
 		Assertions.assertEquals("--" + CompilerOptions.SWF_EXTERNAL_LIBRARY_PATH + "+=" + value3, result.get(2),
 			"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
@@ -1231,8 +1111,7 @@ class CompilerOptionsParserTests
 	{
 		String value1 = "swf/library/path1";
 		String value2 = "swf/library/path2 with spaces";
-		String value3 = "swf/library/path3";
-		String formattedValue2 = PathUtils.escapePath(value2);
+		String value3 = "./swf/library/path3";
 
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		ArrayNode libraryPath = JsonNodeFactory.instance.arrayNode();
@@ -1256,7 +1135,7 @@ class CompilerOptionsParserTests
 			"CompilerOptionsParser.parse() created incorrect number of options.");
 		Assertions.assertEquals("--" + CompilerOptions.SWF_LIBRARY_PATH + "+=" + value1, result.get(0),
 			"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
-		Assertions.assertEquals("--" + CompilerOptions.SWF_LIBRARY_PATH + "+=" + formattedValue2, result.get(1),
+		Assertions.assertEquals("--" + CompilerOptions.SWF_LIBRARY_PATH + "+=" + value2, result.get(1),
 			"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
 		Assertions.assertEquals("--" + CompilerOptions.SWF_LIBRARY_PATH + "+=" + value3, result.get(2),
 			"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
