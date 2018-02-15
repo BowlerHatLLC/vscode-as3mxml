@@ -5726,8 +5726,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private void querySymbolsInScope(String query, IASScope scope, List<SymbolInformation> result)
     {
-        String lowerCaseQuery
-         = query.toLowerCase();
+        String lowerCaseQuery = query.toLowerCase();
         Collection<IDefinition> definitions = scope.getAllLocalDefinitions();
         for (IDefinition definition : definitions)
         {
