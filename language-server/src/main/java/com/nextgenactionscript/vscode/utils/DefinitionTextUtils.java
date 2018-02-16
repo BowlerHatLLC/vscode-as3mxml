@@ -685,7 +685,15 @@ public class DefinitionTextUtils
             {
                 labelBuilder.append(IASLanguageConstants.REST);
             }
-            labelBuilder.append(parameterDefinition.getBaseName());
+            String baseName = parameterDefinition.getBaseName();
+            if (parameterDefinition.isRest() && (baseName == null || baseName.length() == 0))
+            {
+                labelBuilder.append(IASLanguageConstants.REST_IDENTIFIER);
+            }
+            else
+            {
+                labelBuilder.append(parameterDefinition.getBaseName());
+            }
             labelBuilder.append(":");
             labelBuilder.append(parameterDefinition.getTypeAsDisplayString());
             if (parameterDefinition.hasDefaultValue())
