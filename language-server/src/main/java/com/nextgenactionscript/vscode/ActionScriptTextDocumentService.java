@@ -23,9 +23,17 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.lang.reflect.Field;
 import java.net.URI;
+import java.nio.file.FileSystems;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardWatchEventKinds;
+import java.nio.file.WatchEvent;
+import java.nio.file.WatchKey;
+import java.nio.file.WatchService;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -296,6 +304,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private ProblemTracker codeProblemTracker = new ProblemTracker();
     private ProblemTracker configProblemTracker = new ProblemTracker();
     private Pattern additionalOptionsPattern = Pattern.compile("[^\\s]*'([^'])*?'|[^\\s]*\"([^\"])*?\"|[^\\s]+");
+    private WatchService sourcePathWatcher;
+    private Map<WatchKey, Path> sourcePathWatchKeys = new HashMap<>();
+    private Thread sourcePathWatcherThread;
 
     private class MXMLNamespace
     {
@@ -1369,12 +1380,124 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         frameworkSDKIsFlexJS = !frameworkSDKIsRoyale && sdkPath.toFile().exists();
     }
 
+    private void watchNewSourcePath(Path sourcePath)
+    {
+        try
+        {
+            java.nio.file.Files.walkFileTree(sourcePath, new SimpleFileVisitor<Path>()
+            {
+                @Override
+                public FileVisitResult preVisitDirectory(Path subPath, BasicFileAttributes attrs) throws IOException
+                {
+                    WatchKey watchKey = subPath.register(sourcePathWatcher, StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_DELETE, StandardWatchEventKinds.ENTRY_MODIFY);
+                    sourcePathWatchKeys.put(watchKey, subPath);
+                    return FileVisitResult.CONTINUE;
+                }
+            });
+        }
+        catch (IOException e)
+        {
+            System.err.println("Failed to watch source path: " + sourcePath.toString());
+            e.printStackTrace(System.err);
+        }
+    }
+
+    private void prepareNewProject()
+    {
+        if (sourcePathWatcher == null)
+        {
+            try
+            {
+                sourcePathWatcher = FileSystems.getDefault().newWatchService();
+            }
+            catch (IOException e)
+            {
+                System.err.println("Failed to get watch service for source paths.");
+                e.printStackTrace(System.err);
+            }
+            sourcePathWatcherThread = new Thread()
+            {
+                public void run()
+                {
+                    while(true)
+                    {
+                        WatchKey watchKey = null;
+                        try
+                        {
+                            watchKey = sourcePathWatcher.take();
+                        }
+                        catch (InterruptedException e)
+                        {
+                            return;
+                        }
+                        Path path = sourcePathWatchKeys.get(watchKey);
+                        for (WatchEvent<?> event : watchKey.pollEvents())
+                        {
+                            WatchEvent.Kind<?> kind = event.kind();
+                            Path childPath = (Path) event.context();
+                            childPath = path.resolve(childPath);
+                            if(java.nio.file.Files.isDirectory(childPath))
+                            {
+                                if(kind.equals(StandardWatchEventKinds.ENTRY_CREATE))
+                                {
+                                    //if a new directory has been created under
+                                    //an existing that we're already watching,
+                                    //then start watching the new one too.
+                                    watchNewSourcePath(childPath);
+                                }
+                            }
+                            FileChangeType changeType = FileChangeType.Changed;
+                            if(kind.equals(StandardWatchEventKinds.ENTRY_CREATE))
+                            {
+                                changeType = FileChangeType.Created;
+                            }
+                            else if(kind.equals(StandardWatchEventKinds.ENTRY_DELETE))
+                            {
+                                changeType = FileChangeType.Deleted;
+                            }
+                            //convert to DidChangeWatchedFilesParams and pass
+                            //to didChangeWatchedFiles, as if a notification
+                            //had been sent from the client.
+                            DidChangeWatchedFilesParams params = new DidChangeWatchedFilesParams();
+                            List<FileEvent> changes = new ArrayList<>();
+                            changes.add(new FileEvent(childPath.toUri().toString(), changeType));
+                            params.setChanges(changes);
+                            didChangeWatchedFiles(params);
+                        }
+                        boolean valid = watchKey.reset();
+                        if (!valid)
+                        {
+                            sourcePathWatchKeys.remove(watchKey);
+                        }
+                    }
+                }
+            };
+            sourcePathWatcherThread.start();
+        }
+        for (Path sourcePath : currentProjectOptions.sourcePaths)
+        {
+            try
+            {
+                sourcePath = sourcePath.toRealPath();
+            }
+            catch(IOException e)
+            {
+            }
+            watchNewSourcePath(sourcePath);
+        }
+    }
+
     private void cleanupCurrentProject()
     {
         currentWorkspace = null;
         currentProject = null;
         fileSpecGetter = null;
         compilationUnits = null;
+        for(WatchKey watchKey : sourcePathWatchKeys.keySet())
+        {
+            watchKey.cancel();
+        }
+        sourcePathWatchKeys.clear();
     }
 
     private void refreshProjectOptions()
@@ -1387,6 +1510,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         //if the configuration changed, start fresh with a whole new workspace
         cleanupCurrentProject();
         currentProjectOptions = projectConfigStrategy.getOptions();
+        if (currentProjectOptions == null)
+        {
+            return;
+        }
+        prepareNewProject();
     }
 
     private String nodeToContainingPackageName(IASNode node)
