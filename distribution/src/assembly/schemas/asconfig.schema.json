@@ -135,6 +135,15 @@
 			"description": "The package target for desktop applications.",
 			"pattern": "^(air|bundle|native)$"
 		},
+		"airOptionsExtdir":
+		{
+			"type": "array",
+			"description": "One or more specified directories that contain ANE files for native extensions that the application uses.",
+			"items":
+			{
+				"type": "string"
+			}
+		},
 		"airOptionsFiles":
 		{
 			"type": "array",
@@ -168,6 +177,7 @@
 			"description": "Instructs the ADT utility how to package the Adobe AIR application.",
 			"properties":
 			{
+				"extdir": { "$ref": "#/definitions/airOptionsExtdir" },
 				"files": { "$ref": "#/definitions/airOptionsFiles" },
 				"output": { "$ref": "#/definitions/airOptionsOutput" },
 				"signingOptions": { "$ref": "#/definitions/signingOptions" },
@@ -181,6 +191,7 @@
 							"type": "boolean",
 							"description": "Specify whether to embed iOS bitcode or not."
 						},
+						"extdir": { "$ref": "#/definitions/airOptionsExtdir" },
 						"files": { "$ref": "#/definitions/airOptionsFiles" },
 						"hideAneLibSymbols":
 						{
@@ -225,6 +236,7 @@
 							"type": "string",
 							"description": "Specifies an alternate URL for downloading and installing the AIR runtime on Android devices."
 						},
+						"extdir": { "$ref": "#/definitions/airOptionsExtdir" },
 						"files": { "$ref": "#/definitions/airOptionsFiles" },
 						"output": { "$ref": "#/definitions/airOptionsOutput" },
 						"connect": { "$ref": "#/definitions/airOptionsConnect" },
@@ -248,6 +260,7 @@
 					"type": "object",
 					"properties":
 					{
+						"extdir": { "$ref": "#/definitions/airOptionsExtdir" },
 						"files": { "$ref": "#/definitions/airOptionsFiles" },
 						"output": { "$ref": "#/definitions/airOptionsOutput" },
 						"signingOptions": { "$ref": "#/definitions/signingOptions" },
@@ -259,6 +272,7 @@
 					"type": "object",
 					"properties":
 					{
+						"extdir": { "$ref": "#/definitions/airOptionsExtdir" },
 						"files": { "$ref": "#/definitions/airOptionsFiles" },
 						"output": { "$ref": "#/definitions/airOptionsOutput" },
 						"signingOptions": { "$ref": "#/definitions/signingOptions" },
