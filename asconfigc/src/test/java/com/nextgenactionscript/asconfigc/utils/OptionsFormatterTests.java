@@ -15,7 +15,6 @@ limitations under the License.
 */
 package com.nextgenactionscript.asconfigc.utils;
 
-import java.io.FileNotFoundException;
 import java.util.ArrayList;
 
 import org.junit.jupiter.api.Assertions;
@@ -55,14 +54,7 @@ class OptionsFormatterTests
 		String optionName = "optionName";
 		String value = "path/to/file.txt";
 		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			OptionsFormatter.setPathValue(optionName, value, false, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("OptionsFormatter.setPathValue() incorrectly threw a FileNotFoundException.");
-		}
+		OptionsFormatter.setPathValue(optionName, value, result);
 		Assertions.assertEquals(1, result.size(),
 			"OptionsFormatter.setPathValue() created incorrect number of options.");
 		Assertions.assertEquals("--optionName=" + value, result.get(0),
@@ -137,14 +129,7 @@ class OptionsFormatterTests
 		values.add(value2);
 		values.add(value3);
 		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			OptionsFormatter.appendPaths(optionName, values, false, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("OptionsFormatter.appendPaths() incorrectly threw a FileNotFoundException.");
-		}
+		OptionsFormatter.appendPaths(optionName, values, result);
 		Assertions.assertEquals(3, result.size(),
 			"OptionsFormatter.testAppendPaths() created incorrect number of options.");
 		Assertions.assertEquals("--optionName+=" + value1, result.get(0),

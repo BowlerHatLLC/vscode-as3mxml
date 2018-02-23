@@ -15,7 +15,6 @@ limitations under the License.
 */
 package com.nextgenactionscript.asconfigc.compiler;
 
-import java.io.FileNotFoundException;
 import java.util.ArrayList;
 
 import org.junit.jupiter.api.AfterEach;
@@ -35,7 +34,6 @@ class CompilerOptionsParserTests
 	void setup()
 	{
 		parser = new CompilerOptionsParser();
-		parser.setCheckPaths(false);
 	}
 
 	@AfterEach
@@ -51,14 +49,7 @@ class CompilerOptionsParserTests
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		options.set(CompilerOptions.ACCESSIBLE, JsonNodeFactory.instance.booleanNode(value));
 		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			parser.parse(options, null, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("CompilerOptionsParser.parse() incorrectly threw a FileNotFoundException.");
-		}
+		parser.parse(options, null, result);
 		Assertions.assertEquals(1, result.size(),
 			"CompilerOptionsParser.parse() created incorrect number of options.");
 			Assertions.assertEquals("--" + CompilerOptions.ACCESSIBLE + "=" + Boolean.toString(value), result.get(0),
@@ -72,14 +63,7 @@ class CompilerOptionsParserTests
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		options.set(CompilerOptions.ADVANCED_TELEMETRY, JsonNodeFactory.instance.booleanNode(value));
 		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			parser.parse(options, null, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("CompilerOptionsParser.parse() incorrectly threw a FileNotFoundException.");
-		}
+		parser.parse(options, null, result);
 		Assertions.assertEquals(1, result.size(),
 			"CompilerOptionsParser.parse() created incorrect number of options.");
 		Assertions.assertEquals("--" + CompilerOptions.ADVANCED_TELEMETRY + "=" + Boolean.toString(value), result.get(0),
@@ -93,14 +77,7 @@ class CompilerOptionsParserTests
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		options.set(CompilerOptions.BENCHMARK, JsonNodeFactory.instance.booleanNode(value));
 		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			parser.parse(options, null, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("CompilerOptionsParser.parse() incorrectly threw a FileNotFoundException.");
-		}
+		parser.parse(options, null, result);
 		Assertions.assertEquals(1, result.size(),
 			"CompilerOptionsParser.parse() created incorrect number of options.");
 		Assertions.assertEquals("--" + CompilerOptions.BENCHMARK + "=" + Boolean.toString(value), result.get(0),
@@ -114,14 +91,7 @@ class CompilerOptionsParserTests
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		options.set(CompilerOptions.DEBUG, JsonNodeFactory.instance.booleanNode(value));
 		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			parser.parse(options, null, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("CompilerOptionsParser.parse() incorrectly threw a FileNotFoundException.");
-		}
+		parser.parse(options, null, result);
 		Assertions.assertEquals(1, result.size(),
 			"CompilerOptionsParser.parse() created incorrect number of options.");
 		Assertions.assertEquals("--" + CompilerOptions.DEBUG + "=" + value, result.get(0),
@@ -135,14 +105,7 @@ class CompilerOptionsParserTests
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		options.set(CompilerOptions.DEBUG, JsonNodeFactory.instance.booleanNode(value));
 		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			parser.parse(options, true, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("CompilerOptionsParser.parse() incorrectly threw a FileNotFoundException.");
-		}
+		parser.parse(options, true, result);
 		Assertions.assertEquals(0, result.size(),
 			"CompilerOptionsParser.parse() created incorrect number of options.");
 	}
@@ -154,14 +117,7 @@ class CompilerOptionsParserTests
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		options.set(CompilerOptions.DEBUG, JsonNodeFactory.instance.booleanNode(value));
 		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			parser.parse(options, false, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("CompilerOptionsParser.parse() incorrectly threw a FileNotFoundException.");
-		}
+		parser.parse(options, false, result);
 		Assertions.assertEquals(0, result.size(),
 			"CompilerOptionsParser.parse() created incorrect number of options.");
 	}
@@ -173,14 +129,7 @@ class CompilerOptionsParserTests
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		options.set(CompilerOptions.DEBUG_PASSWORD, JsonNodeFactory.instance.textNode(value));
 		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			parser.parse(options, null, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("CompilerOptionsParser.parse() incorrectly threw a FileNotFoundException.");
-		}
+		parser.parse(options, null, result);
 		Assertions.assertEquals(1, result.size(),
 			"CompilerOptionsParser.parse() created incorrect number of options.");
 		Assertions.assertEquals("--" + CompilerOptions.DEBUG_PASSWORD + "=" + value, result.get(0),
@@ -194,14 +143,7 @@ class CompilerOptionsParserTests
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		options.set(CompilerOptions.DEFAULT_FRAME_RATE, JsonNodeFactory.instance.numberNode(value));
 		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			parser.parse(options, null, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("CompilerOptionsParser.parse() incorrectly threw a FileNotFoundException.");
-		}
+		parser.parse(options, null, result);
 		Assertions.assertEquals(1, result.size(),
 			"CompilerOptionsParser.parse() created incorrect number of options.");
 		Assertions.assertEquals("--" + CompilerOptions.DEFAULT_FRAME_RATE + "=" + value, result.get(0),
@@ -219,14 +161,7 @@ class CompilerOptionsParserTests
 		defaultSize.set(CompilerOptions.DEFAULT_SIZE__HEIGHT, JsonNodeFactory.instance.numberNode(height));
 		options.set(CompilerOptions.DEFAULT_SIZE, defaultSize);
 		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			parser.parse(options, null, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("CompilerOptionsParser.parse() incorrectly threw a FileNotFoundException.");
-		}
+		parser.parse(options, null, result);
 		Assertions.assertEquals(3, result.size(),
 			"CompilerOptionsParser.parse() created incorrect number of options.");
 		Assertions.assertEquals("--" + CompilerOptions.DEFAULT_SIZE, result.get(0),
@@ -282,14 +217,7 @@ class CompilerOptionsParserTests
 		options.set(CompilerOptions.DEFINE, define);
 
 		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			parser.parse(options, null, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("CompilerOptionsParser.parse() incorrectly threw a FileNotFoundException.");
-		}
+		parser.parse(options, null, result);
 		Assertions.assertEquals(5, result.size(),
 			"CompilerOptionsParser.parse() created incorrect number of options.");
 		Assertions.assertEquals("--" + CompilerOptions.DEFINE + "+=" + name1 + "," + Boolean.toString(value1), result.get(0),
@@ -311,14 +239,7 @@ class CompilerOptionsParserTests
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		options.set(CompilerOptions.DUMP_CONFIG, JsonNodeFactory.instance.textNode(value));
 		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			parser.parse(options, null, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("CompilerOptionsParser.parse() incorrectly threw a FileNotFoundException.");
-		}
+		parser.parse(options, null, result);
 		Assertions.assertEquals(1, result.size(),
 			"CompilerOptionsParser.parse() created incorrect number of options.");
 		Assertions.assertEquals("--" + CompilerOptions.DUMP_CONFIG + "=" + value, result.get(0),
@@ -342,14 +263,7 @@ class CompilerOptionsParserTests
 		options.set(CompilerOptions.EXTERNAL_LIBRARY_PATH, externalLibraryPath);
 
 		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			parser.parse(options, null, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("CompilerOptionsParser.parse() incorrectly threw a FileNotFoundException.");
-		}
+		parser.parse(options, null, result);
 		Assertions.assertEquals(3, result.size(),
 			"CompilerOptionsParser.parse() created incorrect number of options.");
 		Assertions.assertEquals("--" + CompilerOptions.EXTERNAL_LIBRARY_PATH + "+=" + value1, result.get(0),
@@ -367,14 +281,7 @@ class CompilerOptionsParserTests
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		options.set(CompilerOptions.HTML_OUTPUT_FILENAME, JsonNodeFactory.instance.textNode(value));
 		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			parser.parse(options, null, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("CompilerOptionsParser.parse() incorrectly threw a FileNotFoundException.");
-		}
+		parser.parse(options, null, result);
 		Assertions.assertEquals(1, result.size(),
 			"CompilerOptionsParser.parse() created incorrect number of options.");
 		Assertions.assertEquals("--" + CompilerOptions.HTML_OUTPUT_FILENAME + "=" + value, result.get(0),
@@ -388,14 +295,7 @@ class CompilerOptionsParserTests
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		options.set(CompilerOptions.HTML_TEMPLATE, JsonNodeFactory.instance.textNode(value));
 		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			parser.parse(options, null, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("CompilerOptionsParser.parse() incorrectly threw a FileNotFoundException.");
-		}
+		parser.parse(options, null, result);
 		Assertions.assertEquals(1, result.size(),
 			"CompilerOptionsParser.parse() created incorrect number of options.");
 		Assertions.assertEquals("--" + CompilerOptions.HTML_TEMPLATE + "=" + value, result.get(0),
@@ -419,14 +319,7 @@ class CompilerOptionsParserTests
 		options.set(CompilerOptions.INCLUDE_CLASSES, includeClasses);
 
 		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			parser.parse(options, null, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("CompilerOptionsParser.parse() incorrectly threw a FileNotFoundException.");
-		}
+		parser.parse(options, null, result);
 		Assertions.assertEquals(3, result.size(),
 			"CompilerOptionsParser.parse() created incorrect number of options.");
 		Assertions.assertEquals("--" + CompilerOptions.INCLUDE_CLASSES + "+=" + value1, result.get(0),
@@ -452,14 +345,7 @@ class CompilerOptionsParserTests
 		options.set(CompilerOptions.INCLUDE_NAMESPACES, includeNamespaces);
 
 		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			parser.parse(options, null, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("CompilerOptionsParser.parse() incorrectly threw a FileNotFoundException.");
-		}
+		parser.parse(options, null, result);
 		Assertions.assertEquals(2, result.size(),
 			"CompilerOptionsParser.parse() created incorrect number of options.");
 		Assertions.assertEquals("--" + CompilerOptions.INCLUDE_NAMESPACES + "+=" + value1, result.get(0),
@@ -487,14 +373,7 @@ class CompilerOptionsParserTests
 		options.set(CompilerOptions.INCLUDE_SOURCES, includeSources);
 
 		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			parser.parse(options, null, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("CompilerOptionsParser.parse() incorrectly threw a FileNotFoundException.");
-		}
+		parser.parse(options, null, result);
 		Assertions.assertEquals(4, result.size(),
 			"CompilerOptionsParser.parse() created incorrect number of options.");
 		Assertions.assertEquals("--" + CompilerOptions.INCLUDE_SOURCES + "+=" + value1, result.get(0),
@@ -522,14 +401,7 @@ class CompilerOptionsParserTests
 		options.set(CompilerOptions.JS_COMPILER_OPTION, jsComplilationOptions);
 
 		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			parser.parse(options, null, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("CompilerOptionsParser.parse() incorrectly threw a FileNotFoundException.");
-		}
+		parser.parse(options, null, result);
 		Assertions.assertEquals(2, result.size(),
 			"CompilerOptionsParser.parse() created incorrect number of options.");
 		Assertions.assertEquals("--" + CompilerOptions.JS_COMPILER_OPTION + "+=\"" + value1 + "\"", result.get(0),
@@ -555,14 +427,7 @@ class CompilerOptionsParserTests
 		options.set(CompilerOptions.JS_EXTERNAL_LIBRARY_PATH, externalLibraryPath);
 
 		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			parser.parse(options, null, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("CompilerOptionsParser.parse() incorrectly threw a FileNotFoundException.");
-		}
+		parser.parse(options, null, result);
 		Assertions.assertEquals(3, result.size(),
 			"CompilerOptionsParser.parse() created incorrect number of options.");
 		Assertions.assertEquals("--" + CompilerOptions.JS_EXTERNAL_LIBRARY_PATH + "+=" + value1, result.get(0),
@@ -590,14 +455,7 @@ class CompilerOptionsParserTests
 		options.set(CompilerOptions.JS_LIBRARY_PATH, libraryPath);
 
 		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			parser.parse(options, null, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("CompilerOptionsParser.parse() incorrectly threw a FileNotFoundException.");
-		}
+		parser.parse(options, null, result);
 		Assertions.assertEquals(3, result.size(),
 			"CompilerOptionsParser.parse() created incorrect number of options.");
 		Assertions.assertEquals("--" + CompilerOptions.JS_LIBRARY_PATH + "+=" + value1, result.get(0),
@@ -615,14 +473,7 @@ class CompilerOptionsParserTests
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		options.set(CompilerOptions.JS_OUTPUT_TYPE, JsonNodeFactory.instance.textNode(value));
 		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			parser.parse(options, null, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("CompilerOptionsParser.parse() incorrectly threw a FileNotFoundException.");
-		}
+		parser.parse(options, null, result);
 		Assertions.assertEquals(1, result.size(),
 			"CompilerOptionsParser.parse() created incorrect number of options.");
 		Assertions.assertEquals("--" + CompilerOptions.JS_OUTPUT_TYPE + "=" + value, result.get(0),
@@ -644,14 +495,7 @@ class CompilerOptionsParserTests
 		options.set(CompilerOptions.KEEP_AS3_METADATA, keepMetadata);
 
 		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			parser.parse(options, null, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("CompilerOptionsParser.parse() incorrectly threw a FileNotFoundException.");
-		}
+		parser.parse(options, null, result);
 		Assertions.assertEquals(2, result.size(),
 			"CompilerOptionsParser.parse() created incorrect number of options.");
 		Assertions.assertEquals("--" + CompilerOptions.KEEP_AS3_METADATA + "+=" + value1, result.get(0),
@@ -667,14 +511,7 @@ class CompilerOptionsParserTests
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		options.set(CompilerOptions.KEEP_GENERATED_ACTIONSCRIPT, JsonNodeFactory.instance.booleanNode(value));
 		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			parser.parse(options, null, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("CompilerOptionsParser.parse() incorrectly threw a FileNotFoundException.");
-		}
+		parser.parse(options, null, result);
 		Assertions.assertEquals(1, result.size(),
 			"CompilerOptionsParser.parse() created incorrect number of options.");
 		Assertions.assertEquals("--" + CompilerOptions.KEEP_GENERATED_ACTIONSCRIPT + "=" + Boolean.toString(value), result.get(0),
@@ -698,14 +535,7 @@ class CompilerOptionsParserTests
 		options.set(CompilerOptions.LIBRARY_PATH, libraryPath);
 
 		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			parser.parse(options, null, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("CompilerOptionsParser.parse() incorrectly threw a FileNotFoundException.");
-		}
+		parser.parse(options, null, result);
 		Assertions.assertEquals(3, result.size(),
 			"CompilerOptionsParser.parse() created incorrect number of options.");
 		Assertions.assertEquals("--" + CompilerOptions.LIBRARY_PATH + "+=" + value1, result.get(0),
@@ -723,14 +553,7 @@ class CompilerOptionsParserTests
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		options.set(CompilerOptions.LINK_REPORT, JsonNodeFactory.instance.textNode(value));
 		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			parser.parse(options, null, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("CompilerOptionsParser.parse() incorrectly threw a FileNotFoundException.");
-		}
+		parser.parse(options, null, result);
 		Assertions.assertEquals(1, result.size(),
 			"CompilerOptionsParser.parse() created incorrect number of options.");
 		Assertions.assertEquals("--" + CompilerOptions.LINK_REPORT + "=" + value, result.get(0),
@@ -752,14 +575,7 @@ class CompilerOptionsParserTests
 		options.set(CompilerOptions.LOAD_CONFIG, loadConfig);
 
 		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			parser.parse(options, null, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("CompilerOptionsParser.parse() incorrectly threw a FileNotFoundException.");
-		}
+		parser.parse(options, null, result);
 		Assertions.assertEquals(2, result.size(),
 			"CompilerOptionsParser.parse() created incorrect number of options.");
 		Assertions.assertEquals("--" + CompilerOptions.LOAD_CONFIG + "+=" + value1, result.get(0),
@@ -783,14 +599,7 @@ class CompilerOptionsParserTests
 		options.set(CompilerOptions.LOCALE, locale);
 
 		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			parser.parse(options, null, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("CompilerOptionsParser.parse() incorrectly threw a FileNotFoundException.");
-		}
+		parser.parse(options, null, result);
 		Assertions.assertEquals(2, result.size(),
 			"CompilerOptionsParser.parse() created incorrect number of options.");
 		Assertions.assertEquals("--" + CompilerOptions.LOCALE + "=" + value1, result.get(0),
@@ -823,14 +632,7 @@ class CompilerOptionsParserTests
 		options.set(CompilerOptions.NAMESPACE, namespace);
 
 		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			parser.parse(options, null, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("CompilerOptionsParser.parse() incorrectly threw a FileNotFoundException.");
-		}
+		parser.parse(options, null, result);
 		Assertions.assertEquals(6, result.size(),
 			"CompilerOptionsParser.parse() created incorrect number of options.");
 		Assertions.assertEquals("--" + CompilerOptions.NAMESPACE, result.get(0),
@@ -854,14 +656,7 @@ class CompilerOptionsParserTests
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		options.set(CompilerOptions.OMIT_TRACE_STATEMENTS, JsonNodeFactory.instance.booleanNode(value));
 		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			parser.parse(options, null, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("CompilerOptionsParser.parse() incorrectly threw a FileNotFoundException.");
-		}
+		parser.parse(options, null, result);
 		Assertions.assertEquals(1, result.size(),
 			"CompilerOptionsParser.parse() created incorrect number of options.");
 		Assertions.assertEquals("--" + CompilerOptions.OMIT_TRACE_STATEMENTS + "=" + Boolean.toString(value), result.get(0),
@@ -875,14 +670,7 @@ class CompilerOptionsParserTests
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		options.set(CompilerOptions.OPTIMIZE, JsonNodeFactory.instance.booleanNode(value));
 		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			parser.parse(options, null, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("CompilerOptionsParser.parse() incorrectly threw a FileNotFoundException.");
-		}
+		parser.parse(options, null, result);
 		Assertions.assertEquals(1, result.size(),
 			"CompilerOptionsParser.parse() created incorrect number of options.");
 		Assertions.assertEquals("--" + CompilerOptions.OPTIMIZE + "=" + Boolean.toString(value), result.get(0),
@@ -896,14 +684,7 @@ class CompilerOptionsParserTests
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		options.set(CompilerOptions.OUTPUT, JsonNodeFactory.instance.textNode(value));
 		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			parser.parse(options, null, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("CompilerOptionsParser.parse() incorrectly threw a FileNotFoundException.");
-		}
+		parser.parse(options, null, result);
 		Assertions.assertEquals(1, result.size(),
 			"CompilerOptionsParser.parse() created incorrect number of options.");
 		Assertions.assertEquals("--" + CompilerOptions.OUTPUT + "=" + value, result.get(0),
@@ -917,14 +698,7 @@ class CompilerOptionsParserTests
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		options.set(CompilerOptions.PRELOADER, JsonNodeFactory.instance.textNode(value));
 		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			parser.parse(options, null, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("CompilerOptionsParser.parse() incorrectly threw a FileNotFoundException.");
-		}
+		parser.parse(options, null, result);
 		Assertions.assertEquals(1, result.size(),
 			"CompilerOptionsParser.parse() created incorrect number of options.");
 		Assertions.assertEquals("--" + CompilerOptions.PRELOADER + "=" + value, result.get(0),
@@ -938,14 +712,7 @@ class CompilerOptionsParserTests
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		options.set(CompilerOptions.REMOVE_CIRCULARS, JsonNodeFactory.instance.booleanNode(value));
 		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			parser.parse(options, null, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("CompilerOptionsParser.parse() incorrectly threw a FileNotFoundException.");
-		}
+		parser.parse(options, null, result);
 		Assertions.assertEquals(1, result.size(),
 			"CompilerOptionsParser.parse() created incorrect number of options.");
 		Assertions.assertEquals("--" + CompilerOptions.REMOVE_CIRCULARS + "=" + Boolean.toString(value), result.get(0),
@@ -959,14 +726,7 @@ class CompilerOptionsParserTests
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		options.set(CompilerOptions.SIZE_REPORT, JsonNodeFactory.instance.textNode(value));
 		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			parser.parse(options, null, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("CompilerOptionsParser.parse() incorrectly threw a FileNotFoundException.");
-		}
+		parser.parse(options, null, result);
 		Assertions.assertEquals(1, result.size(),
 			"CompilerOptionsParser.parse() created incorrect number of options.");
 		Assertions.assertEquals("--" + CompilerOptions.SIZE_REPORT + "=" + value, result.get(0),
@@ -980,14 +740,7 @@ class CompilerOptionsParserTests
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		options.set(CompilerOptions.SOURCE_MAP, JsonNodeFactory.instance.booleanNode(value));
 		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			parser.parse(options, null, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("CompilerOptionsParser.parse() incorrectly threw a FileNotFoundException.");
-		}
+		parser.parse(options, null, result);
 		Assertions.assertEquals(1, result.size(),
 			"CompilerOptionsParser.parse() created incorrect number of options.");
 		Assertions.assertEquals("--" + CompilerOptions.SOURCE_MAP + "=" + Boolean.toString(value), result.get(0),
@@ -1011,14 +764,7 @@ class CompilerOptionsParserTests
 		options.set(CompilerOptions.SOURCE_PATH, sourcePath);
 
 		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			parser.parse(options, null, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("CompilerOptionsParser.parse() incorrectly threw a FileNotFoundException.");
-		}
+		parser.parse(options, null, result);
 		Assertions.assertEquals(3, result.size(),
 			"CompilerOptionsParser.parse() created incorrect number of options.");
 		Assertions.assertEquals("--" + CompilerOptions.SOURCE_PATH + "+=" + value1, result.get(0),
@@ -1036,14 +782,7 @@ class CompilerOptionsParserTests
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		options.set(CompilerOptions.STATIC_LINK_RUNTIME_SHARED_LIBRARIES, JsonNodeFactory.instance.booleanNode(value));
 		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			parser.parse(options, null, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("CompilerOptionsParser.parse() incorrectly threw a FileNotFoundException.");
-		}
+		parser.parse(options, null, result);
 		Assertions.assertEquals(1, result.size(),
 			"CompilerOptionsParser.parse() created incorrect number of options.");
 		Assertions.assertEquals("--" + CompilerOptions.STATIC_LINK_RUNTIME_SHARED_LIBRARIES + "=" + Boolean.toString(value), result.get(0),
@@ -1057,14 +796,7 @@ class CompilerOptionsParserTests
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		options.set(CompilerOptions.STRICT, JsonNodeFactory.instance.booleanNode(value));
 		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			parser.parse(options, null, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("CompilerOptionsParser.parse() incorrectly threw a FileNotFoundException.");
-		}
+		parser.parse(options, null, result);
 		Assertions.assertEquals(1, result.size(),
 			"CompilerOptionsParser.parse() created incorrect number of options.");
 		Assertions.assertEquals("--" + CompilerOptions.STRICT + "=" + Boolean.toString(value), result.get(0),
@@ -1088,14 +820,7 @@ class CompilerOptionsParserTests
 		options.set(CompilerOptions.SWF_EXTERNAL_LIBRARY_PATH, externalLibraryPath);
 
 		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			parser.parse(options, null, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("CompilerOptionsParser.parse() incorrectly threw a FileNotFoundException.");
-		}
+		parser.parse(options, null, result);
 		Assertions.assertEquals(3, result.size(),
 			"CompilerOptionsParser.parse() created incorrect number of options.");
 		Assertions.assertEquals("--" + CompilerOptions.SWF_EXTERNAL_LIBRARY_PATH + "+=" + value1, result.get(0),
@@ -1123,14 +848,7 @@ class CompilerOptionsParserTests
 		options.set(CompilerOptions.SWF_LIBRARY_PATH, libraryPath);
 
 		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			parser.parse(options, null, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("CompilerOptionsParser.parse() incorrectly threw a FileNotFoundException.");
-		}
+		parser.parse(options, null, result);
 		Assertions.assertEquals(3, result.size(),
 			"CompilerOptionsParser.parse() created incorrect number of options.");
 		Assertions.assertEquals("--" + CompilerOptions.SWF_LIBRARY_PATH + "+=" + value1, result.get(0),
@@ -1148,14 +866,7 @@ class CompilerOptionsParserTests
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		options.set(CompilerOptions.SWF_VERSION, JsonNodeFactory.instance.numberNode(value));
 		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			parser.parse(options, null, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("CompilerOptionsParser.parse() incorrectly threw a FileNotFoundException.");
-		}
+		parser.parse(options, null, result);
 		Assertions.assertEquals(1, result.size(),
 			"CompilerOptionsParser.parse() created incorrect number of options.");
 		Assertions.assertEquals("--" + CompilerOptions.SWF_VERSION + "=" + value, result.get(0),
@@ -1169,14 +880,7 @@ class CompilerOptionsParserTests
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		options.set(CompilerOptions.TARGET_PLAYER, JsonNodeFactory.instance.textNode(value));
 		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			parser.parse(options, null, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("CompilerOptionsParser.parse() incorrectly threw a FileNotFoundException.");
-		}
+		parser.parse(options, null, result);
 		Assertions.assertEquals(1, result.size(),
 			"CompilerOptionsParser.parse() created incorrect number of options.");
 		Assertions.assertEquals("--" + CompilerOptions.TARGET_PLAYER + "=" + value, result.get(0),
@@ -1196,14 +900,7 @@ class CompilerOptionsParserTests
 		options.set(CompilerOptions.TARGETS, targets);
 
 		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			parser.parse(options, null, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("CompilerOptionsParser.parse() incorrectly threw a FileNotFoundException.");
-		}
+		parser.parse(options, null, result);
 		Assertions.assertEquals(1, result.size(),
 			"CompilerOptionsParser.parse() created incorrect number of options.");
 		Assertions.assertEquals("--" + CompilerOptions.TARGETS + "=" + value1, result.get(0),
@@ -1225,14 +922,7 @@ class CompilerOptionsParserTests
 		options.set(CompilerOptions.TARGETS, targets);
 
 		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			parser.parse(options, null, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("CompilerOptionsParser.parse() incorrectly threw a FileNotFoundException.");
-		}
+		parser.parse(options, null, result);
 		Assertions.assertEquals(1, result.size(),
 			"CompilerOptionsParser.parse() created incorrect number of options.");
 		Assertions.assertEquals("--" + CompilerOptions.TARGETS + "=" + value1 + "," + value2, result.get(0),
@@ -1246,14 +936,7 @@ class CompilerOptionsParserTests
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		options.set(CompilerOptions.TOOLS_LOCALE, JsonNodeFactory.instance.textNode(value));
 		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			parser.parse(options, null, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("CompilerOptionsParser.parse() incorrectly threw a FileNotFoundException.");
-		}
+		parser.parse(options, null, result);
 		Assertions.assertEquals(1, result.size(),
 			"CompilerOptionsParser.parse() created incorrect number of options.");
 		Assertions.assertEquals("--" + CompilerOptions.TOOLS_LOCALE + "=" + value, result.get(0),
@@ -1267,14 +950,7 @@ class CompilerOptionsParserTests
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		options.set(CompilerOptions.USE_DIRECT_BLIT, JsonNodeFactory.instance.booleanNode(value));
 		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			parser.parse(options, null, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("CompilerOptionsParser.parse() incorrectly threw a FileNotFoundException.");
-		}
+		parser.parse(options, null, result);
 		Assertions.assertEquals(1, result.size(),
 			"CompilerOptionsParser.parse() created incorrect number of options.");
 		Assertions.assertEquals("--" + CompilerOptions.USE_DIRECT_BLIT + "=" + Boolean.toString(value), result.get(0),
@@ -1288,14 +964,7 @@ class CompilerOptionsParserTests
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		options.set(CompilerOptions.USE_GPU, JsonNodeFactory.instance.booleanNode(value));
 		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			parser.parse(options, null, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("CompilerOptionsParser.parse() incorrectly threw a FileNotFoundException.");
-		}
+		parser.parse(options, null, result);
 		Assertions.assertEquals(1, result.size(),
 			"CompilerOptionsParser.parse() created incorrect number of options.");
 		Assertions.assertEquals("--" + CompilerOptions.USE_GPU + "=" + Boolean.toString(value), result.get(0),
@@ -1309,14 +978,7 @@ class CompilerOptionsParserTests
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		options.set(CompilerOptions.USE_NETWORK, JsonNodeFactory.instance.booleanNode(value));
 		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			parser.parse(options, null, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("CompilerOptionsParser.parse() incorrectly threw a FileNotFoundException.");
-		}
+		parser.parse(options, null, result);
 		Assertions.assertEquals(1, result.size(),
 			"CompilerOptionsParser.parse() created incorrect number of options.");
 		Assertions.assertEquals("--" + CompilerOptions.USE_NETWORK + "=" + Boolean.toString(value), result.get(0),
@@ -1330,14 +992,7 @@ class CompilerOptionsParserTests
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		options.set(CompilerOptions.USE_RESOURCE_BUNDLE_METADATA, JsonNodeFactory.instance.booleanNode(value));
 		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			parser.parse(options, null, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("CompilerOptionsParser.parse() incorrectly threw a FileNotFoundException.");
-		}
+		parser.parse(options, null, result);
 		Assertions.assertEquals(1, result.size(),
 			"CompilerOptionsParser.parse() created incorrect number of options.");
 		Assertions.assertEquals("--" + CompilerOptions.USE_RESOURCE_BUNDLE_METADATA + "=" + Boolean.toString(value), result.get(0),
@@ -1351,14 +1006,7 @@ class CompilerOptionsParserTests
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		options.set(CompilerOptions.VERBOSE_STACKTRACES, JsonNodeFactory.instance.booleanNode(value));
 		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			parser.parse(options, null, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("CompilerOptionsParser.parse() incorrectly threw a FileNotFoundException.");
-		}
+		parser.parse(options, null, result);
 		Assertions.assertEquals(1, result.size(),
 			"CompilerOptionsParser.parse() created incorrect number of options.");
 		Assertions.assertEquals("--" + CompilerOptions.VERBOSE_STACKTRACES + "=" + Boolean.toString(value), result.get(0),
@@ -1372,14 +1020,7 @@ class CompilerOptionsParserTests
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		options.set(CompilerOptions.WARNINGS, JsonNodeFactory.instance.booleanNode(value));
 		ArrayList<String> result = new ArrayList<>();
-		try
-		{
-			parser.parse(options, null, result);
-		}
-		catch(FileNotFoundException e)
-		{
-			Assertions.fail("CompilerOptionsParser.parse() incorrectly threw a FileNotFoundException.");
-		}
+		parser.parse(options, null, result);
 		Assertions.assertEquals(1, result.size(),
 			"CompilerOptionsParser.parse() created incorrect number of options.");
 		Assertions.assertEquals("--" + CompilerOptions.WARNINGS + "=" + Boolean.toString(value), result.get(0),

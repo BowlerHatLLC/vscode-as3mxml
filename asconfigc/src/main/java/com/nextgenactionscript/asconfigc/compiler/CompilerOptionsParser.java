@@ -15,7 +15,6 @@ limitations under the License.
 */
 package com.nextgenactionscript.asconfigc.compiler;
 
-import java.io.FileNotFoundException;
 import java.util.Iterator;
 import java.util.List;
 
@@ -29,19 +28,7 @@ public class CompilerOptionsParser
 	{
 	}
 
-	private boolean checkPaths = true;
-	
-	public boolean getCheckPaths()
-	{
-		return checkPaths;
-	}
-
-	public void setCheckPaths(boolean value)
-	{
-		checkPaths = value;
-	}
-
-	public void parse(JsonNode options, Boolean debugBuild, List<String> result) throws FileNotFoundException
+	public void parse(JsonNode options, Boolean debugBuild, List<String> result)
 	{
 		Iterator<String> iterator = options.fieldNames();
 		while(iterator.hasNext())
@@ -95,23 +82,23 @@ public class CompilerOptionsParser
 				}
 				case CompilerOptions.DUMP_CONFIG:
 				{
-					OptionsFormatter.setPathValue(key, options.get(key).asText(), false, result);
+					OptionsFormatter.setPathValue(key, options.get(key).asText(), result);
 					break;
 				}
 				case CompilerOptions.EXTERNAL_LIBRARY_PATH:
 				{
 					List<String> values = JsonUtils.jsonNodeToListOfStrings(options.get(key));
-					OptionsFormatter.appendPaths(key, values, checkPaths, result);
+					OptionsFormatter.appendPaths(key, values, result);
 					break;
 				}
 				case CompilerOptions.HTML_OUTPUT_FILENAME:
 				{
-					OptionsFormatter.setPathValue(key, options.get(key).asText(), false, result);
+					OptionsFormatter.setPathValue(key, options.get(key).asText(), result);
 					break;
 				}
 				case CompilerOptions.HTML_TEMPLATE:
 				{
-					OptionsFormatter.setPathValue(key, options.get(key).asText(), checkPaths, result);
+					OptionsFormatter.setPathValue(key, options.get(key).asText(), result);
 					break;
 				}
 				case CompilerOptions.INCLUDE_CLASSES:
@@ -129,7 +116,7 @@ public class CompilerOptionsParser
 				case CompilerOptions.INCLUDE_SOURCES:
 				{
 					List<String> values = JsonUtils.jsonNodeToListOfStrings(options.get(key));
-					OptionsFormatter.appendPaths(key, values, checkPaths, result);
+					OptionsFormatter.appendPaths(key, values, result);
 					break;
 				}
 				case CompilerOptions.JS_COMPILER_OPTION:
@@ -141,13 +128,13 @@ public class CompilerOptionsParser
 				case CompilerOptions.JS_EXTERNAL_LIBRARY_PATH:
 				{
 					List<String> values = JsonUtils.jsonNodeToListOfStrings(options.get(key));
-					OptionsFormatter.appendPaths(key, values, checkPaths, result);
+					OptionsFormatter.appendPaths(key, values, result);
 					break;
 				}
 				case CompilerOptions.JS_LIBRARY_PATH:
 				{
 					List<String> values = JsonUtils.jsonNodeToListOfStrings(options.get(key));
-					OptionsFormatter.appendPaths(key, values, checkPaths, result);
+					OptionsFormatter.appendPaths(key, values, result);
 					break;
 				}
 				case CompilerOptions.JS_OUTPUT_TYPE:
@@ -169,18 +156,18 @@ public class CompilerOptionsParser
 				case CompilerOptions.LIBRARY_PATH:
 				{
 					List<String> values = JsonUtils.jsonNodeToListOfStrings(options.get(key));
-					OptionsFormatter.appendPaths(key, values, checkPaths, result);
+					OptionsFormatter.appendPaths(key, values, result);
 					break;
 				}
 				case CompilerOptions.LINK_REPORT:
 				{
-					OptionsFormatter.setPathValue(key, options.get(key).asText(), false, result);
+					OptionsFormatter.setPathValue(key, options.get(key).asText(), result);
 					break;
 				}
 				case CompilerOptions.LOAD_CONFIG:
 				{
 					List<String> values = JsonUtils.jsonNodeToListOfStrings(options.get(key));
-					OptionsFormatter.appendPaths(key, values, checkPaths, result);
+					OptionsFormatter.appendPaths(key, values, result);
 					break;
 				}
 				case CompilerOptions.LOCALE:
@@ -206,7 +193,7 @@ public class CompilerOptionsParser
 				}
 				case CompilerOptions.OUTPUT:
 				{
-					OptionsFormatter.setPathValue(key, options.get(key).asText(), false, result);
+					OptionsFormatter.setPathValue(key, options.get(key).asText(), result);
 					break;
 				}
 				case CompilerOptions.PRELOADER:
@@ -221,7 +208,7 @@ public class CompilerOptionsParser
 				}
 				case CompilerOptions.SIZE_REPORT:
 				{
-					OptionsFormatter.setPathValue(key, options.get(key).asText(), false, result);
+					OptionsFormatter.setPathValue(key, options.get(key).asText(), result);
 					break;
 				}
 				case CompilerOptions.SOURCE_MAP:
@@ -232,7 +219,7 @@ public class CompilerOptionsParser
 				case CompilerOptions.SOURCE_PATH:
 				{
 					List<String> values = JsonUtils.jsonNodeToListOfStrings(options.get(key));
-					OptionsFormatter.appendPaths(key, values, checkPaths, result);
+					OptionsFormatter.appendPaths(key, values, result);
 					break;
 				}
 				case CompilerOptions.STATIC_LINK_RUNTIME_SHARED_LIBRARIES:
@@ -248,13 +235,13 @@ public class CompilerOptionsParser
 				case CompilerOptions.SWF_EXTERNAL_LIBRARY_PATH:
 				{
 					List<String> values = JsonUtils.jsonNodeToListOfStrings(options.get(key));
-					OptionsFormatter.appendPaths(key, values, checkPaths, result);
+					OptionsFormatter.appendPaths(key, values, result);
 					break;
 				}
 				case CompilerOptions.SWF_LIBRARY_PATH:
 				{
 					List<String> values = JsonUtils.jsonNodeToListOfStrings(options.get(key));
-					OptionsFormatter.appendPaths(key, values, checkPaths, result);
+					OptionsFormatter.appendPaths(key, values, result);
 					break;
 				}
 				case CompilerOptions.SWF_VERSION:

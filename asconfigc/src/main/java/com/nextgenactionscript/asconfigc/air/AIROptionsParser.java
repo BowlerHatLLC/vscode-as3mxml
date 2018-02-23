@@ -16,7 +16,6 @@ limitations under the License.
 package com.nextgenactionscript.asconfigc.air;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
@@ -29,21 +28,9 @@ public class AIROptionsParser
 	public AIROptionsParser()
 	{
 	}
-	
-	private boolean checkPaths = true;
-	
-	public boolean getCheckPaths()
-	{
-		return checkPaths;
-	}
-
-	public void setCheckPaths(boolean value)
-	{
-		checkPaths = value;
-	}
 
 	public void parse(String platform, boolean debug, String applicationDescriptorPath,
-		String applicationContentPath, JsonNode options, List<String> result) throws FileNotFoundException
+		String applicationContentPath, JsonNode options, List<String> result)
 	{
 		result.add("-" + AIROptions.PACKAGE);
 		
@@ -193,7 +180,7 @@ public class AIROptionsParser
 
 		if(overridesOptionForPlatform(options, AIROptions.PLATFORMSDK, platform))
 		{
-			setPathValueWithoutAssignment(AIROptions.PLATFORMSDK, options.get(platform).get(AIROptions.PLATFORMSDK).asText(), checkPaths, result);
+			setPathValueWithoutAssignment(AIROptions.PLATFORMSDK, options.get(platform).get(AIROptions.PLATFORMSDK).asText(), result);
 		}
 		if(overridesOptionForPlatform(options, AIROptions.ARCH, platform))
 		{
@@ -285,12 +272,12 @@ public class AIROptionsParser
 		result.add(value.toString());
 	}
 	
-	private void parseExtdir(JsonNode extdir, List<String> result) throws FileNotFoundException
+	private void parseExtdir(JsonNode extdir, List<String> result)
 	{
 		for(int i = 0, size = extdir.size(); i < size; i++)
 		{
 			String current = extdir.get(i).asText();
-			setPathValueWithoutAssignment(AIROptions.EXTDIR, current, checkPaths, result);
+			setPathValueWithoutAssignment(AIROptions.EXTDIR, current, result);
 		}
 	}
 
@@ -334,20 +321,8 @@ public class AIROptionsParser
 		result.add(destPath);
 	}
 	
-	private void setPathValueWithoutAssignment(String optionName, String value, boolean checkIfExists, List<String> result) throws FileNotFoundException
+	private void setPathValueWithoutAssignment(String optionName, String value, List<String> result)
 	{
-		if(checkIfExists)
-		{
-			File file = new File(value);
-			if(!file.isAbsolute())
-			{
-				file = new File(System.getProperty("user.dir"), value);
-			}
-			if(!file.exists())
-			{
-				throw new FileNotFoundException("Path for Adobe AIR option \"" + optionName + "\" not found: " + value);
-			}
-		}
 		result.add("-" + optionName);
 		result.add(value);
 	}
@@ -395,7 +370,7 @@ public class AIROptionsParser
 		}
 	}
 	
-	protected void parseSigningOptions(JsonNode signingOptions, boolean debug, List<String> result) throws FileNotFoundException
+	protected void parseSigningOptions(JsonNode signingOptions, boolean debug, List<String> result)
 	{
 		if(signingOptions.has(AIRSigningOptions.DEBUG) && debug)
 		{
@@ -410,7 +385,7 @@ public class AIROptionsParser
 
 		if(signingOptions.has(AIRSigningOptions.PROVISIONING_PROFILE))
 		{
-			setPathValueWithoutAssignment(AIRSigningOptions.PROVISIONING_PROFILE, signingOptions.get(AIRSigningOptions.PROVISIONING_PROFILE).asText(), checkPaths, result);
+			setPathValueWithoutAssignment(AIRSigningOptions.PROVISIONING_PROFILE, signingOptions.get(AIRSigningOptions.PROVISIONING_PROFILE).asText(), result);
 		}
 		if(signingOptions.has(AIRSigningOptions.ALIAS))
 		{
@@ -422,7 +397,7 @@ public class AIROptionsParser
 		}
 		if(signingOptions.has(AIRSigningOptions.KEYSTORE))
 		{
-			setPathValueWithoutAssignment(AIRSigningOptions.KEYSTORE, signingOptions.get(AIRSigningOptions.KEYSTORE).asText(), checkPaths, result);
+			setPathValueWithoutAssignment(AIRSigningOptions.KEYSTORE, signingOptions.get(AIRSigningOptions.KEYSTORE).asText(), result);
 		}
 		if(signingOptions.has(AIRSigningOptions.PROVIDER_NAME))
 		{

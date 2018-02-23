@@ -17,7 +17,6 @@ package com.nextgenactionscript.asconfigc;
 
 import java.io.Console;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
@@ -394,10 +393,6 @@ public class ASConfigC
 		{
 			parser.parse(compilerOptionsJson, options.debug, compilerOptions);
 		}
-		catch(FileNotFoundException e)
-		{
-			throw new ASConfigCException("Error with file specified in compiler options. " + e.getMessage());
-		}
 		catch(Exception e)
 		{
 			StringWriter stackTrace = new StringWriter();
@@ -464,10 +459,6 @@ public class ASConfigC
 				ProjectUtils.findApplicationContentOutputPath(mainFile, outputPath, !outputIsJS, debugBuild),
 				airOptionsJson,
 				airOptions);
-		}
-		catch(FileNotFoundException e)
-		{
-			throw new ASConfigCException("Error with file specified in Adobe AIR options. " + e.getMessage());
 		}
 		catch(Exception e)
 		{

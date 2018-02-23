@@ -15,8 +15,6 @@ limitations under the License.
 */
 package com.nextgenactionscript.asconfigc.utils;
 
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.util.List;
 
 public class OptionsFormatter
@@ -31,20 +29,8 @@ public class OptionsFormatter
 		result.add("--" + optionName + "=" + Boolean.toString(value));
 	}
 
-	public static void setPathValue(String optionName, String value, boolean checkIfExists, List<String> result) throws FileNotFoundException
+	public static void setPathValue(String optionName, String value, List<String> result)
 	{
-		if(checkIfExists)
-		{
-			File file = new File(value);
-			if(!file.isAbsolute())
-			{
-				file = new File(System.getProperty("user.dir"), value);
-			}
-			if(!file.exists())
-			{
-				throw new FileNotFoundException("Path for option \"" + optionName + "\" not found: " + value);
-			}
-		}
 		result.add("--" + optionName + "=" + value);
 	}
 
@@ -88,24 +74,12 @@ public class OptionsFormatter
 		}
 	}
 
-	public static void appendPaths(String optionName, List<String> paths, boolean checkIfExists, List<String> result) throws FileNotFoundException
+	public static void appendPaths(String optionName, List<String> paths, List<String> result)
 	{
 		int pathsCount = paths.size();
 		for(int i = 0; i < pathsCount; i++)
 		{
 			String currentPath = paths.get(i);
-			if(checkIfExists)
-			{
-				File file = new File(currentPath);
-				if(!file.isAbsolute())
-				{
-					file = new File(System.getProperty("user.dir"), currentPath);
-				}
-				if(!file.exists())
-				{
-					throw new FileNotFoundException("Path for option \"" + optionName + "\" not found: " + currentPath);
-				}
-			}
 			result.add("--" + optionName + "+=" + currentPath);
 		}
 	}
