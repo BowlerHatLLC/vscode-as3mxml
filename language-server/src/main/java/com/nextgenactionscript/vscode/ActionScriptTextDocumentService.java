@@ -299,6 +299,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private String namespaceUri;
     private LanguageServerFileSpecGetter fileSpecGetter;
     private boolean frameworkSDKContainsFalconCompiler = false;
+    private boolean frameworkSDKContainsSparkTheme = false;
     private boolean frameworkSDKIsRoyale = false;
     private boolean frameworkSDKIsFlexJS = false;
     private ProblemTracker codeProblemTracker = new ProblemTracker();
@@ -1378,6 +1379,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         sdkPath = Paths.get(System.getProperty(PROPERTY_FRAMEWORK_LIB));
         sdkPath = sdkPath.resolve("../js/bin/asjsc");
         frameworkSDKIsFlexJS = !frameworkSDKIsRoyale && sdkPath.toFile().exists();
+
+        //check if the framework SDK doesn't include the Spark theme
+        Path sparkPath = Paths.get(frameworkSDKPath).resolve("./themes/Spark/spark.css");
+        frameworkSDKContainsSparkTheme = sparkPath.toFile().exists();
     }
 
     private void watchNewSourcePath(Path sourcePath)
@@ -4878,7 +4883,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         //not all framework SDKs support a theme (such as Adobe's AIR SDK), so
         //we clear it for the editor to avoid a missing spark.css file.
-        combinedOptions.add("-theme=");
+        if (!frameworkSDKContainsSparkTheme)
+        {
+            combinedOptions.add("-theme=");
+        }
         if (projectType.equals(ProjectType.LIB))
         {
             configurator.setConfiguration(combinedOptions.toArray(new String[combinedOptions.size()]),
