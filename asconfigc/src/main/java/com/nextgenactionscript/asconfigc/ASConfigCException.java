@@ -17,6 +17,8 @@ package com.nextgenactionscript.asconfigc;
 
 public class ASConfigCException extends Exception
 {
+	private static final long serialVersionUID = 1L;
+
 	public ASConfigCException(String message)
 	{
 		super(message);
