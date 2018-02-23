@@ -1474,13 +1474,17 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             };
             sourcePathWatcherThread.start();
         }
+        if (currentProjectOptions.sourcePaths == null)
+        {
+            return;
+        }
         for (Path sourcePath : currentProjectOptions.sourcePaths)
         {
             try
             {
                 sourcePath = sourcePath.toRealPath();
             }
-            catch(IOException e)
+            catch (IOException e)
             {
             }
             watchNewSourcePath(sourcePath);
