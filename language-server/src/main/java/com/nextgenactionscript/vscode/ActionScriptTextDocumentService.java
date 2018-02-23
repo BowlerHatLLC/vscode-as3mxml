@@ -4738,7 +4738,15 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             Map<URI, PublishDiagnosticsParams> filesMap = new HashMap<>();
             for (ICompilerProblem problem : problems)
             {
-                URI uri = Paths.get(problem.getSourcePath()).toUri();
+                String problemSourcePath = problem.getSourcePath();
+                if (problemSourcePath == null)
+                {
+                    //since we're processing configuration problems, the best
+                    //default location to send the user is probably to the
+                    //asconfig.json file.
+                    problemSourcePath = "asconfig.json";
+                }
+                URI uri = Paths.get(problemSourcePath).toUri();
                 configProblemTracker.trackFileWithProblems(uri);
                 PublishDiagnosticsParams params = null;
                 if (filesMap.containsKey(uri))
