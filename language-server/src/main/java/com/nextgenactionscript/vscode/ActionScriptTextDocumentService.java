@@ -241,6 +241,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private static final String MARKDOWN_CODE_BLOCK_MXML_START = "```mxml\n";
     private static final String MARKDOWN_CODE_BLOCK_END = "\n```";
     private static final String TOKEN_CONFIGNAME = "configname";
+    private static final String TOKEN_ROYALELIB = "royalelib";
+    private static final String TOKEN_FLEXLIB = "flexlib";
     private static final String CONFIG_ROYALE = "royale";
     private static final String CONFIG_JS = "js";
     private static final String CONFIG_NODE = "node";
@@ -4868,6 +4870,14 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         else //swf only
         {
             configurator = new RoyaleProjectConfigurator(VSCodeConfiguration.class);
+        }
+        if(frameworkSDKIsRoyale)
+        {
+            configurator.setToken(TOKEN_ROYALELIB, System.getProperty(PROPERTY_FRAMEWORK_LIB));
+        }
+        else //not royale
+        {
+            configurator.setToken(TOKEN_FLEXLIB, System.getProperty(PROPERTY_FRAMEWORK_LIB));
         }
         configurator.setToken(TOKEN_CONFIGNAME, currentProjectOptions.config);
         String projectType = currentProjectOptions.type;
