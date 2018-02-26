@@ -75,22 +75,6 @@
         "title": "ActionScript: Restart ActionScript/MXML server"
       },
       {
-        "command": "nextgenas.compileDebugBuildWithFlexCompilerShell",
-        "title": "ActionScript: Compile debug build with Flex Compiler Shell (Experimental)"
-      },
-      {
-        "command": "nextgenas.compileDebugBuildWithFlexCompilerShellAndLaunch",
-        "title": "ActionScript: Compile debug build with Flex Compiler Shell and Start Debugging (Experimental)"
-      },
-      {
-        "command": "nextgenas.compileReleaseBuildWithFlexCompilerShell",
-        "title": "ActionScript: Compile release build with Flex Compiler Shell (Experimental)"
-      },
-      {
-        "command": "nextgenas.migrateFlashBuilderProject",
-        "title": "ActionScript: Migrate Adobe Flash Builder Project (Experimental)"
-      },
-      {
         "command": "nextgenas.organizeImportsInTextEditor",
         "title": "ActionScript: Organize Imports"
       },
