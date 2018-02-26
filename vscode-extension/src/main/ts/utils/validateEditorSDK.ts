@@ -60,8 +60,8 @@ function validatePossibleEditorSDK(extensionPath: string, javaPath: string, sdkP
 	let args =
 	[
 		"-cp",
-		path.resolve(sdkPath, "lib", "compiler.jar") + cpDelimiter +
-		path.resolve(sdkPath, "js", "lib", "jsc.jar") + cpDelimiter +
+		path.resolve(sdkPath, "lib", "*") + cpDelimiter +
+		path.resolve(sdkPath, "js", "lib", "*") + cpDelimiter +
 		path.resolve(extensionPath, "bin", "check-royale-version.jar"),
 		"com.nextgenactionscript.vscode.CheckRoyaleVersion",
 	];
