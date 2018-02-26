@@ -3,7 +3,7 @@
 ### New Features
 
 * Build: *asconfig.json* may optionally include `${flexlib}` token in paths specified in the compiler options. This token will be replaced with the path to the *frameworks* directory of the current SDK. For Apache Royale projects, the `${royalelib}` token is available instead.
-* Editor: If a symbol is only available in a compiled SWC, using jumping to the definition with Ctrl+Click will open a temporary, read-only text file with a "stub" API.
+* Editor: Goto definition works for symbols in SWC files. Opens a temporary, read-only text file that displays the public API.
 * Views: The ActionScript Source Paths view displays file icons.
 
 ### Fixed Issues
