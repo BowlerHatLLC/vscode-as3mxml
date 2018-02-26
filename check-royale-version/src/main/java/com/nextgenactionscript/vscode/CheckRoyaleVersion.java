@@ -32,6 +32,7 @@ public class CheckRoyaleVersion
         try
         {
             String sdkVersion = IASNode.class.getPackage().getImplementationVersion();
+            //remove -SNAPSHOT, if present. then, split on the "." character.
             String[] versionParts = sdkVersion.split("-")[0].split("\\.");
             int major = 0;
             int minor = 0;
