@@ -1,3 +1,23 @@
+## 0.10.0
+
+### New Features
+
+* Build: *asconfig.json* may optionally include `${flexlib}` token in paths specified in the compiler options. This token will be replaced with the path to the *frameworks* directory of the current SDK. For Apache Royale projects, the `${royalelib}` token is available instead.
+* Editor: If a symbol is only available in a compiled SWC, using jumping to the definition with Ctrl+Click will open a temporary, read-only text file with a "stub" API.
+* Views: The ActionScript Source Paths view displays file icons.
+
+### Fixed Issues
+
+* Build: Fixed issue where `extdir` option for Adobe AIR packaging was missing from the *asconfig.json* schema.
+* Build: The *asconfig.json* file format is validated as *JSON with Comments* by Visual Studio Code.
+* Build: Fixed issue where the the bundled version of **asconfigc** failed when paths contained spaces.
+* Editor: Fixed issue where compiler configuration errors with no file path were not displayed.
+* Editor: Fixed issue where setting styles in MXML in Flex projects could result in incorrect warnings.
+* Editor: Fixed issue where files created, deleted, or modified in directories specified with the `source-path` compiler option were not reflected in the code intelligence.
+* Editor: Fixed issue where deleting directory did not clear problems for *.as* and *.mxml* files in the directory.
+* Settings: Fixed issue where a Maven-built distribution of Apache Royale could not be used with the `nextgenas.sdk.editor` setting.
+* Syntax Highlighting: Classes and interfaces are now colored differently than keywords, making ActionScript syntax highlighting more consistent with other languages in Visual Studio Code. Additionally, the package name in fully qualified class names is now colored too.
+
 ## 0.9.0
 
 ### New Features
