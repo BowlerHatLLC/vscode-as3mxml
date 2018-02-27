@@ -130,7 +130,7 @@
 		<key>class</key>
 		<dict>
 			<key>begin</key>
-			<string>(?x) (^|\s+|;) (\b(dynamic|final)\b\s+)? (\b(internal|public)\b\s+)? (\b(dynamic|final)\b\s+)? (?=class)</string>
+			<string>(?x) (^|\s+|;) (\b(dynamic|final)\b\s+)? (\b(internal|public)\b\s+)? (\b(dynamic|final)\b\s+)? (?=\bclass\b)</string>
 			<key>beginCaptures</key>
 			<dict>
 				<key>3</key>
@@ -244,7 +244,7 @@
 		<key>class_declaration</key>
 		<dict>
 			<key>begin</key>
-			<string>(?x) (class) \s+ ([\.\w]+)</string>
+			<string>(?x) \b(class)\b \s+ ([\.\w]+)</string>
 			<key>beginCaptures</key>
 			<dict>
 				<key>1</key>
@@ -271,10 +271,6 @@
 				<dict>
 					<key>include</key>
 					<string>#implements</string>
-				</dict>
-				<dict>
-					<key>include</key>
-					<string>#multiple_implements</string>
 				</dict>
 				<dict>
 					<key>include</key>
@@ -460,9 +456,14 @@
 					<key>name</key>
 					<string>entity.other.inherited-class.actionscript.3</string>
 				</dict>
+				<key>3</key>
+				<dict>
+					<key>name</key>
+					<string>entity.other.inherited-class.actionscript.3</string>
+				</dict>
 			</dict>
 			<key>match</key>
-			<string>(?x) \b(extends) \s+ ([\.\w]+) \s*</string>
+			<string>(?x) \b(extends)\b \s+ ([\.\w]+) \s* (?:, \s* ([\.\w]+))* \s*</string>
 			<key>name</key>
 			<string>meta.extends.actionscript.3</string>
 		</dict>
@@ -509,27 +510,27 @@
 		<key>functions</key>
 		<dict>
 			<key>begin</key>
-			<string>(?x) (^|\s+) (function) (\s+(get|set))? (\s+[a-zA-Z0-9_\$]+)? \s* (?=\()</string>
+			<string>(?x) \b(function)\b (?:\s+\b(get|set)\b\s+)? \s* ([a-zA-Z0-9_\$]+\b)?</string>
 			<key>beginCaptures</key>
 			<dict>
-				<key>2</key>
+				<key>1</key>
 				<dict>
 					<key>name</key>
 					<string>storage.type.function.actionscript.3</string>
 				</dict>
-				<key>4</key>
+				<key>2</key>
 				<dict>
 					<key>name</key>
 					<string>storage.modifier.actionscript.3</string>
 				</dict>
-				<key>5</key>
+				<key>3</key>
 				<dict>
 					<key>name</key>
 					<string>entity.name.function.actionscript.3</string>
 				</dict>
 			</dict>
 			<key>end</key>
-			<string>(;|(?=\{))</string>
+			<string>($|;|(?=\{))</string>
 			<key>name</key>
 			<string>meta.function.actionscript.3</string>
 			<key>patterns</key>
@@ -592,9 +593,14 @@
 					<key>name</key>
 					<string>entity.other.inherited-class.actionscript.3</string>
 				</dict>
+				<key>3</key>
+				<dict>
+					<key>name</key>
+					<string>entity.other.inherited-class.actionscript.3</string>
+				</dict>
 			</dict>
 			<key>match</key>
-			<string>(?x) \b(implements) \s+ ([\.\w]+) \s*</string>
+			<string>(?x) \b(implements)\b \s+ ([\.\w]+) \s* (?:, \s* ([\.\w]+))* \s*</string>
 			<key>name</key>
 			<string>meta.implements.actionscript.3</string>
 		</dict>
@@ -614,14 +620,16 @@
 				</dict>
 			</dict>
 			<key>match</key>
-			<string>(?x) (^|\s+|;) (import) \s+ ((?:[A-Za-z0-9\$_]+\.)*(?:\*|(?:[A-Za-z0-9\$_]+))) \s* (?=;|$)</string>
+			<!-- just look for a string of characters and dots so that it doesn't 
+				turn off the syntax when the line ends with a dot -->
+			<string>(?x) (^|\s+|;) \b(import)\b \s+ ([A-Za-z0-9\$_\.]+(?:\.\*)?) \s* (?=;|$)</string>
 			<key>name</key>
 			<string>meta.import.actionscript.3</string>
 		</dict>
 		<key>interface</key>
 		<dict>
 			<key>begin</key>
-			<string>(?x) (^|\s+|;) (\b(internal|public)\b\s+)? (?=interface)</string>
+			<string>(?x) (^|\s+|;) (\b(internal|public)\b\s+)? (?=\binterface\b)</string>
 			<key>beginCaptures</key>
 			<dict>
 				<key>3</key>
@@ -657,7 +665,7 @@
 		<key>interface_declaration</key>
 		<dict>
 			<key>begin</key>
-			<string>(?x) (interface) \s+ ([\.\w]+)</string>
+			<string>(?x) \b(interface)\b \s+ ([\.\w]+)</string>
 			<key>beginCaptures</key>
 			<dict>
 				<key>1</key>
@@ -737,7 +745,7 @@
 		<key>method</key>
 		<dict>
 			<key>begin</key>
-			<string>(?x) (^|\s+) ((\w+)\s+)? ((\w+)\s+)? ((\w+)\s+)? (\w+) (?=\s+function)</string>
+			<string>(?x) (^|\s+) ((\w+)\s+)? ((\w+)\s+)? ((\w+)\s+)? (\w+) (?=\s+\bfunction\b)</string>
 			<key>beginCaptures</key>
 			<dict>
 				<key>3</key>
@@ -776,21 +784,6 @@
 					<string>#code_block</string>
 				</dict>
 			</array>
-		</dict>
-		<key>multiple_implements</key>
-		<dict>
-			<key>captures</key>
-			<dict>
-				<key>1</key>
-				<dict>
-					<key>name</key>
-					<string>entity.other.inherited-class.actionscript.3</string>
-				</dict>
-			</dict>
-			<key>match</key>
-			<string>,\s*([\.\w]+)\s*</string>
-			<key>name</key>
-			<string>meta.implements.actionscript.3</string>
 		</dict>
 		<key>mxml</key>
 		<dict>
