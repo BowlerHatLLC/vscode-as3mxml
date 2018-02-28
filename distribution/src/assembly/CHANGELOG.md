@@ -18,6 +18,14 @@
 * Settings: Fixed issue where a Maven-built distribution of Apache Royale could not be used with the `nextgenas.sdk.editor` setting.
 * Syntax Highlighting: Classes and interfaces are now colored differently than keywords, making ActionScript syntax highlighting more consistent with other languages in Visual Studio Code. Additionally, the package name in fully qualified class names is now colored too.
 
+## 0.9.1
+
+### Fixed Issues
+
+* Apache Royale: Updated to search for npm moddules with new names: *@apache-royale/royale-js* and *@apache-royale/royale-js-swf*.
+* Build: Fixed issue where copying files from source paths could fail from nested directories.
+* Completion: Fixed issue where activating completion with `Ctrl+Space` after a partial MXML component name could omit some results due to incorrect case-sensitive comparison.
+
 ## 0.9.0
 
 ### New Features
