@@ -3,6 +3,8 @@
 ### New Features
 
 * Build: *asconfig.json* may optionally include `${flexlib}` token in paths specified in the compiler options. This token will be replaced with the path to the *frameworks* directory of the current SDK. For Apache Royale projects, the `${royalelib}` token is available instead.
+* Debugger: When a runtime error is thrown, displays the details inside the editor – directly below the line where the error occurred.
+* Debugger: When a runtime error is thrown, the properties of the error object are displayed in the **Variables** view.
 * Editor: Goto definition works for symbols in SWC files. Opens a temporary, read-only text file that displays the public API.
 * Views: The ActionScript Source Paths view displays file icons.
 
