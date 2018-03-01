@@ -152,6 +152,7 @@ import org.apache.royale.compiler.workspaces.IWorkspace;
 
 import com.google.common.io.Files;
 import com.google.common.net.UrlEscapers;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.internal.LinkedTreeMap;
 import com.nextgenactionscript.asconfigc.compiler.ProjectType;
@@ -6134,16 +6135,21 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private CompletableFuture<Object> executeGenerateGetterAndSetterCommand(ExecuteCommandParams params, boolean generateGetter, boolean generateSetter)
     {
         List<Object> args = params.getArguments();
-        String uri = (String) args.get(0);
-        int startLine = ((Double) args.get(1)).intValue();
-        int startChar = ((Double) args.get(2)).intValue();
-        int endLine = ((Double) args.get(3)).intValue();
-        int endChar = ((Double) args.get(4)).intValue();
-        String name = (String) args.get(5);
-        String namespace = (String) args.get(6);
-        boolean isStatic = (Boolean) args.get(7);
-        String type = (String) args.get(8);
-        String assignedValue = (String) args.get(9);
+        String uri = ((JsonPrimitive) args.get(0)).getAsString();
+        int startLine = ((JsonPrimitive) args.get(1)).getAsInt();
+        int startChar = ((JsonPrimitive) args.get(2)).getAsInt();
+        int endLine = ((JsonPrimitive) args.get(3)).getAsInt();
+        int endChar = ((JsonPrimitive) args.get(4)).getAsInt();
+        String name = ((JsonPrimitive) args.get(5)).getAsString();
+        String namespace = ((JsonPrimitive) args.get(6)).getAsString();
+        boolean isStatic = ((JsonPrimitive) args.get(7)).getAsBoolean();
+        String type = ((JsonPrimitive) args.get(8)).getAsString();
+        String assignedValue = null;
+        JsonElement assignedValueArg = (JsonElement) args.get(9);
+        if(assignedValueArg instanceof JsonPrimitive)
+        {
+            assignedValue = assignedValueArg.getAsString();
+        }
 
         Path path = Paths.get(URI.create(uri));
         String fileText = "";

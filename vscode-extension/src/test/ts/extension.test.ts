@@ -6996,3 +6996,188 @@ suite("code action provider", () =>
 		});
 	});
 });
+
+suite("generate getter/setter", () =>
+{
+	teardown(() =>
+	{
+		return vscode.commands.executeCommand("workbench.action.revertAndCloseActiveEditor").then(() =>
+		{
+			return new Promise((resolve, reject) =>
+			{
+				setTimeout(() =>
+				{
+					resolve();
+				}, 100);
+			});
+		});
+	});
+	test("nextgenas.generateGetter generates getter without assignment", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "GenerateGetterAndSetter.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("nextgenas.generateGetter", uri.toString(), 7, 2, 7, 32, "noAssignment", "public", false, "Object", null)
+				.then(() =>
+					{
+						return new Promise((resolve, reject) =>
+						{
+							//the text edit is not applied immediately, so give
+							//it a short delay before we check
+							setTimeout(() =>
+							{
+								let start = new vscode.Position(7, 0);
+								let end = new vscode.Position(13, 0);
+								let range = new vscode.Range(start, end);
+								let generatedText = editor.document.getText(range);
+								assert.strictEqual(generatedText, "\t\tprivate var _noAssignment:Object;\n\n\t\tpublic function get noAssignment():Object\n\t\t{\n\t\t\treturn _noAssignment;\n\t\t}\n", "nextgenas.generateGetter failed to generate getter");
+								resolve();
+							}, 250);
+						})
+					}, (err) =>
+					{
+						assert(false, "Failed to execute generate getter command: " + uri);
+					});
+		});
+	});
+	test("nextgenas.generateGetter generates getter with a type and assignment", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "GenerateGetterAndSetter.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("nextgenas.generateGetter", uri.toString(), 9, 2, 9, 40, "assignment", "public", false, "String", "\"hello\"")
+				.then(() =>
+					{
+						return new Promise((resolve, reject) =>
+						{
+							//the text edit is not applied immediately, so give
+							//it a short delay before we check
+							setTimeout(() =>
+							{
+								let start = new vscode.Position(9, 0);
+								let end = new vscode.Position(15, 0);
+								let range = new vscode.Range(start, end);
+								let generatedText = editor.document.getText(range);
+								assert.strictEqual(generatedText, "\t\tprivate var _assignment:String = \"hello\";\n\n\t\tpublic function get assignment():String\n\t\t{\n\t\t\treturn _assignment;\n\t\t}\n", "nextgenas.generateGetter failed to generate getter");
+								resolve();
+							}, 250);
+						})
+					}, (err) =>
+					{
+						assert(false, "Failed to execute generate getter command: " + uri);
+					});
+		});
+	});
+	test("nextgenas.generateSetter generates setter without assignment", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "GenerateGetterAndSetter.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("nextgenas.generateSetter", uri.toString(), 7, 2, 7, 32, "noAssignment", "public", false, "Object", null)
+				.then(() =>
+					{
+						return new Promise((resolve, reject) =>
+						{
+							//the text edit is not applied immediately, so give
+							//it a short delay before we check
+							setTimeout(() =>
+							{
+								let start = new vscode.Position(7, 0);
+								let end = new vscode.Position(13, 0);
+								let range = new vscode.Range(start, end);
+								let generatedText = editor.document.getText(range);
+								assert.strictEqual(generatedText, "\t\tprivate var _noAssignment:Object;\n\n\t\tpublic function set noAssignment(value:Object):void\n\t\t{\n\t\t\t_noAssignment = value;\n\t\t}\n", "nextgenas.generateSetter failed to generate setter");
+								resolve();
+							}, 250);
+						})
+					}, (err) =>
+					{
+						assert(false, "Failed to execute generate setter command: " + uri);
+					});
+		});
+	});
+	test("nextgenas.generateSetter generates setter with a type and assignment", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "GenerateGetterAndSetter.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("nextgenas.generateSetter", uri.toString(), 9, 2, 9, 40, "assignment", "public", false, "String", "\"hello\"")
+				.then(() =>
+					{
+						return new Promise((resolve, reject) =>
+						{
+							//the text edit is not applied immediately, so give
+							//it a short delay before we check
+							setTimeout(() =>
+							{
+								let start = new vscode.Position(9, 0);
+								let end = new vscode.Position(15, 0);
+								let range = new vscode.Range(start, end);
+								let generatedText = editor.document.getText(range);
+								assert.strictEqual(generatedText, "\t\tprivate var _assignment:String = \"hello\";\n\n\t\tpublic function set assignment(value:String):void\n\t\t{\n\t\t\t_assignment = value;\n\t\t}\n", "nextgenas.generateSetter failed to generate setter");
+								resolve();
+							}, 250);
+						})
+					}, (err) =>
+					{
+						assert(false, "Failed to execute generate setter command: " + uri);
+					});
+		});
+	});
+	test("nextgenas.generateGetterAndSetter generates getter and setter without assignment", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "GenerateGetterAndSetter.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("nextgenas.generateGetterAndSetter", uri.toString(), 7, 2, 7, 32, "noAssignment", "public", false, "Object", null)
+				.then(() =>
+					{
+						return new Promise((resolve, reject) =>
+						{
+							//the text edit is not applied immediately, so give
+							//it a short delay before we check
+							setTimeout(() =>
+							{
+								let start = new vscode.Position(7, 0);
+								let end = new vscode.Position(18, 0);
+								let range = new vscode.Range(start, end);
+								let generatedText = editor.document.getText(range);
+								assert.strictEqual(generatedText, "\t\tprivate var _noAssignment:Object;\n\n\t\tpublic function get noAssignment():Object\n\t\t{\n\t\t\treturn _noAssignment;\n\t\t}\n\n\t\tpublic function set noAssignment(value:Object):void\n\t\t{\n\t\t\t_noAssignment = value;\n\t\t}\n", "nextgenas.generateSetter failed to generate getter and setter");
+								resolve();
+							}, 250);
+						})
+					}, (err) =>
+					{
+						assert(false, "Failed to execute generate getter and setter command: " + uri);
+					});
+		});
+	});
+	test("nextgenas.generateGetterAndSetter generates getter and setter with a type and assignment", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "GenerateGetterAndSetter.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("nextgenas.generateGetterAndSetter", uri.toString(), 9, 2, 9, 40, "assignment", "public", false, "String", "\"hello\"")
+				.then(() =>
+					{
+						return new Promise((resolve, reject) =>
+						{
+							//the text edit is not applied immediately, so give
+							//it a short delay before we check
+							setTimeout(() =>
+							{
+								let start = new vscode.Position(9, 0);
+								let end = new vscode.Position(20, 0);
+								let range = new vscode.Range(start, end);
+								let generatedText = editor.document.getText(range);
+								assert.strictEqual(generatedText, "\t\tprivate var _assignment:String = \"hello\";\n\n\t\tpublic function get assignment():String\n\t\t{\n\t\t\treturn _assignment;\n\t\t}\n\n\t\tpublic function set assignment(value:String):void\n\t\t{\n\t\t\t_assignment = value;\n\t\t}\n", "nextgenas.generateSetter failed to generate getter and setter");
+								resolve();
+							}, 250);
+						})
+					}, (err) =>
+					{
+						assert(false, "Failed to execute generate getter and setter command: " + uri);
+					});
+		});
+	});
+});
