@@ -152,6 +152,7 @@ import org.apache.royale.compiler.workspaces.IWorkspace;
 
 import com.google.common.io.Files;
 import com.google.common.net.UrlEscapers;
+import com.google.gson.JsonPrimitive;
 import com.google.gson.internal.LinkedTreeMap;
 import com.nextgenactionscript.asconfigc.compiler.ProjectType;
 import com.nextgenactionscript.vscode.asdoc.VSCodeASDocComment;
@@ -5934,10 +5935,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private CompletableFuture<Object> executeAddImportCommand(ExecuteCommandParams params)
     {
         List<Object> args = params.getArguments();
-        String qualifiedName = (String) args.get(0);
-        String uri = (String) args.get(1);
-        int startIndex = ((Double) args.get(2)).intValue();
-        int endIndex = ((Double) args.get(3)).intValue();
+        String qualifiedName = ((JsonPrimitive) args.get(0)).getAsString();
+        String uri = ((JsonPrimitive) args.get(1)).getAsString();
+        int startIndex = ((JsonPrimitive) args.get(2)).getAsInt();
+        int endIndex = ((JsonPrimitive) args.get(3)).getAsInt();
         if(qualifiedName == null)
         {
             return CompletableFuture.completedFuture(new Object());
@@ -5968,11 +5969,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private CompletableFuture<Object> executeAddMXMLNamespaceCommand(ExecuteCommandParams params)
     {
         List<Object> args = params.getArguments();
-        String nsPrefix = (String) args.get(0);
-        String nsUri = (String) args.get(1);
-        String uri = (String) args.get(2);
-        int startIndex = ((Double) args.get(3)).intValue();
-        int endIndex = ((Double) args.get(4)).intValue();
+        String nsPrefix = ((JsonPrimitive) args.get(0)).getAsString();
+        String nsUri = ((JsonPrimitive) args.get(1)).getAsString();
+        String uri = ((JsonPrimitive) args.get(2)).getAsString();
+        int startIndex = ((JsonPrimitive) args.get(3)).getAsInt();
+        int endIndex = ((JsonPrimitive) args.get(4)).getAsInt();
         if(nsPrefix == null || nsUri == null)
         {
             return CompletableFuture.completedFuture(new Object());
