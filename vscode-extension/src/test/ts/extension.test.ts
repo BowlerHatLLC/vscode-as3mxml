@@ -7411,3 +7411,48 @@ suite("generate method", () =>
 		});
 	});
 });
+
+suite("organize imports", () =>
+{
+	teardown(() =>
+	{
+		return vscode.commands.executeCommand("workbench.action.revertAndCloseActiveEditor").then(() =>
+		{
+			return new Promise((resolve, reject) =>
+			{
+				setTimeout(() =>
+				{
+					resolve();
+				}, 100);
+			});
+		});
+	});
+	test("nextgenas.organizeImportsInUri organizes imports removes unused imports, adds missing imports, and reorganizes remaining imports in alphabetical order", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "OrganizeImports.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("nextgenas.organizeImportsInUri", uri)
+				.then(() =>
+					{
+						return new Promise((resolve, reject) =>
+						{
+							//the text edit is not applied immediately, so give
+							//it a short delay before we check
+							setTimeout(() =>
+							{
+								let start = new vscode.Position(2, 0);
+								let end = new vscode.Position(6, 0);
+								let range = new vscode.Range(start, end);
+								let generatedText = editor.document.getText(range);
+								assert.strictEqual(generatedText, "\timport com.example.IPackageInterface;\n\timport com.example.ImportToAdd;\n\timport com.example.PackageClass;\n\n", "nextgenas.organizeImportsInUri failed to organize imports");
+								resolve();
+							}, 1000);
+						})
+					}, (err) =>
+					{
+						assert(false, "Failed to execute organize imports command: " + uri);
+					});
+		});
+	});
+});

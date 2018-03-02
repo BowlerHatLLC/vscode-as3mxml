@@ -155,6 +155,7 @@ import com.google.common.io.Files;
 import com.google.common.net.UrlEscapers;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.internal.LinkedTreeMap;
 import com.nextgenactionscript.asconfigc.compiler.ProjectType;
@@ -5922,14 +5923,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private CompletableFuture<Object> executeOrganizeImportsInUriCommand(ExecuteCommandParams params)
     {
         List<Object> args = params.getArguments();
-        Object uncastUri = args.get(0);
-        LinkedTreeMap<?,?> encodedUri = null;
-        if (uncastUri instanceof LinkedTreeMap<?,?>)
-        {
-            encodedUri = (LinkedTreeMap<?,?>) uncastUri;
-        }
+        JsonObject uriObject = (JsonObject) args.get(0);
+        String uri = uriObject.get("external").getAsString();
 
-        String uri = (String) encodedUri.get("external");
         organizeImportsInUri(uri);
 
         return CompletableFuture.completedFuture(new Object());
