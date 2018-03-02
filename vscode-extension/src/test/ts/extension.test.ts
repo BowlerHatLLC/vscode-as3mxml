@@ -7265,3 +7265,76 @@ suite("generate getter/setter", () =>
 		});
 	});
 });
+
+suite("generate variable", () =>
+{
+	teardown(() =>
+	{
+		return vscode.commands.executeCommand("workbench.action.revertAndCloseActiveEditor").then(() =>
+		{
+			return new Promise((resolve, reject) =>
+			{
+				setTimeout(() =>
+				{
+					resolve();
+				}, 100);
+			});
+		});
+	});
+	test("nextgenas.generateLocalVariable generates local variable", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "GenerateVariable.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("nextgenas.generateLocalVariable", uri.toString(), 7, 2, 7, 32, "myVar")
+				.then(() =>
+					{
+						return new Promise((resolve, reject) =>
+						{
+							//the text edit is not applied immediately, so give
+							//it a short delay before we check
+							setTimeout(() =>
+							{
+								let start = new vscode.Position(6, 0);
+								let end = new vscode.Position(8, 0);
+								let range = new vscode.Range(start, end);
+								let generatedText = editor.document.getText(range);
+								assert.strictEqual(generatedText, "\t\t\tvar myVar:Object;\n\t\t\tmyVar = 12;\n", "nextgenas.generateLocalVariable failed to generate local variable");
+								resolve();
+							}, 250);
+						})
+					}, (err) =>
+					{
+						assert(false, "Failed to execute generate local variable command: " + uri);
+					});
+		});
+	});
+	test("nextgenas.generateFieldVariable generates local variable", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "GenerateVariable.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("nextgenas.generateFieldVariable", uri.toString(), 7, 2, 7, 32, "myVar")
+				.then(() =>
+					{
+						return new Promise((resolve, reject) =>
+						{
+							//the text edit is not applied immediately, so give
+							//it a short delay before we check
+							setTimeout(() =>
+							{
+								let start = new vscode.Position(9, 0);
+								let end = new vscode.Position(10, 0);
+								let range = new vscode.Range(start, end);
+								let generatedText = editor.document.getText(range);
+								assert.strictEqual(generatedText, "\t\tpublic var myVar:Object;\n", "nextgenas.generateFieldVariable failed to generate field variable");
+								resolve();
+							}, 250);
+						})
+					}, (err) =>
+					{
+						assert(false, "Failed to execute generate field variable command: " + uri);
+					});
+		});
+	});
+});

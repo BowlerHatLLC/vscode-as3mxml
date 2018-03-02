@@ -150,6 +150,7 @@ import org.apache.royale.compiler.units.ICompilationUnit;
 import org.apache.royale.compiler.units.IInvisibleCompilationUnit;
 import org.apache.royale.compiler.workspaces.IWorkspace;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.io.Files;
 import com.google.common.net.UrlEscapers;
 import com.google.gson.JsonElement;
@@ -6005,12 +6006,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private CompletableFuture<Object> executeGenerateLocalVariableCommand(ExecuteCommandParams params)
     {
         List<Object> args = params.getArguments();
-        String uri = (String) args.get(0);
-        int startLine = ((Double) args.get(1)).intValue();
-        int startChar = ((Double) args.get(2)).intValue();
-        //int endLine = ((Double) args.get(3)).intValue();
-        //int endChar = ((Double) args.get(4)).intValue();
-        String name = (String) args.get(5);
+        String uri = ((JsonPrimitive) args.get(0)).getAsString();
+        int startLine = ((JsonPrimitive) args.get(1)).getAsInt();
+        int startChar = ((JsonPrimitive) args.get(2)).getAsInt();
+        //int endLine = ((JsonPrimitive) args.get(3)).getAsInt();
+        //int endChar = ((JsonPrimitive) args.get(4)).getAsInt();
+        String name = ((JsonPrimitive) args.get(5)).getAsString();
 
         TextDocumentIdentifier identifier = new TextDocumentIdentifier(uri);
         Position position = new Position(startLine, startChar);
@@ -6045,12 +6046,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private CompletableFuture<Object> executeGenerateFieldVariableCommand(ExecuteCommandParams params)
     {
         List<Object> args = params.getArguments();
-        String uri = (String) args.get(0);
-        int startLine = ((Double) args.get(1)).intValue();
-        int startChar = ((Double) args.get(2)).intValue();
-        //int endLine = ((Double) args.get(3)).intValue();
-        //int endChar = ((Double) args.get(4)).intValue();
-        String name = (String) args.get(5);
+        String uri = ((JsonPrimitive) args.get(0)).getAsString();
+        int startLine = ((JsonPrimitive) args.get(1)).getAsInt();
+        int startChar = ((JsonPrimitive) args.get(2)).getAsInt();
+        //int endLine = ((JsonPrimitive) args.get(3)).getAsInt();
+        //int endChar = ((JsonPrimitive) args.get(4)).getAsInt();
+        String name = ((JsonPrimitive) args.get(5)).getAsString();
         
         TextDocumentIdentifier identifier = new TextDocumentIdentifier(uri);
         Position position = new Position(startLine, startChar);
