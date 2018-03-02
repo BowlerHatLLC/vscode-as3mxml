@@ -9,6 +9,8 @@ package
 
 		public var assignment:String = "hello";
 
+		private static var isStatic:Boolean;
+
 		//some code to appear after the variables
 		public function someFunction():void {}
 	}

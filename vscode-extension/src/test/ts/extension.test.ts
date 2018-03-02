@@ -7068,6 +7068,34 @@ suite("generate getter/setter", () =>
 					});
 		});
 	});
+	test("nextgenas.generateGetter generates getter with static", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "GenerateGetterAndSetter.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("nextgenas.generateGetter", uri.toString(), 11, 2, 11, 37, "isStatic", "private", true, "Boolean", null)
+				.then(() =>
+					{
+						return new Promise((resolve, reject) =>
+						{
+							//the text edit is not applied immediately, so give
+							//it a short delay before we check
+							setTimeout(() =>
+							{
+								let start = new vscode.Position(11, 0);
+								let end = new vscode.Position(17, 0);
+								let range = new vscode.Range(start, end);
+								let generatedText = editor.document.getText(range);
+								assert.strictEqual(generatedText, "\t\tprivate static var _isStatic:Boolean;\n\n\t\tprivate static function get isStatic():Boolean\n\t\t{\n\t\t\treturn _isStatic;\n\t\t}\n", "nextgenas.generateGetter failed to generate getter");
+								resolve();
+							}, 250);
+						})
+					}, (err) =>
+					{
+						assert(false, "Failed to execute generate getter command: " + uri);
+					});
+		});
+	});
 	test("nextgenas.generateSetter generates setter without assignment", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "GenerateGetterAndSetter.as"));
@@ -7124,6 +7152,34 @@ suite("generate getter/setter", () =>
 					});
 		});
 	});
+	test("nextgenas.generateSetter generates setter with static", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "GenerateGetterAndSetter.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("nextgenas.generateSetter", uri.toString(), 11, 2, 11, 37, "isStatic", "private", true, "Boolean", null)
+				.then(() =>
+					{
+						return new Promise((resolve, reject) =>
+						{
+							//the text edit is not applied immediately, so give
+							//it a short delay before we check
+							setTimeout(() =>
+							{
+								let start = new vscode.Position(11, 0);
+								let end = new vscode.Position(17, 0);
+								let range = new vscode.Range(start, end);
+								let generatedText = editor.document.getText(range);
+								assert.strictEqual(generatedText, "\t\tprivate static var _isStatic:Boolean;\n\n\t\tprivate static function set isStatic(value:Boolean):void\n\t\t{\n\t\t\t_isStatic = value;\n\t\t}\n", "nextgenas.generateSetter failed to generate setter");
+								resolve();
+							}, 250);
+						})
+					}, (err) =>
+					{
+						assert(false, "Failed to execute generate setter command: " + uri);
+					});
+		});
+	});
 	test("nextgenas.generateGetterAndSetter generates getter and setter without assignment", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "GenerateGetterAndSetter.as"));
@@ -7171,6 +7227,34 @@ suite("generate getter/setter", () =>
 								let range = new vscode.Range(start, end);
 								let generatedText = editor.document.getText(range);
 								assert.strictEqual(generatedText, "\t\tprivate var _assignment:String = \"hello\";\n\n\t\tpublic function get assignment():String\n\t\t{\n\t\t\treturn _assignment;\n\t\t}\n\n\t\tpublic function set assignment(value:String):void\n\t\t{\n\t\t\t_assignment = value;\n\t\t}\n", "nextgenas.generateSetter failed to generate getter and setter");
+								resolve();
+							}, 250);
+						})
+					}, (err) =>
+					{
+						assert(false, "Failed to execute generate getter and setter command: " + uri);
+					});
+		});
+	});
+	test("nextgenas.generateGetterAndSetter generates getter and setter with static", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "GenerateGetterAndSetter.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("nextgenas.generateGetterAndSetter", uri.toString(), 11, 2, 11, 37, "isStatic", "private", true, "Boolean", null)
+				.then(() =>
+					{
+						return new Promise((resolve, reject) =>
+						{
+							//the text edit is not applied immediately, so give
+							//it a short delay before we check
+							setTimeout(() =>
+							{
+								let start = new vscode.Position(11, 0);
+								let end = new vscode.Position(22, 0);
+								let range = new vscode.Range(start, end);
+								let generatedText = editor.document.getText(range);
+								assert.strictEqual(generatedText, "\t\tprivate static var _isStatic:Boolean;\n\n\t\tprivate static function get isStatic():Boolean\n\t\t{\n\t\t\treturn _isStatic;\n\t\t}\n\n\t\tprivate static function set isStatic(value:Boolean):void\n\t\t{\n\t\t\t_isStatic = value;\n\t\t}\n", "nextgenas.generateGetterAndSetter failed to generate getter and setter");
 								resolve();
 							}, 250);
 						})
