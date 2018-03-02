@@ -99,7 +99,7 @@ public class CodeGenerationUtils
 
 	public static WorkspaceEdit createGenerateMethodWorkspaceEdit(
 		String uri, int startLine, int startChar, int endLine, int endChar,
-		String name, List<?> methodArgs, ImportRange importRange, String fileText)
+		String name, List<String> methodArgs, ImportRange importRange, String fileText)
     {
 		WorkspaceEdit workspaceEdit = new WorkspaceEdit();
 
@@ -119,29 +119,32 @@ public class CodeGenerationUtils
         builder.append("private function ");
         builder.append(name);
         builder.append("(");
-        for (int i = 0, count = methodArgs.size(); i < count; i++)
+        if(methodArgs != null)
         {
-            if(i > 0)
+            for (int i = 0, count = methodArgs.size(); i < count; i++)
             {
-                builder.append(", ");
-            }
-            String type = (String) methodArgs.get(i);
-            builder.append("param");
-            builder.append(i);
-            builder.append(":");
-            int index = type.lastIndexOf(".");
-            if (index == -1)
-            {
-                builder.append(type);
-            }
-            else
-            {
-                builder.append(type.substring(index + 1));
-            }
-            TextEdit importEdit = ImportTextEditUtils.createTextEditForImport(type, fileText, importRange.startIndex, importRange.endIndex);
-            if (importEdit != null)
-            {
-                edits.add(importEdit);
+                if(i > 0)
+                {
+                    builder.append(", ");
+                }
+                String type = methodArgs.get(i);
+                builder.append("param");
+                builder.append(i);
+                builder.append(":");
+                int index = type.lastIndexOf(".");
+                if (index == -1)
+                {
+                    builder.append(type);
+                }
+                else
+                {
+                    builder.append(type.substring(index + 1));
+                }
+                TextEdit importEdit = ImportTextEditUtils.createTextEditForImport(type, fileText, importRange.startIndex, importRange.endIndex);
+                if (importEdit != null)
+                {
+                    edits.add(importEdit);
+                }
             }
         }
         builder.append(")");

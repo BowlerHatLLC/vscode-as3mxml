@@ -153,6 +153,7 @@ import org.apache.royale.compiler.workspaces.IWorkspace;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.io.Files;
 import com.google.common.net.UrlEscapers;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.internal.LinkedTreeMap;
@@ -6086,17 +6087,23 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private CompletableFuture<Object> executeGenerateMethodCommand(ExecuteCommandParams params)
     {
         List<Object> args = params.getArguments();
-        String uri = (String) args.get(0);
-        int startLine = ((Double) args.get(1)).intValue();
-        int startChar = ((Double) args.get(2)).intValue();
-        //int endLine = ((Double) args.get(3)).intValue();
-        //int endChar = ((Double) args.get(4)).intValue();
-        String name = (String) args.get(5);
-        Object uncastArgs = args.get(6);
-        ArrayList<?> methodArgs = null;
-        if (uncastArgs instanceof ArrayList<?>)
+        String uri = ((JsonPrimitive) args.get(0)).getAsString();
+        int startLine = ((JsonPrimitive) args.get(1)).getAsInt();
+        int startChar = ((JsonPrimitive) args.get(2)).getAsInt();
+        //int endLine = ((JsonPrimitive) args.get(3)).getAsInt();
+        //int endChar = ((JsonPrimitive) args.get(4)).getAsInt();
+        String name = ((JsonPrimitive) args.get(5)).getAsString();
+
+        ArrayList<String> methodArgs = null;
+        JsonElement methodArgsRaw = (JsonElement) args.get(6);
+        if (methodArgsRaw.isJsonArray())
         {
-            methodArgs = (ArrayList<?>) uncastArgs;
+            JsonArray methodArgsJson = methodArgsRaw.getAsJsonArray();
+            methodArgs = new ArrayList<>();
+            for (int i = 0, count = methodArgsJson.size(); i < count; i++)
+            {
+                methodArgs.add(methodArgsJson.get(i).getAsString());
+            }
         }
 
         TextDocumentIdentifier identifier = new TextDocumentIdentifier(uri);

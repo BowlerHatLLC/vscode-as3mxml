@@ -7327,13 +7327,86 @@ suite("generate variable", () =>
 								let end = new vscode.Position(10, 0);
 								let range = new vscode.Range(start, end);
 								let generatedText = editor.document.getText(range);
-								assert.strictEqual(generatedText, "\t\tpublic var myVar:Object;\n", "nextgenas.generateFieldVariable failed to generate field variable");
+								assert.strictEqual(generatedText, "\t\tpublic var myVar:Object;\n\t\t\tmyVar = 12;\n", "nextgenas.generateFieldVariable failed to generate field variable");
 								resolve();
 							}, 250);
 						})
 					}, (err) =>
 					{
 						assert(false, "Failed to execute generate field variable command: " + uri);
+					});
+		});
+	});
+});
+
+suite("generate method", () =>
+{
+	teardown(() =>
+	{
+		return vscode.commands.executeCommand("workbench.action.revertAndCloseActiveEditor").then(() =>
+		{
+			return new Promise((resolve, reject) =>
+			{
+				setTimeout(() =>
+				{
+					resolve();
+				}, 100);
+			});
+		});
+	});
+	test("nextgenas.generateMethod generates method with no parameters", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "GenerateMethod.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("nextgenas.generateMethod", uri.toString(), 6, 2, 6, 11, "myMethod", null)
+				.then(() =>
+					{
+						return new Promise((resolve, reject) =>
+						{
+							//the text edit is not applied immediately, so give
+							//it a short delay before we check
+							setTimeout(() =>
+							{
+								let start = new vscode.Position(10, 0);
+								let end = new vscode.Position(13, 0);
+								let range = new vscode.Range(start, end);
+								let generatedText = editor.document.getText(range);
+								assert.strictEqual(generatedText, "\t\tprivate function myMethod():void\n\t\t{\n\t\t}\n", "nextgenas.generateMethod failed to generate method");
+								resolve();
+							}, 250);
+						})
+					}, (err) =>
+					{
+						assert(false, "Failed to execute generate method command: " + uri);
+					});
+		});
+	});
+	test("nextgenas.generateMethod generates method with parameters", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "GenerateMethod.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("nextgenas.generateMethod", uri.toString(), 7, 2, 7, 11, "myMethod", ["Number", "Boolean", "String"])
+				.then(() =>
+					{
+						return new Promise((resolve, reject) =>
+						{
+							//the text edit is not applied immediately, so give
+							//it a short delay before we check
+							setTimeout(() =>
+							{
+								let start = new vscode.Position(10, 0);
+								let end = new vscode.Position(13, 0);
+								let range = new vscode.Range(start, end);
+								let generatedText = editor.document.getText(range);
+								assert.strictEqual(generatedText, "\t\tprivate function myMethod(param0:Number, param1:Boolean, param2:String):void\n\t\t{\n\t\t}\n", "nextgenas.generateMethod failed to generate method");
+								resolve();
+							}, 250);
+						})
+					}, (err) =>
+					{
+						assert(false, "Failed to execute generate method command: " + uri);
 					});
 		});
 	});
