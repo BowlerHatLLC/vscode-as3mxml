@@ -104,6 +104,18 @@ public class AIROptionsParser
 					}
 					break;
 				}
+				case AIRPlatform.IOS_SIMULATOR:
+				{
+					if(debug)
+					{
+						setValueWithoutAssignment(AIROptions.TARGET, AIRTarget.IPA_DEBUG_INTERPRETER_SIMULATOR, result);
+					}
+					else
+					{
+						setValueWithoutAssignment(AIROptions.TARGET, AIRTarget.IPA_TEST_INTERPRETER_SIMULATOR, result);
+					}
+					break;
+				}
 				case AIRPlatform.WINDOWS:
 				{
 					//captive runtime
@@ -138,7 +150,7 @@ public class AIROptionsParser
 		}
 
 		//DEBUGGER_CONNECTION_OPTIONS begin
-		if(debug && (platform.equals(AIRPlatform.ANDROID) || platform.equals(AIRPlatform.IOS)))
+		if(debug && (platform.equals(AIRPlatform.ANDROID) || platform.equals(AIRPlatform.IOS) || platform.equals(AIRPlatform.IOS_SIMULATOR)))
 		{
 			parseDebugOptions(options, platform, result);
 		}
@@ -152,7 +164,7 @@ public class AIROptionsParser
 		//NATIVE_SIGNING_OPTIONS begin
 		//these are *mobile* signing options only
 		//desktop signing options were already handled earlier
-		if(platform.equals(AIRPlatform.ANDROID) || platform.equals(AIRPlatform.IOS))
+		if(platform.equals(AIRPlatform.ANDROID) || platform.equals(AIRPlatform.IOS) || platform.equals(AIRPlatform.IOS_SIMULATOR))
 		{
 			if(overridesOptionForPlatform(options, AIROptions.SIGNING_OPTIONS, platform))
 			{
@@ -232,6 +244,7 @@ public class AIROptionsParser
 				case AIRPlatform.AIR:
 				case AIRPlatform.ANDROID:
 				case AIRPlatform.IOS:
+				case AIRPlatform.IOS_SIMULATOR:
 				case AIRPlatform.MAC:
 				case AIRPlatform.WINDOWS:
 

@@ -22,4 +22,5 @@ public class AIRPlatform
 	public static final String WINDOWS = "windows";
 	public static final String IOS = "ios";
 	public static final String ANDROID = "android";
+	public static final String IOS_SIMULATOR = "ios_simulator";
 }

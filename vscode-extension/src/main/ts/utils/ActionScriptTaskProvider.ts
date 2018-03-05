@@ -29,6 +29,7 @@ const FIELD_APPLICATION = "application";
 const FIELD_AIR_OPTIONS = "airOptions";
 const FIELD_TARGET = "target";
 const PLATFORM_IOS = "ios";
+const PLATFORM_IOS_SIMULATOR = "ios_simulator";
 const PLATFORM_ANDROID = "android";
 const PLATFORM_AIR = "air";
 const PLATFORM_WINDOWS = "windows";
@@ -122,10 +123,14 @@ export default class ActionScriptTaskProvider implements vscode.TaskProvider
 
 		if(isAIRMobile)
 		{
-			result.push(this.getTask("package debug iOS application",
+			result.push(this.getTask("package debug iOS application (Device)",
 				workspaceFolder, command, frameworkSDK, true, PLATFORM_IOS));
-			result.push(this.getTask("package release iOS application",
+			result.push(this.getTask("package release iOS application (Device)",
 				workspaceFolder, command, frameworkSDK, false, PLATFORM_IOS));
+			result.push(this.getTask("package debug iOS application (Simulator)",
+				workspaceFolder, command, frameworkSDK, true, PLATFORM_IOS_SIMULATOR));
+			result.push(this.getTask("package release iOS application (Simulator)",
+				workspaceFolder, command, frameworkSDK, false, PLATFORM_IOS_SIMULATOR));
 			result.push(this.getTask("package debug Android application",
 				workspaceFolder, command, frameworkSDK, true, PLATFORM_ANDROID));
 			result.push(this.getTask("package release Android application",

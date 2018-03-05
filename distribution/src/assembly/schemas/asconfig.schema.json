@@ -171,6 +171,21 @@
 				]
 			}
 		},
+		"airOptionsSampler":
+		{
+			"type": "boolean",
+			"description": "Enables the telemetry-based ActionScript sampler in iOS applications."
+		},
+		"airOptionsHideAneLibSymbols":
+		{
+			"type": "boolean",
+			"description": "Specify whether iOS ANE library symbols are visible only to that library's sources or globally."
+		},
+		"airOptionsEmbedBitcode":
+		{
+			"type": "boolean",
+			"description": "Specify whether to embed iOS bitcode or not."
+		},
 		"airOptions":
 		{
 			"type": "object",
@@ -186,25 +201,13 @@
 					"type": "object",
 					"properties":
 					{
-						"embedBitcode":
-						{
-							"type": "boolean",
-							"description": "Specify whether to embed iOS bitcode or not."
-						},
+						"embedBitcode": { "$ref": "#/definitions/airOptionsEmbedBitcode" },
 						"extdir": { "$ref": "#/definitions/airOptionsExtdir" },
 						"files": { "$ref": "#/definitions/airOptionsFiles" },
-						"hideAneLibSymbols":
-						{
-							"type": "boolean",
-							"description": "Specify whether iOS ANE library symbols are visible only to that library's sources or globally."
-						},
+						"hideAneLibSymbols": { "$ref": "#/definitions/airOptionsHideAneLibSymbols" },
 						"output": { "$ref": "#/definitions/airOptionsOutput" },
 						"signingOptions": { "$ref": "#/definitions/signingOptions" },
-						"sampler":
-						{
-							"type": "boolean",
-							"description": "Enables the telemetry-based ActionScript sampler in iOS applications."
-						},
+						"sampler": { "$ref": "#/definitions/airOptionsSampler" },
 						"connect": { "$ref": "#/definitions/airOptionsConnect" },
 						"listen": { "$ref": "#/definitions/airOptionsListen" },
 						"platformsdk": { "$ref": "#/definitions/airOptionsPlatformSDK" },
@@ -213,6 +216,33 @@
 							"type": "string",
 							"description": "The package target for iOS.",
 							"pattern": "^(ipa-app-store|ipa-ad-hoc|ipa-debug|ipa-test|ipa-debug-interpreter|ipa-test-interpreter)$"
+						}
+					},
+					"required":
+					[
+						"signingOptions"
+					]
+				},
+				"ios_simulator":
+				{
+					"type": "object",
+					"properties":
+					{
+						"embedBitcode": { "$ref": "#/definitions/airOptionsEmbedBitcode" },
+						"extdir": { "$ref": "#/definitions/airOptionsExtdir" },
+						"files": { "$ref": "#/definitions/airOptionsFiles" },
+						"hideAneLibSymbols": { "$ref": "#/definitions/airOptionsHideAneLibSymbols" },
+						"output": { "$ref": "#/definitions/airOptionsOutput" },
+						"signingOptions": { "$ref": "#/definitions/signingOptions" },
+						"sampler": { "$ref": "#/definitions/airOptionsSampler" },
+						"connect": { "$ref": "#/definitions/airOptionsConnect" },
+						"listen": { "$ref": "#/definitions/airOptionsListen" },
+						"platformsdk": { "$ref": "#/definitions/airOptionsPlatformSDK" },
+						"target":
+						{
+							"type": "string",
+							"description": "The package target for iOS.",
+							"pattern": "^(ipa-debug-interpreter-simulator|ipa-test-interpreter-simulator)$"
 						}
 					},
 					"required":
