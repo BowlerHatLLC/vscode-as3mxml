@@ -34,6 +34,7 @@ public class AIRTarget
 	public static final String IPA_DEBUG = "ipa-debug";
 	public static final String IPA_TEST = "ipa-test";
 	public static final String IPA_DEBUG_INTERPRETER = "ipa-debug-interpreter";
+	public static final String IPA_DEBUG_INTERPRETER_SIMULATOR = "ipa-debug-interpreter-simulator";
 	public static final String IPA_TEST_INTERPRETER = "ipa-test-interpreter";
 	public static final String IPA_TEST_INTERPRETER_SIMULATOR = "ipa-test-interpreter-simulator";
 }
