@@ -7309,7 +7309,7 @@ suite("generate variable", () =>
 					});
 		});
 	});
-	test("nextgenas.generateFieldVariable generates local variable", () =>
+	test("nextgenas.generateFieldVariable generates field variable", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "GenerateVariable.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
@@ -7327,7 +7327,7 @@ suite("generate variable", () =>
 								let end = new vscode.Position(10, 0);
 								let range = new vscode.Range(start, end);
 								let generatedText = editor.document.getText(range);
-								assert.strictEqual(generatedText, "\t\tpublic var myVar:Object;\n\t\t\tmyVar = 12;\n", "nextgenas.generateFieldVariable failed to generate field variable");
+								assert.strictEqual(generatedText, "\t\tpublic var myVar:Object;\n", "nextgenas.generateFieldVariable failed to generate field variable");
 								resolve();
 							}, 250);
 						})
