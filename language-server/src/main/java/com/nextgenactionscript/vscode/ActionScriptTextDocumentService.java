@@ -5829,13 +5829,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private CompletableFuture<Object> executeOrganizeImportsInDirectoryCommand(ExecuteCommandParams params)
     {
         List<Object> args = params.getArguments();
-        Object uncastUri = args.get(0);
-        LinkedTreeMap<?,?> encodedUri = null;
-        if (uncastUri instanceof LinkedTreeMap<?,?>)
-        {
-            encodedUri = (LinkedTreeMap<?,?>) uncastUri;
-        }
-        String uri = (String) encodedUri.get("external");
+        JsonObject uriObject = (JsonObject) args.get(0);
+        String uri = uriObject.get("external").getAsString();
 
         File rootDir = Paths.get(URI.create(uri)).toFile();
         if (!rootDir.isDirectory())
