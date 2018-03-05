@@ -128,7 +128,7 @@ function findImportCommandForType(qualifiedName: string, codeActions: vscode.Com
 	return null;
 }
 
-suite("NextGenAS extension", () =>
+suite("ActionScript & MXML extension", () =>
 {
 	test("vscode.extensions.getExtension() and isActive", (done) =>
 	{
