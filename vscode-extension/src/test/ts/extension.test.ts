@@ -7442,10 +7442,10 @@ suite("organize imports", () =>
 							setTimeout(() =>
 							{
 								let start = new vscode.Position(2, 0);
-								let end = new vscode.Position(6, 0);
+								let end = new vscode.Position(11, 0);
 								let range = new vscode.Range(start, end);
 								let generatedText = editor.document.getText(range);
-								assert.strictEqual(generatedText, "\timport com.example.IPackageInterface;\n\timport com.example.ImportToAdd;\n\timport com.example.PackageClass;\n\n", "nextgenas.organizeImportsInUri failed to organize imports");
+								assert.strictEqual(generatedText, "\timport com.example.organizeImports.ImportToAdd;\n\timport com.example.organizeImports.ImportToAddFromAsOperator;\n\timport com.example.organizeImports.ImportToAddFromCast;\n\timport com.example.organizeImports.ImportToAddFromIsOperator;\n\timport com.example.organizeImports.ImportToAddFromNew;\n\timport com.example.organizeImports.ImportToAddFromReturnType;\n\timport com.example.organizeImports.ImportToKeepClass;\n\timport com.example.organizeImports.ImportToKeepInterface;\n\n", "nextgenas.organizeImportsInUri failed to organize imports");
 								resolve();
 							}, 1000);
 						})

@@ -1,4 +1,4 @@
-package com.example
+package com.example.organizeImports
 {
 	public class ImportToRemove
 	{
