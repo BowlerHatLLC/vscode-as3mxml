@@ -3810,6 +3810,22 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         item.setKind(getDefinitionKind(definition));
         item.setDetail(DefinitionTextUtils.definitionToDetail(definition, currentProject));
         item.setLabel(definition.getBaseName());
+        /*if (definition instanceof IFunctionDefinition
+                && !(definition instanceof IAccessorDefinition)
+                && completionSupportsSnippets)
+        {
+            IFunctionDefinition functionDefinition = (IFunctionDefinition) definition;
+            if (functionDefinition.getParameters().length == 0)
+            {
+                item.setInsertText(definition.getBaseName() + "()");
+            }
+            else
+            {
+                item.setInsertTextFormat(InsertTextFormat.Snippet);
+                item.setInsertText(definition.getBaseName() + "($0)");
+                //TODO: manually activate signature help
+            }
+        }*/
         String docs = getDocumentationForDefinition(definition, false);
         if (docs != null)
         {
