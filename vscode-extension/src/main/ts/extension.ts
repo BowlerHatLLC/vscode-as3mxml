@@ -37,6 +37,7 @@ import {LanguageClient, LanguageClientOptions, SettingMonitor,
 	CloseAction, Executable, ExecutableOptions} from "vscode-languageclient";
 import { Message } from "vscode-jsonrpc";
 import buildWithFlexCompilerShell from "./commands/buildWithFlexCompilerShell";
+import updateFCSHOutputChannel from "./commands/updateFCSHOutputChannel";
 
 const INVALID_SDK_ERROR = "nextgenas.sdk.editor in settings does not point to a valid SDK. Requires Apache Royale 0.9.0 or newer.";
 const MISSING_FRAMEWORK_SDK_ERROR = "You must configure an SDK to enable all ActionScript and MXML features.";
@@ -234,6 +235,7 @@ export function activate(context: vscode.ExtensionContext)
 	});
 	vscode.commands.registerCommand("nextgenas.selectWorkspaceSDK", selectWorkspaceSDK);
 	vscode.commands.registerCommand("nextgenas.restartServer", restartServer);
+	vscode.commands.registerCommand("nextgenas.updateFCSHOutputChannel", updateFCSHOutputChannel);
 	vscode.commands.registerCommand("nextgenas.migrateFlashBuilderProject", () =>
 	{
 		if(vscode.workspace.workspaceFolders)

@@ -25,27 +25,22 @@ const OUTPUT_PROMPT_FCSH = "(fcsh) ";
 const OUTPUT_COLUMN_NUMBER = "): col: ";
 const OUTPUT_PROBLEM_TYPE_ERROR = "Error: ";
 const ERROR_CANNOT_FIND_FCSH = "Flex Compiler Shell (fcsh) not found in the workspace's SDK.";
+const NEW_LINE = "\n";
 
 let fcshPath: string = null;
 let fcshProcess: child_process.ChildProcess = null;
-let outputChannel: vscode.OutputChannel = null;
 let waitingForInput = false;
 let compileID: string = null;
 
 function executeCommand(command: string)
 {
 	waitingForInput = false;
-	outputChannel.appendLine(command);
-	fcshProcess.stdin.write(command + "\n");
+	vscode.commands.executeCommand("nextgenas.updateFCSHOutputChannel", command);
+	fcshProcess.stdin.write(command + NEW_LINE);
 }
 
 export default function buildWithFlexCompilerShell(workspaceFolder: vscode.WorkspaceFolder, javaExecutablePath: string, frameworkSDKHome: string, debugBuild: boolean)
 {
-	if(outputChannel === null)
-	{
-		outputChannel = vscode.window.createOutputChannel("Flex Compiler Shell (fcsh)");
-	}
-	outputChannel.show();
 	let executable = EXECUTABLE_UNIX_FCSH;
 	if(process.platform === "win32")
 	{
@@ -61,9 +56,9 @@ export default function buildWithFlexCompilerShell(workspaceFolder: vscode.Works
 		{
 			//if the path doesn't match, and the process was previously
 			//started, exit so that we can launch the new executable.
-			let command = "exit\n";
-			outputChannel.append(command);
-			fcshProcess.stdin.write(command);
+			let command = "exit";
+			vscode.commands.executeCommand("nextgenas.updateFCSHOutputChannel", command);
+			fcshProcess.stdin.write(command + NEW_LINE);
 			fcshProcess = null;
 		}
 	}
@@ -106,7 +101,7 @@ export default function buildWithFlexCompilerShell(workspaceFolder: vscode.Works
 				if(waitingForStart)
 				{
 					waitingForStart = false;
-					outputChannel.append(text);
+					vscode.commands.executeCommand("nextgenas.updateFCSHOutputChannel", text, false);
 					let command = "mxmlc"; //TODO: replace with real command
 					executeCommand(command);
 				}
@@ -117,15 +112,15 @@ export default function buildWithFlexCompilerShell(workspaceFolder: vscode.Works
 					fcshProcess.stderr.removeListener("data", stderr_onData);
 					if(hasErrors)
 					{
-						outputChannel.appendLine("");
-						outputChannel.appendLine("Build failed.");
+						vscode.commands.executeCommand("nextgenas.updateFCSHOutputChannel", "");
+						vscode.commands.executeCommand("nextgenas.updateFCSHOutputChannel", "Build failed.");
 						reject();
 						return;
 					}
 					else
 					{
-						outputChannel.appendLine("");
-						outputChannel.appendLine("Build complete.");
+						vscode.commands.executeCommand("nextgenas.updateFCSHOutputChannel", "");
+						vscode.commands.executeCommand("nextgenas.updateFCSHOutputChannel", "Build complete.");
 						resolve();
 						return;
 					}
@@ -133,7 +128,7 @@ export default function buildWithFlexCompilerShell(workspaceFolder: vscode.Works
 			}
 			else
 			{
-				outputChannel.append(text);
+				vscode.commands.executeCommand("nextgenas.updateFCSHOutputChannel", text, false);
 			}
 		};
 		
@@ -158,7 +153,7 @@ export default function buildWithFlexCompilerShell(workspaceFolder: vscode.Works
 					}
 				}
 			}
-			outputChannel.append(text);
+			vscode.commands.executeCommand("nextgenas.updateFCSHOutputChannel", text, false);
 		};
 		
 		fcshProcess.stdout.addListener("data", stdout_onData);
@@ -167,8 +162,7 @@ export default function buildWithFlexCompilerShell(workspaceFolder: vscode.Works
 		if(!waitingForStart && waitingForInput)
 		{
 			waitingForInput = false;
-			outputChannel.clear();
-			outputChannel.append(OUTPUT_PROMPT_FCSH);
+			vscode.commands.executeCommand("nextgenas.updateFCSHOutputChannel", OUTPUT_PROMPT_FCSH, false, true);
 			executeCommand("compile " + compileID);
 		}
 	});
