@@ -3945,6 +3945,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return CompletionItemKind.Interface;
         }
+        else if (definition instanceof IAccessorDefinition)
+        {
+            return CompletionItemKind.Field;
+        }
         else if (definition instanceof IFunctionDefinition)
         {
             IFunctionDefinition functionDefinition = (IFunctionDefinition) definition;
@@ -3952,11 +3956,28 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             {
                 return CompletionItemKind.Constructor;
             }
+            IDefinition parentDefinition = functionDefinition.getParent();
+            if (parentDefinition != null && parentDefinition instanceof ITypeDefinition)
+            {
+                return CompletionItemKind.Method;
+            }
             return CompletionItemKind.Function;
         }
         else if (definition instanceof IVariableDefinition)
         {
-            return CompletionItemKind.Variable;
+            IVariableDefinition variableDefinition = (IVariableDefinition) definition;
+            switch(variableDefinition.getVariableClassification())
+            {
+                case INTERFACE_MEMBER:
+                case CLASS_MEMBER:
+                {
+                    return CompletionItemKind.Field;
+                }
+                default:
+                {
+                    return CompletionItemKind.Variable;
+                }
+            }
         }
         return CompletionItemKind.Value;
     }
