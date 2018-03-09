@@ -19,8 +19,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.Reader;
 import java.io.StringReader;
 import java.lang.reflect.Field;
@@ -162,6 +160,7 @@ import com.nextgenactionscript.asconfigc.compiler.ProjectType;
 import com.nextgenactionscript.vscode.asdoc.VSCodeASDocComment;
 import com.nextgenactionscript.vscode.asdoc.VSCodeASDocDelegate;
 import com.nextgenactionscript.vscode.commands.ICommandConstants;
+import com.nextgenactionscript.vscode.compiler.CompilerShell;
 import com.nextgenactionscript.vscode.mxml.IMXMLLibraryConstants;
 import com.nextgenactionscript.vscode.project.IProjectConfigStrategy;
 import com.nextgenactionscript.vscode.project.ProjectOptions;
@@ -319,6 +318,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private Thread sourcePathWatcherThread;
     private ClientCapabilities clientCapabilities;
     private boolean completionSupportsSnippets = false;
+    private CompilerShell compilerShell;
 
     private class MXMLNamespace
     {
@@ -6264,194 +6264,15 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return CompletableFuture.completedFuture(new Object());
     }
 
-    private Process compilerShellProcess;
-    private String compileID;
-
     private CompletableFuture<Object> executeCompileDebugBuildWithCompilerShell(ExecuteCommandParams params)
     {
+        if (compilerShell == null)
+        {
+            compilerShell = new CompilerShell(languageClient);
+        }
         String frameworkLib = System.getProperty(PROPERTY_FRAMEWORK_LIB);
         Path frameworkSDKHome = Paths.get(frameworkLib, "..");
-        Path fcshPath = Paths.get(frameworkLib, "..", "lib", "fcsh.jar");
-        if (!fcshPath.toFile().exists())
-        {
-            languageClient.showMessage(new MessageParams(MessageType.Error, "Flex Compiler Shell (fcsh) not found in the workspace's SDK."));
-            return CompletableFuture.completedFuture(new Object());
-        }
-        if (currentProjectOptions == null)
-        {
-            languageClient.showMessage(new MessageParams(MessageType.Error, "Failed to start Flex Compiler Shell (fcsh) because project options are invalid."));
-            return CompletableFuture.completedFuture(new Object());
-        }
-
-        boolean waitingForStart = false;
-        if (compilerShellProcess == null)
-        {
-            waitingForStart = true;
-            Path javaExecutablePath = Paths.get(System.getProperty("java.home"), "bin", "java");
-            ArrayList<String> options = new ArrayList<>();
-            options.add(javaExecutablePath.toString());
-            options.add("-Dapplication.home=" + frameworkSDKHome);
-			options.add("-Djava.util.Arrays.useLegacyMergeSort=true");
-			options.add("-jar");
-            options.add(fcshPath.toAbsolutePath().toString());
-            try
-            {
-                compilerShellProcess = new ProcessBuilder()
-                    .command(options)
-                    .directory(workspaceRoot.toFile())
-                    .start();
-            }
-            catch (IOException e)
-            {
-                e.printStackTrace(System.err);
-                languageClient.showMessage(new MessageParams(MessageType.Error, "Failed to start Flex Compiler Shell (fcsh)."));
-                return CompletableFuture.completedFuture(new Object());
-            }
-        }
-
-        if(waitingForStart)
-        {
-            String currentInput = "";
-            InputStream inputStream = compilerShellProcess.getInputStream();
-            do
-            {
-                try
-                {
-                    char next = (char) inputStream.read();
-                    currentInput += next;
-                }
-                catch (IOException e)
-                {
-                    e.printStackTrace(System.err);
-                    languageClient.showMessage(new MessageParams(MessageType.Error, "Error reading from Flex Compiler Shell (fcsh)."));
-                    return CompletableFuture.completedFuture(new Object());
-                }
-            }
-            while (!currentInput.endsWith("(fcsh) "));
-            languageClient.logMessage(new MessageParams(MessageType.Info, currentInput));
-            waitingForStart = false;
-        }
-
-        String command;
-        if (compileID != null)
-        {
-            command = "compile " + compileID + "\n";
-        }
-        else
-        {
-            StringBuilder commandBuilder = new StringBuilder();
-            if (currentProjectOptions.type.equals(ProjectType.APP))
-            {
-                commandBuilder.append("mxmlc");
-            }
-            else if (currentProjectOptions.type.equals(ProjectType.LIB))
-            {
-                commandBuilder.append("compc");
-            }
-            commandBuilder.append(" ");
-            commandBuilder.append("+configname=");
-            commandBuilder.append(currentProjectOptions.config);
-            if (currentProjectOptions.compilerOptions != null)
-            {
-                commandBuilder.append(" ");
-                commandBuilder.append(String.join(" ", currentProjectOptions.compilerOptions));
-            }
-            if (currentProjectOptions.additionalOptions != null)
-            {
-                commandBuilder.append(" ");
-                commandBuilder.append(currentProjectOptions.additionalOptions);
-            }
-            if (currentProjectOptions.files != null)
-            {
-                commandBuilder.append(" ");
-                commandBuilder.append(String.join(" ", currentProjectOptions.files));
-            }
-            commandBuilder.append("\n");
-            command = commandBuilder.toString();
-        }
-        languageClient.logMessage(new MessageParams(MessageType.Info, command));
-
-        OutputStream outputStream = compilerShellProcess.getOutputStream();
-        try
-        {
-            outputStream.write(command.getBytes());
-            outputStream.flush();
-        }
-        catch(IOException e)
-        {
-            e.printStackTrace(System.err);
-            languageClient.showMessage(new MessageParams(MessageType.Error, "Error writing to Flex Compiler Shell (fcsh)."));
-            return CompletableFuture.completedFuture(new Object());
-        }
-
-        String currentError = "";
-        String currentInput = "";
-        InputStream inputStream = compilerShellProcess.getInputStream();
-        InputStream errorStream = compilerShellProcess.getErrorStream();
-        boolean waitingForInput = true;
-        boolean waitingForError = false;
-        try
-        {
-            waitingForError = errorStream.available() > 0;
-        }
-        catch (IOException e)
-        {
-            e.printStackTrace(System.err);
-            languageClient.showMessage(new MessageParams(MessageType.Error, "Error reading from Flex Compiler Shell (fcsh)."));
-            return CompletableFuture.completedFuture(new Object());
-        }
-        do
-        {
-            try
-            {
-                if (waitingForError)
-                {
-                    char next = (char) errorStream.read();
-                    currentError += next;
-                    if (next == '\n')
-                    {
-                        languageClient.logMessage(new MessageParams(MessageType.Error, currentError));
-                        currentError = "";
-                    }
-                }
-                waitingForError = errorStream.available() > 0;
-                if (waitingForInput)
-                {
-                    char next = (char) inputStream.read();
-                    currentInput += next;
-                    //fcsh: Assigned 1 as the compile target id
-                    if (currentInput.startsWith("fcsh: Assigned ") && currentInput.endsWith(" as the compile target id"))
-                    {
-                        compileID = currentInput.substring("fcsh: Assigned ".length(), currentInput.length() - " as the compile target id".length());
-                    }
-                    if (next == '\n')
-                    {
-                        languageClient.logMessage(new MessageParams(MessageType.Info, currentInput));
-                        currentInput = "";
-                    }
-                    if (currentInput.endsWith("(fcsh) "))
-                    {
-                        waitingForInput = false;
-                    }
-                }
-            }
-            catch (IOException e)
-            {
-                e.printStackTrace(System.err);
-                languageClient.showMessage(new MessageParams(MessageType.Error, "Error reading from Flex Compiler Shell (fcsh)."));
-                return CompletableFuture.completedFuture(new Object());
-            }
-        }
-        while (waitingForInput || waitingForError);
-        if (currentError.length() > 0)
-        {
-            languageClient.logMessage(new MessageParams(MessageType.Error, currentError));
-        }
-        if (currentInput.length() > 0)
-        {
-            languageClient.logMessage(new MessageParams(MessageType.Info, currentInput));
-        }
-        
+        compilerShell.compile(currentProjectOptions, workspaceRoot, frameworkSDKHome);
         return CompletableFuture.completedFuture(new Object());
     }
 }
