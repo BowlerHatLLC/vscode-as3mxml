@@ -6265,6 +6265,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     }
 
     private Process compilerShellProcess;
+    private String compileID;
 
     private CompletableFuture<Object> executeCompileDebugBuildWithCompilerShell(ExecuteCommandParams params)
     {
@@ -6331,35 +6332,43 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             waitingForStart = false;
         }
 
-        StringBuilder commandBuilder = new StringBuilder();
-        if (currentProjectOptions.type.equals(ProjectType.APP))
+        String command;
+        if (compileID != null)
         {
-            commandBuilder.append("mxmlc");
+            command = "compile " + compileID + "\n";
         }
-        else if (currentProjectOptions.type.equals(ProjectType.LIB))
+        else
         {
-            commandBuilder.append("compc");
-        }
-        commandBuilder.append(" ");
-        commandBuilder.append("+configname=");
-        commandBuilder.append(currentProjectOptions.config);
-        if (currentProjectOptions.compilerOptions != null)
-        {
+            StringBuilder commandBuilder = new StringBuilder();
+            if (currentProjectOptions.type.equals(ProjectType.APP))
+            {
+                commandBuilder.append("mxmlc");
+            }
+            else if (currentProjectOptions.type.equals(ProjectType.LIB))
+            {
+                commandBuilder.append("compc");
+            }
             commandBuilder.append(" ");
-            commandBuilder.append(String.join(" ", currentProjectOptions.compilerOptions));
+            commandBuilder.append("+configname=");
+            commandBuilder.append(currentProjectOptions.config);
+            if (currentProjectOptions.compilerOptions != null)
+            {
+                commandBuilder.append(" ");
+                commandBuilder.append(String.join(" ", currentProjectOptions.compilerOptions));
+            }
+            if (currentProjectOptions.additionalOptions != null)
+            {
+                commandBuilder.append(" ");
+                commandBuilder.append(currentProjectOptions.additionalOptions);
+            }
+            if (currentProjectOptions.files != null)
+            {
+                commandBuilder.append(" ");
+                commandBuilder.append(String.join(" ", currentProjectOptions.files));
+            }
+            commandBuilder.append("\n");
+            command = commandBuilder.toString();
         }
-        if (currentProjectOptions.additionalOptions != null)
-        {
-            commandBuilder.append(" ");
-            commandBuilder.append(currentProjectOptions.additionalOptions);
-        }
-        if (currentProjectOptions.files != null)
-        {
-            commandBuilder.append(" ");
-            commandBuilder.append(String.join(" ", currentProjectOptions.files));
-        }
-        commandBuilder.append("\n");
-        String command = commandBuilder.toString();
         languageClient.logMessage(new MessageParams(MessageType.Info, command));
 
         OutputStream outputStream = compilerShellProcess.getOutputStream();
@@ -6410,6 +6419,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 {
                     char next = (char) inputStream.read();
                     currentInput += next;
+                    //fcsh: Assigned 1 as the compile target id
+                    if (currentInput.startsWith("fcsh: Assigned ") && currentInput.endsWith(" as the compile target id"))
+                    {
+                        compileID = currentInput.substring("fcsh: Assigned ".length(), currentInput.length() - " as the compile target id".length());
+                    }
                     if (next == '\n')
                     {
                         languageClient.logMessage(new MessageParams(MessageType.Info, currentInput));
