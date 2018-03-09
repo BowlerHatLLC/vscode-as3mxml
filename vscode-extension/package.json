@@ -56,9 +56,8 @@
     "onCommand:nextgenas.selectWorkspaceSDK",
     "onCommand:nextgenas.restartServer",
     "onCommand:nextgenas.migrateFlashBuilderProject",
-    "onCommand:nextgenas.compileDebugBuildWithFlexCompilerShell",
-    "onCommand:nextgenas.compileDebugBuildWithFlexCompilerShellAndLaunch",
-    "onCommand:nextgenas.compileReleaseBuildWithFlexCompilerShell"
+    "onCommand:nextgenas.compileDebugBuildWithCompilerShell",
+    "onCommand:nextgenas.compileDebugBuildWithCompilerShellAndLaunch"
   ],
   "contributes": {
     "commands": [

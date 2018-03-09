@@ -243,18 +243,11 @@ export function activate(context: vscode.ExtensionContext)
 			migrateFlashBuilderProject(vscode.workspace.workspaceFolders[0].uri);
 		}
 	});
-	vscode.commands.registerCommand("nextgenas.compileDebugBuildWithFlexCompilerShell", () =>
+	vscode.commands.registerCommand("nextgenas.compileDebugBuildWithCompilerShellAndLaunch", () =>
 	{
 		if(vscode.workspace.workspaceFolders)
 		{
-			buildWithFlexCompilerShell(vscode.workspace.workspaceFolders[0], javaExecutablePath, frameworkSDKHome, true);
-		}
-	});
-	vscode.commands.registerCommand("nextgenas.compileDebugBuildWithFlexCompilerShellAndLaunch", () =>
-	{
-		if(vscode.workspace.workspaceFolders)
-		{
-			buildWithFlexCompilerShell(vscode.workspace.workspaceFolders[0], javaExecutablePath, frameworkSDKHome, true).then(() =>
+			vscode.commands.executeCommand("nextgenas.compileDebugBuildWithCompilerShell").then(() =>
 			{
 				//if the build succeeded, start a debug session
 				vscode.commands.executeCommand("workbench.action.debug.start");
@@ -265,13 +258,6 @@ export function activate(context: vscode.ExtensionContext)
 				//a debug session
 				vscode.window.showErrorMessage(CANNOT_LAUNCH_FCSH_FAILED_ERROR);
 			});
-		}
-	});
-	vscode.commands.registerCommand("nextgenas.compileReleaseBuildWithFlexCompilerShell", () =>
-	{
-		if(vscode.workspace.workspaceFolders)
-		{
-			buildWithFlexCompilerShell(vscode.workspace.workspaceFolders[0], javaExecutablePath, frameworkSDKHome, false);
 		}
 	});
 	vscode.commands.registerTextEditorCommand("nextgenas.organizeImportsInTextEditor", organizeImportsInTextEditor);

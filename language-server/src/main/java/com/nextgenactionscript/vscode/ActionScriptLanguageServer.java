@@ -142,7 +142,8 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
             ICommandConstants.GENERATE_GETTER_AND_SETTER,
             ICommandConstants.GENERATE_LOCAL_VARIABLE,
             ICommandConstants.GENERATE_FIELD_VARIABLE,
-            ICommandConstants.GENERATE_METHOD
+            ICommandConstants.GENERATE_METHOD,
+            ICommandConstants.COMPILE_DEBUG_BUILD_WITH_COMPILER_SHELL
         ));
         serverCapabilities.setExecuteCommandProvider(executeCommandOptions);
 
