@@ -33,7 +33,8 @@ public class CompilerShell
 {
 	private LanguageClient languageClient;
 	private Process process;
-	private String compileID;
+    private String compileID;
+    private String previousCommand;
 
 	public CompilerShell(LanguageClient languageClient)
 	{
@@ -103,14 +104,17 @@ public class CompilerShell
             waitingForStart = false;
         }
 
-		String command;
-        if (compileID != null)
+        String command = getCommand(projectOptions);
+        if (command.equals(previousCommand))
+        {
+            //the compiler options have changed,
+            //so we can't use the old ID anymore
+            compileID = null;
+            previousCommand = command;
+        }
+        else if (compileID != null)
         {
             command = "compile " + compileID + "\n";
-        }
-        else
-        {
-			command = getCommand(projectOptions);
         }
         languageClient.logMessage(new MessageParams(MessageType.Info, command));
 
