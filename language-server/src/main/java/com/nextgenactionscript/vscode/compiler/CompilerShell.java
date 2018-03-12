@@ -31,6 +31,18 @@ import org.eclipse.lsp4j.services.LanguageClient;
 
 public class CompilerShell
 {
+    private static final String ERROR_PROJECT_OPTIONS = "Failed to start Flex Compiler Shell (fcsh) because project options are invalid.";
+    private static final String ERROR_COMPILER_SHELL_NOT_FOUND = "Flex Compiler Shell (fcsh) not found in the workspace's SDK.";
+    private static final String ERROR_COMPILER_SHELL_START = "Failed to start Flex Compiler Shell (fcsh).";
+    private static final String ERROR_COMPILER_SHELL_WRITE = "Error writing to Flex Compiler Shell (fcsh).";
+    private static final String ERROR_COMPILER_SHELL_READ = "Error reading from Flex Compiler Shell (fcsh).";
+    private static final String COMMAND_MXMLC = "mxmlc";
+    private static final String COMMAND_COMPC = "compc";
+    private static final String COMMAND_COMPILE = "compile";
+    private static final String ASSIGNED_ID_PREFIX = "fcsh: Assigned ";
+    private static final String ASSIGNED_ID_SUFFIX = " as the compile target id";
+    private static final String COMPILER_SHELL_PROMPT = "(fcsh) ";
+
 	private LanguageClient languageClient;
 	private Process process;
     private String compileID;
@@ -43,79 +55,60 @@ public class CompilerShell
 
 	public boolean compile(ProjectOptions projectOptions, Path workspaceRoot, Path frameworkSDKHome)
 	{
-        Path fcshPath = frameworkSDKHome.resolve("lib/fcsh.jar");
-        if (!fcshPath.toFile().exists())
-        {
-            languageClient.showMessage(new MessageParams(MessageType.Error, "Flex Compiler Shell (fcsh) not found in the workspace's SDK."));
-            return false;
-        }
         if (projectOptions == null)
         {
-            languageClient.showMessage(new MessageParams(MessageType.Error, "Failed to start Flex Compiler Shell (fcsh) because project options are invalid."));
+            languageClient.showMessage(new MessageParams(MessageType.Error, ERROR_PROJECT_OPTIONS));
             return false;
         }
 
-		boolean waitingForStart = false;
-        if (process == null)
+        if (!startProcess(frameworkSDKHome, workspaceRoot))
         {
-            waitingForStart = true;
-            Path javaExecutablePath = Paths.get(System.getProperty("java.home"), "bin", "java");
-            ArrayList<String> options = new ArrayList<>();
-            options.add(javaExecutablePath.toString());
-            options.add("-Dapplication.home=" + frameworkSDKHome);
-			options.add("-Djava.util.Arrays.useLegacyMergeSort=true");
-			options.add("-jar");
-            options.add(fcshPath.toAbsolutePath().toString());
-            try
-            {
-                process = new ProcessBuilder()
-                    .command(options)
-                    .directory(workspaceRoot.toFile())
-                    .start();
-            }
-            catch (IOException e)
-            {
-                e.printStackTrace(System.err);
-                languageClient.showMessage(new MessageParams(MessageType.Error, "Failed to start Flex Compiler Shell (fcsh)."));
-                return false;
-            }
-        }
-
-        if(waitingForStart)
-        {
-            String currentInput = "";
-            InputStream inputStream = process.getInputStream();
-            do
-            {
-                try
-                {
-                    char next = (char) inputStream.read();
-                    currentInput += next;
-                }
-                catch (IOException e)
-                {
-                    e.printStackTrace(System.err);
-                    languageClient.showMessage(new MessageParams(MessageType.Error, "Error reading from Flex Compiler Shell (fcsh)."));
-                    return false;
-                }
-            }
-            while (!currentInput.endsWith("(fcsh) "));
-            languageClient.logMessage(new MessageParams(MessageType.Info, currentInput));
-            waitingForStart = false;
+            return false;
         }
 
         String command = getCommand(projectOptions);
-        if (command.equals(previousCommand))
+        return executeCommand(command);
+    }
+
+    private boolean startProcess(Path frameworkSDKHome, Path workspaceRoot)
+    {
+        Path compilerShellPath = frameworkSDKHome.resolve("lib/fcsh.jar");
+        if (!compilerShellPath.toFile().exists())
         {
-            //the compiler options have changed,
-            //so we can't use the old ID anymore
-            compileID = null;
-            previousCommand = command;
+            languageClient.showMessage(new MessageParams(MessageType.Error, ERROR_COMPILER_SHELL_NOT_FOUND));
+            return false;
         }
-        else if (compileID != null)
+        if (process != null)
         {
-            command = "compile " + compileID + "\n";
+            return true;
         }
+
+        Path javaExecutablePath = Paths.get(System.getProperty("java.home"), "bin", "java");
+        ArrayList<String> options = new ArrayList<>();
+        options.add(javaExecutablePath.toString());
+        options.add("-Dapplication.home=" + frameworkSDKHome);
+        options.add("-Djava.util.Arrays.useLegacyMergeSort=true");
+        options.add("-jar");
+        options.add(compilerShellPath.toAbsolutePath().toString());
+        try
+        {
+            process = new ProcessBuilder()
+                .command(options)
+                .directory(workspaceRoot.toFile())
+                .start();
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace(System.err);
+            languageClient.showMessage(new MessageParams(MessageType.Error, ERROR_COMPILER_SHELL_START));
+            return false;
+        }
+
+        return waitForPrompt();
+    }
+    
+    private boolean executeCommand(String command)
+    {
         languageClient.logMessage(new MessageParams(MessageType.Info, command));
 
         OutputStream outputStream = process.getOutputStream();
@@ -127,10 +120,19 @@ public class CompilerShell
         catch(IOException e)
         {
             e.printStackTrace(System.err);
-            languageClient.showMessage(new MessageParams(MessageType.Error, "Error writing to Flex Compiler Shell (fcsh)."));
+            languageClient.showMessage(new MessageParams(MessageType.Error, ERROR_COMPILER_SHELL_WRITE));
             return false;
         }
 
+        if (!waitForPrompt())
+        {
+            return false;
+        }
+        return true;
+    }
+
+    private boolean waitForPrompt()
+    {
         String currentError = "";
         String currentInput = "";
         InputStream inputStream = process.getInputStream();
@@ -144,7 +146,7 @@ public class CompilerShell
         catch (IOException e)
         {
             e.printStackTrace(System.err);
-            languageClient.showMessage(new MessageParams(MessageType.Error, "Error reading from Flex Compiler Shell (fcsh)."));
+            languageClient.showMessage(new MessageParams(MessageType.Error, ERROR_COMPILER_SHELL_READ));
             return false;
         }
         do
@@ -167,16 +169,16 @@ public class CompilerShell
                     char next = (char) inputStream.read();
                     currentInput += next;
                     //fcsh: Assigned 1 as the compile target id
-                    if (currentInput.startsWith("fcsh: Assigned ") && currentInput.endsWith(" as the compile target id"))
+                    if (currentInput.startsWith(ASSIGNED_ID_PREFIX) && currentInput.endsWith(ASSIGNED_ID_SUFFIX))
                     {
-                        compileID = currentInput.substring("fcsh: Assigned ".length(), currentInput.length() - " as the compile target id".length());
+                        compileID = currentInput.substring(ASSIGNED_ID_PREFIX.length(), currentInput.length() - ASSIGNED_ID_SUFFIX.length());
                     }
                     if (next == '\n')
                     {
                         languageClient.logMessage(new MessageParams(MessageType.Info, currentInput));
                         currentInput = "";
                     }
-                    if (currentInput.endsWith("(fcsh) "))
+                    if (currentInput.endsWith(COMPILER_SHELL_PROMPT))
                     {
                         waitingForInput = false;
                     }
@@ -185,7 +187,7 @@ public class CompilerShell
             catch (IOException e)
             {
                 e.printStackTrace(System.err);
-                languageClient.showMessage(new MessageParams(MessageType.Error, "Error reading from Flex Compiler Shell (fcsh)."));
+                languageClient.showMessage(new MessageParams(MessageType.Error, ERROR_COMPILER_SHELL_READ));
                 return false;
             }
         }
@@ -198,20 +200,41 @@ public class CompilerShell
         {
             languageClient.logMessage(new MessageParams(MessageType.Info, currentInput));
         }
-        
         return true;
-	}
+    }
 
-	private String getCommand(ProjectOptions projectOptions)
+    private String getCommand(ProjectOptions projectOptions)
+    {
+        String command = getNewCommand(projectOptions);
+        if (!command.equals(previousCommand))
+        {
+            //the compiler options have changed,
+            //so we can't use the old ID anymore
+            compileID = null;
+            previousCommand = command;
+        }
+        else if (compileID != null)
+        {
+            StringBuilder builder = new StringBuilder();
+            builder.append(COMMAND_COMPILE);
+            builder.append(" ");
+            builder.append(compileID);
+            builder.append("\n");
+            command = builder.toString();
+        }
+        return command;
+    }
+
+	private String getNewCommand(ProjectOptions projectOptions)
 	{
 		StringBuilder commandBuilder = new StringBuilder();
 		if (projectOptions.type.equals(ProjectType.APP))
 		{
-			commandBuilder.append("mxmlc");
+			commandBuilder.append(COMMAND_MXMLC);
 		}
 		else if (projectOptions.type.equals(ProjectType.LIB))
 		{
-			commandBuilder.append("compc");
+			commandBuilder.append(COMMAND_COMPC);
 		}
 		commandBuilder.append(" ");
 		commandBuilder.append("+configname=");
