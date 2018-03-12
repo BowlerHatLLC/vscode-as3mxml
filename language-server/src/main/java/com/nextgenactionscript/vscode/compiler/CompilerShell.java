@@ -39,6 +39,7 @@ public class CompilerShell
     private static final String COMMAND_MXMLC = "mxmlc";
     private static final String COMMAND_COMPC = "compc";
     private static final String COMMAND_COMPILE = "compile";
+    private static final String COMMAND_CLEAR = "clear";
     private static final String ASSIGNED_ID_PREFIX = "fcsh: Assigned ";
     private static final String ASSIGNED_ID_SUFFIX = " as the compile target id";
     private static final String COMPILER_SHELL_PROMPT = "(fcsh) ";
@@ -66,7 +67,17 @@ public class CompilerShell
             return false;
         }
 
+        String oldCompileID = compileID;
         String command = getCommand(projectOptions);
+        if (oldCompileID != null && compileID == null)
+        {
+            //if we have a new command, clear the old one from memory
+            String clearCommand = getClearCommand(oldCompileID);
+            if (!executeCommand(clearCommand))
+            {
+                return false;
+            }
+        }
         return executeCommand(command);
     }
 
@@ -215,14 +226,29 @@ public class CompilerShell
         }
         else if (compileID != null)
         {
-            StringBuilder builder = new StringBuilder();
-            builder.append(COMMAND_COMPILE);
-            builder.append(" ");
-            builder.append(compileID);
-            builder.append("\n");
-            command = builder.toString();
+            command = getCompileCommand();
         }
         return command;
+    }
+
+    private String getClearCommand(String compileID)
+    {
+        StringBuilder builder = new StringBuilder();
+        builder.append(COMMAND_CLEAR);
+        builder.append(" ");
+        builder.append(compileID);
+        builder.append("\n");
+        return builder.toString();
+    }
+
+    private String getCompileCommand()
+    {
+        StringBuilder builder = new StringBuilder();
+        builder.append(COMMAND_COMPILE);
+        builder.append(" ");
+        builder.append(compileID);
+        builder.append("\n");
+        return builder.toString();
     }
 
 	private String getNewCommand(ProjectOptions projectOptions)
