@@ -24,10 +24,10 @@ import java.util.ArrayList;
 
 import com.nextgenactionscript.asconfigc.compiler.ProjectType;
 import com.nextgenactionscript.vscode.project.ProjectOptions;
+import com.nextgenactionscript.vscode.services.ActionScriptLanguageClient;
 
 import org.eclipse.lsp4j.MessageParams;
 import org.eclipse.lsp4j.MessageType;
-import org.eclipse.lsp4j.services.LanguageClient;
 
 public class CompilerShell
 {
@@ -44,12 +44,12 @@ public class CompilerShell
     private static final String ASSIGNED_ID_SUFFIX = " as the compile target id";
     private static final String COMPILER_SHELL_PROMPT = "(fcsh) ";
 
-	private LanguageClient languageClient;
+	private ActionScriptLanguageClient languageClient;
 	private Process process;
     private String compileID;
     private String previousCommand;
 
-	public CompilerShell(LanguageClient languageClient)
+	public CompilerShell(ActionScriptLanguageClient languageClient)
 	{
 		this.languageClient = languageClient;
 	}
@@ -120,7 +120,7 @@ public class CompilerShell
     
     private boolean executeCommand(String command)
     {
-        languageClient.logMessage(new MessageParams(MessageType.Info, command));
+        languageClient.buildOutput(command);
 
         OutputStream outputStream = process.getOutputStream();
         try
@@ -170,7 +170,7 @@ public class CompilerShell
                     currentError += next;
                     if (next == '\n')
                     {
-                        languageClient.logMessage(new MessageParams(MessageType.Error, currentError));
+                        languageClient.buildOutput(currentError);
                         currentError = "";
                     }
                 }
@@ -186,7 +186,7 @@ public class CompilerShell
                     }
                     if (next == '\n')
                     {
-                        languageClient.logMessage(new MessageParams(MessageType.Info, currentInput));
+                        languageClient.buildOutput(currentInput);
                         currentInput = "";
                     }
                     if (currentInput.endsWith(COMPILER_SHELL_PROMPT))
@@ -205,11 +205,11 @@ public class CompilerShell
         while (waitingForInput || waitingForError);
         if (currentError.length() > 0)
         {
-            languageClient.logMessage(new MessageParams(MessageType.Error, currentError));
+            languageClient.buildOutput(currentError);
         }
         if (currentInput.length() > 0)
         {
-            languageClient.logMessage(new MessageParams(MessageType.Info, currentInput));
+            languageClient.buildOutput(currentInput);
         }
         return true;
     }
@@ -282,5 +282,5 @@ public class CompilerShell
 		}
 		commandBuilder.append("\n");
 		return commandBuilder.toString();
-	}
+    }
 }

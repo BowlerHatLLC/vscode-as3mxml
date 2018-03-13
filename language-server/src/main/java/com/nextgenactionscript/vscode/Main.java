@@ -19,9 +19,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 
+import com.nextgenactionscript.vscode.services.ActionScriptLanguageClient;
+
 import org.eclipse.lsp4j.jsonrpc.Launcher;
-import org.eclipse.lsp4j.launch.LSPLauncher;
-import org.eclipse.lsp4j.services.LanguageClient;
 
 /**
  * Contains the entry point for the JAR.
@@ -55,8 +55,8 @@ public class Main
                 outputStream = socket.getOutputStream();
             }
             ActionScriptLanguageServer server = new ActionScriptLanguageServer();
-            Launcher<LanguageClient> launcher = LSPLauncher.createServerLauncher(
-                    server, inputStream, outputStream);
+            Launcher<ActionScriptLanguageClient> launcher = Launcher.createLauncher(
+                server, ActionScriptLanguageClient.class, inputStream, outputStream);
             server.connect(launcher.getRemoteProxy());
             launcher.startListening();
         }

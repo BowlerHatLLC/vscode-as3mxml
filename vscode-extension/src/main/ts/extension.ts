@@ -433,6 +433,10 @@ function startClient()
 			savedLanguageClient.onReady().then(() =>
 			{
 				resolve();
+				savedLanguageClient.onNotification("nextgenas/buildOutput", (notification) =>
+				{
+					updateFCSHOutputChannel(notification, false, false);
+				});
 			});
 			let disposable = savedLanguageClient.start();
 			savedContext.subscriptions.push(disposable);

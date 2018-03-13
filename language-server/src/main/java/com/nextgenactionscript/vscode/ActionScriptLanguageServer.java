@@ -28,6 +28,7 @@ import com.google.gson.internal.LinkedTreeMap;
 import com.nextgenactionscript.vscode.DidChangeWatchedFilesRegistrationOptions.FileSystemWatcher;
 import com.nextgenactionscript.vscode.commands.ICommandConstants;
 import com.nextgenactionscript.vscode.project.ASConfigProjectConfigStrategy;
+import com.nextgenactionscript.vscode.services.ActionScriptLanguageClient;
 import com.nextgenactionscript.vscode.utils.LanguageServerCompilerUtils;
 
 import org.apache.royale.compiler.tree.as.IASNode;
@@ -71,7 +72,7 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
     private WorkspaceService workspaceService;
     private ActionScriptTextDocumentService textDocumentService;
     private ASConfigProjectConfigStrategy projectConfigStrategy;
-    private LanguageClient languageClient;
+    private ActionScriptLanguageClient languageClient;
 
     public ActionScriptLanguageServer()
     {
@@ -313,17 +314,22 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
         return textDocumentService;
     }
 
-    /**
-     * Passes in a set of functions to communicate with VSCode.
-     */
-    @Override
-    public void connect(LanguageClient client)
+    public void connect(ActionScriptLanguageClient client)
     {
         languageClient = client;
         if (textDocumentService != null)
         {
             textDocumentService.setLanguageClient(languageClient);
         }
+    }
+
+    /**
+     * Passes in a set of functions to communicate with VSCode.
+     */
+    @Override
+    public void connect(LanguageClient client)
+    {
+        connect((ActionScriptLanguageClient) client);
     }
 
     /**

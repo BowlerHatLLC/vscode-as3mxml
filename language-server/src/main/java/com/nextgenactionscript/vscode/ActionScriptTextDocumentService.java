@@ -165,6 +165,7 @@ import com.nextgenactionscript.vscode.mxml.IMXMLLibraryConstants;
 import com.nextgenactionscript.vscode.project.IProjectConfigStrategy;
 import com.nextgenactionscript.vscode.project.ProjectOptions;
 import com.nextgenactionscript.vscode.project.VSCodeConfiguration;
+import com.nextgenactionscript.vscode.services.ActionScriptLanguageClient;
 import com.nextgenactionscript.vscode.utils.ASTUtils;
 import com.nextgenactionscript.vscode.utils.ActionScriptSDKUtils;
 import com.nextgenactionscript.vscode.utils.CodeGenerationUtils;
@@ -226,7 +227,6 @@ import org.eclipse.lsp4j.VersionedTextDocumentIdentifier;
 import org.eclipse.lsp4j.WorkspaceEdit;
 import org.eclipse.lsp4j.WorkspaceSymbolParams;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
-import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.TextDocumentService;
 
 /**
@@ -287,7 +287,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private static boolean isWindows;
 
-    private LanguageClient languageClient;
+    private ActionScriptLanguageClient languageClient;
     private IProjectConfigStrategy projectConfigStrategy;
     private String oldFrameworkSDKPath;
     private Path workspaceRoot;
@@ -385,7 +385,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         completionSupportsSnippets = clientCapabilities.getTextDocument().getCompletion().getCompletionItem().getSnippetSupport();
     }
 
-    public void setLanguageClient(LanguageClient value)
+    public void setLanguageClient(ActionScriptLanguageClient value)
     {
         languageClient = value;
         codeProblemTracker.setLanguageClient(value);
