@@ -226,7 +226,10 @@ import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.VersionedTextDocumentIdentifier;
 import org.eclipse.lsp4j.WorkspaceEdit;
 import org.eclipse.lsp4j.WorkspaceSymbolParams;
+import org.eclipse.lsp4j.jsonrpc.CompletableFutures;
+import org.eclipse.lsp4j.jsonrpc.ResponseErrorException;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.eclipse.lsp4j.jsonrpc.messages.ResponseError;
 import org.eclipse.lsp4j.services.TextDocumentService;
 
 /**
@@ -1157,9 +1160,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             {
                 return executeGenerateMethodCommand(params);
             }
-            case ICommandConstants.COMPILE_DEBUG_BUILD_WITH_COMPILER_SHELL:
+            case ICommandConstants.QUICK_COMPILE:
             {
-                return executeCompileDebugBuildWithCompilerShell(params);
+                return executeQuickCompileCommand(params);
             }
             default:
             {
@@ -6264,7 +6267,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return CompletableFuture.completedFuture(new Object());
     }
 
-    private CompletableFuture<Object> executeCompileDebugBuildWithCompilerShell(ExecuteCommandParams params)
+    private CompletableFuture<Object> executeQuickCompileCommand(ExecuteCommandParams params)
     {
         if (compilerShell == null)
         {
@@ -6272,7 +6275,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         String frameworkLib = System.getProperty(PROPERTY_FRAMEWORK_LIB);
         Path frameworkSDKHome = Paths.get(frameworkLib, "..");
-        compilerShell.compile(currentProjectOptions, workspaceRoot, frameworkSDKHome);
-        return CompletableFuture.completedFuture(new Object());
+        boolean success = compilerShell.compile(currentProjectOptions, workspaceRoot, frameworkSDKHome);
+        return CompletableFuture.completedFuture(success);
     }
 }

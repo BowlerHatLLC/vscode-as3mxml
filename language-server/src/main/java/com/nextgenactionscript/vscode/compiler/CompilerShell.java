@@ -31,11 +31,11 @@ import org.eclipse.lsp4j.MessageType;
 
 public class CompilerShell
 {
-    private static final String ERROR_PROJECT_OPTIONS = "Failed to start Flex Compiler Shell (fcsh) because project options are invalid.";
-    private static final String ERROR_COMPILER_SHELL_NOT_FOUND = "Flex Compiler Shell (fcsh) not found in the workspace's SDK.";
-    private static final String ERROR_COMPILER_SHELL_START = "Failed to start Flex Compiler Shell (fcsh).";
-    private static final String ERROR_COMPILER_SHELL_WRITE = "Error writing to Flex Compiler Shell (fcsh).";
-    private static final String ERROR_COMPILER_SHELL_READ = "Error reading from Flex Compiler Shell (fcsh).";
+    private static final String ERROR_PROJECT_OPTIONS = "Quick Compile & Debug failed because project options are invalid.";
+    private static final String ERROR_COMPILER_SHELL_NOT_FOUND = "Quick Compile & Debug requires a supported SDK that contains a \"compiler shell\". Compiler shell not found in this SDK. The Apache Flex SDK is recommended.";
+    private static final String ERROR_COMPILER_SHELL_START = "Quick Compile & Debug failed. Error starting compiler shell.";
+    private static final String ERROR_COMPILER_SHELL_WRITE = "Quick Compile & Debug failed. Error writing to compiler shell.";
+    private static final String ERROR_COMPILER_SHELL_READ = "Quick Compile & Debug failed. Error reading from compiler shell.";
     private static final String COMMAND_MXMLC = "mxmlc";
     private static final String COMMAND_COMPC = "compc";
     private static final String COMMAND_COMPILE = "compile";
@@ -120,7 +120,7 @@ public class CompilerShell
     
     private boolean executeCommand(String command)
     {
-        languageClient.buildOutput(command);
+        languageClient.logCompilerShellOutput(command);
 
         OutputStream outputStream = process.getOutputStream();
         try
@@ -150,6 +150,7 @@ public class CompilerShell
         InputStream errorStream = process.getErrorStream();
         boolean waitingForInput = true;
         boolean waitingForError = false;
+        boolean success = true;
         try
         {
             waitingForError = errorStream.available() > 0;
@@ -170,7 +171,8 @@ public class CompilerShell
                     currentError += next;
                     if (next == '\n')
                     {
-                        languageClient.buildOutput(currentError);
+                        success = false;
+                        languageClient.logCompilerShellOutput(currentError);
                         currentError = "";
                     }
                 }
@@ -186,7 +188,7 @@ public class CompilerShell
                     }
                     if (next == '\n')
                     {
-                        languageClient.buildOutput(currentInput);
+                        languageClient.logCompilerShellOutput(currentInput);
                         currentInput = "";
                     }
                     if (currentInput.endsWith(COMPILER_SHELL_PROMPT))
@@ -205,13 +207,14 @@ public class CompilerShell
         while (waitingForInput || waitingForError);
         if (currentError.length() > 0)
         {
-            languageClient.buildOutput(currentError);
+            success = false;
+            languageClient.logCompilerShellOutput(currentError);
         }
         if (currentInput.length() > 0)
         {
-            languageClient.buildOutput(currentInput);
+            languageClient.logCompilerShellOutput(currentInput);
         }
-        return true;
+        return success;
     }
 
     private String getCommand(ProjectOptions projectOptions)

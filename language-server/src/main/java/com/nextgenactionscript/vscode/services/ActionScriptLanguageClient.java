@@ -20,6 +20,6 @@ import org.eclipse.lsp4j.services.LanguageClient;
 
 public interface ActionScriptLanguageClient extends LanguageClient
 {
-	@JsonNotification("nextgenas/buildOutput")
-	void buildOutput(String message);
+	@JsonNotification("nextgenas/logCompilerShellOutput")
+	void logCompilerShellOutput(String message);
 }

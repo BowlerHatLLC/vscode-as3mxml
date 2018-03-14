@@ -15,11 +15,11 @@ limitations under the License.
 */
 import * as vscode from "vscode";
 
-const OUTPUT_CHANNEL_NAME = "Flex Compiler Shell (fcsh)";
+const OUTPUT_CHANNEL_NAME = "ActionScript & MXML: Quick Compile";
 
 let outputChannel: vscode.OutputChannel = null;
 
-export default function updateFCSHOutputChannel(message: string, line: boolean = true, clear: boolean = false)
+export default function logCompilerShellOutput(message: string, line: boolean = true, clear: boolean = false)
 {
 	if(outputChannel === null)
 	{

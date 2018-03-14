@@ -36,15 +36,14 @@ import {LanguageClient, LanguageClientOptions, SettingMonitor,
 	ServerOptions, StreamInfo, ErrorHandler, ErrorAction,
 	CloseAction, Executable, ExecutableOptions} from "vscode-languageclient";
 import { Message } from "vscode-jsonrpc";
-import buildWithFlexCompilerShell from "./commands/buildWithFlexCompilerShell";
-import updateFCSHOutputChannel from "./commands/updateFCSHOutputChannel";
+import logCompilerShellOutput from "./commands/logCompilerShellOutput";
 
 const INVALID_SDK_ERROR = "nextgenas.sdk.editor in settings does not point to a valid SDK. Requires Apache Royale 0.9.0 or newer.";
 const MISSING_FRAMEWORK_SDK_ERROR = "You must configure an SDK to enable all ActionScript and MXML features.";
 const INVALID_JAVA_ERROR = "nextgenas.java in settings does not point to a valid executable. It cannot be a directory, and Java 1.8 or newer is required.";
 const MISSING_JAVA_ERROR = "Could not locate valid Java executable. To configure Java manually, use the nextgenas.java setting.";
 const MISSING_WORKSPACE_ROOT_ERROR = "Open a folder and create a file named asconfig.json to enable all ActionScript and MXML language features.";
-const CANNOT_LAUNCH_FCSH_FAILED_ERROR = "Build failed. Launch canceled.";
+const CANNOT_LAUNCH_QUICK_COMPILE_FAILED_ERROR = "Quick compile failed. Debug launch canceled.";
 const INITIALIZING_MESSAGE = "Initializing ActionScript and MXML language server...";
 const RESTART_FAIL_MESSAGE = "Failed to restart ActionScript/MXML server. Please reload the window to continue.";
 const RELOAD_WINDOW_MESSAGE = "To apply new settings for ActionScript and MXML, please reload the window.";
@@ -235,7 +234,7 @@ export function activate(context: vscode.ExtensionContext)
 	});
 	vscode.commands.registerCommand("nextgenas.selectWorkspaceSDK", selectWorkspaceSDK);
 	vscode.commands.registerCommand("nextgenas.restartServer", restartServer);
-	vscode.commands.registerCommand("nextgenas.updateFCSHOutputChannel", updateFCSHOutputChannel);
+	vscode.commands.registerCommand("nextgenas.logCompilerShellOutput", logCompilerShellOutput);
 	vscode.commands.registerCommand("nextgenas.migrateFlashBuilderProject", () =>
 	{
 		if(vscode.workspace.workspaceFolders)
@@ -243,20 +242,21 @@ export function activate(context: vscode.ExtensionContext)
 			migrateFlashBuilderProject(vscode.workspace.workspaceFolders[0].uri);
 		}
 	});
-	vscode.commands.registerCommand("nextgenas.compileDebugBuildWithCompilerShellAndLaunch", () =>
+	vscode.commands.registerCommand("nextgenas.quickCompileAndDebug", () =>
 	{
 		if(vscode.workspace.workspaceFolders)
 		{
-			vscode.commands.executeCommand("nextgenas.compileDebugBuildWithCompilerShell").then(() =>
+			vscode.commands.executeCommand("nextgenas.quickCompile").then((result) =>
 			{
 				//if the build succeeded, start a debug session
-				vscode.commands.executeCommand("workbench.action.debug.start");
+				console.log("quick compile complete:", result);
+				//vscode.commands.executeCommand("workbench.action.debug.start");
 			}, 
 			() =>
 			{
 				//if the build failed, notify the user that we're not starting
 				//a debug session
-				vscode.window.showErrorMessage(CANNOT_LAUNCH_FCSH_FAILED_ERROR);
+				vscode.window.showErrorMessage(CANNOT_LAUNCH_QUICK_COMPILE_FAILED_ERROR);
 			});
 		}
 	});
@@ -433,9 +433,9 @@ function startClient()
 			savedLanguageClient.onReady().then(() =>
 			{
 				resolve();
-				savedLanguageClient.onNotification("nextgenas/buildOutput", (notification) =>
+				savedLanguageClient.onNotification("nextgenas/logCompilerShellOutput", (notification) =>
 				{
-					updateFCSHOutputChannel(notification, false, false);
+					logCompilerShellOutput(notification, false, false);
 				});
 			});
 			let disposable = savedLanguageClient.start();

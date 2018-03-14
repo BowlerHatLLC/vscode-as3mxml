@@ -27,5 +27,5 @@ public interface ICommandConstants
 	public static final String ADD_MXML_NAMESPACE = "nextgenas.addMXMLNamespace";
 	public static final String ORGANIZE_IMPORTS_IN_URI = "nextgenas.organizeImportsInUri";
 	public static final String ORGANIZE_IMPORTS_IN_DIRECTORY = "nextgenas.organizeImportsInDirectory";
-	public static final String COMPILE_DEBUG_BUILD_WITH_COMPILER_SHELL = "nextgenas.compileDebugBuildWithCompilerShell";
+	public static final String QUICK_COMPILE = "nextgenas.quickCompile";
 }

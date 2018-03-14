@@ -56,8 +56,8 @@
     "onCommand:nextgenas.selectWorkspaceSDK",
     "onCommand:nextgenas.restartServer",
     "onCommand:nextgenas.migrateFlashBuilderProject",
-    "onCommand:nextgenas.compileDebugBuildWithCompilerShell",
-    "onCommand:nextgenas.compileDebugBuildWithCompilerShellAndLaunch"
+    "onCommand:nextgenas.quickCompile",
+    "onCommand:nextgenas.quickCompileAndDebug"
   ],
   "contributes": {
     "commands": [
@@ -84,6 +84,17 @@
       {
         "command": "nextgenas.organizeImportsInDirectory",
         "title": "Organize Imports (Recursive)"
+      },
+      {
+        "command": "nextgenas.quickCompileAndDebug",
+        "title": "ActionScript: Quick Compile & Debug"
+      }
+    ],
+    "keybindings": [
+      {
+        "key": "ctrl+enter",
+        "mac": "cmd+enter",
+        "command": "nextgenas.quickCompileAndDebug"
       }
     ],
     "menus": {
