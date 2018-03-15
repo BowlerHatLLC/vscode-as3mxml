@@ -5556,13 +5556,18 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             //some attributes can have ActionScript completion, such as
             //events and properties with data binding
-            IClassDefinition tagDefinition = (IClassDefinition) currentProject.resolveXMLNameToDefinition(tag.getXMLName(), tag.getMXMLDialect());
-            if (tagDefinition == null)
+
+            IDefinition resolvedDefinition = currentProject.resolveXMLNameToDefinition(tag.getXMLName(), tag.getMXMLDialect());
+            //prominic/Moonshine-IDE#/203: don't allow interface definitions because
+            //we cannot resolve specifiers. <fx:Component> resolves to an interface
+            //definition, and it can have an id attribute.
+            if (resolvedDefinition == null || !(resolvedDefinition instanceof IClassDefinition))
             {
                 //we can't figure out which class the tag represents!
                 //maybe the user hasn't defined the tag's namespace or something
                 return null;
             }
+            IClassDefinition tagDefinition = (IClassDefinition) resolvedDefinition;
             IDefinition attributeDefinition = currentProject.resolveSpecifier(tagDefinition, attributeData.getShortName());
             if (attributeDefinition instanceof IEventDefinition)
             {
