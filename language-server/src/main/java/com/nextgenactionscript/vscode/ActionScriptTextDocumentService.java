@@ -2094,7 +2094,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 return mxmlStatesCompletion(offsetTag, result);
             }
 
-            IClassDefinition classDefinition = (IClassDefinition) offsetDefinition;
+            IClassDefinition classDefinition = (ITypeDefinition) offsetDefinition;
             addMembersForMXMLTypeToAutoComplete(classDefinition, offsetTag, isAttribute, !isAttribute, result);
 
             if (!isAttribute)
@@ -2125,6 +2125,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             {
                 autoCompleteTypesForMXML(result);
             }
+            return result;
+        }
+        if (offsetDefinition instanceof IInterfaceDefinition)
+        {
+            //<fx:Component> resolves to an IInterfaceDefinition, but there's
+            //nothing to add to the result, so return it as-is and skip the
+            //warning below
             return result;
         }
         System.err.println("Unknown definition for MXML completion: " + offsetDefinition.getClass());
