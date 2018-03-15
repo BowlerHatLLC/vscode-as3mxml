@@ -226,10 +226,7 @@ import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.VersionedTextDocumentIdentifier;
 import org.eclipse.lsp4j.WorkspaceEdit;
 import org.eclipse.lsp4j.WorkspaceSymbolParams;
-import org.eclipse.lsp4j.jsonrpc.CompletableFutures;
-import org.eclipse.lsp4j.jsonrpc.ResponseErrorException;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
-import org.eclipse.lsp4j.jsonrpc.messages.ResponseError;
 import org.eclipse.lsp4j.services.TextDocumentService;
 
 /**
@@ -6269,13 +6266,22 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private CompletableFuture<Object> executeQuickCompileCommand(ExecuteCommandParams params)
     {
-        if (compilerShell == null)
+        boolean success = false;
+        try
         {
-            compilerShell = new CompilerShell(languageClient);
+            if (compilerShell == null)
+            {
+                compilerShell = new CompilerShell(languageClient);
+            }
+            String frameworkLib = System.getProperty(PROPERTY_FRAMEWORK_LIB);
+            Path frameworkSDKHome = Paths.get(frameworkLib, "..");
+            success = compilerShell.compile(currentProjectOptions, workspaceRoot, frameworkSDKHome);
         }
-        String frameworkLib = System.getProperty(PROPERTY_FRAMEWORK_LIB);
-        Path frameworkSDKHome = Paths.get(frameworkLib, "..");
-        boolean success = compilerShell.compile(currentProjectOptions, workspaceRoot, frameworkSDKHome);
+        catch(Exception e)
+        {
+            //safe to ignore
+        }
+        languageClient.quickCompileComplete(success);
         return CompletableFuture.completedFuture(success);
     }
 }

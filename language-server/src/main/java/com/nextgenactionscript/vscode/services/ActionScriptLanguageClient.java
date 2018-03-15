@@ -22,4 +22,7 @@ public interface ActionScriptLanguageClient extends LanguageClient
 {
 	@JsonNotification("nextgenas/logCompilerShellOutput")
 	void logCompilerShellOutput(String message);
+	
+	@JsonNotification("nextgenas/quickCompileComplete")
+	void quickCompileComplete(boolean success);
 }

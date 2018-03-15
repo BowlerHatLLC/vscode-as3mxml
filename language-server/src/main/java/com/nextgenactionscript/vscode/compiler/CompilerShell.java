@@ -42,6 +42,7 @@ public class CompilerShell
     private static final String COMMAND_CLEAR = "clear";
     private static final String ASSIGNED_ID_PREFIX = "fcsh: Assigned ";
     private static final String ASSIGNED_ID_SUFFIX = " as the compile target id";
+    private static final String OUTPUT_PROBLEM_TYPE_ERROR = "Error: ";
     private static final String COMPILER_SHELL_PROMPT = "(fcsh) ";
 
 	private ActionScriptLanguageClient languageClient;
@@ -171,7 +172,10 @@ public class CompilerShell
                     currentError += next;
                     if (next == '\n')
                     {
-                        success = false;
+                        if (currentError.startsWith(OUTPUT_PROBLEM_TYPE_ERROR))
+                        {
+                            success = false;
+                        }
                         languageClient.logCompilerShellOutput(currentError);
                         currentError = "";
                     }
@@ -207,7 +211,10 @@ public class CompilerShell
         while (waitingForInput || waitingForError);
         if (currentError.length() > 0)
         {
-            success = false;
+            if (currentError.startsWith(OUTPUT_PROBLEM_TYPE_ERROR))
+            {
+                success = false;
+            }
             languageClient.logCompilerShellOutput(currentError);
         }
         if (currentInput.length() > 0)
