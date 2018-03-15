@@ -43,7 +43,8 @@ const MISSING_FRAMEWORK_SDK_ERROR = "You must configure an SDK to enable all Act
 const INVALID_JAVA_ERROR = "nextgenas.java in settings does not point to a valid executable. It cannot be a directory, and Java 1.8 or newer is required.";
 const MISSING_JAVA_ERROR = "Could not locate valid Java executable. To configure Java manually, use the nextgenas.java setting.";
 const MISSING_WORKSPACE_ROOT_ERROR = "Open a folder and create a file named asconfig.json to enable all ActionScript and MXML language features.";
-const CANNOT_LAUNCH_QUICK_COMPILE_FAILED_ERROR = "Quick compile failed. Debug launch canceled.";
+const CANNOT_LAUNCH_QUICK_COMPILE_FAILED_ERROR = "Quick compile failed with errors. Debug launch canceled.";
+const QUICK_COMPILE_LANGUAGE_SERVER_NOT_STARTED_ERROR = "Quick compile failed. Try again after ActionScript & MXML extension is initialized.";
 const INITIALIZING_MESSAGE = "Initializing ActionScript and MXML language server...";
 const RESTART_FAIL_MESSAGE = "Failed to restart ActionScript/MXML server. Please reload the window to continue.";
 const RELOAD_WINDOW_MESSAGE = "To apply new settings for ActionScript and MXML, please reload the window.";
@@ -52,6 +53,7 @@ const CONFIGURE_SDK_LABEL = "Configure SDK";
 const NO_SDK = "$(alert) No SDK";
 let savedContext: vscode.ExtensionContext;
 let savedLanguageClient: LanguageClient;
+let languageClientStarted: boolean = false;
 let bundledCompilerPath: string;
 let editorSDKHome: string;
 let javaExecutablePath: string;
@@ -121,6 +123,7 @@ function restartServer()
 	}
 	let languageClient = savedLanguageClient;
 	savedLanguageClient = null;
+	languageClientStarted = false;
 	languageClient.stop().then(() =>
 	{
 		startClient();
@@ -247,6 +250,11 @@ export function activate(context: vscode.ExtensionContext)
 	{
 		if(vscode.workspace.workspaceFolders)
 		{
+			if(!savedLanguageClient || !languageClientStarted)
+			{
+				vscode.window.showErrorMessage(QUICK_COMPILE_LANGUAGE_SERVER_NOT_STARTED_ERROR);
+				return;
+			}
 			waitingForQuickCompile = true;
 			vscode.commands.executeCommand("nextgenas.quickCompile").then((result) =>
 			{
@@ -431,10 +439,12 @@ function startClient()
 				}
 			};
 			let options: ExecutableOptions;
+			languageClientStarted = false;
 			savedLanguageClient = new LanguageClient("nextgenas", "ActionScript and MXML Language Server", executable, clientOptions);
 			savedLanguageClient.onReady().then(() =>
 			{
 				resolve();
+				languageClientStarted = true;
 				savedLanguageClient.onNotification("nextgenas/logCompilerShellOutput", (notification: string) =>
 				{
 					logCompilerShellOutput(notification, false, false);
