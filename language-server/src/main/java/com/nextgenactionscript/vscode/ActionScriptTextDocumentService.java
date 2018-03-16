@@ -6291,7 +6291,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         catch(Exception e)
         {
-            //safe to ignore
+            languageClient.logCompilerShellOutput("Exception in compiler shell: " + e);
         }
         languageClient.quickCompileComplete(success);
         return CompletableFuture.completedFuture(success);
