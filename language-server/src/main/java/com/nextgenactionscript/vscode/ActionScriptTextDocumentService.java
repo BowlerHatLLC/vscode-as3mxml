@@ -2094,7 +2094,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 return mxmlStatesCompletion(offsetTag, result);
             }
 
-            IClassDefinition classDefinition = (ITypeDefinition) offsetDefinition;
+            IClassDefinition classDefinition = (IClassDefinition) offsetDefinition;
             addMembersForMXMLTypeToAutoComplete(classDefinition, offsetTag, isAttribute, !isAttribute, result);
 
             if (!isAttribute)
