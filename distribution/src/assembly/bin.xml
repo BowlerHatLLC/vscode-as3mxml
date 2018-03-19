@@ -43,6 +43,13 @@
       </includes>
     </fileSet>
     <fileSet>
+      <directory>../rcsh/target</directory>
+      <outputDirectory>bin</outputDirectory>
+      <includes>
+        <include>rcsh*.jar</include>
+      </includes>
+    </fileSet>
+    <fileSet>
       <directory>../asconfigc/target</directory>
       <outputDirectory>bin</outputDirectory>
       <includes>

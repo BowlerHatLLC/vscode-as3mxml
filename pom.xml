@@ -27,6 +27,7 @@ limitations under the License.
   <modules>
     <module>check-java-version</module>
     <module>check-royale-version</module>
+    <module>rcsh</module>
     <module>asconfigc</module>
     <module>language-server</module>
     <module>swf-debugger</module>
