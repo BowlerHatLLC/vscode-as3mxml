@@ -3506,7 +3506,7 @@ suite("completion item provider", () =>
 						let items = list.items;
 						let memberVarItem = findCompletionItem("memberVar", items);
 						assert.notEqual(memberVarItem, null, "vscode.executeCompletionItemProvider failed to provide member variable: " + uri);
-						assert.strictEqual(memberVarItem.kind, vscode.CompletionItemKind.Variable, "vscode.executeCompletionItemProvider failed to provide correct kind of member variable: " + uri);
+						assert.strictEqual(memberVarItem.kind, vscode.CompletionItemKind.Field, "vscode.executeCompletionItemProvider failed to provide correct kind of member variable: " + uri);
 					}, (err) =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
@@ -3544,7 +3544,7 @@ suite("completion item provider", () =>
 						let items = list.items;
 						let memberVarItem = findCompletionItem("memberVar", items);
 						assert.notEqual(memberVarItem, null, "vscode.executeCompletionItemProvider failed to provide member variable: " + uri);
-						assert.strictEqual(memberVarItem.kind, vscode.CompletionItemKind.Variable, "vscode.executeCompletionItemProvider failed to provide correct kind of member variable: " + uri);
+						assert.strictEqual(memberVarItem.kind, vscode.CompletionItemKind.Field, "vscode.executeCompletionItemProvider failed to provide correct kind of member variable: " + uri);
 					}, (err) =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
@@ -3618,7 +3618,7 @@ suite("completion item provider", () =>
 						let items = list.items;
 						let memberFunctionItem = findCompletionItem("memberFunction", items);
 						assert.notEqual(memberFunctionItem, null, "vscode.executeCompletionItemProvider failed to provide member function: " + uri);
-						assert.strictEqual(memberFunctionItem.kind, vscode.CompletionItemKind.Function, "vscode.executeCompletionItemProvider failed to provide correct kind of member function: " + uri);
+						assert.strictEqual(memberFunctionItem.kind, vscode.CompletionItemKind.Method, "vscode.executeCompletionItemProvider failed to provide correct kind of member function: " + uri);
 					}, (err) =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
@@ -3656,7 +3656,7 @@ suite("completion item provider", () =>
 						let items = list.items;
 						let memberFunctionItem = findCompletionItem("memberFunction", items);
 						assert.notEqual(memberFunctionItem, null, "vscode.executeCompletionItemProvider failed to provide member function: " + uri);
-						assert.strictEqual(memberFunctionItem.kind, vscode.CompletionItemKind.Function, "vscode.executeCompletionItemProvider failed to provide correct kind of member function: " + uri);
+						assert.strictEqual(memberFunctionItem.kind, vscode.CompletionItemKind.Method, "vscode.executeCompletionItemProvider failed to provide correct kind of member function: " + uri);
 					}, (err) =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
@@ -3730,7 +3730,7 @@ suite("completion item provider", () =>
 						let items = list.items;
 						let memberPropItem = findCompletionItem("memberProperty", items);
 						assert.notEqual(memberPropItem, null, "vscode.executeCompletionItemProvider failed to provide member property: " + uri);
-						assert.strictEqual(memberPropItem.kind, vscode.CompletionItemKind.Function, "vscode.executeCompletionItemProvider failed to provide correct kind of member property: " + uri);
+						assert.strictEqual(memberPropItem.kind, vscode.CompletionItemKind.Field, "vscode.executeCompletionItemProvider failed to provide correct kind of member property: " + uri);
 					}, (err) =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
@@ -3768,7 +3768,7 @@ suite("completion item provider", () =>
 						let items = list.items;
 						let memberPropItem = findCompletionItem("memberProperty", items);
 						assert.notEqual(memberPropItem, null, "vscode.executeCompletionItemProvider failed to provide member property: " + uri);
-						assert.strictEqual(memberPropItem.kind, vscode.CompletionItemKind.Function, "vscode.executeCompletionItemProvider failed to provide correct kind of member property: " + uri);
+						assert.strictEqual(memberPropItem.kind, vscode.CompletionItemKind.Field, "vscode.executeCompletionItemProvider failed to provide correct kind of member property: " + uri);
 					}, (err) =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
@@ -3842,7 +3842,7 @@ suite("completion item provider", () =>
 						let items = list.items;
 						let staticVarItem = findCompletionItem("staticVar", items);
 						assert.notEqual(staticVarItem, null, "vscode.executeCompletionItemProvider failed to provide static variable: " + uri);
-						assert.strictEqual(staticVarItem.kind, vscode.CompletionItemKind.Variable, "vscode.executeCompletionItemProvider failed to provide correct kind of static variable: " + uri);
+						assert.strictEqual(staticVarItem.kind, vscode.CompletionItemKind.Field, "vscode.executeCompletionItemProvider failed to provide correct kind of static variable: " + uri);
 					}, (err) =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
@@ -3862,7 +3862,7 @@ suite("completion item provider", () =>
 						let items = list.items;
 						let staticVarItem = findCompletionItem("staticVar", items);
 						assert.notEqual(staticVarItem, null, "vscode.executeCompletionItemProvider failed to provide static variable: " + uri);
-						assert.strictEqual(staticVarItem.kind, vscode.CompletionItemKind.Variable, "vscode.executeCompletionItemProvider failed to provide correct kind of static variable: " + uri);
+						assert.strictEqual(staticVarItem.kind, vscode.CompletionItemKind.Field, "vscode.executeCompletionItemProvider failed to provide correct kind of static variable: " + uri);
 					}, (err) =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
@@ -3955,7 +3955,7 @@ suite("completion item provider", () =>
 						let items = list.items;
 						let staticFunctionItem = findCompletionItem("staticFunction", items);
 						assert.notEqual(staticFunctionItem, null, "vscode.executeCompletionItemProvider failed to provide static function: " + uri);
-						assert.strictEqual(staticFunctionItem.kind, vscode.CompletionItemKind.Function, "vscode.executeCompletionItemProvider failed to provide correct kind of static function: " + uri);
+						assert.strictEqual(staticFunctionItem.kind, vscode.CompletionItemKind.Method, "vscode.executeCompletionItemProvider failed to provide correct kind of static function: " + uri);
 					}, (err) =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
@@ -3975,7 +3975,7 @@ suite("completion item provider", () =>
 						let items = list.items;
 						let staticFunctionItem = findCompletionItem("staticFunction", items);
 						assert.notEqual(staticFunctionItem, null, "vscode.executeCompletionItemProvider failed to provide static function: " + uri);
-						assert.strictEqual(staticFunctionItem.kind, vscode.CompletionItemKind.Function, "vscode.executeCompletionItemProvider failed to provide correct kind of static function: " + uri);
+						assert.strictEqual(staticFunctionItem.kind, vscode.CompletionItemKind.Method, "vscode.executeCompletionItemProvider failed to provide correct kind of static function: " + uri);
 					}, (err) =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
@@ -4068,7 +4068,7 @@ suite("completion item provider", () =>
 						let items = list.items;
 						let staticPropItem = findCompletionItem("staticProperty", items);
 						assert.notEqual(staticPropItem, null, "vscode.executeCompletionItemProvider failed to provide static property: " + uri);
-						assert.strictEqual(staticPropItem.kind, vscode.CompletionItemKind.Function, "vscode.executeCompletionItemProvider failed to provide correct kind of static property: " + uri);
+						assert.strictEqual(staticPropItem.kind, vscode.CompletionItemKind.Field, "vscode.executeCompletionItemProvider failed to provide correct kind of static property: " + uri);
 					}, (err) =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
@@ -4088,7 +4088,7 @@ suite("completion item provider", () =>
 						let items = list.items;
 						let staticPropItem = findCompletionItem("staticProperty", items);
 						assert.notEqual(staticPropItem, null, "vscode.executeCompletionItemProvider failed to provide static property: " + uri);
-						assert.strictEqual(staticPropItem.kind, vscode.CompletionItemKind.Function, "vscode.executeCompletionItemProvider failed to provide correct kind of static property: " + uri);
+						assert.strictEqual(staticPropItem.kind, vscode.CompletionItemKind.Field, "vscode.executeCompletionItemProvider failed to provide correct kind of static property: " + uri);
 					}, (err) =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
@@ -4458,7 +4458,7 @@ suite("completion item provider", () =>
 						let items = list.items;
 						let superMemberVarItem = findCompletionItem("superMemberVar", items);
 						assert.notEqual(superMemberVarItem, null, "vscode.executeCompletionItemProvider failed to provide super member variable: " + uri);
-						assert.strictEqual(superMemberVarItem.kind, vscode.CompletionItemKind.Variable, "vscode.executeCompletionItemProvider failed to provide correct kind of super member variable: " + uri);
+						assert.strictEqual(superMemberVarItem.kind, vscode.CompletionItemKind.Field, "vscode.executeCompletionItemProvider failed to provide correct kind of super member variable: " + uri);
 					}, (err) =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
@@ -4478,7 +4478,7 @@ suite("completion item provider", () =>
 						let items = list.items;
 						let superMemberVarItem = findCompletionItem("superMemberVar", items);
 						assert.notEqual(superMemberVarItem, null, "vscode.executeCompletionItemProvider failed to provide super member variable: " + uri);
-						assert.strictEqual(superMemberVarItem.kind, vscode.CompletionItemKind.Variable, "vscode.executeCompletionItemProvider failed to provide correct kind of super member variable: " + uri);
+						assert.strictEqual(superMemberVarItem.kind, vscode.CompletionItemKind.Field, "vscode.executeCompletionItemProvider failed to provide correct kind of super member variable: " + uri);
 					}, (err) =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
@@ -4517,7 +4517,7 @@ suite("completion item provider", () =>
 						let items = list.items;
 						let superMemberVarItem = findCompletionItem("superMemberVar", items);
 						assert.notEqual(superMemberVarItem, null, "vscode.executeCompletionItemProvider failed to provide member super variable: " + uri);
-						assert.strictEqual(superMemberVarItem.kind, vscode.CompletionItemKind.Variable, "vscode.executeCompletionItemProvider failed to provide correct kind of super member variable: " + uri);
+						assert.strictEqual(superMemberVarItem.kind, vscode.CompletionItemKind.Field, "vscode.executeCompletionItemProvider failed to provide correct kind of super member variable: " + uri);
 					}, (err) =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
@@ -4536,7 +4536,7 @@ suite("completion item provider", () =>
 						let items = list.items;
 						let superMemberPropertyItem = findCompletionItem("superMemberProperty", items);
 						assert.notEqual(superMemberPropertyItem, null, "vscode.executeCompletionItemProvider failed to provide super member property: " + uri);
-						assert.strictEqual(superMemberPropertyItem.kind, vscode.CompletionItemKind.Function, "vscode.executeCompletionItemProvider failed to provide correct kind of super member property: " + uri);
+						assert.strictEqual(superMemberPropertyItem.kind, vscode.CompletionItemKind.Field, "vscode.executeCompletionItemProvider failed to provide correct kind of super member property: " + uri);
 					}, (err) =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
@@ -4556,7 +4556,7 @@ suite("completion item provider", () =>
 						let items = list.items;
 						let superMemberPropertyItem = findCompletionItem("superMemberProperty", items);
 						assert.notEqual(superMemberPropertyItem, null, "vscode.executeCompletionItemProvider failed to provide super member property: " + uri);
-						assert.strictEqual(superMemberPropertyItem.kind, vscode.CompletionItemKind.Function, "vscode.executeCompletionItemProvider failed to provide correct kind of super member property: " + uri);
+						assert.strictEqual(superMemberPropertyItem.kind, vscode.CompletionItemKind.Field, "vscode.executeCompletionItemProvider failed to provide correct kind of super member property: " + uri);
 					}, (err) =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
@@ -4576,7 +4576,7 @@ suite("completion item provider", () =>
 						let items = list.items;
 						let superMemberPropertyItem = findCompletionItem("superMemberProperty", items);
 						assert.notEqual(superMemberPropertyItem, null, "vscode.executeCompletionItemProvider failed to provide super member property: " + uri);
-						assert.strictEqual(superMemberPropertyItem.kind, vscode.CompletionItemKind.Function, "vscode.executeCompletionItemProvider failed to provide correct kind of super member property: " + uri);
+						assert.strictEqual(superMemberPropertyItem.kind, vscode.CompletionItemKind.Field, "vscode.executeCompletionItemProvider failed to provide correct kind of super member property: " + uri);
 					}, (err) =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
@@ -4614,7 +4614,7 @@ suite("completion item provider", () =>
 						let items = list.items;
 						let superMemberFunctionItem = findCompletionItem("superMemberFunction", items);
 						assert.notEqual(superMemberFunctionItem, null, "vscode.executeCompletionItemProvider failed to provide super member function: " + uri);
-						assert.strictEqual(superMemberFunctionItem.kind, vscode.CompletionItemKind.Function, "vscode.executeCompletionItemProvider failed to provide correct kind of super member function: " + uri);
+						assert.strictEqual(superMemberFunctionItem.kind, vscode.CompletionItemKind.Method, "vscode.executeCompletionItemProvider failed to provide correct kind of super member function: " + uri);
 					}, (err) =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
@@ -4634,7 +4634,7 @@ suite("completion item provider", () =>
 						let items = list.items;
 						let superMemberFunctionItem = findCompletionItem("superMemberFunction", items);
 						assert.notEqual(superMemberFunctionItem, null, "vscode.executeCompletionItemProvider failed to provide super member function: " + uri);
-						assert.strictEqual(superMemberFunctionItem.kind, vscode.CompletionItemKind.Function, "vscode.executeCompletionItemProvider failed to provide correct kind of super member function: " + uri);
+						assert.strictEqual(superMemberFunctionItem.kind, vscode.CompletionItemKind.Method, "vscode.executeCompletionItemProvider failed to provide correct kind of super member function: " + uri);
 					}, (err) =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
@@ -4654,7 +4654,7 @@ suite("completion item provider", () =>
 						let items = list.items;
 						let superMemberFunctionItem = findCompletionItem("superMemberFunction", items);
 						assert.notEqual(superMemberFunctionItem, null, "vscode.executeCompletionItemProvider failed to provide super member function: " + uri);
-						assert.strictEqual(superMemberFunctionItem.kind, vscode.CompletionItemKind.Function, "vscode.executeCompletionItemProvider failed to provide correct kind of super member function: " + uri);
+						assert.strictEqual(superMemberFunctionItem.kind, vscode.CompletionItemKind.Method, "vscode.executeCompletionItemProvider failed to provide correct kind of super member function: " + uri);
 					}, (err) =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
@@ -4692,7 +4692,7 @@ suite("completion item provider", () =>
 						let items = list.items;
 						let superStaticVarItem = findCompletionItem("superStaticVar", items);
 						assert.notEqual(superStaticVarItem, null, "vscode.executeCompletionItemProvider failed to provide super static variable: " + uri);
-						assert.strictEqual(superStaticVarItem.kind, vscode.CompletionItemKind.Variable, "vscode.executeCompletionItemProvider failed to provide correct kind of super static variable: " + uri);
+						assert.strictEqual(superStaticVarItem.kind, vscode.CompletionItemKind.Field, "vscode.executeCompletionItemProvider failed to provide correct kind of super static variable: " + uri);
 					}, (err) =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
@@ -4731,7 +4731,7 @@ suite("completion item provider", () =>
 						let items = list.items;
 						let superStaticVarItem = findCompletionItem("superStaticVar", items);
 						assert.notEqual(superStaticVarItem, null, "vscode.executeCompletionItemProvider failed to provide super static variable: " + uri);
-						assert.strictEqual(superStaticVarItem.kind, vscode.CompletionItemKind.Variable, "vscode.executeCompletionItemProvider failed to provide correct kind of super static variable: " + uri);
+						assert.strictEqual(superStaticVarItem.kind, vscode.CompletionItemKind.Field, "vscode.executeCompletionItemProvider failed to provide correct kind of super static variable: " + uri);
 					}, (err) =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
@@ -4807,7 +4807,7 @@ suite("completion item provider", () =>
 						let items = list.items;
 						let superStaticPropertyItem = findCompletionItem("superStaticProperty", items);
 						assert.notEqual(superStaticPropertyItem, null, "vscode.executeCompletionItemProvider failed to provide super static property: " + uri);
-						assert.strictEqual(superStaticPropertyItem.kind, vscode.CompletionItemKind.Function, "vscode.executeCompletionItemProvider failed to provide correct kind of super static property: " + uri);
+						assert.strictEqual(superStaticPropertyItem.kind, vscode.CompletionItemKind.Field, "vscode.executeCompletionItemProvider failed to provide correct kind of super static property: " + uri);
 					}, (err) =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
@@ -4846,7 +4846,7 @@ suite("completion item provider", () =>
 						let items = list.items;
 						let superStaticPropertyItem = findCompletionItem("superStaticProperty", items);
 						assert.notEqual(superStaticPropertyItem, null, "vscode.executeCompletionItemProvider failed to provide super static property: " + uri);
-						assert.strictEqual(superStaticPropertyItem.kind, vscode.CompletionItemKind.Function, "vscode.executeCompletionItemProvider failed to provide correct kind of super static property: " + uri);
+						assert.strictEqual(superStaticPropertyItem.kind, vscode.CompletionItemKind.Field, "vscode.executeCompletionItemProvider failed to provide correct kind of super static property: " + uri);
 					}, (err) =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
@@ -4922,7 +4922,7 @@ suite("completion item provider", () =>
 						let items = list.items;
 						let superStaticFunctionItem = findCompletionItem("superStaticFunction", items);
 						assert.notEqual(superStaticFunctionItem, null, "vscode.executeCompletionItemProvider failed to provide super static function: " + uri);
-						assert.strictEqual(superStaticFunctionItem.kind, vscode.CompletionItemKind.Function, "vscode.executeCompletionItemProvider failed to provide correct kind of super static function: " + uri);
+						assert.strictEqual(superStaticFunctionItem.kind, vscode.CompletionItemKind.Method, "vscode.executeCompletionItemProvider failed to provide correct kind of super static function: " + uri);
 					}, (err) =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
@@ -4961,7 +4961,7 @@ suite("completion item provider", () =>
 						let items = list.items;
 						let superStaticFunctionItem = findCompletionItem("superStaticFunction", items);
 						assert.notEqual(superStaticFunctionItem, null, "vscode.executeCompletionItemProvider failed to provide super static function: " + uri);
-						assert.strictEqual(superStaticFunctionItem.kind, vscode.CompletionItemKind.Function, "vscode.executeCompletionItemProvider failed to provide correct kind of super static function: " + uri);
+						assert.strictEqual(superStaticFunctionItem.kind, vscode.CompletionItemKind.Method, "vscode.executeCompletionItemProvider failed to provide correct kind of super static function: " + uri);
 					}, (err) =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
@@ -5187,7 +5187,7 @@ suite("completion item provider", () =>
 						let items = list.items;
 						let fileInternalMemberVarItem = findCompletionItem("fileInternalMemberVar", items);
 						assert.notEqual(fileInternalMemberVarItem, null, "vscode.executeCompletionItemProvider failed to provide file-internal member variable: " + uri);
-						assert.strictEqual(fileInternalMemberVarItem.kind, vscode.CompletionItemKind.Variable, "vscode.executeCompletionItemProvider failed to provide correct kind of file-internal member variable: " + uri);
+						assert.strictEqual(fileInternalMemberVarItem.kind, vscode.CompletionItemKind.Field, "vscode.executeCompletionItemProvider failed to provide correct kind of file-internal member variable: " + uri);
 					}, (err) =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
@@ -5206,7 +5206,7 @@ suite("completion item provider", () =>
 						let items = list.items;
 						let fileInternalMemberFunctionItem = findCompletionItem("fileInternalMemberFunction", items);
 						assert.notEqual(fileInternalMemberFunctionItem, null, "vscode.executeCompletionItemProvider failed to provide file-internal member function: " + uri);
-						assert.strictEqual(fileInternalMemberFunctionItem.kind, vscode.CompletionItemKind.Function, "vscode.executeCompletionItemProvider failed to provide correct kind of file-internal member function: " + uri);
+						assert.strictEqual(fileInternalMemberFunctionItem.kind, vscode.CompletionItemKind.Method, "vscode.executeCompletionItemProvider failed to provide correct kind of file-internal member function: " + uri);
 					}, (err) =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
@@ -5225,7 +5225,7 @@ suite("completion item provider", () =>
 						let items = list.items;
 						let fileInternalMemberPropertyItem = findCompletionItem("fileInternalMemberProperty", items);
 						assert.notEqual(fileInternalMemberPropertyItem, null, "vscode.executeCompletionItemProvider failed to provide file-internal member property: " + uri);
-						assert.strictEqual(fileInternalMemberPropertyItem.kind, vscode.CompletionItemKind.Function, "vscode.executeCompletionItemProvider failed to provide correct kind of file-internal member property: " + uri);
+						assert.strictEqual(fileInternalMemberPropertyItem.kind, vscode.CompletionItemKind.Field, "vscode.executeCompletionItemProvider failed to provide correct kind of file-internal member property: " + uri);
 					}, (err) =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
@@ -5244,7 +5244,7 @@ suite("completion item provider", () =>
 						let items = list.items;
 						let fileInternalStaticVarItem = findCompletionItem("fileInternalStaticVar", items);
 						assert.notEqual(fileInternalStaticVarItem, null, "vscode.executeCompletionItemProvider failed to provide file-internal static variable: " + uri);
-						assert.strictEqual(fileInternalStaticVarItem.kind, vscode.CompletionItemKind.Variable, "vscode.executeCompletionItemProvider failed to provide correct kind of file-internal static variable: " + uri);
+						assert.strictEqual(fileInternalStaticVarItem.kind, vscode.CompletionItemKind.Field, "vscode.executeCompletionItemProvider failed to provide correct kind of file-internal static variable: " + uri);
 					}, (err) =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
@@ -5263,7 +5263,7 @@ suite("completion item provider", () =>
 						let items = list.items;
 						let fileInternalStaticFunctionItem = findCompletionItem("fileInternalStaticFunction", items);
 						assert.notEqual(fileInternalStaticFunctionItem, null, "vscode.executeCompletionItemProvider failed to provide file-internal static function: " + uri);
-						assert.strictEqual(fileInternalStaticFunctionItem.kind, vscode.CompletionItemKind.Function, "vscode.executeCompletionItemProvider failed to provide correct kind of file-internal static function: " + uri);
+						assert.strictEqual(fileInternalStaticFunctionItem.kind, vscode.CompletionItemKind.Method, "vscode.executeCompletionItemProvider failed to provide correct kind of file-internal static function: " + uri);
 					}, (err) =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
@@ -5282,7 +5282,7 @@ suite("completion item provider", () =>
 						let items = list.items;
 						let fileInternalStaticPropertyItem = findCompletionItem("fileInternalStaticProperty", items);
 						assert.notEqual(fileInternalStaticPropertyItem, null, "vscode.executeCompletionItemProvider failed to provide file-internal static property: " + uri);
-						assert.strictEqual(fileInternalStaticPropertyItem.kind, vscode.CompletionItemKind.Function, "vscode.executeCompletionItemProvider failed to provide correct kind of file-internal static property: " + uri);
+						assert.strictEqual(fileInternalStaticPropertyItem.kind, vscode.CompletionItemKind.Field, "vscode.executeCompletionItemProvider failed to provide correct kind of file-internal static property: " + uri);
 					}, (err) =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
@@ -5502,7 +5502,7 @@ suite("completion item provider", () =>
 						let items = list.items;
 						let propertyItem = findCompletionItem("memberProperty", items);
 						assert.notEqual(propertyItem, null, "vscode.executeCompletionItemProvider failed to provide member property: " + uri);
-						assert.strictEqual(propertyItem.kind, vscode.CompletionItemKind.Function, "vscode.executeCompletionItemProvider failed to provide correct kind of member property: " + uri);
+						assert.strictEqual(propertyItem.kind, vscode.CompletionItemKind.Field, "vscode.executeCompletionItemProvider failed to provide correct kind of member property: " + uri);
 					}, (err) =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
@@ -5521,7 +5521,7 @@ suite("completion item provider", () =>
 						let items = list.items;
 						let functionItem = findCompletionItem("memberFunction", items);
 						assert.notEqual(functionItem, null, "vscode.executeCompletionItemProvider failed to provide member function: " + uri);
-						assert.strictEqual(functionItem.kind, vscode.CompletionItemKind.Function, "vscode.executeCompletionItemProvider failed to provide correct kind of member function: " + uri);
+						assert.strictEqual(functionItem.kind, vscode.CompletionItemKind.Method, "vscode.executeCompletionItemProvider failed to provide correct kind of member function: " + uri);
 					}, (err) =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
@@ -5540,7 +5540,7 @@ suite("completion item provider", () =>
 						let items = list.items;
 						let propertyItem = findCompletionItem("superMemberProperty", items);
 						assert.notEqual(propertyItem, null, "vscode.executeCompletionItemProvider failed to provide super member property: " + uri);
-						assert.strictEqual(propertyItem.kind, vscode.CompletionItemKind.Function, "vscode.executeCompletionItemProvider failed to provide correct kind of super member property: " + uri);
+						assert.strictEqual(propertyItem.kind, vscode.CompletionItemKind.Field, "vscode.executeCompletionItemProvider failed to provide correct kind of super member property: " + uri);
 					}, (err) =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
@@ -5559,7 +5559,7 @@ suite("completion item provider", () =>
 						let items = list.items;
 						let functionItem = findCompletionItem("superMemberFunction", items);
 						assert.notEqual(functionItem, null, "vscode.executeCompletionItemProvider failed to provide super member function: " + uri);
-						assert.strictEqual(functionItem.kind, vscode.CompletionItemKind.Function, "vscode.executeCompletionItemProvider failed to provide correct kind of super member function: " + uri);
+						assert.strictEqual(functionItem.kind, vscode.CompletionItemKind.Method, "vscode.executeCompletionItemProvider failed to provide correct kind of super member function: " + uri);
 					}, (err) =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
@@ -5578,7 +5578,7 @@ suite("completion item provider", () =>
 						let items = list.items;
 						let propertyItem = findCompletionItem("superSuperMemberProperty", items);
 						assert.notEqual(propertyItem, null, "vscode.executeCompletionItemProvider failed to provide super super member property: " + uri);
-						assert.strictEqual(propertyItem.kind, vscode.CompletionItemKind.Function, "vscode.executeCompletionItemProvider failed to provide correct kind of super super member property: " + uri);
+						assert.strictEqual(propertyItem.kind, vscode.CompletionItemKind.Field, "vscode.executeCompletionItemProvider failed to provide correct kind of super super member property: " + uri);
 					}, (err) =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
@@ -5597,7 +5597,7 @@ suite("completion item provider", () =>
 						let items = list.items;
 						let functionItem = findCompletionItem("superSuperMemberFunction", items);
 						assert.notEqual(functionItem, null, "vscode.executeCompletionItemProvider failed to provide super super member function: " + uri);
-						assert.strictEqual(functionItem.kind, vscode.CompletionItemKind.Function, "vscode.executeCompletionItemProvider failed to provide correct kind of super super member function: " + uri);
+						assert.strictEqual(functionItem.kind, vscode.CompletionItemKind.Method, "vscode.executeCompletionItemProvider failed to provide correct kind of super super member function: " + uri);
 					}, (err) =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
@@ -5726,7 +5726,7 @@ suite("completion item provider", () =>
 						let items = list.items;
 						let functionItem = findCompletionItem("superMemberFunction", items);
 						assert.notEqual(functionItem, null, "vscode.executeCompletionItemProvider failed to provide protected member function on protected override " + uri);
-						assert.strictEqual(functionItem.kind, vscode.CompletionItemKind.Function, "vscode.executeCompletionItemProvider failed to provide correct kind of override: " + uri);
+						assert.strictEqual(functionItem.kind, vscode.CompletionItemKind.Method, "vscode.executeCompletionItemProvider failed to provide correct kind of override: " + uri);
 					}, (err) =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
@@ -5767,7 +5767,7 @@ suite("MXML completion item provider", () =>
 						let items = list.items;
 						let propertyItem = findCompletionItem("beads", items);
 						assert.notEqual(propertyItem, null, "vscode.executeCompletionItemProvider failed to provide property as attribute: " + uri);
-						assert.strictEqual(propertyItem.kind, vscode.CompletionItemKind.Variable, "vscode.executeCompletionItemProvider failed to provide correct kind of property: " + uri);
+						assert.strictEqual(propertyItem.kind, vscode.CompletionItemKind.Field, "vscode.executeCompletionItemProvider failed to provide correct kind of property: " + uri);
 						let snippet = propertyItem.insertText as vscode.SnippetString;
 						assert.strictEqual(snippet.value, "beads=\"$0\"", "vscode.executeCompletionItemProvider failed to provide correct insert text for property as attribute: " + uri);
 					}, (err) =>
@@ -5788,7 +5788,7 @@ suite("MXML completion item provider", () =>
 						let items = list.items;
 						let propertyItem = findCompletionItem("beads", items);
 						assert.notEqual(propertyItem, null, "vscode.executeCompletionItemProvider failed to provide property as child element: " + uri);
-						assert.strictEqual(propertyItem.kind, vscode.CompletionItemKind.Variable, "vscode.executeCompletionItemProvider failed to provide correct kind of property: " + uri);
+						assert.strictEqual(propertyItem.kind, vscode.CompletionItemKind.Field, "vscode.executeCompletionItemProvider failed to provide correct kind of property: " + uri);
 						assert.strictEqual(propertyItem.insertText, "js:beads", "vscode.executeCompletionItemProvider failed to provide correct insert text for property as child element: " + uri);
 					}, (err) =>
 					{
