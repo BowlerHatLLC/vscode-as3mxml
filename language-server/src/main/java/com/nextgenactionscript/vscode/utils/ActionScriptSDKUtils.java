@@ -15,4 +15,24 @@ public class ActionScriptSDKUtils
 		path = path.resolve("../royale-sdk-description.xml");
 		return path.toFile().exists();
 	}
+
+	public static boolean isAIRSDK(Path path)
+	{
+		Path airDescriptionPath = path.resolve("air-sdk-description.xml");
+		if(!airDescriptionPath.toFile().exists())
+		{
+			return false;
+		}
+		Path mxmlcJarPath = path.resolve("lib/mxmlc-cli.jar");
+		if(!mxmlcJarPath.toFile().exists())
+		{
+			return false;
+		}
+		Path compcJarPath = path.resolve("lib/compc-cli.jar");
+		if(!compcJarPath.toFile().exists())
+		{
+			return false;
+		}
+		return true;
+	}
 }
