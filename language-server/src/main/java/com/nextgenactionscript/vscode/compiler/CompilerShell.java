@@ -15,16 +15,21 @@ limitations under the License.
 */
 package com.nextgenactionscript.vscode.compiler;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import com.nextgenactionscript.asconfigc.compiler.ProjectType;
 import com.nextgenactionscript.vscode.project.ProjectOptions;
 import com.nextgenactionscript.vscode.services.ActionScriptLanguageClient;
+import com.nextgenactionscript.vscode.utils.ActionScriptSDKUtils;
 
 import org.eclipse.lsp4j.MessageParams;
 import org.eclipse.lsp4j.MessageType;
@@ -32,7 +37,7 @@ import org.eclipse.lsp4j.MessageType;
 public class CompilerShell
 {
     private static final String ERROR_PROJECT_OPTIONS = "Quick Compile & Debug failed because project options are invalid.";
-    private static final String ERROR_COMPILER_SHELL_NOT_FOUND = "Quick Compile & Debug requires a supported SDK that contains a \"compiler shell\". Compiler shell not found in this SDK. The Apache Flex SDK is recommended.";
+    private static final String ERROR_COMPILER_SHELL_NOT_FOUND = "Quick Compile & Debug requires the Adobe AIR SDK & Compiler or Apache Royale. Please choose a different SDK or build using a standard task.";
     private static final String ERROR_COMPILER_SHELL_START = "Quick Compile & Debug failed. Error starting compiler shell.";
     private static final String ERROR_COMPILER_SHELL_WRITE = "Quick Compile & Debug failed. Error writing to compiler shell.";
     private static final String ERROR_COMPILER_SHELL_READ = "Quick Compile & Debug failed. Error reading from compiler shell.";
@@ -40,19 +45,29 @@ public class CompilerShell
     private static final String COMMAND_COMPC = "compc";
     private static final String COMMAND_COMPILE = "compile";
     private static final String COMMAND_CLEAR = "clear";
+    private static final String COMMAND_QUIT = "quit\n";
     private static final String ASSIGNED_ID_PREFIX = "fcsh: Assigned ";
     private static final String ASSIGNED_ID_SUFFIX = " as the compile target id";
     private static final String OUTPUT_PROBLEM_TYPE_ERROR = "Error: ";
+    private static final String OUTPUT_PROBLEM_TYPE_SYNTAX_ERROR = "Syntax error: ";
     private static final String COMPILER_SHELL_PROMPT = "(fcsh) ";
+    private static final String FILE_NAME_RCSH = "rcsh.jar";
+    private static final String FILE_NAME_ASCSH = "ascsh.jar";
 
 	private ActionScriptLanguageClient languageClient;
 	private Process process;
     private String compileID;
     private String previousCommand;
+    private Path rcshPath;
+    private Path ascshPath;
 
-	public CompilerShell(ActionScriptLanguageClient languageClient)
+	public CompilerShell(ActionScriptLanguageClient languageClient) throws URISyntaxException
 	{
 		this.languageClient = languageClient;
+        URI uri = getClass().getProtectionDomain().getCodeSource().getLocation().toURI();
+        Path binPath = Paths.get(uri).getParent().normalize();
+        rcshPath = binPath.resolve(FILE_NAME_RCSH);
+        ascshPath = binPath.resolve(FILE_NAME_ASCSH);
 	}
 
 	public boolean compile(ProjectOptions projectOptions, Path workspaceRoot, Path frameworkSDKHome)
@@ -63,47 +78,90 @@ public class CompilerShell
             return false;
         }
 
+        String oldCompileID = compileID;
+        String command = getCommand(projectOptions);
+
+        if (process != null && oldCompileID != null && compileID == null)
+        {
+            //if we have a new command, start fresh
+            if (!executeCommand(COMMAND_QUIT))
+            {
+                return false;
+            }
+            try
+            {
+                Process oldProcess = process;
+                process = null;
+                int exitCode = oldProcess.waitFor();
+                languageClient.logCompilerShellOutput("Compiler shell exited with code: " + exitCode);
+            }
+            catch(InterruptedException e)
+            {
+                e.printStackTrace(System.err);
+            }
+        }
         if (!startProcess(frameworkSDKHome, workspaceRoot))
         {
             return false;
         }
-
-        String oldCompileID = compileID;
-        String command = getCommand(projectOptions);
-        if (oldCompileID != null && compileID == null)
-        {
-            //if we have a new command, clear the old one from memory
-            String clearCommand = getClearCommand(oldCompileID);
-            if (!executeCommand(clearCommand))
-            {
-                return false;
-            }
-        }
-        return executeCommand(command);
+        return executeCommandAndWaitForPrompt(command, true);
     }
 
-    private boolean startProcess(Path frameworkSDKHome, Path workspaceRoot)
+    private boolean startProcess(Path sdkPath, Path workspaceRoot)
     {
-        Path compilerShellPath = frameworkSDKHome.resolve("lib/fcsh.jar");
-        if (!compilerShellPath.toFile().exists())
+        Path compilerShellPath = null;
+
+        boolean isRoyale = false;
+        if (ActionScriptSDKUtils.isRoyaleSDK(sdkPath))
+        {
+            isRoyale = true;
+            compilerShellPath = rcshPath;
+        }
+        else if (ActionScriptSDKUtils.isAIRSDK(sdkPath))
+        {
+            compilerShellPath = ascshPath;
+        }
+        else
         {
             languageClient.showMessage(new MessageParams(MessageType.Error, ERROR_COMPILER_SHELL_NOT_FOUND));
             return false;
         }
+
         if (process != null)
         {
+            languageClient.clearCompilerShellOutput();
+            languageClient.logCompilerShellOutput(COMPILER_SHELL_PROMPT);
             return true;
         }
+
+        StringBuilder classPath = new StringBuilder();
+        classPath.append(sdkPath.resolve("lib/").toString());
+        classPath.append(File.separator);
+        classPath.append("*");
+        if (isRoyale)
+        {
+            classPath.append(File.pathSeparator);
+            classPath.append(sdkPath.resolve("js/lib/").toString());
+            classPath.append(File.separator);
+            classPath.append("*");
+        }
+        classPath.append(File.pathSeparator);
+        classPath.append(compilerShellPath.toAbsolutePath().toString());
 
         Path javaExecutablePath = Paths.get(System.getProperty("java.home"), "bin", "java");
         ArrayList<String> options = new ArrayList<>();
         options.add(javaExecutablePath.toString());
-        options.add("-Dapplication.home=" + frameworkSDKHome);
-        options.add("-Djava.util.Arrays.useLegacyMergeSort=true");
-        options.add("-jar");
-        options.add(compilerShellPath.toAbsolutePath().toString());
+        options.add("-Dsun.io.useCanonCaches=false");
+        options.add("-Duser.language=en");
+        options.add("-Duser.region=en");
+        options.add("-Dapplication.home=" + sdkPath);
+        options.add("-Dtrace.error=true");
+        options.add("-cp");
+        options.add(classPath.toString());
+        options.add("com.nextgenactionscript.vscode.rcsh.RCSH");
         try
         {
+            System.err.println(String.join(" ", options));
             process = new ProcessBuilder()
                 .command(options)
                 .directory(workspaceRoot.toFile())
@@ -135,8 +193,21 @@ public class CompilerShell
             languageClient.showMessage(new MessageParams(MessageType.Error, ERROR_COMPILER_SHELL_WRITE));
             return false;
         }
-
-        if (!waitForPrompt())
+        return true;
+    }
+    
+    private boolean executeCommandAndWaitForPrompt(String command)
+    {
+        return executeCommandAndWaitForPrompt(command, false);
+    }
+    
+    private boolean executeCommandAndWaitForPrompt(String command, boolean measure)
+    {
+        if (!executeCommand(command))
+        {
+            return false;
+        }
+        if (!waitForPrompt(measure))
         {
             return false;
         }
@@ -145,6 +216,16 @@ public class CompilerShell
 
     private boolean waitForPrompt()
     {
+        return waitForPrompt(false);
+    }
+
+    private boolean waitForPrompt(boolean measure)
+    {
+        long startTime = 0L;
+        if (measure)
+        {
+            startTime = System.nanoTime();
+        }
         String currentError = "";
         String currentInput = "";
         InputStream inputStream = process.getInputStream();
@@ -172,7 +253,8 @@ public class CompilerShell
                     currentError += next;
                     if (next == '\n')
                     {
-                        if (currentError.startsWith(OUTPUT_PROBLEM_TYPE_ERROR))
+                        if (currentError.contains(OUTPUT_PROBLEM_TYPE_ERROR) ||
+                            currentError.contains(OUTPUT_PROBLEM_TYPE_SYNTAX_ERROR))
                         {
                             success = false;
                         }
@@ -198,6 +280,11 @@ public class CompilerShell
                     if (currentInput.endsWith(COMPILER_SHELL_PROMPT))
                     {
                         waitingForInput = false;
+                        if (measure)
+                        {
+                            double totalSeconds = (double) (System.nanoTime() - startTime) / 1000000000.0;
+                            languageClient.logCompilerShellOutput("Elapsed time: " + totalSeconds + " seconds\n");
+                        }
                     }
                 }
             }

@@ -19,6 +19,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.io.Reader;
 import java.io.StringReader;
 import java.lang.reflect.Field;
@@ -49,6 +50,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.royale.abc.ABCConstants;
 import org.apache.royale.abc.ABCParser;
 import org.apache.royale.abc.Pool;
@@ -6291,7 +6293,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         catch(Exception e)
         {
-            languageClient.logCompilerShellOutput("Exception in compiler shell: " + e);
+            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+            e.printStackTrace(new PrintStream(buffer));
+            languageClient.logCompilerShellOutput("Exception in compiler shell: " + buffer.toString());
         }
         languageClient.quickCompileComplete(success);
         return CompletableFuture.completedFuture(success);

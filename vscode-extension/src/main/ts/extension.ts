@@ -449,6 +449,10 @@ function startClient()
 				{
 					logCompilerShellOutput(notification, false, false);
 				});
+				savedLanguageClient.onNotification("nextgenas/clearCompilerShellOutput", () =>
+				{
+					logCompilerShellOutput(null, false, true);
+				});
 				savedLanguageClient.onNotification("nextgenas/quickCompileComplete", (notification: boolean) =>
 				{
 					let startDebug = waitingForQuickCompile && notification;

@@ -20,6 +20,9 @@ import org.eclipse.lsp4j.services.LanguageClient;
 
 public interface ActionScriptLanguageClient extends LanguageClient
 {
+	@JsonNotification("nextgenas/clearCompilerShellOutput")
+	void clearCompilerShellOutput();
+
 	@JsonNotification("nextgenas/logCompilerShellOutput")
 	void logCompilerShellOutput(String message);
 	

@@ -30,12 +30,15 @@ export default function logCompilerShellOutput(message: string, line: boolean = 
 	{
 		outputChannel.clear();
 	}
-	if(line)
+	if(message)
 	{
-		outputChannel.appendLine(message);
-	}
-	else
-	{
-		outputChannel.append(message);
+		if(line)
+		{
+			outputChannel.appendLine(message);
+		}
+		else
+		{
+			outputChannel.append(message);
+		}
 	}
 }
