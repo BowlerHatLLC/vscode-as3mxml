@@ -40,8 +40,8 @@
   "dependencies": {
     "@rgrove/parse-xml": "^1.1.1",
     "json5": "^0.5.1",
-    "vscode-jsonrpc": "^3.5.0",
-    "vscode-languageclient": "^3.5.0"
+    "vscode-jsonrpc": "^3.6.0",
+    "vscode-languageclient": "^4.0.0"
   },
   "activationEvents": [
     "onLanguage:nextgenas",
