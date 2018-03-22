@@ -24,7 +24,6 @@ import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 import com.nextgenactionscript.asconfigc.compiler.ProjectType;
 import com.nextgenactionscript.vscode.project.ProjectOptions;
@@ -53,6 +52,8 @@ public class CompilerShell
     private static final String COMPILER_SHELL_PROMPT = "(fcsh) ";
     private static final String FILE_NAME_RCSH = "rcsh.jar";
     private static final String FILE_NAME_ASCSH = "ascsh.jar";
+    private static final String CLASS_RCSH = "com.nextgenactionscript.vscode.rcsh.RCSH";
+    private static final String CLASS_ASCSH = "ascsh";
 
 	private ActionScriptLanguageClient languageClient;
 	private Process process;
@@ -135,15 +136,21 @@ public class CompilerShell
         }
 
         StringBuilder classPath = new StringBuilder();
-        classPath.append(sdkPath.resolve("lib/").toString());
-        classPath.append(File.separator);
-        classPath.append("*");
         if (isRoyale)
         {
+            classPath.append(sdkPath.resolve("lib/").toString());
+            classPath.append(File.separator);
+            classPath.append("*");
             classPath.append(File.pathSeparator);
             classPath.append(sdkPath.resolve("js/lib/").toString());
             classPath.append(File.separator);
             classPath.append("*");
+        }
+        else
+        {
+            //we can't use * here because it might load a newer version of Guava
+            //which will result in strange errors
+            classPath.append(sdkPath.resolve("lib/compiler.jar").toString());
         }
         classPath.append(File.pathSeparator);
         classPath.append(compilerShellPath.toAbsolutePath().toString());
@@ -158,7 +165,14 @@ public class CompilerShell
         options.add("-Dtrace.error=true");
         options.add("-cp");
         options.add(classPath.toString());
-        options.add("com.nextgenactionscript.vscode.rcsh.RCSH");
+        if (isRoyale)
+        {
+            options.add(CLASS_RCSH);
+        }
+        else
+        {
+            options.add(CLASS_ASCSH);
+        }
         try
         {
             System.err.println(String.join(" ", options));

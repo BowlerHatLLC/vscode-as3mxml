@@ -79,6 +79,7 @@ public class RCSH
     private static ArrayList<Object> compilers = new ArrayList<Object>();
     private static Pattern compilerOptionsPattern = Pattern.compile("[^\\s]*'([^'])*?'|[^\\s]*\"([^\"])*?\"|[^\\s]+");
 
+    @SuppressWarnings("all")
     /**
      * Invoke MXMLC or COMPC
      */
@@ -106,14 +107,16 @@ public class RCSH
                 {
                     MXMLJSC mxmlc = (MXMLJSC) compiler;
                     startCapture();
-                    exitCode = mxmlc.execute(args);
+                    //this is actually a static method, but ascsh calls it as
+                    //non-static, for some reason -JT
+                    exitCode = mxmlc.staticMainNoExit(args);
                     stopCapture();          
                 }
                 else if (compiler instanceof COMPJSC)
                 {
                     COMPJSC compc = (COMPJSC) compiler;
                     startCapture();
-                    exitCode = compc.execute(args);
+                    exitCode = compc.staticMainNoExit(args);
                     stopCapture();
                 }
                 else

@@ -26,6 +26,7 @@
         <include>schemas/*</include>
         <include>syntaxes/*</include>
         <include>snippets/*</include>
+        <include>bin/*</include>
       </includes>
     </fileSet>
     <fileSet>
