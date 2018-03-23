@@ -61,6 +61,8 @@ public class CompilerShell
     private String previousCommand;
     private Path rcshPath;
     private Path ascshPath;
+    private boolean isRoyale = false;
+    private boolean isAIR = false;
 
 	public CompilerShell(ActionScriptLanguageClient languageClient) throws URISyntaxException
 	{
@@ -71,7 +73,7 @@ public class CompilerShell
         ascshPath = binPath.resolve(FILE_NAME_ASCSH);
 	}
 
-	public boolean compile(ProjectOptions projectOptions, Path workspaceRoot, Path frameworkSDKHome)
+	public boolean compile(ProjectOptions projectOptions, Path workspaceRoot, Path sdkPath)
 	{
         if (projectOptions == null)
         {
@@ -79,29 +81,58 @@ public class CompilerShell
             return false;
         }
 
+        isRoyale = ActionScriptSDKUtils.isRoyaleSDK(sdkPath);
+        isAIR = ActionScriptSDKUtils.isAIRSDK(sdkPath);
+
         String oldCompileID = compileID;
+
+        boolean isFCSH = !isRoyale && !isAIR;
+        if (isFCSH)
+        {
+            //fcsh has a bug when run in JAva 1.8 or newer that causes
+            //exceptions to be thrown after multiple builds.
+            //we can force a fresh build and still gain partial performance
+            //improvement from keeping the compiler process loaded in memory.
+            compileID = null;
+        }
+
         String command = getCommand(projectOptions);
 
-        if (process != null && oldCompileID != null && compileID == null)
+        boolean compileIDChanged = oldCompileID != null && compileID == null;
+        if (process != null && compileIDChanged)
         {
-            //if we have a new command, start fresh
-            if (!executeCommand(COMMAND_QUIT))
+            if (isFCSH)
             {
-                return false;
+                //we don't need to restart. we only need to clear.
+                if (!executeCommandAndWaitForPrompt(getClearCommand(oldCompileID)))
+                {
+                    return false;
+                }
             }
-            try
+            else
             {
-                Process oldProcess = process;
-                process = null;
-                int exitCode = oldProcess.waitFor();
-                languageClient.logCompilerShellOutput("Compiler shell exited with code: " + exitCode);
-            }
-            catch(InterruptedException e)
-            {
-                e.printStackTrace(System.err);
+                //if we have a new command, start with a fresh instance of the
+                //compiler shell.
+                //we don't need to wait for the prompt because we'll just wait
+                //for the process to end.
+                if (!executeCommand(COMMAND_QUIT))
+                {
+                    return false;
+                }
+                try
+                {
+                    Process oldProcess = process;
+                    process = null;
+                    int exitCode = oldProcess.waitFor();
+                    languageClient.logCompilerShellOutput("Compiler shell exited with code: " + exitCode);
+                }
+                catch(InterruptedException e)
+                {
+                    e.printStackTrace(System.err);
+                }
             }
         }
-        if (!startProcess(frameworkSDKHome, workspaceRoot))
+        if (!startProcess(sdkPath, workspaceRoot))
         {
             return false;
         }
@@ -112,20 +143,26 @@ public class CompilerShell
     {
         Path compilerShellPath = null;
 
-        boolean isRoyale = false;
-        if (ActionScriptSDKUtils.isRoyaleSDK(sdkPath))
+        if (isRoyale)
         {
-            isRoyale = true;
             compilerShellPath = rcshPath;
         }
-        else if (ActionScriptSDKUtils.isAIRSDK(sdkPath))
+        else if (isAIR)
         {
             compilerShellPath = ascshPath;
         }
         else
         {
-            languageClient.showMessage(new MessageParams(MessageType.Error, ERROR_COMPILER_SHELL_NOT_FOUND));
-            return false;
+            Path fcshPath = sdkPath.resolve("lib/fcsh.jar");
+            if (fcshPath.toFile().exists())
+            {
+                compilerShellPath = fcshPath;
+            }
+            else
+            {
+                languageClient.showMessage(new MessageParams(MessageType.Error, ERROR_COMPILER_SHELL_NOT_FOUND));
+                return false;
+            }
         }
 
         if (process != null)
@@ -135,25 +172,31 @@ public class CompilerShell
             return true;
         }
 
-        StringBuilder classPath = new StringBuilder();
-        if (isRoyale)
+        String classPath = null;
+        if (isRoyale || isAIR)
         {
-            classPath.append(sdkPath.resolve("lib/").toString());
-            classPath.append(File.separator);
-            classPath.append("*");
-            classPath.append(File.pathSeparator);
-            classPath.append(sdkPath.resolve("js/lib/").toString());
-            classPath.append(File.separator);
-            classPath.append("*");
+            StringBuilder builder = new StringBuilder();
+            if (isRoyale)
+            {
+                builder.append(sdkPath.resolve("lib/").toString());
+                builder.append(File.separator);
+                builder.append("*");
+                builder.append(File.pathSeparator);
+                builder.append(sdkPath.resolve("js/lib/").toString());
+                builder.append(File.separator);
+                builder.append("*");
+                builder.append(File.pathSeparator);
+            }
+            else if (isAIR)
+            {
+                //we can't use * here because it might load a newer version of Guava
+                //which will result in strange errors
+                builder.append(sdkPath.resolve("lib/compiler.jar").toString());
+                builder.append(File.pathSeparator);
+            }
+            builder.append(compilerShellPath.toAbsolutePath().toString());
+            classPath = builder.toString();
         }
-        else
-        {
-            //we can't use * here because it might load a newer version of Guava
-            //which will result in strange errors
-            classPath.append(sdkPath.resolve("lib/compiler.jar").toString());
-        }
-        classPath.append(File.pathSeparator);
-        classPath.append(compilerShellPath.toAbsolutePath().toString());
 
         Path javaExecutablePath = Paths.get(System.getProperty("java.home"), "bin", "java");
         ArrayList<String> options = new ArrayList<>();
@@ -163,15 +206,23 @@ public class CompilerShell
         options.add("-Duser.region=en");
         options.add("-Dapplication.home=" + sdkPath);
         options.add("-Dtrace.error=true");
-        options.add("-cp");
-        options.add(classPath.toString());
-        if (isRoyale)
+        if (classPath != null)
         {
-            options.add(CLASS_RCSH);
+            options.add("-cp");
+            options.add(classPath.toString());
+            if (isRoyale)
+            {
+                options.add(CLASS_RCSH);
+            }
+            else if (isAIR)
+            {
+                options.add(CLASS_ASCSH);
+            }
         }
-        else
+        else //fcsh
         {
-            options.add(CLASS_ASCSH);
+            options.add("-jar");
+            options.add(compilerShellPath.toAbsolutePath().toString());
         }
         try
         {
