@@ -95,7 +95,7 @@ public class ImportTextEditUtils
                 nameSet.add(importName);
             }
         }
-        if(nameSet.size() == 0)
+        if(nameSet.size() == 0 && importsToRemove.size() == 0)
         {
             //nothing to organize
             return endIndex;
@@ -145,8 +145,11 @@ public class ImportTextEditUtils
         if (endImportsIndex == -1)
         {
             endImportsIndex = startImportsIndex;
-            //we're only adding new imports, so add some extra whitespace
-            result.append("\n\n");
+            if (nameSet.size() > 0)
+            {
+                //we're only adding new imports, so add some extra whitespace
+                result.append("\n\n");
+            }
         }
 
         TextEdit edit = new TextEdit();

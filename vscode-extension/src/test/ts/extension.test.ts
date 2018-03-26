@@ -7471,4 +7471,33 @@ suite("organize imports", () =>
 					});
 		});
 	});
+	//BowlerHatLLC/vscode-nextgenas#182
+	test("nextgenas.organizeImportsInUri must be able to remove all imports, if necessary", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "RemoveAllImports.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("nextgenas.organizeImportsInUri", uri)
+				.then(() =>
+					{
+						return new Promise((resolve, reject) =>
+						{
+							//the text edit is not applied immediately, so give
+							//it a short delay before we check
+							setTimeout(() =>
+							{
+								let start = new vscode.Position(2, 0);
+								let end = new vscode.Position(3, 0);
+								let range = new vscode.Range(start, end);
+								let generatedText = editor.document.getText(range);
+								assert.strictEqual(generatedText, "\n", "nextgenas.organizeImportsInUri failed to organize imports");
+								resolve();
+							}, 1000);
+						})
+					}, (err) =>
+					{
+						assert(false, "Failed to execute organize imports command: " + uri);
+					});
+		});
+	});
 });
