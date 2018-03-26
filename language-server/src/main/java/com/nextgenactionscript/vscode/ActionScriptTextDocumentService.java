@@ -4890,8 +4890,19 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         RoyaleProject project = null;
         if (currentProject == null)
         {
-            //we're going to try to determine if we need a JS project or a SWF one
+            //we're going to try to determine what kind of project we need
+            //(either Royale or everything else). if it's a Royale project, we
+            //should choose an appropriate backend.
             IBackend backend = null;
+
+            //first, start by looking if the targets compiler option is
+            //specified. if it is, we definitely have a Royale project. we'll
+            //use the first target value as the indicator of what the user
+            //thinks is most important for code intelligence (native JS classes
+            //or native SWF classes?)
+            //this isn't ideal because it would be better if we could provide
+            //code intelligence for all targets simultaneously, but this is a
+            //limitation that we need to live with, for now.
             List<String> targets = currentProjectOptions.targets;
             if (targets != null && targets.size() > 0)
             {
@@ -4899,12 +4910,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 String firstTarget = targets.get(0);
                 switch (MXMLJSC.JSTargetType.fromString(firstTarget))
                 {
-                    case SWF:
-                    {
-                        //no backend. fall back to RoyaleProject.
-                        backend = null;
-                        break;
-                    }
                     case JS_NATIVE:
                     {
                         backend = new JSCBackend();
@@ -4922,14 +4927,23 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     }
                     default:
                     {
+                        //SWF and JSRoyale should both use this backend.
+
+                        //previously, we didn't use a backend for SWF, but after
+                        //FlexJS became Royale, something changed in the
+                        //compiler to make it more strict.
+
                         //it actually shouldn't matter too much which JS
-                        //backend is used. we just want to rule out SWF.
+                        //backend is used when we're only using the project for
+                        //code intelligence, so this is probably an acceptable
+                        //fallback for just about everything.
                         backend = new RoyaleBackend();
                         break;
                     }
                 }
             }
-            //if no targets are specified, we can guess JS from some configs
+            //if no targets are specified, we can guess whether it's a Royale
+            //project based on the config value.
             else if (currentProjectOptions.config.equals(CONFIG_ROYALE))
             {
                 backend = new RoyaleBackend();
@@ -4942,19 +4956,24 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             {
                 backend = new NodeBackend();
             }
+            //finally, if the config value is missing, then choose a decent
+            //default backend when the SDK is Royale
             else if (frameworkSDKIsRoyale || frameworkSDKIsFlexJS)
             {
-                //finally, we can guess based on the framework SDK
                 backend = new RoyaleBackend();
             }
+
+            //if we created a backend, it's a Royale project (RoyaleJSProject)
             if (backend != null)
             {
-                //if we created a backend, it's a JS project
                 project = new RoyaleJSProject(new Workspace(), backend);
             }
+            //if we haven't created the project yet, then it's not Royale and
+            //the project should be one that doesn't require a backend.
             if (project == null)
             {
-                //if we haven't created the project yet, we default to SWF
+                //yes, this is called RoyaleProject, but a *real* Royale project
+                //is RoyaleJSProject... even if it's SWF only! confusing, right?
                 project = new RoyaleProject(new Workspace());
             }
             project.setProblems(new ArrayList<>());
