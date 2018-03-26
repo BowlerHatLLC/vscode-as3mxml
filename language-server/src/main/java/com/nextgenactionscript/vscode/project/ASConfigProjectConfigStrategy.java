@@ -99,6 +99,7 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy
         ArrayList<String> compilerOptions = null;
         ArrayList<String> targets = null;
         ArrayList<Path> sourcePaths = null;
+        boolean warnings = true;
         JsonSchema schema = null;
         try (InputStream schemaInputStream = getClass().getResourceAsStream("/schemas/asconfig.schema.json"))
         {
@@ -162,9 +163,10 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy
                 CompilerOptionsParser parser = new CompilerOptionsParser();
                 parser.parse(jsonCompilerOptions, null, compilerOptions);
                 
-                //while the targets and source-path will be included in the
+                //while the following compiler options will be included in the
                 //result above, we need to parse them separately because the
-                //language server cares about their values.
+                //language server needs to check their specific values for
+                //certain behaviors.
                 if (jsonCompilerOptions.has(CompilerOptions.TARGETS))
                 {
                     targets = new ArrayList<>();
@@ -184,6 +186,10 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy
                         String sourcePath = jsonSourcePath.get(i).asText();
                         sourcePaths.add(projectRoot.resolve(sourcePath));
                     }
+                }
+                if (jsonCompilerOptions.has(CompilerOptions.WARNINGS))
+                {
+                    warnings = jsonCompilerOptions.get(CompilerOptions.WARNINGS).asBoolean();
                 }
             }
             //these options are formatted as if sent in through the command line
@@ -218,6 +224,7 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy
         options.additionalOptions = additionalOptions;
         options.targets = targets;
         options.sourcePaths = sourcePaths;
+        options.warnings = warnings;
         return options;
     }
 }

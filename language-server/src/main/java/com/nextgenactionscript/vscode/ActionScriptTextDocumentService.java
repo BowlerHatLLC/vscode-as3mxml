@@ -4519,9 +4519,18 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 return;
             }
         }
-        Diagnostic diagnostic = new Diagnostic();
 
         DiagnosticSeverity severity = LanguageServerCompilerUtils.getDiagnosticSeverityFromCompilerProblem(problem);
+
+        if (currentProjectOptions != null
+                && !currentProjectOptions.warnings
+                && severity.equals(DiagnosticSeverity.Warning))
+        {
+            //if warnings are disabled, and this problem is a warning, we should
+            //ignore it.
+            return;
+        }
+        Diagnostic diagnostic = new Diagnostic();
         diagnostic.setSeverity(severity);
 
         Range range = LanguageServerCompilerUtils.getRangeFromSourceLocation(problem);

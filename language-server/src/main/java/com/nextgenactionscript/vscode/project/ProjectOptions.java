@@ -30,19 +30,22 @@ public class ProjectOptions
     public String[] files;
     public List<String> compilerOptions;
     public String additionalOptions;
-    //while targets and source-path are also included in the compiler options,
+
+    //while the following values are also included in the compiler options,
     //we need them available for other things in the language server
     public List<String> targets;
     public List<Path> sourcePaths;
+    public boolean warnings;
 
     public boolean equals(ProjectOptions other)
     {
         return other.type.equals(type)
                 && other.config.equals(config)
                 && Arrays.equals(other.files, files)
+                && other.compilerOptions.equals(compilerOptions)
+                && other.additionalOptions.equals(additionalOptions)
                 && other.targets.equals(targets)
                 && other.sourcePaths.equals(sourcePaths)
-                && other.compilerOptions.equals(compilerOptions)
-                && other.additionalOptions.equals(additionalOptions);
+                && other.warnings == warnings;
     }
 }
