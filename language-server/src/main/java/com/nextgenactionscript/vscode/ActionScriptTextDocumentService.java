@@ -105,6 +105,7 @@ import org.apache.royale.compiler.internal.scopes.TypeScope;
 import org.apache.royale.compiler.internal.scopes.ASProjectScope.DefinitionPromise;
 import org.apache.royale.compiler.internal.tree.as.FileNode;
 import org.apache.royale.compiler.internal.tree.as.FullNameNode;
+import org.apache.royale.compiler.internal.units.ResourceBundleCompilationUnit;
 import org.apache.royale.compiler.internal.units.SWCCompilationUnit;
 import org.apache.royale.compiler.internal.workspaces.Workspace;
 import org.apache.royale.compiler.mxml.IMXMLData;
@@ -725,7 +726,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         String query = params.getQuery();
         for (ICompilationUnit unit : compilationUnits)
         {
-            if (unit == null || unit instanceof SWCCompilationUnit)
+            if (unit == null
+                    || unit instanceof SWCCompilationUnit
+                    || unit instanceof ResourceBundleCompilationUnit)
             {
                 continue;
             }
@@ -2566,7 +2569,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     {
         for (ICompilationUnit compilationUnit : compilationUnits)
         {
-            if (compilationUnit == null || compilationUnit instanceof SWCCompilationUnit)
+            if (compilationUnit == null
+                    || compilationUnit instanceof SWCCompilationUnit
+                    || compilationUnit instanceof ResourceBundleCompilationUnit)
             {
                 continue;
             }
@@ -4266,7 +4271,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         Path newDefinitionFilePath = null;
         for (ICompilationUnit compilationUnit : compilationUnits)
         {
-            if (compilationUnit == null || compilationUnit instanceof SWCCompilationUnit)
+            if (compilationUnit == null
+                    || compilationUnit instanceof SWCCompilationUnit
+                    || compilationUnit instanceof ResourceBundleCompilationUnit)
             {
                 continue;
             }
@@ -5183,7 +5190,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     {
                         for (ICompilationUnit unit : compilationUnits)
                         {
-                            if (unit == null || unit instanceof SWCCompilationUnit)
+                            if (unit == null
+                                    || unit instanceof SWCCompilationUnit
+                                    || unit instanceof ResourceBundleCompilationUnit)
                             {
                                 //compiled compilation units won't have problems
                                 continue;
