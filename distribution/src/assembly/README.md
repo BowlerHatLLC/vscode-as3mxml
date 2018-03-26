@@ -1,4 +1,4 @@
-# ActionScript and MXML extension for Visual Studio Code by NextGen ActionScript
+# ActionScript & MXML extension for Visual Studio Code by NextGen ActionScript
 
 ## Features
 
@@ -30,7 +30,7 @@
 
 ## asconfig.json
 
-Add a file named [*asconfig.json*](https://github.com/BowlerHatLLC/vscode-nextgenas/wiki/asconfig.json) to the root of your project to enable the ActionScript and MXML extension.
+Add a file named [*asconfig.json*](https://github.com/BowlerHatLLC/vscode-nextgenas/wiki/asconfig.json) to the root of your project to enable the ActionScript & MXML extension.
 
 A sample *asconfig.json* file for an Apache Royale project appears below:
 
@@ -66,7 +66,7 @@ Here's another sample *asconfig.json* file that is for a pure ActionScript proje
 
 ## Support this project
 
-The [ActionScript and MXML extension for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=bowlerhatllc.vscode-nextgenas) is developed by [Josh Tynjala](http://patreon.com/josht) with the support of community members like you.
+The [ActionScript & MXML extension for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=bowlerhatllc.vscode-nextgenas) is developed by [Josh Tynjala](http://patreon.com/josht) with the support of community members like you.
 
 [Support Josh Tynjala on Patreon](http://patreon.com/josht)
 

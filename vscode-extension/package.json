@@ -300,7 +300,7 @@
     ],
     "configuration": {
       "type": "object",
-      "description": "ActionScript and MXML configuration",
+      "description": "ActionScript & MXML configuration",
       "properties": {
         "nextgenas.sdk.framework": {
           "type": [

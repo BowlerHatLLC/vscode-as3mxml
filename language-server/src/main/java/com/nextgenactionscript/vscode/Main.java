@@ -62,7 +62,7 @@ public class Main
         }
         catch (Exception e)
         {
-            System.err.println("ActionScript and MXML language server failed to connect.");
+            System.err.println("ActionScript & MXML language server failed to connect.");
             System.err.println("Visit the following URL to file an issue, and please include this log: https://github.com/BowlerHatLLC/vscode-nextgenas/issues");
             e.printStackTrace(System.err);
             System.exit(SERVER_CONNECT_ERROR);
