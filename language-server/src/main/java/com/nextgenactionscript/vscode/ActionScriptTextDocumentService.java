@@ -249,9 +249,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private static final String DEFAULT_NS_PREFIX = "ns";
     private static final String STAR = "*";
     private static final String DOT_STAR = ".*";
-    private static final String MARKDOWN_CODE_BLOCK_NEXTGENAS_START = "```nextgenas\n";
-    private static final String MARKDOWN_CODE_BLOCK_MXML_START = "```mxml\n";
-    private static final String MARKDOWN_CODE_BLOCK_END = "\n```";
+    private static final String MARKED_STRING_LANGUAGE_ACTIONSCRIPT = "nextgenas";
+    private static final String MARKED_STRING_LANGUAGE_MXML = "mxml";
     private static final String TOKEN_CONFIGNAME = "configname";
     private static final String TOKEN_ROYALELIB = "royalelib";
     private static final String TOKEN_FLEXLIB = "flexlib";
@@ -2231,8 +2230,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
         Hover result = new Hover();
         String detail = DefinitionTextUtils.definitionToDetail(definition, currentProject);
+        MarkedString markedDetail = new MarkedString(MARKED_STRING_LANGUAGE_ACTIONSCRIPT, detail);
         List<Either<String,MarkedString>> contents = new ArrayList<>();
-        contents.add(Either.forLeft(MARKDOWN_CODE_BLOCK_NEXTGENAS_START + detail + MARKDOWN_CODE_BLOCK_END));
+        contents.add(Either.forRight(markedDetail));
         String docs = getDocumentationForDefinition(definition, true);
         if(docs != null)
         {
@@ -2257,7 +2257,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             Hover result = new Hover();
             List<Either<String,MarkedString>> contents = new ArrayList<>();
             StringBuilder detailBuilder = new StringBuilder();
-            detailBuilder.append(MARKDOWN_CODE_BLOCK_MXML_START);
             if (prefix.length() > 0)
             {
                 detailBuilder.append("xmlns:" + prefix + "=\"" + offsetTag.getURI() + "\"");
@@ -2266,16 +2265,17 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             {
                 detailBuilder.append("xmlns=\"" + offsetTag.getURI() + "\"");
             }
-            detailBuilder.append(MARKDOWN_CODE_BLOCK_END);
-            contents.add(Either.forLeft(detailBuilder.toString()));
+            MarkedString markedDetail = new MarkedString(MARKED_STRING_LANGUAGE_MXML, detailBuilder.toString());
+            contents.add(Either.forRight(markedDetail));
             result.setContents(contents);
             return CompletableFuture.completedFuture(result);
         }
 
         Hover result = new Hover();
         String detail = DefinitionTextUtils.definitionToDetail(definition, currentProject);
+        MarkedString markedDetail = new MarkedString(MARKED_STRING_LANGUAGE_ACTIONSCRIPT, detail);
         List<Either<String,MarkedString>> contents = new ArrayList<>();
-        contents.add(Either.forLeft(MARKDOWN_CODE_BLOCK_NEXTGENAS_START + detail + MARKDOWN_CODE_BLOCK_END));
+        contents.add(Either.forRight(markedDetail));
         result.setContents(contents);
         return CompletableFuture.completedFuture(result);
     }
