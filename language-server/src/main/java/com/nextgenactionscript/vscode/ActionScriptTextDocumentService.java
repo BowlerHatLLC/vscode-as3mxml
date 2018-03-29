@@ -6337,7 +6337,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             catch(ASConfigCException e)
             {
-                languageClient.logCompilerShellOutput("Quick Compile & Debug failed. " + e);
+                languageClient.logCompilerShellOutput("\n" + e.getMessage());
                 success = false;
             }
         }
