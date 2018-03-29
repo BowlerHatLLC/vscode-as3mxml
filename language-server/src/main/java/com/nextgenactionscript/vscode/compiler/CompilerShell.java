@@ -25,13 +25,14 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 
+import com.nextgenactionscript.asconfigc.compiler.IASConfigCCompiler;
 import com.nextgenactionscript.vscode.services.ActionScriptLanguageClient;
 import com.nextgenactionscript.vscode.utils.ActionScriptSDKUtils;
 
 import org.eclipse.lsp4j.MessageParams;
 import org.eclipse.lsp4j.MessageType;
 
-public class CompilerShell
+public class CompilerShell implements IASConfigCCompiler
 {
     private static final String ERROR_COMPILER_SHELL_NOT_FOUND = "Quick Compile & Debug requires the Adobe AIR SDK & Compiler or Apache Royale. Please choose a different SDK or build using a standard task.";
     private static final String ERROR_COMPILER_SHELL_START = "Quick Compile & Debug failed. Error starting compiler shell.";
@@ -216,7 +217,6 @@ public class CompilerShell
         }
         try
         {
-            System.err.println(String.join(" ", options));
             process = new ProcessBuilder()
                 .command(options)
                 .directory(workspaceRoot.toFile())
@@ -368,6 +368,7 @@ public class CompilerShell
 
     private String getCommand(String command)
     {
+        command += "\n";
         if (!command.equals(previousCommand))
         {
             //the compiler options have changed,
