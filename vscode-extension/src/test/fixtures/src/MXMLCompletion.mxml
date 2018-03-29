@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <js:View xmlns:fx="http://ns.adobe.com/mxml/2009"
-    xmlns:js="library://ns.apache.org/royale/basic">
+    xmlns:js="library://ns.apache.org/royale/basic" xmlns:example="com.example.mxmlPackageNS.*">
     <fx:Declarations>
     </fx:Declarations>
     <js:states>
@@ -20,4 +20,5 @@
     </js:View >
     <fx:
     <js:View transitions./>
+    <example:
 </js:View>
