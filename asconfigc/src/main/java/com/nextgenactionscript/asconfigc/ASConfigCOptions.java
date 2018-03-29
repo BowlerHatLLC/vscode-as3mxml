@@ -15,6 +15,8 @@ limitations under the License.
 */
 package com.nextgenactionscript.asconfigc;
 
+import com.nextgenactionscript.asconfigc.compiler.IASConfigCCompiler;
+
 import org.apache.commons.cli.CommandLine;
 
 public class ASConfigCOptions
@@ -28,17 +30,19 @@ public class ASConfigCOptions
 	public String sdk = null;
 	public Boolean debug = null;
 	public String air = null;
+	public IASConfigCCompiler compiler = null;
 	
 	public ASConfigCOptions()
 	{
 	}
 
-	public ASConfigCOptions(String project, String sdk, Boolean debug, String air)
+	public ASConfigCOptions(String project, String sdk, Boolean debug, String air, IASConfigCCompiler compiler)
 	{
 		this.project = project;
 		this.sdk = sdk;
 		this.debug = debug;
 		this.air = air;
+		this.compiler = compiler;
 	}
 
 	public ASConfigCOptions(CommandLine line)
@@ -60,5 +64,6 @@ public class ASConfigCOptions
 		{
 			air = line.getOptionValue(OPTION_AIR, "air");
 		}
+		
 	}
 }

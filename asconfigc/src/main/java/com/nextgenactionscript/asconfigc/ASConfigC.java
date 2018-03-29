@@ -53,6 +53,7 @@ import com.nextgenactionscript.asconfigc.air.AIRSigningOptions;
 import com.nextgenactionscript.asconfigc.compiler.CompilerOptions;
 import com.nextgenactionscript.asconfigc.compiler.CompilerOptionsParser;
 import com.nextgenactionscript.asconfigc.compiler.ConfigName;
+import com.nextgenactionscript.asconfigc.compiler.IASConfigCCompiler;
 import com.nextgenactionscript.asconfigc.compiler.JSOutputType;
 import com.nextgenactionscript.asconfigc.compiler.ProjectType;
 import com.nextgenactionscript.asconfigc.compiler.RoyaleTarget;
@@ -145,6 +146,8 @@ public class ASConfigC
 
 	private static final String ASCONFIG_JSON = "asconfig.json";
 	private static final Pattern ADDITIONAL_OPTIONS_PATTERN = Pattern.compile("\"([^\"]*)\"|(\\S+)");
+	private static final String EXECUTABLE_MXMLC = "mxmlc";
+	private static final String EXECUTABLE_COMPC = "compc";
 
 	public ASConfigC(ASConfigCOptions options) throws ASConfigCException
 	{
@@ -172,7 +175,6 @@ public class ASConfigC
 	private String jsOutputType;
 	private String outputPath;
 	private String mainFile;
-	private String additionalOptions;
 	private String airDescriptorPath;
 	private List<String> sourcePaths;
 	private boolean configRequiresRoyale;
@@ -298,7 +300,25 @@ public class ASConfigC
 		}
 		if(json.has(TopLevelFields.ADDITIONAL_OPTIONS))
 		{
-			additionalOptions = json.get(TopLevelFields.ADDITIONAL_OPTIONS).asText();
+			String additionalOptions = json.get(TopLevelFields.ADDITIONAL_OPTIONS).asText();
+			if(additionalOptions != null)
+			{
+				//parse the additional options by splitting on whitespace
+				//except when an option is wrapped in quotes
+				Matcher matcher = ADDITIONAL_OPTIONS_PATTERN.matcher(additionalOptions);
+				while(matcher.find())
+				{
+					String quotedOption = matcher.group(1);
+					if(quotedOption != null)
+					{
+						compilerOptions.add(quotedOption);
+					}
+					else //not quoted
+					{
+						compilerOptions.add(matcher.group(2));
+					}
+				}
+			}
 		}
 		if(json.has(TopLevelFields.APPLICATION))
 		{
@@ -522,8 +542,29 @@ public class ASConfigC
 		outputIsJS = (sdkIsRoyale || sdkIsFlexJS) && !isSWFTargetOnly;
 	}
 	
+	private void compileProjectWithCustomCompiler(IASConfigCCompiler compiler) throws ASConfigCException
+	{
+		String executable = EXECUTABLE_MXMLC;
+		if(projectType.equals(ProjectType.LIB))
+		{
+			executable = EXECUTABLE_COMPC;
+		}
+		compilerOptions.add(0, executable);
+		String command = String.join(" ", compilerOptions);
+		boolean result = compiler.compile(command, Paths.get(System.getProperty("user.dir")), Paths.get(sdkHome));
+		if(!result)
+		{
+			throw new ASConfigCException("Compilation failed.");
+		}
+	}
+	
 	private void compileProject() throws ASConfigCException
 	{
+		if(options.compiler != null)
+		{
+			compileProjectWithCustomCompiler(options.compiler);
+			return;
+		}
 		Path jarPath = ProjectUtils.findCompilerJarPath(projectType, sdkHome, !outputIsJS);
 		if(jarPath == null)
 		{
@@ -552,24 +593,6 @@ public class ASConfigC
 		Path javaExecutablePath = Paths.get(System.getProperty("java.home"), "bin", "java");
 		compilerOptions.add(0, javaExecutablePath.toString());
 
-		if(additionalOptions != null)
-		{
-			//parse the additional options by splitting on whitespace
-			//except when an option is wrapped in quotes
-			Matcher matcher = ADDITIONAL_OPTIONS_PATTERN.matcher(additionalOptions);
-			while(matcher.find())
-			{
-				String quotedOption = matcher.group(1);
-				if(quotedOption != null)
-				{
-					compilerOptions.add(quotedOption);
-				}
-				else //not quoted
-				{
-					compilerOptions.add(matcher.group(2));
-				}
-			}
-		}
 		try
 		{
 			File cwd = new File(System.getProperty("user.dir"));
