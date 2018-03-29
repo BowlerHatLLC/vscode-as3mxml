@@ -264,6 +264,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private static final String UNDERSCORE_UNDERSCORE_AS3_PACKAGE = "__AS3__.";
     private static final String VECTOR_HIDDEN_PREFIX = "Vector$";
     private static final String ASDOC_TAG_PARAM = "param";
+    private static final String COMMAND_MXMLC = "mxmlc";
+    private static final String COMMAND_COMPC = "compc";
 
     private static final HashMap<String, String> NAMESPACE_TO_PREFIX = new HashMap<>();
 
@@ -6326,7 +6328,15 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             String frameworkLib = System.getProperty(PROPERTY_FRAMEWORK_LIB);
             Path frameworkSDKHome = Paths.get(frameworkLib, "..");
-            success = compilerShell.compile(currentProjectOptions, workspaceRoot, frameworkSDKHome);
+            String command = getCompilerShellCommand();
+            if (command == null)
+            {
+                languageClient.logCompilerShellOutput("Quick Compile & Debug failed because project options are invalid.");
+            }
+            else
+            {
+                success = compilerShell.compile(command, workspaceRoot, frameworkSDKHome);
+            }
         }
         catch(Exception e)
         {
@@ -6336,5 +6346,43 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         languageClient.quickCompileComplete(success);
         return CompletableFuture.completedFuture(success);
+    }
+
+    private String getCompilerShellCommand()
+	{
+        if (currentProjectOptions == null)
+        {
+            return null;
+        }
+        StringBuilder commandBuilder = new StringBuilder();
+        String type = currentProjectOptions.type;
+		if (type.equals(ProjectType.APP))
+		{
+			commandBuilder.append(COMMAND_MXMLC);
+		}
+		else if (type.equals(ProjectType.LIB))
+		{
+			commandBuilder.append(COMMAND_COMPC);
+		}
+		commandBuilder.append(" ");
+		commandBuilder.append("+configname=");
+		commandBuilder.append(currentProjectOptions.config);
+		if (currentProjectOptions.compilerOptions != null)
+		{
+			commandBuilder.append(" ");
+			commandBuilder.append(String.join(" ", currentProjectOptions.compilerOptions));
+		}
+		if (currentProjectOptions.additionalOptions != null)
+		{
+			commandBuilder.append(" ");
+			commandBuilder.append(currentProjectOptions.additionalOptions);
+		}
+		if (currentProjectOptions.files != null)
+		{
+			commandBuilder.append(" ");
+			commandBuilder.append(String.join(" ", currentProjectOptions.files));
+		}
+		commandBuilder.append("\n");
+		return commandBuilder.toString();
     }
 }

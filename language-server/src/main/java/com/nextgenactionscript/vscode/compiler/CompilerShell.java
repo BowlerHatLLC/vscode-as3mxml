@@ -25,8 +25,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 
-import com.nextgenactionscript.asconfigc.compiler.ProjectType;
-import com.nextgenactionscript.vscode.project.ProjectOptions;
 import com.nextgenactionscript.vscode.services.ActionScriptLanguageClient;
 import com.nextgenactionscript.vscode.utils.ActionScriptSDKUtils;
 
@@ -35,13 +33,10 @@ import org.eclipse.lsp4j.MessageType;
 
 public class CompilerShell
 {
-    private static final String ERROR_PROJECT_OPTIONS = "Quick Compile & Debug failed because project options are invalid.";
     private static final String ERROR_COMPILER_SHELL_NOT_FOUND = "Quick Compile & Debug requires the Adobe AIR SDK & Compiler or Apache Royale. Please choose a different SDK or build using a standard task.";
     private static final String ERROR_COMPILER_SHELL_START = "Quick Compile & Debug failed. Error starting compiler shell.";
     private static final String ERROR_COMPILER_SHELL_WRITE = "Quick Compile & Debug failed. Error writing to compiler shell.";
     private static final String ERROR_COMPILER_SHELL_READ = "Quick Compile & Debug failed. Error reading from compiler shell.";
-    private static final String COMMAND_MXMLC = "mxmlc";
-    private static final String COMMAND_COMPC = "compc";
     private static final String COMMAND_COMPILE = "compile";
     private static final String COMMAND_CLEAR = "clear";
     private static final String COMMAND_QUIT = "quit\n";
@@ -73,14 +68,8 @@ public class CompilerShell
         ascshPath = binPath.resolve(FILE_NAME_ASCSH);
 	}
 
-	public boolean compile(ProjectOptions projectOptions, Path workspaceRoot, Path sdkPath)
+	public boolean compile(String command, Path workspaceRoot, Path sdkPath)
 	{
-        if (projectOptions == null)
-        {
-            languageClient.showMessage(new MessageParams(MessageType.Error, ERROR_PROJECT_OPTIONS));
-            return false;
-        }
-
         isRoyale = ActionScriptSDKUtils.isRoyaleSDK(sdkPath);
         isAIR = ActionScriptSDKUtils.isAIRSDK(sdkPath);
 
@@ -96,7 +85,8 @@ public class CompilerShell
             compileID = null;
         }
 
-        String command = getCommand(projectOptions);
+        //we might rebuild the same project, if the command hasn't changed
+        command = getCommand(command);
 
         boolean compileIDChanged = oldCompileID != null && compileID == null;
         if (process != null && compileIDChanged)
@@ -376,9 +366,8 @@ public class CompilerShell
         return success;
     }
 
-    private String getCommand(ProjectOptions projectOptions)
+    private String getCommand(String command)
     {
-        String command = getNewCommand(projectOptions);
         if (!command.equals(previousCommand))
         {
             //the compiler options have changed,
@@ -411,38 +400,5 @@ public class CompilerShell
         builder.append(compileID);
         builder.append("\n");
         return builder.toString();
-    }
-
-	private String getNewCommand(ProjectOptions projectOptions)
-	{
-		StringBuilder commandBuilder = new StringBuilder();
-		if (projectOptions.type.equals(ProjectType.APP))
-		{
-			commandBuilder.append(COMMAND_MXMLC);
-		}
-		else if (projectOptions.type.equals(ProjectType.LIB))
-		{
-			commandBuilder.append(COMMAND_COMPC);
-		}
-		commandBuilder.append(" ");
-		commandBuilder.append("+configname=");
-		commandBuilder.append(projectOptions.config);
-		if (projectOptions.compilerOptions != null)
-		{
-			commandBuilder.append(" ");
-			commandBuilder.append(String.join(" ", projectOptions.compilerOptions));
-		}
-		if (projectOptions.additionalOptions != null)
-		{
-			commandBuilder.append(" ");
-			commandBuilder.append(projectOptions.additionalOptions);
-		}
-		if (projectOptions.files != null)
-		{
-			commandBuilder.append(" ");
-			commandBuilder.append(String.join(" ", projectOptions.files));
-		}
-		commandBuilder.append("\n");
-		return commandBuilder.toString();
     }
 }
