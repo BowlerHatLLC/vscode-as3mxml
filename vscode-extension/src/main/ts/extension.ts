@@ -214,23 +214,6 @@ export function activate(context: vscode.ExtensionContext)
 			}
 		]
 	});
-	
-	//this command is deprecated and will be removed in the future
-	vscode.commands.registerCommand("nextgenas.createASConfigTaskRunner", () =>
-	{
-		if(vscode.workspace.workspaceFolders === undefined)
-		{
-			vscode.window.showErrorMessage("Failed to configure task runner. No workspace is open.");
-			return;
-		}
-		let asconfigPath = path.resolve(vscode.workspace.workspaceFolders[0].uri.fsPath, "asconfig.json");
-		if(!fs.existsSync(asconfigPath))
-		{
-			vscode.window.showErrorMessage("Failed to configure task runner. No asconfig.json file found at root of project.");
-			return;
-		}
-		vscode.commands.executeCommand("workbench.action.tasks.configureDefaultBuildTask");
-	});
 
 	vscode.commands.registerCommand("nextgenas.adapterExecutableCommandSWF", function(workspaceUri)
 	{

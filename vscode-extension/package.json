@@ -48,7 +48,6 @@
     "onLanguage:mxml",
     "workspaceContains:asconfig.json",
     "onView:actionScriptSourcePaths",
-    "onCommand:nextgenas.createASConfigTaskRunner",
     "onCommand:nextgenas.adapterExecutableCommandSWF",
     "onCommand:nextgenas.organizeImportsInTextEditor",
     "onCommand:nextgenas.organizeImportsInUri",
@@ -61,10 +60,6 @@
   ],
   "contributes": {
     "commands": [
-      {
-        "command": "nextgenas.createASConfigTaskRunner",
-        "title": "Tasks: Configure Task Runner (ActionScript - asconfig.json) (DEPRECATED)"
-      },
       {
         "command": "nextgenas.selectWorkspaceSDK",
         "title": "ActionScript: Select Workspace SDK"
