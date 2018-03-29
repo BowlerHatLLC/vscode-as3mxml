@@ -87,7 +87,7 @@
       },
       {
         "command": "nextgenas.quickCompileAndDebug",
-        "title": "ActionScript: Quick Compile & Debug"
+        "title": "ActionScript: Quick Compile & Debug (Experimental)"
       }
     ],
     "keybindings": [
