@@ -53,7 +53,6 @@ import com.nextgenactionscript.asconfigc.air.AIRSigningOptions;
 import com.nextgenactionscript.asconfigc.compiler.CompilerOptions;
 import com.nextgenactionscript.asconfigc.compiler.CompilerOptionsParser;
 import com.nextgenactionscript.asconfigc.compiler.ConfigName;
-import com.nextgenactionscript.asconfigc.compiler.IASConfigCCompiler;
 import com.nextgenactionscript.asconfigc.compiler.JSOutputType;
 import com.nextgenactionscript.asconfigc.compiler.ProjectType;
 import com.nextgenactionscript.asconfigc.compiler.RoyaleTarget;
@@ -146,8 +145,6 @@ public class ASConfigC
 
 	private static final String ASCONFIG_JSON = "asconfig.json";
 	private static final Pattern ADDITIONAL_OPTIONS_PATTERN = Pattern.compile("\"([^\"]*)\"|(\\S+)");
-	private static final String EXECUTABLE_MXMLC = "mxmlc";
-	private static final String EXECUTABLE_COMPC = "compc";
 
 	public ASConfigC(ASConfigCOptions options) throws ASConfigCException
 	{
@@ -542,79 +539,9 @@ public class ASConfigC
 		outputIsJS = (sdkIsRoyale || sdkIsFlexJS) && !isSWFTargetOnly;
 	}
 	
-	private void compileProjectWithCustomCompiler(IASConfigCCompiler compiler) throws ASConfigCException
-	{
-		String executable = EXECUTABLE_MXMLC;
-		if(projectType.equals(ProjectType.LIB))
-		{
-			executable = EXECUTABLE_COMPC;
-		}
-		compilerOptions.add(0, executable);
-		String command = String.join(" ", compilerOptions);
-		boolean result = compiler.compile(command, Paths.get(System.getProperty("user.dir")), Paths.get(sdkHome));
-		if(!result)
-		{
-			throw new ASConfigCException("Compilation failed.");
-		}
-	}
-	
 	private void compileProject() throws ASConfigCException
 	{
-		if(options.compiler != null)
-		{
-			compileProjectWithCustomCompiler(options.compiler);
-			return;
-		}
-		Path jarPath = ProjectUtils.findCompilerJarPath(projectType, sdkHome, !outputIsJS);
-		if(jarPath == null)
-		{
-			throw new ASConfigCException("Compiler not found in SDK. Expected in SDK: " + sdkHome);
-		}
-		Path frameworkPath = Paths.get(sdkHome, "frameworks");
-		if(sdkIsRoyale)
-		{
-			//royale is a special case that has renamed many of the common
-			//configuration options for the compiler
-			compilerOptions.add(0, "+royalelib=" + frameworkPath.toString());
-			compilerOptions.add(0, jarPath.toString());
-			compilerOptions.add(0, "-jar");
-			compilerOptions.add(0, "-Droyalelib=" + frameworkPath.toString());
-			compilerOptions.add(0, "-Droyalecompiler=" + sdkHome.toString());
-		}
-		else
-		{
-			//other SDKs all use the same options
-			compilerOptions.add(0, "+flexlib=" + frameworkPath.toString());
-			compilerOptions.add(0, jarPath.toString());
-			compilerOptions.add(0, "-jar");
-			compilerOptions.add(0, "-Dflexlib=" + frameworkPath.toString());
-			compilerOptions.add(0, "-Dflexcompiler=" + sdkHome.toString());
-		}
-		Path javaExecutablePath = Paths.get(System.getProperty("java.home"), "bin", "java");
-		compilerOptions.add(0, javaExecutablePath.toString());
-
-		try
-		{
-			File cwd = new File(System.getProperty("user.dir"));
-			Process process = new ProcessBuilder()
-				.command(compilerOptions)
-				.directory(cwd)
-				.inheritIO()
-				.start();
-			int status = process.waitFor();
-			if(status != 0)
-			{
-				throw new ASConfigCException(status);
-			}
-		}
-		catch(InterruptedException e)
-		{
-			throw new ASConfigCException("Failed to execute compiler: " + e.getMessage());
-		}
-		catch(IOException e)
-		{
-			throw new ASConfigCException("Failed to execute compiler: " + e.getMessage());
-		}
+		options.compiler.compile(projectType, compilerOptions, Paths.get(System.getProperty("user.dir")), Paths.get(sdkHome));
 	}
 
 	private void copySourcePathAssetToOutputDirectory(String assetPath, String outputDirectory) throws ASConfigCException

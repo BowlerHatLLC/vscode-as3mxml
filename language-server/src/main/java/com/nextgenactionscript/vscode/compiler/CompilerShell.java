@@ -24,13 +24,13 @@ import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.List;
 
+import com.nextgenactionscript.asconfigc.ASConfigCException;
 import com.nextgenactionscript.asconfigc.compiler.IASConfigCCompiler;
+import com.nextgenactionscript.asconfigc.compiler.ProjectType;
 import com.nextgenactionscript.vscode.services.ActionScriptLanguageClient;
 import com.nextgenactionscript.vscode.utils.ActionScriptSDKUtils;
-
-import org.eclipse.lsp4j.MessageParams;
-import org.eclipse.lsp4j.MessageType;
 
 public class CompilerShell implements IASConfigCCompiler
 {
@@ -38,6 +38,7 @@ public class CompilerShell implements IASConfigCCompiler
     private static final String ERROR_COMPILER_SHELL_START = "Quick Compile & Debug failed. Error starting compiler shell.";
     private static final String ERROR_COMPILER_SHELL_WRITE = "Quick Compile & Debug failed. Error writing to compiler shell.";
     private static final String ERROR_COMPILER_SHELL_READ = "Quick Compile & Debug failed. Error reading from compiler shell.";
+    private static final String ERROR_COMPILER_ERRORS_FOUND = "Quick Compile & Debug failed. Errors in compiler output.";
     private static final String COMMAND_COMPILE = "compile";
     private static final String COMMAND_CLEAR = "clear";
     private static final String COMMAND_QUIT = "quit\n";
@@ -50,6 +51,8 @@ public class CompilerShell implements IASConfigCCompiler
     private static final String FILE_NAME_ASCSH = "ascsh.jar";
     private static final String CLASS_RCSH = "com.nextgenactionscript.vscode.rcsh.RCSH";
     private static final String CLASS_ASCSH = "ascsh";
+    private static final String EXECUTABLE_MXMLC = "mxmlc";
+    private static final String EXECUTABLE_COMPC = "compc";
 
 	private ActionScriptLanguageClient languageClient;
 	private Process process;
@@ -69,7 +72,7 @@ public class CompilerShell implements IASConfigCCompiler
         ascshPath = binPath.resolve(FILE_NAME_ASCSH);
 	}
 
-	public boolean compile(String command, Path workspaceRoot, Path sdkPath)
+	public void compile(String projectType, List<String> compilerOptions, Path workspaceRoot, Path sdkPath) throws ASConfigCException
 	{
         isRoyale = ActionScriptSDKUtils.isRoyaleSDK(sdkPath);
         isAIR = ActionScriptSDKUtils.isAIRSDK(sdkPath);
@@ -86,8 +89,7 @@ public class CompilerShell implements IASConfigCCompiler
             compileID = null;
         }
 
-        //we might rebuild the same project, if the command hasn't changed
-        command = getCommand(command);
+        String command = getCommand(projectType, compilerOptions);
 
         boolean compileIDChanged = oldCompileID != null && compileID == null;
         if (process != null && compileIDChanged)
@@ -95,10 +97,8 @@ public class CompilerShell implements IASConfigCCompiler
             if (isFCSH)
             {
                 //we don't need to restart. we only need to clear.
-                if (!executeCommandAndWaitForPrompt(getClearCommand(oldCompileID)))
-                {
-                    return false;
-                }
+                String clearCommand = getClearCommand(oldCompileID);
+                executeCommandAndWaitForPrompt(clearCommand);
             }
             else
             {
@@ -106,16 +106,13 @@ public class CompilerShell implements IASConfigCCompiler
                 //compiler shell.
                 //we don't need to wait for the prompt because we'll just wait
                 //for the process to end.
-                if (!executeCommand(COMMAND_QUIT))
-                {
-                    return false;
-                }
+                executeCommand(COMMAND_QUIT);
                 try
                 {
                     Process oldProcess = process;
                     process = null;
                     int exitCode = oldProcess.waitFor();
-                    languageClient.logCompilerShellOutput("Compiler shell exited with code: " + exitCode);
+                    languageClient.logCompilerShellOutput("Compiler shell exited with code: " + exitCode + "\n");
                 }
                 catch(InterruptedException e)
                 {
@@ -123,14 +120,11 @@ public class CompilerShell implements IASConfigCCompiler
                 }
             }
         }
-        if (!startProcess(sdkPath, workspaceRoot))
-        {
-            return false;
-        }
-        return executeCommandAndWaitForPrompt(command, true);
+        startProcess(sdkPath, workspaceRoot);
+        executeCommandAndWaitForPrompt(command, true);
     }
 
-    private boolean startProcess(Path sdkPath, Path workspaceRoot)
+    private void startProcess(Path sdkPath, Path workspaceRoot) throws ASConfigCException
     {
         Path compilerShellPath = null;
 
@@ -151,8 +145,7 @@ public class CompilerShell implements IASConfigCCompiler
             }
             else
             {
-                languageClient.showMessage(new MessageParams(MessageType.Error, ERROR_COMPILER_SHELL_NOT_FOUND));
-                return false;
+                throw new ASConfigCException(ERROR_COMPILER_SHELL_NOT_FOUND);
             }
         }
 
@@ -160,7 +153,7 @@ public class CompilerShell implements IASConfigCCompiler
         {
             languageClient.clearCompilerShellOutput();
             languageClient.logCompilerShellOutput(COMPILER_SHELL_PROMPT);
-            return true;
+            return;
         }
 
         String classPath = null;
@@ -225,14 +218,13 @@ public class CompilerShell implements IASConfigCCompiler
         catch (IOException e)
         {
             e.printStackTrace(System.err);
-            languageClient.showMessage(new MessageParams(MessageType.Error, ERROR_COMPILER_SHELL_START));
-            return false;
+            throw new ASConfigCException(ERROR_COMPILER_SHELL_START);
         }
 
-        return waitForPrompt();
+        waitForPrompt();
     }
     
-    private boolean executeCommand(String command)
+    private void executeCommand(String command) throws ASConfigCException
     {
         languageClient.logCompilerShellOutput(command);
 
@@ -245,36 +237,27 @@ public class CompilerShell implements IASConfigCCompiler
         catch(IOException e)
         {
             e.printStackTrace(System.err);
-            languageClient.showMessage(new MessageParams(MessageType.Error, ERROR_COMPILER_SHELL_WRITE));
-            return false;
+            throw new ASConfigCException(ERROR_COMPILER_SHELL_WRITE);
         }
-        return true;
     }
     
-    private boolean executeCommandAndWaitForPrompt(String command)
+    private void executeCommandAndWaitForPrompt(String command) throws ASConfigCException
     {
-        return executeCommandAndWaitForPrompt(command, false);
+        executeCommandAndWaitForPrompt(command, false);
     }
     
-    private boolean executeCommandAndWaitForPrompt(String command, boolean measure)
+    private void executeCommandAndWaitForPrompt(String command, boolean measure) throws ASConfigCException
     {
-        if (!executeCommand(command))
-        {
-            return false;
-        }
-        if (!waitForPrompt(measure))
-        {
-            return false;
-        }
-        return true;
+        executeCommand(command);
+        waitForPrompt(measure);
     }
 
-    private boolean waitForPrompt()
+    private void waitForPrompt() throws ASConfigCException
     {
-        return waitForPrompt(false);
+        waitForPrompt(false);
     }
 
-    private boolean waitForPrompt(boolean measure)
+    private void waitForPrompt(boolean measure) throws ASConfigCException
     {
         long startTime = 0L;
         if (measure)
@@ -295,8 +278,7 @@ public class CompilerShell implements IASConfigCCompiler
         catch (IOException e)
         {
             e.printStackTrace(System.err);
-            languageClient.showMessage(new MessageParams(MessageType.Error, ERROR_COMPILER_SHELL_READ));
-            return false;
+            throw new ASConfigCException(ERROR_COMPILER_SHELL_READ);
         }
         do
         {
@@ -346,8 +328,7 @@ public class CompilerShell implements IASConfigCCompiler
             catch (IOException e)
             {
                 e.printStackTrace(System.err);
-                languageClient.showMessage(new MessageParams(MessageType.Error, ERROR_COMPILER_SHELL_READ));
-                return false;
+                throw new ASConfigCException(ERROR_COMPILER_SHELL_READ);
             }
         }
         while (waitingForInput || waitingForError);
@@ -363,12 +344,15 @@ public class CompilerShell implements IASConfigCCompiler
         {
             languageClient.logCompilerShellOutput(currentInput);
         }
-        return success;
+        if(!success)
+        {
+            throw new ASConfigCException(ERROR_COMPILER_ERRORS_FOUND);
+        }
     }
 
-    private String getCommand(String command)
+    private String getCommand(String projectType, List<String> compilerOptions)
     {
-        command += "\n";
+        String command = getNewCommand(projectType, compilerOptions);
         if (!command.equals(previousCommand))
         {
             //the compiler options have changed,
@@ -381,6 +365,27 @@ public class CompilerShell implements IASConfigCCompiler
             command = getCompileCommand();
         }
         return command;
+    }
+
+    private String getNewCommand(String projectType, List<String> compilerOptions)
+    {
+        StringBuilder command = new StringBuilder();
+        if(projectType.equals(ProjectType.LIB))
+        {
+            command.append(EXECUTABLE_COMPC);
+        }
+        else
+        {
+            command.append(EXECUTABLE_MXMLC);
+        }
+        command.append(" ");
+        for(String option : compilerOptions)
+        {
+            command.append(option);
+            command.append(" ");
+        }
+        command.append("\n");
+        return command.toString();
     }
 
     private String getClearCommand(String compileID)

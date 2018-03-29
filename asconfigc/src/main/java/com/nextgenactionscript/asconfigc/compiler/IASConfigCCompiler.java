@@ -16,11 +16,14 @@ limitations under the License.
 package com.nextgenactionscript.asconfigc.compiler;
 
 import java.nio.file.Path;
+import java.util.List;
+
+import com.nextgenactionscript.asconfigc.ASConfigCException;
 
 /**
  * Interface to allow a compiler shell to be passed into asconfigc.
  */
 public interface IASConfigCCompiler
 {
-	public boolean compile(String command, Path workspaceRoot, Path sdkPath);
+	public void compile(String projectType, List<String> compilerOptions, Path workspaceRoot, Path sdkPath) throws ASConfigCException;
 }
