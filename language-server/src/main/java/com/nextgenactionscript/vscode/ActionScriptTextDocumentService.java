@@ -5622,12 +5622,17 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             {
                 IMXMLClassReferenceNode mxmlNode = (IMXMLClassReferenceNode) getOffsetNode(position);
                 IMXMLEventSpecifierNode eventNode = mxmlNode.getEventSpecifierNode(attributeData.getShortName());
-                for (IASNode asNode : eventNode.getASNodes())
+                //the event node might be null if the MXML document isn't in a
+                //fully valid state (unclosed tags, for instance)
+                if (eventNode != null)
                 {
-                    IASNode containingNode = ASTUtils.getContainingNodeIncludingStart(asNode, currentOffset);
-                    if (containingNode != null)
+                    for (IASNode asNode : eventNode.getASNodes())
                     {
-                        return containingNode;
+                        IASNode containingNode = ASTUtils.getContainingNodeIncludingStart(asNode, currentOffset);
+                        if (containingNode != null)
+                        {
+                            return containingNode;
+                        }
                     }
                 }
                 return eventNode;
