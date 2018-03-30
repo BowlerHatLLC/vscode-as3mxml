@@ -17,5 +17,4 @@ Thumbs.db
 *.iml
 *.vsix
 npm-debug.log
-package-lock.json
 .vscode-test/
