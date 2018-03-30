@@ -96,6 +96,7 @@ limitations under the License.
             <id>exec-tsc-test</id>
             <phase>generate-sources</phase>
             <configuration>
+              <skip>${skipTests}</skip>
               <workingDirectory>${project.basedir}/src/test</workingDirectory>
               <executable>${tsc.executable}</executable>
               <arguments>

@@ -18,6 +18,17 @@
 				"package",
 				"-s",
 				"settings-template.xml",
+				"-Dskip-vsce=true",
+				"-DskipTests"
+			]
+		},
+		{
+			"label": "build-test",
+			"command": "mvn",
+			"args": [
+				"package",
+				"-s",
+				"settings-template.xml",
 				"-Dskip-vsce=true"
 			]
 		}

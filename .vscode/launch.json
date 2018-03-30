@@ -27,7 +27,7 @@
 			"stopOnEntry": false,
 			"sourceMaps": true,
 			"outDir": "${workspaceRoot}/vscode-extension/target/test",
-			"preLaunchTask": "build-debug"
+			"preLaunchTask": "build-test"
 		}
 	]
 }
