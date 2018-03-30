@@ -15,9 +15,12 @@ limitations under the License.
 */
 package com.nextgenactionscript.vscode.utils;
 
+import org.apache.royale.compiler.common.PrefixMap;
+import org.apache.royale.compiler.common.XMLName;
 import org.apache.royale.compiler.definitions.IClassDefinition;
 import org.apache.royale.compiler.definitions.IDefinition;
 import org.apache.royale.compiler.internal.projects.RoyaleProject;
+import org.apache.royale.compiler.mxml.IMXMLData;
 import org.apache.royale.compiler.mxml.IMXMLLanguageConstants;
 import org.apache.royale.compiler.mxml.IMXMLTagAttributeData;
 import org.apache.royale.compiler.mxml.IMXMLTagData;
@@ -122,6 +125,32 @@ public class MXMLDataUtils
         return null;
     }
 
+    private static XMLName getXMLNameForTagWithFallback(IMXMLTagData tag)
+    {
+        XMLName xmlName = tag.getXMLName();
+        //if the XML isn't valid, it's possible that the namespace for this tag
+        //wasn't properly resolved. however, if we find the tag's prefix on the
+        //root tag, we may be able to find the namespace manually
+        if (xmlName.getXMLNamespace().length() == 0)
+        {
+            IMXMLData parent = tag.getParent();
+            if (parent != null)
+            {
+                IMXMLTagData rootTag = parent.getRootTag();
+                if (rootTag != null)
+                {
+                    PrefixMap prefixMap = rootTag.getPrefixMap();
+                    if (prefixMap.containsPrefix(tag.getPrefix()))
+                    {
+                        String ns = prefixMap.getNamespaceForPrefix(tag.getPrefix());
+                        return new XMLName(ns, xmlName.getName());
+                    }
+                }
+            }
+        }
+        return xmlName;
+    }
+
     public static IDefinition getDefinitionForMXMLTag(IMXMLTagData tag, RoyaleProject project)
     {
         if (tag == null)
@@ -129,12 +158,13 @@ public class MXMLDataUtils
             return null;
         }
 
-        IDefinition offsetDefinition = project.resolveXMLNameToDefinition(tag.getXMLName(), tag.getMXMLDialect());
+        XMLName xmlName = getXMLNameForTagWithFallback(tag);
+        IDefinition offsetDefinition = project.resolveXMLNameToDefinition(xmlName, tag.getMXMLDialect());
         if (offsetDefinition != null)
         {
             return offsetDefinition;
         }
-        if (tag.getXMLName().getXMLNamespace().equals(tag.getMXMLDialect().getLanguageNamespace()))
+        if (xmlName.getXMLNamespace().equals(tag.getMXMLDialect().getLanguageNamespace()))
         {
             for (String typeName : LANGUAGE_TYPE_NAMES)
             {
@@ -149,7 +179,8 @@ public class MXMLDataUtils
         {
             return null;
         }
-        IDefinition parentDefinition = project.resolveXMLNameToDefinition(parentTag.getXMLName(), parentTag.getMXMLDialect());
+        XMLName parentXMLName = getXMLNameForTagWithFallback(parentTag);
+        IDefinition parentDefinition = project.resolveXMLNameToDefinition(parentXMLName, parentTag.getMXMLDialect());
         if (parentDefinition == null || !(parentDefinition instanceof IClassDefinition))
         {
             return null;
