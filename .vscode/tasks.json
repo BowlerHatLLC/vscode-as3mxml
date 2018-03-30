@@ -17,7 +17,8 @@
 			"args": [
 				"package",
 				"-s",
-				"settings-template.xml"
+				"settings-template.xml",
+				"-Dskip-vsce=true"
 			]
 		}
 	]

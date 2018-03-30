@@ -32,6 +32,12 @@ limitations under the License.
 
   <properties>
     <vsce.executable>${project.basedir}/../vscode-extension/node_modules/.bin/vsce</vsce.executable>
+    <!--
+      if you only need to run in the extension host for development, add
+      -Dskip-vsce=true to the mvn package command and it will skip creating the
+      vsix file. vsce takes a while, so this will speed up the build.
+      -->
+    <skip-vsce>false</skip-vsce>
   </properties>
 
   <build>
@@ -63,6 +69,7 @@ limitations under the License.
             <id>exec-vsce-package</id>
             <phase>package</phase>
             <configuration>
+              <skip>${skip-vsce}</skip>
               <workingDirectory>${project.basedir}/target/vscode-nextgenas/vscode-nextgenas</workingDirectory>
               <executable>${vsce.executable}</executable>
               <arguments>
