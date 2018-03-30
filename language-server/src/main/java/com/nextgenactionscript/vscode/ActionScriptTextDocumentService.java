@@ -2753,6 +2753,19 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         String tagStartShortNameForComparison = offsetTag.getShortName().toLowerCase();
         String tagPrefix = offsetTag.getPrefix();
         PrefixMap prefixMap = mxmlData.getRootTagPrefixMap();
+        String tagNamespace = prefixMap.getNamespaceForPrefix(tagPrefix);
+        String tagNamespacePackage = null;
+        if (tagNamespace != null && tagNamespace.endsWith("*"))
+        {
+            if (tagNamespace.length() > 1)
+            {
+                tagNamespacePackage = tagNamespace.substring(0, tagNamespace.length() - 2);
+            }
+            else //top level
+            {
+                tagNamespacePackage = "";
+            }
+        }
 
         for (ICompilationUnit unit : compilationUnits)
         {
@@ -2770,6 +2783,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 //safe to ignore
                 continue;
             }
+
             for (IDefinition definition : definitions)
             {
                 if (!(definition instanceof ITypeDefinition))
@@ -2790,15 +2804,15 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                         Collection<XMLName> tagNames = currentProject.getTagNamesForClass(typeDefinition.getQualifiedName());
                         for (XMLName tagName : tagNames)
                         {
-                            String tagNamespace = tagName.getXMLNamespace();
+                            String tagNameNamespace = tagName.getXMLNamespace();
                             //getTagNamesForClass() returns the 2006 namespace, even if that's
                             //not what we're using in this file
-                            if (tagNamespace.equals(IMXMLLanguageConstants.NAMESPACE_MXML_2006))
+                            if (tagNameNamespace.equals(IMXMLLanguageConstants.NAMESPACE_MXML_2006))
                             {
                                 //use the language namespace of the root tag instead
-                                tagNamespace = mxmlData.getRootTag().getMXMLDialect().getLanguageNamespace();
+                                tagNameNamespace = mxmlData.getRootTag().getMXMLDialect().getLanguageNamespace();
                             }
-                            String[] prefixes = prefixMap.getPrefixesForNamespace(tagNamespace);
+                            String[] prefixes = prefixMap.getPrefixesForNamespace(tagNameNamespace);
                             for (String otherPrefix : prefixes)
                             {
                                 if (tagPrefix.equals(otherPrefix))
@@ -2806,6 +2820,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                                     addDefinitionAutoCompleteMXML(typeDefinition, false, null, null, result);
                                 }
                             }
+                        }
+                        if (tagNamespacePackage != null
+                                && tagNamespacePackage.equals(typeDefinition.getPackageName()))
+                        {
+                            addDefinitionAutoCompleteMXML(typeDefinition, false, null, null, result);
                         }
                     }
                     else

@@ -6373,6 +6373,25 @@ suite("MXML completion item provider", () =>
 					});
 		});
 	});
+	test("vscode.executeCompletionItemProvider includes class in a package xmlns", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "MXMLCompletion.mxml"));
+		let position = new vscode.Position(22, 13);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
+				.then((list: vscode.CompletionList) =>
+					{
+						let items = list.items;
+						let classItem = findCompletionItemOfKind("MXMLPackageNS", vscode.CompletionItemKind.Class, items);
+						assert.notEqual(classItem, null, "vscode.executeCompletionItemProvider failed to provide class in a package xmlns: " + uri);
+						assert.strictEqual(classItem.kind, vscode.CompletionItemKind.Class, "vscode.executeCompletionItemProvider failed to provide correct kind of class: " + uri);
+					}, (err) =>
+					{
+						assert(false, "Failed to execute completion item provider: " + uri);
+					});
+		});
+	});
 });
 
 suite("imports", () =>
