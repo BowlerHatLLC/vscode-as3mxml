@@ -6371,7 +6371,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             e.printStackTrace(new PrintStream(buffer));
             languageClient.logCompilerShellOutput("Exception in compiler shell: " + buffer.toString());
         }
-        languageClient.quickCompileComplete(success);
         return CompletableFuture.completedFuture(success);
     }
 }

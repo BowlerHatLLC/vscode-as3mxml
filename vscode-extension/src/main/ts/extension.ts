@@ -63,7 +63,6 @@ let sourcePathDataProvider: ActionScriptSourcePathDataProvider = null;
 let actionScriptTaskProvider: ActionScriptTaskProvider = null;
 let debugConfigurationProvider: SWFDebugConfigurationProvider = null;
 let swcTextDocumentContentProvider: SWCTextDocumentContentProvider = null;
-let waitingForQuickCompile = false;
 
 function getValidatedEditorSDKConfiguration(javaExecutablePath: string): string
 {
@@ -238,15 +237,19 @@ export function activate(context: vscode.ExtensionContext)
 				vscode.window.showErrorMessage(QUICK_COMPILE_LANGUAGE_SERVER_NOT_STARTED_ERROR);
 				return;
 			}
-			waitingForQuickCompile = true;
 			vscode.commands.executeCommand("nextgenas.quickCompile").then((result) =>
 			{
-				//the result value doesn't work, for some reason, so we use a
-				//workaround notification from the language server
+				if(result)
+				{
+					vscode.commands.executeCommand("workbench.action.debug.start");
+				}
+				else
+				{
+					vscode.window.showErrorMessage(CANNOT_LAUNCH_QUICK_COMPILE_FAILED_ERROR);
+				}
 			}, 
 			() =>
 			{
-				waitingForQuickCompile = false;
 				//if the build failed, notify the user that we're not starting
 				//a debug session
 				vscode.window.showErrorMessage(CANNOT_LAUNCH_QUICK_COMPILE_FAILED_ERROR);
@@ -435,15 +438,6 @@ function startClient()
 				savedLanguageClient.onNotification("nextgenas/clearCompilerShellOutput", () =>
 				{
 					logCompilerShellOutput(null, false, true);
-				});
-				savedLanguageClient.onNotification("nextgenas/quickCompileComplete", (notification: boolean) =>
-				{
-					let startDebug = waitingForQuickCompile && notification;
-					waitingForQuickCompile = false;
-					if(startDebug)
-					{
-						vscode.commands.executeCommand("workbench.action.debug.start");
-					}
 				});
 			});
 			let disposable = savedLanguageClient.start();
