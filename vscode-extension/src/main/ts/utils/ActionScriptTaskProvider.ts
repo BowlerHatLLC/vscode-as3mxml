@@ -34,7 +34,9 @@ const PLATFORM_ANDROID = "android";
 const PLATFORM_AIR = "air";
 const PLATFORM_WINDOWS = "windows";
 const PLATFORM_MAC = "mac";
+const TARGET_AIR = "air";
 const TARGET_BUNDLE = "bundle";
+const TARGET_NATIVE = "native";
 const MATCHER = "$nextgenas_nomatch";
 const TASK_TYPE = "actionscript";
 
@@ -72,9 +74,17 @@ export default class ActionScriptTaskProvider implements vscode.TaskProvider
 	{
 		let provideTask = false;
 		let isAIRMobile = false;
-		let isBundleWindows = false;
-		let isBundleMac = false;
 		let isAIRDesktop = false;
+		let isSharedOverride = false;
+		let isRootTargetShared = false;
+		let isRootTargetBundle = false;
+		let isRootTargetNativeInstaller = false;
+		let isWindowsOverrideBundle = false;
+		let isMacOverrideBundle = false;
+		let isWindowsOverrideNativeInstaller = false;
+		let isMacOverrideNativeInstaller = false;
+		let isWindowsOverrideShared = false;
+		let isMacOverrideShared = false;
 		let asconfigJsonPath = path.join(workspaceFolder.uri.fsPath, ASCONFIG_JSON);
 		if(fs.existsSync(asconfigJsonPath))
 		{
@@ -84,12 +94,20 @@ export default class ActionScriptTaskProvider implements vscode.TaskProvider
 			if(asconfigJson !== null)
 			{
 				isAIRMobile = this.isAIRMobile(asconfigJson);
-				isBundleWindows = this.isBundleWindows(asconfigJson);
-				isBundleMac = this.isBundleMac(asconfigJson);
 				if(!isAIRMobile)
 				{
 					isAIRDesktop = this.isAIRDesktop(asconfigJson);
 				}
+				isSharedOverride = this.isSharedOverride(asconfigJson);
+				isRootTargetShared = this.isRootTargetShared(asconfigJson);
+				isRootTargetBundle = this.isRootTargetBundle(asconfigJson);
+				isRootTargetNativeInstaller = this.isRootTargetNativeInstaller(asconfigJson);
+				isWindowsOverrideShared = this.isWindowsOverrideShared(asconfigJson);
+				isMacOverrideShared = this.isMacOverrideShared(asconfigJson);
+				isWindowsOverrideBundle = this.isWindowsOverrideBundle(asconfigJson);
+				isMacOverrideBundle = this.isMacOverrideBundle(asconfigJson);
+				isWindowsOverrideNativeInstaller = this.isWindowsOverrideNativeInstaller(asconfigJson);
+				isMacOverrideNativeInstaller = this.isMacOverrideNativeInstaller(asconfigJson);
 			}
 		}
 		if(!provideTask && vscode.window.activeTextEditor)
@@ -121,6 +139,7 @@ export default class ActionScriptTaskProvider implements vscode.TaskProvider
 		result.push(this.getTask("compile release build",
 			workspaceFolder, command, frameworkSDK, false, null));
 
+		//package mobile AIR application
 		if(isAIRMobile)
 		{
 			result.push(this.getTask("package debug iOS application (Device)",
@@ -136,20 +155,70 @@ export default class ActionScriptTaskProvider implements vscode.TaskProvider
 			result.push(this.getTask("package release Android application",
 				workspaceFolder, command, frameworkSDK, false, PLATFORM_ANDROID));
 		}
-		if((isAIRDesktop && process.platform === "win32") || isBundleWindows)
+
+		//desktop platform targets are a little trickier because some can only
+		//be built on certain platforms. windows can't package for mac, and mac
+		//can't package for windows, for instance.
+
+		//if the windows or mac section exists, we need to check its target
+		//to determine what to display in the list of tasks.
+
+		//captive runtime
+		if(isWindowsOverrideBundle)
 		{
 			result.push(this.getTask("package release Windows application (captive runtime)",
 				workspaceFolder, command, frameworkSDK, false, PLATFORM_WINDOWS));
 		}
-		if((isAIRDesktop && process.platform === "darwin") || isBundleMac)
+		else if(isMacOverrideBundle)
 		{
 			result.push(this.getTask("package release macOS application (captive runtime)",
 				workspaceFolder, command, frameworkSDK, false, PLATFORM_MAC));
 		}
-		if(isAIRDesktop && (process.platform !== "win32" || !isBundleWindows) && (process.platform !== "darwin" || !isBundleMac))
+		//shared runtime with platform overrides
+		else if(isWindowsOverrideShared)
 		{
-			//it's an AIR desktop application and the bundle target is not
-			//specified explicitly
+			result.push(this.getTask("package debug Windows application (shared runtime)",
+				workspaceFolder, command, frameworkSDK, true, PLATFORM_WINDOWS));
+			result.push(this.getTask("package release Windows application (shared runtime)",
+				workspaceFolder, command, frameworkSDK, false, PLATFORM_WINDOWS));
+		}
+		else if(isMacOverrideShared)
+		{
+			result.push(this.getTask("package debug macOS application (shared runtime)",
+				workspaceFolder, command, frameworkSDK, false, PLATFORM_MAC));
+			result.push(this.getTask("package release macOS application (shared runtime)",
+				workspaceFolder, command, frameworkSDK, true, PLATFORM_MAC));
+		}
+		//native installers
+		else if(isWindowsOverrideNativeInstaller)
+		{
+			result.push(this.getTask("package release Windows application (native installer)",
+				workspaceFolder, command, frameworkSDK, false, PLATFORM_WINDOWS));
+		}
+		else if(isMacOverrideNativeInstaller)
+		{
+			result.push(this.getTask("package release macOS application (native installer)",
+				workspaceFolder, command, frameworkSDK, false, PLATFORM_MAC));
+		}
+
+		//--- root target in airOptions
+
+		//the root target is used if it hasn't been overridden for the current
+		//desktop platform. if it is overridden, it should be skipped to avoid
+		//duplicate items in the list.
+
+		if(isRootTargetBundle && !isWindowsOverrideBundle && !isMacOverrideBundle)
+		{
+			result.push(this.getTask("package release desktop application (captive runtime)",
+				workspaceFolder, command, frameworkSDK, false, PLATFORM_AIR));
+		}
+		else if(isRootTargetNativeInstaller && !isWindowsOverrideNativeInstaller && !isMacOverrideNativeInstaller)
+		{
+			result.push(this.getTask("package release desktop application (native installer)",
+				workspaceFolder, command, frameworkSDK, false, PLATFORM_AIR));
+		}
+		else if((isRootTargetShared || isSharedOverride) && !isWindowsOverrideShared && !isMacOverrideShared)
+		{
 			result.push(this.getTask("package debug desktop application (shared runtime)",
 				workspaceFolder, command, frameworkSDK, true, PLATFORM_AIR));
 			result.push(this.getTask("package release desktop application (shared runtime)",
@@ -286,41 +355,220 @@ export default class ActionScriptTaskProvider implements vscode.TaskProvider
 		return false;
 	}
 	
-	private isBundleWindows(asconfigJson: any): boolean
+	private isWindowsOverrideShared(asconfigJson: any): boolean
 	{
 		if(process.platform !== "win32")
 		{
 			return false;
 		}
-		if(!(PLATFORM_WINDOWS in asconfigJson))
+		if(!(FIELD_AIR_OPTIONS in asconfigJson))
 		{
 			return false;
 		}
-		let windows = asconfigJson[PLATFORM_WINDOWS];
+		let airOptions = asconfigJson[FIELD_AIR_OPTIONS];
+		if(!(PLATFORM_WINDOWS in airOptions))
+		{
+			return false;
+		}
+		let windows = airOptions[PLATFORM_WINDOWS];
 		if(!(FIELD_TARGET in windows))
 		{
+			//if target is omitted, defaults to bundle
 			return false;
 		}
 		let target = windows[FIELD_TARGET];
-		return target === TARGET_BUNDLE;
+		return target === TARGET_AIR;
 	}
 	
-	private isBundleMac(asconfigJson: any): boolean
+	private isMacOverrideShared(asconfigJson: any): boolean
 	{
 		if(process.platform !== "darwin")
 		{
 			return false;
 		}
-		if(!(PLATFORM_MAC in asconfigJson))
+		if(!(FIELD_AIR_OPTIONS in asconfigJson))
 		{
 			return false;
 		}
-		let mac = asconfigJson[PLATFORM_MAC];
+		let airOptions = asconfigJson[FIELD_AIR_OPTIONS];
+		if(!(PLATFORM_MAC in airOptions))
+		{
+			return false;
+		}
+		let mac = airOptions[PLATFORM_MAC];
 		if(!(FIELD_TARGET in mac))
 		{
+			//if target is omitted, defaults to bundle
 			return false;
 		}
 		let target = mac[FIELD_TARGET];
+		return target === TARGET_AIR;
+	}
+	
+	private isWindowsOverrideNativeInstaller(asconfigJson: any): boolean
+	{
+		if(process.platform !== "win32")
+		{
+			return false;
+		}
+		if(!(FIELD_AIR_OPTIONS in asconfigJson))
+		{
+			return false;
+		}
+		let airOptions = asconfigJson[FIELD_AIR_OPTIONS];
+		if(!(PLATFORM_WINDOWS in airOptions))
+		{
+			return false;
+		}
+		let windows = airOptions[PLATFORM_WINDOWS];
+		if(!(FIELD_TARGET in windows))
+		{
+			//if target is omitted, defaults to bundle
+			return false;
+		}
+		let target = windows[FIELD_TARGET];
+		return target === TARGET_NATIVE;
+	}
+	
+	private isMacOverrideNativeInstaller(asconfigJson: any): boolean
+	{
+		if(process.platform !== "darwin")
+		{
+			return false;
+		}
+		if(!(FIELD_AIR_OPTIONS in asconfigJson))
+		{
+			return false;
+		}
+		let airOptions = asconfigJson[FIELD_AIR_OPTIONS];
+		if(!(PLATFORM_MAC in airOptions))
+		{
+			return false;
+		}
+		let mac = airOptions[PLATFORM_MAC];
+		if(!(FIELD_TARGET in mac))
+		{
+			//if target is omitted, defaults to bundle
+			return false;
+		}
+		let target = mac[FIELD_TARGET];
+		return target === TARGET_NATIVE;
+	}
+	
+	private isSharedOverride(asconfigJson: any): boolean
+	{
+		if(process.platform !== "win32")
+		{
+			return false;
+		}
+		if(!(FIELD_AIR_OPTIONS in asconfigJson))
+		{
+			return false;
+		}
+		let airOptions = asconfigJson[FIELD_AIR_OPTIONS];
+		return PLATFORM_AIR in airOptions;
+	}
+	
+	private isWindowsOverrideBundle(asconfigJson: any): boolean
+	{
+		if(process.platform !== "win32")
+		{
+			return false;
+		}
+		if(!(FIELD_AIR_OPTIONS in asconfigJson))
+		{
+			return false;
+		}
+		let airOptions = asconfigJson[FIELD_AIR_OPTIONS];
+		if(!(PLATFORM_WINDOWS in airOptions))
+		{
+			return false;
+		}
+		let windows = airOptions[PLATFORM_WINDOWS];
+		if(!(FIELD_TARGET in windows))
+		{
+			//if target is omitted, default to bundle
+			return true;
+		}
+		let target = windows[FIELD_TARGET];
 		return target === TARGET_BUNDLE;
+	}
+	
+	private isMacOverrideBundle(asconfigJson: any): boolean
+	{
+		if(process.platform !== "darwin")
+		{
+			return false;
+		}
+		if(!(FIELD_AIR_OPTIONS in asconfigJson))
+		{
+			return false;
+		}
+		let airOptions = asconfigJson[FIELD_AIR_OPTIONS];
+		if(!(PLATFORM_MAC in airOptions))
+		{
+			return false;
+		}
+		let mac = airOptions[PLATFORM_MAC];
+		if(!(FIELD_TARGET in mac))
+		{
+			//if target is omitted, default to bundle
+			return true;
+		}
+		let target = mac[FIELD_TARGET];
+		return target === TARGET_BUNDLE;
+	}
+	
+	private isRootTargetShared(asconfigJson: any): boolean
+	{
+		if(!(FIELD_AIR_OPTIONS in asconfigJson))
+		{
+			return false;
+		}
+		let airOptions = asconfigJson[FIELD_AIR_OPTIONS];
+		if(!(FIELD_TARGET in airOptions))
+		{
+			//special case for mobile
+			if(this.isAIRMobile(asconfigJson))
+			{
+				return false;
+			}
+			//if target is omitted, defaults to air/shared
+			return true;
+		}
+		let target = airOptions[FIELD_TARGET];
+		return target === TARGET_AIR;
+	}
+	
+	private isRootTargetBundle(asconfigJson: any): boolean
+	{
+		if(!(FIELD_AIR_OPTIONS in asconfigJson))
+		{
+			return false;
+		}
+		let airOptions = asconfigJson[FIELD_AIR_OPTIONS];
+		if(!(FIELD_TARGET in airOptions))
+		{
+			//if target is omitted, defaults to air/shared
+			return false;
+		}
+		let target = airOptions[FIELD_TARGET];
+		return target === TARGET_BUNDLE;
+	}
+	
+	private isRootTargetNativeInstaller(asconfigJson: any): boolean
+	{
+		if(!(FIELD_AIR_OPTIONS in asconfigJson))
+		{
+			return false;
+		}
+		let airOptions = asconfigJson[FIELD_AIR_OPTIONS];
+		if(!(FIELD_TARGET in airOptions))
+		{
+			//if target is omitted, defaults to air/shared
+			return false;
+		}
+		let target = airOptions[FIELD_TARGET];
+		return target === TARGET_NATIVE;
 	}
 }
