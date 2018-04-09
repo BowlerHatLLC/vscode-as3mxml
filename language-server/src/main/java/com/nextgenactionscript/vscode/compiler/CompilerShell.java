@@ -46,6 +46,7 @@ public class CompilerShell implements IASConfigCCompiler
     private static final String ASSIGNED_ID_SUFFIX = " as the compile target id";
     private static final String OUTPUT_PROBLEM_TYPE_ERROR = "Error: ";
     private static final String OUTPUT_PROBLEM_TYPE_SYNTAX_ERROR = "Syntax error: ";
+    private static final String OUTPUT_PROBLEM_TYPE_INTERNAL_ERROR = "Internal error: ";
     private static final String COMPILER_SHELL_PROMPT = "(fcsh) ";
     private static final String FILE_NAME_RCSH = "rcsh.jar";
     private static final String FILE_NAME_ASCSH = "ascsh.jar";
@@ -257,6 +258,13 @@ public class CompilerShell implements IASConfigCCompiler
         waitForPrompt(false);
     }
 
+    private boolean textContainsError(String text)
+    {
+        return text.contains(OUTPUT_PROBLEM_TYPE_ERROR)
+                || text.contains(OUTPUT_PROBLEM_TYPE_SYNTAX_ERROR)
+                || text.contains(OUTPUT_PROBLEM_TYPE_INTERNAL_ERROR);
+    }
+
     private void waitForPrompt(boolean measure) throws ASConfigCException
     {
         long startTime = 0L;
@@ -290,8 +298,7 @@ public class CompilerShell implements IASConfigCCompiler
                     currentError += next;
                     if (next == '\n')
                     {
-                        if (currentError.contains(OUTPUT_PROBLEM_TYPE_ERROR) ||
-                            currentError.contains(OUTPUT_PROBLEM_TYPE_SYNTAX_ERROR))
+                        if (textContainsError(currentError))
                         {
                             success = false;
                         }
@@ -300,7 +307,11 @@ public class CompilerShell implements IASConfigCCompiler
                     }
                 }
                 waitingForError = errorStream.available() > 0;
-                if (waitingForInput)
+
+                //we need to check inputStream.available() here every time
+                //because if we just go straight to read, it may freeze while
+                //the errorStream still has data.
+                if (waitingForInput && inputStream.available() > 0)
                 {
                     char next = (char) inputStream.read();
                     currentInput += next;
@@ -334,7 +345,7 @@ public class CompilerShell implements IASConfigCCompiler
         while (waitingForInput || waitingForError);
         if (currentError.length() > 0)
         {
-            if (currentError.startsWith(OUTPUT_PROBLEM_TYPE_ERROR))
+            if (textContainsError(currentError))
             {
                 success = false;
             }
