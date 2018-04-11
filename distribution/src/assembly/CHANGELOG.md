@@ -1,3 +1,28 @@
+## 0.11.0
+
+### New Features
+
+* Build: New experimental **ActionScript: Quick Compile & Debug** command builds projects faster by keeping the compiler in memory. Available using the `Ctrl+Enter` keyboard shortcut. This command may be used with all supported SDKs.
+
+### Fixed Issues
+
+* asconfigc: Added `ios_simulator` as a new platform in `airOptions`.
+* Completion: When using completion to add MXML language tags, like `<fx:Script>` or `<fx:Component>`, the cursor is now correctly placed between opening and closing tags instead of at the end.
+* Completion: Fixed issue where triggering the completion list in MXML from an existing prefix would incorrectly omit components if the MXML namespace were defined from a package, like `xmlns:example="com.example.*"`.
+* Completion: Fixed issue where an exception was displayed when triggering completion for aattributes on an `<fx:Component>` tag.
+* Completion: Changed the "kind" for getters/setters and methods so that the proper icon is displayed in the completion list.
+* Hover: Fixed issue where hovering over an MXML event attribute would throw a null reference exception if a preceeding tag the file is unclosed.
+* Hover: Fixed issue where the definition for the final closing tag in an MXML file could not be found if a preceeding tag in the file is unclosed.
+* Hover: Fixed issue where hover details were incorrectly formatted if documentation were also displayed on hover.
+* Hover: Fixed issue where an exception was displayed when hovering over the `id` attribute of an `<fx:Component>` tag.
+* Organize Imports: Fixed issue where some missing imports were not added.
+* Organize Imports: Fixed issue where no changes would be made if all imports can be removed.
+* Problems: Fixed issue where warnings were still displayed if the `warnings` compiler option were set to `false`.
+* Royale: Fixed issue where an exception were thrown if the `targets` compiler option lists "SWF" before "JSRoyale".
+* Tasks: Removed deprecated command "Tasks: Configure Task Runner (ActionScript - asconfig.json)". Use **Configure Default Build Task** in **Tasks** menu instead.
+* Tasks: If the Adobe AIR desktop target is set to "native" in *asconfig.json* the list of tasks will specifically mention which tasks will package a native installer.
+* Workspace Symbols: Fixed issue where an exception was displayed when listing workspace symbols and a SWC file in the SDK contains resource bundles.
+
 ## 0.10.0
 
 ### New Features
