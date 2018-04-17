@@ -137,7 +137,12 @@ public class SWFDebugSession extends DebugSession
                         {
                             TraceEvent traceEvent = (TraceEvent) event;
                             String output = traceEvent.information;
-                            if (output.charAt(output.length() - 1) != '\n')
+                            if (output.length() == 0)
+                            {
+                                //empty string or empty line added with \n
+                                output = "\n";
+                            }
+                            else if (output.charAt(output.length() - 1) != '\n')
                             {
                                 output += '\n';
                             }
