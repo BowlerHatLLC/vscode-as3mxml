@@ -24,6 +24,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.internal.LinkedTreeMap;
 import com.nextgenactionscript.vscode.DidChangeWatchedFilesRegistrationOptions.FileSystemWatcher;
 import com.nextgenactionscript.vscode.commands.ICommandConstants;
@@ -205,18 +207,38 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
                 @Override
                 public void didChangeConfiguration(DidChangeConfigurationParams params)
                 {
-                    if(!(params.getSettings() instanceof LinkedTreeMap))
+                    if(!(params.getSettings() instanceof JsonObject))
                     {
                         return;
                     }
-                    LinkedTreeMap<?,?> settings = (LinkedTreeMap<?,?>) params.getSettings();
-                    LinkedTreeMap<?,?> nextgenas = (LinkedTreeMap<?,?>) settings.get("nextgenas");
-                    LinkedTreeMap<?,?> sdk = (LinkedTreeMap<?,?>) nextgenas.get("sdk");
-                    String frameworkSDK = (String) sdk.get("framework");
-                    if (frameworkSDK == null)
+                    JsonObject settings = (JsonObject) params.getSettings();
+                    if (!settings.has("nextgenas"))
+                    {
+                        return;
+                    }
+                    JsonObject nextgenas = settings.get("nextgenas").getAsJsonObject();
+                    if (!nextgenas.has("sdk"))
+                    {
+                        return;
+                    }
+                    JsonObject sdk = nextgenas.get("sdk").getAsJsonObject();
+                    String frameworkSDK = null;
+                    if (sdk.has("framework"))
+                    {
+                        JsonElement frameworkValue = sdk.get("framework");
+                        if (!frameworkValue.isJsonNull())
+                        {
+                            frameworkSDK = frameworkValue.getAsString();
+                        }
+                    }
+                    if (frameworkSDK == null && sdk.has("editor"))
                     {
                         //for legacy reasons, we fall back to the editor SDK
-                        frameworkSDK = (String) sdk.get("editor");
+                        JsonElement editorValue = sdk.get("editor");
+                        if (!editorValue.isJsonNull())
+                        {
+                            frameworkSDK = editorValue.getAsString();
+                        }
                     }
                     if (frameworkSDK == null)
                     {
