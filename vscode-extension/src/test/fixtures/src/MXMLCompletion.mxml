@@ -21,4 +21,9 @@
     <fx:
     <js:View transitions./>
     <example:
+    <js:View>
+        
+    </js:View>
+    
+    <!-- don't remove the previous empty line -->
 </js:View>
