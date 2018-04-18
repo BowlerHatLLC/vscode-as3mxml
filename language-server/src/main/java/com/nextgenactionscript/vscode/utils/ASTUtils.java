@@ -38,6 +38,7 @@ import org.apache.royale.compiler.tree.as.IInterfaceNode;
 import org.apache.royale.compiler.tree.as.IScopedNode;
 import org.apache.royale.compiler.tree.as.ITransparentContainerNode;
 import org.apache.royale.compiler.tree.as.IVariableNode;
+import org.apache.royale.compiler.tree.mxml.IMXMLScriptNode;
 import org.apache.royale.compiler.units.ICompilationUnit;
 
 public class ASTUtils
@@ -219,17 +220,21 @@ public class ASTUtils
     protected static void findImportNodesToRemove(IASNode node, ICompilerProject project, Set<String> referencedDefinitions, Set<IImportNode> importsToRemove)
     {
         Set<IImportNode> childImports = null;
-        if (node instanceof IScopedNode)
+        if (node instanceof IScopedNode || node instanceof IMXMLScriptNode)
         {
             childImports = new HashSet<>();
         }
         for (int i = 0, count = node.getChildCount(); i < count; i++)
         {
             IASNode child = node.getChild(i);
-            if (childImports != null && child instanceof IImportNode)
+            if (child instanceof IImportNode)
             {
-                IImportNode importNode = (IImportNode) child;
-                childImports.add(importNode);
+                if (childImports != null)
+                {
+                    IImportNode importNode = (IImportNode) child;
+                    childImports.add(importNode);
+                }
+                //import nodes can't be references
                 continue;
             }
             if (child instanceof IIdentifierNode)
