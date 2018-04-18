@@ -5400,9 +5400,15 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         String assignedValue = null;
         if (assignedValueNode != null)
         {
-            String source = sourceByPath.get(path);
-            assignedValue = source.substring(assignedValueNode.getAbsoluteStart(),
-                assignedValueNode.getAbsoluteEnd());
+            int startIndex = assignedValueNode.getAbsoluteStart();
+            int endIndex = assignedValueNode.getAbsoluteEnd();
+            //if the variables value is assigned by [Embed] metadata, the
+            //assigned value node won't be null, but its start/end will be -1!
+            if (startIndex != -1 && endIndex != -1)
+            {
+                String source = sourceByPath.get(path);
+                assignedValue = source.substring(startIndex, endIndex);
+            }
         }
         Command generateGetterAndSetterCommand = new Command();
         generateGetterAndSetterCommand.setTitle("Generate Getter and Setter");
