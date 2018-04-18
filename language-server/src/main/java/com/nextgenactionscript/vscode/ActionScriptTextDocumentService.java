@@ -147,6 +147,7 @@ import org.apache.royale.compiler.tree.mxml.IMXMLConcatenatedDataBindingNode;
 import org.apache.royale.compiler.tree.mxml.IMXMLEventSpecifierNode;
 import org.apache.royale.compiler.tree.mxml.IMXMLNode;
 import org.apache.royale.compiler.tree.mxml.IMXMLPropertySpecifierNode;
+import org.apache.royale.compiler.tree.mxml.IMXMLScriptNode;
 import org.apache.royale.compiler.tree.mxml.IMXMLSingleDataBindingNode;
 import org.apache.royale.compiler.tree.mxml.IMXMLSpecifierNode;
 import org.apache.royale.compiler.units.ICompilationUnit;
@@ -6105,6 +6106,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         String text = null;
         try
         {
+            //TODO: should we use sourceByPath.get() here, or would that fail
+            //because the command might get called when the file is not
+            //necessarily open
             text = IOUtils.toString(reader);
         }
         catch (IOException e)
@@ -6259,12 +6263,16 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return CompletableFuture.completedFuture(new Object());
         }
 
+        Path pathForImport = Paths.get(URI.create(uri));
+        String fileText = sourceByPath.get(pathForImport);
+        String indent = ASTUtils.getIndentBeforeNode(offsetNode, fileText);
+
         ApplyWorkspaceEditParams editParams = new ApplyWorkspaceEditParams();
         
         int endLine = scopedNode.getLine();
         int endChar = scopedNode.getColumn() + 1;
         WorkspaceEdit workspaceEdit = CodeGenerationUtils.createGenerateLocalVariableWorkspaceEdit(
-            uri, startLine, startChar, endLine, endChar, name);
+            uri, startLine, startChar, endLine, endChar, name, indent);
         editParams.setEdit(workspaceEdit);
         languageClient.applyEdit(editParams);
 
@@ -6281,6 +6289,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         //int endChar = ((JsonPrimitive) args.get(4)).getAsInt();
         String name = ((JsonPrimitive) args.get(5)).getAsString();
         
+        int endLine = -1;
+        String indent = "";
+        
         TextDocumentIdentifier identifier = new TextDocumentIdentifier(uri);
         Position position = new Position(startLine, startChar);
         IASNode offsetNode = getOffsetNode(identifier, position);
@@ -6288,22 +6299,49 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return CompletableFuture.completedFuture(new Object());
         }
-        IClassNode classNode = (IClassNode) offsetNode.getAncestorOfType(IClassNode.class);
-        if (classNode == null)
+        IMXMLScriptNode scriptNode = (IMXMLScriptNode) offsetNode.getAncestorOfType(IMXMLScriptNode.class);
+        if (scriptNode != null)
         {
-            return CompletableFuture.completedFuture(new Object());
+            IASNode[] nodes = scriptNode.getASNodes();
+            int nodeCount = nodes.length;
+            if (nodeCount == 0)
+            {
+                return CompletableFuture.completedFuture(new Object());
+            }
+            IASNode finalNode = nodes[nodeCount - 1];
+            endLine = finalNode.getEndLine() + 1;
+
+            Path pathForImport = Paths.get(URI.create(uri));
+            String fileText = sourceByPath.get(pathForImport);
+            indent = ASTUtils.getIndentBeforeNode(finalNode, fileText);
         }
-        IScopedNode scopedNode = classNode.getScopedNode();
-        if (scopedNode == null)
+        else
         {
-            return CompletableFuture.completedFuture(new Object());
+            IClassNode classNode = (IClassNode) offsetNode.getAncestorOfType(IClassNode.class);
+            if (classNode == null)
+            {
+                return CompletableFuture.completedFuture(new Object());
+            }
+            IScopedNode scopedNode = classNode.getScopedNode();
+            if (scopedNode == null)
+            {
+                return CompletableFuture.completedFuture(new Object());
+            }
+            endLine = scopedNode.getEndLine();
+
+            IFunctionNode functionNode = (IFunctionNode) offsetNode.getAncestorOfType(IFunctionNode.class);
+            if (functionNode != null)
+            {
+                Path pathForImport = Paths.get(URI.create(uri));
+                String fileText = sourceByPath.get(pathForImport);
+                indent = ASTUtils.getIndentBeforeNode(functionNode, fileText);
+            }
         }
         
-        int endLine = scopedNode.getEndLine();
         int endChar = 0;
         ApplyWorkspaceEditParams editParams = new ApplyWorkspaceEditParams();
         WorkspaceEdit workspaceEdit = CodeGenerationUtils.createGenerateFieldWorkspaceEdit(
-            uri, startLine, startChar, endLine, endChar, name);
+            uri, startLine, startChar, endLine, endChar, name, indent);
         editParams.setEdit(workspaceEdit);
 
         languageClient.applyEdit(editParams);
@@ -6333,6 +6371,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
         }
 
+        int endLine = -1;
+        String indent = "";
+
         TextDocumentIdentifier identifier = new TextDocumentIdentifier(uri);
         Position position = new Position(startLine, startChar);
         IASNode offsetNode = getOffsetNode(identifier, position);
@@ -6340,26 +6381,53 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return CompletableFuture.completedFuture(new Object());
         }
-        IClassNode classNode = (IClassNode) offsetNode.getAncestorOfType(IClassNode.class);
-        if (classNode == null)
+        IMXMLScriptNode scriptNode = (IMXMLScriptNode) offsetNode.getAncestorOfType(IMXMLScriptNode.class);
+        if (scriptNode != null)
         {
-            return CompletableFuture.completedFuture(new Object());
+            IASNode[] nodes = scriptNode.getASNodes();
+            int nodeCount = nodes.length;
+            if (nodeCount == 0)
+            {
+                return CompletableFuture.completedFuture(new Object());
+            }
+            IASNode finalNode = nodes[nodeCount - 1];
+            endLine = finalNode.getEndLine() + 1;
+
+            Path pathForImport = Paths.get(URI.create(uri));
+            String fileText = sourceByPath.get(pathForImport);
+            indent = ASTUtils.getIndentBeforeNode(finalNode, fileText);
         }
-        IScopedNode scopedNode = classNode.getScopedNode();
-        if (scopedNode == null)
+        else
         {
-            return CompletableFuture.completedFuture(new Object());
+            IClassNode classNode = (IClassNode) offsetNode.getAncestorOfType(IClassNode.class);
+            if (classNode == null)
+            {
+                return CompletableFuture.completedFuture(new Object());
+            }
+            IScopedNode scopedNode = classNode.getScopedNode();
+            if (scopedNode == null)
+            {
+                return CompletableFuture.completedFuture(new Object());
+            }
+            endLine = scopedNode.getEndLine();
+
+            IFunctionNode functionNode = (IFunctionNode) offsetNode.getAncestorOfType(IFunctionNode.class);
+            if (functionNode != null)
+            {
+                Path pathForImport = Paths.get(URI.create(uri));
+                String fileText = sourceByPath.get(pathForImport);
+                indent = ASTUtils.getIndentBeforeNode(functionNode, fileText);
+            }
         }
         ImportRange importRange = ImportRange.fromOffsetNode(offsetNode);
         
-        int endLine = scopedNode.getEndLine();
         int endChar = 0;
         Path pathForImport = Paths.get(URI.create(uri));
         String fileText = sourceByPath.get(pathForImport);
         ApplyWorkspaceEditParams editParams = new ApplyWorkspaceEditParams();
         WorkspaceEdit workspaceEdit = CodeGenerationUtils.createGenerateMethodWorkspaceEdit(
             uri, startLine, startChar, endLine, endChar,
-            name, methodArgs, importRange, fileText);
+            name, methodArgs, importRange, indent, fileText);
         editParams.setEdit(workspaceEdit);
 
         languageClient.applyEdit(editParams);
@@ -6387,20 +6455,18 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
 
         Path path = Paths.get(URI.create(uri));
-        String fileText = "";
-        try
-        {
-            fileText = IOUtils.toString(getReaderForPath(path));
-        }
-        catch(IOException e)
-        {
-            //just ignore it
-        }
+        String fileText = sourceByPath.get(path);
+
+        TextDocumentIdentifier identifier = new TextDocumentIdentifier(uri);
+        Position position = new Position(startLine, startChar);
+        IASNode offsetNode = getOffsetNode(identifier, position);
+        String indent = ASTUtils.getIndentBeforeNode(offsetNode, fileText);
+
         ApplyWorkspaceEditParams editParams = new ApplyWorkspaceEditParams();
         WorkspaceEdit workspaceEdit = CodeGenerationUtils.createGenerateGetterAndSetterWorkspaceEdit(
             uri, startLine, startChar, endLine, endChar,
             name, namespace, isStatic, type, assignedValue,
-            fileText, generateGetter, generateSetter);
+            fileText, indent, generateGetter, generateSetter);
         editParams.setEdit(workspaceEdit);
         languageClient.applyEdit(editParams);
 

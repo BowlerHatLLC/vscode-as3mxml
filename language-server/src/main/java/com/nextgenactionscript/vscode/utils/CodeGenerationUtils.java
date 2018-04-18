@@ -33,13 +33,12 @@ public class CodeGenerationUtils
 	private static final String SPACE = " ";
 
 	public static WorkspaceEdit createGenerateLocalVariableWorkspaceEdit(
-		String uri, int startLine, int startChar, int endLine, int endChar, String name)
+        String uri, int startLine, int startChar, int endLine, int endChar,
+        String name, String startIndent)
     {
 		StringBuilder builder = new StringBuilder();
 		builder.append(NEW_LINE);
-        builder.append(INDENT);
-        builder.append(INDENT);
-        builder.append(INDENT);
+        builder.append(startIndent);
 		builder.append("var ");
 		builder.append(name);
 		builder.append(":");
@@ -66,12 +65,11 @@ public class CodeGenerationUtils
 
 	public static WorkspaceEdit createGenerateFieldWorkspaceEdit(
 		String uri, int startLine, int startChar, int endLine, int endChar,
-		String name)
+		String name, String startIndent)
     {
         StringBuilder builder = new StringBuilder();
         builder.append(NEW_LINE);
-        builder.append(INDENT);
-        builder.append(INDENT);
+        builder.append(startIndent);
         builder.append("public var ");
         builder.append(name);
         builder.append(":");
@@ -99,7 +97,8 @@ public class CodeGenerationUtils
 
 	public static WorkspaceEdit createGenerateMethodWorkspaceEdit(
 		String uri, int startLine, int startChar, int endLine, int endChar,
-		String name, List<String> methodArgs, ImportRange importRange, String fileText)
+        String name, List<String> methodArgs, ImportRange importRange,
+        String startIndent, String fileText)
     {
 		WorkspaceEdit workspaceEdit = new WorkspaceEdit();
 
@@ -114,8 +113,7 @@ public class CodeGenerationUtils
 
         StringBuilder builder = new StringBuilder();
         builder.append(NEW_LINE);
-        builder.append(INDENT);
-        builder.append(INDENT);
+        builder.append(startIndent);
         builder.append("private function ");
         builder.append(name);
         builder.append("(");
@@ -151,12 +149,10 @@ public class CodeGenerationUtils
         builder.append(":");
         builder.append(IASLanguageConstants.void_);
         builder.append(NEW_LINE);
-        builder.append(INDENT);
-        builder.append(INDENT);
+        builder.append(startIndent);
         builder.append("{");
         builder.append(NEW_LINE);
-        builder.append(INDENT);
-        builder.append(INDENT);
+        builder.append(startIndent);
         builder.append("}");
         builder.append(NEW_LINE);
 
@@ -170,7 +166,7 @@ public class CodeGenerationUtils
 	public static WorkspaceEdit createGenerateGetterAndSetterWorkspaceEdit(
 		String uri, int startLine, int startChar, int endLine, int endChar,
 		String name, String namespace, boolean isStatic, String type, String assignedValue,
-		String fileText, boolean generateGetter, boolean generateSetter)
+		String fileText, String startIndent, boolean generateGetter, boolean generateSetter)
     {
 		WorkspaceEdit workspaceEdit = new WorkspaceEdit();
 
@@ -203,8 +199,7 @@ public class CodeGenerationUtils
         {
 			builder.append(NEW_LINE);
 			builder.append(NEW_LINE);
-			builder.append(INDENT);
-			builder.append(INDENT);
+			builder.append(startIndent);
 			builder.append(namespace);
 			builder.append(SPACE);
             if(isStatic)
@@ -217,25 +212,21 @@ public class CodeGenerationUtils
                 builder.append(":" + type);
             }
             builder.append(NEW_LINE);
-			builder.append(INDENT);
-			builder.append(INDENT);
+			builder.append(startIndent);
 			builder.append("{");
 			builder.append(NEW_LINE);
-			builder.append(INDENT);
-			builder.append(INDENT);
-			builder.append(INDENT);
+			builder.append(startIndent);
+			builder.append(INDENT); //extra indent
 			builder.append("return _" + name +";");
 			builder.append(NEW_LINE);
-			builder.append(INDENT);
-			builder.append(INDENT);
+			builder.append(startIndent);
             builder.append("}");
         }
         if (generateSetter)
         {
 			builder.append(NEW_LINE);
 			builder.append(NEW_LINE);
-			builder.append(INDENT);
-			builder.append(INDENT);
+			builder.append(startIndent);
 			builder.append(namespace);
 			builder.append(SPACE);
             if(isStatic)
@@ -249,17 +240,14 @@ public class CodeGenerationUtils
             }
 			builder.append("):void");
 			builder.append(NEW_LINE);
-			builder.append(INDENT);
-			builder.append(INDENT);
+			builder.append(startIndent);
 			builder.append("{");
 			builder.append(NEW_LINE);
-			builder.append(INDENT);
-			builder.append(INDENT);
-			builder.append(INDENT);
+			builder.append(startIndent);
+			builder.append(INDENT); //extra indent
 			builder.append("_" + name + " = value;");
 			builder.append(NEW_LINE);
-			builder.append(INDENT);
-			builder.append(INDENT);
+			builder.append(startIndent);
             builder.append("}");
         }
         edit.setNewText(builder.toString());

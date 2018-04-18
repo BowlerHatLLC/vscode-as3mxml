@@ -279,4 +279,15 @@ public class ASTUtils
             importsToRemove.addAll(childImports);
         }
     }
+
+    public static String getIndentBeforeNode(IASNode node, String fileText)
+    {
+        int indentLength = node.getColumn();
+        int indentStart = node.getAbsoluteStart() - indentLength;
+        if (indentStart != -1 && indentLength != -1)
+        {
+            return fileText.substring(indentStart, indentStart + indentLength);
+        }
+        return "";
+    }
 }

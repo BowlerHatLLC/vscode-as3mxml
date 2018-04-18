@@ -7611,7 +7611,7 @@ suite("generate variable", () =>
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "GenerateVariable.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
-			return vscode.commands.executeCommand("nextgenas.generateLocalVariable", uri.toString(), 7, 2, 7, 32, "myVar")
+			return vscode.commands.executeCommand("nextgenas.generateLocalVariable", uri.toString(), 6, 3, 6, 8, "myVar")
 				.then(() =>
 					{
 						return new Promise((resolve, reject) =>
@@ -7639,7 +7639,7 @@ suite("generate variable", () =>
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "GenerateVariable.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
-			return vscode.commands.executeCommand("nextgenas.generateFieldVariable", uri.toString(), 7, 2, 7, 32, "myVar")
+			return vscode.commands.executeCommand("nextgenas.generateFieldVariable", uri.toString(), 6, 3, 6, 8, "myVar")
 				.then(() =>
 					{
 						return new Promise((resolve, reject) =>
@@ -7684,7 +7684,7 @@ suite("generate method", () =>
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "GenerateMethod.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
-			return vscode.commands.executeCommand("nextgenas.generateMethod", uri.toString(), 6, 2, 6, 11, "myMethod", null)
+			return vscode.commands.executeCommand("nextgenas.generateMethod", uri.toString(), 6, 3, 6, 11, "myMethod", null)
 				.then(() =>
 					{
 						return new Promise((resolve, reject) =>
@@ -7712,7 +7712,7 @@ suite("generate method", () =>
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "GenerateMethod.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
-			return vscode.commands.executeCommand("nextgenas.generateMethod", uri.toString(), 7, 2, 7, 11, "myMethod", ["Number", "Boolean", "String"])
+			return vscode.commands.executeCommand("nextgenas.generateMethod", uri.toString(), 7, 3, 7, 11, "myMethod", ["Number", "Boolean", "String"])
 				.then(() =>
 					{
 						return new Promise((resolve, reject) =>
