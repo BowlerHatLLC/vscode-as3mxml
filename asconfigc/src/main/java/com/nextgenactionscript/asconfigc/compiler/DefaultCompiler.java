@@ -45,6 +45,9 @@ public class DefaultCompiler implements IASConfigCCompiler
 			compilerOptions.add(0, "-jar");
 			compilerOptions.add(0, "-Droyalelib=" + frameworkPath.toString());
 			compilerOptions.add(0, "-Droyalecompiler=" + sdkPath.toString());
+			//Royale requires this so that it doesn't changing the encoding of
+			//UTF-8 characters and display ???? instead
+			compilerOptions.add(0, "-Dfile.encoding=UTF8");
 		}
 		else
 		{

@@ -186,6 +186,12 @@ public class CompilerShell implements IASConfigCCompiler
         Path javaExecutablePath = Paths.get(System.getProperty("java.home"), "bin", "java");
         ArrayList<String> options = new ArrayList<>();
         options.add(javaExecutablePath.toString());
+        if(isRoyale)
+        {
+			//Royale requires this so that it doesn't changing the encoding of
+			//UTF-8 characters and display ???? instead
+            options.add("-Dfile.encoding=UTF8");
+        }
         options.add("-Dsun.io.useCanonCaches=false");
         options.add("-Duser.language=en");
         options.add("-Duser.region=en");

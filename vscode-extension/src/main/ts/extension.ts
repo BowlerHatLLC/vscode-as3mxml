@@ -407,6 +407,7 @@ function startClient()
 			}
 			let args =
 			[
+				"-Dfile.encoding=UTF8",
 				"-cp",
 				cp,
 				"com.nextgenactionscript.vscode.Main",
