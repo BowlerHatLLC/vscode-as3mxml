@@ -1,3 +1,15 @@
+## 0.11.1
+
+### Fixed Issues
+
+* asconfigc: Fixed issue where Apache Royale builds would have broken encoding so that UTF-8 characters would not render correctly.
+* Code Generation: Fixed issue where *Generate Method* and *Generate Field Variable* code actions had no effect in MXML files.
+* Completion: Fixed issue where triggering completion without the `<` character in MXML would omit the character.
+* Language Server: Fixed issue where changing the framework SDK was not detected, and restarting the language server or reloading the window was required.
+* Organize Imports: Fixed issue where unused imports were not removed in MXML files.
+* Problems: Fixed issue where problem checking was disabled for a file when a `var` has `[Embed]` metadata (`const` did not have this issue).
+* SWF Debugger: Fixed issue where `trace()` calls with multiple consecutive new line characters (`\n\n`) would only add a single new line to the debug console.
+
 ## 0.11.0
 
 ### New Features
