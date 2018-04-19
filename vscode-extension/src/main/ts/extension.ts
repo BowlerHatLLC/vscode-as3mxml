@@ -46,6 +46,7 @@ const MISSING_WORKSPACE_ROOT_ERROR = "Open a folder and create a file named asco
 const CANNOT_LAUNCH_QUICK_COMPILE_FAILED_ERROR = "Quick compile failed with errors. Debug launch canceled.";
 const QUICK_COMPILE_LANGUAGE_SERVER_NOT_STARTED_ERROR = "Quick compile failed. Try again after ActionScript & MXML extension is initialized.";
 const INITIALIZING_MESSAGE = "Initializing ActionScript & MXML language server...";
+const QUICK_COMPILE_MESSAGE = "Building ActionScript & MXML project...";
 const RESTART_FAIL_MESSAGE = "Failed to restart ActionScript & MXML server. Please reload the window to continue.";
 const RELOAD_WINDOW_MESSAGE = "To apply new settings for ActionScript & MXML, please reload the window.";
 const RELOAD_WINDOW_BUTTON_LABEL = "Reload Window";
@@ -237,22 +238,33 @@ export function activate(context: vscode.ExtensionContext)
 				vscode.window.showErrorMessage(QUICK_COMPILE_LANGUAGE_SERVER_NOT_STARTED_ERROR);
 				return;
 			}
-			vscode.commands.executeCommand("nextgenas.quickCompile").then((result) =>
+			vscode.window.withProgress({location: vscode.ProgressLocation.Window}, (progress) =>
 			{
-				if(result)
+				progress.report({message: QUICK_COMPILE_MESSAGE});
+				return new Promise((resolve, reject) =>
 				{
-					vscode.commands.executeCommand("workbench.action.debug.start");
-				}
-				else
-				{
-					vscode.window.showErrorMessage(CANNOT_LAUNCH_QUICK_COMPILE_FAILED_ERROR);
-				}
-			}, 
-			() =>
-			{
-				//if the build failed, notify the user that we're not starting
-				//a debug session
-				vscode.window.showErrorMessage(CANNOT_LAUNCH_QUICK_COMPILE_FAILED_ERROR);
+					return vscode.commands.executeCommand("nextgenas.quickCompile").then((result) =>
+					{
+						resolve();
+
+						if(result)
+						{
+							vscode.commands.executeCommand("workbench.action.debug.start");
+						}
+						else
+						{
+							vscode.window.showErrorMessage(CANNOT_LAUNCH_QUICK_COMPILE_FAILED_ERROR);
+						}
+					}, 
+					() =>
+					{
+						resolve();
+
+						//if the build failed, notify the user that we're not starting
+						//a debug session
+						vscode.window.showErrorMessage(CANNOT_LAUNCH_QUICK_COMPILE_FAILED_ERROR);
+					});
+				});
 			});
 		}
 	});
