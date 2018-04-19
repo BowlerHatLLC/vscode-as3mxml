@@ -5789,7 +5789,8 @@ suite("MXML completion item provider", () =>
 						let propertyItem = findCompletionItem("beads", items);
 						assert.notEqual(propertyItem, null, "vscode.executeCompletionItemProvider failed to provide property as child element: " + uri);
 						assert.strictEqual(propertyItem.kind, vscode.CompletionItemKind.Field, "vscode.executeCompletionItemProvider failed to provide correct kind of property: " + uri);
-						assert.strictEqual(propertyItem.insertText, "js:beads", "vscode.executeCompletionItemProvider failed to provide correct insert text for property as child element: " + uri);
+						let snippet = propertyItem.insertText as vscode.SnippetString;
+						assert.strictEqual(snippet.value, "js:beads>$0</js:beads>", "vscode.executeCompletionItemProvider failed to provide correct insert text for property as child element: " + uri);
 					}, (err) =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
@@ -5809,7 +5810,8 @@ suite("MXML completion item provider", () =>
 						let propertyItem = findCompletionItem("beads", items);
 						assert.notEqual(propertyItem, null, "vscode.executeCompletionItemProvider failed to provide property as child element: " + uri);
 						assert.strictEqual(propertyItem.kind, vscode.CompletionItemKind.Field, "vscode.executeCompletionItemProvider failed to provide correct kind of property: " + uri);
-						assert.strictEqual(propertyItem.insertText, "<js:beads", "vscode.executeCompletionItemProvider failed to provide correct insert text for property as child element: " + uri);
+						let snippet = propertyItem.insertText as vscode.SnippetString;
+						assert.strictEqual(snippet.value, "<js:beads>$0</js:beads>", "vscode.executeCompletionItemProvider failed to provide correct insert text for property as child element: " + uri);
 					}, (err) =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
@@ -5868,7 +5870,8 @@ suite("MXML completion item provider", () =>
 						let eventItem = findCompletionItem("click", items);
 						assert.notEqual(eventItem, null, "vscode.executeCompletionItemProvider failed to provide event as child element: " + uri);
 						assert.strictEqual(eventItem.kind, vscode.CompletionItemKind.Field, "vscode.executeCompletionItemProvider failed to provide correct kind of event: " + uri);
-						assert.strictEqual(eventItem.insertText, "js:click", "vscode.executeCompletionItemProvider failed to provide correct insert text for event as child element: " + uri);
+						let snippet = eventItem.insertText as vscode.SnippetString;
+						assert.strictEqual(snippet.value, "js:click>$0</js:click>", "vscode.executeCompletionItemProvider failed to provide correct insert text for event as child element: " + uri);
 					}, (err) =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
@@ -5888,7 +5891,8 @@ suite("MXML completion item provider", () =>
 						let eventItem = findCompletionItem("click", items);
 						assert.notEqual(eventItem, null, "vscode.executeCompletionItemProvider failed to provide event as child element: " + uri);
 						assert.strictEqual(eventItem.kind, vscode.CompletionItemKind.Field, "vscode.executeCompletionItemProvider failed to provide correct kind of event: " + uri);
-						assert.strictEqual(eventItem.insertText, "<js:click", "vscode.executeCompletionItemProvider failed to provide correct insert text for event as child element: " + uri);
+						let snippet = eventItem.insertText as vscode.SnippetString;
+						assert.strictEqual(snippet.value, "<js:click>$0</js:click>", "vscode.executeCompletionItemProvider failed to provide correct insert text for event as child element: " + uri);
 					}, (err) =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);

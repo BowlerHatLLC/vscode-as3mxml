@@ -3768,6 +3768,20 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                         builder.append(IMXMLCoreConstants.colon);
                     }
                     builder.append(eventName);
+                    if (completionSupportsSnippets)
+                    {
+                        item.setInsertTextFormat(InsertTextFormat.Snippet);
+                        builder.append(">");
+                        builder.append("$0");
+                        builder.append("</");
+                        if(prefix != null)
+                        {
+                            builder.append(prefix);
+                            builder.append(IMXMLCoreConstants.colon);
+                        }
+                        builder.append(eventName);
+                        builder.append(">");
+                    }
                     item.setInsertText(builder.toString());
                 }
                 item.setDetail(DefinitionTextUtils.definitionToDetail(eventDefinition, currentProject));
@@ -3837,6 +3851,20 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                         builder.append(IMXMLCoreConstants.colon);
                     }
                     builder.append(styleName);
+                    if (completionSupportsSnippets)
+                    {
+                        item.setInsertTextFormat(InsertTextFormat.Snippet);
+                        builder.append(">");
+                        builder.append("$0");
+                        builder.append("</");
+                        if(prefix != null)
+                        {
+                            builder.append(prefix);
+                            builder.append(IMXMLCoreConstants.colon);
+                        }
+                        builder.append(styleName);
+                        builder.append(">");
+                    }
                     item.setInsertText(builder.toString());
                 }
                 item.setDetail(DefinitionTextUtils.definitionToDetail(styleDefinition, currentProject));
@@ -3949,10 +3977,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             String qualifiedName = definition.getQualifiedName();
             completionTypes.add(qualifiedName);
         }
+        String definitionBaseName = definition.getBaseName();
         CompletionItem item = new CompletionItem();
         item.setKind(getDefinitionKind(definition));
         item.setDetail(DefinitionTextUtils.definitionToDetail(definition, currentProject));
-        item.setLabel(definition.getBaseName());
+        item.setLabel(definitionBaseName);
         String docs = getDocumentationForDefinition(definition, false);
         if (docs != null)
         {
@@ -3961,7 +3990,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         if (isAttribute && completionSupportsSnippets)
         {
             item.setInsertTextFormat(InsertTextFormat.Snippet);
-            item.setInsertText(definition.getBaseName() + "=\"$0\"");
+            item.setInsertText(definitionBaseName + "=\"$0\"");
         }
         else if (!isAttribute)
         {
@@ -3975,7 +4004,21 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 builder.append(prefix);
                 builder.append(IMXMLCoreConstants.colon);
             }
-            builder.append(definition.getBaseName());
+            builder.append(definitionBaseName);
+            if (completionSupportsSnippets && !(definition instanceof ITypeDefinition))
+            {
+                item.setInsertTextFormat(InsertTextFormat.Snippet);
+                builder.append(">");
+                builder.append("$0");
+                builder.append("</");
+                if(prefix != null)
+                {
+                    builder.append(prefix);
+                    builder.append(IMXMLCoreConstants.colon);
+                }
+                builder.append(definitionBaseName);
+                builder.append(">");
+            }
             item.setInsertText(builder.toString());
             if (definition instanceof ITypeDefinition && prefix != null && uri != null)
             {
