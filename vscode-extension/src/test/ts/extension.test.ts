@@ -5667,9 +5667,11 @@ suite("completion item provider", () =>
 				.then((list: vscode.CompletionList) =>
 					{
 						let items = list.items;
-						let packageItem = findCompletionItem("package com.example\n{\n\t\n}", items);
+						let packageItem = findCompletionItem("package com.example {}", items);
 						assert.notEqual(packageItem, null, "vscode.executeCompletionItemProvider failed to provide package name: " + uri);
 						assert.strictEqual(packageItem.kind, vscode.CompletionItemKind.Module, "vscode.executeCompletionItemProvider failed to provide correct kind of package name: " + uri);
+						let snippet = packageItem.insertText as vscode.SnippetString;
+						assert.strictEqual(snippet.value, "package com.example\n{\n\t$0\n}", "vscode.executeCompletionItemProvider failed to provide correct insert text for package name: " + uri);
 					}, (err) =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
@@ -5705,9 +5707,11 @@ suite("completion item provider", () =>
 				.then((list: vscode.CompletionList) =>
 					{
 						let items = list.items;
-						let packageItem = findCompletionItem("package com.example\n{\n\t\n}", items);
+						let packageItem = findCompletionItem("package com.example {}", items);
 						assert.notEqual(packageItem, null, "vscode.executeCompletionItemProvider failed to provide package name: " + uri);
 						assert.strictEqual(packageItem.kind, vscode.CompletionItemKind.Module, "vscode.executeCompletionItemProvider failed to provide correct kind of package name: " + uri);
+						let snippet = packageItem.insertText as vscode.SnippetString;
+						assert.strictEqual(snippet.value, "package com.example\n{\n\t$0\n}", "vscode.executeCompletionItemProvider failed to provide correct insert text for package name: " + uri);
 					}, (err) =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);

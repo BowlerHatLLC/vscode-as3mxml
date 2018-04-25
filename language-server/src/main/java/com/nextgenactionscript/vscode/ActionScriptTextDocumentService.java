@@ -3157,17 +3157,42 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         File unitFile = new File(currentUnit.getAbsoluteFilename());
         unitFile = unitFile.getParentFile();
         String expectedPackage = SourcePathUtils.getPackageForDirectoryPath(unitFile.toPath(), currentProject);
-        StringBuilder builder = new StringBuilder();
-        builder.append("package");
+
+        StringBuilder labelBuilder = new StringBuilder();
+        labelBuilder.append(IASKeywordConstants.PACKAGE);
         if (expectedPackage.length() > 0)
         {
-            builder.append(" ");
-            builder.append(expectedPackage);
+            labelBuilder.append(" ");
+            labelBuilder.append(expectedPackage);
         }
-        builder.append("\n{\n\t\n}");
+        labelBuilder.append(" {}");
+
+        StringBuilder insertTextBuilder = new StringBuilder();
+        insertTextBuilder.append(IASKeywordConstants.PACKAGE);
+        if (expectedPackage.length() > 0)
+        {
+            insertTextBuilder.append(" ");
+            insertTextBuilder.append(expectedPackage);
+        }
+        insertTextBuilder.append("\n");
+        insertTextBuilder.append("{");
+        insertTextBuilder.append("\n");
+        insertTextBuilder.append("\t");
+        if (completionSupportsSnippets)
+        {
+            insertTextBuilder.append("$0");
+        }
+        insertTextBuilder.append("\n");
+        insertTextBuilder.append("}");
+
         CompletionItem packageItem = new CompletionItem();
-        packageItem.setLabel(builder.toString());
         packageItem.setKind(CompletionItemKind.Module);
+        packageItem.setLabel(labelBuilder.toString());
+        packageItem.setInsertText(insertTextBuilder.toString());
+        if (completionSupportsSnippets)
+        {
+            packageItem.setInsertTextFormat(InsertTextFormat.Snippet);
+        }
         result.getItems().add(packageItem);
     }
 
