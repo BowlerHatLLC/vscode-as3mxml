@@ -1277,6 +1277,19 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocumentUri);
         if (path != null)
         {
+            if (!isInProjectSourcePath(path))
+            {
+                //immediately clear any diagnostics published for this file
+                URI uri = path.toUri();
+                PublishDiagnosticsParams publish = new PublishDiagnosticsParams();
+                ArrayList<Diagnostic> diagnostics = new ArrayList<>();
+                publish.setDiagnostics(diagnostics);
+                publish.setUri(uri.toString());
+                if (languageClient != null)
+                {
+                    languageClient.publishDiagnostics(publish);
+                }
+            }
             sourceByPath.remove(path);
             codeActionsByPath.remove(path);
         }
@@ -5242,13 +5255,34 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private void checkFilePathForProblems(Path path, Boolean quick)
     {
         currentUnit = null;
-        if (!isInWorkspaceOrSourcePath(path))
+        if (!isInProjectSourcePath(path))
         {
+            publishDiagnosticForFileOutsideSourcePath(path);
             return;
         }
         if (!checkFilePathForAllProblems(path, quick))
         {
             checkFilePathForSyntaxProblems(path);
+        }
+    }
+
+    private void publishDiagnosticForFileOutsideSourcePath(Path path)
+    {
+        URI uri = path.toUri();
+        PublishDiagnosticsParams publish = new PublishDiagnosticsParams();
+        ArrayList<Diagnostic> diagnostics = new ArrayList<>();
+        publish.setDiagnostics(diagnostics);
+        publish.setUri(uri.toString());
+        codeProblemTracker.trackFileWithProblems(uri);
+
+        Diagnostic diagnostic = createDiagnosticWithoutRange();
+        diagnostic.setSeverity(DiagnosticSeverity.Information);
+        diagnostic.setMessage(path.getFileName() + " is not located in the project's source path. Code intelligence will not be available for this file.");
+        diagnostics.add(diagnostic);
+
+        if (languageClient != null)
+        {
+            languageClient.publishDiagnostics(publish);
         }
     }
 
@@ -5572,7 +5606,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return null;
         }
-        if (!isInWorkspaceOrSourcePath(path))
+        if (!isInProjectSourcePath(path))
         {
             //the path must be in the workspace or source-path
             return null;
@@ -5689,7 +5723,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return null;
         }
-        if (!isInWorkspaceOrSourcePath(path))
+        if (!isInProjectSourcePath(path))
         {
             //the path must be in the workspace or source-path
             return null;
@@ -5904,12 +5938,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return endComment > currentOffset;
     }
 
-    private boolean isInWorkspaceOrSourcePath(Path path)
+    private boolean isInProjectSourcePath(Path path)
     {
-        if (path.startsWith(workspaceRoot))
-        {
-            return true;
-        }
         //if we haven't accessed a compilation unit yet, the project may be null
         currentProject = getProject();
         if (currentProjectOptions == null)
@@ -5932,6 +5962,22 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 {
                     //safe to ignore
                 }
+            }
+        }
+        //the compiler may create source paths from the main files
+        for(String file : currentProjectOptions.files)
+        {
+            Path sourcePath = Paths.get(file).getParent();
+            try
+            {
+                if (path.startsWith(sourcePath.toRealPath()))
+                {
+                    return true;
+                }
+            }
+            catch (IOException e)
+            {
+                //safe to ignore
             }
         }
         return false;
