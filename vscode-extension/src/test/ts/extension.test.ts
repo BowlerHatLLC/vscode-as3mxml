@@ -5927,9 +5927,11 @@ suite("MXML completion item provider", () =>
 				.then((list: vscode.CompletionList) =>
 					{
 						let items = list.items;
-						let packageClassItem = findCompletionItem("UnreferencedClass", items);
+						let packageClassItem = findCompletionItem("ns1:UnreferencedClass", items);
 						assert.notEqual(packageClassItem, null, "vscode.executeCompletionItemProvider failed to provide package class: " + uri);
 						assert.strictEqual(packageClassItem.kind, vscode.CompletionItemKind.Class, "vscode.executeCompletionItemProvider failed to provide correct kind of package class: " + uri);
+						assert.strictEqual(packageClassItem.sortText, "UnreferencedClass", "vscode.executeCompletionItemProvider failed to provide correct sort text for package class as child element: " + uri);
+						assert.strictEqual(packageClassItem.filterText, "UnreferencedClass", "vscode.executeCompletionItemProvider failed to provide correct filter text for package class as child element: " + uri);
 						assert.strictEqual(packageClassItem.insertText, "ns1:UnreferencedClass", "vscode.executeCompletionItemProvider failed to provide correct insert text for package class as child element: " + uri);
 					}, (err) =>
 					{
@@ -5947,9 +5949,11 @@ suite("MXML completion item provider", () =>
 				.then((list: vscode.CompletionList) =>
 					{
 						let items = list.items;
-						let packageClassItem = findCompletionItem("UnreferencedClass", items);
+						let packageClassItem = findCompletionItem("ns1:UnreferencedClass", items);
 						assert.notEqual(packageClassItem, null, "vscode.executeCompletionItemProvider failed to provide package class: " + uri);
 						assert.strictEqual(packageClassItem.kind, vscode.CompletionItemKind.Class, "vscode.executeCompletionItemProvider failed to provide correct kind of package class: " + uri);
+						assert.strictEqual(packageClassItem.sortText, "UnreferencedClass", "vscode.executeCompletionItemProvider failed to provide correct sort text for package class as child element: " + uri);
+						assert.strictEqual(packageClassItem.filterText, "UnreferencedClass", "vscode.executeCompletionItemProvider failed to provide correct filter text for package class as child element: " + uri);
 						assert.strictEqual(packageClassItem.insertText, "<ns1:UnreferencedClass", "vscode.executeCompletionItemProvider failed to provide correct insert text for package class as child element: " + uri);
 					}, (err) =>
 					{
@@ -5967,8 +5971,10 @@ suite("MXML completion item provider", () =>
 				.then((list: vscode.CompletionList) =>
 					{
 						let items = list.items;
-						let mxmlItem = findCompletionItemOfKind("<fx:Binding>", vscode.CompletionItemKind.Keyword, items);
+						let mxmlItem = findCompletionItemOfKind("fx:Binding", vscode.CompletionItemKind.Keyword, items);
 						assert.notEqual(mxmlItem, null, "vscode.executeCompletionItemProvider failed to provide <fx:Binding>: " + uri);
+						assert.strictEqual(mxmlItem.sortText, "Binding", "vscode.executeCompletionItemProvider failed to provide correct sort text for <fx:Binding>: " + uri);
+						assert.strictEqual(mxmlItem.filterText, "Binding", "vscode.executeCompletionItemProvider failed to provide correct sort text for <fx:Binding>: " + uri);
 						let snippet = mxmlItem.insertText as vscode.SnippetString;
 						assert.strictEqual(snippet.value, "fx:Binding>\n\t$0\n</fx:Binding>", "vscode.executeCompletionItemProvider failed to provide correct insert text for <fx:Binding>: " + uri);
 					}, (err) =>
@@ -5987,8 +5993,10 @@ suite("MXML completion item provider", () =>
 				.then((list: vscode.CompletionList) =>
 					{
 						let items = list.items;
-						let mxmlItem = findCompletionItemOfKind("<fx:Binding>", vscode.CompletionItemKind.Keyword, items);
+						let mxmlItem = findCompletionItemOfKind("fx:Binding", vscode.CompletionItemKind.Keyword, items);
 						assert.notEqual(mxmlItem, null, "vscode.executeCompletionItemProvider failed to provide <fx:Binding>: " + uri);
+						assert.strictEqual(mxmlItem.sortText, "Binding", "vscode.executeCompletionItemProvider failed to provide correct sort text for <fx:Binding>: " + uri);
+						assert.strictEqual(mxmlItem.filterText, "Binding", "vscode.executeCompletionItemProvider failed to provide correct sort text for <fx:Binding>: " + uri);
 						let snippet = mxmlItem.insertText as vscode.SnippetString;
 						assert.strictEqual(snippet.value, "<fx:Binding>\n\t$0\n</fx:Binding>", "vscode.executeCompletionItemProvider failed to provide correct insert text for <fx:Binding>: " + uri);
 					}, (err) =>
@@ -6007,7 +6015,7 @@ suite("MXML completion item provider", () =>
 				.then((list: vscode.CompletionList) =>
 					{
 						let items = list.items;
-						let mxmlItem = findCompletionItemOfKind("<fx:Binding>", vscode.CompletionItemKind.Keyword, items);
+						let mxmlItem = findCompletionItemOfKind("fx:Binding", vscode.CompletionItemKind.Keyword, items);
 						assert.equal(mxmlItem, null, "vscode.executeCompletionItemProvider failed to omit <fx:Binding> in non-root element: " + uri);
 					}, (err) =>
 					{
@@ -6025,7 +6033,7 @@ suite("MXML completion item provider", () =>
 				.then((list: vscode.CompletionList) =>
 					{
 						let items = list.items;
-						let mxmlItem = findCompletionItemOfKind("<fx:Binding>", vscode.CompletionItemKind.Keyword, items);
+						let mxmlItem = findCompletionItemOfKind("fx:Binding", vscode.CompletionItemKind.Keyword, items);
 						assert.equal(mxmlItem, null, "vscode.executeCompletionItemProvider failed to omit <fx:Binding> in non-root element: " + uri);
 					}, (err) =>
 					{
@@ -6043,8 +6051,10 @@ suite("MXML completion item provider", () =>
 				.then((list: vscode.CompletionList) =>
 					{
 						let items = list.items;
-						let mxmlItem = findCompletionItemOfKind("<fx:Binding>", vscode.CompletionItemKind.Keyword, items);
+						let mxmlItem = findCompletionItemOfKind("fx:Binding", vscode.CompletionItemKind.Keyword, items);
 						assert.notEqual(mxmlItem, null, "vscode.executeCompletionItemProvider failed to provide <fx:Binding>: " + uri);
+						assert.strictEqual(mxmlItem.sortText, "Binding", "vscode.executeCompletionItemProvider failed to provide correct sort text for <fx:Binding>: " + uri);
+						assert.strictEqual(mxmlItem.filterText, "Binding", "vscode.executeCompletionItemProvider failed to provide correct sort text for <fx:Binding>: " + uri);
 						let snippet = mxmlItem.insertText as vscode.SnippetString;
 						assert.strictEqual(snippet.value, "Binding>\n\t$0\n</fx:Binding>", "vscode.executeCompletionItemProvider failed to provide correct insert text for <fx:Binding>: " + uri);
 					}, (err) =>
@@ -6063,7 +6073,7 @@ suite("MXML completion item provider", () =>
 				.then((list: vscode.CompletionList) =>
 					{
 						let items = list.items;
-						let mxmlItem = findCompletionItemOfKind("<fx:Binding>", vscode.CompletionItemKind.Keyword, items);
+						let mxmlItem = findCompletionItemOfKind("fx:Binding", vscode.CompletionItemKind.Keyword, items);
 						assert.equal(mxmlItem, null, "vscode.executeCompletionItemProvider failed to omit <fx:Binding> in non-root element existing prefix: " + uri);
 					}, (err) =>
 					{
@@ -6081,8 +6091,10 @@ suite("MXML completion item provider", () =>
 				.then((list: vscode.CompletionList) =>
 					{
 						let items = list.items;
-						let mxmlItem = findCompletionItemOfKind("<fx:Component>", vscode.CompletionItemKind.Keyword, items);
+						let mxmlItem = findCompletionItemOfKind("fx:Component", vscode.CompletionItemKind.Keyword, items);
 						assert.notEqual(mxmlItem, null, "vscode.executeCompletionItemProvider failed to provide <fx:Component>: " + uri);
+						assert.strictEqual(mxmlItem.sortText, "Component", "vscode.executeCompletionItemProvider failed to provide correct sort text for <fx:Component>: " + uri);
+						assert.strictEqual(mxmlItem.filterText, "Component", "vscode.executeCompletionItemProvider failed to provide correct sort text for <fx:Component>: " + uri);
 						let snippet = mxmlItem.insertText as vscode.SnippetString;
 						assert.strictEqual(snippet.value, "fx:Component>\n\t$0\n</fx:Component>", "vscode.executeCompletionItemProvider failed to provide correct insert text for <fx:Component>: " + uri);
 					}, (err) =>
@@ -6101,8 +6113,10 @@ suite("MXML completion item provider", () =>
 				.then((list: vscode.CompletionList) =>
 					{
 						let items = list.items;
-						let mxmlItem = findCompletionItemOfKind("<fx:Component>", vscode.CompletionItemKind.Keyword, items);
+						let mxmlItem = findCompletionItemOfKind("fx:Component", vscode.CompletionItemKind.Keyword, items);
 						assert.notEqual(mxmlItem, null, "vscode.executeCompletionItemProvider failed to provide <fx:Component>: " + uri);
+						assert.strictEqual(mxmlItem.sortText, "Component", "vscode.executeCompletionItemProvider failed to provide correct sort text for <fx:Component>: " + uri);
+						assert.strictEqual(mxmlItem.filterText, "Component", "vscode.executeCompletionItemProvider failed to provide correct sort text for <fx:Component>: " + uri);
 						let snippet = mxmlItem.insertText as vscode.SnippetString;
 						assert.strictEqual(snippet.value, "<fx:Component>\n\t$0\n</fx:Component>", "vscode.executeCompletionItemProvider failed to provide correct insert text for <fx:Component>: " + uri);
 					}, (err) =>
@@ -6121,8 +6135,10 @@ suite("MXML completion item provider", () =>
 				.then((list: vscode.CompletionList) =>
 					{
 						let items = list.items;
-						let mxmlItem = findCompletionItemOfKind("<fx:Component>", vscode.CompletionItemKind.Keyword, items);
+						let mxmlItem = findCompletionItemOfKind("fx:Component", vscode.CompletionItemKind.Keyword, items);
 						assert.notEqual(mxmlItem, null, "vscode.executeCompletionItemProvider failed to provide <fx:Component>: " + uri);
+						assert.strictEqual(mxmlItem.sortText, "Component", "vscode.executeCompletionItemProvider failed to provide correct sort text for <fx:Component>: " + uri);
+						assert.strictEqual(mxmlItem.filterText, "Component", "vscode.executeCompletionItemProvider failed to provide correct sort text for <fx:Component>: " + uri);
 						let snippet = mxmlItem.insertText as vscode.SnippetString;
 						assert.strictEqual(snippet.value, "fx:Component>\n\t$0\n</fx:Component>", "vscode.executeCompletionItemProvider failed to provide correct insert text for <fx:Component>: " + uri);
 					}, (err) =>
@@ -6141,8 +6157,10 @@ suite("MXML completion item provider", () =>
 				.then((list: vscode.CompletionList) =>
 					{
 						let items = list.items;
-						let mxmlItem = findCompletionItemOfKind("<fx:Component>", vscode.CompletionItemKind.Keyword, items);
+						let mxmlItem = findCompletionItemOfKind("fx:Component", vscode.CompletionItemKind.Keyword, items);
 						assert.notEqual(mxmlItem, null, "vscode.executeCompletionItemProvider failed to provide <fx:Component>: " + uri);
+						assert.strictEqual(mxmlItem.sortText, "Component", "vscode.executeCompletionItemProvider failed to provide correct sort text for <fx:Component>: " + uri);
+						assert.strictEqual(mxmlItem.filterText, "Component", "vscode.executeCompletionItemProvider failed to provide correct sort text for <fx:Component>: " + uri);
 						let snippet = mxmlItem.insertText as vscode.SnippetString;
 						assert.strictEqual(snippet.value, "<fx:Component>\n\t$0\n</fx:Component>", "vscode.executeCompletionItemProvider failed to provide correct insert text for <fx:Component>: " + uri);
 					}, (err) =>
@@ -6161,8 +6179,10 @@ suite("MXML completion item provider", () =>
 				.then((list: vscode.CompletionList) =>
 					{
 						let items = list.items;
-						let mxmlItem = findCompletionItemOfKind("<fx:Component>", vscode.CompletionItemKind.Keyword, items);
+						let mxmlItem = findCompletionItemOfKind("fx:Component", vscode.CompletionItemKind.Keyword, items);
 						assert.notEqual(mxmlItem, null, "vscode.executeCompletionItemProvider failed to provide <fx:Component>: " + uri);
+						assert.strictEqual(mxmlItem.sortText, "Component", "vscode.executeCompletionItemProvider failed to provide correct sort text for <fx:Component>: " + uri);
+						assert.strictEqual(mxmlItem.filterText, "Component", "vscode.executeCompletionItemProvider failed to provide correct sort text for <fx:Component>: " + uri);
 						let snippet = mxmlItem.insertText as vscode.SnippetString;
 						assert.strictEqual(snippet.value, "Component>\n\t$0\n</fx:Component>", "vscode.executeCompletionItemProvider failed to provide correct insert text for <fx:Component>: " + uri);
 					}, (err) =>
@@ -6181,8 +6201,10 @@ suite("MXML completion item provider", () =>
 				.then((list: vscode.CompletionList) =>
 					{
 						let items = list.items;
-						let mxmlItem = findCompletionItemOfKind("<fx:Component>", vscode.CompletionItemKind.Keyword, items);
+						let mxmlItem = findCompletionItemOfKind("fx:Component", vscode.CompletionItemKind.Keyword, items);
 						assert.notEqual(mxmlItem, null, "vscode.executeCompletionItemProvider failed to provide <fx:Component>: " + uri);
+						assert.strictEqual(mxmlItem.sortText, "Component", "vscode.executeCompletionItemProvider failed to provide correct sort text for <fx:Component>: " + uri);
+						assert.strictEqual(mxmlItem.filterText, "Component", "vscode.executeCompletionItemProvider failed to provide correct sort text for <fx:Component>: " + uri);
 						let snippet = mxmlItem.insertText as vscode.SnippetString;
 						assert.strictEqual(snippet.value, "Component>\n\t$0\n</fx:Component>", "vscode.executeCompletionItemProvider failed to provide correct insert text for <fx:Component>: " + uri);
 					}, (err) =>
@@ -6201,8 +6223,10 @@ suite("MXML completion item provider", () =>
 				.then((list: vscode.CompletionList) =>
 					{
 						let items = list.items;
-						let mxmlItem = findCompletionItemOfKind("<fx:Declarations>", vscode.CompletionItemKind.Keyword, items);
+						let mxmlItem = findCompletionItemOfKind("fx:Declarations", vscode.CompletionItemKind.Keyword, items);
 						assert.notEqual(mxmlItem, null, "vscode.executeCompletionItemProvider failed to provide <fx:Declarations>: " + uri);
+						assert.strictEqual(mxmlItem.sortText, "Declarations", "vscode.executeCompletionItemProvider failed to provide correct sort text for <fx:Declarations>: " + uri);
+						assert.strictEqual(mxmlItem.filterText, "Declarations", "vscode.executeCompletionItemProvider failed to provide correct sort text for <fx:Declarations>: " + uri);
 						let snippet = mxmlItem.insertText as vscode.SnippetString;
 						assert.strictEqual(snippet.value, "fx:Declarations>\n\t$0\n</fx:Declarations>", "vscode.executeCompletionItemProvider failed to provide correct insert text for <fx:Declarations>: " + uri);
 					}, (err) =>
@@ -6221,8 +6245,10 @@ suite("MXML completion item provider", () =>
 				.then((list: vscode.CompletionList) =>
 					{
 						let items = list.items;
-						let mxmlItem = findCompletionItemOfKind("<fx:Declarations>", vscode.CompletionItemKind.Keyword, items);
+						let mxmlItem = findCompletionItemOfKind("fx:Declarations", vscode.CompletionItemKind.Keyword, items);
 						assert.notEqual(mxmlItem, null, "vscode.executeCompletionItemProvider failed to provide <fx:Declarations>: " + uri);
+						assert.strictEqual(mxmlItem.sortText, "Declarations", "vscode.executeCompletionItemProvider failed to provide correct sort text for <fx:Declarations>: " + uri);
+						assert.strictEqual(mxmlItem.filterText, "Declarations", "vscode.executeCompletionItemProvider failed to provide correct sort text for <fx:Declarations>: " + uri);
 						let snippet = mxmlItem.insertText as vscode.SnippetString;
 						assert.strictEqual(snippet.value, "<fx:Declarations>\n\t$0\n</fx:Declarations>", "vscode.executeCompletionItemProvider failed to provide correct insert text for <fx:Declarations>: " + uri);
 					}, (err) =>
@@ -6241,7 +6267,7 @@ suite("MXML completion item provider", () =>
 				.then((list: vscode.CompletionList) =>
 					{
 						let items = list.items;
-						let mxmlItem = findCompletionItemOfKind("<fx:Declarations>", vscode.CompletionItemKind.Keyword, items);
+						let mxmlItem = findCompletionItemOfKind("fx:Declarations", vscode.CompletionItemKind.Keyword, items);
 						assert.equal(mxmlItem, null, "vscode.executeCompletionItemProvider failed to omit <fx:Declarations> in non-root element: " + uri);
 					}, (err) =>
 					{
@@ -6259,7 +6285,7 @@ suite("MXML completion item provider", () =>
 				.then((list: vscode.CompletionList) =>
 					{
 						let items = list.items;
-						let mxmlItem = findCompletionItemOfKind("<fx:Declarations>", vscode.CompletionItemKind.Keyword, items);
+						let mxmlItem = findCompletionItemOfKind("fx:Declarations", vscode.CompletionItemKind.Keyword, items);
 						assert.equal(mxmlItem, null, "vscode.executeCompletionItemProvider failed to omit <fx:Declarations> in non-root element: " + uri);
 					}, (err) =>
 					{
@@ -6277,8 +6303,10 @@ suite("MXML completion item provider", () =>
 				.then((list: vscode.CompletionList) =>
 					{
 						let items = list.items;
-						let mxmlItem = findCompletionItemOfKind("<fx:Declarations>", vscode.CompletionItemKind.Keyword, items);
+						let mxmlItem = findCompletionItemOfKind("fx:Declarations", vscode.CompletionItemKind.Keyword, items);
 						assert.notEqual(mxmlItem, null, "vscode.executeCompletionItemProvider failed to provide <fx:Declarations>: " + uri);
+						assert.strictEqual(mxmlItem.sortText, "Declarations", "vscode.executeCompletionItemProvider failed to provide correct sort text for <fx:Declarations>: " + uri);
+						assert.strictEqual(mxmlItem.filterText, "Declarations", "vscode.executeCompletionItemProvider failed to provide correct sort text for <fx:Declarations>: " + uri);
 						let snippet = mxmlItem.insertText as vscode.SnippetString;
 						assert.strictEqual(snippet.value, "Declarations>\n\t$0\n</fx:Declarations>", "vscode.executeCompletionItemProvider failed to provide correct insert text for <fx:Declarations>: " + uri);
 					}, (err) =>
@@ -6297,7 +6325,7 @@ suite("MXML completion item provider", () =>
 				.then((list: vscode.CompletionList) =>
 					{
 						let items = list.items;
-						let mxmlItem = findCompletionItemOfKind("<fx:Declarations>", vscode.CompletionItemKind.Keyword, items);
+						let mxmlItem = findCompletionItemOfKind("fx:Declarations", vscode.CompletionItemKind.Keyword, items);
 						assert.equal(mxmlItem, null, "vscode.executeCompletionItemProvider failed to omit <fx:Declarations> in non-root element existing prefix: " + uri);
 					}, (err) =>
 					{
@@ -6315,8 +6343,10 @@ suite("MXML completion item provider", () =>
 				.then((list: vscode.CompletionList) =>
 					{
 						let items = list.items;
-						let mxmlItem = findCompletionItemOfKind("<fx:Metadata>", vscode.CompletionItemKind.Keyword, items);
+						let mxmlItem = findCompletionItemOfKind("fx:Metadata", vscode.CompletionItemKind.Keyword, items);
 						assert.notEqual(mxmlItem, null, "vscode.executeCompletionItemProvider failed to provide <fx:Metadata>: " + uri);
+						assert.strictEqual(mxmlItem.sortText, "Metadata", "vscode.executeCompletionItemProvider failed to provide correct sort text for <fx:Metadata>: " + uri);
+						assert.strictEqual(mxmlItem.filterText, "Metadata", "vscode.executeCompletionItemProvider failed to provide correct sort text for <fx:Metadata>: " + uri);
 						let snippet = mxmlItem.insertText as vscode.SnippetString;
 						assert.strictEqual(snippet.value, "fx:Metadata>\n\t$0\n</fx:Metadata>", "vscode.executeCompletionItemProvider failed to provide correct insert text for <fx:Metadata>: " + uri);
 					}, (err) =>
@@ -6335,8 +6365,10 @@ suite("MXML completion item provider", () =>
 				.then((list: vscode.CompletionList) =>
 					{
 						let items = list.items;
-						let mxmlItem = findCompletionItemOfKind("<fx:Metadata>", vscode.CompletionItemKind.Keyword, items);
+						let mxmlItem = findCompletionItemOfKind("fx:Metadata", vscode.CompletionItemKind.Keyword, items);
 						assert.notEqual(mxmlItem, null, "vscode.executeCompletionItemProvider failed to provide <fx:Metadata>: " + uri);
+						assert.strictEqual(mxmlItem.sortText, "Metadata", "vscode.executeCompletionItemProvider failed to provide correct sort text for <fx:Metadata>: " + uri);
+						assert.strictEqual(mxmlItem.filterText, "Metadata", "vscode.executeCompletionItemProvider failed to provide correct sort text for <fx:Metadata>: " + uri);
 						let snippet = mxmlItem.insertText as vscode.SnippetString;
 						assert.strictEqual(snippet.value, "<fx:Metadata>\n\t$0\n</fx:Metadata>", "vscode.executeCompletionItemProvider failed to provide correct insert text for <fx:Metadata>: " + uri);
 					}, (err) =>
@@ -6355,7 +6387,7 @@ suite("MXML completion item provider", () =>
 				.then((list: vscode.CompletionList) =>
 					{
 						let items = list.items;
-						let mxmlItem = findCompletionItemOfKind("<fx:Metadata>", vscode.CompletionItemKind.Keyword, items);
+						let mxmlItem = findCompletionItemOfKind("fx:Metadata", vscode.CompletionItemKind.Keyword, items);
 						assert.equal(mxmlItem, null, "vscode.executeCompletionItemProvider failed to omit <fx:Metadata> in non-root element: " + uri);
 					}, (err) =>
 					{
@@ -6373,7 +6405,7 @@ suite("MXML completion item provider", () =>
 				.then((list: vscode.CompletionList) =>
 					{
 						let items = list.items;
-						let mxmlItem = findCompletionItemOfKind("<fx:Metadata>", vscode.CompletionItemKind.Keyword, items);
+						let mxmlItem = findCompletionItemOfKind("fx:Metadata", vscode.CompletionItemKind.Keyword, items);
 						assert.equal(mxmlItem, null, "vscode.executeCompletionItemProvider failed to omit <fx:Metadata> in non-root element: " + uri);
 					}, (err) =>
 					{
@@ -6391,8 +6423,10 @@ suite("MXML completion item provider", () =>
 				.then((list: vscode.CompletionList) =>
 					{
 						let items = list.items;
-						let mxmlItem = findCompletionItemOfKind("<fx:Metadata>", vscode.CompletionItemKind.Keyword, items);
+						let mxmlItem = findCompletionItemOfKind("fx:Metadata", vscode.CompletionItemKind.Keyword, items);
 						assert.notEqual(mxmlItem, null, "vscode.executeCompletionItemProvider failed to provide <fx:Metadata>: " + uri);
+						assert.strictEqual(mxmlItem.sortText, "Metadata", "vscode.executeCompletionItemProvider failed to provide correct sort text for <fx:Metadata>: " + uri);
+						assert.strictEqual(mxmlItem.filterText, "Metadata", "vscode.executeCompletionItemProvider failed to provide correct sort text for <fx:Metadata>: " + uri);
 						let snippet = mxmlItem.insertText as vscode.SnippetString;
 						assert.strictEqual(snippet.value, "Metadata>\n\t$0\n</fx:Metadata>", "vscode.executeCompletionItemProvider failed to provide correct insert text for <fx:Metadata>: " + uri);
 					}, (err) =>
@@ -6411,7 +6445,7 @@ suite("MXML completion item provider", () =>
 				.then((list: vscode.CompletionList) =>
 					{
 						let items = list.items;
-						let mxmlItem = findCompletionItemOfKind("<fx:Metadata>", vscode.CompletionItemKind.Keyword, items);
+						let mxmlItem = findCompletionItemOfKind("fx:Metadata", vscode.CompletionItemKind.Keyword, items);
 						assert.equal(mxmlItem, null, "vscode.executeCompletionItemProvider failed to omit <fx:Metadata> in non-root element existing prefix: " + uri);
 					}, (err) =>
 					{
@@ -6429,8 +6463,10 @@ suite("MXML completion item provider", () =>
 				.then((list: vscode.CompletionList) =>
 					{
 						let items = list.items;
-						let mxmlItem = findCompletionItemOfKind("<fx:Script>", vscode.CompletionItemKind.Keyword, items);
+						let mxmlItem = findCompletionItemOfKind("fx:Script", vscode.CompletionItemKind.Keyword, items);
 						assert.notEqual(mxmlItem, null, "vscode.executeCompletionItemProvider failed to provide <fx:Script>: " + uri);
+						assert.strictEqual(mxmlItem.sortText, "Script", "vscode.executeCompletionItemProvider failed to provide correct sort text for <fx:Script>: " + uri);
+						assert.strictEqual(mxmlItem.filterText, "Script", "vscode.executeCompletionItemProvider failed to provide correct sort text for <fx:Script>: " + uri);
 						let snippet = mxmlItem.insertText as vscode.SnippetString;
 						assert.strictEqual(snippet.value, "fx:Script>\n\t<![CDATA[\n\t\t$0\n\t]]>\n</fx:Script>", "vscode.executeCompletionItemProvider failed to provide correct insert text for <fx:Script>: " + uri);
 					}, (err) =>
@@ -6449,8 +6485,10 @@ suite("MXML completion item provider", () =>
 				.then((list: vscode.CompletionList) =>
 					{
 						let items = list.items;
-						let mxmlItem = findCompletionItemOfKind("<fx:Script>", vscode.CompletionItemKind.Keyword, items);
+						let mxmlItem = findCompletionItemOfKind("fx:Script", vscode.CompletionItemKind.Keyword, items);
 						assert.notEqual(mxmlItem, null, "vscode.executeCompletionItemProvider failed to provide <fx:Script>: " + uri);
+						assert.strictEqual(mxmlItem.sortText, "Script", "vscode.executeCompletionItemProvider failed to provide correct sort text for <fx:Script>: " + uri);
+						assert.strictEqual(mxmlItem.filterText, "Script", "vscode.executeCompletionItemProvider failed to provide correct sort text for <fx:Script>: " + uri);
 						let snippet = mxmlItem.insertText as vscode.SnippetString;
 						assert.strictEqual(snippet.value, "<fx:Script>\n\t<![CDATA[\n\t\t$0\n\t]]>\n</fx:Script>", "vscode.executeCompletionItemProvider failed to provide correct insert text for <fx:Script>: " + uri);
 					}, (err) =>
@@ -6469,7 +6507,7 @@ suite("MXML completion item provider", () =>
 				.then((list: vscode.CompletionList) =>
 					{
 						let items = list.items;
-						let mxmlItem = findCompletionItemOfKind("<fx:Script>", vscode.CompletionItemKind.Keyword, items);
+						let mxmlItem = findCompletionItemOfKind("fx:Script", vscode.CompletionItemKind.Keyword, items);
 						assert.equal(mxmlItem, null, "vscode.executeCompletionItemProvider failed to omit <fx:Script> in non-root element: " + uri);
 					}, (err) =>
 					{
@@ -6487,7 +6525,7 @@ suite("MXML completion item provider", () =>
 				.then((list: vscode.CompletionList) =>
 					{
 						let items = list.items;
-						let mxmlItem = findCompletionItemOfKind("<fx:Script>", vscode.CompletionItemKind.Keyword, items);
+						let mxmlItem = findCompletionItemOfKind("fx:Script", vscode.CompletionItemKind.Keyword, items);
 						assert.equal(mxmlItem, null, "vscode.executeCompletionItemProvider failed to omit <fx:Script> in non-root element: " + uri);
 					}, (err) =>
 					{
@@ -6505,8 +6543,10 @@ suite("MXML completion item provider", () =>
 				.then((list: vscode.CompletionList) =>
 					{
 						let items = list.items;
-						let mxmlItem = findCompletionItemOfKind("<fx:Script>", vscode.CompletionItemKind.Keyword, items);
+						let mxmlItem = findCompletionItemOfKind("fx:Script", vscode.CompletionItemKind.Keyword, items);
 						assert.notEqual(mxmlItem, null, "vscode.executeCompletionItemProvider failed to provide <fx:Script>: " + uri);
+						assert.strictEqual(mxmlItem.sortText, "Script", "vscode.executeCompletionItemProvider failed to provide correct sort text for <fx:Script>: " + uri);
+						assert.strictEqual(mxmlItem.filterText, "Script", "vscode.executeCompletionItemProvider failed to provide correct sort text for <fx:Script>: " + uri);
 						let snippet = mxmlItem.insertText as vscode.SnippetString;
 						assert.strictEqual(snippet.value, "Script>\n\t<![CDATA[\n\t\t$0\n\t]]>\n</fx:Script>", "vscode.executeCompletionItemProvider failed to provide correct insert text for <fx:Script>: " + uri);
 					}, (err) =>
@@ -6525,7 +6565,7 @@ suite("MXML completion item provider", () =>
 				.then((list: vscode.CompletionList) =>
 					{
 						let items = list.items;
-						let mxmlItem = findCompletionItemOfKind("<fx:Script>", vscode.CompletionItemKind.Keyword, items);
+						let mxmlItem = findCompletionItemOfKind("fx:Script", vscode.CompletionItemKind.Keyword, items);
 						assert.equal(mxmlItem, null, "vscode.executeCompletionItemProvider failed to omit <fx:Script> in non-root element existing prefix: " + uri);
 					}, (err) =>
 					{
@@ -6543,8 +6583,10 @@ suite("MXML completion item provider", () =>
 				.then((list: vscode.CompletionList) =>
 					{
 						let items = list.items;
-						let mxmlItem = findCompletionItemOfKind("<fx:Style>", vscode.CompletionItemKind.Keyword, items);
+						let mxmlItem = findCompletionItemOfKind("fx:Style", vscode.CompletionItemKind.Keyword, items);
 						assert.notEqual(mxmlItem, null, "vscode.executeCompletionItemProvider failed to provide <fx:Style>: " + uri);
+						assert.strictEqual(mxmlItem.sortText, "Style", "vscode.executeCompletionItemProvider failed to provide correct sort text for <fx:Style>: " + uri);
+						assert.strictEqual(mxmlItem.filterText, "Style", "vscode.executeCompletionItemProvider failed to provide correct sort text for <fx:Style>: " + uri);
 						let snippet = mxmlItem.insertText as vscode.SnippetString;
 						assert.strictEqual(snippet.value, "fx:Style>\n\t$0\n</fx:Style>", "vscode.executeCompletionItemProvider failed to provide correct insert text for <fx:Style>: " + uri);
 					}, (err) =>
@@ -6563,8 +6605,10 @@ suite("MXML completion item provider", () =>
 				.then((list: vscode.CompletionList) =>
 					{
 						let items = list.items;
-						let mxmlItem = findCompletionItemOfKind("<fx:Style>", vscode.CompletionItemKind.Keyword, items);
+						let mxmlItem = findCompletionItemOfKind("fx:Style", vscode.CompletionItemKind.Keyword, items);
 						assert.notEqual(mxmlItem, null, "vscode.executeCompletionItemProvider failed to provide <fx:Style>: " + uri);
+						assert.strictEqual(mxmlItem.sortText, "Style", "vscode.executeCompletionItemProvider failed to provide correct sort text for <fx:Style>: " + uri);
+						assert.strictEqual(mxmlItem.filterText, "Style", "vscode.executeCompletionItemProvider failed to provide correct sort text for <fx:Style>: " + uri);
 						let snippet = mxmlItem.insertText as vscode.SnippetString;
 						assert.strictEqual(snippet.value, "<fx:Style>\n\t$0\n</fx:Style>", "vscode.executeCompletionItemProvider failed to provide correct insert text for <fx:Style>: " + uri);
 					}, (err) =>
@@ -6583,7 +6627,7 @@ suite("MXML completion item provider", () =>
 				.then((list: vscode.CompletionList) =>
 					{
 						let items = list.items;
-						let mxmlItem = findCompletionItemOfKind("<fx:Style>", vscode.CompletionItemKind.Keyword, items);
+						let mxmlItem = findCompletionItemOfKind("fx:Style", vscode.CompletionItemKind.Keyword, items);
 						assert.equal(mxmlItem, null, "vscode.executeCompletionItemProvider failed to omit <fx:Style> in non-root element: " + uri);
 					}, (err) =>
 					{
@@ -6601,7 +6645,7 @@ suite("MXML completion item provider", () =>
 				.then((list: vscode.CompletionList) =>
 					{
 						let items = list.items;
-						let mxmlItem = findCompletionItemOfKind("<fx:Style>", vscode.CompletionItemKind.Keyword, items);
+						let mxmlItem = findCompletionItemOfKind("fx:Style", vscode.CompletionItemKind.Keyword, items);
 						assert.equal(mxmlItem, null, "vscode.executeCompletionItemProvider failed to omit <fx:Style> in non-root element: " + uri);
 					}, (err) =>
 					{
@@ -6619,8 +6663,10 @@ suite("MXML completion item provider", () =>
 				.then((list: vscode.CompletionList) =>
 					{
 						let items = list.items;
-						let mxmlItem = findCompletionItemOfKind("<fx:Style>", vscode.CompletionItemKind.Keyword, items);
+						let mxmlItem = findCompletionItemOfKind("fx:Style", vscode.CompletionItemKind.Keyword, items);
 						assert.notEqual(mxmlItem, null, "vscode.executeCompletionItemProvider failed to provide <fx:Style>: " + uri);
+						assert.strictEqual(mxmlItem.sortText, "Style", "vscode.executeCompletionItemProvider failed to provide correct sort text for <fx:Style>: " + uri);
+						assert.strictEqual(mxmlItem.filterText, "Style", "vscode.executeCompletionItemProvider failed to provide correct sort text for <fx:Style>: " + uri);
 						let snippet = mxmlItem.insertText as vscode.SnippetString;
 						assert.strictEqual(snippet.value, "Style>\n\t$0\n</fx:Style>", "vscode.executeCompletionItemProvider failed to provide correct insert text for <fx:Style>: " + uri);
 					}, (err) =>
@@ -6639,7 +6685,7 @@ suite("MXML completion item provider", () =>
 				.then((list: vscode.CompletionList) =>
 					{
 						let items = list.items;
-						let mxmlItem = findCompletionItemOfKind("<fx:Style>", vscode.CompletionItemKind.Keyword, items);
+						let mxmlItem = findCompletionItemOfKind("fx:Style", vscode.CompletionItemKind.Keyword, items);
 						assert.equal(mxmlItem, null, "vscode.executeCompletionItemProvider failed to omit <fx:Style> in non-root element existing prefix: " + uri);
 					}, (err) =>
 					{

@@ -3474,7 +3474,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         List<CompletionItem> items = result.getItems();
         CompletionItem item = new CompletionItem();
         item.setKind(CompletionItemKind.Keyword);
-        item.setLabel("<fx:" + tagName + ">");
+        item.setLabel("fx:" + tagName);
         if (completionSupportsSnippets)
         {
             item.setInsertTextFormat(InsertTextFormat.Snippet);
@@ -3516,7 +3516,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                             
         CompletionItem item = new CompletionItem();
         item.setKind(CompletionItemKind.Keyword);
-        item.setLabel("<fx:" + IMXMLLanguageConstants.SCRIPT + ">");
+        item.setLabel("fx:" + IMXMLLanguageConstants.SCRIPT);
         if (completionSupportsSnippets)
         {
             item.setInsertTextFormat(InsertTextFormat.Snippet);
@@ -4007,32 +4007,42 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         else if (!isAttribute)
         {
-            StringBuilder builder = new StringBuilder();
+            if (definition instanceof ITypeDefinition && prefix != null)
+            {
+                StringBuilder labelBuilder = new StringBuilder();
+                labelBuilder.append(prefix);
+                labelBuilder.append(IMXMLCoreConstants.colon);
+                labelBuilder.append(definitionBaseName);
+                item.setLabel(labelBuilder.toString());
+                item.setSortText(definitionBaseName);
+                item.setFilterText(definitionBaseName);
+            }
+            StringBuilder insertTextBuilder = new StringBuilder();
             if (tagsNeedOpenBracket)
             {
-                builder.append("<");
+                insertTextBuilder.append("<");
             }
             if(prefix != null)
             {
-                builder.append(prefix);
-                builder.append(IMXMLCoreConstants.colon);
+                insertTextBuilder.append(prefix);
+                insertTextBuilder.append(IMXMLCoreConstants.colon);
             }
-            builder.append(definitionBaseName);
+            insertTextBuilder.append(definitionBaseName);
             if (completionSupportsSnippets && !(definition instanceof ITypeDefinition))
             {
                 item.setInsertTextFormat(InsertTextFormat.Snippet);
-                builder.append(">");
-                builder.append("$0");
-                builder.append("</");
+                insertTextBuilder.append(">");
+                insertTextBuilder.append("$0");
+                insertTextBuilder.append("</");
                 if(prefix != null)
                 {
-                    builder.append(prefix);
-                    builder.append(IMXMLCoreConstants.colon);
+                    insertTextBuilder.append(prefix);
+                    insertTextBuilder.append(IMXMLCoreConstants.colon);
                 }
-                builder.append(definitionBaseName);
-                builder.append(">");
+                insertTextBuilder.append(definitionBaseName);
+                insertTextBuilder.append(">");
             }
-            item.setInsertText(builder.toString());
+            item.setInsertText(insertTextBuilder.toString());
             if (definition instanceof ITypeDefinition && prefix != null && uri != null)
             {
                 item.setCommand(createMXMLNamespaceCommand(definition, prefix, uri));
