@@ -168,7 +168,6 @@ import com.nextgenactionscript.vscode.asdoc.VSCodeASDocComment;
 import com.nextgenactionscript.vscode.asdoc.VSCodeASDocDelegate;
 import com.nextgenactionscript.vscode.commands.ICommandConstants;
 import com.nextgenactionscript.vscode.compiler.CompilerShell;
-import com.nextgenactionscript.vscode.mxml.IMXMLLibraryConstants;
 import com.nextgenactionscript.vscode.project.IProjectConfigStrategy;
 import com.nextgenactionscript.vscode.project.ProjectOptions;
 import com.nextgenactionscript.vscode.project.VSCodeConfiguration;
@@ -182,6 +181,8 @@ import com.nextgenactionscript.vscode.utils.ImportTextEditUtils;
 import com.nextgenactionscript.vscode.utils.LSPUtils;
 import com.nextgenactionscript.vscode.utils.LanguageServerCompilerUtils;
 import com.nextgenactionscript.vscode.utils.MXMLDataUtils;
+import com.nextgenactionscript.vscode.utils.MXMLNamespace;
+import com.nextgenactionscript.vscode.utils.MXMLNamespaceUtils;
 import com.nextgenactionscript.vscode.utils.ProblemTracker;
 import com.nextgenactionscript.vscode.utils.DefinitionTextUtils.DefinitionAsText;
 
@@ -247,9 +248,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private static final String MXML_EXTENSION = ".mxml";
     private static final String AS_EXTENSION = ".as";
     private static final String SWC_EXTENSION = ".swc";
-    private static final String DEFAULT_NS_PREFIX = "ns";
-    private static final String STAR = "*";
-    private static final String DOT_STAR = ".*";
     private static final String MARKED_STRING_LANGUAGE_ACTIONSCRIPT = "nextgenas";
     private static final String MARKED_STRING_LANGUAGE_MXML = "mxml";
     private static final String TOKEN_CONFIGNAME = "configname";
@@ -267,29 +265,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private static final String UNDERSCORE_UNDERSCORE_AS3_PACKAGE = "__AS3__.";
     private static final String VECTOR_HIDDEN_PREFIX = "Vector$";
     private static final String ASDOC_TAG_PARAM = "param";
-
-    private static final HashMap<String, String> NAMESPACE_TO_PREFIX = new HashMap<>();
-
-    {
-        //MXML language
-        NAMESPACE_TO_PREFIX.put(IMXMLLanguageConstants.NAMESPACE_MXML_2006, "mx");
-        NAMESPACE_TO_PREFIX.put(IMXMLLanguageConstants.NAMESPACE_MXML_2009, "fx");
-
-        //Flex
-        NAMESPACE_TO_PREFIX.put(IMXMLLibraryConstants.MX, "mx");
-        NAMESPACE_TO_PREFIX.put(IMXMLLibraryConstants.SPARK, "s");
-        
-        //FlexJS
-        NAMESPACE_TO_PREFIX.put(IMXMLLibraryConstants.FLEXJS_EXPRESS, "js");
-        NAMESPACE_TO_PREFIX.put(IMXMLLibraryConstants.FLEXJS_BASIC, "js");
-
-        //Royale
-        NAMESPACE_TO_PREFIX.put(IMXMLLibraryConstants.ROYALE_EXPRESS, "js");
-        NAMESPACE_TO_PREFIX.put(IMXMLLibraryConstants.ROYALE_BASIC, "js");
-
-        //Feathers
-        NAMESPACE_TO_PREFIX.put(IMXMLLibraryConstants.FEATHERS, "f");
-    }
 
     private static boolean isWindows;
 
@@ -325,18 +300,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private ClientCapabilities clientCapabilities;
     private boolean completionSupportsSnippets = false;
     private CompilerShell compilerShell;
-
-    private class MXMLNamespace
-    {
-        public MXMLNamespace(String prefix, String uri)
-        {
-            this.prefix = prefix;
-            this.uri = uri;
-        }
-
-        public String prefix;
-        public String uri;
-    }
 
     private class SavedCodeAction
     {
@@ -2069,7 +2032,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     }
                     if (!isAttribute)
                     {
-                        MXMLNamespace fxNS = getMXMLLanguageNamespace();
+                        MXMLNamespace fxNS = MXMLNamespaceUtils.getMXMLLanguageNamespace(currentUnit, fileSpecGetter, currentWorkspace);
                         IMXMLData mxmlParent = offsetTag.getParent();
                         if (mxmlParent != null && parentTag.equals(mxmlParent.getRootTag()))
                         {
@@ -2138,7 +2101,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             if (!isAttribute)
             {
                 IMXMLData mxmlParent = offsetTag.getParent();
-                MXMLNamespace fxNS = getMXMLLanguageNamespace();
+                MXMLNamespace fxNS = MXMLNamespaceUtils.getMXMLLanguageNamespace(currentUnit, fileSpecGetter, currentWorkspace);
                 if (mxmlParent != null && offsetTag.equals(mxmlParent.getRootTag()))
                 {
                     addRootMXMLLanguageTagsToAutoComplete(offsetTag, fxNS.prefix, true, tagsNeedOpenBracket, result);
@@ -2612,123 +2575,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             referencesForDefinitionInCompilationUnit(definition, compilationUnit, result);
         }
     }
-
-    private MXMLNamespace getNamespaceFromURI(String uri, PrefixMap prefixMap)
-    {
-        String[] uriPrefixes = prefixMap.getPrefixesForNamespace(uri);
-        if (uriPrefixes.length > 0)
-        {
-            return new MXMLNamespace(uriPrefixes[0], uri);
-        }
-
-        //we'll check if the namespace comes from a known library
-        //with a common prefix
-        if (NAMESPACE_TO_PREFIX.containsKey(uri))
-        {
-            String prefix = NAMESPACE_TO_PREFIX.get(uri);
-            if (prefixMap.containsPrefix(prefix))
-            {
-                //the prefix already exists with a different URI, so we can't
-                //use it for this URI
-                prefix = null;
-            }
-            if (prefix != null)
-            {
-                return new MXMLNamespace(prefix, uri);
-            }
-        }
-        return null;
-    }
-
-    private MXMLNamespace getMXMLLanguageNamespace()
-    {
-        IMXMLDataManager mxmlDataManager = currentWorkspace.getMXMLDataManager();
-        MXMLData mxmlData = (MXMLData) mxmlDataManager.get(fileSpecGetter.getFileSpecification(currentUnit.getAbsoluteFilename()));
-        PrefixMap prefixMap = mxmlData.getRootTagPrefixMap();
-        String fxURI = mxmlData.getRootTag().getMXMLDialect().getLanguageNamespace();
-        MXMLNamespace fxNS = getNamespaceFromURI(fxURI, prefixMap);
-        return fxNS;
-    }
-
-    private MXMLNamespace getMXMLNamespaceForTypeDefinition(ITypeDefinition definition, MXMLData mxmlData)
-    {
-        PrefixMap prefixMap = mxmlData.getRootTagPrefixMap();
-        Collection<XMLName> tagNames = currentProject.getTagNamesForClass(definition.getQualifiedName());
-
-        //1. try to use an existing xmlns with an uri
-        for (XMLName tagName : tagNames)
-        {
-            String tagNamespace = tagName.getXMLNamespace();
-            //getTagNamesForClass() returns the 2006 namespace, even if that's
-            //not what we're using in this file
-            if (tagNamespace.equals(IMXMLLanguageConstants.NAMESPACE_MXML_2006))
-            {
-                //use the language namespace of the root tag instead
-                tagNamespace = mxmlData.getRootTag().getMXMLDialect().getLanguageNamespace();
-            }
-            String[] uriPrefixes = prefixMap.getPrefixesForNamespace(tagNamespace);
-            if (uriPrefixes.length > 0)
-            {
-                return new MXMLNamespace(uriPrefixes[0], tagNamespace);
-            }
-        }
-
-        //2. try to use an existing xmlns with a package name
-        String packageName = definition.getPackageName();
-        String packageNamespace = getPackageNameMXMLNamespaceURI(packageName);
-        String[] packagePrefixes = prefixMap.getPrefixesForNamespace(packageNamespace);
-        if (packagePrefixes.length > 0)
-        {
-            return new MXMLNamespace(packagePrefixes[0], packageNamespace);
-        }
-
-        //3. try to create a new xmlns with a prefix and uri
-
-
-        //special case for the __AS3__ package
-        if (packageName != null && packageName.startsWith(UNDERSCORE_UNDERSCORE_AS3_PACKAGE))
-        {
-            //anything in this package is in the language namespace
-            String fxNamespace = mxmlData.getRootTag().getMXMLDialect().getLanguageNamespace();
-            MXMLNamespace resultNS = getNamespaceFromURI(fxNamespace, prefixMap);
-            if (resultNS != null)
-            {
-                return resultNS;
-            }
-        }
-
-        String fallbackNamespace = null;
-        for (XMLName tagName : tagNames)
-        {
-            //we know this type is in one or more namespaces
-            //let's try to figure out a nice prefix to use
-            fallbackNamespace = tagName.getXMLNamespace();
-            MXMLNamespace resultNS = getNamespaceFromURI(fallbackNamespace, prefixMap);
-            if (resultNS != null)
-            {
-                return resultNS;
-            }
-        }
-        if (fallbackNamespace != null)
-        {
-            //if we couldn't find a known prefix, use a numbered one
-            String prefix = getNumberedNamespacePrefix(DEFAULT_NS_PREFIX, prefixMap);
-            return new MXMLNamespace(prefix, fallbackNamespace);
-        }
-
-        //4. worse case: create a new xmlns with numbered prefix and package name
-        String prefix = getNumberedNamespacePrefix(DEFAULT_NS_PREFIX, prefixMap);
-        return new MXMLNamespace(prefix, packageNamespace);
-    }
-
-    private String getPackageNameMXMLNamespaceURI(String packageName)
-    {
-        if (packageName.length() > 0)
-        {
-            return packageName + DOT_STAR;
-        }
-        return STAR;
-    }
     
     private void autoCompleteValue(String value, CompletionList result)
     {
@@ -2861,7 +2707,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     else
                     {
                         //no prefix yet, so complete the definition with a prefix
-                        MXMLNamespace ns = getMXMLNamespaceForTypeDefinition(typeDefinition, mxmlData);
+                        MXMLNamespace ns = MXMLNamespaceUtils.getMXMLNamespaceForTypeDefinition(typeDefinition, mxmlData, currentProject);
                         addDefinitionAutoCompleteMXML(typeDefinition, false, ns.prefix, ns.uri, false, result);
                     }
                 }
@@ -3891,26 +3737,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     {
         IMXMLDataManager mxmlDataManager = currentWorkspace.getMXMLDataManager();
         MXMLData mxmlData = (MXMLData) mxmlDataManager.get(fileSpecGetter.getFileSpecification(currentUnit.getAbsoluteFilename()));
-        MXMLNamespace discoveredNS = getMXMLNamespaceForTypeDefinition(definition, mxmlData);
+        MXMLNamespace discoveredNS = MXMLNamespaceUtils.getMXMLNamespaceForTypeDefinition(definition, mxmlData, currentProject);
         addDefinitionAutoCompleteMXML(definition, false, discoveredNS.prefix, discoveredNS.uri, tagsNeedOpenBracket, result);
-    }
-
-    private String getNumberedNamespacePrefix(String prefixPrefix, PrefixMap prefixMap)
-    {
-        //if all else fails, fall back to a generic namespace
-        int count = 1;
-        String prefix = null;
-        do
-        {
-            prefix = prefixPrefix + count;
-            if (prefixMap.containsPrefix(prefix))
-            {
-                prefix = null;
-            }
-            count++;
-        }
-        while (prefix == null);
-        return prefix;
     }
 
     private boolean isDuplicateTypeDefinition(IDefinition definition)
