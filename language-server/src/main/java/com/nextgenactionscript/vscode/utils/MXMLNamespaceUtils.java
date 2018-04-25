@@ -56,6 +56,7 @@ public class MXMLNamespaceUtils
         NAMESPACE_TO_PREFIX.put(IMXMLLibraryConstants.FEATHERS, "f");
     }
 
+	private static final String LOCAL_PREFIX = "local";
 	private static final String DEFAULT_NS_PREFIX = "ns";
     private static final String STAR = "*";
     private static final String DOT_STAR = ".*";
@@ -163,16 +164,36 @@ public class MXMLNamespaceUtils
             //if we couldn't find a known prefix, use a numbered one
             String prefix = getNumberedNamespacePrefix(DEFAULT_NS_PREFIX, prefixMap);
             return new MXMLNamespace(prefix, fallbackNamespace);
-        }
+		}
+		
+		//4. special case: if the package namespace is simply *, try to use
+		//local as the prefix, if it's not already defined. this matches the
+		//behavior of Adoboe Flash Builder.
+		if (packageNamespace.equals(STAR) && !prefixMap.containsPrefix(LOCAL_PREFIX))
+		{
+			return new MXMLNamespace(LOCAL_PREFIX, packageNamespace);
+		}
 
-        //4. worse case: create a new xmlns with numbered prefix and package name
+		//5. try to use the final part of the package name as the prefix, if
+		//it's not already defined.
+		if (packageName != null && packageName.length() > 0)
+		{
+			String[] parts = packageName.split("\\.");
+			String finalPart = parts[parts.length - 1];
+			if (!prefixMap.containsPrefix(finalPart))
+			{
+				return new MXMLNamespace(finalPart, packageNamespace);
+			}
+		}
+
+        //6. worst case: create a new xmlns with numbered prefix and package name
         String prefix = getNumberedNamespacePrefix(DEFAULT_NS_PREFIX, prefixMap);
         return new MXMLNamespace(prefix, packageNamespace);
     }
 
     private static String getPackageNameMXMLNamespaceURI(String packageName)
     {
-        if (packageName.length() > 0)
+        if (packageName != null && packageName.length() > 0)
         {
             return packageName + DOT_STAR;
         }

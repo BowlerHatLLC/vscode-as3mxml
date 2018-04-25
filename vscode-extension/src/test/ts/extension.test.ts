@@ -5927,12 +5927,12 @@ suite("MXML completion item provider", () =>
 				.then((list: vscode.CompletionList) =>
 					{
 						let items = list.items;
-						let packageClassItem = findCompletionItem("ns1:UnreferencedClass", items);
+						let packageClassItem = findCompletionItem("example:UnreferencedClass", items);
 						assert.notEqual(packageClassItem, null, "vscode.executeCompletionItemProvider failed to provide package class: " + uri);
 						assert.strictEqual(packageClassItem.kind, vscode.CompletionItemKind.Class, "vscode.executeCompletionItemProvider failed to provide correct kind of package class: " + uri);
 						assert.strictEqual(packageClassItem.sortText, "UnreferencedClass", "vscode.executeCompletionItemProvider failed to provide correct sort text for package class as child element: " + uri);
 						assert.strictEqual(packageClassItem.filterText, "UnreferencedClass", "vscode.executeCompletionItemProvider failed to provide correct filter text for package class as child element: " + uri);
-						assert.strictEqual(packageClassItem.insertText, "ns1:UnreferencedClass", "vscode.executeCompletionItemProvider failed to provide correct insert text for package class as child element: " + uri);
+						assert.strictEqual(packageClassItem.insertText, "example:UnreferencedClass", "vscode.executeCompletionItemProvider failed to provide correct insert text for package class as child element: " + uri);
 					}, (err) =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
@@ -5949,12 +5949,12 @@ suite("MXML completion item provider", () =>
 				.then((list: vscode.CompletionList) =>
 					{
 						let items = list.items;
-						let packageClassItem = findCompletionItem("ns1:UnreferencedClass", items);
+						let packageClassItem = findCompletionItem("example:UnreferencedClass", items);
 						assert.notEqual(packageClassItem, null, "vscode.executeCompletionItemProvider failed to provide package class: " + uri);
 						assert.strictEqual(packageClassItem.kind, vscode.CompletionItemKind.Class, "vscode.executeCompletionItemProvider failed to provide correct kind of package class: " + uri);
 						assert.strictEqual(packageClassItem.sortText, "UnreferencedClass", "vscode.executeCompletionItemProvider failed to provide correct sort text for package class as child element: " + uri);
 						assert.strictEqual(packageClassItem.filterText, "UnreferencedClass", "vscode.executeCompletionItemProvider failed to provide correct filter text for package class as child element: " + uri);
-						assert.strictEqual(packageClassItem.insertText, "<ns1:UnreferencedClass", "vscode.executeCompletionItemProvider failed to provide correct insert text for package class as child element: " + uri);
+						assert.strictEqual(packageClassItem.insertText, "<example:UnreferencedClass", "vscode.executeCompletionItemProvider failed to provide correct insert text for package class as child element: " + uri);
 					}, (err) =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
@@ -6716,7 +6716,7 @@ suite("MXML completion item provider", () =>
 	test("vscode.executeCompletionItemProvider includes class in a package xmlns", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "MXMLCompletion.mxml"));
-		let position = new vscode.Position(22, 13);
+		let position = new vscode.Position(22, 10);
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
