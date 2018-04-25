@@ -222,4 +222,14 @@ public class MXMLDataUtils
         }
         return getDefinitionForMXMLTag(tag, project);
     }
+
+    public static boolean isMXMLTagValidForCompletion(IMXMLTagData tag)
+    {
+        if (tag.getXMLName().equals(tag.getMXMLDialect().resolveScript()))
+        {
+            //inside an <fx:Script> tag
+            return false;
+        }
+        return true;
+    }
 }

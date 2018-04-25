@@ -24,9 +24,16 @@ import java.util.Optional;
 
 import org.apache.royale.compiler.clients.problems.CompilerProblemCategorizer;
 import org.apache.royale.compiler.common.ISourceLocation;
+import org.apache.royale.compiler.definitions.IAccessorDefinition;
+import org.apache.royale.compiler.definitions.IClassDefinition;
+import org.apache.royale.compiler.definitions.IDefinition;
+import org.apache.royale.compiler.definitions.IFunctionDefinition;
+import org.apache.royale.compiler.definitions.IInterfaceDefinition;
+import org.apache.royale.compiler.definitions.ITypeDefinition;
+import org.apache.royale.compiler.definitions.IVariableDefinition;
 import org.apache.royale.compiler.problems.CompilerProblemSeverity;
 import org.apache.royale.compiler.problems.ICompilerProblem;
-
+import org.eclipse.lsp4j.CompletionItemKind;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Position;
@@ -252,5 +259,52 @@ public class LanguageServerCompilerUtils
         {
             return Optional.of(Paths.get(uri));
         }
+    }
+
+    public static CompletionItemKind getCompletionItemKindFromDefinition(IDefinition definition)
+    {
+        if (definition instanceof IClassDefinition)
+        {
+            return CompletionItemKind.Class;
+        }
+        else if (definition instanceof IInterfaceDefinition)
+        {
+            return CompletionItemKind.Interface;
+        }
+        else if (definition instanceof IAccessorDefinition)
+        {
+            return CompletionItemKind.Field;
+        }
+        else if (definition instanceof IFunctionDefinition)
+        {
+            IFunctionDefinition functionDefinition = (IFunctionDefinition) definition;
+            if (functionDefinition.isConstructor())
+            {
+                return CompletionItemKind.Constructor;
+            }
+            IDefinition parentDefinition = functionDefinition.getParent();
+            if (parentDefinition != null && parentDefinition instanceof ITypeDefinition)
+            {
+                return CompletionItemKind.Method;
+            }
+            return CompletionItemKind.Function;
+        }
+        else if (definition instanceof IVariableDefinition)
+        {
+            IVariableDefinition variableDefinition = (IVariableDefinition) definition;
+            switch(variableDefinition.getVariableClassification())
+            {
+                case INTERFACE_MEMBER:
+                case CLASS_MEMBER:
+                {
+                    return CompletionItemKind.Field;
+                }
+                default:
+                {
+                    return CompletionItemKind.Variable;
+                }
+            }
+        }
+        return CompletionItemKind.Value;
     }
 }

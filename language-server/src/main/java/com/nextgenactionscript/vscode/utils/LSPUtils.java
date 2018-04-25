@@ -15,6 +15,8 @@ limitations under the License.
 */
 package com.nextgenactionscript.vscode.utils;
 
+import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 
 /**
@@ -61,4 +63,14 @@ public class LSPUtils
 		}
 		return true;
 	}
+
+    public static Diagnostic createDiagnosticWithoutRange()
+    {
+        Diagnostic diagnostic = new Diagnostic();
+        Range range = new Range();
+        range.setStart(new Position());
+        range.setEnd(new Position());
+        diagnostic.setRange(range);
+        return diagnostic;
+    }
 }

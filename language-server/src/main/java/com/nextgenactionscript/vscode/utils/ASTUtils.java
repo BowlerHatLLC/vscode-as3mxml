@@ -290,4 +290,16 @@ public class ASTUtils
         }
         return "";
     }
+
+    public static String nodeToContainingPackageName(IASNode node)
+    {
+        IASNode currentNode = node;
+        String containingPackageName = null;
+        while(currentNode != null && containingPackageName == null)
+        {
+            containingPackageName = currentNode.getPackageName();
+            currentNode = currentNode.getParent();
+        }
+        return containingPackageName;
+    }
 }
