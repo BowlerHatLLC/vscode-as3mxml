@@ -3422,6 +3422,50 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             addDefinitionsInTypeScopeToAutoCompleteMXML(typeScope, scope, isAttribute, propertyElementPrefix, tagsNeedOpenBracket, result);
             addStyleMetadataToAutoCompleteMXML(typeScope, isAttribute, propertyElementPrefix, tagsNeedOpenBracket, result);
             addEventMetadataToAutoCompleteMXML(typeScope, isAttribute, propertyElementPrefix, tagsNeedOpenBracket, result);
+            if(isAttribute)
+            {
+                addLanguageAttributesToAutoCompleteMXML(typeScope, scope, result);
+            }
+        }
+    }
+
+    private void addLanguageAttributesToAutoCompleteMXML(TypeScope typeScope, ASScope otherScope, CompletionList result)
+    {
+        List<CompletionItem> items = result.getItems();
+
+        CompletionItem includeInItem = new CompletionItem();
+        includeInItem.setKind(CompletionItemKind.Keyword);
+        includeInItem.setLabel(IMXMLLanguageConstants.ATTRIBUTE_INCLUDE_IN);
+        if (completionSupportsSnippets)
+        {
+            includeInItem.setInsertTextFormat(InsertTextFormat.Snippet);
+            includeInItem.setInsertText(IMXMLLanguageConstants.ATTRIBUTE_INCLUDE_IN + "=\"$0\"");
+        }
+        items.add(includeInItem);
+
+        CompletionItem excludeFromItem = new CompletionItem();
+        excludeFromItem.setKind(CompletionItemKind.Keyword);
+        excludeFromItem.setLabel(IMXMLLanguageConstants.ATTRIBUTE_EXCLUDE_FROM);
+        if (completionSupportsSnippets)
+        {
+            excludeFromItem.setInsertTextFormat(InsertTextFormat.Snippet);
+            excludeFromItem.setInsertText(IMXMLLanguageConstants.ATTRIBUTE_EXCLUDE_FROM + "=\"$0\"");
+        }
+        items.add(excludeFromItem);
+
+        Set<INamespaceDefinition> namespaceSet = getNamespaceSetForScopes(typeScope, otherScope);
+        IDefinition propertyDefinition = typeScope.getPropertyByNameForMemberAccess(currentProject, IMXMLLanguageConstants.ATTRIBUTE_ID, namespaceSet);
+        if (propertyDefinition == null)
+        {
+            CompletionItem idItem = new CompletionItem();
+            idItem.setKind(CompletionItemKind.Keyword);
+            idItem.setLabel(IMXMLLanguageConstants.ATTRIBUTE_ID);
+            if (completionSupportsSnippets)
+            {
+                idItem.setInsertTextFormat(InsertTextFormat.Snippet);
+                idItem.setInsertText(IMXMLLanguageConstants.ATTRIBUTE_ID + "=\"$0\"");
+            }
+            items.add(idItem);
         }
     }
 
@@ -3446,10 +3490,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
     }
 
-    private void addDefinitionsInTypeScopeToAutoComplete(TypeScope typeScope, ASScope otherScope, boolean isStatic, boolean includeSuperStatics, boolean forMXML, boolean isAttribute, String prefix, boolean tagsNeedOpenBracket, CompletionList result)
+    private Set<INamespaceDefinition> getNamespaceSetForScopes(TypeScope typeScope, ASScope otherScope)
     {
-        IMetaTag[] excludeMetaTags = typeScope.getDefinition().getMetaTagsByName(IMetaAttributeConstants.ATTRIBUTE_EXCLUDE);
-        ArrayList<IDefinition> memberAccessDefinitions = new ArrayList<>();
         Set<INamespaceDefinition> namespaceSet = otherScope.getNamespaceSet(currentProject);
         if (typeScope.getContainingDefinition() instanceof IInterfaceDefinition)
         {
@@ -3479,6 +3521,15 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 }
             }
         }
+        return namespaceSet;
+    }
+
+    private void addDefinitionsInTypeScopeToAutoComplete(TypeScope typeScope, ASScope otherScope, boolean isStatic, boolean includeSuperStatics, boolean forMXML, boolean isAttribute, String prefix, boolean tagsNeedOpenBracket, CompletionList result)
+    {
+        IMetaTag[] excludeMetaTags = typeScope.getDefinition().getMetaTagsByName(IMetaAttributeConstants.ATTRIBUTE_EXCLUDE);
+        ArrayList<IDefinition> memberAccessDefinitions = new ArrayList<>();
+        Set<INamespaceDefinition> namespaceSet = getNamespaceSetForScopes(typeScope, otherScope);
+        
         typeScope.getAllPropertiesForMemberAccess(currentProject, memberAccessDefinitions, namespaceSet);
         for (IDefinition localDefinition : memberAccessDefinitions)
         {

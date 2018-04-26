@@ -6736,6 +6736,123 @@ suite("MXML completion item provider", () =>
 					});
 		});
 	});
+	test("vscode.executeCompletionItemProvider omits id as attribute of <fx:Declarations>", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "MXMLCompletion.mxml"));
+		let position = new vscode.Position(28, 21);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
+				.then((list: vscode.CompletionList) =>
+					{
+						let items = list.items;
+						let propertyItem = findCompletionItem("id", items);
+						assert.equal(propertyItem, null, "vscode.executeCompletionItemProvider failed to omit keyword as attribute: " + uri);
+					}, (err) =>
+					{
+						assert(false, "Failed to execute completion item provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeCompletionItemProvider includes id as attribute of <fx:Object>", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "MXMLCompletion.mxml"));
+		let position = new vscode.Position(29, 15);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
+				.then((list: vscode.CompletionList) =>
+					{
+						let items = list.items;
+						let propertyItem = findCompletionItem("id", items);
+						assert.notEqual(propertyItem, null, "vscode.executeCompletionItemProvider failed to include keyword as attribute: " + uri);
+						assert.strictEqual(propertyItem.kind, vscode.CompletionItemKind.Keyword, "vscode.executeCompletionItemProvider failed to provide correct kind of keyword as attribute: " + uri);
+						let snippet = propertyItem.insertText as vscode.SnippetString;
+						assert.strictEqual(snippet.value, "id=\"$0\"", "vscode.executeCompletionItemProvider failed to provide correct insert text for keyword as attribute: " + uri);
+					}, (err) =>
+					{
+						assert(false, "Failed to execute completion item provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeCompletionItemProvider omits includeIn as attribute of <fx:Declarations>", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "MXMLCompletion.mxml"));
+		let position = new vscode.Position(28, 21);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
+				.then((list: vscode.CompletionList) =>
+					{
+						let items = list.items;
+						let propertyItem = findCompletionItem("includeIn", items);
+						assert.equal(propertyItem, null, "vscode.executeCompletionItemProvider failed to omit keyword as attribute: " + uri);
+					}, (err) =>
+					{
+						assert(false, "Failed to execute completion item provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeCompletionItemProvider includes includeIn as attribute of <fx:Object>", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "MXMLCompletion.mxml"));
+		let position = new vscode.Position(29, 15);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
+				.then((list: vscode.CompletionList) =>
+					{
+						let items = list.items;
+						let propertyItem = findCompletionItem("includeIn", items);
+						assert.notEqual(propertyItem, null, "vscode.executeCompletionItemProvider failed to include keyword as attribute: " + uri);
+						assert.strictEqual(propertyItem.kind, vscode.CompletionItemKind.Keyword, "vscode.executeCompletionItemProvider failed to provide correct kind of keyword as attribute: " + uri);
+						let snippet = propertyItem.insertText as vscode.SnippetString;
+						assert.strictEqual(snippet.value, "includeIn=\"$0\"", "vscode.executeCompletionItemProvider failed to provide correct insert text for keyword as attribute: " + uri);
+					}, (err) =>
+					{
+						assert(false, "Failed to execute completion item provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeCompletionItemProvider omits excludeFrom as attribute of <fx:Declarations>", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "MXMLCompletion.mxml"));
+		let position = new vscode.Position(28, 21);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
+				.then((list: vscode.CompletionList) =>
+					{
+						let items = list.items;
+						let propertyItem = findCompletionItem("excludeFrom", items);
+						assert.equal(propertyItem, null, "vscode.executeCompletionItemProvider failed to omit keyword as attribute: " + uri);
+					}, (err) =>
+					{
+						assert(false, "Failed to execute completion item provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeCompletionItemProvider includes excludeFrom as attribute of <fx:Object>", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "MXMLCompletion.mxml"));
+		let position = new vscode.Position(29, 15);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
+				.then((list: vscode.CompletionList) =>
+					{
+						let items = list.items;
+						let propertyItem = findCompletionItem("excludeFrom", items);
+						assert.notEqual(propertyItem, null, "vscode.executeCompletionItemProvider failed to include keyword as attribute: " + uri);
+						assert.strictEqual(propertyItem.kind, vscode.CompletionItemKind.Keyword, "vscode.executeCompletionItemProvider failed to provide correct kind of keyword as attribute: " + uri);
+						let snippet = propertyItem.insertText as vscode.SnippetString;
+						assert.strictEqual(snippet.value, "excludeFrom=\"$0\"", "vscode.executeCompletionItemProvider failed to provide correct insert text for keyword as attribute: " + uri);
+					}, (err) =>
+					{
+						assert(false, "Failed to execute completion item provider: " + uri);
+					});
+		});
+	});
 });
 
 suite("imports", () =>

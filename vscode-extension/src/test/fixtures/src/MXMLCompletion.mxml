@@ -26,4 +26,6 @@
     </js:View>
     
     <!-- don't remove the previous empty line -->
+    <fx:Declarations />
+    <fx:Object />
 </js:View>
