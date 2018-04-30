@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.io.Reader;
 import java.io.StringReader;
-import java.lang.reflect.Field;
 import java.net.URI;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
@@ -65,7 +64,6 @@ import org.apache.royale.compiler.constants.IASKeywordConstants;
 import org.apache.royale.compiler.constants.IASLanguageConstants;
 import org.apache.royale.compiler.constants.IMXMLCoreConstants;
 import org.apache.royale.compiler.constants.IMetaAttributeConstants;
-import org.apache.royale.compiler.definitions.IAccessorDefinition;
 import org.apache.royale.compiler.definitions.IClassDefinition;
 import org.apache.royale.compiler.definitions.IConstantDefinition;
 import org.apache.royale.compiler.definitions.IDefinition;
@@ -80,7 +78,6 @@ import org.apache.royale.compiler.definitions.ISetterDefinition;
 import org.apache.royale.compiler.definitions.IStyleDefinition;
 import org.apache.royale.compiler.definitions.ITypeDefinition;
 import org.apache.royale.compiler.definitions.IVariableDefinition;
-import org.apache.royale.compiler.definitions.IVariableDefinition.VariableClassification;
 import org.apache.royale.compiler.definitions.metadata.IMetaTag;
 import org.apache.royale.compiler.driver.IBackend;
 import org.apache.royale.compiler.filespecs.IFileSpecification;
@@ -113,7 +110,6 @@ import org.apache.royale.compiler.mxml.IMXMLTagAttributeData;
 import org.apache.royale.compiler.mxml.IMXMLTagData;
 import org.apache.royale.compiler.mxml.IMXMLTextData;
 import org.apache.royale.compiler.mxml.IMXMLUnitData;
-import org.apache.royale.compiler.problems.FontEmbeddingNotSupported;
 import org.apache.royale.compiler.problems.ICompilerProblem;
 import org.apache.royale.compiler.scopes.IASScope;
 import org.apache.royale.compiler.targets.ITarget;
@@ -171,7 +167,9 @@ import com.nextgenactionscript.vscode.project.VSCodeConfiguration;
 import com.nextgenactionscript.vscode.services.ActionScriptLanguageClient;
 import com.nextgenactionscript.vscode.utils.ASTUtils;
 import com.nextgenactionscript.vscode.utils.ActionScriptSDKUtils;
+import com.nextgenactionscript.vscode.utils.CodeActionsUtils;
 import com.nextgenactionscript.vscode.utils.CodeGenerationUtils;
+import com.nextgenactionscript.vscode.utils.CompilerProblemFilter;
 import com.nextgenactionscript.vscode.utils.DefinitionDocumentationUtils;
 import com.nextgenactionscript.vscode.utils.DefinitionTextUtils;
 import com.nextgenactionscript.vscode.utils.ImportRange;
@@ -182,7 +180,9 @@ import com.nextgenactionscript.vscode.utils.MXMLDataUtils;
 import com.nextgenactionscript.vscode.utils.MXMLNamespace;
 import com.nextgenactionscript.vscode.utils.MXMLNamespaceUtils;
 import com.nextgenactionscript.vscode.utils.ProblemTracker;
+import com.nextgenactionscript.vscode.utils.RealTimeProblemAnalyzer;
 import com.nextgenactionscript.vscode.utils.SourcePathUtils;
+import com.nextgenactionscript.vscode.utils.CodeActionsUtils.CommandAndRange;
 import com.nextgenactionscript.vscode.utils.DefinitionTextUtils.DefinitionAsText;
 
 import org.eclipse.lsp4j.ApplyWorkspaceEditParams;
@@ -271,7 +271,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private String oldFrameworkSDKPath;
     private Path workspaceRoot;
     private Map<Path, String> sourceByPath = new HashMap<>();
-    private Map<Path, List<SavedCodeAction>> codeActionsByPath = new HashMap<>();
     private List<String> completionTypes = new ArrayList<>();
     private Collection<ICompilationUnit> compilationUnits;
     private ArrayList<IInvisibleCompilationUnit> invisibleUnits = new ArrayList<>();
@@ -285,7 +284,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private int namespaceEndIndex = -1;
     private String namespaceUri;
     private LanguageServerFileSpecGetter fileSpecGetter;
-    private boolean frameworkSDKContainsFalconCompiler = false;
     private boolean frameworkSDKContainsSparkTheme = false;
     private boolean frameworkSDKIsRoyale = false;
     private boolean frameworkSDKIsFlexJS = false;
@@ -298,18 +296,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private ClientCapabilities clientCapabilities;
     private boolean completionSupportsSnippets = false;
     private CompilerShell compilerShell;
-
-    private class SavedCodeAction
-    {
-        public SavedCodeAction(Command command, Range range)
-        {
-            this.command = command;
-            this.range = range;
-        }
-        
-        public Command command;
-        public Range range;
-    }
+    private Thread realTimeProblemAnalyzerThread;
+    private RealTimeProblemAnalyzer realTimeProblemAnalyzer = new RealTimeProblemAnalyzer();
+    private CompilerProblemFilter compilerProblemFilter = new CompilerProblemFilter();
 
     public ActionScriptTextDocumentService()
     {
@@ -825,16 +814,34 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 }
             }
         }
-        if (codeActionsByPath.containsKey(path))
+        ICompilationUnit unit = getCompilationUnit(path);
+        if (unit != null)
         {
-            List<SavedCodeAction> codeActionsForPath = codeActionsByPath.get(path);
-            for (SavedCodeAction codeAction : codeActionsForPath)
+            IASNode ast = null;
+            try
             {
-                Range savedRange = codeAction.range;
-                Range paramRange = params.getRange();
-                if (LSPUtils.rangesIntersect(savedRange, paramRange))
+                ast = unit.getSyntaxTreeRequest().get().getAST();
+            }
+            catch(Exception e)
+            {
+
+            }
+            if (ast != null)
+            {
+                List<CommandAndRange> codeActions = new ArrayList<>();
+                String fileText = sourceByPath.get(path);
+                CodeActionsUtils.findCodeActions(ast, currentProject, path, fileText, codeActions);
+                if (codeActions != null)
                 {
-                    commands.add(codeAction.command);
+                    for (CommandAndRange codeAction : codeActions)
+                    {
+                        Range savedRange = codeAction.range;
+                        Range paramRange = params.getRange();
+                        if (LSPUtils.rangesIntersect(savedRange, paramRange))
+                        {
+                            commands.add(codeAction.command);
+                        }
+                    }
                 }
             }
         }
@@ -1162,7 +1169,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             String text = textDocument.getText();
             sourceByPath.put(path, text);
-            codeActionsByPath.put(path, new ArrayList<>());
 
             if (currentWorkspace != null)
             {
@@ -1173,7 +1179,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             //we need to check for problems when opening a new file because it
             //may not have been in the workspace before.
-            checkFilePathForProblems(path, false);
+            checkFilePathForProblems(path);
         }
     }
 
@@ -1210,13 +1216,42 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             if (currentWorkspace != null)
             {
-                IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(path.toAbsolutePath().toString());
-                currentWorkspace.fileChanged(fileSpec);
+                if(realTimeProblemAnalyzer.getCompilationUnit() != null)
+                {
+                    //if the compilation unit is already being analyzed for
+                    //problems, set a flag to indicate that it has changed so
+                    //that the analyzer can update after the current pass.
+                    realTimeProblemAnalyzer.setFileChangedPending(true);
+                }
+                else
+                {
+                    IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(path.toAbsolutePath().toString());
+                    currentWorkspace.fileChanged(fileSpec);
+                }
             }
             //we do a quick check of the current file on change for better
             //performance while typing. we'll do a full check when we save the
             //file later
-            checkFilePathForProblems(path, true);
+            currentProject = getProject();
+            realTimeProblemAnalyzer.setProject(currentProject);
+            if (!SourcePathUtils.isInProjectSourcePath(path, currentProject))
+            {
+                realTimeProblemAnalyzer.setCompilationUnit(null);
+                realTimeProblemAnalyzer.setFileSpecification(null);
+                publishDiagnosticForFileOutsideSourcePath(path);
+                return;
+            }
+            ICompilationUnit unit = getCompilationUnit(path);
+            IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(path.toAbsolutePath().toString());
+            realTimeProblemAnalyzer.languageClient = languageClient;
+            realTimeProblemAnalyzer.compilerProblemFilter = compilerProblemFilter;
+            realTimeProblemAnalyzer.setCompilationUnit(unit);
+            realTimeProblemAnalyzer.setFileSpecification(fileSpec);
+            if (realTimeProblemAnalyzerThread == null || !realTimeProblemAnalyzerThread.isAlive())
+            {
+                realTimeProblemAnalyzerThread = new Thread(realTimeProblemAnalyzer);
+                realTimeProblemAnalyzerThread.start();
+            }
         }
     }
 
@@ -1252,7 +1287,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 }
             }
             sourceByPath.remove(path);
-            codeActionsByPath.remove(path);
         }
     }
 
@@ -1311,7 +1345,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 {
                     IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(file.getAbsolutePath());
                     currentWorkspace.fileChanged(fileSpec);
-                    checkFilePathForProblems(path, false);
+                    checkFilePathForProblems(path);
                 }
             }
             else if (event.getType().equals(FileChangeType.Deleted))
@@ -1379,7 +1413,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         //ignore certain errors from the editor SDK, which includes Falcon.
         Path sdkPath = Paths.get(frameworkSDKPath);
         sdkPath = sdkPath.resolve("../lib/falcon-mxmlc.jar");
-        frameworkSDKContainsFalconCompiler = sdkPath.toFile().exists();
+        compilerProblemFilter.royaleProblems = sdkPath.toFile().exists();
 
         sdkPath = Paths.get(System.getProperty(PROPERTY_FRAMEWORK_LIB));
         frameworkSDKIsRoyale = ActionScriptSDKUtils.isRoyaleFramework(sdkPath);
@@ -1529,8 +1563,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         currentProjectOptions = projectConfigStrategy.getOptions();
         if (currentProjectOptions == null)
         {
+            compilerProblemFilter.warnings = true;
             return;
         }
+        compilerProblemFilter.warnings = currentProjectOptions.warnings;
         prepareNewProject();
     }
 
@@ -4424,52 +4460,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private void addCompilerProblem(ICompilerProblem problem, PublishDiagnosticsParams publish)
     {
-        if (!frameworkSDKContainsFalconCompiler)
+        if (!compilerProblemFilter.isAllowed(problem))
         {
-            //the following errors get special treatment if the framework SDK's
-            //compiler isn't Falcon
-
-            if (problem.getClass().equals(FontEmbeddingNotSupported.class))
-            {
-                //ignore this error because the framework SDK can embed fonts
-                return;
-            }
-        }
-
-        DiagnosticSeverity severity = LanguageServerCompilerUtils.getDiagnosticSeverityFromCompilerProblem(problem);
-
-        if (currentProjectOptions != null
-                && !currentProjectOptions.warnings
-                && severity.equals(DiagnosticSeverity.Warning))
-        {
-            //if warnings are disabled, and this problem is a warning, we should
-            //ignore it.
             return;
         }
-        Diagnostic diagnostic = new Diagnostic();
-        diagnostic.setSeverity(severity);
-
-        Range range = LanguageServerCompilerUtils.getRangeFromSourceLocation(problem);
-        if (range == null)
-        {
-            //fall back to an empty range
-            range = new Range(new Position(), new Position());
-        }
-        diagnostic.setRange(range);
-
-        diagnostic.setMessage(problem.toString());
-
-        try
-        {
-            Field field = problem.getClass().getDeclaredField("errorCode");
-            int errorCode = (int) field.get(problem);
-            diagnostic.setCode(Integer.toString(errorCode));
-        }
-        catch (Exception e)
-        {
-            //skip it
-        }
-
+        Diagnostic diagnostic = LanguageServerCompilerUtils.getDiagnosticFromCompilerProblem(problem);
         List<Diagnostic> diagnostics = publish.getDiagnostics();
         diagnostics.add(diagnostic);
     }
@@ -5000,7 +4995,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 //it doesn't matter which file we pick here because we're
                 //doing a full build
                 Path path = filePaths.iterator().next();
-                checkFilePathForProblems(path, false);
+                checkFilePathForProblems(path);
             }
         }
         else //app
@@ -5008,12 +5003,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             Path path = getMainCompilationUnitPath();
             if (path != null)
             {
-                checkFilePathForProblems(path, false);
+                checkFilePathForProblems(path);
             }
         }
     }
 
-    private void checkFilePathForProblems(Path path, Boolean quick)
+    private void checkFilePathForProblems(Path path)
     {
         currentUnit = null;
 
@@ -5024,7 +5019,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             publishDiagnosticForFileOutsideSourcePath(path);
             return;
         }
-        if (!checkFilePathForAllProblems(path, quick))
+        if (!checkFilePathForAllProblems(path))
         {
             checkFilePathForSyntaxProblems(path);
         }
@@ -5050,7 +5045,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
     }
 
-    private boolean checkFilePathForAllProblems(Path path, Boolean quick)
+    private boolean checkFilePathForAllProblems(Path path)
     {
         ICompilationUnit mainUnit = getCompilationUnit(path);
         if (mainUnit == null)
@@ -5081,62 +5076,39 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             return true;
         }
-        IASNode ast = null;
-        try
-        {
-            ast = mainUnit.getSyntaxTreeRequest().get().getAST();
-        }
-        catch (Exception e)
-        {
-            System.err.println("Exception during build: " + e);
-            return false;
-        }
-        if (ast == null)
-        {
-            return false;
-        }
         Map<URI, PublishDiagnosticsParams> files = new HashMap<>();
         try
         {
-            if (quick)
+            boolean continueCheckingForErrors = true;
+            while (continueCheckingForErrors)
             {
-                PublishDiagnosticsParams params = checkCompilationUnitForAllProblems(mainUnit);
-                URI uri = Paths.get(mainUnit.getAbsoluteFilename()).toUri();
-                files.put(uri, params);
-            }
-            else
-            {
-                boolean continueCheckingForErrors = true;
-                while (continueCheckingForErrors)
+                try
                 {
-                    try
+                    for (ICompilationUnit unit : compilationUnits)
                     {
-                        for (ICompilationUnit unit : compilationUnits)
+                        if (unit == null
+                                || unit instanceof SWCCompilationUnit
+                                || unit instanceof ResourceBundleCompilationUnit)
                         {
-                            if (unit == null
-                                    || unit instanceof SWCCompilationUnit
-                                    || unit instanceof ResourceBundleCompilationUnit)
-                            {
-                                //compiled compilation units won't have problems
-                                continue;
-                            }
-                            PublishDiagnosticsParams params = checkCompilationUnitForAllProblems(unit);
-                            URI uri = Paths.get(unit.getAbsoluteFilename()).toUri();
-                            files.put(uri, params);
+                            //compiled compilation units won't have problems
+                            continue;
                         }
-                        continueCheckingForErrors = false;
+                        PublishDiagnosticsParams params = checkCompilationUnitForAllProblems(unit);
+                        URI uri = Paths.get(unit.getAbsoluteFilename()).toUri();
+                        files.put(uri, params);
                     }
-                    catch (ConcurrentModificationException e)
-                    {
-                        //when we finished building one of the compilation
-                        //units, more were added to the collection, so we need
-                        //to start over because we can't iterate over a modified
-                        //collection.
-                    }
+                    continueCheckingForErrors = false;
                 }
-                //only clean up stale errors on a full check
-                codeProblemTracker.cleanUpStaleProblems();
+                catch (ConcurrentModificationException e)
+                {
+                    //when we finished building one of the compilation
+                    //units, more were added to the collection, so we need
+                    //to start over because we can't iterate over a modified
+                    //collection.
+                }
             }
+            //only clean up stale errors on a full check
+            codeProblemTracker.cleanUpStaleProblems();
         }
         catch (Exception e)
         {
@@ -5181,130 +5153,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             diagnostics.add(diagnostic);
         }
 
-        Path unitPath = Paths.get(uri);
-        if (sourceByPath.containsKey(unitPath) && codeActionsByPath.containsKey(unitPath))
-        {
-            IASNode ast = null;
-            try
-            {
-                ast = unit.getSyntaxTreeRequest().get().getAST();
-            }
-            catch (Exception e)
-            {
-                //do nothing
-            }
-            if (ast != null)
-            {
-                List<SavedCodeAction> codeActions = codeActionsByPath.get(unitPath);
-                codeActions.clear();
-                saveCodeActionsForLater(ast, unitPath, codeActions);
-            }
-        }
-
         return publish;
-    }
-
-    private void saveCodeActionsForLater(IASNode node, Path path, List<SavedCodeAction> codeActions)
-    {
-        if (node instanceof IVariableNode)
-        {
-            IVariableNode variableNode = (IVariableNode) node;
-            IExpressionNode expressionNode = variableNode.getNameExpressionNode();
-            IDefinition definition = expressionNode.resolve(currentProject);
-            if (definition instanceof IVariableDefinition
-                && !(definition instanceof IConstantDefinition)
-                && !(definition instanceof IAccessorDefinition))
-            {
-                //we want variables, but not constants or accessors
-                IVariableDefinition variableDefinition = (IVariableDefinition) definition;
-                if (variableDefinition.getVariableClassification().equals(VariableClassification.CLASS_MEMBER))
-                {
-                    createCommandsForGenerateGetterAndSetter(variableNode, path, codeActions);
-                }
-            }
-        }
-        if (node instanceof IFunctionNode)
-        {
-            //a member can't be the child of a function, so no need to continue
-            return;
-        }
-        for (int i = 0, childCount = node.getChildCount(); i < childCount; i++)
-        {
-            IASNode child = node.getChild(i);
-            saveCodeActionsForLater(child, path, codeActions);
-        }
-    }
-
-    private void createCommandsForGenerateGetterAndSetter(IVariableNode variableNode, Path path, List<SavedCodeAction> codeActions)
-    {
-        Range range = LanguageServerCompilerUtils.getRangeFromSourceLocation(variableNode);
-        IExpressionNode assignedValueNode = variableNode.getAssignedValueNode();
-        String assignedValue = null;
-        if (assignedValueNode != null)
-        {
-            int startIndex = assignedValueNode.getAbsoluteStart();
-            int endIndex = assignedValueNode.getAbsoluteEnd();
-            //if the variables value is assigned by [Embed] metadata, the
-            //assigned value node won't be null, but its start/end will be -1!
-            if (startIndex != -1 && endIndex != -1)
-            {
-                String source = sourceByPath.get(path);
-                assignedValue = source.substring(startIndex, endIndex);
-            }
-        }
-        Command generateGetterAndSetterCommand = new Command();
-        generateGetterAndSetterCommand.setTitle("Generate Getter and Setter");
-        generateGetterAndSetterCommand.setCommand(ICommandConstants.GENERATE_GETTER_AND_SETTER);
-        generateGetterAndSetterCommand.setArguments(Arrays.asList(
-            path.toUri().toString(),
-            range.getStart().getLine(),
-            range.getStart().getCharacter(),
-            range.getEnd().getLine(),
-            range.getEnd().getCharacter(),
-            variableNode.getName(),
-            variableNode.getNamespace(),
-            variableNode.hasModifier(ASModifier.STATIC),
-            variableNode.getVariableType(),
-            assignedValue
-        ));
-        SavedCodeAction getterSetterCodeAction = new SavedCodeAction(generateGetterAndSetterCommand, range);
-        codeActions.add(getterSetterCodeAction);
-        
-        Command generateGetterCommand = new Command();
-        generateGetterCommand.setTitle("Generate Getter");
-        generateGetterCommand.setCommand(ICommandConstants.GENERATE_GETTER);
-        generateGetterCommand.setArguments(Arrays.asList(
-            path.toUri().toString(),
-            range.getStart().getLine(),
-            range.getStart().getCharacter(),
-            range.getEnd().getLine(),
-            range.getEnd().getCharacter(),
-            variableNode.getName(),
-            variableNode.getNamespace(),
-            variableNode.hasModifier(ASModifier.STATIC),
-            variableNode.getVariableType(),
-            assignedValue
-        ));
-        SavedCodeAction getterCodeAction = new SavedCodeAction(generateGetterCommand, range);
-        codeActions.add(getterCodeAction);
-
-        Command generateSetterCommand = new Command();
-        generateSetterCommand.setTitle("Generate Setter");
-        generateSetterCommand.setCommand(ICommandConstants.GENERATE_SETTER);
-        generateSetterCommand.setArguments(Arrays.asList(
-            path.toUri().toString(),
-            range.getStart().getLine(),
-            range.getStart().getCharacter(),
-            range.getEnd().getLine(),
-            range.getEnd().getCharacter(),
-            variableNode.getName(),
-            variableNode.getNamespace(),
-            variableNode.hasModifier(ASModifier.STATIC),
-            variableNode.getVariableType(),
-            assignedValue
-        ));
-        SavedCodeAction setterCodeAction = new SavedCodeAction(generateSetterCommand, range);
-        codeActions.add(setterCodeAction);
     }
 
     private Reader getReaderForPath(Path path)

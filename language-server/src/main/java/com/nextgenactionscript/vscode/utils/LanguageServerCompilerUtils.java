@@ -17,6 +17,7 @@ package com.nextgenactionscript.vscode.utils;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.lang.reflect.Field;
 import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -34,6 +35,7 @@ import org.apache.royale.compiler.definitions.IVariableDefinition;
 import org.apache.royale.compiler.problems.CompilerProblemSeverity;
 import org.apache.royale.compiler.problems.ICompilerProblem;
 import org.eclipse.lsp4j.CompletionItemKind;
+import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Position;
@@ -306,5 +308,35 @@ public class LanguageServerCompilerUtils
             }
         }
         return CompletionItemKind.Value;
+    }
+
+    public static Diagnostic getDiagnosticFromCompilerProblem(ICompilerProblem problem)
+    {
+        Diagnostic diagnostic = new Diagnostic();
+
+        DiagnosticSeverity severity = LanguageServerCompilerUtils.getDiagnosticSeverityFromCompilerProblem(problem);
+        diagnostic.setSeverity(severity);
+
+        Range range = LanguageServerCompilerUtils.getRangeFromSourceLocation(problem);
+        if (range == null)
+        {
+            //fall back to an empty range
+            range = new Range(new Position(), new Position());
+        }
+        diagnostic.setRange(range);
+
+        diagnostic.setMessage(problem.toString());
+
+        try
+        {
+            Field field = problem.getClass().getDeclaredField("errorCode");
+            int errorCode = (int) field.get(problem);
+            diagnostic.setCode(Integer.toString(errorCode));
+        }
+        catch (Exception e)
+        {
+            //skip it
+        }
+        return diagnostic;
     }
 }
