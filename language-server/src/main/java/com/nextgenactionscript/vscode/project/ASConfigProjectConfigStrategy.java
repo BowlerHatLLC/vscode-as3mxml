@@ -32,6 +32,7 @@ import com.nextgenactionscript.asconfigc.TopLevelFields;
 import com.nextgenactionscript.asconfigc.compiler.CompilerOptions;
 import com.nextgenactionscript.asconfigc.compiler.CompilerOptionsParser;
 import com.nextgenactionscript.asconfigc.compiler.ProjectType;
+import com.nextgenactionscript.asconfigc.compiler.CompilerOptionsParser.UnknownCompilerOptionException;
 import com.nextgenactionscript.vscode.utils.ActionScriptSDKUtils;
 
 import org.apache.commons.io.FileUtils;
@@ -197,6 +198,11 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy
             {
                 additionalOptions = json.get(TopLevelFields.ADDITIONAL_OPTIONS).asText();
             }
+        }
+        catch (UnknownCompilerOptionException e)
+        {
+            //there's a compiler option that the parser doesn't recognize
+            return null;
         }
         catch (Exception e)
         {

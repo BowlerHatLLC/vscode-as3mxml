@@ -24,11 +24,30 @@ import com.nextgenactionscript.asconfigc.utils.JsonUtils;
 
 public class CompilerOptionsParser
 {
+	public static class UnknownCompilerOptionException extends Exception
+	{
+		private static final long serialVersionUID = 1L;
+		private static final String MESSAGE = "Unknown compiler option: ";
+
+		public UnknownCompilerOptionException(String optionName)
+		{
+			super(MESSAGE + optionName + ".");
+			this.optionName = optionName;
+		}
+
+		private String optionName;
+
+		public String getOptionName()
+		{
+			return optionName;
+		}
+	}
+
 	public CompilerOptionsParser()
 	{
 	}
 
-	public void parse(JsonNode options, Boolean debugBuild, List<String> result)
+	public void parse(JsonNode options, Boolean debugBuild, List<String> result) throws UnknownCompilerOptionException
 	{
 		Iterator<String> iterator = options.fieldNames();
 		while(iterator.hasNext())
@@ -297,7 +316,7 @@ public class CompilerOptionsParser
 				}
 				default:
 				{
-					throw new Error("Unknown compiler option: " + key);
+					throw new UnknownCompilerOptionException(key);
 				}
 			}
 		}
