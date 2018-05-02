@@ -42,6 +42,7 @@ import org.apache.commons.io.FileUtils;
  */
 public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy
 {
+    private static final String ASCONFIG_JSON = "asconfig.json";
     private static final String PROPERTY_FRAMEWORK_LIB = "royalelib";
     private static final String CONFIG_ROYALE = "royale";
     private static final String CONFIG_FLEX = "flex";
@@ -52,6 +53,11 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy
     public ASConfigProjectConfigStrategy()
     {
 
+    }
+
+    public String getDefaultConfigurationProblemPath()
+    {
+        return ASCONFIG_JSON;
     }
 
     public Path getASConfigPath()

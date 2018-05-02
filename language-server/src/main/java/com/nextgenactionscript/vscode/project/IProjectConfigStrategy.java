@@ -21,6 +21,11 @@ package com.nextgenactionscript.vscode.project;
 public interface IProjectConfigStrategy
 {
     /**
+     * If the compiler reports a problem without a file path, use this value.
+     */
+    String getDefaultConfigurationProblemPath();
+
+    /**
      * Indicates if the project configuration has changed.
      */
     boolean getChanged();

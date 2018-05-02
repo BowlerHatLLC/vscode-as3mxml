@@ -1234,7 +1234,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             //file later
             currentProject = getProject();
             realTimeProblemAnalyzer.setProject(currentProject);
-            if (!SourcePathUtils.isInProjectSourcePath(path, currentProject))
+            if (currentProject != null && !SourcePathUtils.isInProjectSourcePath(path, currentProject))
             {
                 realTimeProblemAnalyzer.setCompilationUnit(null);
                 realTimeProblemAnalyzer.setFileSpecification(null);
@@ -1310,6 +1310,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     {
         if(currentWorkspace == null)
         {
+            if (projectConfigStrategy.getChanged())
+            {
+                //check for problems because the config may have been invalid
+                //before, and now it might be valid
+                checkProjectForProblems();
+            }
             //safe to ignore
             return;
         }
@@ -4526,6 +4532,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             diagnostic.setSeverity(DiagnosticSeverity.Error);
             diagnostic.setMessage("File not found: " + path.toAbsolutePath().toString() + ". Error checking disabled.");
         }
+        else if (parser == null && currentProjectOptions == null)
+        {
+            //we couldn't load the project configuration and we couldn't parse
+            //the file. we can't provide any information here.
+            diagnostic.setSeverity(DiagnosticSeverity.Error);
+            diagnostic.setMessage("Failed to load project configuration options. Error checking disabled.");
+        }
         else if (parser == null)
         {
             //something terrible happened, and this is the best we can do
@@ -4535,14 +4548,15 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         else if (currentProjectOptions == null)
         {
             //something went wrong while attempting to load and parse the
-            //project configuration.
+            //project configuration, but we could successfully parse the syntax
+            //tree.
             diagnostic.setMessage("Failed to load project configuration options. Error checking disabled, except for simple syntax problems.");
         }
         else
         {
-            //we loaded and parsed the project configuration, so something went
-            //wrong while checking for errors.
-            diagnostic.setMessage("A fatal error occurred while checking for errors. Error checking disabled, except for simple syntax problems.");
+            //we seem to have loaded the project configuration and we could
+            //parse the file, but something still went wrong.
+            diagnostic.setMessage("A fatal error occurred. Error checking disabled, except for simple syntax problems.");
         }
 
         diagnostics.add(diagnostic);
@@ -4763,7 +4777,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     //since we're processing configuration problems, the best
                     //default location to send the user is probably to the
                     //asconfig.json file.
-                    problemSourcePath = "asconfig.json";
+                    problemSourcePath = projectConfigStrategy.getDefaultConfigurationProblemPath();
                 }
                 URI uri = Paths.get(problemSourcePath).toUri();
                 configProblemTracker.trackFileWithProblems(uri);
@@ -5014,7 +5028,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
         //if we haven't accessed a compilation unit yet, the project may be null
         currentProject = getProject();
-        if (!SourcePathUtils.isInProjectSourcePath(path, currentProject))
+        if (currentProject != null && !SourcePathUtils.isInProjectSourcePath(path, currentProject))
         {
             publishDiagnosticForFileOutsideSourcePath(path);
             return;
