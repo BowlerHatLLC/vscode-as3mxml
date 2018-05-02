@@ -50,6 +50,7 @@
 		{
 			"type": "object",
 			"description": "Options for code signing an Adobe AIR application.",
+			"additionalProperties": false,
 			"properties":
 			{
 				"alias":
@@ -87,8 +88,14 @@
 		},
 		"dualSigningOptions":
 		{
-			"debug": { "$ref": "#/definitions/singleSigningOptions" },
-			"release": { "$ref": "#/definitions/singleSigningOptions" },
+			"type": "object",
+			"description": "Options for code signing an Adobe AIR application.",
+			"additionalProperties": false,
+			"properties":
+			{
+				"debug": { "$ref": "#/definitions/singleSigningOptions" },
+				"release": { "$ref": "#/definitions/singleSigningOptions" }
+			},
 			"required":
 			[
 				"debug",
@@ -151,6 +158,7 @@
 			"items":
 			{
 				"type": "object",
+				"additionalProperties": false,
 				"properties":
 				{
 					"file":
@@ -190,6 +198,7 @@
 		{
 			"type": "object",
 			"description": "Instructs the ADT utility how to package the Adobe AIR application.",
+			"additionalProperties": false,
 			"properties":
 			{
 				"extdir": { "$ref": "#/definitions/airOptionsExtdir" },
@@ -199,6 +208,7 @@
 				"ios":
 				{
 					"type": "object",
+					"additionalProperties": false,
 					"properties":
 					{
 						"embedBitcode": { "$ref": "#/definitions/airOptionsEmbedBitcode" },
@@ -226,6 +236,7 @@
 				"ios_simulator":
 				{
 					"type": "object",
+					"additionalProperties": false,
 					"properties":
 					{
 						"embedBitcode": { "$ref": "#/definitions/airOptionsEmbedBitcode" },
@@ -253,6 +264,7 @@
 				"android":
 				{
 					"type": "object",
+					"additionalProperties": false,
 					"properties":
 					{
 						"arch":
@@ -288,6 +300,7 @@
 				"windows":
 				{
 					"type": "object",
+					"additionalProperties": false,
 					"properties":
 					{
 						"extdir": { "$ref": "#/definitions/airOptionsExtdir" },
@@ -300,6 +313,7 @@
 				"mac":
 				{
 					"type": "object",
+					"additionalProperties": false,
 					"properties":
 					{
 						"extdir": { "$ref": "#/definitions/airOptionsExtdir" },
@@ -320,6 +334,7 @@
 		{
 			"type": "object",
 			"description": "Instructs the ActionScript and MXML compiler how to build the project.",
+			"additionalProperties": false,
 			"properties":
 			{
 				"accessible":
@@ -357,6 +372,7 @@
 				{
 					"type": "object",
 					"description": "In a SWF project, defines the default application size, in pixels.",
+					"additionalProperties": false,
 					"properties":
 					{
 						"width":
@@ -385,6 +401,7 @@
 					"items":
 					{
 						"type": "object",
+						"additionalProperties": false,
 						"properties":
 						{
 							"name":
@@ -559,6 +576,7 @@
 					"items":
 					{
 						"type": "object",
+						"additionalProperties": false,
 						"properties":
 						{
 							"uri":
