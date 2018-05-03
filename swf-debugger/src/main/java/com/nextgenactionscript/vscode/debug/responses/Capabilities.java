@@ -113,4 +113,9 @@ public class Capabilities extends Response.ResponseBody
      * The debug adapter supports the exceptionInfo request.
      */
     public boolean supportsExceptionInfoRequest;
+
+    /**
+     * The debug adapter supports logpoints by interpreting the 'logMessage' attribute of the SourceBreakpoint.
+     */
+    public boolean supportsLogPoints;
 }

@@ -83,6 +83,7 @@ import flash.tools.debugger.SwfInfo;
 import flash.tools.debugger.Value;
 import flash.tools.debugger.VariableType;
 import flash.tools.debugger.VersionException;
+import flash.tools.debugger.events.BreakEvent;
 import flash.tools.debugger.events.DebugEvent;
 import flash.tools.debugger.events.ExceptionFault;
 import flash.tools.debugger.events.FaultEvent;
@@ -111,6 +112,19 @@ public class SWFDebugSession extends DebugSession
     private Path flexHome;
     private Path adlPath;
     private Map<String,SourceBreakpoint[]> pendingBreakpoints;
+    private List<LogLocation> savedLogLocations = new ArrayList<>();
+
+    private class LogLocation
+    {
+        public LogLocation(Location location, String logMessage)
+        {
+            this.location = location;
+            this.logMessage = logMessage;
+        }
+
+        public Location location;
+        public String logMessage;
+    }
 
     private class SessionRunner implements Runnable
     {
@@ -130,6 +144,7 @@ public class SWFDebugSession extends DebugSession
                 }
                 try
                 {
+                    boolean logPoint = false;
                     while (swfSession.getEventCount() > 0)
                     {
                         DebugEvent event = swfSession.nextEvent();
@@ -168,6 +183,24 @@ public class SWFDebugSession extends DebugSession
                             sendEvent(new OutputEvent(body));
                             previousFaultEvent = faultEvent;
                         }
+                        else if (event instanceof BreakEvent)
+                        {
+                            BreakEvent breakEvent = (BreakEvent) event;
+                            for(LogLocation logLocation : savedLogLocations)
+                            {
+                                Location location = logLocation.location;
+                                if(breakEvent.fileId == location.getFile().getId()
+                                        && breakEvent.line == location.getLine())
+                                {
+                                    OutputEvent.OutputBody body = new OutputEvent.OutputBody();
+                                    populateLocationInOutputBody(body);
+                                    body.output = logLocation.logMessage;
+                                    sendEvent(new OutputEvent(body));
+                                    logPoint = true;
+                                    break;
+                                }
+                            }
+                        }
                     }
                     while (swfSession.isSuspended() && !waitingForResume)
                     {
@@ -191,8 +224,17 @@ public class SWFDebugSession extends DebugSession
                             }
                             case SuspendReason.Breakpoint:
                             {
-                                body = new StoppedEvent.StoppedBody();
-                                body.reason = StoppedEvent.REASON_BREAKPOINT;
+                                if(logPoint)
+                                {
+                                    //if it was a logpoint, then resume
+                                    //immediately because we should not stop
+                                    swfSession.resume();
+                                }
+                                else
+                                {
+                                    body = new StoppedEvent.StoppedBody();
+                                    body.reason = StoppedEvent.REASON_BREAKPOINT;
+                                }
                                 break;
                             }
                             case SuspendReason.StopRequest:
@@ -301,6 +343,7 @@ public class SWFDebugSession extends DebugSession
 
         Capabilities capabilities = new Capabilities();
         capabilities.supportsExceptionInfoRequest = true;
+        capabilities.supportsLogPoints = true;
         sendResponse(response, capabilities);
     }
 
@@ -668,6 +711,7 @@ public class SWFDebugSession extends DebugSession
                     swfSession.clearBreakpoint(location);
                 }
             }
+            savedLogLocations.clear();
         }
         catch (NoResponseException e)
         {
@@ -702,6 +746,11 @@ public class SWFDebugSession extends DebugSession
                         //use the one returned by the location
                         responseBreakpoint.line = breakpointLocation.getLine();
                         responseBreakpoint.verified = true;
+                        String logMessage = sourceBreakpoint.logMessage;
+                        if(logMessage != null)
+                        {
+                            savedLogLocations.add(new LogLocation(breakpointLocation, logMessage));
+                        }
                     }
                     else
                     {

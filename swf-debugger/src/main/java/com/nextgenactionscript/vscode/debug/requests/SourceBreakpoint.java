@@ -21,4 +21,5 @@ public class SourceBreakpoint
     public int column;
     public String condition;
     public String hitCondition;
+    public String logMessage;
 }
