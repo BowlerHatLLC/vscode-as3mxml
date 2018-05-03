@@ -1,4 +1,4 @@
-# ActionScript & MXML extension for Visual Studio Code by NextGen ActionScript
+# ActionScript & MXML extension for Visual Studio Code
 
 ## Features
 

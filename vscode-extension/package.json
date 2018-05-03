@@ -1,10 +1,10 @@
 {
   "name": "vscode-nextgenas",
   "displayName": "ActionScript & MXML",
-  "description": "Language support for ActionScript and MXML provided by NextGen ActionScript",
+  "description": "Language support for ActionScript and MXML",
   "version": "0.12.0-SNAPSHOT",
   "publisher": "bowlerhatllc",
-  "homepage": "http://nextgenactionscript.com/vscode/",
+  "homepage": "http://as3mxml.com/",
   "repository": {
     "type": "git",
     "url": "https://github.com/BowlerHatLLC/vscode-nextgenas.git"
