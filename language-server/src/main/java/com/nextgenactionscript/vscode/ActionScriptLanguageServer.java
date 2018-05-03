@@ -181,7 +181,7 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
     @Override
     public void exit()
     {
-        //not used at this time
+        System.exit(0);
     }
 
     /**
