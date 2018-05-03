@@ -5852,7 +5852,7 @@ suite("MXML completion item provider", () =>
 						let items = list.items;
 						let eventItem = findCompletionItem("click", items);
 						assert.notEqual(eventItem, null, "vscode.executeCompletionItemProvider failed to provide event as attribute: " + uri);
-						assert.strictEqual(eventItem.kind, vscode.CompletionItemKind.Field, "vscode.executeCompletionItemProvider failed to provide correct kind of event: " + uri);
+						assert.strictEqual(eventItem.kind, vscode.CompletionItemKind.Event, "vscode.executeCompletionItemProvider failed to provide correct kind of event: " + uri);
 						let snippet = eventItem.insertText as vscode.SnippetString;
 						assert.strictEqual(snippet.value, "click=\"$0\"", "vscode.executeCompletionItemProvider failed to provide correct insert text for event as attribute: " + uri);
 					}, (err) =>
@@ -5873,7 +5873,7 @@ suite("MXML completion item provider", () =>
 						let items = list.items;
 						let eventItem = findCompletionItem("click", items);
 						assert.notEqual(eventItem, null, "vscode.executeCompletionItemProvider failed to provide event as child element: " + uri);
-						assert.strictEqual(eventItem.kind, vscode.CompletionItemKind.Field, "vscode.executeCompletionItemProvider failed to provide correct kind of event: " + uri);
+						assert.strictEqual(eventItem.kind, vscode.CompletionItemKind.Event, "vscode.executeCompletionItemProvider failed to provide correct kind of event: " + uri);
 						let snippet = eventItem.insertText as vscode.SnippetString;
 						assert.strictEqual(snippet.value, "js:click>$0</js:click>", "vscode.executeCompletionItemProvider failed to provide correct insert text for event as child element: " + uri);
 					}, (err) =>
@@ -5894,7 +5894,7 @@ suite("MXML completion item provider", () =>
 						let items = list.items;
 						let eventItem = findCompletionItem("click", items);
 						assert.notEqual(eventItem, null, "vscode.executeCompletionItemProvider failed to provide event as child element: " + uri);
-						assert.strictEqual(eventItem.kind, vscode.CompletionItemKind.Field, "vscode.executeCompletionItemProvider failed to provide correct kind of event: " + uri);
+						assert.strictEqual(eventItem.kind, vscode.CompletionItemKind.Event, "vscode.executeCompletionItemProvider failed to provide correct kind of event: " + uri);
 						let snippet = eventItem.insertText as vscode.SnippetString;
 						assert.strictEqual(snippet.value, "<js:click>$0</js:click>", "vscode.executeCompletionItemProvider failed to provide correct insert text for event as child element: " + uri);
 					}, (err) =>

@@ -3682,7 +3682,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     continue;
                 }
                 CompletionItem item = new CompletionItem();
-                item.setKind(CompletionItemKind.Field);
+                item.setKind(CompletionItemKind.Event);
                 item.setLabel(eventName);
                 if (isAttribute && completionSupportsSnippets)
                 {
