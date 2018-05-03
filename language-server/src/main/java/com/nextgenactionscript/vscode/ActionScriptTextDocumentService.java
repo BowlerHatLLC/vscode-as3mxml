@@ -194,6 +194,7 @@ import org.eclipse.lsp4j.Command;
 import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.CompletionItemKind;
 import org.eclipse.lsp4j.CompletionList;
+import org.eclipse.lsp4j.CompletionParams;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.eclipse.lsp4j.DidChangeTextDocumentParams;
@@ -354,12 +355,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
      * user types, and may not necessarily be triggered only on "." or ":".
      */
     @Override
-    public CompletableFuture<Either<List<CompletionItem>, CompletionList>> completion(TextDocumentPositionParams position)
+    public CompletableFuture<Either<List<CompletionItem>, CompletionList>> completion(CompletionParams params)
     {
         //this shouldn't be necessary, but if we ever forget to do this
         //somewhere, completion results might be missing items.
         completionTypes.clear();
-        String textDocumentUri = position.getTextDocument().getUri();
+        String textDocumentUri = params.getTextDocument().getUri();
         if (!textDocumentUri.endsWith(AS_EXTENSION)
                 && !textDocumentUri.endsWith(MXML_EXTENSION))
         {
@@ -368,13 +369,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             result.setItems(new ArrayList<>());
             return CompletableFuture.completedFuture(Either.forRight(result));
         }
-        IMXMLTagData offsetTag = getOffsetMXMLTag(position);
+        IMXMLTagData offsetTag = getOffsetMXMLTag(params);
         if (offsetTag != null)
         {
-            IASNode embeddedNode = getEmbeddedActionScriptNodeInMXMLTag(offsetTag, currentOffset, position);
+            IASNode embeddedNode = getEmbeddedActionScriptNodeInMXMLTag(offsetTag, currentOffset, params);
             if (embeddedNode != null)
             {
-                CompletionList result = actionScriptCompletionWithNode(position, embeddedNode);
+                CompletionList result = actionScriptCompletionWithNode(params, embeddedNode);
                 completionTypes.clear();
                 return CompletableFuture.completedFuture(Either.forRight(result));
             }
@@ -382,12 +383,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             //so that's why we call isMXMLTagValidForCompletion()
             if (MXMLDataUtils.isMXMLTagValidForCompletion(offsetTag))
             {
-                CompletionList result = mxmlCompletion(position, offsetTag);
+                CompletionList result = mxmlCompletion(params, offsetTag);
                 completionTypes.clear();
                 return CompletableFuture.completedFuture(Either.forRight(result));
             }
         }
-        if (offsetTag == null && position.getTextDocument().getUri().endsWith(MXML_EXTENSION))
+        if (offsetTag == null && params.getTextDocument().getUri().endsWith(MXML_EXTENSION))
         {
             //it's possible for the offset tag to be null in an MXML file, but
             //we don't want to trigger ActionScript completion.
@@ -399,7 +400,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             result.setItems(new ArrayList<>());
             return CompletableFuture.completedFuture(Either.forRight(result));
         }
-        CompletionList result = actionScriptCompletion(position);
+        CompletionList result = actionScriptCompletion(params);
         completionTypes.clear();
         return CompletableFuture.completedFuture(Either.forRight(result));
     }
@@ -1576,13 +1577,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         prepareNewProject();
     }
 
-    private CompletionList actionScriptCompletion(TextDocumentPositionParams position)
+    private CompletionList actionScriptCompletion(CompletionParams params)
     {
-        IASNode offsetNode = getOffsetNode(position);
-        return actionScriptCompletionWithNode(position, offsetNode);
+        IASNode offsetNode = getOffsetNode(params);
+        return actionScriptCompletionWithNode(params, offsetNode);
     }
 
-    private CompletionList actionScriptCompletionWithNode(TextDocumentPositionParams position, IASNode offsetNode)
+    private CompletionList actionScriptCompletionWithNode(CompletionParams params, IASNode offsetNode)
     {
         CompletionList result = new CompletionList();
         result.setIsIncomplete(false);
@@ -1599,7 +1600,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             nodeAtPreviousOffset = parentNode.getContainingNode(currentOffset - 1);
         }
 
-        if (!isActionScriptCompletionAllowedInNode(position, offsetNode))
+        if (!isActionScriptCompletionAllowedInNode(params, offsetNode))
         {
             //if we're inside a node that shouldn't have completion!
             return new CompletionList();
@@ -1613,8 +1614,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             IVariableNode variableNode = (IVariableNode) offsetNode;
             IExpressionNode nameExpression = variableNode.getNameExpressionNode();
             IExpressionNode typeNode = variableNode.getVariableTypeNode();
-            int line = position.getPosition().getLine();
-            int column = position.getPosition().getCharacter();
+            int line = params.getPosition().getLine();
+            int column = params.getPosition().getCharacter();
             if (line >= nameExpression.getEndLine() && line <= typeNode.getLine())
             {
                 if ((line != nameExpression.getEndLine() && line != typeNode.getLine())
@@ -1644,8 +1645,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             IExpressionNode typeNode = functionNode.getReturnTypeNode();
             if (typeNode != null)
             {
-                int line = position.getPosition().getLine();
-                int column = position.getPosition().getCharacter();
+                int line = params.getPosition().getLine();
+                int column = params.getPosition().getCharacter();
                 if (line >= parameters.getEndLine()
                         && column > parameters.getEndColumn()
                         && line <= typeNode.getLine()
@@ -1806,7 +1807,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             if (offsetNode == nameNode)
             {
                 String importName = importNode.getImportName();
-                importName = importName.substring(0, position.getPosition().getCharacter() - nameNode.getColumn());
+                importName = importName.substring(0, params.getPosition().getCharacter() - nameNode.getColumn());
                 autoCompleteImport(importName, result);
                 return result;
             }
@@ -1822,7 +1823,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 if (parentNode == nameNode)
                 {
                     String importName = importNode.getImportName();
-                    importName = importName.substring(0, position.getPosition().getCharacter() - nameNode.getColumn());
+                    importName = importName.substring(0, params.getPosition().getCharacter() - nameNode.getColumn());
                     autoCompleteImport(importName, result);
                     return result;
                 }
@@ -1841,8 +1842,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             IMemberAccessExpressionNode memberAccessNode = (IMemberAccessExpressionNode) offsetNode;
             IExpressionNode leftOperand = memberAccessNode.getLeftOperandNode();
             IExpressionNode rightOperand = memberAccessNode.getRightOperandNode();
-            int line = position.getPosition().getLine();
-            int column = position.getPosition().getCharacter();
+            int line = params.getPosition().getLine();
+            int column = params.getPosition().getCharacter();
             if (line >= leftOperand.getEndLine() && line <= rightOperand.getLine())
             {
                 if ((line != leftOperand.getEndLine() && line != rightOperand.getLine())
@@ -1959,12 +1960,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return result;
     }
 
-    private CompletionList mxmlCompletion(TextDocumentPositionParams position, IMXMLTagData offsetTag)
+    private CompletionList mxmlCompletion(CompletionParams params, IMXMLTagData offsetTag)
     {
         CompletionList result = new CompletionList();
         result.setIsIncomplete(false);
         result.setItems(new ArrayList<>());
-        if (isInXMLComment(position))
+        if (isInXMLComment(params))
         {
             //if we're inside a comment, no completion!
             return result;
