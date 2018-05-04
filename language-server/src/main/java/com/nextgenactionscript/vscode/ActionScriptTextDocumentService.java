@@ -327,6 +327,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         workspaceRoot = value;
         if (workspaceRoot != null)
         {
+            Path path = getMainCompilationUnitPath();
+            if (path != null)
+            {
+                notifyWorkspaceOfPathChange(path);
+            }
             checkProjectForProblems();
         }
     }
@@ -1171,13 +1176,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             String text = textDocument.getText();
             sourceByPath.put(path, text);
 
-            if (currentWorkspace != null)
-            {
-                //if the compiler was using the file system version, switch to
-                //the in-memory version
-                IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(path.toAbsolutePath().toString());
-                currentWorkspace.fileChanged(fileSpec);
-            }
+            notifyWorkspaceOfPathChange(path);
             //we need to check for problems when opening a new file because it
             //may not have been in the workspace before.
             checkFilePathForProblems(path);
@@ -5002,6 +5001,21 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         project.setTargetSettings(targetSettings);
         return project;
+    }
+
+    private void notifyWorkspaceOfPathChange(Path path)
+    {
+        //calling getCompilationUnit() makes sure that currentWorkspace is
+        //not null. somehow this call to fileChanged() ensures that function
+        //bodies are populated.
+        getCompilationUnit(path);
+        if (currentWorkspace != null)
+        {
+            //if the compiler was using the file system version, switch to
+            //the in-memory version
+            IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(path.toAbsolutePath().toString());
+            currentWorkspace.fileChanged(fileSpec);
+        }
     }
 
     private void checkProjectForProblems()
