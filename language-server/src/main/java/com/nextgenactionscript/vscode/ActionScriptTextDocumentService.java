@@ -5803,6 +5803,17 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return;
         }
+        boolean isOpen = sourceByPath.containsKey(pathForImport);
+        if(!isOpen)
+        {
+            //for some reason, the full AST is not populated if the file is not
+            //already open in the editor. we use a similar workaround to didOpen
+            //to force the AST to be populated.
+
+            //we'll clear this out later before we return from this function
+            sourceByPath.put(pathForImport, text);
+            notifyWorkspaceOfPathChange(pathForImport);
+        }
 
         Set<String> missingNames = null;
         Set<String> importsToAdd = null;
@@ -5825,6 +5836,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     importsToAdd.add(types.get(0).getQualifiedName());
                 }
             }
+        }
+        if(!isOpen)
+        {
+            //if the file wasn't open before, clear out this temporary text
+            sourceByPath.remove(pathForImport);
         }
         List<TextEdit> edits = ImportTextEditUtils.organizeImports(text, importsToRemove, importsToAdd);
         if(edits == null || edits.size() == 0)
