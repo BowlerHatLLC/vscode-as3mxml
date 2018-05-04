@@ -391,8 +391,8 @@ function startClient()
 			{
 				documentSelector:
 				[
-					"nextgenas",
-					"mxml",
+					{ scheme: "file", language: "nextgenas" },
+					{ scheme: "file", language: "mxml" },
 				],
 				synchronize:
 				{
