@@ -105,8 +105,8 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
         URI rootURI = URI.create(params.getRootUri());
         Path workspaceRoot = Paths.get(rootURI).toAbsolutePath().normalize();
         projectConfigStrategy.setASConfigPath(workspaceRoot.resolve(ASCONFIG_JSON));
-        textDocumentService.setWorkspaceRoot(workspaceRoot);
         textDocumentService.setClientCapabilities(params.getCapabilities());
+        textDocumentService.setWorkspaceRoot(workspaceRoot);
 
         InitializeResult result = new InitializeResult();
 

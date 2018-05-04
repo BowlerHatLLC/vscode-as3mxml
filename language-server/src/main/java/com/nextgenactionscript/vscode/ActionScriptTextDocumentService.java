@@ -1531,6 +1531,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return;
         }
+        boolean dynamicDidChangeWatchedFiles = clientCapabilities.getWorkspace().getDidChangeWatchedFiles().getDynamicRegistration();
         for (Path sourcePath : currentProjectOptions.sourcePaths)
         {
             try
@@ -1539,6 +1540,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             catch (IOException e)
             {
+            }
+            if(dynamicDidChangeWatchedFiles && sourcePath.startsWith(workspaceRoot))
+            {
+                //if we're already watching for changes in the workspace, avoid
+                //duplicates
+                continue;
             }
             watchNewSourcePath(sourcePath);
         }
