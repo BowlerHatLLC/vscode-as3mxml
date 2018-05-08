@@ -1962,7 +1962,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 //include all public definitions
                 IASScope scope = scopedNode.getScope();
                 IDefinition definitionToSkip = scope.getDefinition();
-                autoCompleteDefinitions(result, false, false, null, definitionToSkip, containingPackageName, false, null);
+                autoCompleteDefinitionsForActionScript(result, false, null, definitionToSkip, containingPackageName, false, null);
                 autoCompleteKeywords(scopedNode, result);
                 return result;
             }
@@ -2046,7 +2046,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             if (!isAttribute)
             {
-                autoCompleteTypesForMXML(tagsNeedOpenBracket, null, result);
+                autoCompleteDefinitionsForMXML(result, true, tagsNeedOpenBracket, null);
             }
             return result;
         }
@@ -2164,7 +2164,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     //if [DefaultProperty] is set, then we can instantiate
                     //types as child elements
                     //but we don't want to do that when in an attribute
-                    autoCompleteTypesForMXML(tagsNeedOpenBracket, typeFilter, result);
+                    autoCompleteDefinitionsForMXML(result, true, tagsNeedOpenBracket, typeFilter);
                 }
             }
             return result;
@@ -2176,7 +2176,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             if (!isAttribute)
             {
                 String typeFilter = DefinitionUtils.getMXMLChildElementTypeForDefinition(offsetDefinition, currentProject);
-                autoCompleteTypesForMXML(tagsNeedOpenBracket, typeFilter, result);
+                autoCompleteDefinitionsForMXML(result, true, tagsNeedOpenBracket, typeFilter);
             }
             return result;
         }
@@ -2663,12 +2663,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             node = node.getParent();
         }
         while (node != null);
-        autoCompleteDefinitions(result, false, true, null, null, containingPackageName, false, null);
-    }
-
-    private void autoCompleteTypesForMXML(boolean tagsNeedOpenBracket, String typeFilter, CompletionList result)
-    {
-        autoCompleteDefinitions(result, true, true, null, null, null, tagsNeedOpenBracket, typeFilter);
+        autoCompleteDefinitionsForActionScript(result, true, null, null, containingPackageName, false, null);
     }
 
     /**
@@ -2767,10 +2762,60 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
     }
 
-    private void autoCompleteDefinitions(CompletionList result, boolean forMXML,
-                                         boolean typesOnly, String requiredPackageName,
-                                         IDefinition definitionToSkip, String containingPackageName,
-                                         boolean tagsNeedOpenBracket, String typeFilter)
+    private void autoCompleteDefinitionsForMXML(CompletionList result, boolean typesOnly, boolean tagsNeedOpenBracket, String typeFilter)
+    {
+        for (ICompilationUnit unit : compilationUnits)
+        {
+            if (unit == null)
+            {
+                continue;
+            }
+            Collection<IDefinition> definitions = null;
+            try
+            {
+                definitions = unit.getFileScopeRequest().get().getExternallyVisibleDefinitions();
+            }
+            catch (Exception e)
+            {
+                //safe to ignore
+                continue;
+            }
+            for (IDefinition definition : definitions)
+            {
+                boolean isType = definition instanceof ITypeDefinition;
+                if (!typesOnly || isType)
+                {
+                    if (isType)
+                    {
+                        IMetaTag excludeClassMetaTag = definition.getMetaTagByName(IMetaAttributeConstants.ATTRIBUTE_EXCLUDECLASS);
+                        if (excludeClassMetaTag != null)
+                        {
+                            //skip types with [ExcludeClass] metadata
+                            continue;
+                        }
+                    }
+                    if (isType)
+                    {
+                        ITypeDefinition typeDefinition = (ITypeDefinition) definition;
+                        if (typeFilter != null && !DefinitionUtils.extendsOrImplements(currentProject, typeDefinition, typeFilter))
+                        {
+                            continue;
+                        }
+
+                        addMXMLTypeDefinitionAutoComplete(typeDefinition, tagsNeedOpenBracket, result);
+                    }
+                    else
+                    {
+                        addDefinitionAutoCompleteActionScript(definition, null, result);
+                    }
+                }
+            }
+        }
+    }
+
+    private void autoCompleteDefinitionsForActionScript(CompletionList result, boolean typesOnly, String requiredPackageName,
+                                        IDefinition definitionToSkip, String containingPackageName,
+                                        boolean tagsNeedOpenBracket, String typeFilter)
     {
         String skipQualifiedName = null;
         if (definitionToSkip != null)
@@ -2814,25 +2859,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                                 continue;
                             }
                         }
-                        if (forMXML && isType)
-                        {
-                            ITypeDefinition typeDefinition = (ITypeDefinition) definition;
-                            if (typeFilter != null && !DefinitionUtils.extendsOrImplements(currentProject, typeDefinition, typeFilter))
-                            {
-                                continue;
-                            }
-
-                            addMXMLTypeDefinitionAutoComplete(typeDefinition, tagsNeedOpenBracket, result);
-                        }
-                        else
-                        {
-                            addDefinitionAutoCompleteActionScript(definition, containingPackageName, result);
-                        }
+                        addDefinitionAutoCompleteActionScript(definition, containingPackageName, result);
                     }
                 }
             }
         }
-        if (!forMXML && (requiredPackageName == null || requiredPackageName.equals("")))
+        if (requiredPackageName == null || requiredPackageName.equals(""))
         {
             CompletionItem item = new CompletionItem();
             item.setKind(CompletionItemKind.Class);
@@ -3190,7 +3222,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             String packageName = memberAccessToPackageName(memberAccess);
             if (packageName != null)
             {
-                autoCompleteDefinitions(result, false, false, packageName, null, null, false, null);
+                autoCompleteDefinitionsForActionScript(result, false, packageName, null, null, false, null);
                 return;
             }
         }
