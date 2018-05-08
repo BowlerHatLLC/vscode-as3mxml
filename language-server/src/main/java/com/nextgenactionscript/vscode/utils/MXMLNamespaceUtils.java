@@ -33,31 +33,37 @@ import org.apache.royale.compiler.workspaces.IWorkspace;
 
 public class MXMLNamespaceUtils
 {
+    private static final String PREFIX_MX = "mx";
+    private static final String PREFIX_FX = "fx";
+    private static final String PREFIX_S = "s";
+    private static final String PREFIX_JS = "js";
+    private static final String PREFIX_F = "f";
+
     private static final HashMap<String, String> NAMESPACE_TO_PREFIX = new HashMap<>();
 
     {
         //MXML language
-        NAMESPACE_TO_PREFIX.put(IMXMLLanguageConstants.NAMESPACE_MXML_2006, "mx");
-        NAMESPACE_TO_PREFIX.put(IMXMLLanguageConstants.NAMESPACE_MXML_2009, "fx");
+        NAMESPACE_TO_PREFIX.put(IMXMLLanguageConstants.NAMESPACE_MXML_2009, PREFIX_FX);
+        NAMESPACE_TO_PREFIX.put(IMXMLLanguageConstants.NAMESPACE_MXML_2006, PREFIX_MX);
 
         //Flex
-        NAMESPACE_TO_PREFIX.put(IMXMLLibraryConstants.MX, "mx");
-        NAMESPACE_TO_PREFIX.put(IMXMLLibraryConstants.SPARK, "s");
+        NAMESPACE_TO_PREFIX.put(IMXMLLibraryConstants.SPARK, PREFIX_S);
+        NAMESPACE_TO_PREFIX.put(IMXMLLibraryConstants.MX, PREFIX_MX);
         
         //FlexJS
-        NAMESPACE_TO_PREFIX.put(IMXMLLibraryConstants.FLEXJS_EXPRESS, "js");
-        NAMESPACE_TO_PREFIX.put(IMXMLLibraryConstants.FLEXJS_BASIC, "js");
+        NAMESPACE_TO_PREFIX.put(IMXMLLibraryConstants.FLEXJS_EXPRESS, PREFIX_JS);
+        NAMESPACE_TO_PREFIX.put(IMXMLLibraryConstants.FLEXJS_BASIC, PREFIX_JS);
 
         //Royale
-        NAMESPACE_TO_PREFIX.put(IMXMLLibraryConstants.ROYALE_EXPRESS, "js");
-        NAMESPACE_TO_PREFIX.put(IMXMLLibraryConstants.ROYALE_BASIC, "js");
+        NAMESPACE_TO_PREFIX.put(IMXMLLibraryConstants.ROYALE_EXPRESS, PREFIX_JS);
+        NAMESPACE_TO_PREFIX.put(IMXMLLibraryConstants.ROYALE_BASIC, PREFIX_JS);
 
         //Feathers
-        NAMESPACE_TO_PREFIX.put(IMXMLLibraryConstants.FEATHERS, "f");
+        NAMESPACE_TO_PREFIX.put(IMXMLLibraryConstants.FEATHERS, PREFIX_F);
     }
 
-	private static final String LOCAL_PREFIX = "local";
-	private static final String DEFAULT_NS_PREFIX = "ns";
+	private static final String PREFIX_LOCAL = "local";
+	private static final String PREFIX_DEFAULT_NS = "ns";
     private static final String STAR = "*";
     private static final String DOT_STAR = ".*";
     private static final String UNDERSCORE_UNDERSCORE_AS3_PACKAGE = "__AS3__.";
@@ -106,6 +112,7 @@ public class MXMLNamespaceUtils
         Collection<XMLName> tagNames = currentProject.getTagNamesForClass(definition.getQualifiedName());
 
         //1. try to use an existing xmlns with an uri
+        MXMLNamespace tagNameResult = null;
         for (XMLName tagName : tagNames)
         {
             String tagNamespace = tagName.getXMLNamespace();
@@ -119,8 +126,24 @@ public class MXMLNamespaceUtils
             String[] uriPrefixes = prefixMap.getPrefixesForNamespace(tagNamespace);
             if (uriPrefixes.length > 0)
             {
-                return new MXMLNamespace(uriPrefixes[0], tagNamespace);
+                String firstPrefix = uriPrefixes[0];
+                if (firstPrefix.equals(PREFIX_MX))
+                {
+                    //we found mx, but spark is preferred over mx, so save the
+                    //result, but keep looking...
+                    tagNameResult = new MXMLNamespace(firstPrefix, tagNamespace);
+                }
+                else
+                {
+                    //the prefix is not mx, so we don't need to keep looking
+                    return new MXMLNamespace(firstPrefix, tagNamespace);
+                }
             }
+        }
+        if (tagNameResult != null)
+        {
+            //we may have gotten here if mx was found, but spark was not
+            return tagNameResult;
         }
 
         //2. try to use an existing xmlns with a package name
@@ -162,16 +185,16 @@ public class MXMLNamespaceUtils
         if (fallbackNamespace != null)
         {
             //if we couldn't find a known prefix, use a numbered one
-            String prefix = getNumberedNamespacePrefix(DEFAULT_NS_PREFIX, prefixMap);
+            String prefix = getNumberedNamespacePrefix(PREFIX_DEFAULT_NS, prefixMap);
             return new MXMLNamespace(prefix, fallbackNamespace);
 		}
 		
 		//4. special case: if the package namespace is simply *, try to use
 		//local as the prefix, if it's not already defined. this matches the
 		//behavior of Adoboe Flash Builder.
-		if (packageNamespace.equals(STAR) && !prefixMap.containsPrefix(LOCAL_PREFIX))
+		if (packageNamespace.equals(STAR) && !prefixMap.containsPrefix(PREFIX_LOCAL))
 		{
-			return new MXMLNamespace(LOCAL_PREFIX, packageNamespace);
+			return new MXMLNamespace(PREFIX_LOCAL, packageNamespace);
 		}
 
 		//5. try to use the final part of the package name as the prefix, if
@@ -187,7 +210,7 @@ public class MXMLNamespaceUtils
 		}
 
         //6. worst case: create a new xmlns with numbered prefix and package name
-        String prefix = getNumberedNamespacePrefix(DEFAULT_NS_PREFIX, prefixMap);
+        String prefix = getNumberedNamespacePrefix(PREFIX_DEFAULT_NS, prefixMap);
         return new MXMLNamespace(prefix, packageNamespace);
     }
 
