@@ -17,6 +17,7 @@ package com.nextgenactionscript.vscode.utils;
 
 import java.util.Iterator;
 
+import org.apache.royale.compiler.constants.IASLanguageConstants;
 import org.apache.royale.compiler.constants.IMetaAttributeConstants;
 import org.apache.royale.compiler.definitions.IClassDefinition;
 import org.apache.royale.compiler.definitions.IDefinition;
@@ -41,8 +42,6 @@ public class DefinitionUtils
 
 	private static String getMXMLChildElementTypeForDefinition(IDefinition definition, ICompilerProject project, boolean resolvePaired)
 	{
-		
-		String result = null;
 		IMetaTag arrayElementType = definition.getMetaTagByName(IMetaAttributeConstants.ATTRIBUTE_ARRAYELEMENTTYPE);
 		if (arrayElementType != null)
 		{
@@ -77,7 +76,13 @@ public class DefinitionUtils
 		ITypeDefinition typeDefinition = definition.resolveType(project);
 		if (typeDefinition != null)
 		{
-			return typeDefinition.getQualifiedName();
+			String qualifiedName = typeDefinition.getQualifiedName();
+			if (qualifiedName.equals(IASLanguageConstants.Array))
+			{
+				//the wrapping array can be omitted, and since there's no
+				//[ArrayElementType] metadata, default to Object
+				return IASLanguageConstants.Object;
+			}
 		}
 		return null;
 	}
