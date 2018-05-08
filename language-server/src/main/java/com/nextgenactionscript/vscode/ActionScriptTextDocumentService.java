@@ -1171,7 +1171,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return;
         }
+
         Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocumentUri);
+        if (!SourcePathUtils.isInProjectSourcePath(path, currentProject))
+        {
+            return;
+        }
+
         if (path != null)
         {
             String text = textDocument.getText();
