@@ -172,6 +172,7 @@ import com.nextgenactionscript.vscode.utils.CodeGenerationUtils;
 import com.nextgenactionscript.vscode.utils.CompilerProblemFilter;
 import com.nextgenactionscript.vscode.utils.DefinitionDocumentationUtils;
 import com.nextgenactionscript.vscode.utils.DefinitionTextUtils;
+import com.nextgenactionscript.vscode.utils.DefinitionUtils;
 import com.nextgenactionscript.vscode.utils.ImportRange;
 import com.nextgenactionscript.vscode.utils.ImportTextEditUtils;
 import com.nextgenactionscript.vscode.utils.LSPUtils;
@@ -1955,7 +1956,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 //include all public definitions
                 IASScope scope = scopedNode.getScope();
                 IDefinition definitionToSkip = scope.getDefinition();
-                autoCompleteDefinitions(result, false, false, null, definitionToSkip, containingPackageName, false);
+                autoCompleteDefinitions(result, false, false, null, definitionToSkip, containingPackageName, false, null);
                 autoCompleteKeywords(scopedNode, result);
                 return result;
             }
@@ -2039,7 +2040,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             if (!isAttribute)
             {
-                autoCompleteTypesForMXML(tagsNeedOpenBracket, result);
+                autoCompleteTypesForMXML(tagsNeedOpenBracket, null, result);
             }
             return result;
         }
@@ -2145,10 +2146,19 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 String defaultPropertyName = classDefinition.getDefaultPropertyName(currentProject);
                 if (defaultPropertyName != null)
                 {
+                    String typeFilter = null;
+                    TypeScope typeScope = (TypeScope) classDefinition.getContainedScope();
+                    List<IDefinition> propertiesByName = typeScope.getPropertiesByNameForMemberAccess(currentProject, defaultPropertyName, getNamespaceSetForScopes(typeScope, typeScope));
+                    if (propertiesByName.size() > 0)
+                    {
+                        IDefinition propertyDefinition = propertiesByName.get(0);
+                        typeFilter = DefinitionUtils.getMXMLChildElementTypeForDefinition(propertyDefinition, currentProject);
+                    }
+
                     //if [DefaultProperty] is set, then we can instantiate
                     //types as child elements
                     //but we don't want to do that when in an attribute
-                    autoCompleteTypesForMXML(tagsNeedOpenBracket, result);
+                    autoCompleteTypesForMXML(tagsNeedOpenBracket, typeFilter, result);
                 }
             }
             return result;
@@ -2159,7 +2169,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             if (!isAttribute)
             {
-                autoCompleteTypesForMXML(tagsNeedOpenBracket, result);
+                String typeFilter = DefinitionUtils.getMXMLChildElementTypeForDefinition(offsetDefinition, currentProject);
+                autoCompleteTypesForMXML(tagsNeedOpenBracket, typeFilter, result);
             }
             return result;
         }
@@ -2646,12 +2657,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             node = node.getParent();
         }
         while (node != null);
-        autoCompleteDefinitions(result, false, true, null, null, containingPackageName, false);
+        autoCompleteDefinitions(result, false, true, null, null, containingPackageName, false, null);
     }
 
-    private void autoCompleteTypesForMXML(boolean tagsNeedOpenBracket, CompletionList result)
+    private void autoCompleteTypesForMXML(boolean tagsNeedOpenBracket, String typeFilter, CompletionList result)
     {
-        autoCompleteDefinitions(result, true, true, null, null, null, tagsNeedOpenBracket);
+        autoCompleteDefinitions(result, true, true, null, null, null, tagsNeedOpenBracket, typeFilter);
     }
 
     /**
@@ -2753,7 +2764,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private void autoCompleteDefinitions(CompletionList result, boolean forMXML,
                                          boolean typesOnly, String requiredPackageName,
                                          IDefinition definitionToSkip, String containingPackageName,
-                                         boolean tagsNeedOpenBracket)
+                                         boolean tagsNeedOpenBracket, String typeFilter)
     {
         String skipQualifiedName = null;
         if (definitionToSkip != null)
@@ -2800,6 +2811,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                         if (forMXML && isType)
                         {
                             ITypeDefinition typeDefinition = (ITypeDefinition) definition;
+                            if (typeFilter != null && !DefinitionUtils.extendsOrImplements(currentProject, typeDefinition, typeFilter))
+                            {
+                                continue;
+                            }
+
                             addMXMLTypeDefinitionAutoComplete(typeDefinition, tagsNeedOpenBracket, result);
                         }
                         else
@@ -2810,7 +2826,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 }
             }
         }
-        if (requiredPackageName == null || requiredPackageName.equals(""))
+        if (!forMXML && (requiredPackageName == null || requiredPackageName.equals("")))
         {
             CompletionItem item = new CompletionItem();
             item.setKind(CompletionItemKind.Class);
@@ -3168,7 +3184,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             String packageName = memberAccessToPackageName(memberAccess);
             if (packageName != null)
             {
-                autoCompleteDefinitions(result, false, false, packageName, null, null, false);
+                autoCompleteDefinitions(result, false, false, packageName, null, null, false, null);
                 return;
             }
         }
