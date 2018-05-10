@@ -3793,7 +3793,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         while (definition instanceof IClassDefinition)
         {
             IClassDefinition classDefinition = (IClassDefinition) definition;
-            IMetaTag[] styleMetaTags = typeScope.getDefinition().getMetaTagsByName(IMetaAttributeConstants.ATTRIBUTE_STYLE);
+            IMetaTag[] styleMetaTags = definition.getMetaTagsByName(IMetaAttributeConstants.ATTRIBUTE_STYLE);
             for (IMetaTag styleMetaTag : styleMetaTags)
             {
                 String styleName = styleMetaTag.getAttributeValue(IMetaAttributeConstants.NAME_STYLE_NAME);
@@ -3814,8 +3814,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     if (item.getLabel().equals(styleName))
                     {
                         //we want to avoid adding a duplicate item with the same
-                        //name. if there's a conflict, the compiler will know
-                        //how to handle it.
+                        //name. in flex, it's possible for a component to have
+                        //a property and a style with the same name.
+                        //if there's a conflict, the compiler will know how to handle it.
                         foundExisting = true;
                         break;
                     }
