@@ -17,6 +17,8 @@ package com.nextgenactionscript.vscode.utils;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.nextgenactionscript.vscode.mxml.IMXMLLibraryConstants;
 
@@ -62,6 +64,18 @@ public class MXMLNamespaceUtils
         NAMESPACE_TO_PREFIX.put(IMXMLLibraryConstants.FEATHERS, PREFIX_F);
     }
 
+    private static final Pattern[] PATTERNS =
+    {
+        //Royale/FlexJS library
+        Pattern.compile("^library:\\/\\/ns\\.apache\\.org\\/(?:flexjs|royale)\\/(\\w+)$"),
+
+        //Flex library
+        Pattern.compile("^[a-z]+:\\/\\/flex\\.apache\\.org\\/(\\w+)\\/ns$"),
+
+        //Final fallback (extracts domain name)
+        Pattern.compile("^[a-z]+:\\/\\/(?:\\w+\\.)?(\\w+)\\.\\w+\\/"),
+    };
+
 	private static final String PREFIX_LOCAL = "local";
 	private static final String PREFIX_DEFAULT_NS = "ns";
     private static final String STAR = "*";
@@ -91,20 +105,54 @@ public class MXMLNamespaceUtils
         if (NAMESPACE_TO_PREFIX.containsKey(uri))
         {
             String prefix = NAMESPACE_TO_PREFIX.get(uri);
-            if (prefixMap.containsPrefix(prefix))
-            {
-                //the prefix already exists with a different URI, so we can't
-                //use it for this URI
-                prefix = null;
-            }
+
+            prefix = validatePrefix(prefix, prefixMap);
             if (prefix != null)
             {
                 return new MXMLNamespace(prefix, uri);
             }
         }
+        
+        //try to guess a good prefix based on common formats
+        for (Pattern pattern : PATTERNS)
+        {
+            Matcher matcher = pattern.matcher(uri);
+            if (matcher.find())
+            {
+                String prefix = matcher.group(1);
+                prefix = validatePrefix(prefix, prefixMap);
+                if (prefix != null)
+                {
+                    return new MXMLNamespace(prefix, uri);
+                }
+            }
+        }
+
         return null;
-	}
-	
+    }
+
+    private static String validatePrefix(String prefix, PrefixMap prefixMap)
+    {
+        if (prefix == null)
+        {
+            return null;
+        }
+
+        if (prefixMap.containsPrefix(prefix))
+        {
+            //the prefix already exists with a different URI, so we can't
+            //use it for this URI
+           return null;
+        }
+        
+        //prefixes shouldn't start with a number
+        if (Character.isDigit(prefix.charAt(0)))
+        {
+            return null;
+        }
+
+        return prefix;
+    }
 
     public static MXMLNamespace getMXMLNamespaceForTypeDefinition(ITypeDefinition definition, MXMLData mxmlData, IRoyaleProject currentProject)
     {
