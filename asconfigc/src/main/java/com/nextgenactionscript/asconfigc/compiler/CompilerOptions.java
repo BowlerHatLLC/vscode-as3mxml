@@ -27,12 +27,6 @@ public class CompilerOptions
 	public static final String DEFINE = "define";
 	public static final String DUMP_CONFIG = "dump-config";
 	public static final String EXTERNAL_LIBRARY_PATH = "external-library-path";
-	public static final String HTML_OUTPUT_FILENAME = "html-output-filename";
-	public static final String HTML_TEMPLATE = "html-template";
-	public static final String JS_COMPILER_OPTION = "js-compiler-option";
-	public static final String JS_EXTERNAL_LIBRARY_PATH = "js-external-library-path";
-	public static final String JS_LIBRARY_PATH = "js-library-path";
-	public static final String JS_OUTPUT_TYPE = "js-output-type";
 	public static final String KEEP_AS3_METADATA = "keep-as3-metadata";
 	public static final String KEEP_GENERATED_ACTIONSCRIPT = "keep-generated-actionscript";
 	public static final String LIBRARY_PATH = "library-path";
@@ -44,16 +38,11 @@ public class CompilerOptions
 	public static final String OMIT_TRACE_STATEMENTS = "omit-trace-statements";
 	public static final String OUTPUT = "output";
 	public static final String PRELOADER = "preloader";
-	public static final String REMOVE_CIRCULARS = "remove-circulars";
 	public static final String SIZE_REPORT = "size-report";
-	public static final String SOURCE_MAP = "source-map";
 	public static final String SOURCE_PATH = "source-path";
 	public static final String STATIC_LINK_RUNTIME_SHARED_LIBRARIES = "static-link-runtime-shared-libraries";
 	public static final String STRICT = "strict";
-	public static final String SWF_EXTERNAL_LIBRARY_PATH = "swf-external-library-path";
-	public static final String SWF_LIBRARY_PATH = "swf-library-path";
 	public static final String SWF_VERSION = "swf-version";
-	public static final String TARGETS = "targets";
 	public static final String TARGET_PLAYER = "target-player";
 	public static final String TOOLS_LOCALE = "tools-locale";
 	public static final String USE_DIRECT_BLIT = "use-direct-blit";
@@ -62,6 +51,22 @@ public class CompilerOptions
 	public static final String USE_RESOURCE_BUNDLE_METADATA = "use-resource-bundle-metadata";
 	public static final String VERBOSE_STACKTRACES = "verbose-stacktraces";
 	public static final String WARNINGS = "warnings";
+
+	//royale options
+	public static final String HTML_OUTPUT_FILENAME = "html-output-filename";
+	public static final String HTML_TEMPLATE = "html-template";
+	public static final String JS_COMPILER_OPTION = "js-compiler-option";
+	public static final String JS_DEFAULT_INITIALIZERS = "js-default-initializers";
+	public static final String JS_EXTERNAL_LIBRARY_PATH = "js-external-library-path";
+	public static final String JS_LIBRARY_PATH = "js-library-path";
+	public static final String JS_OUTPUT = "js-output";
+	public static final String JS_OUTPUT_TYPE = "js-output-type";
+	public static final String REMOVE_CIRCULARS = "remove-circulars";
+	public static final String SOURCE_MAP = "source-map";
+	public static final String SWF_EXTERNAL_LIBRARY_PATH = "swf-external-library-path";
+	public static final String SWF_LIBRARY_PATH = "swf-library-path";
+	public static final String TARGETS = "targets";
+	public static final String WARN_PUBLIC_VARS = "warn-public-vars";
 
 	//library options
 	public static final String INCLUDE_CLASSES = "include-classes";

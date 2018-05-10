@@ -504,6 +504,16 @@
 						"type": "string"
 					}
 				},
+				"js-default-initializers":
+				{
+					"type": "boolean",
+					"description": "In an Apache Royale project, enables or disables initialization of variables with primitive types in the generated JavaScript using default values."
+				},
+				"js-output":
+				{
+					"type": "string",
+					"description": "In an Apache Royale project, the path where the generated JavaScript output should be saved."
+				},
 				"keep-as3-metadata":
 				{
 					"type": "array",
@@ -708,6 +718,11 @@
 				{
 					"type": "boolean",
 					"description": "Enables or disables all warnings." 
+				},
+				"warn-public-vars":
+				{
+					"type": "boolean",
+					"description": "In an Apache Royale project, enables or disables warnings about public variables." 
 				}
 			}
 		},
