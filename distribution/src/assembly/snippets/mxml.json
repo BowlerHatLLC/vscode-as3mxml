@@ -53,5 +53,628 @@
 			"</js:${1:component}>"
 		],
 		"description": "Basic Component Definition"
+	},
+	
+	
+	
+	"AdvancedDataGrid": {
+		"prefix": "AdvancedDataGrid",
+		"body": [
+			"<mx:AdvancedDataGrid id=\"${adg}\"",
+			"\t\t\t\t\t width=\"${width:200}\" height=\"${height:200}\"",
+			"\t\t\t\t\t dataProvider=\"{${dataprovider}}\">",
+			"\t<mx:groupedColumns>",
+			"\t\t<mx:AdvancedDataGridColumn dataField=\"${fieldName}\"/>",
+			"\t</mx:groupedColumns>",
+			"</mx:AdvancedDataGrid>$0"
+		],
+		"description": "Creates an Advanced DataGrid"
+	},
+	"BorderContainer": {
+		"prefix": "BorderContainer",
+		"body": [
+			"<s:BorderContainer backgroundColor=\"#${1:FFFFFF}\"",
+			"\t\t\t\t   width=\"${2:200}\" height=\"${3:200}\"",
+			"\t\t\t\t   cornerRadius=\"${4:4}\"",
+			"\t\t\t\t   borderStyle=\"${5|inset,solid|}\" borderWeight=\"${6:2}\">",
+			"\t<s:layout>",
+			"    \t<s:HorizontalLayout paddingLeft=\"${7:5}\" paddingRight=\"${7:5}\" paddingTop=\"${7:5}\" paddingBottom=\"${7:5}\"/>",
+			"\t</s:layout>",
+			"\t$TM_SELECTED_TEXT$0",
+			"</s:BorderContainer>"
+		],
+		"description": "Creates a BorderContainer"
+	},
+	"Box": {
+		"prefix": "Box",
+		"body": [
+			"<mx:Box width=\"${1:200}\" height=\"${2:200}\"",
+			"\t\tdirection=\"${3|vertical,horizontal|}\"",
+			"\t\tpaddingTop=\"${4:0}\" paddingBottom=\"${4:0}\" paddingLeft=\"${4:0}\" paddingRight=\"${4:0}\"",
+			"\t\tborderStyle=\"${5|solid,none,inset,outset|}\">",
+			"\t$0",
+			"</mx:Box>"
+		],
+		"description": "Creates a Box"
+	},
+	"MX Button": {
+		"prefix": "Button",
+		"body": [
+			"<mx:Button id=\"${button}\" label=\"${Label}\" click=\"${onClick}(${event})\"/>$0"
+		],
+		"description": "Creates a MX Button"
+	},
+	"Spark Button": {
+		"prefix": "Button",
+		"body": [
+			"<s:Button id=\"${button}\" label=\"${myButton}\" click=\"${onClick}(${event})\"/>$0"
+		],
+		"description": "Creates a Spark Button"
+	},
+	"Canvas": {
+		"prefix": "Canvas",
+		"body": [
+			"<mx:Canvas width=\"${1:200}\" height=\"${2:200}\"",
+			"\t\t   borderStyle=\"${3|solid,none,inset,outset|}\">",
+			"\t$0",
+			"</mx:Canvas>"
+		],
+		"description": "Creates a Canvas"
+	},
+	"MX Checkbox": {
+		"prefix": "Checkbox",
+		"body": [
+			"<mx:CheckBox id=\"${checkBox}\" label=\"${myCheckBox}\"/>$0"
+		],
+		"description": "Creates a MX Checkbox"
+	},
+	"Spark Checkbox": {
+		"prefix": "Checkbox",
+		"body": [
+			"<s:CheckBox id=\"${checkBox}\" label=\"${myCheckBox}\"/>$0"
+		],
+		"description": "Creates a Spark CheckBox"
+	},
+	"MX ComboBox": {
+		"prefix": "ComboBox",
+		"body": [
+			"<mx:ComboBox id=\"${1:comboBox}\"",
+			"\t\t\t rowCount=\"${2:5}\" selectedIndex=\"${3:0}\"",
+			"\t\t\t dataProvider=\"{${4:dataProvider}}\"/>$0"
+		],
+		"description": "Creates a MX Combobox"
+	},
+	"Spark ComboBox ": {
+		"prefix": "ComboBox",
+		"body": [
+			"<s:ComboBox id=\"${1:comboBox}\"",
+			"\t\t\tselectedIndex=\"${2:0}\"",
+			"\t\t\tdataProvider=\"{${3:dataProvider}}\"/>$0"
+		],
+		"description": "Creates a Spark ComboBox"
+	},
+	"MX DataGrid": {
+		"prefix": "DataGrid",
+		"body": [
+			"<mx:DataGrid id=\"${1:dataGrid}\"",
+			"\t\t\t width=\"${2:200}\" height=\"${3:200}\"",
+			"\t\t\t rowCount=\"${4:10}\"",
+			"\t\t\t dataProvider=\"{${5:dataProvider}}\">",
+			"\t<mx:columns>",
+			"\t\t<mx:DataGridColumn headerText=\"${Column1}\" dataField=\"${col1}\"/>",
+			"\t\t<mx:DataGridColumn headerText=\"${Column2}\" dataField=\"${col2}\"/>",
+			"\t\t<mx:DataGridColumn headerText=\"${Column3}\" dataField=\"${col3}\"/>",
+			"\t</mx:columns>",
+			"</mx:DataGrid>$0"
+		],
+		"description": "Creates a MX DataGrid"
+	},
+	"Spark DataGrid": {
+		"prefix": "DataGrid",
+		"body": [
+			"<s:DataGrid id=\"${1:dataGrid}\" requestedRowCount=\"${2:4}\">",
+			"\t<s:columns>",
+			"\t\t<s:ArrayList>",
+			"\t\t\t<s:GridColumn dataField=\"${dataField1}\" headerText=\"${Column1}\"></s:GridColumn>",
+			"\t\t\t<s:GridColumn dataField=\"${dataField2}\" headerText=\"${Column2}\"></s:GridColumn>",
+			"\t\t\t<s:GridColumn dataField=\"${dataField3}\" headerText=\"${Column3}\"></s:GridColumn>",
+			"\t\t</s:ArrayList>",
+			"\t</s:columns>",
+			"\t<s:typicalItem>",
+			"\t\t<fx:Object ${dataField1}=\"Sample Data\" ${dataField2}=\"Sample Data\" ${dataField3}=\"Sample Data\"></fx:Object>",
+			"\t</s:typicalItem>",
+			"\t<s:ArrayList>",
+			"\t\t<fx:Object ${dataField1}=\"data1\" ${dataField2}=\"data1\" ${dataField3}=\"data1\"></fx:Object>",
+			"\t\t<fx:Object ${dataField1}=\"data2\" ${dataField2}=\"data2\" ${dataField3}=\"data2\"></fx:Object>",
+			"\t\t<fx:Object ${dataField1}=\"data3\" ${dataField2}=\"data3\" ${dataField3}=\"data3\"></fx:Object>",
+			"\t\t<fx:Object ${dataField1}=\"data4\" ${dataField2}=\"data4\" ${dataField3}=\"data4\"></fx:Object>",
+			"\t</s:ArrayList>",
+			"</s:DataGrid>$0"
+		],
+		"description": "Creates a Spark DataGrid"
+	},
+	"DataGroup": {
+		"prefix": "DataGroup",
+		"body": [
+			"<s:DataGroup id=\"${1:dataGroup}\"",
+			"\t\t\t width=\"${2:200}\" height=\"${3:200}\"",
+			"\t\t\t dataProvider=\"{${4:dataProvider}}\"",
+			"\t\t\t itemRenderer=\"${5|spark.skins.spark.DefaultItemRenderer,spark.skins.spark.DefaultComplexItemRenderer|}\">",
+			"\t<s:layout>",
+			"\t\t<s:VerticalLayout paddingTop=\"${6:5}\" paddingBottom=\"${6:5}\" paddingLeft=\"${6:5}\" paddingRight=\"${6:5}\" gap=\"${7:4}\"",
+			"\t\t\thorizontalAlign=\"${8|left,center,right|}\" verticalAlign=\"${9|top,middle,bottom,justify,contentJustify|}\"/>",
+			"\t</s:layout>",
+			"\t$TM_SELECTED_TEXT$0",
+			"</s:DataGroup>"
+		],
+		"description": "Creates a DataGroup"
+	},
+	"DateFormatter": {
+		"prefix": "DateFormatter",
+		"body": [
+			"<mx:DateFormatter id=\"${1:dateFormatter}\" formatString=\"${2:DD/MM/YYYY}\"/>$0"
+		],
+		"description": "Creates a DateFormatter"
+	},
+	"DateValidator": {
+		"prefix": "DateValidator",
+		"body": [
+			"<mx:DateValidator id=\"${1:dateValidator}\"",
+			"\t\t\t\t  source=\"{${2:textInput}}\" property=\"${3:text}\"",
+			"\t\t\t\t  allowedFormatChars=\"${4:/}\"",
+			"\t\t\t\t  trigger=\"{${5:button}}\"",
+			"\t\t\t\t  triggerEvent=\"${6:click}\"",
+			"\t\t\t\t  valid=\"${7:ifValid}(${8:event})\"",
+			"\t\t\t\t  invalid=\"${9:ifInvalid}(${10:event})\"/>$0"
+		],
+		"description": "Creates a DateValidator"
+	},
+	"DropDownList": {
+		"prefix": "DropDownList",
+		"body": [
+			"<s:DropDownList id=\"${1:dropDownList}\"",
+			"\t\t\t\tprompt=\"${2:Select One}\"",
+			"\t\t\t\tdataProvider=\"{${dataProvider}}\"",
+			"\t\t\t\tchange=\"${onChange}(${event})\"/>$0"
+		],
+		"description": "Creates a DropDownList"
+	},
+	"Ellipse": {
+		"prefix": "Ellipse",
+		"body": [
+			"<s:Ellipse width=\"${1:200}\" height=\"${2:100}\">",
+			"\t<s:stroke>",
+			"\t\t<s:SolidColorStroke color=\"#${3:000000}\" weight=\"${4:1}\"/>",
+			"\t</s:stroke>\t\t",
+			"</s:Ellipse>$0"
+		],
+		"description": "Creates an Ellipse"
+	},
+	"MX Form": {
+		"prefix": "Form",
+		"body": [
+			"<mx:Form id=\"${1:form}\" width=\"${2:200}\" height=\"${3:200}\">",
+			"\t<mx:FormHeading label=\"${4:headerLabel}\"/>",
+			"\t<mx:FormItem label=\"${5:itemLabel}\" width=\"${6:100%}\" required=\"${7|false,true|}\">",
+			"\t\t$0",
+			"\t</mx:FormItem>",
+			"</mx:Form>"
+		],
+		"description": "Creates a MX Form"
+	},
+	"Spark Form": {
+		"prefix": "Form",
+		"body": [
+			"<s:Form id=\"${1:form}\" width=\"${2:200}\" height=\"${3:200}\" defaultButton=\"{${4:submitButton}}\">",
+			"\t<s:FormHeading label=\"${5:headingLabel}\"/>",
+			"\t<s:FormItem label=\"${6:itemLabel}\" width=\"${7:100%}\" required=\"${8|false,true|}\">",
+			"\t\t$0",
+			"\t</s:FormItem>\t",
+			"\t<s:Button id=\"${4}\" label=\"${9:Submit}\"/>",
+			"</s:Form>"
+		],
+		"description": "Creates a Spark Form"
+	},
+	"Group": {
+		"prefix": "Group",
+		"body": [
+			"<s:Group width=\"${1:100}%\" height=\"${2:100}%\">",
+			"\t$TM_SELECTED_TEXT$0",
+			"</s:Group>"
+		],
+		"description": "Creates a Group"
+	},
+	"HBox": {
+		"prefix": "HBox",
+		"body": [
+			"<mx:HBox width=\"${1:200}\" height=\"${2:200}\"",
+			"\t\t paddingTop=\"${3:0}\" paddingBottom=\"${3:0}\" paddingLeft=\"${3:0}\" paddingRight=\"${3:0}\"",
+			"\t\t borderStyle=\"${4|none,inset,outset,solid|}\">",
+			"\t$0",
+			"</mx:HBox>"
+		],
+		"description": "Creates a HBox"
+	},
+	"HGroup": {
+		"prefix": "HGroup",
+		"body": [
+			"<s:HGroup width=\"${1:100}%\" height=\"${2:100}%\" >",
+			"\t$TM_SELECTED_TEXT$0",
+			"</s:HGroup>"
+		],
+		"description": "Creates a HGroup"
+	},
+	"HorizontalLayout": {
+		"prefix": "HorizontalLayout",
+		"body": [
+			"<s:HorizontalLayout paddingTop=\"${1:5}\" paddingBottom=\"${2:5}\" paddingLeft=\"${3:5}\" paddingRight=\"${4:5}\" gap=\"${5:5}\"",
+			"\t\t\t\t\thorizontalAlign=\"${6|left,center,right|}\" verticalAlign=\"${7|top,middle,bottom|}\"/>$0"
+		],
+		"description": "Creates a HorizontalLayout with padding, gap and align properties"
+	},
+	"HTTPService": {
+		"prefix": "HTTPService",
+		"body": [
+			"<s:HTTPService id=\"${1:service}\"",
+			"\t\t\t   url=\"${2:url}\"",
+			"\t\t\t   fault=\"${3:onFault}(${4:event})\"",
+			"\t\t\t   result=\"${5:onResult}(${6:event})\"",
+			"\t\t\t   resultFormat=\"${7|object,array,xml,e4x,flashvars,text|}\"",
+			"\t\t\t   showBusyCursor=\"${8|true,false|}\"/>$0"
+		],
+		"description": "Creates a HTTPService"
+	},
+	"IconItemRenderer": {
+		"prefix": "IconItemRenderer",
+		"body": [
+			"<s:itemRenderer>",
+			"    <fx:Component>",
+			"        <s:IconItemRenderer iconField=\"${1:iconField}\" iconWidth=\"${2:64}\" iconHeight=\"${3:64}\"/>",
+			"\t</fx:Component>",
+			"</s:itemRenderer>$0"
+		],
+		"description": "Creates an IconItemRenderer for a List"
+	},
+	"MX Image": {
+		"prefix": "Image",
+		"body": [
+			"<mx:Image id=\"${image}\" source=\"{${imageSource}}\"/>$0"
+		],
+		"description": "Creates a MX Image"
+	},
+	"Spark Image": {
+		"prefix": "Image",
+		"body": [
+			"<s:Image id=\"${image}\" source=\"{${imageSource}}\"/>$0"
+		],
+		"description": "Creates a Spark Image"
+	},
+	"Spark Image wth embedded source": {
+		"prefix": "Image wth embedded source",
+		"body": [
+			"<s:Image id=\"${image}\" source=\"@Embed(source='${imageSource}')\"/>$0"
+		],
+		"description": "Creates a Spark Image with embedded source"
+	},
+	"MX Label": {
+		"prefix": "Label",
+		"body": [
+			"<mx:Label id=\"${label}\" text=\"${myLabel}\"/>$0"
+		],
+		"description": "Creates a MX Label"
+	},
+	"Spark Label": {
+		"prefix": "Label",
+		"body": [
+			"<s:Label id=\"${label}\" text=\"${myLabel}\"/>$0"
+		],
+		"description": "Creates a Spark Label"
+	},
+	"layout with HorizontalLayout": {
+		"prefix": "layout with HorizontalLayout",
+		"body": [
+			"<s:layout>",
+			"\t<s:HorizontalLayout paddingTop=\"${1:5}\" paddingBottom=\"${1:5}\" paddingLeft=\"${1:5}\" paddingRight=\"${1:5}\" gap=\"${2:5}\"",
+			"\t\t\t\t\t\thorizontalAlign=\"${3|left,center,right|}\" verticalAlign=\"${4|top,middle,bottom|}\"/>",
+			"</s:layout>$0"
+		],
+		"description": "Creates a layout tag with HorizontalLayout having padding, gap and align properties"
+	},
+	"layout with VerticalLayout": {
+		"prefix": "layout with VerticalLayout",
+		"body": [
+			"<s:layout>",
+			"\t<s:VerticalLayout paddingTop=\"${1:5}\" paddingBottom=\"${1:5}\" paddingLeft=\"${1:5}\" paddingRight=\"${1:5}\" gap=\"${2:5}\"",
+			"\t\t\t\t\t  horizontalAlign=\"${3|left,center,right|}\" verticalAlign=\"${4|top,middle,bottom|}\"/>",
+			"</s:layout>$0"
+		],
+		"description": "Creates a layout tag with VerticalLayout having padding, gap and align properties"
+	},
+	"Library": {
+		"prefix": "Library",
+		"body": [
+			"<fx:Library>",
+			"\t<fx:Definition name=\"${definitionName}\">",
+			"\t\t$0",
+			"\t</fx:Definition>",
+			"</fx:Library>"
+		],
+		"description": "Creates a Library"
+	},
+	"Line": {
+		"prefix": "Line",
+		"body": [
+			"<s:Line xFrom=\"${1:0}\" xTo=\"${2:100}\" yFrom=\"${3:0}\" yTo=\"${4:100}\">",
+			"\t<s:stroke>",
+			"\t\t<s:SolidColorStroke color=\"#${5:000000}\" weight=\"${6:1}\"/>",
+			"\t</s:stroke>",
+			"</s:Line>$0"
+		],
+		"description": "Creates a Line"
+	},
+	"Spark List": {
+		"prefix": "List",
+		"body": [
+			"<s:List id=\"${myList}\" dataProvider=\"{${arrayColl}}\"/>$0"
+		],
+		"description": "Creates a Spark List"
+	},
+	"MX List with inline dataProvider": {
+		"prefix": "List with inline dataProvider",
+		"body": [
+			"<mx:List id=\"${myList}\">",
+			"\t<mx:dataProvider>",
+			"\t\t<mx:ArrayCollection>",
+			"\t\t\t$0",
+			"\t\t</mx:ArrayCollection>",
+			"\t</mx:dataProvider>",
+			"</mx:List>"
+		],
+		"description": "Creates a MX List with inline dataProvider"
+	},
+	"Spark List with inline dataProvider": {
+		"prefix": "List with inline dataProvider",
+		"body": [
+			"<s:List id=\"${myList}\">",
+			"\t<s:dataProvider>",
+			"\t\t<mx:ArrayCollection>",
+			"\t\t\t$0",
+			"\t\t</mx:ArrayCollection>",
+			"\t</s:dataProvider>",
+			"</s:List>"
+		],
+		"description": "Creates a Spark List with inline dataProvider"
+	},
+	"MultiDPIBitmapSource": {
+		"prefix": "MultiDPIBitmapSource",
+		"body": [
+			"<s:MultiDPIBitmapSource",
+			"\tsource160dpi=\"@Embed('${source160dpi}')\"",
+			"\tsource240dpi=\"@Embed('${source240dpi}')\"",
+			"\tsource320dpi=\"@Embed('${source320dpi}')\"/>"
+		],
+		"description": "Creates an instance of MultiDPIBitmapSource"
+	},
+	"NumberFormatter": {
+		"prefix": "NumberFormatter",
+		"body": [
+			"<mx:NumberFormatter id=\"${1:numberFormatter}\"",
+			"\t\t\t\t\tprecision=\"${2:4}\"",
+			"\t\t\t\t\tuseThousandsSeparator=\"${3|true,false|}\"",
+			"\t\t\t\t\tuseNegativeSign=\"${4|true,false|}\"/>$0"
+		],
+		"description": "Creates a NumberFormatter"
+	},
+	"NumberValidator": {
+		"prefix": "NumberValidator",
+		"body": [
+			"<mx:NumberValidator id=\"${1:numberValidator}\"",
+			"\t\t\t\t\tsource=\"{${2:textInput}}\" property=\"${3:text}\"",
+			"\t\t\t\t\tallowNegative=\"${4|true,false|}\"",
+			"\t\t\t\t\tdomain=\"${5|real,int|}\"",
+			"\t\t\t\t\ttrigger=\"{${6:button}}\"",
+			"\t\t\t\t\ttriggerEvent=\"${7:click}\"",
+			"\t\t\t\t\tvalid=\"${8:ifValid}(${9:event})\"",
+			"\t\t\t\t\tinvalid=\"${10:ifInvalid}(${11:event})\"/>$0"
+		],
+		"description": "Creates a NumberValidator"
+	},
+	"Spark Panel with HorizontalLayout": {
+		"prefix": "Panel with HorizontalLayout",
+		"body": [
+			"<s:Panel id=\"${1:panel}\" title=\"${2:Title}\"",
+			"\t\t width=\"${3:200}\" height=\"${4:200}\">",
+			"\t<s:layout>",
+			"\t\t<s:HorizontalLayout/>",
+			"\t</s:layout>",
+			"\t$0",
+			"</s:Panel>"
+		],
+		"description": "Creates a Spark Panel with a HorizontalLayout"
+	},
+	"Spark Panel with VerticalLayout": {
+		"prefix": "Panel with VerticalLayout",
+		"body": [
+			"<s:Panel id=\"${1:panel}\" title=\"${2:Title}\"",
+			"\t\t width=\"${3:200}\" height=\"${4:200}\">",
+			"\t<s:layout>",
+			"\t\t<s:VerticalLayout/>",
+			"\t</s:layout>",
+			"\t$0",
+			"</s:Panel>"
+		],
+		"description": "Creates a Spark Panel with a VerticalLayout"
+	},
+	"PhoneFormatter": {
+		"prefix": "PhoneFormatter",
+		"body": [
+			"<mx:PhoneFormatter id=\"${1:phoneFormatter}\" formatString=\"${2:(### ###-####)}\" validPatternChars=\"${3: #-()}\"/>$0"
+		],
+		"description": "Creates a PhoneFormatter"
+	},
+	"PhoneNumberValidator": {
+		"prefix": "PhoneNumberValidator",
+		"body": [
+			"<mx:PhoneNumberValidator id=\"${1:phoneNumberValidator}\"",
+			"\t\t\t\t\t\t source=\"{${2:textInput}}\" property=\"${3:text}\"",
+			"\t\t\t\t\t\t allowedFormatChars=\"${4: #-()}\"",
+			"\t\t\t\t\t\t minDigits=\"${5:10}\"",
+			"\t\t\t\t\t\t trigger=\"{${6:button}}\"",
+			"\t\t\t\t\t\t triggerEvent=\"${7:click}\"",
+			"\t\t\t\t\t\t valid=\"${8:ifValid}(${9:event})\"",
+			"\t\t\t\t\t\t invalid=\"${10:ifInvalid}(${11:event})\"/>$0"
+		],
+		"description": "Creates a PhoneNumberValidator"
+	},
+	"Rect": {
+		"prefix": "Rect",
+		"body": [
+			"<s:Rect width=\"${1:200}\" height=\"${2:100}\">",
+			"\t<s:fill>",
+			"\t\t<s:SolidColor color=\"#${3:FFFFFF}\"/>",
+			"\t</s:fill>",
+			"\t<s:stroke>",
+			"\t\t<s:SolidColorStroke color=\"#${4:000000}\" weight=\"${5:1}\"/>",
+			"\t</s:stroke>",
+			"</s:Rect>$0"
+		],
+		"description": "Creates a Rectangle"
+	},
+	"MX RemoteObject": {
+		"prefix": "RemoteObject",
+		"body": [
+			"<mx:RemoteObject id=\"${1:remoteObject}\"",
+			"\t\t\t\t source=\"${2:roSource}\"",
+			"\t\t\t\t destination=\"${3:dest}\"",
+			"\t\t\t\t endpoint=\"${4:url}\"",
+			"\t\t\t\t fault=\"${5:onFault}(${6:event})\"",
+			"\t\t\t\t showBusyCursor=\"${7|true,false|}\">",
+			"\t<mx:method name=\"${8:roMethod}\" result=\"${9:onResult}(${10:event})\" fault=\"${11:onFault}(${12:event})\">",
+			"\t\t<mx:arguments>",
+			"\t\t\t<arg1>{${13:text}}</arg1>",
+			"\t\t</mx:arguments>",
+			"\t</mx:method>",
+			"\t$0",
+			"</mx:RemoteObject>"
+		],
+		"description": "Creates a MX RemoteObject"
+	},
+	"Spark RemoteObject": {
+		"prefix": "RemoteObject",
+		"body": [
+			"<s:RemoteObject id=\"${1:remoteObject}\"",
+			"\t\t\t\tsource=\"${2:roSource}\"",
+			"\t\t\t\tdestination=\"${3:dest}\"",
+			"\t\t\t\tendpoint=\"${4:url}\"",
+			"\t\t\t\tfault=\"${5:onFault}(${6:event})\"",
+			"\t\t\t\tshowBusyCursor=\"${7|true,false|}\">",
+			"\t<s:method name=\"${8:roMethod}\" result=\"${9:onResult}(${10:event})\" fault=\"${11:onFault}(${12:event})\">",
+			"\t\t<s:arguments>",
+			"\t\t\t<arg1>{${13:text}}</arg1>",
+			"\t\t</s:arguments>",
+			"\t</s:method>",
+			"\t$0",
+			"</s:RemoteObject>"
+		],
+		"description": "Creates a Spark RemoteObject"
+	},
+	"MX Script": {
+		"prefix": "Script",
+		"body": [
+			"<mx:Script>",
+			"\t<![CDATA[",
+			"\t\t$0",
+			"\t]]>",
+			"</mx:Script>"
+		],
+		"description": "Creates a MX Script/CDATA section"
+	},
+	"Spark Script": {
+		"prefix": "Script",
+		"body": [
+			"<fx:Script>",
+			"\t<![CDATA[",
+			"\t\t$0",
+			"\t]]>",
+			"</fx:Script>"
+		],
+		"description": "Creates a Spark Script/CDATA section"
+	},
+	"StringValidator": {
+		"prefix": "StringValidator",
+		"body": [
+			"<mx:StringValidator id=\"${1:stringValidator}\"",
+			"\t\t\t\t\tsource=\"{${2:textInput}}\" property=\"${3:text}\"",
+			"\t\t\t\t\tminLength=\"${4:1}\"",
+			"\t\t\t\t\tmaxLength=\"${5:25}\"",
+			"\t\t\t\t\ttooShortError=\"This string is shorter than the minimum allowed length of ${4}.\"",
+			"\t\t\t\t\ttooLongError=\"This string is longer than the maximum allowed length of ${5}.\"",
+			"\t\t\t\t\ttrigger=\"{${6:button}}\"",
+			"\t\t\t\t\ttriggerEvent=\"${7:click}\"",
+			"\t\t\t\t\tvalid=\"${8:ifValid}(${9:event})\"",
+			"\t\t\t\t\tinvalid=\"${10:ifInvalid}(${11:event})\"/>$0"
+		],
+		"description": "Creates a StringValidator"
+	},
+	"VBox": {
+		"prefix": "VBox",
+		"body": [
+			"<mx:VBox width=\"${1:200}\" height=\"${2:200}\"",
+			"\t\t paddingTop=\"${3:0}\" paddingBottom=\"${4:0}\" paddingLeft=\"${5:0}\" paddingRight=\"${6:0}\"",
+			"\t\t borderStyle=\"${7|solid,none,inset,outset|}\">",
+			"\t$0",
+			"</mx:VBox>"
+		],
+		"description": "Creates a VBox"
+	},
+	"VerticalLayout ": {
+		"prefix": "VerticalLayout ",
+		"body": [
+			"<s:VerticalLayout paddingTop=\"${1:5}\" paddingBottom=\"${2:5}\" paddingLeft=\"${3:5}\" paddingRight=\"${4:5}\" gap=\"${5:5}\"",
+			"\t\t\t\t  horizontalAlign=\"${6|left,center,right|}\" verticalAlign=\"${7|top,middle,bottom|}\"/>$0"
+		],
+		"description": "Creates a VerticalLayout with padding, gap and align properties"
+	},
+	"VGroup": {
+		"prefix": "VGroup",
+		"body": [
+			"<s:VGroup width=\"${1:100}%\" height=\"${2:100}%\" >",
+			"\t$TM_SELECTED_TEXT$0",
+			"</s:VGroup>"
+		],
+		"description": "Creates a VGroup"
+	},
+	"WebService": {
+		"prefix": "WebService",
+		"body": [
+			"<mx:WebService id=\"${1:service}\"",
+			"\t\t\t   wsdl=\"${2:wsdl}\"",
+			"\t\t\t   useProxy=\"${3|false,true|}\"",
+			"\t\t\t   showBusyCursor=\"${4|true,false|}\"",
+			"\t\t\t   result=\"${5:onResult}(${6:event})\"",
+			"\t\t\t   fault=\"${7:onFault}(${8:event})\">\t",
+			"</mx:Webservice>$0"
+		],
+		"description": "Creates a WebService"
+	},
+	"ZipCodeFormatter": {
+		"prefix": "ZipCodeFormatter",
+		"body": [
+			"<mx:ZipCodeFormatter id=\"${1:zipCodeFormatter}\" formatString=\"${2:#####-####}\"/>$0"
+		],
+		"description": "Creates a ZipCodeFormatter"
+	},
+	"ZipCodeValidator": {
+		"prefix": "ZipCodeValidator",
+		"body": [
+			"<mx:ZipCodeValidator id=\"${1:zipCodeValidator}\"",
+			"\t\t\t\t\t source=\"{${2:textInput}}\" property=\"${3:text}\"",
+			"\t\t\t\t\t allowedFormatChars=\"${4: -}\"",
+			"\t\t\t\t\t trigger=\"{${5:button}}\"",
+			"\t\t\t\t\t triggerEvent=\"${6:click}\"",
+			"\t\t\t\t\t valid=\"${7:ifValid}(${8:event})\"",
+			"\t\t\t\t\t invalid=\"${9:ifInvalid}(${10:event})\"/>$0"
+		],
+		"description": "Creates a ZipCodeValidator"
 	}
 }
