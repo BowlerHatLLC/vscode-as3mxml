@@ -15,8 +15,10 @@ limitations under the License.
 */
 package com.nextgenactionscript.vscode.utils;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -160,38 +162,38 @@ public class MXMLNamespaceUtils
         Collection<XMLName> tagNames = currentProject.getTagNamesForClass(definition.getQualifiedName());
 
         //1. try to use an existing xmlns with an uri
-        MXMLNamespace tagNameResult = null;
+        List<String> xmlNamespaces = new ArrayList<>();
         for (XMLName tagName : tagNames)
         {
+            //creating a new collection with only the namespace strings for easy
+            //searching for other values
             String tagNamespace = tagName.getXMLNamespace();
-            //getTagNamesForClass() returns the 2006 namespace, even if that's
-            //not what we're using in this file
+            xmlNamespaces.add(tagNamespace);
+        }
+        for (String tagNamespace : xmlNamespaces)
+        {
+            if (tagNamespace.equals(IMXMLLibraryConstants.MX) && xmlNamespaces.contains(IMXMLLibraryConstants.SPARK))
+            {
+                //if we find mx, but spark also exists, we prefer spark
+                continue;
+            }
             if (tagNamespace.equals(IMXMLLanguageConstants.NAMESPACE_MXML_2006))
             {
-                //use the language namespace of the root tag instead
-                tagNamespace = mxmlData.getRootTag().getMXMLDialect().getLanguageNamespace();
+                //getTagNamesForClass() may sometimes return the 2006 namespace,
+                //even if that's not what we're using in this file.
+                String rootLanguageNamespace = mxmlData.getRootTag().getMXMLDialect().getLanguageNamespace();
+                if (!rootLanguageNamespace.equals(tagNamespace)
+                        && xmlNamespaces.contains(rootLanguageNamespace))
+                {
+                    continue;
+                }
             }
             String[] uriPrefixes = prefixMap.getPrefixesForNamespace(tagNamespace);
             if (uriPrefixes.length > 0)
             {
                 String firstPrefix = uriPrefixes[0];
-                if (firstPrefix.equals(PREFIX_MX))
-                {
-                    //we found mx, but spark is preferred over mx, so save the
-                    //result, but keep looking...
-                    tagNameResult = new MXMLNamespace(firstPrefix, tagNamespace);
-                }
-                else
-                {
-                    //the prefix is not mx, so we don't need to keep looking
-                    return new MXMLNamespace(firstPrefix, tagNamespace);
-                }
+                return new MXMLNamespace(firstPrefix, tagNamespace);
             }
-        }
-        if (tagNameResult != null)
-        {
-            //we may have gotten here if mx was found, but spark was not
-            return tagNameResult;
         }
 
         //2. try to use an existing xmlns with a package name
