@@ -585,7 +585,16 @@ public class DefinitionTextUtils
             }
             detailBuilder.append(variableDefinition.getQualifiedName());
             detailBuilder.append(":");
-            detailBuilder.append(variableDefinition.getTypeAsDisplayString());
+            String typeAsDisplayString = variableDefinition.getTypeAsDisplayString();
+            if (typeAsDisplayString.length() == 0)
+            {
+                //returns an empty string if there is no type reference
+                detailBuilder.append(IASLanguageConstants.ANY_TYPE);
+            }
+            else
+            {
+                detailBuilder.append(typeAsDisplayString);
+            }
         }
         else if (definition instanceof IFunctionDefinition)
         {
