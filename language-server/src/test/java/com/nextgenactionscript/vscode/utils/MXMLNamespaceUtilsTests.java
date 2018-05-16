@@ -15,8 +15,6 @@ limitations under the License.
 */
 package com.nextgenactionscript.vscode.utils;
 
-import com.nextgenactionscript.vscode.mxml.IMXMLLibraryConstants;
-
 import org.apache.royale.compiler.common.PrefixMap;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
