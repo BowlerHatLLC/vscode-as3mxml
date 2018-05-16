@@ -373,6 +373,14 @@
                 "description": "If the \"connect\" attribute is true, the debugger will connect on the specified port.",
                 "multipleOf": 1,
                 "default": 7936
+              },
+              "platform": {
+                "type": "string",
+                "description": "Installs the Adobe AIR application on the specified platform and launches it before attaching to the debugger.",
+                "enum": [
+                  "ios",
+                  "android"
+                ]
               }
             }
           },

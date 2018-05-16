@@ -17,6 +17,7 @@ import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
 import * as json5 from "json5";
+import installAppOnDevice from "../commands/installAppOnDevice";
 
 const FILE_EXTENSION_SWF = ".swf";
 
@@ -70,6 +71,45 @@ export default class SWFDebugConfigurationProvider implements vscode.DebugConfig
 			vscode.window.showErrorMessage("Failed to debug SWF. A workspace must be open.");
 			return null;
 		}
+		if(debugConfiguration.request === "attach")
+		{
+			return this.resolveAttachDebugConfiguration(workspaceFolder, debugConfiguration);
+		}
+		return this.resolveLaunchDebugConfiguration(workspaceFolder, debugConfiguration);
+
+	}
+
+	private resolveAttachDebugConfiguration(workspaceFolder: vscode.WorkspaceFolder, debugConfiguration: SWFDebugConfiguration): vscode.ProviderResult<SWFDebugConfiguration>
+	{
+		if(!debugConfiguration.platform)
+		{
+			return debugConfiguration;
+		}
+		return vscode.window.withProgress({location: vscode.ProgressLocation.Window}, (progress) =>
+		{
+			progress.report({message: "Installing Adobe AIR application on device..."});
+			return new Promise((resolve, reject) =>
+			{
+				//the progress message won't display unless we wait for
+				//about a second before starting the installation
+				setTimeout(() =>
+				{
+					let result = installAppOnDevice(workspaceFolder.uri, debugConfiguration.platform);
+					if(result)
+					{
+						resolve(debugConfiguration);
+					}
+					else
+					{
+						resolve(null);
+					}
+				}, 1000);
+			});
+		});
+	}
+
+	private resolveLaunchDebugConfiguration(workspaceFolder: vscode.WorkspaceFolder, debugConfiguration: SWFDebugConfiguration): vscode.ProviderResult<SWFDebugConfiguration>
+	{	
 		//see if we can find the SWF file
 		let workspaceFolderPath = workspaceFolder.uri.fsPath;
 		let asconfigPath = path.resolve(workspaceFolderPath, "asconfig.json");
@@ -78,7 +118,7 @@ export default class SWFDebugConfigurationProvider implements vscode.DebugConfig
 			vscode.window.showErrorMessage("Failed to debug SWF. Workspace does not contain asconfig.json.");
 			return null;
 		}
-		
+
 		let program: string = debugConfiguration.program;
 		let asconfigJSON: any = null;
 		try
