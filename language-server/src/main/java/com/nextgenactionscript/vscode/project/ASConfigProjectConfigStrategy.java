@@ -17,6 +17,7 @@ package com.nextgenactionscript.vscode.project;
 
 import java.io.File;
 import java.io.InputStream;
+import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -36,6 +37,7 @@ import com.nextgenactionscript.asconfigc.compiler.CompilerOptionsParser.UnknownC
 import com.nextgenactionscript.vscode.utils.ActionScriptSDKUtils;
 
 import org.apache.commons.io.FileUtils;
+import org.eclipse.lsp4j.WorkspaceFolder;
 
 /**
  * Configures a project using an asconfig.json file.
@@ -49,10 +51,14 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy
 
     private Path asconfigPath;
     private boolean changed = true;
+    private WorkspaceFolder workspaceFolder;
 
-    public ASConfigProjectConfigStrategy()
+    public ASConfigProjectConfigStrategy(WorkspaceFolder workspaceFolder)
     {
+        this.workspaceFolder = workspaceFolder;
 
+        Path workspacePath = Paths.get(URI.create(workspaceFolder.getUri()));
+        asconfigPath = workspacePath.resolve(ASCONFIG_JSON);
     }
 
     public String getDefaultConfigurationProblemPath()
@@ -60,7 +66,12 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy
         return ASCONFIG_JSON;
     }
 
-    public Path getASConfigPath()
+    public WorkspaceFolder getWorkspaceFolder()
+    {
+        return workspaceFolder;
+    }
+
+    public Path getConfigFilePath()
     {
         return asconfigPath;
     }
@@ -75,9 +86,9 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy
         return changed;
     }
 
-    public void setChanged(boolean value)
+    public void forceChanged()
     {
-        changed = value;
+        changed = true;
     }
 
     public ProjectOptions getOptions()

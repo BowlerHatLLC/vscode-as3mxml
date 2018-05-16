@@ -19,8 +19,12 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 
+import com.nextgenactionscript.vscode.project.ASConfigProjectConfigStrategy;
+import com.nextgenactionscript.vscode.project.IProjectConfigStrategy;
+import com.nextgenactionscript.vscode.project.IProjectConfigStrategyFactory;
 import com.nextgenactionscript.vscode.services.ActionScriptLanguageClient;
 
+import org.eclipse.lsp4j.WorkspaceFolder;
 import org.eclipse.lsp4j.jsonrpc.Launcher;
 
 /**
@@ -54,7 +58,8 @@ public class Main
                 inputStream = socket.getInputStream();
                 outputStream = socket.getOutputStream();
             }
-            ActionScriptLanguageServer server = new ActionScriptLanguageServer();
+            ASConfigProjectConfigStrategyFactory configFactory = new ASConfigProjectConfigStrategyFactory();
+            ActionScriptLanguageServer server = new ActionScriptLanguageServer(configFactory);
             Launcher<ActionScriptLanguageClient> launcher = Launcher.createLauncher(
                 server, ActionScriptLanguageClient.class, inputStream, outputStream);
             server.connect(launcher.getRemoteProxy());
@@ -66,6 +71,14 @@ public class Main
             System.err.println("Visit the following URL to file an issue, and please include this log: https://github.com/BowlerHatLLC/vscode-nextgenas/issues");
             e.printStackTrace(System.err);
             System.exit(SERVER_CONNECT_ERROR);
+        }
+    }
+
+    private static class ASConfigProjectConfigStrategyFactory implements IProjectConfigStrategyFactory
+    {
+        public IProjectConfigStrategy create(WorkspaceFolder folder)
+        {
+            return new ASConfigProjectConfigStrategy(folder);
         }
     }
 }

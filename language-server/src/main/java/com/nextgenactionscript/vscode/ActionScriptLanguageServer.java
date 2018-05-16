@@ -28,7 +28,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.nextgenactionscript.vscode.DidChangeWatchedFilesRegistrationOptions.FileSystemWatcher;
 import com.nextgenactionscript.vscode.commands.ICommandConstants;
-import com.nextgenactionscript.vscode.project.ASConfigProjectConfigStrategy;
+import com.nextgenactionscript.vscode.project.IProjectConfigStrategy;
+import com.nextgenactionscript.vscode.project.IProjectConfigStrategyFactory;
 import com.nextgenactionscript.vscode.services.ActionScriptLanguageClient;
 import com.nextgenactionscript.vscode.utils.LanguageServerCompilerUtils;
 
@@ -68,16 +69,16 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
     private static final String ROYALE_ASJS_RELATIVE_PATH_CHILD = "./royale-asjs";
     private static final String FRAMEWORKS_RELATIVE_PATH_CHILD = "./frameworks";
     private static final String FRAMEWORKS_RELATIVE_PATH_PARENT = "../frameworks";
-    private static final String ASCONFIG_JSON = "asconfig.json";
 
     private WorkspaceService workspaceService;
     private ActionScriptTextDocumentService textDocumentService;
-    private ASConfigProjectConfigStrategy projectConfigStrategy;
+    private IProjectConfigStrategyFactory projectConfigStrategyFactory;
+    private IProjectConfigStrategy projectConfigStrategy;
     private ActionScriptLanguageClient languageClient;
 
-    public ActionScriptLanguageServer()
+    public ActionScriptLanguageServer(IProjectConfigStrategyFactory factory)
     {
-        projectConfigStrategy = new ASConfigProjectConfigStrategy();
+        this.projectConfigStrategyFactory = factory;
         //the royalelib system property may be configured in the command line
         //options, but if it isn't, use the framework included with Royale
         if (System.getProperty(PROPERTY_FRAMEWORK_LIB) == null)
@@ -104,8 +105,10 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
     {
         URI rootURI = URI.create(params.getRootUri());
         Path workspaceRoot = Paths.get(rootURI).toAbsolutePath().normalize();
-        projectConfigStrategy.setASConfigPath(workspaceRoot.resolve(ASCONFIG_JSON));
+        projectConfigStrategy = projectConfigStrategyFactory.create(params.getWorkspaceFolders().get(0));
         textDocumentService.setClientCapabilities(params.getCapabilities());
+        textDocumentService.setLanguageClient(languageClient);
+        textDocumentService.setProjectConfigStrategy(projectConfigStrategy);
         textDocumentService.setWorkspaceRoot(workspaceRoot);
 
         InitializeResult result = new InitializeResult();
@@ -274,27 +277,24 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
                         return;
                     }
                     System.setProperty(PROPERTY_FRAMEWORK_LIB, frameworkLib);
-                    projectConfigStrategy.setChanged(true);
+                    projectConfigStrategy.forceChanged();
                     textDocumentService.checkForProblemsNow();
                 }
 
                 @Override
                 public void didChangeWatchedFiles(DidChangeWatchedFilesParams params)
                 {
-                    for (FileEvent event : params.getChanges())
+                    Path configFilePath = projectConfigStrategy.getConfigFilePath();
+                    if (configFilePath != null)
                     {
-                        Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(event.getUri());
-                        if (path == null)
+                        for (FileEvent event : params.getChanges())
                         {
-                            continue;
-                        }
-                        File file = path.toFile();
-                        String fileName = file.getName();
-                        if (fileName.equals(ASCONFIG_JSON))
-                        {
-                            //compiler settings may have changed, which means we should
-                            //start fresh
-                            projectConfigStrategy.setChanged(true);
+                            Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(event.getUri());
+                            if (path == null || !path.equals(configFilePath))
+                            {
+                                continue;
+                            }
+                            projectConfigStrategy.forceChanged();
                         }
                     }
                     //delegate to the ActionScriptTextDocumentService, since that's
@@ -329,8 +329,6 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
         if (textDocumentService == null)
         {
             textDocumentService = new ActionScriptTextDocumentService();
-            textDocumentService.setLanguageClient(languageClient);
-            textDocumentService.setProjectConfigStrategy(projectConfigStrategy);
         }
         return textDocumentService;
     }
