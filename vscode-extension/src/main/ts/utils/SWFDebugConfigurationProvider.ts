@@ -17,7 +17,6 @@ import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
 import * as json5 from "json5";
-import installAppOnDevice from "../commands/installAppOnDevice";
 
 const FILE_EXTENSION_SWF = ".swf";
 
@@ -73,39 +72,11 @@ export default class SWFDebugConfigurationProvider implements vscode.DebugConfig
 		}
 		if(debugConfiguration.request === "attach")
 		{
-			return this.resolveAttachDebugConfiguration(workspaceFolder, debugConfiguration);
+			//nothing to resolve
+			return debugConfiguration;
 		}
 		return this.resolveLaunchDebugConfiguration(workspaceFolder, debugConfiguration);
 
-	}
-
-	private resolveAttachDebugConfiguration(workspaceFolder: vscode.WorkspaceFolder, debugConfiguration: SWFDebugConfiguration): vscode.ProviderResult<SWFDebugConfiguration>
-	{
-		if(!debugConfiguration.platform)
-		{
-			return debugConfiguration;
-		}
-		return vscode.window.withProgress({location: vscode.ProgressLocation.Window}, (progress) =>
-		{
-			progress.report({message: "Installing Adobe AIR application on device..."});
-			return new Promise((resolve, reject) =>
-			{
-				//the progress message won't display unless we wait for
-				//about a second before starting the installation
-				setTimeout(() =>
-				{
-					let result = installAppOnDevice(workspaceFolder.uri, debugConfiguration.platform);
-					if(result)
-					{
-						resolve(debugConfiguration);
-					}
-					else
-					{
-						resolve(null);
-					}
-				}, 1000);
-			});
-		});
 	}
 
 	private resolveLaunchDebugConfiguration(workspaceFolder: vscode.WorkspaceFolder, debugConfiguration: SWFDebugConfiguration): vscode.ProviderResult<SWFDebugConfiguration>

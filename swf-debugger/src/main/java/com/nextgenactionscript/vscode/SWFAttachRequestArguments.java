@@ -21,4 +21,5 @@ public class SWFAttachRequestArguments extends AttachRequest.AttachRequestArgume
 {
 	public boolean connect = false;
 	public int port = 7936;
+	public String platform = null;
 }

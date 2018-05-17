@@ -66,6 +66,9 @@ import com.nextgenactionscript.vscode.debug.responses.Thread;
 import com.nextgenactionscript.vscode.debug.responses.ThreadsResponseBody;
 import com.nextgenactionscript.vscode.debug.responses.Variable;
 import com.nextgenactionscript.vscode.debug.responses.VariablesResponseBody;
+import com.nextgenactionscript.vscode.debug.utils.DeviceInstallUtils;
+import com.nextgenactionscript.vscode.debug.utils.DeviceInstallUtils.DeviceCommandResult;
+
 import flash.tools.debugger.AIRLaunchInfo;
 import flash.tools.debugger.CommandLineException;
 import flash.tools.debugger.DefaultDebuggerCallbacks;
@@ -97,11 +100,14 @@ public class SWFDebugSession extends DebugSession
     private static final String FILE_EXTENSION_AS = ".as";
     private static final String FILE_EXTENSION_MXML = ".mxml";
     private static final String FILE_EXTENSION_EXE = ".exe";
+    private static final String FILE_EXTENSION_BAT = ".bat";
     private static final String FILE_EXTENSION_XML = ".xml";
     private static final String ADL_BASE_NAME = "bin/adl";
+    private static final String ADT_BASE_NAME = "bin/adt";
     private static final String FLEXLIB_PROPERTY = "flexlib";
     private static final String WORKSPACE_PROPERTY = "workspace";
     private static final String SDK_PATH_SIGNATURE = "/frameworks/projects/";
+    private static final String PLATFORM_IOS = "ios";
     private static final long LOCAL_VARIABLES_REFERENCE = 1;
     private ThreadSafeSession swfSession;
     private java.lang.Thread sessionThread;
@@ -111,6 +117,7 @@ public class SWFDebugSession extends DebugSession
     private Path flexlib;
     private Path flexHome;
     private Path adlPath;
+    private Path adtPath;
     private Map<String,SourceBreakpoint[]> pendingBreakpoints;
     private List<LogLocation> savedLogLocations = new ArrayList<>();
 
@@ -328,11 +335,14 @@ public class SWFDebugSession extends DebugSession
             flexlib = Paths.get(flexlibPath);
             flexHome = flexlib.getParent();
             String adlRelativePath = ADL_BASE_NAME;
+            String adtRelativePath = ADT_BASE_NAME;
             if (System.getProperty("os.name").toLowerCase().startsWith("windows"))
             {
                 adlRelativePath += FILE_EXTENSION_EXE;
+                adtRelativePath += FILE_EXTENSION_BAT;
             }
             adlPath = flexHome.resolve(adlRelativePath);
+            adtPath = flexHome.resolve(adtRelativePath);
         }
     }
 
@@ -429,7 +439,6 @@ public class SWFDebugSession extends DebugSession
                     }
                     if (isAIR && adlPath != null)
                     {
-
                         String extdir = swfArgs.extdir;
                         if (extdir != null)
                         {
@@ -571,14 +580,96 @@ public class SWFDebugSession extends DebugSession
     public void attach(Response response, AttachRequest.AttachRequestArguments args)
     {
         SWFAttachRequestArguments swfArgs = (SWFAttachRequestArguments) args;
+        if(swfArgs.platform != null)
+        {
+            if(!installOnDevice(swfArgs.platform))
+            {
+                response.success = false;
+                sendResponse(response);
+                return;
+            }
+        }
+        attach(response, swfArgs);
+    }
+
+    private void sendOutputEvent(String message)
+    {
+        OutputEvent.OutputBody body = new OutputEvent.OutputBody();
+        body.output = message;
+        sendEvent(new OutputEvent(body));
+    }
+
+    private boolean installOnDevice(String platform)
+    {
+        sendOutputEvent("Preparing to install Adobe AIR application...\n");
+        Path workspacePath = Paths.get(System.getProperty(WORKSPACE_PROPERTY));
+        String applicationID = DeviceInstallUtils.findApplicationID(workspacePath);
+        if(applicationID == null)
+        {
+            OutputEvent.OutputBody body = new OutputEvent.OutputBody();
+            body.category = "stderr";
+            body.output = "Failed to debug SWF. Error reading application <id> in application descriptor for platform \"" + platform + "\".\n";
+            sendEvent(new OutputEvent(body));
+            return false;
+        }
+        Path outputPath = DeviceInstallUtils.findOutputPath(platform, workspacePath);
+        if(outputPath == null)
+        {
+            OutputEvent.OutputBody body = new OutputEvent.OutputBody();
+            body.category = "stderr";
+            body.output = "Failed to debug SWF. Error reading output path in asconfig.json for platform \"" + platform + "\".\n";
+            sendEvent(new OutputEvent(body));
+            return false;
+        }
+        DeviceCommandResult uninstallResult = DeviceInstallUtils.runUninstallCommand(platform, applicationID, workspacePath, adtPath);
+        if(uninstallResult.error)
+        {
+            OutputEvent.OutputBody body = new OutputEvent.OutputBody();
+            body.category = "stderr";
+            body.output = uninstallResult.message + "\n";
+            sendEvent(new OutputEvent(body));
+            return false;
+        }
+        sendOutputEvent("Installing Adobe AIR application...\n");
+        DeviceCommandResult installResult = DeviceInstallUtils.runInstallCommand(platform, outputPath, workspacePath, adtPath);
+        if(installResult.error)
+        {
+            OutputEvent.OutputBody body = new OutputEvent.OutputBody();
+            body.category = "stderr";
+            body.output = installResult.message + "\n";
+            sendEvent(new OutputEvent(body));
+            return false;
+        }
+        if(platform.equals(PLATFORM_IOS))
+        {
+            //ADT can't launch an iOS application automatically
+            sendOutputEvent("\033[0;95mDebugger ready to attach. You must launch your application manually on the iOS device.\u001B[0m\n");
+            return true;
+        }
+        sendOutputEvent("Launching Adobe AIR application on device...\n");
+        DeviceCommandResult launchResult = DeviceInstallUtils.runLaunchCommand(platform, applicationID, workspacePath, adtPath);
+        if(launchResult.error)
+        {
+            OutputEvent.OutputBody body = new OutputEvent.OutputBody();
+            body.category = "stderr";
+            body.output = launchResult.message + "\n";
+            sendEvent(new OutputEvent(body));
+            return false;
+        }
+        sendOutputEvent("\033[0;92mInstallation and launch completed successfully.\u001B[0m\n");
+        return true;
+    }
+
+    private void attach(Response response, SWFAttachRequestArguments args)
+    {
         ThreadSafeSessionManager manager = ThreadSafeBootstrap.sessionManager();
         swfSession = null;
         try
         {
             manager.startListening();
-            if (swfArgs.connect)
+            if (args.connect)
             {
-                swfSession = (ThreadSafeSession) manager.connect(swfArgs.port, null);
+                swfSession = (ThreadSafeSession) manager.connect(args.port, null);
             }
             else
             {
