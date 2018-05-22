@@ -375,6 +375,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             result.setItems(new ArrayList<>());
             return CompletableFuture.completedFuture(Either.forRight(result));
         }
+
+        //we need the compilation unit to be fully built or the completion
+        //result will be inaccurate
+        realTimeProblemAnalyzer.completePendingRequests();
+
         IMXMLTagData offsetTag = getOffsetMXMLTag(params);
         if (offsetTag != null)
         {

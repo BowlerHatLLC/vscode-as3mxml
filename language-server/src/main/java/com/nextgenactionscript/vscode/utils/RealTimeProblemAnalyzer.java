@@ -19,18 +19,12 @@ import java.net.URI;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 
 import org.apache.royale.compiler.filespecs.IFileSpecification;
 import org.apache.royale.compiler.problems.ICompilerProblem;
 import org.apache.royale.compiler.problems.InternalCompilerProblem2;
 import org.apache.royale.compiler.projects.ICompilerProject;
 import org.apache.royale.compiler.units.ICompilationUnit;
-import org.apache.royale.compiler.units.requests.IABCBytesRequestResult;
-import org.apache.royale.compiler.units.requests.IFileScopeRequestResult;
-import org.apache.royale.compiler.units.requests.IOutgoingDependenciesRequestResult;
-import org.apache.royale.compiler.units.requests.IRequest;
-import org.apache.royale.compiler.units.requests.ISyntaxTreeRequestResult;
 import org.apache.royale.compiler.workspaces.IWorkspace;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
@@ -101,46 +95,36 @@ public class RealTimeProblemAnalyzer implements Runnable
 			}
 			else
 			{
-				//if we're changing compilation units, force publish immediately
+				//if we're changing compilation units, publish immediately
+				completePendingRequests();
 				publishDiagnostics();
 			}
 		}
 		compilationUnit = unit;
-		if(compilationUnit != null)
+		if(unit != null)
 		{
-			syntaxTreeRequest = compilationUnit.getSyntaxTreeRequest();
-			fileScopeRequest = compilationUnit.getFileScopeRequest();
-			outgoingDependenciesRequest = compilationUnit.getOutgoingDependenciesRequest();
-			abcBytesRequest = compilationUnit.getABCBytesRequest();
-		}
-		else
-		{
-			syntaxTreeRequest = null;
-			fileScopeRequest = null;
-			outgoingDependenciesRequest = null;
-			abcBytesRequest = null;
+			//we don't need to save the return values of these methods. it's
+			//enough to simply start the process
+			unit.getSyntaxTreeRequest();
+			unit.getFileScopeRequest();
+			unit.getOutgoingDependenciesRequest();
+			unit.getABCBytesRequest();
 		}
 	}
-
-	private IRequest<ISyntaxTreeRequestResult, ICompilationUnit> syntaxTreeRequest;
-	private IRequest<IFileScopeRequestResult, ICompilationUnit> fileScopeRequest;
-	private IRequest<IOutgoingDependenciesRequestResult, ICompilationUnit> outgoingDependenciesRequest;
-	private IRequest<IABCBytesRequestResult, ICompilationUnit> abcBytesRequest;
-
-	private List<ICompilerProblem> problems = new ArrayList<>();
 
 	public void run()
 	{
 		while(true)
 		{
-			if(compilationUnit == null)
+			ICompilationUnit unit = compilationUnit;
+			if(unit == null)
 			{
 				break;
 			}
-			if(syntaxTreeRequest.isDone()
-					&& fileScopeRequest.isDone()
-					&& outgoingDependenciesRequest.isDone()
-					&& abcBytesRequest.isDone())
+			if(unit.getSyntaxTreeRequest().isDone()
+					&& unit.getFileScopeRequest().isDone()
+					&& unit.getOutgoingDependenciesRequest().isDone()
+					&& unit.getABCBytesRequest().isDone())
 			{
 				publishDiagnostics();
 				if(compilationUnit == null)
@@ -159,22 +143,56 @@ public class RealTimeProblemAnalyzer implements Runnable
 		}
 	}
 
+	public void completePendingRequests()
+	{
+		ICompilationUnit unit = compilationUnit;
+		if (unit == null)
+		{
+			//no compilation unit is being analyzed right now
+			return;
+		}
+		if (fileChangedPending)
+		{
+			//make sure that the workspace sees the latest changes before we
+			//publish any problems!
+			fileChangedPending = false;
+			IWorkspace workspace = project.getWorkspace();
+			workspace.fileChanged(fileSpec);
+		}
+		try
+		{
+			unit.getSyntaxTreeRequest().get();
+			unit.getFileScopeRequest().get();
+			unit.getOutgoingDependenciesRequest().get();
+			unit.getABCBytesRequest().get();
+		}
+		catch(InterruptedException e)
+		{
+
+		}
+	}
+
 	private void publishDiagnostics()
 	{
-        URI uri = Paths.get(compilationUnit.getAbsoluteFilename()).toUri();
+		ICompilationUnit unit = compilationUnit;
+		if(unit == null)
+		{
+			return;
+		}
+        URI uri = Paths.get(unit.getAbsoluteFilename()).toUri();
         PublishDiagnosticsParams publish = new PublishDiagnosticsParams();
         ArrayList<Diagnostic> diagnostics = new ArrayList<>();
         publish.setDiagnostics(diagnostics);
-        publish.setUri(uri.toString());
-		problems.clear();
+		publish.setUri(uri.toString());
+		ArrayList<ICompilerProblem> problems = new ArrayList<>();
         try
         {
             //if we pass in null, it's designed to ignore certain errors that
             //don't matter for IDE code intelligence.
-			Collections.addAll(problems, syntaxTreeRequest.get().getProblems());
-			Collections.addAll(problems, fileScopeRequest.get().getProblems());
-			Collections.addAll(problems, outgoingDependenciesRequest.get().getProblems());
-			ICompilerProblem[] probs = abcBytesRequest.get().getProblems();
+			Collections.addAll(problems, unit.getSyntaxTreeRequest().get().getProblems());
+			Collections.addAll(problems, unit.getFileScopeRequest().get().getProblems());
+			Collections.addAll(problems, unit.getOutgoingDependenciesRequest().get().getProblems());
+			ICompilerProblem[] probs = unit.getABCBytesRequest().get().getProblems();
 			for (ICompilerProblem prob : probs)
 			{
 				if (!(prob instanceof InternalCompilerProblem2))
@@ -202,19 +220,19 @@ public class RealTimeProblemAnalyzer implements Runnable
 			Diagnostic diagnostic = LanguageServerCompilerUtils.getDiagnosticFromCompilerProblem(problem);
 			diagnostics.add(diagnostic);
 		}
-		problems.clear();
 
-        if (languageClient != null)
+		//if the unit has changed, it happened by calling publishNow() and the
+		//diagnostics should already be accurate
+		if(!unit.equals(compilationUnit))
+		{
+			return;
+		}
+		if (languageClient != null)
         {
             languageClient.publishDiagnostics(publish);
 		}
-		ICompilationUnit unit = compilationUnit;
 		compilationUnit = null;
-		syntaxTreeRequest = null;
-		fileScopeRequest = null;
-		outgoingDependenciesRequest = null;
-		abcBytesRequest = null;
-		if(fileChangedPending)
+		if (fileChangedPending)
 		{
 			fileChangedPending = false;
 			IWorkspace workspace = project.getWorkspace();
