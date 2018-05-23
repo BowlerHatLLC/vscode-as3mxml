@@ -192,7 +192,9 @@ import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.CodeLensParams;
 import org.eclipse.lsp4j.Command;
+import org.eclipse.lsp4j.CompletionCapabilities;
 import org.eclipse.lsp4j.CompletionItem;
+import org.eclipse.lsp4j.CompletionItemCapabilities;
 import org.eclipse.lsp4j.CompletionItemKind;
 import org.eclipse.lsp4j.CompletionList;
 import org.eclipse.lsp4j.CompletionParams;
@@ -227,6 +229,7 @@ import org.eclipse.lsp4j.SignatureHelp;
 import org.eclipse.lsp4j.SignatureInformation;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.SymbolKind;
+import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.eclipse.lsp4j.TextDocumentContentChangeEvent;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.TextDocumentItem;
@@ -344,8 +347,22 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     public void setClientCapabilities(ClientCapabilities value)
     {
+        completionSupportsSnippets = false;
+
         clientCapabilities = value;
-        completionSupportsSnippets = clientCapabilities.getTextDocument().getCompletion().getCompletionItem().getSnippetSupport();
+        TextDocumentClientCapabilities textDocument = clientCapabilities.getTextDocument();
+        if(textDocument != null)
+        {
+            CompletionCapabilities completion = textDocument.getCompletion();
+            if(completion != null)
+            {
+                CompletionItemCapabilities completionItem = completion.getCompletionItem();
+                if(completionItem != null)
+                {
+                    completionSupportsSnippets = completionItem.getSnippetSupport();
+                }
+            }
+        }
     }
 
     public void setLanguageClient(ActionScriptLanguageClient value)
