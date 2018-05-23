@@ -1210,6 +1210,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return;
         }
+        if (currentProject == null)
+        {
+            return;
+        }
         Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocumentUri);
         if (path != null)
         {
@@ -1219,11 +1223,15 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 {
                     sourceByPath.put(path, change.getText());
                 }
-                else
+                else if(sourceByPath.containsKey(path))
                 {
                     String existingText = sourceByPath.get(path);
                     String newText = patch(existingText, change);
                     sourceByPath.put(path, newText);
+                }
+                else
+                {
+                    System.err.println("Failed to apply changes to code intelligence from URI: " + textDocumentUri);
                 }
             }
             if (currentWorkspace != null)
@@ -5090,6 +5098,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         refreshProjectOptions();
         if (currentProjectOptions != null && currentProjectOptions.type.equals(ProjectType.LIB))
         {
+            //if we haven't accessed a compilation unit yet, the project may be null
+            currentProject = getProject();
             Set<Path> filePaths = sourceByPath.keySet();
             if (filePaths.size() > 0)
             {
