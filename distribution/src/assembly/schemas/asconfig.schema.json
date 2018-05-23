@@ -686,7 +686,7 @@
 				"theme":
 				{
 					"type": "string",
-					"description": "Specifies a list of theme files to use with this application."
+					"description": "Specifies a theme file to use with this application."
 				},
 				"tools-locale":
 				{
