@@ -289,6 +289,11 @@ public class CompilerOptionsParser
 					OptionsFormatter.setValuesWithCommas(key, values, result);
 					break;
 				}
+				case CompilerOptions.THEME:
+				{
+					OptionsFormatter.setPathValue(key, options.get(key).asText(), result);
+					break;
+				}
 				case CompilerOptions.TOOLS_LOCALE:
 				{
 					OptionsFormatter.setValue(key, options.get(key).asText(), result);

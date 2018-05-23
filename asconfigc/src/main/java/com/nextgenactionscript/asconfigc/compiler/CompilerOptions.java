@@ -44,6 +44,7 @@ public class CompilerOptions
 	public static final String STRICT = "strict";
 	public static final String SWF_VERSION = "swf-version";
 	public static final String TARGET_PLAYER = "target-player";
+	public static final String THEME = "theme";
 	public static final String TOOLS_LOCALE = "tools-locale";
 	public static final String USE_DIRECT_BLIT = "use-direct-blit";
 	public static final String USE_GPU = "use-gpu";

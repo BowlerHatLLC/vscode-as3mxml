@@ -1143,6 +1143,24 @@ class CompilerOptionsParserTests
 	}
 	
 	@Test
+	void testTheme()
+	{
+		String value = "path/to/theme.swc";
+		ObjectNode options = JsonNodeFactory.instance.objectNode();
+		options.set(CompilerOptions.THEME, JsonNodeFactory.instance.textNode(value));
+		ArrayList<String> result = new ArrayList<>();
+		try
+		{
+			parser.parse(options, null, result);
+		}
+		catch(UnknownCompilerOptionException e) {}
+		Assertions.assertEquals(1, result.size(),
+			"CompilerOptionsParser.parse() created incorrect number of options.");
+		Assertions.assertEquals("--" + CompilerOptions.THEME + "=" + value, result.get(0),
+			"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
+	}
+	
+	@Test
 	void testToolsLocale()
 	{
 		String value = "fr_FR";
