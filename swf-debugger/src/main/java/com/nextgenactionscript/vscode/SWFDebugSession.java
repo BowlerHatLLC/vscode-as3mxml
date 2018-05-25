@@ -106,7 +106,8 @@ public class SWFDebugSession extends DebugSession
     private static final String ADT_BASE_NAME = "bin/adt";
     private static final String FLEXLIB_PROPERTY = "flexlib";
     private static final String WORKSPACE_PROPERTY = "workspace";
-    private static final String SDK_PATH_SIGNATURE = "/frameworks/projects/";
+    private static final String SDK_PATH_SIGNATURE_UNIX = "/frameworks/projects/";
+    private static final String SDK_PATH_SIGNATURE_WINDOWS = "\\frameworks\\projects\\";
     private static final String PLATFORM_IOS = "ios";
     private static final long LOCAL_VARIABLES_REFERENCE = 1;
     private ThreadSafeSession swfSession;
@@ -1157,10 +1158,14 @@ public class SWFDebugSession extends DebugSession
 
     protected String transformPath(String sourceFilePath)
     {
-        int index = sourceFilePath.indexOf(SDK_PATH_SIGNATURE);
+        int index = sourceFilePath.indexOf(SDK_PATH_SIGNATURE_UNIX);
         if (index == -1)
         {
-            return sourceFilePath;
+            index = sourceFilePath.indexOf(SDK_PATH_SIGNATURE_WINDOWS);
+            if (index == -1)
+            {
+                return sourceFilePath;
+            }
         }
         if (flexHome == null)
         {
