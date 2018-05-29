@@ -167,9 +167,7 @@
           "AS3",
           "as3",
           "AS",
-          "as",
-          "NextGenAS",
-          "NextGen ActionScript"
+          "as"
         ],
         "configuration": "./nextgenas.configuration.json"
       },
