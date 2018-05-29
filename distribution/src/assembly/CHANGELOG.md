@@ -1,3 +1,38 @@
+## v0.12.0
+
+### New Features
+
+* Completion: In MXML, xmlns prefix is displayed before component names to help differentiate between different libraries that might have components with the same name. For example, instead of seeing `Button` in the list twice when using Apache Flex, you'll now see `s:Button` and `mx:Button`.
+* Completion: When completing types in MXML for child elements, types that are incompatible with the current property are filtered out.
+* Completion: In MXML, when defining a property, style, or event listener as a child XML element, now automatically adds the closing tag and places the cursor in between the opening and closing tags.
+* Completion: Improved the automatic xmlns prefix detection for MXML components so that it is now based on the namespace URI or the package name to avoid prefixes like `ns1`, `ns2`, etc. (except as a final fallback).
+* Completion: Added `id`, `includeIn`, and `excludeFrom` keywords in MXML.
+* SWF Debugger: Added support for [*logpoints*](https://code.visualstudio.com/docs/editor/debugging#_logpoints), a special kind of breakpoint that writes to the console and continues without breaking.
+* SWF Debugger: Added ability to automatically install an Adobe AIR application on a device before connecting to the debugger. In *launch.json*, you may now specify a new, optional `platform` field on an `attach` request. Valid values for `platform` are **"ios"** and **"android"**.
+* Quick Compile & Debug: Displays activity indicator in status bar during compilation.
+* asconfig.json: Added `js-default-initializers`, `js-output`, `warn-public-vars`, and `theme` as valid compiler options.
+
+### Fixed Issues
+
+* asconfig.json: Stricter validation so that unknown compiler options are properly flagged as invalid.
+* asconfig.json: Fixed issue where project was not immediately updated if the configuration file has errors, but then gets modified and becomes valid.
+* Completion: Improved performance in larger files by moving error checking into a separate thread.
+* Completion: Adding a package block to an empty file now places the cursor in between the curly braces.
+* Completion: Fixed the classification of events so that they have the correct icon in the completion list.
+* Completion: Fixed issue where styles defined in superclasses were incorrectly omitted in MXML.
+* Hover: Fixed issue where hover details for a variable without a type annotation would incorrectly display `:` when it should be `:*` instead.
+* Organize Imports: Fixed issue where the organize imports command would not work from the File Explorer, if the file were not already open in an editor.
+* Problem Checking: Fixed issue where "duplicate definition" errors could be displayed when copying/creating files because the workspace got out of sync.
+* Goto Definition: Fixed null reference exception when MXML file does not contain any xmlns references in the root tag.
+* Goto Definition: Fixed null reference exception when attempting to goto an event definition in a SWC file.
+* Language Server: Fixed issue where language server process did not properly exit on macOS when requested by Visual Studio Code.
+* SWF Debugger: Fixed issue where source code for classes in the SDK could not be loaded from the call stack on Windows when stopped at a breakpoint during debugging.
+* Usability: Improved informational message displayed when an *.as* or *.mxml* file is outside of the source path and code intelligence is disabled.
+
+### Other Changes
+
+* eclipse/lsp4j updated to v0.4.0.
+
 ## 0.11.1
 
 ### Fixed Issues
