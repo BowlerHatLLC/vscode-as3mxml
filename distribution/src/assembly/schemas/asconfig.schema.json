@@ -507,7 +507,7 @@
 				"js-default-initializers":
 				{
 					"type": "boolean",
-					"description": "In an Apache Royale project, enables or disables initialization of variables with primitive types in the generated JavaScript using default values."
+					"description": "In an Apache Royale project, enables or disables initialization of primitive (Number, Boolean, etc.) variables with default values in the generated JavaScript."
 				},
 				"js-output":
 				{
