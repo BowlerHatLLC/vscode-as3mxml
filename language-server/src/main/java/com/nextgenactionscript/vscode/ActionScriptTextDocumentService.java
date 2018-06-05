@@ -170,6 +170,7 @@ import com.nextgenactionscript.vscode.utils.ActionScriptSDKUtils;
 import com.nextgenactionscript.vscode.utils.CodeActionsUtils;
 import com.nextgenactionscript.vscode.utils.CodeGenerationUtils;
 import com.nextgenactionscript.vscode.utils.CompilerProblemFilter;
+import com.nextgenactionscript.vscode.utils.CompletionItemUtils;
 import com.nextgenactionscript.vscode.utils.DefinitionDocumentationUtils;
 import com.nextgenactionscript.vscode.utils.DefinitionTextUtils;
 import com.nextgenactionscript.vscode.utils.DefinitionUtils;
@@ -182,6 +183,7 @@ import com.nextgenactionscript.vscode.utils.MXMLNamespace;
 import com.nextgenactionscript.vscode.utils.MXMLNamespaceUtils;
 import com.nextgenactionscript.vscode.utils.ProblemTracker;
 import com.nextgenactionscript.vscode.utils.RealTimeProblemAnalyzer;
+import com.nextgenactionscript.vscode.utils.ScopeUtils;
 import com.nextgenactionscript.vscode.utils.SourcePathUtils;
 import com.nextgenactionscript.vscode.utils.CodeActionsUtils.CommandAndRange;
 import com.nextgenactionscript.vscode.utils.DefinitionTextUtils.DefinitionAsText;
@@ -2166,7 +2168,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             if (attribute != null
                     && currentOffset > (attribute.getAbsoluteStart() + attribute.getXMLName().toString().length()))
             {
-                return mxmlStatesCompletion(offsetTag, result);
+                return mxmlStatesCompletion(currentUnit, result);
             }
 
             IClassDefinition classDefinition = (IClassDefinition) offsetDefinition;
@@ -2186,7 +2188,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 {
                     String typeFilter = null;
                     TypeScope typeScope = (TypeScope) classDefinition.getContainedScope();
-                    List<IDefinition> propertiesByName = typeScope.getPropertiesByNameForMemberAccess(currentProject, defaultPropertyName, getNamespaceSetForScopes(typeScope, typeScope));
+                    Set<INamespaceDefinition> namespaceSet = ScopeUtils.getNamespaceSetForScopes(typeScope, typeScope, currentProject);
+                    List<IDefinition> propertiesByName = typeScope.getPropertiesByNameForMemberAccess(currentProject, defaultPropertyName, namespaceSet);
                     if (propertiesByName.size() > 0)
                     {
                         IDefinition propertyDefinition = propertiesByName.get(0);
@@ -2223,9 +2226,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return result;
     }
 
-    private CompletionList mxmlStatesCompletion(IMXMLTagData offsetTag, CompletionList result)
+    private CompletionList mxmlStatesCompletion(ICompilationUnit unit, CompletionList result)
     {
-        List<IDefinition> definitions = currentUnit.getDefinitionPromises();
+        List<IDefinition> definitions = unit.getDefinitionPromises();
         if (definitions.size() == 0)
         {
             return result;
@@ -3214,16 +3217,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 insertText.append(returnType);
             }
 
-            CompletionItem item = new CompletionItem();
-            item.setKind(LanguageServerCompilerUtils.getCompletionItemKindFromDefinition(functionDefinition));
-            item.setDetail(DefinitionTextUtils.definitionToDetail(functionDefinition, currentProject));
-            item.setLabel(functionDefinition.getBaseName());
-            item.setInsertText(insertText.toString());
-            String docs = DefinitionDocumentationUtils.getDocumentationForDefinition(functionDefinition, false);
-            if (docs != null)
-            {
-                item.setDocumentation(docs);
-            }
+            CompletionItem item = CompletionItemUtils.createDefinitionItem(functionDefinition, currentProject);
+		    item.setInsertText(insertText.toString());
             resultItems.add(item);
         }
     }
@@ -3292,42 +3287,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         File unitFile = new File(currentUnit.getAbsoluteFilename());
         unitFile = unitFile.getParentFile();
         String expectedPackage = SourcePathUtils.getPackageForDirectoryPath(unitFile.toPath(), currentProject);
-
-        StringBuilder labelBuilder = new StringBuilder();
-        labelBuilder.append(IASKeywordConstants.PACKAGE);
-        if (expectedPackage.length() > 0)
-        {
-            labelBuilder.append(" ");
-            labelBuilder.append(expectedPackage);
-        }
-        labelBuilder.append(" {}");
-
-        StringBuilder insertTextBuilder = new StringBuilder();
-        insertTextBuilder.append(IASKeywordConstants.PACKAGE);
-        if (expectedPackage.length() > 0)
-        {
-            insertTextBuilder.append(" ");
-            insertTextBuilder.append(expectedPackage);
-        }
-        insertTextBuilder.append("\n");
-        insertTextBuilder.append("{");
-        insertTextBuilder.append("\n");
-        insertTextBuilder.append("\t");
-        if (completionSupportsSnippets)
-        {
-            insertTextBuilder.append("$0");
-        }
-        insertTextBuilder.append("\n");
-        insertTextBuilder.append("}");
-
-        CompletionItem packageItem = new CompletionItem();
-        packageItem.setKind(CompletionItemKind.Module);
-        packageItem.setLabel(labelBuilder.toString());
-        packageItem.setInsertText(insertTextBuilder.toString());
-        if (completionSupportsSnippets)
-        {
-            packageItem.setInsertTextFormat(InsertTextFormat.Snippet);
-        }
+        CompletionItem packageItem = CompletionItemUtils.createPackageBlockItem(expectedPackage, completionSupportsSnippets);
         result.getItems().add(packageItem);
     }
 
@@ -3525,7 +3485,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         addMXMLLanguageTagToAutoComplete(IMXMLLanguageConstants.STYLE, prefix, includeOpenTagPrefix, tagsNeedOpenBracket, result);
     }
 
-    private void addMembersForMXMLTypeToAutoComplete(IClassDefinition definition, IMXMLTagData offsetTag, boolean isAttribute, boolean includePrefix, boolean tagsNeedOpenBracket, CompletionList result)
+    private void addMembersForMXMLTypeToAutoComplete(IClassDefinition definition, IMXMLTagData offsetTag,
+            boolean isAttribute, boolean includePrefix, boolean tagsNeedOpenBracket, CompletionList result)
     {
         ICompilationUnit unit = getCompilationUnit(Paths.get(offsetTag.getSourcePath()));
         if (unit == null)
@@ -3588,7 +3549,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         items.add(excludeFromItem);
 
-        Set<INamespaceDefinition> namespaceSet = getNamespaceSetForScopes(typeScope, otherScope);
+        Set<INamespaceDefinition> namespaceSet = ScopeUtils.getNamespaceSetForScopes(typeScope, otherScope, currentProject);
         IDefinition propertyDefinition = typeScope.getPropertyByNameForMemberAccess(currentProject, IMXMLLanguageConstants.ATTRIBUTE_ID, namespaceSet);
         if (propertyDefinition == null)
         {
@@ -3614,56 +3575,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         addDefinitionsInTypeScopeToAutoComplete(typeScope, otherScope, false, false, true, isAttribute, prefix, tagsNeedOpenBracket, result);
     }
 
-    private void collectInterfaceNamespaces(IInterfaceDefinition interfaceDefinition, Set<INamespaceDefinition> namespaceSet)
-    {
-        TypeScope typeScope = (TypeScope) interfaceDefinition.getContainedScope();
-        namespaceSet.addAll(typeScope.getNamespaceSet(currentProject));
-        IInterfaceDefinition[] interfaceDefinitions = interfaceDefinition.resolveExtendedInterfaces(currentProject);
-        for (IInterfaceDefinition extendedInterface : interfaceDefinitions)
-        {
-            collectInterfaceNamespaces(extendedInterface, namespaceSet);
-        }
-    }
-
-    private Set<INamespaceDefinition> getNamespaceSetForScopes(TypeScope typeScope, ASScope otherScope)
-    {
-        Set<INamespaceDefinition> namespaceSet = otherScope.getNamespaceSet(currentProject);
-        if (typeScope.getContainingDefinition() instanceof IInterfaceDefinition)
-        {
-            //interfaces have a special namespace that isn't actually the same
-            //as public, but should be treated the same way
-            IInterfaceDefinition interfaceDefinition = (IInterfaceDefinition) typeScope.getContainingDefinition();
-            collectInterfaceNamespaces(interfaceDefinition, namespaceSet);
-        }
-        IClassDefinition otherContainingClass = otherScope.getContainingClass();
-        if (otherContainingClass != null)
-        {
-            IClassDefinition classDefinition = typeScope.getContainingClass();
-            if (classDefinition != null)
-            {
-                boolean isSuperClass = Arrays.asList(otherContainingClass.resolveAncestry(currentProject)).contains(classDefinition);
-                if (isSuperClass)
-                {
-                    //if the containing class of the type scope is a superclass
-                    //of the other scope, we need to add the protected
-                    //namespaces from the super classes
-                    do
-                    {
-                        namespaceSet.add(classDefinition.getProtectedNamespaceReference());
-                        classDefinition = classDefinition.resolveBaseClass(currentProject);
-                    }
-                    while (classDefinition instanceof IClassDefinition);
-                }
-            }
-        }
-        return namespaceSet;
-    }
-
     private void addDefinitionsInTypeScopeToAutoComplete(TypeScope typeScope, ASScope otherScope, boolean isStatic, boolean includeSuperStatics, boolean forMXML, boolean isAttribute, String prefix, boolean tagsNeedOpenBracket, CompletionList result)
     {
         IMetaTag[] excludeMetaTags = typeScope.getDefinition().getMetaTagsByName(IMetaAttributeConstants.ATTRIBUTE_EXCLUDE);
         ArrayList<IDefinition> memberAccessDefinitions = new ArrayList<>();
-        Set<INamespaceDefinition> namespaceSet = getNamespaceSetForScopes(typeScope, otherScope);
+        Set<INamespaceDefinition> namespaceSet = ScopeUtils.getNamespaceSetForScopes(typeScope, otherScope, currentProject);
         
         typeScope.getAllPropertiesForMemberAccess(currentProject, memberAccessDefinitions, namespaceSet);
         for (IDefinition localDefinition : memberAccessDefinitions)
@@ -3773,9 +3689,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 {
                     continue;
                 }
-                CompletionItem item = new CompletionItem();
-                item.setKind(CompletionItemKind.Event);
-                item.setLabel(eventName);
+                CompletionItem item = CompletionItemUtils.createDefinitionItem(eventDefinition, currentProject);
                 if (isAttribute && completionSupportsSnippets)
                 {
                     item.setInsertTextFormat(InsertTextFormat.Snippet);
@@ -3810,7 +3724,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     }
                     item.setInsertText(builder.toString());
                 }
-                item.setDetail(DefinitionTextUtils.definitionToDetail(eventDefinition, currentProject));
                 result.getItems().add(item);
             }
             definition = classDefinition.resolveBaseClass(currentProject);
@@ -3857,9 +3770,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 {
                     break;
                 }
-                CompletionItem item = new CompletionItem();
-                item.setKind(CompletionItemKind.Field);
-                item.setLabel(styleName);
+                CompletionItem item = CompletionItemUtils.createDefinitionItem(styleDefinition, currentProject);
                 if (isAttribute && completionSupportsSnippets)
                 {
                     item.setInsertTextFormat(InsertTextFormat.Snippet);
@@ -3894,7 +3805,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     }
                     item.setInsertText(builder.toString());
                 }
-                item.setDetail(DefinitionTextUtils.definitionToDetail(styleDefinition, currentProject));
                 items.add(item);
             }
             definition = classDefinition.resolveBaseClass(currentProject);
@@ -3934,10 +3844,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             String qualifiedName = definition.getQualifiedName();
             completionTypes.add(qualifiedName);
         }
-        CompletionItem item = new CompletionItem();
-        item.setKind(LanguageServerCompilerUtils.getCompletionItemKindFromDefinition(definition));
-        item.setDetail(DefinitionTextUtils.definitionToDetail(definition, currentProject));
-        item.setLabel(definition.getBaseName());
+        CompletionItem item = CompletionItemUtils.createDefinitionItem(definition, currentProject);
         /*if (definition instanceof IFunctionDefinition
                 && !(definition instanceof IAccessorDefinition)
                 && completionSupportsSnippets)
@@ -3954,11 +3861,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 //TODO: manually activate signature help
             }
         }*/
-        String docs = DefinitionDocumentationUtils.getDocumentationForDefinition(definition, false);
-        if (docs != null)
-        {
-            item.setDocumentation(docs);
-        }
         boolean isInPackage = !definition.getQualifiedName().equals(definition.getBaseName());
         if (isInPackage && (containingPackageName == null || !definition.getPackageName().equals(containingPackageName)))
         {
@@ -3987,15 +3889,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             completionTypes.add(qualifiedName);
         }
         String definitionBaseName = definition.getBaseName();
-        CompletionItem item = new CompletionItem();
-        item.setKind(LanguageServerCompilerUtils.getCompletionItemKindFromDefinition(definition));
-        item.setDetail(DefinitionTextUtils.definitionToDetail(definition, currentProject));
-        item.setLabel(definitionBaseName);
-        String docs = DefinitionDocumentationUtils.getDocumentationForDefinition(definition, false);
-        if (docs != null)
-        {
-            item.setDocumentation(docs);
-        }
+        CompletionItem item = CompletionItemUtils.createDefinitionItem(definition, currentProject);
         if (isAttribute && completionSupportsSnippets)
         {
             item.setInsertTextFormat(InsertTextFormat.Snippet);

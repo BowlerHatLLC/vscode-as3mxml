@@ -28,8 +28,10 @@ import org.apache.royale.compiler.common.ISourceLocation;
 import org.apache.royale.compiler.definitions.IAccessorDefinition;
 import org.apache.royale.compiler.definitions.IClassDefinition;
 import org.apache.royale.compiler.definitions.IDefinition;
+import org.apache.royale.compiler.definitions.IEventDefinition;
 import org.apache.royale.compiler.definitions.IFunctionDefinition;
 import org.apache.royale.compiler.definitions.IInterfaceDefinition;
+import org.apache.royale.compiler.definitions.IStyleDefinition;
 import org.apache.royale.compiler.definitions.ITypeDefinition;
 import org.apache.royale.compiler.definitions.IVariableDefinition;
 import org.apache.royale.compiler.problems.CompilerProblemSeverity;
@@ -306,6 +308,14 @@ public class LanguageServerCompilerUtils
                     return CompletionItemKind.Variable;
                 }
             }
+        }
+        else if (definition instanceof IEventDefinition)
+        {
+            return CompletionItemKind.Event;
+        }
+        else if (definition instanceof IStyleDefinition)
+        {
+            return CompletionItemKind.Field;
         }
         return CompletionItemKind.Value;
     }
