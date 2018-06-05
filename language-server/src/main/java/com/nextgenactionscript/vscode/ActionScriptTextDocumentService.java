@@ -1494,6 +1494,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private void prepareNewProject()
     {
+        currentProject = getProject();
+        if (currentProject == null)
+        {
+            return;
+        }
         if (sourcePathWatcher == null)
         {
             try
@@ -1564,13 +1569,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             };
             sourcePathWatcherThread.start();
         }
-        if (currentProjectOptions.sourcePaths == null)
-        {
-            return;
-        }
         boolean dynamicDidChangeWatchedFiles = clientCapabilities.getWorkspace().getDidChangeWatchedFiles().getDynamicRegistration();
-        for (Path sourcePath : currentProjectOptions.sourcePaths)
+        for (File sourcePathFile : currentProject.getSourcePath())
         {
+            Path sourcePath = sourcePathFile.toPath();
             try
             {
                 sourcePath = sourcePath.toRealPath();

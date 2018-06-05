@@ -116,7 +116,6 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy
         String additionalOptions = null;
         ArrayList<String> compilerOptions = null;
         ArrayList<String> targets = null;
-        ArrayList<Path> sourcePaths = null;
         boolean warnings = true;
         JsonSchema schema = null;
         try (InputStream schemaInputStream = getClass().getResourceAsStream("/schemas/asconfig.schema.json"))
@@ -195,16 +194,6 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy
                         targets.add(target);
                     }
                 }
-                if (jsonCompilerOptions.has(CompilerOptions.SOURCE_PATH))
-                {
-                    sourcePaths = new ArrayList<>();
-                    JsonNode jsonSourcePath = jsonCompilerOptions.get(CompilerOptions.SOURCE_PATH);
-                    for (int i = 0, count = jsonSourcePath.size(); i < count; i++)
-                    {
-                        String sourcePath = jsonSourcePath.get(i).asText();
-                        sourcePaths.add(projectRoot.resolve(sourcePath));
-                    }
-                }
                 if (jsonCompilerOptions.has(CompilerOptions.WARNINGS))
                 {
                     warnings = jsonCompilerOptions.get(CompilerOptions.WARNINGS).asBoolean();
@@ -246,7 +235,6 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy
         options.compilerOptions = compilerOptions;
         options.additionalOptions = additionalOptions;
         options.targets = targets;
-        options.sourcePaths = sourcePaths;
         options.warnings = warnings;
         return options;
     }
