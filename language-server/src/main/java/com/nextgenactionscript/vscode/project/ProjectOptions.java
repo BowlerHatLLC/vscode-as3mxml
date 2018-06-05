@@ -15,7 +15,6 @@ limitations under the License.
 */
 package com.nextgenactionscript.vscode.project;
 
-import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 
