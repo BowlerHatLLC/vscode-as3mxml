@@ -5775,20 +5775,25 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         Path pathForImport = Paths.get(URI.create(uri));
         Reader reader = getReaderForPath(pathForImport);
         String text = null;
-        try
-        {
-            //TODO: should we use sourceByPath.get() here, or would that fail
-            //because the command might get called when the file is not
-            //necessarily open
-            text = IOUtils.toString(reader);
-        }
-        catch (IOException e)
-        {
-            return;
-        }
         boolean isOpen = sourceByPath.containsKey(pathForImport);
-        if(!isOpen)
+        if (isOpen)
         {
+            //if the file is open in an editor, we have the string in memory
+            //already, so use that.
+            text = sourceByPath.get(pathForImport);
+        }
+        else
+        {
+            //if the file isn't open in an editor, we need to read it from the
+            //file system instead.
+            try
+            {
+                text = IOUtils.toString(reader);
+            }
+            catch (IOException e)
+            {
+                return;
+            }
             //for some reason, the full AST is not populated if the file is not
             //already open in the editor. we use a similar workaround to didOpen
             //to force the AST to be populated.
