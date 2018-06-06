@@ -457,7 +457,7 @@ public class DefinitionTextUtils
         textDocumentBuilder.append(" ");
         appendDefinitionName(variableDefinition, textDocumentBuilder, definitionToFind, result);
         textDocumentBuilder.append(":");
-        textDocumentBuilder.append(variableDefinition.getTypeAsDisplayString());
+        textDocumentBuilder.append(getTypeAsDisplayString(variableDefinition));
         textDocumentBuilder.append(";");
         textDocumentBuilder.append(NEW_LINE);
     }
@@ -585,16 +585,7 @@ public class DefinitionTextUtils
             }
             detailBuilder.append(variableDefinition.getQualifiedName());
             detailBuilder.append(":");
-            String typeAsDisplayString = variableDefinition.getTypeAsDisplayString();
-            if (typeAsDisplayString.length() == 0)
-            {
-                //returns an empty string if there is no type reference
-                detailBuilder.append(IASLanguageConstants.ANY_TYPE);
-            }
-            else
-            {
-                detailBuilder.append(typeAsDisplayString);
-            }
+            detailBuilder.append(getTypeAsDisplayString(variableDefinition));
         }
         else if (definition instanceof IFunctionDefinition)
         {
@@ -704,7 +695,7 @@ public class DefinitionTextUtils
                 labelBuilder.append(parameterDefinition.getBaseName());
             }
             labelBuilder.append(":");
-            labelBuilder.append(parameterDefinition.getTypeAsDisplayString());
+            labelBuilder.append(getTypeAsDisplayString(parameterDefinition));
             if (parameterDefinition.hasDefaultValue())
             {
                 labelBuilder.append(" = ");
@@ -787,6 +778,17 @@ public class DefinitionTextUtils
         //we add a fake directory as a prefix here because VSCode won't display
         //the file name if it isn't in a directory
         return PATH_PREFIX_GENERATED + definition.getQualifiedName().replaceAll("\\.", "/") + FILE_EXTENSION_AS;
+    }
+
+    private static String getTypeAsDisplayString(IDefinition definition)
+    {
+        String typeAsDisplayString = definition.getTypeAsDisplayString();
+        if (typeAsDisplayString.length() == 0)
+        {
+            //returns an empty string if there is no type reference
+            return IASLanguageConstants.ANY_TYPE;
+        }
+        return typeAsDisplayString;
     }
     
     private static String increaseIndent(String indent)
