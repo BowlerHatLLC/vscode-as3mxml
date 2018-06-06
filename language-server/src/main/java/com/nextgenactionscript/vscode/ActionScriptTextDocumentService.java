@@ -146,7 +146,6 @@ import org.apache.royale.compiler.tree.mxml.IMXMLSingleDataBindingNode;
 import org.apache.royale.compiler.tree.mxml.IMXMLSpecifierNode;
 import org.apache.royale.compiler.units.ICompilationUnit;
 import org.apache.royale.compiler.units.IInvisibleCompilationUnit;
-import org.apache.royale.compiler.workspaces.IWorkspace;
 
 import com.google.common.io.Files;
 import com.google.common.net.UrlEscapers;
@@ -283,7 +282,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private ArrayList<IInvisibleCompilationUnit> invisibleUnits = new ArrayList<>();
     private ICompilationUnit currentUnit;
     private RoyaleProject currentProject;
-    private IWorkspace currentWorkspace;
+    private Workspace compilerWorkspace;
     private ProjectOptions currentProjectOptions;
     private int currentOffset = -1;
     private ImportRange importRange = new ImportRange();
@@ -311,6 +310,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     {
         updateFrameworkSDK();
         isWindows = System.getProperty("os.name").toLowerCase().startsWith("windows");
+        
+        compilerWorkspace = new Workspace();
+        compilerWorkspace.setASDocDelegate(new VSCodeASDocDelegate());
+        fileSpecGetter = new LanguageServerFileSpecGetter(compilerWorkspace, sourceByPath);
     }
 
     public IProjectConfigStrategy getProjectConfigStrategy()
@@ -333,10 +336,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         workspaceRoot = value;
         if (workspaceRoot != null)
         {
+            //let's get the code intelligence up and running!
             Path path = getMainCompilationUnitPath();
             if (path != null)
             {
-                notifyWorkspaceOfPathChange(path);
+                IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(path.toAbsolutePath().toString());
+                compilerWorkspace.fileChanged(fileSpec);
             }
             checkProjectForProblems();
         }
@@ -1207,7 +1212,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             String text = textDocument.getText();
             sourceByPath.put(path, text);
 
-            notifyWorkspaceOfPathChange(path);
+            //notify the workspace that it should read the file from memory
+            //instead of loading from the file system
+            IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(path.toAbsolutePath().toString());
+            compilerWorkspace.fileChanged(fileSpec);
+
             //we need to check for problems when opening a new file because it
             //may not have been in the workspace before.
             checkFilePathForProblems(path);
@@ -1253,20 +1262,17 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     System.err.println("Failed to apply changes to code intelligence from URI: " + textDocumentUri);
                 }
             }
-            if (currentWorkspace != null)
+            if(realTimeProblemAnalyzer.getCompilationUnit() != null)
             {
-                if(realTimeProblemAnalyzer.getCompilationUnit() != null)
-                {
-                    //if the compilation unit is already being analyzed for
-                    //problems, set a flag to indicate that it has changed so
-                    //that the analyzer can update after the current pass.
-                    realTimeProblemAnalyzer.setFileChangedPending(true);
-                }
-                else
-                {
-                    IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(path.toAbsolutePath().toString());
-                    currentWorkspace.fileChanged(fileSpec);
-                }
+                //if the compilation unit is already being analyzed for
+                //problems, set a flag to indicate that it has changed so
+                //that the analyzer can update after the current pass.
+                realTimeProblemAnalyzer.setFileChangedPending(true);
+            }
+            else
+            {
+                IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(path.toAbsolutePath().toString());
+                compilerWorkspace.fileChanged(fileSpec);
             }
             //we do a quick check of the current file on change for better
             //performance while typing. we'll do a full check when we save the
@@ -1347,7 +1353,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
      */
     public void didChangeWatchedFiles(DidChangeWatchedFilesParams params)
     {
-        if(currentWorkspace == null)
+        if(currentProject == null)
         {
             if (projectConfigStrategy.getChanged())
             {
@@ -1373,7 +1379,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 if (event.getType().equals(FileChangeType.Deleted))
                 {
                     IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(file.getAbsolutePath());
-                    currentWorkspace.fileRemoved(fileSpec);
+                    compilerWorkspace.fileRemoved(fileSpec);
                     //deleting a file may change errors in other existing files,
                     //so we need to do a full check
                     needsFullCheck = true;
@@ -1381,7 +1387,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 else if (event.getType().equals(FileChangeType.Created))
                 {
                     IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(file.getAbsolutePath());
-                    currentWorkspace.fileAdded(fileSpec);
+                    compilerWorkspace.fileAdded(fileSpec);
                     //creating a file may change errors in other existing files,
                     //so we need to do a full check
                     needsFullCheck = true;
@@ -1389,7 +1395,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 else if (event.getType().equals(FileChangeType.Changed))
                 {
                     IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(file.getAbsolutePath());
-                    currentWorkspace.fileChanged(fileSpec);
+                    compilerWorkspace.fileChanged(fileSpec);
                     checkFilePathForProblems(path);
                 }
             }
@@ -1417,7 +1423,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 for (String fileToRemove : filesToRemove)
                 {
                     IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(fileToRemove);
-                    currentWorkspace.fileRemoved(fileSpec);
+                    compilerWorkspace.fileRemoved(fileSpec);
                 }
                 if (filesToRemove.size() > 0)
                 {
@@ -1594,10 +1600,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private void cleanupCurrentProject()
     {
-        currentWorkspace = null;
-        currentProject = null;
-        fileSpecGetter = null;
         compilationUnits = null;
+        if(currentProject != null)
+        {
+            currentProject.delete();
+            currentProject = null;
+        }
         for(WatchKey watchKey : sourcePathWatchKeys.keySet())
         {
             watchKey.cancel();
@@ -2108,7 +2116,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     }
                     if (!isAttribute)
                     {
-                        MXMLNamespace fxNS = MXMLNamespaceUtils.getMXMLLanguageNamespace(currentUnit, fileSpecGetter, currentWorkspace);
+                        MXMLNamespace fxNS = MXMLNamespaceUtils.getMXMLLanguageNamespace(currentUnit, fileSpecGetter, compilerWorkspace);
                         IMXMLData mxmlParent = offsetTag.getParent();
                         if (mxmlParent != null && parentTag.equals(mxmlParent.getRootTag()))
                         {
@@ -2177,7 +2185,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             if (!isAttribute)
             {
                 IMXMLData mxmlParent = offsetTag.getParent();
-                MXMLNamespace fxNS = MXMLNamespaceUtils.getMXMLLanguageNamespace(currentUnit, fileSpecGetter, currentWorkspace);
+                MXMLNamespace fxNS = MXMLNamespaceUtils.getMXMLLanguageNamespace(currentUnit, fileSpecGetter, compilerWorkspace);
                 if (mxmlParent != null && offsetTag.equals(mxmlParent.getRootTag()))
                 {
                     addRootMXMLLanguageTagsToAutoComplete(offsetTag, fxNS.prefix, true, tagsNeedOpenBracket, result);
@@ -2609,7 +2617,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     {
         if (compilationUnit.getAbsoluteFilename().endsWith(MXML_EXTENSION))
         {
-            IMXMLDataManager mxmlDataManager = currentWorkspace.getMXMLDataManager();
+            IMXMLDataManager mxmlDataManager = compilerWorkspace.getMXMLDataManager();
             MXMLData mxmlData = (MXMLData) mxmlDataManager.get(fileSpecGetter.getFileSpecification(compilationUnit.getAbsoluteFilename()));
             IMXMLTagData rootTag = mxmlData.getRootTag();
             if (rootTag != null)
@@ -2707,7 +2715,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
      */
     private void autoCompleteTypesForMXMLFromExistingTag(CompletionList result, IMXMLTagData offsetTag)
     {
-        IMXMLDataManager mxmlDataManager = currentWorkspace.getMXMLDataManager();
+        IMXMLDataManager mxmlDataManager = compilerWorkspace.getMXMLDataManager();
         MXMLData mxmlData = (MXMLData) mxmlDataManager.get(fileSpecGetter.getFileSpecification(currentUnit.getAbsoluteFilename()));
         String tagStartShortNameForComparison = offsetTag.getShortName().toLowerCase();
         String tagPrefix = offsetTag.getPrefix();
@@ -3813,7 +3821,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private void addMXMLTypeDefinitionAutoComplete(ITypeDefinition definition, boolean tagsNeedOpenBracket, CompletionList result)
     {
-        IMXMLDataManager mxmlDataManager = currentWorkspace.getMXMLDataManager();
+        IMXMLDataManager mxmlDataManager = compilerWorkspace.getMXMLDataManager();
         MXMLData mxmlData = (MXMLData) mxmlDataManager.get(fileSpecGetter.getFileSpecification(currentUnit.getAbsoluteFilename()));
         MXMLNamespace discoveredNS = MXMLNamespaceUtils.getMXMLNamespaceForTypeDefinition(definition, mxmlData, currentProject);
         addDefinitionAutoCompleteMXML(definition, false, discoveredNS.prefix, discoveredNS.uri, tagsNeedOpenBracket, result);
@@ -4224,7 +4232,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             ArrayList<TextEdit> textEdits = new ArrayList<>();
             if (compilationUnit.getAbsoluteFilename().endsWith(MXML_EXTENSION))
             {
-                IMXMLDataManager mxmlDataManager = currentWorkspace.getMXMLDataManager();
+                IMXMLDataManager mxmlDataManager = compilerWorkspace.getMXMLDataManager();
                 MXMLData mxmlData = (MXMLData) mxmlDataManager.get(fileSpecGetter.getFileSpecification(compilationUnit.getAbsoluteFilename()));
                 IMXMLTagData rootTag = mxmlData.getRootTag();
                 if (rootTag != null)
@@ -4633,7 +4641,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return null;
         }
-        currentWorkspace = currentProject.getWorkspace();
         //we're going to start with the files passed into the compiler
         String[] files = currentProjectOptions.files;
         if (files != null)
@@ -4883,7 +4890,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             //if we created a backend, it's a Royale project (RoyaleJSProject)
             if (backend != null)
             {
-                project = new RoyaleJSProject(new Workspace(), backend);
+                project = new RoyaleJSProject(compilerWorkspace, backend);
             }
             //if we haven't created the project yet, then it's not Royale and
             //the project should be one that doesn't require a backend.
@@ -4891,12 +4898,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             {
                 //yes, this is called RoyaleProject, but a *real* Royale project
                 //is RoyaleJSProject... even if it's SWF only! confusing, right?
-                project = new RoyaleProject(new Workspace());
+                project = new RoyaleProject(compilerWorkspace);
             }
             project.setProblems(new ArrayList<>());
-            currentWorkspace = project.getWorkspace();
-            currentWorkspace.setASDocDelegate(new VSCodeASDocDelegate());
-            fileSpecGetter = new LanguageServerFileSpecGetter(currentWorkspace, sourceByPath);
         }
         else
         {
@@ -4989,21 +4993,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         project.setTargetSettings(targetSettings);
         return project;
-    }
-
-    private void notifyWorkspaceOfPathChange(Path path)
-    {
-        //calling getCompilationUnit() makes sure that currentWorkspace is
-        //not null. somehow this call to fileChanged() ensures that function
-        //bodies are populated.
-        getCompilationUnit(path);
-        if (currentWorkspace != null)
-        {
-            //if the compiler was using the file system version, switch to
-            //the in-memory version
-            IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(path.toAbsolutePath().toString());
-            currentWorkspace.fileChanged(fileSpec);
-        }
     }
 
     private void checkProjectForProblems()
@@ -5259,7 +5248,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             //should have been logged already
             return null;
         }
-        IMXMLDataManager mxmlDataManager = currentWorkspace.getMXMLDataManager();
+        IMXMLDataManager mxmlDataManager = compilerWorkspace.getMXMLDataManager();
         MXMLData mxmlData = (MXMLData) mxmlDataManager.get(fileSpecGetter.getFileSpecification(path.toAbsolutePath().toString()));
         if (mxmlData == null)
         {
@@ -5800,7 +5789,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
             //we'll clear this out later before we return from this function
             sourceByPath.put(pathForImport, text);
-            notifyWorkspaceOfPathChange(pathForImport);
+
+            //notify the workspace that it should read the file from memory
+            //instead of loading from the file system
+            IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(pathForImport.toAbsolutePath().toString());
+            compilerWorkspace.fileChanged(fileSpec);
         }
 
         Set<String> missingNames = null;
