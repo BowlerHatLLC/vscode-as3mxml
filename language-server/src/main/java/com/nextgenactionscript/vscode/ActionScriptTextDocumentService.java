@@ -45,8 +45,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.ByteArrayOutputStream;
@@ -54,12 +52,10 @@ import org.apache.royale.abc.ABCConstants;
 import org.apache.royale.abc.ABCParser;
 import org.apache.royale.abc.Pool;
 import org.apache.royale.abc.PoolingABCVisitor;
-import org.apache.royale.compiler.clients.MXMLJSC;
 import org.apache.royale.compiler.common.ASModifier;
 import org.apache.royale.compiler.common.ISourceLocation;
 import org.apache.royale.compiler.common.PrefixMap;
 import org.apache.royale.compiler.common.XMLName;
-import org.apache.royale.compiler.config.ICompilerSettingsConstants;
 import org.apache.royale.compiler.constants.IASKeywordConstants;
 import org.apache.royale.compiler.constants.IASLanguageConstants;
 import org.apache.royale.compiler.constants.IMXMLCoreConstants;
@@ -79,22 +75,14 @@ import org.apache.royale.compiler.definitions.IStyleDefinition;
 import org.apache.royale.compiler.definitions.ITypeDefinition;
 import org.apache.royale.compiler.definitions.IVariableDefinition;
 import org.apache.royale.compiler.definitions.metadata.IMetaTag;
-import org.apache.royale.compiler.driver.IBackend;
 import org.apache.royale.compiler.filespecs.IFileSpecification;
-import org.apache.royale.compiler.internal.driver.js.royale.RoyaleBackend;
-import org.apache.royale.compiler.internal.driver.js.goog.JSGoogConfiguration;
-import org.apache.royale.compiler.internal.driver.js.jsc.JSCBackend;
-import org.apache.royale.compiler.internal.driver.js.node.NodeBackend;
-import org.apache.royale.compiler.internal.driver.js.node.NodeModuleBackend;
 import org.apache.royale.compiler.internal.mxml.MXMLData;
 import org.apache.royale.compiler.internal.parsing.as.ASParser;
 import org.apache.royale.compiler.internal.parsing.as.ASToken;
 import org.apache.royale.compiler.internal.parsing.as.RepairingTokenBuffer;
 import org.apache.royale.compiler.internal.parsing.as.StreamingASTokenizer;
 import org.apache.royale.compiler.internal.projects.CompilerProject;
-import org.apache.royale.compiler.internal.projects.RoyaleJSProject;
 import org.apache.royale.compiler.internal.projects.RoyaleProject;
-import org.apache.royale.compiler.internal.projects.RoyaleProjectConfigurator;
 import org.apache.royale.compiler.internal.scopes.ASScope;
 import org.apache.royale.compiler.internal.scopes.TypeScope;
 import org.apache.royale.compiler.internal.scopes.ASProjectScope.DefinitionPromise;
@@ -112,8 +100,6 @@ import org.apache.royale.compiler.mxml.IMXMLTextData;
 import org.apache.royale.compiler.mxml.IMXMLUnitData;
 import org.apache.royale.compiler.problems.ICompilerProblem;
 import org.apache.royale.compiler.scopes.IASScope;
-import org.apache.royale.compiler.targets.ITarget;
-import org.apache.royale.compiler.targets.ITargetSettings;
 import org.apache.royale.compiler.tree.ASTNodeID;
 import org.apache.royale.compiler.tree.as.IASNode;
 import org.apache.royale.compiler.tree.as.IBinaryOperatorNode;
@@ -162,13 +148,12 @@ import com.nextgenactionscript.vscode.commands.ICommandConstants;
 import com.nextgenactionscript.vscode.compiler.CompilerShell;
 import com.nextgenactionscript.vscode.project.IProjectConfigStrategy;
 import com.nextgenactionscript.vscode.project.ProjectOptions;
-import com.nextgenactionscript.vscode.project.VSCodeConfiguration;
 import com.nextgenactionscript.vscode.services.ActionScriptLanguageClient;
 import com.nextgenactionscript.vscode.utils.ASTUtils;
-import com.nextgenactionscript.vscode.utils.ActionScriptSDKUtils;
 import com.nextgenactionscript.vscode.utils.CodeActionsUtils;
 import com.nextgenactionscript.vscode.utils.CodeGenerationUtils;
 import com.nextgenactionscript.vscode.utils.CompilerProblemFilter;
+import com.nextgenactionscript.vscode.utils.CompilerProjectUtils;
 import com.nextgenactionscript.vscode.utils.CompletionItemUtils;
 import com.nextgenactionscript.vscode.utils.DefinitionDocumentationUtils;
 import com.nextgenactionscript.vscode.utils.DefinitionTextUtils;
@@ -255,12 +240,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private static final String SWC_EXTENSION = ".swc";
     private static final String MARKED_STRING_LANGUAGE_ACTIONSCRIPT = "nextgenas";
     private static final String MARKED_STRING_LANGUAGE_MXML = "mxml";
-    private static final String TOKEN_CONFIGNAME = "configname";
-    private static final String TOKEN_ROYALELIB = "royalelib";
-    private static final String TOKEN_FLEXLIB = "flexlib";
-    private static final String CONFIG_ROYALE = "royale";
-    private static final String CONFIG_JS = "js";
-    private static final String CONFIG_NODE = "node";
     private static final String SDK_FRAMEWORKS_PATH_SIGNATURE = "/frameworks/";
     private static final String SDK_LIBRARY_PATH_SIGNATURE_UNIX = "/frameworks/libs/";
     private static final String SDK_LIBRARY_PATH_SIGNATURE_WINDOWS = "\\frameworks\\libs\\";
@@ -290,12 +269,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private int namespaceEndIndex = -1;
     private String namespaceUri;
     private LanguageServerFileSpecGetter fileSpecGetter;
-    private boolean frameworkSDKContainsSparkTheme = false;
-    private boolean frameworkSDKIsRoyale = false;
-    private boolean frameworkSDKIsFlexJS = false;
     private ProblemTracker codeProblemTracker = new ProblemTracker();
     private ProblemTracker configProblemTracker = new ProblemTracker();
-    private Pattern additionalOptionsPattern = Pattern.compile("[^\\s]*'([^'])*?'|[^\\s]*\"([^\"])*?\"|[^\\s]+");
     private WatchService sourcePathWatcher;
     private Map<WatchKey, Path> sourcePathWatchKeys = new HashMap<>();
     private Thread sourcePathWatcherThread;
@@ -1465,17 +1440,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         Path sdkPath = Paths.get(frameworkSDKPath);
         sdkPath = sdkPath.resolve("../lib/falcon-mxmlc.jar");
         compilerProblemFilter.royaleProblems = sdkPath.toFile().exists();
-
-        sdkPath = Paths.get(System.getProperty(PROPERTY_FRAMEWORK_LIB));
-        frameworkSDKIsRoyale = ActionScriptSDKUtils.isRoyaleFramework(sdkPath);
-
-        sdkPath = Paths.get(System.getProperty(PROPERTY_FRAMEWORK_LIB));
-        sdkPath = sdkPath.resolve("../js/bin/asjsc");
-        frameworkSDKIsFlexJS = !frameworkSDKIsRoyale && sdkPath.toFile().exists();
-
-        //check if the framework SDK doesn't include the Spark theme
-        Path sparkPath = Paths.get(frameworkSDKPath).resolve("./themes/Spark/spark.css");
-        frameworkSDKContainsSparkTheme = sparkPath.toFile().exists();
     }
 
     private void watchNewSourcePath(Path sourcePath)
@@ -4762,16 +4726,31 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         invisibleUnits.clear();
     }
-    
-    private void publishConfigurationProblems(RoyaleProjectConfigurator configurator)
+
+    private RoyaleProject getProject()
     {
-        Collection<ICompilerProblem> problems = configurator.getConfigurationProblems();
-        if (problems.size() > 0)
+        clearInvisibleCompilationUnits();
+        refreshProjectOptions();
+        if (currentProjectOptions == null)
+        {
+            cleanupCurrentProject();
+            return null;
+        }
+        if (currentProject != null)
+        {   
+            //clear all old problems because they won't be cleared automatically
+            currentProject.getProblems().clear();
+            return currentProject;
+        }
+
+        List<ICompilerProblem> configProblems = new ArrayList<>();
+        RoyaleProject project = CompilerProjectUtils.createProject(currentProjectOptions, compilerWorkspace, configProblems);
+        if (configProblems.size() > 0)
         {
             Map<URI, PublishDiagnosticsParams> filesMap = new HashMap<>();
-            for (ICompilerProblem problem : problems)
+            for (ICompilerProblem configProblem : configProblems)
             {
-                String problemSourcePath = problem.getSourcePath();
+                String problemSourcePath = configProblem.getSourcePath();
                 if (problemSourcePath == null)
                 {
                     //since we're processing configuration problems, the best
@@ -4793,205 +4772,15 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     params.setDiagnostics(new ArrayList<>());
                     filesMap.put(uri, params);
                 }
-                addCompilerProblem(problem, params);
+                addCompilerProblem(configProblem, params);
             }
             if (languageClient != null)
             {
                 filesMap.values().forEach(languageClient::publishDiagnostics);
             }
         }
-    }
-
-    private RoyaleProject getProject()
-    {
-        clearInvisibleCompilationUnits();
-        refreshProjectOptions();
-        if (currentProjectOptions == null)
-        {
-            cleanupCurrentProject();
-            return null;
-        }
-        RoyaleProject project = null;
-        if (currentProject == null)
-        {
-            //we're going to try to determine what kind of project we need
-            //(either Royale or everything else). if it's a Royale project, we
-            //should choose an appropriate backend.
-            IBackend backend = null;
-
-            //first, start by looking if the targets compiler option is
-            //specified. if it is, we definitely have a Royale project. we'll
-            //use the first target value as the indicator of what the user
-            //thinks is most important for code intelligence (native JS classes
-            //or native SWF classes?)
-            //this isn't ideal because it would be better if we could provide
-            //code intelligence for all targets simultaneously, but this is a
-            //limitation that we need to live with, for now.
-            List<String> targets = currentProjectOptions.targets;
-            if (targets != null && targets.size() > 0)
-            {
-                //first, check if any targets are specified
-                String firstTarget = targets.get(0);
-                switch (MXMLJSC.JSTargetType.fromString(firstTarget))
-                {
-                    case JS_NATIVE:
-                    {
-                        backend = new JSCBackend();
-                        break;
-                    }
-                    case JS_NODE:
-                    {
-                        backend = new NodeBackend();
-                        break;
-                    }
-                    case JS_NODE_MODULE:
-                    {
-                        backend = new NodeModuleBackend();
-                        break;
-                    }
-                    default:
-                    {
-                        //SWF and JSRoyale should both use this backend.
-
-                        //previously, we didn't use a backend for SWF, but after
-                        //FlexJS became Royale, something changed in the
-                        //compiler to make it more strict.
-
-                        //it actually shouldn't matter too much which JS
-                        //backend is used when we're only using the project for
-                        //code intelligence, so this is probably an acceptable
-                        //fallback for just about everything.
-                        backend = new RoyaleBackend();
-                        break;
-                    }
-                }
-            }
-            //if no targets are specified, we can guess whether it's a Royale
-            //project based on the config value.
-            else if (currentProjectOptions.config.equals(CONFIG_ROYALE))
-            {
-                backend = new RoyaleBackend();
-            }
-            else if (currentProjectOptions.config.equals(CONFIG_JS))
-            {
-                backend = new JSCBackend();
-            }
-            else if (currentProjectOptions.config.equals(CONFIG_NODE))
-            {
-                backend = new NodeBackend();
-            }
-            //finally, if the config value is missing, then choose a decent
-            //default backend when the SDK is Royale
-            else if (frameworkSDKIsRoyale || frameworkSDKIsFlexJS)
-            {
-                backend = new RoyaleBackend();
-            }
-
-            //if we created a backend, it's a Royale project (RoyaleJSProject)
-            if (backend != null)
-            {
-                project = new RoyaleJSProject(compilerWorkspace, backend);
-            }
-            //if we haven't created the project yet, then it's not Royale and
-            //the project should be one that doesn't require a backend.
-            if (project == null)
-            {
-                //yes, this is called RoyaleProject, but a *real* Royale project
-                //is RoyaleJSProject... even if it's SWF only! confusing, right?
-                project = new RoyaleProject(compilerWorkspace);
-            }
-            project.setProblems(new ArrayList<>());
-        }
-        else
-        {
-            //clear all old problems because they won't be cleared automatically
-            currentProject.getProblems().clear();
-            return currentProject;
-        }
-        List<String> compilerOptions = currentProjectOptions.compilerOptions;
-        RoyaleProjectConfigurator configurator = null;
-        if (project instanceof RoyaleJSProject)
-        {
-            configurator = new RoyaleProjectConfigurator(JSGoogConfiguration.class);
-        }
-        else //swf only
-        {
-            configurator = new RoyaleProjectConfigurator(VSCodeConfiguration.class);
-        }
-        if(frameworkSDKIsRoyale)
-        {
-            configurator.setToken(TOKEN_ROYALELIB, System.getProperty(PROPERTY_FRAMEWORK_LIB));
-        }
-        else //not royale
-        {
-            configurator.setToken(TOKEN_FLEXLIB, System.getProperty(PROPERTY_FRAMEWORK_LIB));
-        }
-        configurator.setToken(TOKEN_CONFIGNAME, currentProjectOptions.config);
-        String projectType = currentProjectOptions.type;
-        String[] files = currentProjectOptions.files;
-        String additionalOptions = currentProjectOptions.additionalOptions;
-        ArrayList<String> combinedOptions = new ArrayList<>();
-        if (compilerOptions != null)
-        {
-            combinedOptions.addAll(compilerOptions);
-        }
-        if (additionalOptions != null)
-        {
-            //split the additionalOptions into separate values so that we can
-            //pass them in as String[], as the compiler expects.
-            Matcher matcher = additionalOptionsPattern.matcher(additionalOptions);
-            while (matcher.find())
-            {
-                String option = matcher.group();
-                combinedOptions.add(option);
-            }
-        }
-        //not all framework SDKs support a theme (such as Adobe's AIR SDK), so
-        //we clear it for the editor to avoid a missing spark.css file.
-        if (!frameworkSDKContainsSparkTheme)
-        {
-            combinedOptions.add("-theme=");
-        }
-        if (projectType.equals(ProjectType.LIB))
-        {
-            configurator.setConfiguration(combinedOptions.toArray(new String[combinedOptions.size()]),
-                    ICompilerSettingsConstants.INCLUDE_CLASSES_VAR, false);
-        }
-        else // app
-        {
-            combinedOptions.addAll(Arrays.asList(files));
-            configurator.setConfiguration(combinedOptions.toArray(new String[combinedOptions.size()]),
-                    ICompilerSettingsConstants.FILE_SPECS_VAR);
-        }
-        //this needs to be set before applyToProject() so that it's in the
-        //configuration buffer before addExternalLibraryPath() is called
-        configurator.setExcludeNativeJSLibraries(false);
-        Path appendConfigPath = Paths.get(System.getProperty(PROPERTY_FRAMEWORK_LIB));
-        appendConfigPath = appendConfigPath.resolve("../ide/vscode-nextgenas/vscode-nextgenas-config.xml");
-        File appendConfigFile = appendConfigPath.toFile();
-        if (appendConfigFile.exists())
-        {
-            configurator.addConfiguration(appendConfigFile);
-        }
-        boolean result = configurator.applyToProject(project);
-        publishConfigurationProblems(configurator);
         configProblemTracker.cleanUpStaleProblems();
-        if (!result)
-        {
-            return null;
-        }
-        ITarget.TargetType targetType = ITarget.TargetType.SWF;
-        if (currentProjectOptions.type.equals(ProjectType.LIB))
-        {
-            targetType = ITarget.TargetType.SWC;
-        }
-        ITargetSettings targetSettings = configurator.getTargetSettings(targetType);
-        if (targetSettings == null)
-        {
-            System.err.println("Failed to get compile settings for +configname=" + currentProjectOptions.config + ".");
-            return null;
-        }
-        project.setTargetSettings(targetSettings);
+
         return project;
     }
 
