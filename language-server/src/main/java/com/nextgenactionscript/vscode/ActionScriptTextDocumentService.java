@@ -679,26 +679,44 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         List<SymbolInformation> result = new ArrayList<>();
         String query = params.getQuery();
+        String lowerCaseQuery = query.toLowerCase();
         for (ICompilationUnit unit : compilationUnits)
         {
-            if (unit == null
-                    || unit instanceof SWCCompilationUnit
-                    || unit instanceof ResourceBundleCompilationUnit)
+            if (unit == null || unit instanceof ResourceBundleCompilationUnit)
             {
                 continue;
             }
-            IASScope[] scopes;
-            try
+            if (unit instanceof SWCCompilationUnit)
             {
-                scopes = unit.getFileScopeRequest().get().getScopes();
+                List<IDefinition> definitions = unit.getDefinitionPromises();
+                for (IDefinition definition : definitions)
+                {
+                    if (definition.isImplicit() || !definition.getQualifiedName().toLowerCase().contains(lowerCaseQuery))
+                    {
+                        continue;
+                    }
+                    SymbolInformation symbol = definitionToSymbol(definition, unit.getAbsoluteFilename());
+                    if (symbol != null)
+                    {
+                        result.add(symbol);
+                    }
+                }
             }
-            catch (Exception e)
+            else
             {
-                return CompletableFuture.completedFuture(Collections.emptyList());
-            }
-            for (IASScope scope : scopes)
-            {
-                querySymbolsInScope(query, scope, result);
+                IASScope[] scopes;
+                try
+                {
+                    scopes = unit.getFileScopeRequest().get().getScopes();
+                }
+                catch (Exception e)
+                {
+                    return CompletableFuture.completedFuture(Collections.emptyList());
+                }
+                for (IASScope scope : scopes)
+                {
+                    querySymbolsInScope(lowerCaseQuery, scope, result);
+                }
             }
         }
         return CompletableFuture.completedFuture(result);
@@ -5287,7 +5305,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private void querySymbolsInScope(String query, IASScope scope, List<SymbolInformation> result)
     {
-        String lowerCaseQuery = query.toLowerCase();
         Collection<IDefinition> definitions = scope.getAllLocalDefinitions();
         for (IDefinition definition : definitions)
         {
@@ -5301,10 +5318,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             {
                 ITypeDefinition typeDefinition = (ITypeDefinition) definition;
                 if (!definition.isImplicit()
-                        && typeDefinition.getQualifiedName().toLowerCase().contains(lowerCaseQuery))
+                        && typeDefinition.getQualifiedName().toLowerCase().contains(query))
                 {
                     SymbolInformation symbol = definitionToSymbol(typeDefinition);
-                    result.add(symbol);
+                    if (symbol != null)
+                    {
+                        result.add(symbol);
+                    }
                 }
                 IASScope typeScope = typeDefinition.getContainedScope();
                 querySymbolsInScope(query, typeScope, result);
@@ -5316,10 +5336,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     continue;
                 }
                 IFunctionDefinition functionDefinition = (IFunctionDefinition) definition;
-                if (functionDefinition.getQualifiedName().toLowerCase().contains(lowerCaseQuery))
+                if (functionDefinition.getQualifiedName().toLowerCase().contains(query))
                 {
                     SymbolInformation symbol = definitionToSymbol(functionDefinition);
-                    result.add(symbol);
+                    if (symbol != null)
+                    {
+                        result.add(symbol);
+                    }
                 }
             }
             else if (definition instanceof IVariableDefinition)
@@ -5329,10 +5352,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     continue;
                 }
                 IVariableDefinition variableDefinition = (IVariableDefinition) definition;
-                if (variableDefinition.getQualifiedName().toLowerCase().contains(lowerCaseQuery))
+                if (variableDefinition.getQualifiedName().toLowerCase().contains(query))
                 {
                     SymbolInformation symbol = definitionToSymbol(variableDefinition);
-                    result.add(symbol);
+                    if (symbol != null)
+                    {
+                        result.add(symbol);
+                    }
                 }
             }
         }
@@ -5355,7 +5381,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 if (!definition.isImplicit())
                 {
                     SymbolInformation typeSymbol = definitionToSymbol(typeDefinition);
-                    result.add(typeSymbol);
+                    if (typeSymbol != null)
+                    {
+                        result.add(typeSymbol);
+                    }
                 }
                 IASScope typeScope = typeDefinition.getContainedScope();
                 scopeToSymbols(typeScope, result);
@@ -5368,13 +5397,46 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     continue;
                 }
                 SymbolInformation localSymbol = definitionToSymbol(definition);
-                result.add(localSymbol);
+                if (localSymbol != null)
+                {
+                    result.add(localSymbol);
+                }
             }
         }
     }
 
     private SymbolInformation definitionToSymbol(IDefinition definition)
     {
+        String sourcePath = definition.getSourcePath();
+        if (sourcePath == null)
+        {
+            //I'm not sure why getSourcePath() can sometimes return null, but
+            //getContainingFilePath() seems to work as a fallback -JT
+            sourcePath = definition.getContainingFilePath();
+        }
+        if (sourcePath == null)
+        {
+            return null;
+        }
+        return definitionToSymbol(definition, sourcePath);
+    }
+
+    private SymbolInformation definitionToSymbol(IDefinition definition, String sourcePath)
+    {
+        if (!sourcePath.endsWith(AS_EXTENSION)
+                && !sourcePath.endsWith(MXML_EXTENSION)
+                && (sourcePath.contains(SDK_LIBRARY_PATH_SIGNATURE_UNIX)
+                || sourcePath.contains(SDK_LIBRARY_PATH_SIGNATURE_WINDOWS)))
+        {
+            //if it's a framework SWC, we're going to attempt to resolve
+            //the real source file 
+            sourcePath = DefinitionUtils.getDefinitionDebugSourceFilePath(definition, currentProject);
+        }
+        if (sourcePath == null)
+        {
+            return null;
+        }
+
         SymbolInformation symbol = new SymbolInformation();
         if (definition instanceof IClassDefinition)
         {
@@ -5413,14 +5475,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             symbol.setContainerName(definition.getPackageName());
         }
         symbol.setName(definition.getBaseName());
+
         Location location = new Location();
-        String sourcePath = definition.getSourcePath();
-        if (sourcePath == null)
-        {
-            //I'm not sure why getSourcePath() can sometimes return null, but
-            //getContainingFilePath() seems to work as a fallback -JT
-            sourcePath = definition.getContainingFilePath();
-        }
         Path definitionPath = Paths.get(sourcePath);
         location.setUri(definitionPath.toUri().toString());
         Position start = new Position();
