@@ -49,9 +49,6 @@ import java.util.concurrent.CompletableFuture;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.royale.abc.ABCConstants;
-import org.apache.royale.abc.ABCParser;
-import org.apache.royale.abc.Pool;
-import org.apache.royale.abc.PoolingABCVisitor;
 import org.apache.royale.compiler.common.ASModifier;
 import org.apache.royale.compiler.common.ISourceLocation;
 import org.apache.royale.compiler.common.PrefixMap;
@@ -240,16 +237,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private static final String SWC_EXTENSION = ".swc";
     private static final String MARKED_STRING_LANGUAGE_ACTIONSCRIPT = "nextgenas";
     private static final String MARKED_STRING_LANGUAGE_MXML = "mxml";
-    private static final String SDK_FRAMEWORKS_PATH_SIGNATURE = "/frameworks/";
     private static final String SDK_LIBRARY_PATH_SIGNATURE_UNIX = "/frameworks/libs/";
     private static final String SDK_LIBRARY_PATH_SIGNATURE_WINDOWS = "\\frameworks\\libs\\";
-    private static final String SDK_SOURCE_PATH_SIGNATURE_UNIX = "/frameworks/projects/";
-    private static final String SDK_SOURCE_PATH_SIGNATURE_WINDOWS = "\\frameworks\\projects\\";
     private static final String PROPERTY_FRAMEWORK_LIB = "royalelib";
     private static final String UNDERSCORE_UNDERSCORE_AS3_PACKAGE = "__AS3__.";
     private static final String VECTOR_HIDDEN_PREFIX = "Vector$";
-
-    private static boolean isWindows;
 
     private ActionScriptLanguageClient languageClient;
     private IProjectConfigStrategy projectConfigStrategy;
@@ -284,7 +276,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     public ActionScriptTextDocumentService()
     {
         updateFrameworkSDK();
-        isWindows = System.getProperty("os.name").toLowerCase().startsWith("windows");
         
         compilerWorkspace = new Workspace();
         compilerWorkspace.setASDocDelegate(new VSCodeASDocDelegate());
@@ -3951,33 +3942,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return xmlnsCommand;
     }
 
-    private String transformDebugFilePath(String sourceFilePath)
-    {
-        int index = -1;
-        if (isWindows)
-        {
-            //the debug file path divides directories with ; instead of slash in
-            //a couple of places, but it's easy to fix
-            sourceFilePath = sourceFilePath.replace(';', '\\');
-            sourceFilePath = sourceFilePath.replace('/', '\\');
-            index = sourceFilePath.indexOf(SDK_SOURCE_PATH_SIGNATURE_WINDOWS);
-        }
-        else
-        {
-            sourceFilePath = sourceFilePath.replace(';', '/');
-            sourceFilePath = sourceFilePath.replace('\\', '/');
-            index = sourceFilePath.indexOf(SDK_SOURCE_PATH_SIGNATURE_UNIX);
-        }
-        if (index == -1)
-        {
-            return sourceFilePath;
-        }
-        sourceFilePath = sourceFilePath.substring(index + SDK_FRAMEWORKS_PATH_SIGNATURE.length());
-        Path frameworkPath = Paths.get(System.getProperty(PROPERTY_FRAMEWORK_LIB));
-        Path transformedPath = frameworkPath.resolve(sourceFilePath);
-        return transformedPath.toFile().getAbsolutePath();
-    }
-
     private void resolveDefinition(IDefinition definition, List<Location> result)
     {
         String definitionPath = definition.getSourcePath();
@@ -3999,29 +3963,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             {
                 //if it's a framework SWC, we're going to attempt to resolve
                 //the source file 
-                ICompilationUnit unit = currentProject.getScope().getCompilationUnitForDefinition(definition);
-                try
-                {
-                    byte[] abcBytes = unit.getABCBytesRequest().get().getABCBytes();
-                    ABCParser parser = new ABCParser(abcBytes);
-                    PoolingABCVisitor visitor = new PoolingABCVisitor();
-                    parser.parseABC(visitor);
-                    Pool<String> pooledStrings = visitor.getStringPool();
-                    for (String pooledString : pooledStrings.getValues())
-                    {
-                        if (pooledString.contains(SDK_SOURCE_PATH_SIGNATURE_UNIX)
-                                || pooledString.contains(SDK_SOURCE_PATH_SIGNATURE_WINDOWS))
-                        {
-                            //just go with the first one that we find
-                            definitionPath = transformDebugFilePath(pooledString);
-                            break;
-                        }
-                    }
-                }
-                catch (InterruptedException e)
-                {
-                    //safe to ignore
-                }
+                definitionPath = DefinitionUtils.getDefinitionDebugSourceFilePath(definition, currentProject);
             }
             if (definitionPath.endsWith(SWC_EXTENSION))
             {

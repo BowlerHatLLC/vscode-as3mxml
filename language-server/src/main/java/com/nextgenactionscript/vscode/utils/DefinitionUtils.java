@@ -15,8 +15,13 @@ limitations under the License.
 */
 package com.nextgenactionscript.vscode.utils;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Iterator;
 
+import org.apache.royale.abc.ABCParser;
+import org.apache.royale.abc.Pool;
+import org.apache.royale.abc.PoolingABCVisitor;
 import org.apache.royale.compiler.constants.IASLanguageConstants;
 import org.apache.royale.compiler.constants.IMetaAttributeConstants;
 import org.apache.royale.compiler.definitions.IClassDefinition;
@@ -27,10 +32,17 @@ import org.apache.royale.compiler.definitions.ISetterDefinition;
 import org.apache.royale.compiler.definitions.ITypeDefinition;
 import org.apache.royale.compiler.definitions.IClassDefinition.IClassIterator;
 import org.apache.royale.compiler.definitions.metadata.IMetaTag;
+import org.apache.royale.compiler.internal.projects.RoyaleProject;
 import org.apache.royale.compiler.projects.ICompilerProject;
+import org.apache.royale.compiler.units.ICompilationUnit;
 
 public class DefinitionUtils
 {
+    private static final String PROPERTY_FRAMEWORK_LIB = "royalelib";
+    private static final String SDK_FRAMEWORKS_PATH_SIGNATURE = "/frameworks/";
+    private static final String SDK_SOURCE_PATH_SIGNATURE_UNIX = "/frameworks/projects/";
+    private static final String SDK_SOURCE_PATH_SIGNATURE_WINDOWS = "\\frameworks\\projects\\";
+
 	/**
 	 * Returns the qualified name of the required type for child elements, or
 	 * null.
@@ -87,6 +99,33 @@ public class DefinitionUtils
 		return null;
 	}
 
+	public static String getDefinitionDebugSourceFilePath(IDefinition definition, RoyaleProject project)
+	{
+		ICompilationUnit unit = project.getScope().getCompilationUnitForDefinition(definition);
+		try
+		{
+			byte[] abcBytes = unit.getABCBytesRequest().get().getABCBytes();
+			ABCParser parser = new ABCParser(abcBytes);
+			PoolingABCVisitor visitor = new PoolingABCVisitor();
+			parser.parseABC(visitor);
+			Pool<String> pooledStrings = visitor.getStringPool();
+			for (String pooledString : pooledStrings.getValues())
+			{
+				if (pooledString.contains(SDK_SOURCE_PATH_SIGNATURE_UNIX)
+						|| pooledString.contains(SDK_SOURCE_PATH_SIGNATURE_WINDOWS))
+				{
+					//just go with the first one that we find
+					return transformDebugFilePath(pooledString);
+				}
+			}
+		}
+		catch (InterruptedException e)
+		{
+			//safe to ignore
+		}
+		return null;
+	}
+
 	public static boolean extendsOrImplements(ICompilerProject project, ITypeDefinition typeDefinition, String qualifiedNameToFind)
     {
 		if (typeDefinition instanceof IClassDefinition)
@@ -118,6 +157,33 @@ public class DefinitionUtils
 		}
 		return false;
 	}
+
+    private static String transformDebugFilePath(String sourceFilePath)
+    {
+        int index = -1;
+        if (System.getProperty("os.name").toLowerCase().startsWith("windows"))
+        {
+            //the debug file path divides directories with ; instead of slash in
+            //a couple of places, but it's easy to fix
+            sourceFilePath = sourceFilePath.replace(';', '\\');
+            sourceFilePath = sourceFilePath.replace('/', '\\');
+            index = sourceFilePath.indexOf(SDK_SOURCE_PATH_SIGNATURE_WINDOWS);
+        }
+        else
+        {
+            sourceFilePath = sourceFilePath.replace(';', '/');
+            sourceFilePath = sourceFilePath.replace('\\', '/');
+            index = sourceFilePath.indexOf(SDK_SOURCE_PATH_SIGNATURE_UNIX);
+        }
+        if (index == -1)
+        {
+            return sourceFilePath;
+        }
+        sourceFilePath = sourceFilePath.substring(index + SDK_FRAMEWORKS_PATH_SIGNATURE.length());
+        Path frameworkPath = Paths.get(System.getProperty(PROPERTY_FRAMEWORK_LIB));
+        Path transformedPath = frameworkPath.resolve(sourceFilePath);
+        return transformedPath.toFile().getAbsolutePath();
+    }
 	
 	private static boolean interfaceIteratorContainsQualifiedName(Iterator<IInterfaceDefinition> interfaceIterator, String qualifiedName)
 	{
