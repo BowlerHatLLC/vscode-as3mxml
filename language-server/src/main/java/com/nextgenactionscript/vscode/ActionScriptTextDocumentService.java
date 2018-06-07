@@ -692,7 +692,15 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     {
                         continue;
                     }
-                    SymbolInformation symbol = definitionToSymbol(definition, unit.getAbsoluteFilename());
+                    if (definition instanceof DefinitionPromise)
+                    {
+                        //we won't be able to detect what type of definition
+                        //this is without getting the actual definition from the
+                        //promise.
+                        DefinitionPromise promise = (DefinitionPromise) definition;
+                        definition = promise.getActualDefinition();
+                    }
+                    SymbolInformation symbol = definitionToSymbol(definition);
                     if (symbol != null)
                     {
                         result.add(symbol);
@@ -5399,18 +5407,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         if (sourcePath == null)
         {
             return null;
-        }
-        return definitionToSymbol(definition, sourcePath);
-    }
-
-    private SymbolInformation definitionToSymbol(IDefinition definition, String sourcePath)
-    {
-        if (definition instanceof DefinitionPromise)
-        {
-            //we won't be able to detect what type of definition this is without
-            //getting the actual definition from the promise
-            DefinitionPromise promise = (DefinitionPromise) definition;
-            definition = promise.getActualDefinition();
         }
         if (!sourcePath.endsWith(AS_EXTENSION)
                 && !sourcePath.endsWith(MXML_EXTENSION)
