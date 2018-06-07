@@ -65,6 +65,10 @@ function findSymbol(symbols: vscode.SymbolInformation[], symbolToFind: vscode.Sy
 		{
 			return false;
 		}
+		if(symbol.containerName !== symbolToFind.containerName)
+		{
+			return false;
+		}
 		if(symbol.kind !== symbolToFind.kind)
 		{
 			return false;
@@ -176,7 +180,8 @@ suite("document symbol provider", () =>
 							classQualifiedName,
 							vscode.SymbolKind.Class,
 							createRange(2, 14),
-							uri)),
+							uri,
+							"No Package")),
 							"vscode.executeDocumentSymbolProvider failed to provide symbol for class: " + classQualifiedName);
 					}, (err) =>
 					{
@@ -197,7 +202,8 @@ suite("document symbol provider", () =>
 							classQualifiedName,
 							vscode.SymbolKind.Constructor,
 							createRange(11, 18),
-							uri)),
+							uri,
+							"Main")),
 							"vscode.executeDocumentSymbolProvider failed to provide symbol for constructor: " + classQualifiedName);
 					}, (err) =>
 					{
@@ -216,9 +222,10 @@ suite("document symbol provider", () =>
 						let memberVarName = "memberVar";
 						assert.ok(findSymbol(symbols, new vscode.SymbolInformation(
 							memberVarName,
-							vscode.SymbolKind.Variable,
+							vscode.SymbolKind.Field,
 							createRange(16, 13),
-							uri)),
+							uri,
+							"Main")),
 							"vscode.executeDocumentSymbolProvider failed to provide symbol for member variable: " + memberVarName);
 					}, (err) =>
 					{
@@ -237,9 +244,10 @@ suite("document symbol provider", () =>
 						let memberFunctionName = "memberFunction";
 						assert.ok(findSymbol(symbols, new vscode.SymbolInformation(
 							memberFunctionName,
-							vscode.SymbolKind.Function,
+							vscode.SymbolKind.Method,
 							createRange(18, 19),
-							uri)),
+							uri,
+							"Main")),
 							"vscode.executeDocumentSymbolProvider failed to provide symbol for member function: " + memberFunctionName);
 					}, (err) =>
 					{
@@ -258,9 +266,10 @@ suite("document symbol provider", () =>
 						let staticVarName = "staticVar";
 						assert.ok(findSymbol(symbols, new vscode.SymbolInformation(
 							staticVarName,
-							vscode.SymbolKind.Variable,
+							vscode.SymbolKind.Field,
 							createRange(4, 21),
-							uri)),
+							uri,
+							"Main")),
 							"vscode.executeDocumentSymbolProvider failed to provide symbol for static variable: " + staticVarName);
 					}, (err) =>
 					{
@@ -281,7 +290,8 @@ suite("document symbol provider", () =>
 							staticConstName,
 							vscode.SymbolKind.Constant,
 							createRange(5, 22),
-							uri)),
+							uri,
+							"Main")),
 							"vscode.executeDocumentSymbolProvider failed to provide symbol for static constant: " + staticConstName);
 					}, (err) =>
 					{
@@ -300,9 +310,10 @@ suite("document symbol provider", () =>
 						let staticFunctionName = "staticFunction";
 						assert.ok(findSymbol(symbols, new vscode.SymbolInformation(
 							staticFunctionName,
-							vscode.SymbolKind.Function,
+							vscode.SymbolKind.Method,
 							createRange(7, 28),
-							uri)),
+							uri,
+							"Main")),
 							"vscode.executeDocumentSymbolProvider failed to provide symbol for static function: " + staticFunctionName);
 					}, (err) =>
 					{
@@ -323,7 +334,8 @@ suite("document symbol provider", () =>
 							internalClassQualifiedName,
 							vscode.SymbolKind.Class,
 							createRange(24, 6),
-							uri)),
+							uri,
+							"No Package")),
 							"vscode.executeDocumentSymbolProvider failed to provide symbol for internal class: " + internalClassQualifiedName);
 					}, (err) =>
 					{
@@ -342,9 +354,10 @@ suite("document symbol provider", () =>
 						let memberVarName = "internalClassMemberVar";
 						assert.ok(findSymbol(symbols, new vscode.SymbolInformation(
 							memberVarName,
-							vscode.SymbolKind.Variable,
+							vscode.SymbolKind.Field,
 							createRange(26, 13),
-							uri)),
+							uri,
+							"MainInternalClass")),
 							"vscode.executeDocumentSymbolProvider failed to provide symbol for member variable in internal class: " + memberVarName);
 					}, (err) =>
 					{
@@ -369,7 +382,8 @@ suite("workspace symbol provider", () =>
 							query,
 							vscode.SymbolKind.Class,
 							createRange(2, 14),
-							uri)),
+							uri,
+							"No Package")),
 							"vscode.executeWorkspaceSymbolProvider failed to provide symbol for class: " + query);
 					}, (err) =>
 					{
@@ -390,7 +404,8 @@ suite("workspace symbol provider", () =>
 							query,
 							vscode.SymbolKind.Constructor,
 							createRange(11, 18),
-							uri)),
+							uri,
+							"Main")),
 							"vscode.executeWorkspaceSymbolProvider failed to provide symbol for constructor: " + query);
 					}, (err) =>
 					{
@@ -433,9 +448,10 @@ suite("workspace symbol provider", () =>
 					{
 						assert.ok(findSymbol(symbols, new vscode.SymbolInformation(
 							query,
-							vscode.SymbolKind.Variable,
+							vscode.SymbolKind.Field,
 							createRange(16, 13),
-							uri)),
+							uri,
+							"Main")),
 							"vscode.executeWorkspaceSymbolProvider failed to provide symbol for member variable: " + query);
 					}, (err) =>
 					{
@@ -454,9 +470,10 @@ suite("workspace symbol provider", () =>
 					{
 						assert.ok(findSymbol(symbols, new vscode.SymbolInformation(
 							query,
-							vscode.SymbolKind.Function,
+							vscode.SymbolKind.Method,
 							createRange(18, 19),
-							uri)),
+							uri,
+							"Main")),
 							"vscode.executeWorkspaceSymbolProvider failed to provide symbol for member function: " + query);
 					}, (err) =>
 					{
@@ -475,9 +492,10 @@ suite("workspace symbol provider", () =>
 					{
 						assert.ok(findSymbol(symbols, new vscode.SymbolInformation(
 							query,
-							vscode.SymbolKind.Variable,
+							vscode.SymbolKind.Field,
 							createRange(4, 21),
-							uri)),
+							uri,
+							"Main")),
 							"vscode.executeWorkspaceSymbolProvider failed to provide symbol for static variable: " + query);
 					}, (err) =>
 					{
@@ -498,7 +516,8 @@ suite("workspace symbol provider", () =>
 							query,
 							vscode.SymbolKind.Constant,
 							createRange(5, 22),
-							uri)),
+							uri,
+							"Main")),
 							"vscode.executeWorkspaceSymbolProvider failed to provide symbol for static constant: " + query);
 					}, (err) =>
 					{
@@ -517,9 +536,10 @@ suite("workspace symbol provider", () =>
 					{
 						assert.ok(findSymbol(symbols, new vscode.SymbolInformation(
 							query,
-							vscode.SymbolKind.Function,
+							vscode.SymbolKind.Method,
 							createRange(7, 28),
-							uri)),
+							uri,
+							"Main")),
 							"vscode.executeWorkspaceSymbolProvider failed to provide symbol for static function: " + query);
 					}, (err) =>
 					{
@@ -540,7 +560,8 @@ suite("workspace symbol provider", () =>
 							query,
 							vscode.SymbolKind.Class,
 							createRange(24, 6),
-							uri)),
+							uri,
+							"No Package")),
 							"vscode.executeWorkspaceSymbolProvider did not provide internal class");
 							
 					}, (err) =>
@@ -560,9 +581,10 @@ suite("workspace symbol provider", () =>
 					{
 						assert.ok(findSymbol(symbols, new vscode.SymbolInformation(
 							query,
-							vscode.SymbolKind.Variable,
+							vscode.SymbolKind.Field,
 							createRange(26, 13),
-							uri)),
+							uri,
+							"MainInternalClass")),
 							"vscode.executeWorkspaceSymbolProvider failed to provide symbol for member variable in internal class: " + query);
 					}, (err) =>
 					{

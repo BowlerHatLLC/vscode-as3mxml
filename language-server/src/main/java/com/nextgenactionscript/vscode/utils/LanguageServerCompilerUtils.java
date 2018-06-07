@@ -27,6 +27,7 @@ import org.apache.royale.compiler.clients.problems.CompilerProblemCategorizer;
 import org.apache.royale.compiler.common.ISourceLocation;
 import org.apache.royale.compiler.definitions.IAccessorDefinition;
 import org.apache.royale.compiler.definitions.IClassDefinition;
+import org.apache.royale.compiler.definitions.IConstantDefinition;
 import org.apache.royale.compiler.definitions.IDefinition;
 import org.apache.royale.compiler.definitions.IEventDefinition;
 import org.apache.royale.compiler.definitions.IFunctionDefinition;
@@ -294,6 +295,10 @@ public class LanguageServerCompilerUtils
             }
             return CompletionItemKind.Function;
         }
+        else if (definition instanceof IConstantDefinition)
+        {
+            return CompletionItemKind.Constant;
+        }
         else if (definition instanceof IVariableDefinition)
         {
             IVariableDefinition variableDefinition = (IVariableDefinition) definition;
@@ -348,6 +353,10 @@ public class LanguageServerCompilerUtils
                 return SymbolKind.Method;
             }
             return SymbolKind.Function;
+        }
+        else if (definition instanceof IConstantDefinition)
+        {
+            return SymbolKind.Constant;
         }
         else if (definition instanceof IVariableDefinition)
         {
