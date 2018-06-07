@@ -654,6 +654,29 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     }
 
     /**
+     * Finds all implemenations of an interface.
+     */
+    public CompletableFuture<List<? extends Location>> implementation(TextDocumentPositionParams position)
+    {
+        String textDocumentUri = position.getTextDocument().getUri();
+        if (!textDocumentUri.endsWith(AS_EXTENSION)
+                && !textDocumentUri.endsWith(MXML_EXTENSION))
+        {
+            return CompletableFuture.completedFuture(Collections.emptyList());
+        }
+        IMXMLTagData offsetTag = getOffsetMXMLTag(position);
+        if (offsetTag != null)
+        {
+            IASNode embeddedNode = getEmbeddedActionScriptNodeInMXMLTag(offsetTag, currentOffset, position);
+            if (embeddedNode != null)
+            {
+                return actionScriptImplementationWithNode(position, embeddedNode);
+            }
+        }
+        return actionScriptImplementation(position);
+    }
+
+    /**
      * Finds all references of the definition referenced at the current position
      * in a text document. Does not necessarily get called where a definition is
      * defined, but may be at one of the references.
@@ -2495,6 +2518,80 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
         List<Location> result = new ArrayList<>();
         resolveDefinition(definition, result);
+        return CompletableFuture.completedFuture(result);
+    }
+
+    private CompletableFuture<List<? extends Location>> actionScriptImplementation(TextDocumentPositionParams position)
+    {
+        IASNode offsetNode = getOffsetNode(position);
+        return actionScriptImplementationWithNode(position, offsetNode);
+    }
+
+    private CompletableFuture<List<? extends Location>> actionScriptImplementationWithNode(TextDocumentPositionParams position, IASNode offsetNode)
+    {
+        if (offsetNode == null)
+        {
+            //we couldn't find a node at the specified location
+            return CompletableFuture.completedFuture(Collections.emptyList());
+        }
+
+        IInterfaceDefinition interfaceDefinition = null;
+
+        if (offsetNode instanceof IIdentifierNode)
+        {
+            IIdentifierNode expressionNode = (IIdentifierNode) offsetNode;
+            IDefinition resolvedDefinition = expressionNode.resolve(currentProject);
+            if (resolvedDefinition instanceof IInterfaceDefinition)
+            {
+                interfaceDefinition = (IInterfaceDefinition) resolvedDefinition;
+            }
+        }
+
+        if (interfaceDefinition == null)
+        {
+            //VSCode may call typeDefinition() when there isn't necessarily a
+            //type definition referenced at the current position.
+            return CompletableFuture.completedFuture(Collections.emptyList());
+        }
+        
+        List<Location> result = new ArrayList<>();
+        for (ICompilationUnit unit : compilationUnits)
+        {
+            if (unit == null
+                    || unit instanceof SWCCompilationUnit
+                    || unit instanceof ResourceBundleCompilationUnit)
+            {
+                continue;
+            }
+            Collection<IDefinition> definitions = null;
+            try
+            {
+                definitions = unit.getFileScopeRequest().get().getExternallyVisibleDefinitions();
+            }
+            catch (Exception e)
+            {
+                //safe to ignore
+                continue;
+            }
+
+            for (IDefinition definition : definitions)
+            {
+                if (!(definition instanceof IClassDefinition))
+                {
+                    continue;
+                }
+                IClassDefinition classDefinition = (IClassDefinition) definition;
+                if (DefinitionUtils.isImplementationOfInterface(classDefinition, interfaceDefinition, currentProject))
+                {
+                    Location location = definitionToLocation(classDefinition);
+                    if (location != null)
+                    {
+                        result.add(location);
+                    }
+                }
+            }
+        }
+
         return CompletableFuture.completedFuture(result);
     }
 
@@ -5485,6 +5582,39 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private SymbolInformation definitionToSymbol(IDefinition definition)
     {
+        Location location = definitionToLocation(definition);
+        if (location == null)
+        {
+            //we can't find where the source code for this symbol is located
+            return null;
+        }
+
+        SymbolInformation symbol = new SymbolInformation();
+        symbol.setKind(LanguageServerCompilerUtils.getSymbolKindFromDefinition(definition));
+        if (!definition.getQualifiedName().equals(definition.getBaseName()))
+        {
+            symbol.setContainerName(definition.getPackageName());
+        }
+        else if (definition instanceof ITypeDefinition)
+        {
+            symbol.setContainerName("No Package");
+        }
+        else
+        {
+            IDefinition parentDefinition = definition.getParent();
+            if (parentDefinition != null)
+            {
+                symbol.setContainerName(parentDefinition.getQualifiedName());
+            }
+        }
+        symbol.setName(definition.getBaseName());
+
+        symbol.setLocation(location);
+        return symbol;
+    }
+
+    private String definitionToSourcePath(IDefinition definition)
+    {
         String sourcePath = definition.getSourcePath();
         if (sourcePath == null)
         {
@@ -5510,27 +5640,17 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 sourcePath = debugPath;
             }
         }
+        return sourcePath;
+    }
 
-        SymbolInformation symbol = new SymbolInformation();
-        symbol.setKind(LanguageServerCompilerUtils.getSymbolKindFromDefinition(definition));
-        if (!definition.getQualifiedName().equals(definition.getBaseName()))
+    private Location definitionToLocation(IDefinition definition)
+    {
+        String sourcePath = definitionToSourcePath(definition);
+        if (sourcePath == null)
         {
-            symbol.setContainerName(definition.getPackageName());
+            //we can't find where the source code for this symbol is located
+            return null;
         }
-        else if (definition instanceof ITypeDefinition)
-        {
-            symbol.setContainerName("No Package");
-        }
-        else
-        {
-            IDefinition parentDefinition = definition.getParent();
-            if (parentDefinition != null)
-            {
-                symbol.setContainerName(parentDefinition.getQualifiedName());
-            }
-        }
-        symbol.setName(definition.getBaseName());
-
         Location location = null;
         if (sourcePath.endsWith(SWC_EXTENSION))
         {
@@ -5578,8 +5698,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             range.setEnd(end);
             location.setRange(range);
         }
-        symbol.setLocation(location);
-        return symbol;
+        return location;
     }
 
     private CompletableFuture<Object> executeOrganizeImportsInDirectoryCommand(ExecuteCommandParams params)

@@ -126,6 +126,20 @@ public class DefinitionUtils
 		return null;
 	}
 
+	public static boolean isImplementationOfInterface(IClassDefinition classDefinition, IInterfaceDefinition interfaceDefinition, ICompilerProject project)
+	{
+		Iterator<IInterfaceDefinition> interfaceIterator = classDefinition.interfaceIterator(project);
+		while (interfaceIterator.hasNext())
+		{
+			IInterfaceDefinition implementedInterfaceDefinition = interfaceIterator.next();
+			if (implementedInterfaceDefinition.equals(interfaceDefinition))
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
 	public static boolean extendsOrImplements(ICompilerProject project, ITypeDefinition typeDefinition, String qualifiedNameToFind)
     {
 		if (typeDefinition instanceof IClassDefinition)
