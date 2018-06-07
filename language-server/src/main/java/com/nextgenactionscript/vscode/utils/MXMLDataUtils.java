@@ -190,6 +190,16 @@ public class MXMLDataUtils
         return project.resolveSpecifier(classDefinition, tag.getShortName());
     }
 
+    public static IDefinition getTypeDefinitionForMXMLTag(IMXMLTagData tag, RoyaleProject project)
+    {
+        IDefinition result = getDefinitionForMXMLTag(tag, project);
+        if(result == null)
+        {
+            return null;
+        }
+        return result.resolveType(project);
+    }
+
     public static IDefinition getDefinitionForMXMLTagAttribute(IMXMLTagData tag, int offset, boolean includeValue, RoyaleProject project)
     {
         IMXMLTagAttributeData attributeData = null;
@@ -215,6 +225,16 @@ public class MXMLDataUtils
         return null;
     }
 
+    public static IDefinition getTypeDefinitionForMXMLTagAttribute(IMXMLTagData tag, int offset, boolean includeValue, RoyaleProject project)
+    {
+        IDefinition result = getDefinitionForMXMLTagAttribute(tag, offset, includeValue, project);
+        if(result == null)
+        {
+            return null;
+        }
+        return result.resolveType(project);
+    }
+
     public static IDefinition getDefinitionForMXMLNameAtOffset(IMXMLTagData tag, int offset, RoyaleProject project)
     {
         if (tag.isOffsetInAttributeList(offset))
@@ -222,6 +242,16 @@ public class MXMLDataUtils
             return getDefinitionForMXMLTagAttribute(tag, offset, false, project);
         }
         return getDefinitionForMXMLTag(tag, project);
+    }
+
+    public static IDefinition getTypeDefinitionForMXMLNameAtOffset(IMXMLTagData tag, int offset, RoyaleProject project)
+    {
+        IDefinition result = getDefinitionForMXMLNameAtOffset(tag, offset, project);
+        if(result == null)
+        {
+            return null;
+        }
+        return result.resolveType(project);
     }
 
     public static boolean isMXMLTagValidForCompletion(IMXMLTagData tag)

@@ -1842,6 +1842,98 @@ suite("definition provider", () =>
 	});
 });
 
+suite("type definition provider", () =>
+{
+	test("vscode.executeTypeDefinitionProvider finds type definition of local variable", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "TypeDefinitions.as"));
+		let expected = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "typeDefinition", "LocalVarTypeDefinition.as"));
+		let position = new vscode.Position(14, 10);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeTypeDefinitionProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 1,
+							"vscode.executeTypeDefinitionProvider failed to provide location of local variable definition: " + uri);
+						let location = locations[0];
+						assert.strictEqual(location.uri.path, expected.path, "vscode.executeTypeDefinitionProvider provided incorrect uri for local variable definition");
+						assert.strictEqual(location.range.start.line, 2, "vscode.executeTypeDefinitionProvider provided incorrect line for local variable definition");
+						assert.strictEqual(location.range.start.character, 14, "vscode.executeTypeDefinitionProvider provided incorrect character for local variable definition");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute type definition provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeTypeDefinitionProvider finds type definition of member variable", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "TypeDefinitions.as"));
+		let expected = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "typeDefinition", "MemberVarTypeDefinition.as"));
+		let position = new vscode.Position(10, 14);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeTypeDefinitionProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 1,
+							"vscode.executeTypeDefinitionProvider failed to provide location of member variable definition: " + uri);
+						let location = locations[0];
+						assert.strictEqual(location.uri.path, expected.path, "vscode.executeTypeDefinitionProvider provided incorrect uri for member variable definition");
+						assert.strictEqual(location.range.start.line, 2, "vscode.executeTypeDefinitionProvider provided incorrect line for member variable definition");
+						assert.strictEqual(location.range.start.character, 14, "vscode.executeTypeDefinitionProvider provided incorrect character for member variable definition");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute type definition provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeTypeDefinitionProvider finds type definition of static variable", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "TypeDefinitions.as"));
+		let expected = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "typeDefinition", "StaticVarTypeDefinition.as"));
+		let position = new vscode.Position(9, 22);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeTypeDefinitionProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 1,
+							"vscode.executeTypeDefinitionProvider failed to provide location of static variable definition: " + uri);
+						let location = locations[0];
+						assert.strictEqual(location.uri.path, expected.path, "vscode.executeTypeDefinitionProvider provided incorrect uri for static variable definition");
+						assert.strictEqual(location.range.start.line, 2, "vscode.executeTypeDefinitionProvider provided incorrect line for static variable definition");
+						assert.strictEqual(location.range.start.character, 14, "vscode.executeTypeDefinitionProvider provided incorrect character for static variable definition");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute type definition provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeTypeDefinitionProvider finds type definition of parameter", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "TypeDefinitions.as"));
+		let expected = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "typeDefinition", "ParameterTypeDefinition.as"));
+		let position = new vscode.Position(12, 34);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeTypeDefinitionProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 1,
+							"vscode.executeTypeDefinitionProvider failed to provide location of parameter: " + uri);
+						let location = locations[0];
+						assert.strictEqual(location.uri.path, expected.path, "vscode.executeTypeDefinitionProvider provided incorrect uri for parameter definition");
+						assert.strictEqual(location.range.start.line, 2, "vscode.executeTypeDefinitionProvider provided incorrect line for parameter definition");
+						assert.strictEqual(location.range.start.character, 14, "vscode.executeTypeDefinitionProvider provided incorrect character for parameter definition");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute type definition provider: " + uri);
+					});
+		});
+	});
+});
+
 suite("hover provider", () =>
 {
 	test("vscode.executeHoverProvider displays hover for local variable", () =>

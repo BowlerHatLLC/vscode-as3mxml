@@ -624,6 +624,36 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     }
 
     /**
+     * Finds where the type of the definition referenced at the current position
+     * in a text document is defined.
+     */
+    public CompletableFuture<List<? extends Location>> typeDefinition(TextDocumentPositionParams position)
+    {
+        String textDocumentUri = position.getTextDocument().getUri();
+        if (!textDocumentUri.endsWith(AS_EXTENSION)
+                && !textDocumentUri.endsWith(MXML_EXTENSION))
+        {
+            return CompletableFuture.completedFuture(Collections.emptyList());
+        }
+        IMXMLTagData offsetTag = getOffsetMXMLTag(position);
+        if (offsetTag != null)
+        {
+            IASNode embeddedNode = getEmbeddedActionScriptNodeInMXMLTag(offsetTag, currentOffset, position);
+            if (embeddedNode != null)
+            {
+                return actionScriptTypeDefinitionWithNode(position, embeddedNode);
+            }
+            //if we're inside an <fx:Script> tag, we want ActionScript lookup,
+            //so that's why we call isMXMLTagValidForCompletion()
+            if (MXMLDataUtils.isMXMLTagValidForCompletion(offsetTag))
+            {
+                return mxmlTypeDefinition(position, offsetTag);
+            }
+        }
+        return actionScriptTypeDefinition(position);
+    }
+
+    /**
      * Finds all references of the definition referenced at the current position
      * in a text document. Does not necessarily get called where a definition is
      * defined, but may be at one of the references.
@@ -2414,6 +2444,60 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return CompletableFuture.completedFuture(result);
     }
 
+    private CompletableFuture<List<? extends Location>> actionScriptTypeDefinition(TextDocumentPositionParams position)
+    {
+        IASNode offsetNode = getOffsetNode(position);
+        return actionScriptTypeDefinitionWithNode(position, offsetNode);
+    }
+
+    private CompletableFuture<List<? extends Location>> actionScriptTypeDefinitionWithNode(TextDocumentPositionParams position, IASNode offsetNode)
+    {
+        if (offsetNode == null)
+        {
+            //we couldn't find a node at the specified location
+            return CompletableFuture.completedFuture(Collections.emptyList());
+        }
+
+        IDefinition definition = null;
+
+        if (offsetNode instanceof IIdentifierNode)
+        {
+            IIdentifierNode expressionNode = (IIdentifierNode) offsetNode;
+            definition = expressionNode.resolveType(currentProject);
+        }
+
+        if (definition == null)
+        {
+            //VSCode may call typeDefinition() when there isn't necessarily a
+            //type definition referenced at the current position.
+            return CompletableFuture.completedFuture(Collections.emptyList());
+        }
+        List<Location> result = new ArrayList<>();
+        resolveDefinition(definition, result);
+        return CompletableFuture.completedFuture(result);
+    }
+
+    private CompletableFuture<List<? extends Location>> mxmlTypeDefinition(TextDocumentPositionParams position, IMXMLTagData offsetTag)
+    {
+        IDefinition definition = MXMLDataUtils.getTypeDefinitionForMXMLNameAtOffset(offsetTag, currentOffset, currentProject);
+        if (definition == null)
+        {
+            //VSCode may call definition() when there isn't necessarily a
+            //definition referenced at the current position.
+            return CompletableFuture.completedFuture(Collections.emptyList());
+        }
+
+        if (MXMLDataUtils.isInsideTagPrefix(offsetTag, currentOffset))
+        {
+            //ignore the tag's prefix
+            return CompletableFuture.completedFuture(Collections.emptyList());
+        }
+
+        List<Location> result = new ArrayList<>();
+        resolveDefinition(definition, result);
+        return CompletableFuture.completedFuture(result);
+    }
+
     private CompletableFuture<List<? extends Location>> actionScriptReferences(ReferenceParams params)
     {
         IASNode offsetNode = getOffsetNode(params);
@@ -3986,7 +4070,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             {
                 //if it's a framework SWC, we're going to attempt to resolve
                 //the source file 
-                definitionPath = DefinitionUtils.getDefinitionDebugSourceFilePath(definition, currentProject);
+                String debugPath = DefinitionUtils.getDefinitionDebugSourceFilePath(definition, currentProject);
+                if (debugPath != null)
+                {
+                    definitionPath = debugPath;
+                }
             }
             if (definitionPath.endsWith(SWC_EXTENSION))
             {
