@@ -42,6 +42,7 @@ import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.SymbolKind;
 
 /**
  * Utility functions for converting between language server types and Flex
@@ -318,6 +319,61 @@ public class LanguageServerCompilerUtils
             return CompletionItemKind.Field;
         }
         return CompletionItemKind.Value;
+    }
+
+    public static SymbolKind getSymbolKindFromDefinition(IDefinition definition)
+    {
+        if (definition instanceof IClassDefinition)
+        {
+            return SymbolKind.Class;
+        }
+        else if (definition instanceof IInterfaceDefinition)
+        {
+            return SymbolKind.Interface;
+        }
+        else if (definition instanceof IAccessorDefinition)
+        {
+            return SymbolKind.Field;
+        }
+        else if (definition instanceof IFunctionDefinition)
+        {
+            IFunctionDefinition functionDefinition = (IFunctionDefinition) definition;
+            if (functionDefinition.isConstructor())
+            {
+                return SymbolKind.Constructor;
+            }
+            IDefinition parentDefinition = functionDefinition.getParent();
+            if (parentDefinition != null && parentDefinition instanceof ITypeDefinition)
+            {
+                return SymbolKind.Method;
+            }
+            return SymbolKind.Function;
+        }
+        else if (definition instanceof IVariableDefinition)
+        {
+            IVariableDefinition variableDefinition = (IVariableDefinition) definition;
+            switch(variableDefinition.getVariableClassification())
+            {
+                case INTERFACE_MEMBER:
+                case CLASS_MEMBER:
+                {
+                    return SymbolKind.Field;
+                }
+                default:
+                {
+                    return SymbolKind.Variable;
+                }
+            }
+        }
+        else if (definition instanceof IEventDefinition)
+        {
+            return SymbolKind.Event;
+        }
+        else if (definition instanceof IStyleDefinition)
+        {
+            return SymbolKind.Field;
+        }
+        return SymbolKind.Object;
     }
 
     public static Diagnostic getDiagnosticFromCompilerProblem(ICompilerProblem problem)

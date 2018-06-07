@@ -58,7 +58,6 @@ import org.apache.royale.compiler.constants.IASLanguageConstants;
 import org.apache.royale.compiler.constants.IMXMLCoreConstants;
 import org.apache.royale.compiler.constants.IMetaAttributeConstants;
 import org.apache.royale.compiler.definitions.IClassDefinition;
-import org.apache.royale.compiler.definitions.IConstantDefinition;
 import org.apache.royale.compiler.definitions.IDefinition;
 import org.apache.royale.compiler.definitions.IEventDefinition;
 import org.apache.royale.compiler.definitions.IFunctionDefinition;
@@ -131,7 +130,6 @@ import org.apache.royale.compiler.units.ICompilationUnit;
 import org.apache.royale.compiler.units.IInvisibleCompilationUnit;
 
 import com.google.common.io.Files;
-import com.google.common.net.UrlEscapers;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -211,7 +209,6 @@ import org.eclipse.lsp4j.RenameParams;
 import org.eclipse.lsp4j.SignatureHelp;
 import org.eclipse.lsp4j.SignatureInformation;
 import org.eclipse.lsp4j.SymbolInformation;
-import org.eclipse.lsp4j.SymbolKind;
 import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.eclipse.lsp4j.TextDocumentContentChangeEvent;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
@@ -3993,22 +3990,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     //if we get here, we couldn't find a framework source file and
                     //the definition path still ends with .swc
                     //we're going to try our best to display "decompiled" content
-                    Location location = new Location();
-                    String text = UrlEscapers.urlFragmentEscaper().escape(definitionText.text);
-                    String path = definitionText.path;
-                    URI uri = URI.create("swc://" + path + "?" + text);
-                    location.setUri(uri.toString());
-                    Position start = new Position();
-                    start.setLine(definitionText.startLine);
-                    start.setCharacter(definitionText.startColumn);
-                    Position end = new Position();
-                    end.setLine(definitionText.endLine);
-                    end.setCharacter(definitionText.endColumn);
-                    Range range = new Range();
-                    range.setStart(start);
-                    range.setEnd(end);
-                    location.setRange(range);
-                    result.add(location);
+                    result.add(definitionText.toLocation());
                 }
                 return;
             }
@@ -5423,6 +5405,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private SymbolInformation definitionToSymbol(IDefinition definition, String sourcePath)
     {
+        if (definition instanceof DefinitionPromise)
+        {
+            //we won't be able to detect what type of definition this is without
+            //getting the actual definition from the promise
+            DefinitionPromise promise = (DefinitionPromise) definition;
+            definition = promise.getActualDefinition();
+        }
         if (!sourcePath.endsWith(AS_EXTENSION)
                 && !sourcePath.endsWith(MXML_EXTENSION)
                 && (sourcePath.contains(SDK_LIBRARY_PATH_SIGNATURE_UNIX)
@@ -5430,82 +5419,81 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             //if it's a framework SWC, we're going to attempt to resolve
             //the real source file 
-            sourcePath = DefinitionUtils.getDefinitionDebugSourceFilePath(definition, currentProject);
-        }
-        if (sourcePath == null)
-        {
-            return null;
+            String debugPath = DefinitionUtils.getDefinitionDebugSourceFilePath(definition, currentProject);
+            if (debugPath != null)
+            {
+                //if we can't find the debug source file, keep the SWC extension
+                sourcePath = debugPath;
+            }
         }
 
         SymbolInformation symbol = new SymbolInformation();
-        if (definition instanceof IClassDefinition)
-        {
-            symbol.setKind(SymbolKind.Class);
-        }
-        else if (definition instanceof IInterfaceDefinition)
-        {
-            symbol.setKind(SymbolKind.Interface);
-        }
-        else if (definition instanceof IFunctionDefinition)
-        {
-            IFunctionDefinition functionDefinition = (IFunctionDefinition) definition;
-            if (functionDefinition.isConstructor())
-            {
-                symbol.setKind(SymbolKind.Constructor);
-            }
-            else
-            {
-                symbol.setKind(SymbolKind.Function);
-            }
-        }
-        else if (definition instanceof IFunctionDefinition)
-        {
-            symbol.setKind(SymbolKind.Function);
-        }
-        else if (definition instanceof IConstantDefinition)
-        {
-            symbol.setKind(SymbolKind.Constant);
-        }
-        else
-        {
-            symbol.setKind(SymbolKind.Variable);
-        }
+        symbol.setKind(LanguageServerCompilerUtils.getSymbolKindFromDefinition(definition));
         if (!definition.getQualifiedName().equals(definition.getBaseName()))
         {
             symbol.setContainerName(definition.getPackageName());
         }
-        symbol.setName(definition.getBaseName());
-
-        Location location = new Location();
-        Path definitionPath = Paths.get(sourcePath);
-        location.setUri(definitionPath.toUri().toString());
-        Position start = new Position();
-        Position end = new Position();
-        //getLine() and getColumn() may include things like metadata, so it
-        //makes more sense to jump to where the definition name starts
-        int line = definition.getNameLine();
-        int column = definition.getNameColumn();
-        if (line < 0 || column < 0)
+        else if (definition instanceof ITypeDefinition)
         {
-            //this is not ideal, but MXML variable definitions may not have a
-            //node associated with them, so we need to figure this out from the
-            //offset instead of a pre-calculated line and column -JT
-            Reader definitionReader = getReaderForPath(definitionPath);
-            LanguageServerCompilerUtils.getPositionFromOffset(definitionReader, definition.getNameStart(), start);
-            end.setLine(start.getLine());
-            end.setCharacter(start.getCharacter());
+            symbol.setContainerName("No Package");
         }
         else
         {
-            start.setLine(line);
-            start.setCharacter(column);
-            end.setLine(line);
-            end.setCharacter(column);
+            IDefinition parentDefinition = definition.getParent();
+            if (parentDefinition != null)
+            {
+                symbol.setContainerName(parentDefinition.getQualifiedName());
+            }
         }
-        Range range = new Range();
-        range.setStart(start);
-        range.setEnd(end);
-        location.setRange(range);
+        symbol.setName(definition.getBaseName());
+
+        Location location = null;
+        if (sourcePath.endsWith(SWC_EXTENSION))
+        {
+            DefinitionAsText definitionText = DefinitionTextUtils.definitionToTextDocument(definition, currentProject);
+            //may be null if definitionToTextDocument() doesn't know how
+            //to parse that type of definition
+            if (definitionText != null)
+            {
+                //if we get here, we couldn't find a framework source file and
+                //the definition path still ends with .swc
+                //we're going to try our best to display "decompiled" content
+                location = definitionText.toLocation();
+            }
+        }
+        if(location == null)
+        {
+            location = new Location();
+            Path definitionPath = Paths.get(sourcePath);
+            location.setUri(definitionPath.toUri().toString());
+            Position start = new Position();
+            Position end = new Position();
+            //getLine() and getColumn() may include things like metadata, so it
+            //makes more sense to jump to where the definition name starts
+            int line = definition.getNameLine();
+            int column = definition.getNameColumn();
+            if (line < 0 || column < 0)
+            {
+                //this is not ideal, but MXML variable definitions may not have a
+                //node associated with them, so we need to figure this out from the
+                //offset instead of a pre-calculated line and column -JT
+                Reader definitionReader = getReaderForPath(definitionPath);
+                LanguageServerCompilerUtils.getPositionFromOffset(definitionReader, definition.getNameStart(), start);
+                end.setLine(start.getLine());
+                end.setCharacter(start.getCharacter());
+            }
+            else
+            {
+                start.setLine(line);
+                start.setCharacter(column);
+                end.setLine(line);
+                end.setCharacter(column);
+            }
+            Range range = new Range();
+            range.setStart(start);
+            range.setEnd(end);
+            location.setRange(range);
+        }
         symbol.setLocation(location);
         return symbol;
     }

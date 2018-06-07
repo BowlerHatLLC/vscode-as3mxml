@@ -15,7 +15,10 @@ limitations under the License.
 */
 package com.nextgenactionscript.vscode.utils;
 
+import java.net.URI;
 import java.util.Collection;
+
+import com.google.common.net.UrlEscapers;
 
 import org.apache.royale.compiler.constants.IASKeywordConstants;
 import org.apache.royale.compiler.constants.IASLanguageConstants;
@@ -35,6 +38,9 @@ import org.apache.royale.compiler.definitions.IStyleDefinition;
 import org.apache.royale.compiler.definitions.ITypeDefinition;
 import org.apache.royale.compiler.definitions.IVariableDefinition;
 import org.apache.royale.compiler.projects.ICompilerProject;
+import org.eclipse.lsp4j.Location;
+import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.Range;
 
 public class DefinitionTextUtils
 {
@@ -54,6 +60,25 @@ public class DefinitionTextUtils
 		public int endColumn = 0;
         public String text;
         public String path;
+
+        public Location toLocation()
+        {
+            Location location = new Location();
+            String escapedText = UrlEscapers.urlFragmentEscaper().escape(text);
+            URI uri = URI.create("swc://" + path + "?" + escapedText);
+            location.setUri(uri.toString());
+            Position start = new Position();
+            start.setLine(startLine);
+            start.setCharacter(startColumn);
+            Position end = new Position();
+            end.setLine(endLine);
+            end.setCharacter(endColumn);
+            Range range = new Range();
+            range.setStart(start);
+            range.setEnd(end);
+            location.setRange(range);
+            return location;
+        }
 	}
 
     public static DefinitionAsText definitionToTextDocument(IDefinition definition, ICompilerProject currentProject)
