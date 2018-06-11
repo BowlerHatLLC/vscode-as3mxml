@@ -1464,18 +1464,32 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     public void didChangeWatchedFiles(DidChangeWatchedFilesParams params)
     {
         Set<WorkspaceFolderData> foldersToCheck = new HashSet<>();
+
         for (FileEvent event : params.getChanges())
         {
-            Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(event.getUri());
-            if (path == null)
+            Path changedPath = LanguageServerCompilerUtils.getPathFromLanguageServerURI(event.getUri());
+            if (changedPath == null)
             {
                 continue;
             }
-            File file = path.toFile();
+
+            //first check if any project's config file has changed
+            for (WorkspaceFolderData folderData : workspaceFolderToData.values())
+            {
+                IProjectConfigStrategy config = folderData.config;
+                if(changedPath.equals(config.getConfigFilePath()))
+                {
+                    config.forceChanged();
+                    foldersToCheck.add(folderData);
+                }
+            }
+
+            //then, check if source files have changed
+            File file = changedPath.toFile();
             String fileName = file.getName();
             if (fileName.endsWith(AS_EXTENSION) || fileName.endsWith(MXML_EXTENSION))
             {
-                List<WorkspaceFolderData> allFolderData = getAllWorkspaceFolderDataForSourceFile(path);
+                List<WorkspaceFolderData> allFolderData = getAllWorkspaceFolderDataForSourceFile(changedPath);
                 if (event.getType().equals(FileChangeType.Deleted))
                 {
                     IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(file.getAbsolutePath());
@@ -1496,7 +1510,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 {
                     IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(file.getAbsolutePath());
                     compilerWorkspace.fileChanged(fileSpec);
-                    checkFilePathForProblems(path);
+                    checkFilePathForProblems(changedPath);
                 }
             }
             else if (event.getType().equals(FileChangeType.Deleted))
@@ -1507,31 +1521,36 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 //compilation units were in the directory that was deleted.
                 String deletedFilePath = file.getAbsolutePath();
                 deletedFilePath += File.separator;
-                List<String> filesToRemove = new ArrayList<>();
-                for (ICompilationUnit unit : compilationUnits)
+                Set<String> filesToRemove = new HashSet<>();
+                
+                for (WorkspaceFolderData folderData : workspaceFolderToData.values())
                 {
-                    String unitFileName = unit.getAbsoluteFilename();
-                    if (unitFileName.startsWith(deletedFilePath)
-                            && (unitFileName.endsWith(AS_EXTENSION) || unitFileName.endsWith(MXML_EXTENSION)))
+                    RoyaleProject project = folderData.project;
+                    if (project == null)
                     {
-                        //if we call fileRemoved() here, it will change the
-                        //compilationUnits collection and throw an exception
-                        //so just save the paths to be removed after this loop.
-                        filesToRemove.add(unitFileName);
+                        continue;
+                    }
+                    for (ICompilationUnit unit : project.getCompilationUnits())
+                    {
+                        String unitFileName = unit.getAbsoluteFilename();
+                        if (unitFileName.startsWith(deletedFilePath)
+                                && (unitFileName.endsWith(AS_EXTENSION) || unitFileName.endsWith(MXML_EXTENSION)))
+                        {
+                            //if we call fileRemoved() here, it will change the
+                            //compilationUnits collection and throw an exception
+                            //so just save the paths to be removed after this loop.
+                            filesToRemove.add(unitFileName);
+
+                            //deleting a file may change errors in other existing files,
+                            //so we need to do a full check
+                            foldersToCheck.add(folderData);
+                        }
                     }
                 }
                 for (String fileToRemove : filesToRemove)
                 {
                     IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(fileToRemove);
                     compilerWorkspace.fileRemoved(fileSpec);
-                }
-                if (filesToRemove.size() > 0)
-                {
-                    //deleting a file may change errors in other existing files,
-                    //so we need to do a full check
-
-                    //TODO: uncomment and fix
-                    //foldersToCheck.addAll(allFolderData);
                 }
             }
         }
@@ -1602,29 +1621,66 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         if (sourcePathWatcher == null)
         {
+            createSourcePathWatcher();
+        }
+        String workspaceFolderUri = folderData.folder.getUri();
+        Path workspaceFolderPath = LanguageServerCompilerUtils.getPathFromLanguageServerURI(workspaceFolderUri);
+        if (workspaceFolderPath == null)
+        {
+            return;
+        }
+        boolean dynamicDidChangeWatchedFiles = clientCapabilities.getWorkspace().getDidChangeWatchedFiles().getDynamicRegistration();
+        for (File sourcePathFile : currentProject.getSourcePath())
+        {
+            Path sourcePath = sourcePathFile.toPath();
             try
             {
-                sourcePathWatcher = FileSystems.getDefault().newWatchService();
+                sourcePath = sourcePath.toRealPath();
             }
             catch (IOException e)
             {
-                System.err.println("Failed to get watch service for source paths.");
-                e.printStackTrace(System.err);
             }
-            sourcePathWatcherThread = new Thread()
+            if(dynamicDidChangeWatchedFiles && sourcePath.startsWith(workspaceFolderPath))
             {
-                public void run()
+                //if we're already watching for changes in the workspace, avoid
+                //duplicates
+                continue;
+            }
+            watchNewSourcePath(sourcePath, folderData);
+        }
+    }
+
+    private void createSourcePathWatcher()
+    {
+        try
+        {
+            sourcePathWatcher = FileSystems.getDefault().newWatchService();
+        }
+        catch (IOException e)
+        {
+            System.err.println("Failed to get watch service for source paths.");
+            e.printStackTrace(System.err);
+        }
+        sourcePathWatcherThread = new Thread()
+        {
+            public void run()
+            {
+                while(true)
                 {
-                    while(true)
+                    WatchKey watchKey = null;
+                    try
                     {
-                        WatchKey watchKey = null;
-                        try
+                        watchKey = sourcePathWatcher.take();
+                    }
+                    catch (InterruptedException e)
+                    {
+                        return;
+                    }
+                    for (WorkspaceFolderData folderData : workspaceFolderToData.values())
+                    {
+                        if(!folderData.sourcePathWatchKeys.containsKey(watchKey))
                         {
-                            watchKey = sourcePathWatcher.take();
-                        }
-                        catch (InterruptedException e)
-                        {
-                            return;
+                            continue;
                         }
                         Path path = folderData.sourcePathWatchKeys.get(watchKey);
                         for (WatchEvent<?> event : watchKey.pollEvents())
@@ -1667,34 +1723,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                         }
                     }
                 }
-            };
-            sourcePathWatcherThread.start();
-        }
-        String workspaceFolderUri = folderData.folder.getUri();
-        Path workspaceFolderPath = LanguageServerCompilerUtils.getPathFromLanguageServerURI(workspaceFolderUri);
-        if (workspaceFolderPath == null)
-        {
-            return;
-        }
-        boolean dynamicDidChangeWatchedFiles = clientCapabilities.getWorkspace().getDidChangeWatchedFiles().getDynamicRegistration();
-        for (File sourcePathFile : currentProject.getSourcePath())
-        {
-            Path sourcePath = sourcePathFile.toPath();
-            try
-            {
-                sourcePath = sourcePath.toRealPath();
             }
-            catch (IOException e)
-            {
-            }
-            if(dynamicDidChangeWatchedFiles && sourcePath.startsWith(workspaceFolderPath))
-            {
-                //if we're already watching for changes in the workspace, avoid
-                //duplicates
-                continue;
-            }
-            watchNewSourcePath(sourcePath, folderData);
-        }
+        };
+        sourcePathWatcherThread.start();
     }
 
     private void cleanupProject(WorkspaceFolderData folderData)
