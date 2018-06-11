@@ -142,6 +142,45 @@ function restartServer()
 	});
 }
 
+function quickCompileAndDebug(workspaceFolder)
+{
+	if(!workspaceFolder)
+	{
+		//it's possible for no folder to be chosen when using
+		//showWorkspaceFolderPick()
+		return;
+	}
+	let workspaceFolderUri = workspaceFolder.uri.toString();
+	vscode.window.withProgress({location: vscode.ProgressLocation.Window}, (progress) =>
+	{
+		progress.report({message: QUICK_COMPILE_MESSAGE});
+		return new Promise((resolve, reject) =>
+		{
+			return vscode.commands.executeCommand("nextgenas.quickCompile", workspaceFolderUri).then((result) =>
+			{
+				resolve();
+
+				if(result)
+				{
+					vscode.commands.executeCommand("workbench.action.debug.start");
+				}
+				else
+				{
+					vscode.window.showErrorMessage(CANNOT_LAUNCH_QUICK_COMPILE_FAILED_ERROR);
+				}
+			}, 
+			() =>
+			{
+				resolve();
+
+				//if the build failed, notify the user that we're not starting
+				//a debug session
+				vscode.window.showErrorMessage(CANNOT_LAUNCH_QUICK_COMPILE_FAILED_ERROR);
+			});
+		});
+	});
+}
+
 export function activate(context: vscode.ExtensionContext)
 {
 	savedContext = context;
@@ -238,34 +277,14 @@ export function activate(context: vscode.ExtensionContext)
 				vscode.window.showErrorMessage(QUICK_COMPILE_LANGUAGE_SERVER_NOT_STARTED_ERROR);
 				return;
 			}
-			vscode.window.withProgress({location: vscode.ProgressLocation.Window}, (progress) =>
+			if(vscode.workspace.workspaceFolders.length === 1)
 			{
-				progress.report({message: QUICK_COMPILE_MESSAGE});
-				return new Promise((resolve, reject) =>
-				{
-					return vscode.commands.executeCommand("nextgenas.quickCompile").then((result) =>
-					{
-						resolve();
-
-						if(result)
-						{
-							vscode.commands.executeCommand("workbench.action.debug.start");
-						}
-						else
-						{
-							vscode.window.showErrorMessage(CANNOT_LAUNCH_QUICK_COMPILE_FAILED_ERROR);
-						}
-					}, 
-					() =>
-					{
-						resolve();
-
-						//if the build failed, notify the user that we're not starting
-						//a debug session
-						vscode.window.showErrorMessage(CANNOT_LAUNCH_QUICK_COMPILE_FAILED_ERROR);
-					});
-				});
-			});
+				quickCompileAndDebug(vscode.workspace.workspaceFolders[0]);
+			}
+			else
+			{
+				vscode.window.showWorkspaceFolderPick().then(quickCompileAndDebug);
+			}
 		}
 	});
 	vscode.commands.registerTextEditorCommand("nextgenas.organizeImportsInTextEditor", organizeImportsInTextEditor);

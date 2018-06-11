@@ -6237,6 +6237,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private CompletableFuture<Object> executeQuickCompileCommand(ExecuteCommandParams params)
     {
+        List<Object> args = params.getArguments();
+        String uri = ((JsonPrimitive) args.get(0)).getAsString();
         boolean success = false;
         try
         {
@@ -6246,9 +6248,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             String frameworkLib = System.getProperty(PROPERTY_FRAMEWORK_LIB);
             Path frameworkSDKHome = Paths.get(frameworkLib, "..");
-            //TODO: pass in workspace folder as parameter instead
-            String workspaceRootUri = workspaceFolders.get(0).getUri();
-            Path workspaceRootPath = LanguageServerCompilerUtils.getPathFromLanguageServerURI(workspaceRootUri);
+            Path workspaceRootPath = LanguageServerCompilerUtils.getPathFromLanguageServerURI(uri);
             ASConfigCOptions options = new ASConfigCOptions(workspaceRootPath.toString(), frameworkSDKHome.toString(), true, null, compilerShell);
             try
             {
