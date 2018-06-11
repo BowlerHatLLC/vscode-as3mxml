@@ -175,7 +175,7 @@
 					"path":
 					{
 						"type": "string",
-						"description": "Destination directory of the file inside the application package."
+						"description": "Destination path of the file or directory inside the application package."
 					}
 				},
 				"required":
