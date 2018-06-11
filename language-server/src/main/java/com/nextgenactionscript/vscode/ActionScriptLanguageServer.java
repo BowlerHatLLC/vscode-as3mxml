@@ -28,10 +28,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.nextgenactionscript.vscode.DidChangeWatchedFilesRegistrationOptions.FileSystemWatcher;
 import com.nextgenactionscript.vscode.commands.ICommandConstants;
-import com.nextgenactionscript.vscode.project.IProjectConfigStrategy;
 import com.nextgenactionscript.vscode.project.IProjectConfigStrategyFactory;
 import com.nextgenactionscript.vscode.services.ActionScriptLanguageClient;
-import com.nextgenactionscript.vscode.utils.LanguageServerCompilerUtils;
 
 import org.apache.royale.compiler.tree.as.IASNode;
 import org.eclipse.lsp4j.CompletionOptions;
@@ -39,7 +37,6 @@ import org.eclipse.lsp4j.DidChangeConfigurationParams;
 import org.eclipse.lsp4j.DidChangeWatchedFilesParams;
 import org.eclipse.lsp4j.ExecuteCommandOptions;
 import org.eclipse.lsp4j.ExecuteCommandParams;
-import org.eclipse.lsp4j.FileEvent;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.InitializeResult;
 import org.eclipse.lsp4j.InitializedParams;
@@ -73,7 +70,6 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
     private WorkspaceService workspaceService;
     private ActionScriptTextDocumentService textDocumentService;
     private IProjectConfigStrategyFactory projectConfigStrategyFactory;
-    private IProjectConfigStrategy projectConfigStrategy;
     private ActionScriptLanguageClient languageClient;
 
     public ActionScriptLanguageServer(IProjectConfigStrategyFactory factory)
@@ -103,13 +99,10 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
     @Override
     public CompletableFuture<InitializeResult> initialize(InitializeParams params)
     {
-        URI rootURI = URI.create(params.getRootUri());
-        Path workspaceRoot = Paths.get(rootURI).toAbsolutePath().normalize();
-        projectConfigStrategy = projectConfigStrategyFactory.create(params.getWorkspaceFolders().get(0));
         textDocumentService.setClientCapabilities(params.getCapabilities());
         textDocumentService.setLanguageClient(languageClient);
-        textDocumentService.setProjectConfigStrategy(projectConfigStrategy);
-        textDocumentService.setWorkspaceRoot(workspaceRoot);
+        textDocumentService.setProjectConfigStrategyFactory(projectConfigStrategyFactory);
+        textDocumentService.addWorkspaceFolder(params.getWorkspaceFolders().get(0));
 
         InitializeResult result = new InitializeResult();
 
@@ -167,7 +160,7 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
         //but there's no way to target directories without *
         watchers.add(new FileSystemWatcher("**/*"));
 
-        String id = "vscode-nextgenas-" + textDocumentService.getWorkspaceRoot().toString();
+        String id = "vscode-nextgenas-" + Math.random();
         DidChangeWatchedFilesRegistrationOptions options = new DidChangeWatchedFilesRegistrationOptions(watchers);
         Registration registration = new Registration(id, "workspace/didChangeWatchedFiles", options);
         List<Registration> registrations = new ArrayList<>();
@@ -279,26 +272,12 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
                         return;
                     }
                     System.setProperty(PROPERTY_FRAMEWORK_LIB, frameworkLib);
-                    projectConfigStrategy.forceChanged();
                     textDocumentService.checkForProblemsNow();
                 }
 
                 @Override
                 public void didChangeWatchedFiles(DidChangeWatchedFilesParams params)
                 {
-                    Path configFilePath = projectConfigStrategy.getConfigFilePath();
-                    if (configFilePath != null)
-                    {
-                        for (FileEvent event : params.getChanges())
-                        {
-                            Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(event.getUri());
-                            if (path == null || !path.equals(configFilePath))
-                            {
-                                continue;
-                            }
-                            projectConfigStrategy.forceChanged();
-                        }
-                    }
                     //delegate to the ActionScriptTextDocumentService, since that's
                     //where the compiler is running, and the compiler may need to
                     //know about file changes
