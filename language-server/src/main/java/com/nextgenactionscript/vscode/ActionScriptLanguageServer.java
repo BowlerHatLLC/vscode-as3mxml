@@ -35,6 +35,7 @@ import org.apache.royale.compiler.tree.as.IASNode;
 import org.eclipse.lsp4j.CompletionOptions;
 import org.eclipse.lsp4j.DidChangeConfigurationParams;
 import org.eclipse.lsp4j.DidChangeWatchedFilesParams;
+import org.eclipse.lsp4j.DidChangeWorkspaceFoldersParams;
 import org.eclipse.lsp4j.ExecuteCommandOptions;
 import org.eclipse.lsp4j.ExecuteCommandParams;
 import org.eclipse.lsp4j.InitializeParams;
@@ -46,6 +47,7 @@ import org.eclipse.lsp4j.ServerCapabilities;
 import org.eclipse.lsp4j.SignatureHelpOptions;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.TextDocumentSyncKind;
+import org.eclipse.lsp4j.WorkspaceFolder;
 import org.eclipse.lsp4j.WorkspaceSymbolParams;
 import org.eclipse.lsp4j.jsonrpc.services.JsonNotification;
 import org.eclipse.lsp4j.services.LanguageClient;
@@ -102,7 +104,10 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
         textDocumentService.setClientCapabilities(params.getCapabilities());
         textDocumentService.setLanguageClient(languageClient);
         textDocumentService.setProjectConfigStrategyFactory(projectConfigStrategyFactory);
-        textDocumentService.addWorkspaceFolder(params.getWorkspaceFolders().get(0));
+        for(WorkspaceFolder folder : params.getWorkspaceFolders())
+        {
+            textDocumentService.addWorkspaceFolder(folder);
+        }
 
         InitializeResult result = new InitializeResult();
 
@@ -282,6 +287,19 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
                     //where the compiler is running, and the compiler may need to
                     //know about file changes
                     textDocumentService.didChangeWatchedFiles(params);
+                }
+
+                @Override
+                public void didChangeWorkspaceFolders(DidChangeWorkspaceFoldersParams params)
+                {
+                    for(WorkspaceFolder folder : params.getEvent().getRemoved())
+                    {
+                        textDocumentService.removeWorkspaceFolder(folder);
+                    }
+                    for(WorkspaceFolder folder : params.getEvent().getAdded())
+                    {
+                        textDocumentService.addWorkspaceFolder(folder);
+                    }
                 }
 
                 @Override
