@@ -1252,9 +1252,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return;
         }
-
         Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocumentUri);
-        if (!SourcePathUtils.isInProjectSourcePath(path, currentProject))
+        if (path == null)
+        {
+            return;
+        }
+        WorkspaceFolderData folderData = getWorkspaceFolderDataForSourceFile(path);
+        if (folderData == null)
         {
             return;
         }
@@ -1426,23 +1430,27 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return;
         }
         Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocumentUri);
-        if (path != null)
+        if (path == null)
         {
-            if (!SourcePathUtils.isInProjectSourcePath(path, currentProject))
-            {
-                //immediately clear any diagnostics published for this file
-                URI uri = path.toUri();
-                PublishDiagnosticsParams publish = new PublishDiagnosticsParams();
-                ArrayList<Diagnostic> diagnostics = new ArrayList<>();
-                publish.setDiagnostics(diagnostics);
-                publish.setUri(uri.toString());
-                if (languageClient != null)
-                {
-                    languageClient.publishDiagnostics(publish);
-                }
-            }
-            sourceByPath.remove(path);
+            return;
         }
+        WorkspaceFolderData folderData = getWorkspaceFolderDataForSourceFile(path);
+        if (folderData == null)
+        {
+            return;
+        }
+
+        //immediately clear any diagnostics published for this file
+        URI uri = path.toUri();
+        PublishDiagnosticsParams publish = new PublishDiagnosticsParams();
+        ArrayList<Diagnostic> diagnostics = new ArrayList<>();
+        publish.setDiagnostics(diagnostics);
+        publish.setUri(uri.toString());
+        if (languageClient != null)
+        {
+            languageClient.publishDiagnostics(publish);
+        }
+        sourceByPath.remove(path);
     }
 
     /**
@@ -5245,6 +5253,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return null;
         }
+        WorkspaceFolderData folderData = getWorkspaceFolderDataForSourceFile(path);
+        currentProject = getProject(folderData);
         if (!SourcePathUtils.isInProjectSourcePath(path, currentProject))
         {
             //the path must be in the workspace or source-path
@@ -5257,8 +5267,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         else
         {
-            System.err.println("Could not find source " + path.toAbsolutePath().toString());
-            System.err.println(sourceByPath.keySet().size());
+            Path workspacePath = LanguageServerCompilerUtils.getPathFromLanguageServerURI(folderData.folder.getUri());
+            System.err.println("Could not find source " + path.toAbsolutePath().toString() + " for workspace folder " + workspacePath.toString() + ".");
             return null;
         }
 
@@ -5362,6 +5372,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return null;
         }
+        WorkspaceFolderData folderData = getWorkspaceFolderDataForSourceFile(path);
+        currentProject = getProject(folderData);
         if (!SourcePathUtils.isInProjectSourcePath(path, currentProject))
         {
             //the path must be in the workspace or source-path
@@ -5374,8 +5386,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         else
         {
-            System.err.println("Could not find source " + path.toAbsolutePath().toString());
-            System.err.println(sourceByPath.keySet().size());
+            Path workspacePath = LanguageServerCompilerUtils.getPathFromLanguageServerURI(folderData.folder.getUri());
+            System.err.println("Could not find source " + path.toAbsolutePath().toString() + " for workspace folder " + workspacePath.toString() + ".");
             return null;
         }
 
