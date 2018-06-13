@@ -17,15 +17,12 @@ package com.nextgenactionscript.vscode;
 
 import java.io.File;
 import java.net.URI;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import com.nextgenactionscript.vscode.DidChangeWatchedFilesRegistrationOptions.FileSystemWatcher;
 import com.nextgenactionscript.vscode.commands.ICommandConstants;
 import com.nextgenactionscript.vscode.project.IProjectConfigStrategyFactory;
@@ -33,11 +30,7 @@ import com.nextgenactionscript.vscode.services.ActionScriptLanguageClient;
 
 import org.apache.royale.compiler.tree.as.IASNode;
 import org.eclipse.lsp4j.CompletionOptions;
-import org.eclipse.lsp4j.DidChangeConfigurationParams;
-import org.eclipse.lsp4j.DidChangeWatchedFilesParams;
-import org.eclipse.lsp4j.DidChangeWorkspaceFoldersParams;
 import org.eclipse.lsp4j.ExecuteCommandOptions;
-import org.eclipse.lsp4j.ExecuteCommandParams;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.InitializeResult;
 import org.eclipse.lsp4j.InitializedParams;
@@ -45,11 +38,8 @@ import org.eclipse.lsp4j.Registration;
 import org.eclipse.lsp4j.RegistrationParams;
 import org.eclipse.lsp4j.ServerCapabilities;
 import org.eclipse.lsp4j.SignatureHelpOptions;
-import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.TextDocumentSyncKind;
 import org.eclipse.lsp4j.WorkspaceFolder;
-import org.eclipse.lsp4j.WorkspaceSymbolParams;
-import org.eclipse.lsp4j.jsonrpc.services.JsonNotification;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.LanguageClientAware;
 import org.eclipse.lsp4j.services.LanguageServer;
@@ -65,11 +55,9 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
     private static final int MISSING_FRAMEWORK_LIB = 200;
     private static final int INVALID_FRAMEWORK_LIB = 201;
     private static final String PROPERTY_FRAMEWORK_LIB = "royalelib";
-    private static final String ROYALE_ASJS_RELATIVE_PATH_CHILD = "./royale-asjs";
-    private static final String FRAMEWORKS_RELATIVE_PATH_CHILD = "./frameworks";
     private static final String FRAMEWORKS_RELATIVE_PATH_PARENT = "../frameworks";
 
-    private WorkspaceService workspaceService;
+    private ActionScriptWorkspaceService workspaceService;
     private ActionScriptTextDocumentService textDocumentService;
     private IProjectConfigStrategyFactory projectConfigStrategyFactory;
     private ActionScriptLanguageClient languageClient;
@@ -77,6 +65,7 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
     public ActionScriptLanguageServer(IProjectConfigStrategyFactory factory)
     {
         this.projectConfigStrategyFactory = factory;
+
         //the royalelib system property may be configured in the command line
         //options, but if it isn't, use the framework included with Royale
         if (System.getProperty(PROPERTY_FRAMEWORK_LIB) == null)
@@ -195,125 +184,8 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
     {
         if (workspaceService == null)
         {
-            workspaceService = new WorkspaceService()
-            {
-                @Override
-                public CompletableFuture<List<? extends SymbolInformation>> symbol(WorkspaceSymbolParams params)
-                {
-                    //delegate to the ActionScriptTextDocumentService, since that's
-                    //where the compiler is running, and the compiler is needed to
-                    //find workspace symbols
-                    return textDocumentService.workspaceSymbol(params);
-                }
-
-                @Override
-                public void didChangeConfiguration(DidChangeConfigurationParams params)
-                {
-                    if(!(params.getSettings() instanceof JsonObject))
-                    {
-                        return;
-                    }
-                    JsonObject settings = (JsonObject) params.getSettings();
-                    if (!settings.has("nextgenas"))
-                    {
-                        return;
-                    }
-                    JsonObject nextgenas = settings.get("nextgenas").getAsJsonObject();
-                    if (!nextgenas.has("sdk"))
-                    {
-                        return;
-                    }
-                    JsonObject sdk = nextgenas.get("sdk").getAsJsonObject();
-                    String frameworkSDK = null;
-                    if (sdk.has("framework"))
-                    {
-                        JsonElement frameworkValue = sdk.get("framework");
-                        if (!frameworkValue.isJsonNull())
-                        {
-                            frameworkSDK = frameworkValue.getAsString();
-                        }
-                    }
-                    if (frameworkSDK == null && sdk.has("editor"))
-                    {
-                        //for legacy reasons, we fall back to the editor SDK
-                        JsonElement editorValue = sdk.get("editor");
-                        if (!editorValue.isJsonNull())
-                        {
-                            frameworkSDK = editorValue.getAsString();
-                        }
-                    }
-                    if (frameworkSDK == null)
-                    {
-                        //keep using the existing framework for now
-                        return;
-                    }
-                    String frameworkLib = null;
-                    Path frameworkLibPath = Paths.get(frameworkSDK).resolve(FRAMEWORKS_RELATIVE_PATH_CHILD).toAbsolutePath().normalize();
-                    if (frameworkLibPath.toFile().exists())
-                    {
-                        //if the frameworks directory exists, use it!
-                        frameworkLib = frameworkLibPath.toString();
-                    }
-                    else 
-                    {
-                        //if the frameworks directory doesn't exist, we also
-                        //need to check for Apache Royale's unique layout
-                        //with the royale-asjs directory
-                        Path royalePath = Paths.get(frameworkSDK).resolve(ROYALE_ASJS_RELATIVE_PATH_CHILD).resolve(FRAMEWORKS_RELATIVE_PATH_CHILD).toAbsolutePath().normalize();
-                        if(royalePath.toFile().exists())
-                        {
-                            frameworkLib = royalePath.toString();
-                        }
-                    }
-                    if (frameworkLib == null)
-                    {
-                        //keep using the existing framework for now
-                        return;
-                    }
-                    String oldFrameworkLib = System.getProperty(PROPERTY_FRAMEWORK_LIB);
-                    if (oldFrameworkLib.equals(frameworkLib))
-                    {
-                        //frameworks library has not changed
-                        return;
-                    }
-                    System.setProperty(PROPERTY_FRAMEWORK_LIB, frameworkLib);
-                    textDocumentService.checkForProblemsNow();
-                }
-
-                @Override
-                public void didChangeWatchedFiles(DidChangeWatchedFilesParams params)
-                {
-                    //delegate to the ActionScriptTextDocumentService, since that's
-                    //where the compiler is running, and the compiler may need to
-                    //know about file changes
-                    textDocumentService.didChangeWatchedFiles(params);
-                }
-
-                @Override
-                public void didChangeWorkspaceFolders(DidChangeWorkspaceFoldersParams params)
-                {
-                    for(WorkspaceFolder folder : params.getEvent().getRemoved())
-                    {
-                        textDocumentService.removeWorkspaceFolder(folder);
-                    }
-                    for(WorkspaceFolder folder : params.getEvent().getAdded())
-                    {
-                        textDocumentService.addWorkspaceFolder(folder);
-                    }
-                }
-
-                @Override
-                public CompletableFuture<Object> executeCommand(ExecuteCommandParams params)
-                {
-                    return textDocumentService.executeCommand(params);
-                }
-                
-                @JsonNotification("$/setTraceNotification")
-                public void setTraceNotification(Object params)
-                {
-                    //this may be ignored. see: eclipse/lsp4j#22
-                }
-            };
+            workspaceService = new ActionScriptWorkspaceService();
+            workspaceService.textDocumentService = textDocumentService;
         }
         return workspaceService;
     }
@@ -328,6 +200,10 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
         if (textDocumentService == null)
         {
             textDocumentService = new ActionScriptTextDocumentService();
+            if (workspaceService != null)
+            {
+                workspaceService.textDocumentService = textDocumentService;
+            }
         }
         return textDocumentService;
     }
