@@ -159,6 +159,7 @@ import com.nextgenactionscript.vscode.utils.ImportRange;
 import com.nextgenactionscript.vscode.utils.ImportTextEditUtils;
 import com.nextgenactionscript.vscode.utils.LSPUtils;
 import com.nextgenactionscript.vscode.utils.LanguageServerCompilerUtils;
+import com.nextgenactionscript.vscode.utils.LanguageServerFileSpecGetter;
 import com.nextgenactionscript.vscode.utils.MXMLDataUtils;
 import com.nextgenactionscript.vscode.utils.MXMLNamespace;
 import com.nextgenactionscript.vscode.utils.MXMLNamespaceUtils;
