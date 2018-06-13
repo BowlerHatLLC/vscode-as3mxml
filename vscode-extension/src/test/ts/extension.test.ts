@@ -6850,6 +6850,61 @@ suite("MXML completion item provider", () =>
 					});
 		});
 	});
+	test("vscode.executeCompletionItemProvider includes class with existing prefix", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "MXMLCompletion.mxml"));
+		let position = new vscode.Position(16, 8);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
+				.then((list: vscode.CompletionList) =>
+					{
+						let items = list.items;
+						let mxmlItem = findCompletionItemOfKind("View", vscode.CompletionItemKind.Class, items);
+						assert.notEqual(mxmlItem, null, "vscode.executeCompletionItemProvider failed to provide class with existing prefix: " + uri);
+						assert.strictEqual(mxmlItem.kind, vscode.CompletionItemKind.Class, "vscode.executeCompletionItemProvider failed to provide correct kind of class: " + uri);
+					}, (err) =>
+					{
+						assert(false, "Failed to execute completion item provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeCompletionItemProvider includes class with partial name and existing prefix", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "MXMLCompletion.mxml"));
+		let position = new vscode.Position(30, 11);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
+				.then((list: vscode.CompletionList) =>
+					{
+						let items = list.items;
+						let mxmlItem = findCompletionItemOfKind("View", vscode.CompletionItemKind.Class, items);
+						assert.notEqual(mxmlItem, null, "vscode.executeCompletionItemProvider failed to include class with partial name and existing prefix: " + uri);
+					}, (err) =>
+					{
+						assert(false, "Failed to execute completion item provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeCompletionItemProvider includes class with full name and existing prefix", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "MXMLCompletion.mxml"));
+		let position = new vscode.Position(9, 12);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
+				.then((list: vscode.CompletionList) =>
+					{
+						let items = list.items;
+						let mxmlItem = findCompletionItemOfKind("View", vscode.CompletionItemKind.Class, items);
+						assert.notEqual(mxmlItem, null, "vscode.executeCompletionItemProvider failed to include class with partial name and existing prefix: " + uri);
+					}, (err) =>
+					{
+						assert(false, "Failed to execute completion item provider: " + uri);
+					});
+		});
+	});
 	test("vscode.executeCompletionItemProvider omits id as attribute of <fx:Declarations>", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "MXMLCompletion.mxml"));

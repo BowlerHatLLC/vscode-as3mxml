@@ -73,6 +73,7 @@ import org.apache.royale.compiler.definitions.IVariableDefinition;
 import org.apache.royale.compiler.definitions.metadata.IMetaTag;
 import org.apache.royale.compiler.filespecs.IFileSpecification;
 import org.apache.royale.compiler.internal.mxml.MXMLData;
+import org.apache.royale.compiler.internal.mxml.MXMLTagData;
 import org.apache.royale.compiler.internal.parsing.as.ASParser;
 import org.apache.royale.compiler.internal.parsing.as.ASToken;
 import org.apache.royale.compiler.internal.parsing.as.RepairingTokenBuffer;
@@ -2193,6 +2194,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return result;
         }
+        boolean isTagName = false;
+        if(offsetTag instanceof MXMLTagData) //this shouldn't ever be false
+        {
+            MXMLTagData mxmlTagData = (MXMLTagData) offsetTag;
+            //getNameStart() and getNameEnd() are not defined on IMXMLTagData
+            isTagName = MXMLData.contains(mxmlTagData.getNameStart(), mxmlTagData.getNameEnd(), currentOffset);
+        }
 
         //an implicit offset tag may mean that we're trying to close a tag
         if (parentTag != null && offsetTag.isImplicit())
@@ -2234,7 +2242,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
 
         IDefinition offsetDefinition = MXMLDataUtils.getDefinitionForMXMLTag(offsetTag, currentProject);
-        if (offsetDefinition == null)
+        if (offsetDefinition == null || isTagName)
         {
             IDefinition parentDefinition = null;
             if (parentTag != null)
