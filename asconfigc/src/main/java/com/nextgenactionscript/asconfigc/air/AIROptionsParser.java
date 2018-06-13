@@ -187,6 +187,26 @@ public class AIROptionsParser
 			String outputPath = options.get(AIROptions.OUTPUT).asText();
 			result.add(outputPath);
 		}
+		else
+		{
+			//output is not defined, so generate an appropriate file name based
+			//on the content's file name
+			Path applicationContentFilePath = Paths.get(applicationContentPath);
+			String fileName = applicationContentFilePath.getFileName().toString();
+			int index = fileName.lastIndexOf(".");
+			if(index != -1)
+			{
+				//remove the file extension, if it exists
+				//adt will automatically add an extension, if necessary
+				fileName = fileName.substring(0, index);
+			}
+			else
+			{
+				throw new Error("Cannot find Adobe AIR application output path.");
+			}
+			Path outputPath = applicationContentFilePath.resolveSibling(fileName);
+			result.add(outputPath.toString());
+		}
 		
 		result.add(applicationDescriptorPath);
 
