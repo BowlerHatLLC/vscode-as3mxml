@@ -84,7 +84,7 @@ class AIROptionsParserTests
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		ArrayList<String> result = new ArrayList<>();
 		parser.parse(AIRPlatform.AIR, false, value, "content.swf", options, result);
-		Assertions.assertEquals(3, result.indexOf(value));
+		Assertions.assertEquals(4, result.indexOf(value));
 	}
 
 	@Test

@@ -339,13 +339,12 @@ public class AIROptionsParser
 			//Adobe's documentation for adt says that the -e option can
 			//accept a directory, but it only seems to work with files, so
 			//we read the directory contents to add the files individually
-			File destFile = new File(destPath, srcFile.getName());
-			destPath = destFile.getAbsolutePath();
-			File[] files = destFile.listFiles();
+			File[] files = srcFile.listFiles();
 			for(int i = 0, length = files.length; i < length; i++)
 			{
 				File file = files[i];
-				addFile(file, destPath, result);
+				String fileDestPath = Paths.get(destPath, file.getName()).toString();
+				addFile(file, fileDestPath, result);
 			}
 			return;
 		}
