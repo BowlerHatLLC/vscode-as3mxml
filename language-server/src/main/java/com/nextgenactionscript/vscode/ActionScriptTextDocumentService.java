@@ -264,8 +264,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private int namespaceEndIndex = -1;
     private String namespaceUri;
     private LanguageServerFileSpecGetter fileSpecGetter;
-    private ProblemTracker codeProblemTracker = new ProblemTracker();
-    private ProblemTracker configProblemTracker = new ProblemTracker();
     private WatchService sourcePathWatcher;
     private Thread sourcePathWatcherThread;
     private ClientCapabilities clientCapabilities;
@@ -300,6 +298,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         IProjectConfigStrategy config = projectConfigStrategyFactory.create(folder);
         WorkspaceFolderData folderData = new WorkspaceFolderData(folder, config);
         workspaceFolderToData.put(folder, folderData);
+        folderData.codeProblemTracker.setLanguageClient(languageClient);
+        folderData.configProblemTracker.setLanguageClient(languageClient);
         
         //let's get the code intelligence up and running!
         Path path = getMainCompilationUnitPath(folderData);
@@ -350,8 +350,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     public void setLanguageClient(ActionScriptLanguageClient value)
     {
         languageClient = value;
-        codeProblemTracker.setLanguageClient(value);
-        configProblemTracker.setLanguageClient(value);
     }
 
     /**
@@ -1277,7 +1275,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
             //we need to check for problems when opening a new file because it
             //may not have been in the workspace before.
-            checkFilePathForProblems(path);
+            checkFilePathForProblems(path, folderData);
         }
     }
 
@@ -1399,7 +1397,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             {
                 realTimeProblemAnalyzer.setCompilationUnit(null);
                 realTimeProblemAnalyzer.setFileSpecification(null);
-                publishDiagnosticForFileOutsideSourcePath(path);
+                publishDiagnosticForFileOutsideSourcePath(path, folderData.codeProblemTracker);
                 return;
             }
             ICompilationUnit unit = getCompilationUnit(path);
@@ -1520,7 +1518,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 {
                     IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(file.getAbsolutePath());
                     compilerWorkspace.fileChanged(fileSpec);
-                    checkFilePathForProblems(changedPath);
+                    for (WorkspaceFolderData folderData : allFolderData)
+                    {
+                        checkFilePathForProblems(changedPath, folderData);
+                    }
                 }
             }
             else if (event.getType().equals(FileChangeType.Deleted))
@@ -4692,7 +4693,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         diagnostics.add(diagnostic);
     }
 
-    private void checkFilePathForSyntaxProblems(Path path)
+    private void checkFilePathForSyntaxProblems(Path path, ProblemTracker codeProblemTracker)
     {
         URI uri = path.toUri();
         PublishDiagnosticsParams publish = new PublishDiagnosticsParams();
@@ -4971,7 +4972,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     {
         if(folderData == null)
         {
-            System.err.println("getProject() null folderData");
+            System.err.println("Cannot find workspace for project.");
             return null;
         }
         currentProject = folderData.project;
@@ -4991,6 +4992,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
         List<ICompilerProblem> configProblems = new ArrayList<>();
         RoyaleProject project = CompilerProjectUtils.createProject(currentProjectOptions, compilerWorkspace, configProblems);
+        ProblemTracker configProblemTracker = folderData.configProblemTracker;
         if (configProblems.size() > 0)
         {
             Map<URI, PublishDiagnosticsParams> filesMap = new HashMap<>();
@@ -5043,7 +5045,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 //it doesn't matter which file we pick here because we're
                 //doing a full build
                 Path path = filePaths.iterator().next();
-                checkFilePathForProblems(path);
+                checkFilePathForProblems(path, folderData);
             }
         }
         else //app
@@ -5051,34 +5053,30 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             Path path = getMainCompilationUnitPath(folderData);
             if (path != null)
             {
-                checkFilePathForProblems(path);
+                checkFilePathForProblems(path, folderData);
             }
         }
     }
 
-    private void checkFilePathForProblems(Path path)
+    private void checkFilePathForProblems(Path path, WorkspaceFolderData folderData)
     {
         currentUnit = null;
-        WorkspaceFolderData folderData = getWorkspaceFolderDataForSourceFile(path);
-        if(folderData == null)
-        {
-            System.err.println("checkFilePathForProblems() null folderData " + path);
-        }
 
         //if we haven't accessed a compilation unit yet, the project may be null
         currentProject = getProject(folderData);
         if (currentProject != null && !SourcePathUtils.isInProjectSourcePath(path, currentProject))
         {
-            publishDiagnosticForFileOutsideSourcePath(path);
+            publishDiagnosticForFileOutsideSourcePath(path, folderData.codeProblemTracker);
             return;
         }
-        if (!checkFilePathForAllProblems(path))
+        ProblemTracker codeProblemTracker = folderData.codeProblemTracker;
+        if (!checkFilePathForAllProblems(path, codeProblemTracker))
         {
-            checkFilePathForSyntaxProblems(path);
+            checkFilePathForSyntaxProblems(path, codeProblemTracker);
         }
     }
 
-    private void publishDiagnosticForFileOutsideSourcePath(Path path)
+    private void publishDiagnosticForFileOutsideSourcePath(Path path, ProblemTracker codeProblemTracker)
     {
         URI uri = path.toUri();
         PublishDiagnosticsParams publish = new PublishDiagnosticsParams();
@@ -5098,7 +5096,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
     }
 
-    private boolean checkFilePathForAllProblems(Path path)
+    private boolean checkFilePathForAllProblems(Path path, ProblemTracker codeProblemTracker)
     {
         ICompilationUnit mainUnit = getCompilationUnit(path);
         if (mainUnit == null)
@@ -5146,7 +5144,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                             //compiled compilation units won't have problems
                             continue;
                         }
-                        PublishDiagnosticsParams params = checkCompilationUnitForAllProblems(unit);
+                        PublishDiagnosticsParams params = checkCompilationUnitForAllProblems(unit, codeProblemTracker);
                         URI uri = Paths.get(unit.getAbsoluteFilename()).toUri();
                         files.put(uri, params);
                     }
@@ -5176,7 +5174,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return true;
     }
 
-    private PublishDiagnosticsParams checkCompilationUnitForAllProblems(ICompilationUnit unit)
+    private PublishDiagnosticsParams checkCompilationUnitForAllProblems(ICompilationUnit unit, ProblemTracker codeProblemTracker)
     {
         URI uri = Paths.get(unit.getAbsoluteFilename()).toUri();
         PublishDiagnosticsParams publish = new PublishDiagnosticsParams();

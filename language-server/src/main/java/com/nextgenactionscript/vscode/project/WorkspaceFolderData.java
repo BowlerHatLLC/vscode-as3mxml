@@ -22,6 +22,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.nextgenactionscript.vscode.utils.ProblemTracker;
+
 import org.apache.royale.compiler.internal.projects.RoyaleProject;
 import org.apache.royale.compiler.units.IInvisibleCompilationUnit;
 import org.eclipse.lsp4j.WorkspaceFolder;
@@ -39,6 +41,8 @@ public class WorkspaceFolderData
 	public RoyaleProject project;
 	public Map<WatchKey, Path> sourcePathWatchKeys = new HashMap<>();
 	public List<IInvisibleCompilationUnit> invisibleUnits = new ArrayList<>();
+    public ProblemTracker codeProblemTracker = new ProblemTracker();
+    public ProblemTracker configProblemTracker = new ProblemTracker();
 	
 	public void cleanup()
 	{

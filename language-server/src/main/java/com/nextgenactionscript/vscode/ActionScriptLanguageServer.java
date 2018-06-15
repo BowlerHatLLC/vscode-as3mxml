@@ -94,6 +94,7 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
         textDocumentService.setClientCapabilities(params.getCapabilities());
         textDocumentService.setLanguageClient(languageClient);
         textDocumentService.setProjectConfigStrategyFactory(projectConfigStrategyFactory);
+        //setting everything above must happen before adding workspace folders
         for(WorkspaceFolder folder : params.getWorkspaceFolders())
         {
             textDocumentService.addWorkspaceFolder(folder);
