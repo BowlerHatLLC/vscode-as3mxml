@@ -54,8 +54,7 @@ const CONFIGURE_SDK_LABEL = "Configure SDK";
 const NO_SDK = "$(alert) No SDK";
 let savedContext: vscode.ExtensionContext;
 let savedLanguageClient: LanguageClient;
-let languageClientStarted: boolean = false;
-let bundledCompilerPath: string;
+let isLanguageClientReady = false;
 let editorSDKHome: string;
 let javaExecutablePath: string;
 let frameworkSDKHome: string;
@@ -123,7 +122,7 @@ function restartServer()
 	}
 	let languageClient = savedLanguageClient;
 	savedLanguageClient = null;
-	languageClientStarted = false;
+	isLanguageClientReady = false;
 	languageClient.stop().then(() =>
 	{
 		startClient();
@@ -272,7 +271,7 @@ export function activate(context: vscode.ExtensionContext)
 	{
 		if(vscode.workspace.workspaceFolders)
 		{
-			if(!savedLanguageClient || !languageClientStarted)
+			if(!savedLanguageClient || !isLanguageClientReady)
 			{
 				vscode.window.showErrorMessage(QUICK_COMPILE_LANGUAGE_SERVER_NOT_STARTED_ERROR);
 				return;
@@ -312,6 +311,15 @@ export function activate(context: vscode.ExtensionContext)
 		vscode.workspace.registerTextDocumentContentProvider("swc", swcTextDocumentContentProvider);
 	}
 	startClient();
+
+	return (
+		{
+			get isLanguageClientReady(): boolean
+			{
+				return isLanguageClientReady;
+			}
+		}
+	)
 }
 
 export function deactivate()
@@ -457,12 +465,12 @@ function startClient()
 				}
 			};
 			let options: ExecutableOptions;
-			languageClientStarted = false;
+			isLanguageClientReady = false;
 			savedLanguageClient = new LanguageClient("nextgenas", "ActionScript & MXML Language Server", executable, clientOptions);
 			savedLanguageClient.onReady().then(() =>
 			{
 				resolve();
-				languageClientStarted = true;
+				isLanguageClientReady = true;
 				savedLanguageClient.onNotification("nextgenas/logCompilerShellOutput", (notification: string) =>
 				{
 					logCompilerShellOutput(notification, false, false);

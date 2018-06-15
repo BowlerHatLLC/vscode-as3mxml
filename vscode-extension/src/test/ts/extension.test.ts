@@ -144,8 +144,9 @@ suite("ActionScript & MXML extension", () =>
 		setTimeout(() =>
 		{
 			assert.ok(extension.isActive, `Extension "${extensionName}" not active!`);
+			assert.ok(extension.exports.isLanguageClientReady, `Extension "${extensionName}" language client not ready!`);
 			done();
-		}, 5000);
+		}, 6500);
 	});
 });
 
