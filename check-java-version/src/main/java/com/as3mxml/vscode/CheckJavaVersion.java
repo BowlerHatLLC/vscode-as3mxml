@@ -16,7 +16,7 @@ limitations under the License.
 package com.as3mxml.vscode;
 
 /**
- * Checks that the Java version is capable of running the NextGenAS language
+ * Checks that the Java version is capable of running the AS3 & MXML language
  * server.
  */
 public class CheckJavaVersion
