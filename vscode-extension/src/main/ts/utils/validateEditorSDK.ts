@@ -63,7 +63,7 @@ function validatePossibleEditorSDK(extensionPath: string, javaPath: string, sdkP
 		path.resolve(sdkPath, "lib", "*") + cpDelimiter +
 		path.resolve(sdkPath, "js", "lib", "*") + cpDelimiter +
 		path.resolve(extensionPath, "bin", "check-royale-version.jar"),
-		"com.nextgenactionscript.vscode.CheckRoyaleVersion",
+		"com.as3mxml.vscode.CheckRoyaleVersion",
 	];
 	let result = child_process.spawnSync(javaPath, args);
 	if(result.status !== 0)

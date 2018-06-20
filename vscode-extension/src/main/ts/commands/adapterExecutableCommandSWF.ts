@@ -29,7 +29,7 @@ export default function(workspaceUri: string, javaPath: string, editorSDKPath: s
 		"-Dflexlib=" + path.resolve(frameworkSDKPath, "frameworks"),
 		"-cp",
 		getClassPath(editorSDKPath),
-		"com.nextgenactionscript.vscode.SWFDebug"
+		"com.as3mxml.vscode.SWFDebug"
 	];
 	let result: any =
 	{

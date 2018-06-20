@@ -20,12 +20,12 @@ limitations under the License.
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>com.nextgenactionscript.vscode</groupId>
+    <groupId>com.as3mxml.vscode</groupId>
     <artifactId>vscode-nextgenas</artifactId>
     <version>0.13.0-SNAPSHOT</version>
   </parent>
 
-  <groupId>com.nextgenactionscript.vscode</groupId>
+  <groupId>com.as3mxml.vscode</groupId>
   <artifactId>rcsh</artifactId>
   <name>rcsh</name>
   
@@ -46,7 +46,7 @@ limitations under the License.
         <configuration>
           <archive>
             <manifest>
-              <mainClass>com.nextgenactionscript.vscode.rcsh.RCSH</mainClass>
+              <mainClass>com.as3mxml.vscode.rcsh.RCSH</mainClass>
             </manifest>
           </archive>
         </configuration>

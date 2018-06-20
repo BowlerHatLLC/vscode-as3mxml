@@ -20,11 +20,11 @@ limitations under the License.
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<artifactId>vscode-nextgenas</artifactId>
-		<groupId>com.nextgenactionscript.vscode</groupId>
+		<groupId>com.as3mxml.vscode</groupId>
     	<version>0.13.0-SNAPSHOT</version>
 	</parent>
 
-	<groupId>com.nextgenactionscript.vscode</groupId>
+	<groupId>com.as3mxml.vscode</groupId>
 	<artifactId>swf-debugger</artifactId>
 	<name>swf-debugger</name>
 
@@ -54,7 +54,7 @@ limitations under the License.
 				<configuration>
 					<archive>
 						<manifest>
-							<mainClass>com.nextgenactionscript.vscode.SWFDebug</mainClass>
+							<mainClass>com.as3mxml.vscode.SWFDebug</mainClass>
 						</manifest>
 					</archive>
 				</configuration>

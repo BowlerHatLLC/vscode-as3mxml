@@ -20,12 +20,12 @@ limitations under the License.
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>com.nextgenactionscript.vscode</groupId>
+    <groupId>com.as3mxml.vscode</groupId>
     <artifactId>vscode-nextgenas</artifactId>
     <version>0.13.0-SNAPSHOT</version>
   </parent>
 
-  <groupId>com.nextgenactionscript.vscode</groupId>
+  <groupId>com.as3mxml.vscode</groupId>
   <artifactId>vscode-extension</artifactId>
   <name>vscode-extension</name>
 

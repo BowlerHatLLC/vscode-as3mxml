@@ -449,7 +449,7 @@ function startClient()
 				"-Dfile.encoding=UTF8",
 				"-cp",
 				cp,
-				"com.nextgenactionscript.vscode.Main",
+				"com.as3mxml.vscode.Main",
 			];
 			if(frameworkSDKHome)
 			{
