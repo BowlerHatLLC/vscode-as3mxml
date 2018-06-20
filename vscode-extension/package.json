@@ -503,8 +503,8 @@
         ]
       },
       {
-        "type": "nextgenas-node",
-        "label": "NextGenAS Node.js",
+        "type": "node-royale",
+        "label": "Node.js (Apache Royale)",
         "enableBreakpointsFor": {
           "languageIds": [
             "nextgenas",
@@ -513,7 +513,7 @@
         },
         "initialConfigurations": [
           {
-            "name": "NextGenAS Node.js Launch",
+            "name": "Node.js (Apache Royale) Launch",
             "type": "node",
             "request": "launch",
             "program": "${workspaceRoot}/bin/js-debug/index.js",
