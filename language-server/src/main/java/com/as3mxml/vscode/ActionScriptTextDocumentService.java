@@ -1495,10 +1495,16 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             //then, check if source files have changed
             File file = changedPath.toFile();
             String fileName = file.getName();
+            FileChangeType changeType = event.getType();
             if (fileName.endsWith(AS_EXTENSION) || fileName.endsWith(MXML_EXTENSION))
             {
                 List<WorkspaceFolderData> allFolderData = getAllWorkspaceFolderDataForSourceFile(changedPath);
-                if (event.getType().equals(FileChangeType.Deleted))
+                if (changeType.equals(FileChangeType.Deleted) ||
+
+                    //this is weird, but it's possible for a renamed file to
+                    //result in a Changed event, but not a Deleted event
+                    (changeType.equals(FileChangeType.Changed) && !file.exists())
+                )
                 {
                     IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(file.getAbsolutePath());
                     compilerWorkspace.fileRemoved(fileSpec);
@@ -1514,7 +1520,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     //so we need to do a full check
                     foldersToCheck.addAll(allFolderData);
                 }
-                else if (event.getType().equals(FileChangeType.Changed))
+                else if (changeType.equals(FileChangeType.Changed))
                 {
                     IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(file.getAbsolutePath());
                     compilerWorkspace.fileChanged(fileSpec);
@@ -1524,7 +1530,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     }
                 }
             }
-            else if (event.getType().equals(FileChangeType.Deleted))
+            else if (changeType.equals(FileChangeType.Deleted))
             {
                 //we don't get separate didChangeWatchedFiles notifications for
                 //each .as and .mxml in a directory when the directory is
