@@ -279,7 +279,7 @@ public class LanguageServerCompilerUtils
         }
         else if (definition instanceof IAccessorDefinition)
         {
-            return CompletionItemKind.Field;
+            return CompletionItemKind.Property;
         }
         else if (definition instanceof IFunctionDefinition)
         {
@@ -338,7 +338,7 @@ public class LanguageServerCompilerUtils
         }
         else if (definition instanceof IAccessorDefinition)
         {
-            return SymbolKind.Field;
+            return SymbolKind.Property;
         }
         else if (definition instanceof IFunctionDefinition)
         {

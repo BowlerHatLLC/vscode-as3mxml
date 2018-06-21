@@ -9,6 +9,11 @@ package
 		{
 		}
 
+		public static function get staticProperty():Object
+		{
+			return null;
+		}
+
 		public function Main()
 		{
 			var localVar:Number = 2;
@@ -18,6 +23,11 @@ package
 
 		private function memberFunction():void
 		{
+		}
+
+		public function get memberProperty():Object
+		{
+			return null;
 		}
 	}
 }
