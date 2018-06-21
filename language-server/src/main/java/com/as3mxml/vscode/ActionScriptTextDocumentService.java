@@ -3444,8 +3444,14 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 continue;
             }
             String functionName = functionDefinition.getBaseName();
+            if (functionName.length() == 0)
+            {
+                //vscode expects all items to have a name
+                continue;
+            }
             if (functionNames.contains(functionName))
             {
+                //avoid duplicates
                 continue;
             }
             functionNames.add(functionName);
@@ -3963,6 +3969,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             for (IMetaTag eventMetaTag : eventMetaTags)
             {
                 String eventName = eventMetaTag.getAttributeValue(IMetaAttributeConstants.NAME_EVENT_NAME);
+                if (eventName.length() == 0)
+                {
+                    //vscode expects all items to have a name
+                    continue;
+                }
                 if (eventNames.contains(eventName))
                 {
                     //avoid duplicates!
@@ -4027,6 +4038,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             for (IMetaTag styleMetaTag : styleMetaTags)
             {
                 String styleName = styleMetaTag.getAttributeValue(IMetaAttributeConstants.NAME_STYLE_NAME);
+                if (styleName.length() == 0)
+                {
+                    //vscode expects all items to have a name
+                    continue;
+                }
                 if (styleNames.contains(styleName))
                 {
                     //avoid duplicates!
@@ -4116,7 +4132,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private void addDefinitionAutoCompleteActionScript(IDefinition definition, String containingPackageName, CompletionList result)
     {
-        if (definition.getBaseName().startsWith(VECTOR_HIDDEN_PREFIX))
+        String definitionBaseName = definition.getBaseName();
+        if (definitionBaseName.length() == 0)
+        {
+            //vscode expects all items to have a name
+            return;
+        }
+        if (definitionBaseName.startsWith(VECTOR_HIDDEN_PREFIX))
         {
             return;
         }
@@ -4174,6 +4196,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             completionTypes.add(qualifiedName);
         }
         String definitionBaseName = definition.getBaseName();
+        if (definitionBaseName.length() == 0)
+        {
+            //vscode expects all items to have a name
+            return;
+        }
         CompletionItem item = CompletionItemUtils.createDefinitionItem(definition, currentProject);
         if (isAttribute && completionSupportsSnippets)
         {
@@ -5700,6 +5727,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private SymbolInformation definitionToSymbol(IDefinition definition)
     {
+        String definitionBaseName = definition.getBaseName();
+        if (definitionBaseName.length() == 0)
+        {
+            //vscode expects all items to have a name
+            return null;
+        }
+
         Location location = definitionToLocation(definition);
         if (location == null)
         {
@@ -5709,7 +5743,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
         SymbolInformation symbol = new SymbolInformation();
         symbol.setKind(LanguageServerCompilerUtils.getSymbolKindFromDefinition(definition));
-        if (!definition.getQualifiedName().equals(definition.getBaseName()))
+        if (!definition.getQualifiedName().equals(definitionBaseName))
         {
             symbol.setContainerName(definition.getPackageName());
         }
@@ -5725,7 +5759,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 symbol.setContainerName(parentDefinition.getQualifiedName());
             }
         }
-        symbol.setName(definition.getBaseName());
+        symbol.setName(definitionBaseName);
 
         symbol.setLocation(location);
         return symbol;
