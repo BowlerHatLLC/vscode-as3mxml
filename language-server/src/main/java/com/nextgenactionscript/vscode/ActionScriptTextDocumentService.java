@@ -1564,13 +1564,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             };
             sourcePathWatcherThread.start();
         }
-        if (currentProjectOptions.sourcePaths == null)
-        {
-            return;
-        }
+        currentProject = getProject();
         boolean dynamicDidChangeWatchedFiles = clientCapabilities.getWorkspace().getDidChangeWatchedFiles().getDynamicRegistration();
-        for (Path sourcePath : currentProjectOptions.sourcePaths)
+        for (File sourcePathFile : currentProject.getSourcePath())
         {
+            Path sourcePath = sourcePathFile.toPath();
             try
             {
                 sourcePath = sourcePath.toRealPath();
