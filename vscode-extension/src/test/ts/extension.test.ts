@@ -17,6 +17,7 @@ import * as assert from "assert";
 import * as path from "path";
 import * as vscode from "vscode";
 
+const EXTENSION_ID = "bowlerhatllc.vscode-nextgenas";
 const COMMAND_ADD_IMPORT = "nextgenas.addImport";
 const COMMAND_GENERATE_GETTER = "nextgenas.generateGetter";
 const COMMAND_GENERATE_SETTER = "nextgenas.generateSetter";
@@ -132,25 +133,24 @@ function findImportCommandForType(qualifiedName: string, codeActions: vscode.Com
 	return null;
 }
 
-suite("ActionScript & MXML extension", () =>
+suite("ActionScript & MXML extension: Application workspace", () =>
 {
 	test("vscode.extensions.getExtension() and isActive", (done) =>
 	{
-		let extensionName = "bowlerhatllc.vscode-nextgenas";
-		let extension = vscode.extensions.getExtension(extensionName);
-		assert.ok(extension, `Extension "${extensionName}" not found!`);
+		let extension = vscode.extensions.getExtension(EXTENSION_ID);
+		assert.ok(extension, `Extension "${EXTENSION_ID}" not found!`);
 		//wait a bit for the the extension to fully activate because we need
 		//the project to be fully loaded into the compiler for future tests
 		setTimeout(() =>
 		{
-			assert.ok(extension.isActive, `Extension "${extensionName}" not active!`);
-			assert.ok(extension.exports.isLanguageClientReady, `Extension "${extensionName}" language client not ready!`);
+			assert.ok(extension.isActive, `Extension "${EXTENSION_ID}" not active!`);
+			assert.ok(extension.exports.isLanguageClientReady, `Extension "${EXTENSION_ID}" language client not ready!`);
 			done();
 		}, 6500);
 	});
 });
 
-suite("document symbol provider", () =>
+suite("document symbol provider: Application workspace", () =>
 {
 	test("vscode.executeDocumentSymbolProvider not empty", () =>
 	{
@@ -412,7 +412,7 @@ suite("document symbol provider", () =>
 	});
 });
 
-suite("workspace symbol provider", () =>
+suite("workspace symbol provider: Application workspace", () =>
 {
 	test("vscode.executeWorkspaceSymbolProvider includes class", () =>
 	{
@@ -774,7 +774,7 @@ suite("workspace symbol provider", () =>
 	});
 });
 
-suite("signature help provider", () =>
+suite("signature help provider: Application workspace", () =>
 {
 	test("vscode.executeSignatureHelpProvider provides help for local function", () =>
 	{
@@ -1026,7 +1026,7 @@ suite("signature help provider", () =>
 	});
 });
 
-suite("definition provider", () =>
+suite("definition provider: Application workspace", () =>
 {
 	test("vscode.executeDefinitionProvider finds definition of local variable", () =>
 	{
@@ -1931,7 +1931,7 @@ suite("definition provider", () =>
 	});
 });
 
-suite("type definition provider", () =>
+suite("type definition provider: Application workspace", () =>
 {
 	test("vscode.executeTypeDefinitionProvider finds type definition of local variable", () =>
 	{
@@ -2023,7 +2023,7 @@ suite("type definition provider", () =>
 	});
 });
 
-suite("hover provider", () =>
+suite("hover provider: Application workspace", () =>
 {
 	test("vscode.executeHoverProvider displays hover for local variable", () =>
 	{
@@ -3475,7 +3475,7 @@ suite("hover provider", () =>
 	});
 });
 
-suite("completion item provider", () =>
+suite("completion item provider: Application workspace", () =>
 {
 	test("vscode.executeCompletionItemProvider includes local variable", () =>
 	{
@@ -5960,7 +5960,7 @@ suite("completion item provider", () =>
 	});
 });
 
-suite("MXML completion item provider", () =>
+suite("MXML completion item provider: Application workspace", () =>
 {
 	test("vscode.executeCompletionItemProvider includes property as attribute", () =>
 	{
@@ -7194,7 +7194,7 @@ suite("MXML completion item provider", () =>
 	});
 });
 
-suite("imports", () =>
+suite("imports: Application workspace", () =>
 {
 	teardown(() =>
 	{
@@ -7298,7 +7298,7 @@ suite("imports", () =>
 	});
 });
 
-suite("mxml namespaces", () =>
+suite("mxml namespaces: Application workspace", () =>
 {
 	teardown(() =>
 	{
@@ -7376,7 +7376,7 @@ suite("mxml namespaces", () =>
 	});
 });
 
-suite("code action provider", () =>
+suite("code action provider: Application workspace", () =>
 {
 	test("vscode.executeCodeActionProvider finds import for base class", () =>
 	{
@@ -7832,7 +7832,7 @@ suite("code action provider", () =>
 	});
 });
 
-suite("generate getter/setter", () =>
+suite("generate getter/setter: Application workspace", () =>
 {
 	teardown(() =>
 	{
@@ -8101,7 +8101,7 @@ suite("generate getter/setter", () =>
 	});
 });
 
-suite("generate variable", () =>
+suite("generate variable: Application workspace", () =>
 {
 	teardown(() =>
 	{
@@ -8174,7 +8174,7 @@ suite("generate variable", () =>
 	});
 });
 
-suite("generate method", () =>
+suite("generate method: Application workspace", () =>
 {
 	teardown(() =>
 	{
@@ -8247,7 +8247,7 @@ suite("generate method", () =>
 	});
 });
 
-suite("organize imports", () =>
+suite("organize imports: Application workspace", () =>
 {
 	teardown(() =>
 	{
@@ -8348,3 +8348,67 @@ suite("organize imports", () =>
 		});
 	});
 });
+
+suite("ActionScript & MXML extension: Library workspace", () =>
+{
+	test("vscode.extensions.getExtension() and isActive", (done) =>
+	{
+		let oldWorkspacePath = vscode.workspace.workspaceFolders[0].uri.fsPath;
+		let newWorkspacePath = path.resolve(oldWorkspacePath, "..", "library_workspace");
+		vscode.workspace.updateWorkspaceFolders(vscode.workspace.workspaceFolders.length, 0, { uri: vscode.Uri.file(newWorkspacePath) });
+		assert.strictEqual(vscode.workspace.workspaceFolders[1].uri.fsPath, newWorkspacePath, `Wrong workspace folder path!`);
+		//wait a bit for the the extension to fully activate because we need
+		//the project to be fully loaded into the compiler for future tests
+		setTimeout(() =>
+		{
+			let extension = vscode.extensions.getExtension(EXTENSION_ID);
+			assert.ok(extension, `Extension "${EXTENSION_ID}" not found!`);
+			assert.ok(extension.isActive, `Extension "${EXTENSION_ID}" not active!`);
+			assert.ok(extension.exports.isLanguageClientReady, `Extension "${EXTENSION_ID}" language client not ready!`);
+			done();
+		}, 6500);
+	});
+});
+
+/*suite("document symbol provider: Library workspace", () =>
+{
+	test("vscode.executeDocumentSymbolProvider not empty", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[1].uri.fsPath, "src", "com", "example", "LibraryDocumentSymbols.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDocumentSymbolProvider", uri)
+				.then((symbols: vscode.SymbolInformation[]) =>
+					{
+						assert.notStrictEqual(symbols.length, 0,
+							"vscode.executeDocumentSymbolProvider failed to provide symbols in text document: " + uri);
+					}, (err) =>
+					{
+						assert(false, "Failed to execute document symbol provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeDocumentSymbolProvider includes class", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[1].uri.fsPath, "src", "com", "example", "LibraryDocumentSymbols.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDocumentSymbolProvider", uri)
+				.then((symbols: vscode.SymbolInformation[]) =>
+					{
+						let className = "LibraryDocumentSymbols";
+						let packageName = "com.example";
+						assert.ok(findSymbol(symbols, new vscode.SymbolInformation(
+							className,
+							vscode.SymbolKind.Class,
+							createRange(2, 14),
+							uri,
+							packageName)),
+							"vscode.executeDocumentSymbolProvider failed to provide symbol for class: " + packageName);
+					}, (err) =>
+					{
+						assert(false, "Failed to execute document symbol provider: " + uri);
+					});
+		});
+	});
+});*/

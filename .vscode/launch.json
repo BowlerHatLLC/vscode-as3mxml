@@ -20,7 +20,7 @@
 			"request": "launch",
 			"runtimeExecutable": "${execPath}",
 			"args": [
-				"${workspaceRoot}/vscode-extension/src/test/fixtures",
+				"${workspaceRoot}/vscode-extension/src/test/application_workspace",
 				"--extensionDevelopmentPath=${workspaceRoot}/distribution/target/vscode-nextgenas/vscode-nextgenas",
 				"--extensionTestsPath=${workspaceRoot}/vscode-extension/target/test"
 			],

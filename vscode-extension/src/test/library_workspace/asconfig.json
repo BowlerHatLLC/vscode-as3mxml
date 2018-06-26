@@ -1,0 +1,12 @@
+{
+	"type": "lib",
+	"config": "royale",
+	"compilerOptions": {
+		"source-path": [
+			"src"
+		],
+		"include-sources": [
+			"src"
+		]
+	}
+}

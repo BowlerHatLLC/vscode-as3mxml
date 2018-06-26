@@ -41,7 +41,7 @@ Tests are run in the Visual Studio Code extension host.
 
 Results will appear in the **Output** view.
 
-Note: If the extension cannot find Apache Royale on your system automatically, you may need to configure the `nextgenas.sdk.framework` or `nextgenas.sdk.editor` setting in *vscode-extension/src/test/fixtures/.vscode/settings.json*.
+Note: If the extension cannot find Apache Royale on your system automatically, you may need to configure the `nextgenas.sdk.framework` or `nextgenas.sdk.editor` setting in *vscode-extension/src/test/application_workspace/.vscode/settings.json*.
 
 ## Support this project
 
