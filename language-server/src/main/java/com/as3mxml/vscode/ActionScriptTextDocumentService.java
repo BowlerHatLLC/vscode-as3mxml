@@ -1467,6 +1467,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         //as long as we're checking on change, we shouldn't need to do anything
         //on save
     }
+
     public void didChangeWatchedFiles(DidChangeWatchedFilesParams params)
     {
         didChangeWatchedFiles(params, true);
@@ -1478,7 +1479,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
      * the project configuration strategy has changed. If it has, checks for
      * errors on the whole project.
      */
-    public void didChangeWatchedFiles(DidChangeWatchedFilesParams params, boolean checkForProblems)
+    public synchronized void didChangeWatchedFiles(DidChangeWatchedFilesParams params, boolean checkForProblems)
     {
         Set<WorkspaceFolderData> foldersToCheck = new HashSet<>();
 
@@ -1540,6 +1541,31 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(normalizedChangedPathAsString);
                     compilerWorkspace.fileChanged(fileSpec);
                     foldersToCheck.addAll(allFolderData);
+                }
+            }
+            else if (changeType.equals(FileChangeType.Created) && java.nio.file.Files.isDirectory(changedPath))
+            {
+                try
+                {
+                    java.nio.file.Files.walkFileTree(changedPath, new SimpleFileVisitor<Path>()
+                    {
+                        @Override
+                        public FileVisitResult visitFile(Path subPath, BasicFileAttributes attrs)
+                        {
+                            String normalizedSubPath = FilenameNormalization.normalize(subPath.toString());
+                            if (normalizedSubPath.endsWith(AS_EXTENSION) || normalizedSubPath.endsWith(MXML_EXTENSION))
+                            {
+                                IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(normalizedSubPath);
+                                compilerWorkspace.fileAdded(fileSpec);
+                            }
+                            return FileVisitResult.CONTINUE;
+                        }
+                    });
+                }
+                catch (IOException e)
+                {
+                    System.err.println("Failed to walk added path: " + changedPath.toString());
+                    e.printStackTrace(System.err);
                 }
             }
             else if (changeType.equals(FileChangeType.Deleted))
