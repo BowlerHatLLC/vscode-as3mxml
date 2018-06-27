@@ -129,6 +129,7 @@ import org.apache.royale.compiler.tree.mxml.IMXMLSingleDataBindingNode;
 import org.apache.royale.compiler.tree.mxml.IMXMLSpecifierNode;
 import org.apache.royale.compiler.units.ICompilationUnit;
 import org.apache.royale.compiler.units.IInvisibleCompilationUnit;
+import org.apache.royale.utils.FilenameNormalization;
 
 import com.google.common.io.Files;
 import com.google.gson.JsonArray;
@@ -305,7 +306,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         Path path = getMainCompilationUnitPath(folderData);
         if (path != null)
         {
-            IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(path.toAbsolutePath().toString());
+            String normalizedPath = FilenameNormalization.normalize(path.toAbsolutePath().toString());
+            IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(normalizedPath);
             compilerWorkspace.fileChanged(fileSpec);
         }
         checkProjectForProblems(folderData);
@@ -1270,7 +1272,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
             //notify the workspace that it should read the file from memory
             //instead of loading from the file system
-            IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(path.toAbsolutePath().toString());
+            String normalizedPath = FilenameNormalization.normalize(path.toAbsolutePath().toString());
+            IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(normalizedPath);
             compilerWorkspace.fileChanged(fileSpec);
 
             //we need to check for problems when opening a new file because it
@@ -1385,7 +1388,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             else
             {
-                IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(path.toAbsolutePath().toString());
+                String normalizedPath = FilenameNormalization.normalize(path.toAbsolutePath().toString());
+                IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(normalizedPath);
                 compilerWorkspace.fileChanged(fileSpec);
             }
             //we do a quick check of the current file on change for better
@@ -1401,7 +1405,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 return;
             }
             ICompilationUnit unit = getCompilationUnit(path);
-            IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(path.toAbsolutePath().toString());
+            String normalizedPath = FilenameNormalization.normalize(path.toAbsolutePath().toString());
+            IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(normalizedPath);
             realTimeProblemAnalyzer.languageClient = languageClient;
             realTimeProblemAnalyzer.compilerProblemFilter = compilerProblemFilter;
             realTimeProblemAnalyzer.setCompilationUnit(unit);
@@ -1462,6 +1467,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         //as long as we're checking on change, we shouldn't need to do anything
         //on save
     }
+    public void didChangeWatchedFiles(DidChangeWatchedFilesParams params)
+    {
+        didChangeWatchedFiles(params, true);
+    }
 
     /**
      * Called when certain files in the workspace are added, removed, or
@@ -1469,7 +1478,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
      * the project configuration strategy has changed. If it has, checks for
      * errors on the whole project.
      */
-    public void didChangeWatchedFiles(DidChangeWatchedFilesParams params)
+    public void didChangeWatchedFiles(DidChangeWatchedFilesParams params, boolean checkForProblems)
     {
         Set<WorkspaceFolderData> foldersToCheck = new HashSet<>();
 
@@ -1493,20 +1502,26 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
 
             //then, check if source files have changed
-            File file = changedPath.toFile();
-            String fileName = file.getName();
             FileChangeType changeType = event.getType();
-            if (fileName.endsWith(AS_EXTENSION) || fileName.endsWith(MXML_EXTENSION))
+            String normalizedChangedPathAsString = FilenameNormalization.normalize(changedPath.toString());
+            ICompilationUnit changedUnit = findCompilationUnit(normalizedChangedPathAsString, currentProject);
+            if (changedUnit != null)
+            {
+                //windows drive letter may not match, even after normalization,
+                //so it's better to use the unit's path, if available.
+                normalizedChangedPathAsString = changedUnit.getAbsoluteFilename();
+            }
+            if (normalizedChangedPathAsString.endsWith(AS_EXTENSION) || normalizedChangedPathAsString.endsWith(MXML_EXTENSION))
             {
                 List<WorkspaceFolderData> allFolderData = getAllWorkspaceFolderDataForSourceFile(changedPath);
                 if (changeType.equals(FileChangeType.Deleted) ||
 
                     //this is weird, but it's possible for a renamed file to
                     //result in a Changed event, but not a Deleted event
-                    (changeType.equals(FileChangeType.Changed) && !file.exists())
+                    (changeType.equals(FileChangeType.Changed) && !java.nio.file.Files.exists(changedPath))
                 )
                 {
-                    IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(file.getAbsolutePath());
+                    IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(normalizedChangedPathAsString);
                     compilerWorkspace.fileRemoved(fileSpec);
                     //deleting a file may change errors in other existing files,
                     //so we need to do a full check
@@ -1514,7 +1529,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 }
                 else if (event.getType().equals(FileChangeType.Created))
                 {
-                    IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(file.getAbsolutePath());
+                    IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(normalizedChangedPathAsString);
                     compilerWorkspace.fileAdded(fileSpec);
                     //creating a file may change errors in other existing files,
                     //so we need to do a full check
@@ -1522,12 +1537,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 }
                 else if (changeType.equals(FileChangeType.Changed))
                 {
-                    IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(file.getAbsolutePath());
+                    IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(normalizedChangedPathAsString);
                     compilerWorkspace.fileChanged(fileSpec);
-                    for (WorkspaceFolderData folderData : allFolderData)
-                    {
-                        checkFilePathForProblems(changedPath, folderData);
-                    }
+                    foldersToCheck.addAll(allFolderData);
                 }
             }
             else if (changeType.equals(FileChangeType.Deleted))
@@ -1536,8 +1548,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 //each .as and .mxml in a directory when the directory is
                 //deleted. with that in mind, we need to manually check if any
                 //compilation units were in the directory that was deleted.
-                String deletedFilePath = file.getAbsolutePath();
-                deletedFilePath += File.separator;
+                String deletedFilePath = normalizedChangedPathAsString + File.separator;
                 Set<String> filesToRemove = new HashSet<>();
                 
                 for (WorkspaceFolderData folderData : workspaceFolderToData.values())
@@ -1566,14 +1577,22 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 }
                 for (String fileToRemove : filesToRemove)
                 {
+                    ICompilationUnit unit = findCompilationUnit(fileToRemove, currentProject);
+                    if (unit != null)
+                    {
+                        fileToRemove = unit.getAbsoluteFilename();
+                    }
                     IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(fileToRemove);
                     compilerWorkspace.fileRemoved(fileSpec);
                 }
             }
         }
-        for (WorkspaceFolderData folderData : foldersToCheck)
+        if (checkForProblems)
         {
-            checkProjectForProblems(folderData);
+            for (WorkspaceFolderData folderData : foldersToCheck)
+            {
+                checkProjectForProblems(folderData);
+            }
         }
     }
 
@@ -1687,58 +1706,74 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     WatchKey watchKey = null;
                     try
                     {
+                        //pause the thread while there are no changes pending,
+                        //for better performance
                         watchKey = sourcePathWatcher.take();
                     }
-                    catch (InterruptedException e)
+                    catch(InterruptedException e)
                     {
                         return;
                     }
-                    for (WorkspaceFolderData folderData : workspaceFolderToData.values())
+                    Set<WorkspaceFolderData> foldersToCheckForProblems = new HashSet<WorkspaceFolderData>();
+                    while (watchKey != null)
                     {
-                        if(!folderData.sourcePathWatchKeys.containsKey(watchKey))
+                        for (WorkspaceFolderData folderData : workspaceFolderToData.values())
                         {
-                            continue;
-                        }
-                        Path path = folderData.sourcePathWatchKeys.get(watchKey);
-                        for (WatchEvent<?> event : watchKey.pollEvents())
-                        {
-                            WatchEvent.Kind<?> kind = event.kind();
-                            Path childPath = (Path) event.context();
-                            childPath = path.resolve(childPath);
-                            if(java.nio.file.Files.isDirectory(childPath))
+                            if(!folderData.sourcePathWatchKeys.containsKey(watchKey))
                             {
+                                continue;
+                            }
+                            foldersToCheckForProblems.add(folderData);
+                            List<FileEvent> changes = new ArrayList<>();
+                            Path path = folderData.sourcePathWatchKeys.get(watchKey);
+                            for (WatchEvent<?> event : watchKey.pollEvents())
+                            {
+                                WatchEvent.Kind<?> kind = event.kind();
+                                Path childPath = (Path) event.context();
+                                childPath = path.resolve(childPath);
+                                if(java.nio.file.Files.isDirectory(childPath))
+                                {
+                                    if(kind.equals(StandardWatchEventKinds.ENTRY_CREATE))
+                                    {
+                                        //if a new directory has been created under
+                                        //an existing that we're already watching,
+                                        //then start watching the new one too.
+                                        watchNewSourcePath(childPath, folderData);
+                                    }
+                                }
+                                FileChangeType changeType = FileChangeType.Changed;
                                 if(kind.equals(StandardWatchEventKinds.ENTRY_CREATE))
                                 {
-                                    //if a new directory has been created under
-                                    //an existing that we're already watching,
-                                    //then start watching the new one too.
-                                    watchNewSourcePath(childPath, folderData);
+                                    changeType = FileChangeType.Created;
                                 }
+                                else if(kind.equals(StandardWatchEventKinds.ENTRY_DELETE))
+                                {
+                                    changeType = FileChangeType.Deleted;
+                                }
+                                changes.add(new FileEvent(childPath.toUri().toString(), changeType));
                             }
-                            FileChangeType changeType = FileChangeType.Changed;
-                            if(kind.equals(StandardWatchEventKinds.ENTRY_CREATE))
+                            boolean valid = watchKey.reset();
+                            if (!valid)
                             {
-                                changeType = FileChangeType.Created;
-                            }
-                            else if(kind.equals(StandardWatchEventKinds.ENTRY_DELETE))
-                            {
-                                changeType = FileChangeType.Deleted;
+                                folderData.sourcePathWatchKeys.remove(watchKey);
                             }
                             //convert to DidChangeWatchedFilesParams and pass
                             //to didChangeWatchedFiles, as if a notification
                             //had been sent from the client.
                             DidChangeWatchedFilesParams params = new DidChangeWatchedFilesParams();
-                            List<FileEvent> changes = new ArrayList<>();
-                            changes.add(new FileEvent(childPath.toUri().toString(), changeType));
                             params.setChanges(changes);
-                            didChangeWatchedFiles(params);
+                            didChangeWatchedFiles(params, false);
                         }
-                        boolean valid = watchKey.reset();
-                        if (!valid)
-                        {
-                            folderData.sourcePathWatchKeys.remove(watchKey);
-                        }
+                        //keep handling new changes until we run out
+                        watchKey = sourcePathWatcher.poll();
                     }
+                    //if we get here, watchKey is null, so there are no more
+                    //pending changes. now, we can check for problems.
+                    for (WorkspaceFolderData folderData : foldersToCheckForProblems)
+                    {
+                        checkProjectForProblems(folderData);
+                    }
+                    foldersToCheckForProblems.clear();
                 }
             }
         };
@@ -4819,23 +4854,30 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
     }
 
-    private ICompilationUnit findCompilationUnit(String absoluteFileName)
+    private ICompilationUnit findCompilationUnit(Path pathToFind, RoyaleProject project)
     {
-        if (compilationUnits == null)
-        {
-            return null;
-        }
-        for (ICompilationUnit unit : compilationUnits)
+        for (ICompilationUnit unit : project.getCompilationUnits())
         {
             //it's possible for the collection of compilation units to contain
             //null values, so be sure to check for null values before checking
             //the file name
-            if (unit != null && unit.getAbsoluteFilename().equals(absoluteFileName))
+            if (unit == null)
+            {
+                continue;
+            }
+            Path unitPath = Paths.get(unit.getAbsoluteFilename());
+            if(unitPath.equals(pathToFind))
             {
                 return unit;
             }
         }
         return null;
+    }
+
+    private ICompilationUnit findCompilationUnit(String absoluteFileName, RoyaleProject project)
+    {
+        Path pathToFind = Paths.get(absoluteFileName);
+        return findCompilationUnit(pathToFind, project);
     }
 
     private Path getMainCompilationUnitPath(WorkspaceFolderData folderData)
@@ -4901,7 +4943,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 String file = files[i];
                 //a previous file may have created a compilation unit for the
                 //current file, so use that, if available
-                ICompilationUnit existingUnit = findCompilationUnit(file);
+                ICompilationUnit existingUnit = findCompilationUnit(file, currentProject);
                 if (existingUnit != null)
                 {
                     if (file.equals(absolutePath))
@@ -4947,14 +4989,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             //first, search the existing compilation units for the file because it
             //might already be created
-            for (ICompilationUnit unit : compilationUnits)
-            {
-                if (unit != null && unit.getAbsoluteFilename().equals(absolutePath))
-                {
-                    currentUnit = unit;
-                    break;
-                }
-            }
+            currentUnit = findCompilationUnit(absolutePath, currentProject);
         }
 
         //if we still haven't found it, create it manually
@@ -5322,7 +5357,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return null;
         }
         IMXMLDataManager mxmlDataManager = compilerWorkspace.getMXMLDataManager();
-        MXMLData mxmlData = (MXMLData) mxmlDataManager.get(fileSpecGetter.getFileSpecification(path.toAbsolutePath().toString()));
+        String normalizedPath = FilenameNormalization.normalize(path.toAbsolutePath().toString());
+        IFileSpecification fileSpecification = fileSpecGetter.getFileSpecification(normalizedPath);
+        MXMLData mxmlData = (MXMLData) mxmlDataManager.get(fileSpecification);
         if (mxmlData == null)
         {
             return null;
@@ -5928,7 +5965,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
             //notify the workspace that it should read the file from memory
             //instead of loading from the file system
-            IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(pathForImport.toAbsolutePath().toString());
+            String normalizedPath = FilenameNormalization.normalize(pathForImport.toAbsolutePath().toString());
+            IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(normalizedPath);
             compilerWorkspace.fileChanged(fileSpec);
         }
 
