@@ -38,6 +38,7 @@ public class WorkspaceFolderData
 
 	public WorkspaceFolder folder;
 	public IProjectConfigStrategy config;
+	public ProjectOptions options;
 	public RoyaleProject project;
 	public Map<WatchKey, Path> sourcePathWatchKeys = new HashMap<>();
 	public List<IInvisibleCompilationUnit> invisibleUnits = new ArrayList<>();

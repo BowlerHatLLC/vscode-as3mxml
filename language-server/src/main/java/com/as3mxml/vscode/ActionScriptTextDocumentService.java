@@ -1797,7 +1797,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private void refreshProjectOptions(WorkspaceFolderData folderData)
     {
         currentConfig = folderData.config;
-        currentProjectOptions = currentConfig.getOptions();
+        currentProjectOptions = folderData.options;
         if (!currentConfig.getChanged() && currentProjectOptions != null)
         {
             //the options are fully up-to-date
@@ -1805,7 +1805,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         //if the configuration changed, start fresh with a whole new workspace
         cleanupProject(folderData);
-        currentProjectOptions = currentConfig.getOptions();
+        currentProjectOptions = folderData.options = currentConfig.getOptions();
         if (currentProjectOptions == null)
         {
             compilerProblemFilter.warnings = true;
