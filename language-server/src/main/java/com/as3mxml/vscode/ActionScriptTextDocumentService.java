@@ -5877,9 +5877,18 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 //node associated with them, so we need to figure this out from the
                 //offset instead of a pre-calculated line and column -JT
                 Reader definitionReader = getReaderForPath(definitionPath);
-                LanguageServerCompilerUtils.getPositionFromOffset(definitionReader, definition.getNameStart(), start);
-                end.setLine(start.getLine());
-                end.setCharacter(start.getCharacter());
+                if (definitionReader == null)
+                {
+                    //we might get here if it's from a SWC, but the associated
+                    //source file is missing.
+                    return null;
+                }
+                else
+                {
+                    LanguageServerCompilerUtils.getPositionFromOffset(definitionReader, definition.getNameStart(), start);
+                    end.setLine(start.getLine());
+                    end.setCharacter(start.getCharacter());
+                }
             }
             else
             {
