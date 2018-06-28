@@ -1435,6 +1435,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 //compilation units were in the directory that was deleted.
                 String deletedFilePath = normalizedChangedPathAsString + File.separator;
                 Set<String> filesToRemove = new HashSet<>();
+                currentWorkspace.startIdleState();
                 for (ICompilationUnit unit : compilationUnits)
                 {
                     String unitFileName = unit.getAbsoluteFilename();
@@ -1447,6 +1448,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                         filesToRemove.add(unitFileName);
                     }
                 }
+                currentWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
                 for (String fileToRemove : filesToRemove)
                 {
                     //no need to call findCompilationUnit() because we built
@@ -4716,6 +4718,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return null;
         }
+        currentWorkspace.startIdleState();
         for (ICompilationUnit unit : currentProject.getCompilationUnits())
         {
             //it's possible for the collection of compilation units to contain
@@ -4728,9 +4731,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             Path unitPath = Paths.get(unit.getAbsoluteFilename());
             if(unitPath.equals(pathToFind))
             {
+                currentWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
                 return unit;
             }
         }
+        currentWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
         return null;
     }
 
