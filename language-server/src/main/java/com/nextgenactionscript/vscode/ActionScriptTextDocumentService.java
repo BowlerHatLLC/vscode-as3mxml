@@ -1351,7 +1351,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
      * the project configuration strategy has changed. If it has, checks for
      * errors on the whole project.
      */
-    public void didChangeWatchedFiles(DidChangeWatchedFilesParams params, boolean checkForProblems)
+    public synchronized void didChangeWatchedFiles(DidChangeWatchedFilesParams params, boolean checkForProblems)
     {
         if(currentWorkspace == null)
         {
@@ -1594,11 +1594,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                             //had been sent from the client.
                             DidChangeWatchedFilesParams params = new DidChangeWatchedFilesParams();
                             params.setChanges(changes);
-                            didChangeWatchedFiles(params);
+                            didChangeWatchedFiles(params, false);
 
                             //keep handling new changes until we run out
                             watchKey = sourcePathWatcher.poll();
                         }
+                        checkProjectForProblems();
                     }
                 }
             };
@@ -5153,7 +5154,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
     }
 
-    private void checkProjectForProblems()
+    private synchronized void checkProjectForProblems()
     {
         refreshProjectOptions();
         if (currentProjectOptions != null && currentProjectOptions.type.equals(ProjectType.LIB))
