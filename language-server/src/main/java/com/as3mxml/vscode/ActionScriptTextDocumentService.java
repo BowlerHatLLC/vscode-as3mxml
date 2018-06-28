@@ -129,6 +129,7 @@ import org.apache.royale.compiler.tree.mxml.IMXMLSingleDataBindingNode;
 import org.apache.royale.compiler.tree.mxml.IMXMLSpecifierNode;
 import org.apache.royale.compiler.units.ICompilationUnit;
 import org.apache.royale.compiler.units.IInvisibleCompilationUnit;
+import org.apache.royale.compiler.workspaces.IWorkspace;
 import org.apache.royale.utils.FilenameNormalization;
 
 import com.google.common.io.Files;
@@ -1584,6 +1585,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     {
                         continue;
                     }
+                    compilerWorkspace.startIdleState();
                     for (ICompilationUnit unit : project.getCompilationUnits())
                     {
                         String unitFileName = unit.getAbsoluteFilename();
@@ -1600,6 +1602,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                             foldersToCheck.add(folderData);
                         }
                     }
+                    compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
                 }
                 for (String fileToRemove : filesToRemove)
                 {
@@ -4882,6 +4885,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private ICompilationUnit findCompilationUnit(Path pathToFind, RoyaleProject project)
     {
+        //make sure that the compilation units collection isn't modified while
+        //we're looping over it, or we'll get concurrent modification exceptions
+        compilerWorkspace.startIdleState();
         for (ICompilationUnit unit : project.getCompilationUnits())
         {
             //it's possible for the collection of compilation units to contain
@@ -4894,9 +4900,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             Path unitPath = Paths.get(unit.getAbsoluteFilename());
             if(unitPath.equals(pathToFind))
             {
+                compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
                 return unit;
             }
         }
+        compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
         return null;
     }
 
