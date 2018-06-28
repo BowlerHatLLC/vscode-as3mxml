@@ -5126,7 +5126,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return project;
     }
 
-    private void checkProjectForProblems(WorkspaceFolderData folderData)
+    private synchronized void checkProjectForProblems(WorkspaceFolderData folderData)
     {
         refreshProjectOptions(folderData);
         if (currentProjectOptions != null && currentProjectOptions.type.equals(ProjectType.LIB))
