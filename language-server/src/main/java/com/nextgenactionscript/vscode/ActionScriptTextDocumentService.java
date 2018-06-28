@@ -1402,6 +1402,31 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     currentWorkspace.fileChanged(fileSpec);
                 }
             }
+            else if (changeType.equals(FileChangeType.Created) && java.nio.file.Files.isDirectory(changedPath))
+            {
+                try
+                {
+                    java.nio.file.Files.walkFileTree(changedPath, new SimpleFileVisitor<Path>()
+                    {
+                        @Override
+                        public FileVisitResult visitFile(Path subPath, BasicFileAttributes attrs)
+                        {
+                            String normalizedSubPath = FilenameNormalization.normalize(subPath.toString());
+                            if (normalizedSubPath.endsWith(AS_EXTENSION) || normalizedSubPath.endsWith(MXML_EXTENSION))
+                            {
+                                IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(normalizedSubPath);
+                                currentWorkspace.fileAdded(fileSpec);
+                            }
+                            return FileVisitResult.CONTINUE;
+                        }
+                    });
+                }
+                catch (IOException e)
+                {
+                    System.err.println("Failed to walk added path: " + changedPath.toString());
+                    e.printStackTrace(System.err);
+                }
+            }            
             else if (changeType.equals(FileChangeType.Deleted))
             {
                 //we don't get separate didChangeWatchedFiles notifications for
