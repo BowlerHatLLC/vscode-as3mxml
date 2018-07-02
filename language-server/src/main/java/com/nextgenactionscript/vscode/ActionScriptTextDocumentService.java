@@ -1527,6 +1527,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private void prepareNewProject()
     {
+        currentProject = getProject();
+        if (currentProject == null)
+        {
+            return;
+        }
         if (sourcePathWatcher == null)
         {
             try
@@ -1607,7 +1612,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             };
             sourcePathWatcherThread.start();
         }
-        currentProject = getProject();
         boolean dynamicDidChangeWatchedFiles = clientCapabilities.getWorkspace().getDidChangeWatchedFiles().getDynamicRegistration();
         for (File sourcePathFile : currentProject.getSourcePath())
         {
