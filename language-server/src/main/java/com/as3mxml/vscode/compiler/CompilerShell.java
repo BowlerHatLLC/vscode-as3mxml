@@ -59,6 +59,7 @@ public class CompilerShell implements IASConfigCCompiler
 	private Process process;
     private String compileID;
     private String previousCommand;
+    private Path previousSDKPath;
     private Path rcshPath;
     private Path ascshPath;
     private boolean isRoyale = false;
@@ -83,19 +84,33 @@ public class CompilerShell implements IASConfigCCompiler
         boolean isFCSH = !isRoyale && !isAIR;
         if (isFCSH)
         {
-            //fcsh has a bug when run in JAva 1.8 or newer that causes
+            //fcsh has a bug when run in Java 1.8 or newer that causes
             //exceptions to be thrown after multiple builds.
             //we can force a fresh build and still gain partial performance
             //improvement from keeping the compiler process loaded in memory.
             compileID = null;
         }
+        boolean sdkChanged = previousSDKPath != null && !previousSDKPath.equals(sdkPath);
+        if (sdkChanged)
+        {
+            //we need to start a different compiler shell process with the new
+            //SDK, so the old compileID is no longer valid
+            compileID = null;
+        }
+        previousSDKPath = sdkPath;
 
         String command = getCommand(projectType, compilerOptions);
 
         boolean compileIDChanged = oldCompileID != null && compileID == null;
-        if (process != null && compileIDChanged)
+        if (process != null && (compileIDChanged || sdkChanged))
         {
-            if (isFCSH)
+            if (sdkChanged)
+            {
+                //we need to start a different compiler shell process with the
+                //new SDK
+                quit();
+            }
+            else if (isFCSH)
             {
                 //we don't need to restart. we only need to clear.
                 String clearCommand = getClearCommand(oldCompileID);
@@ -105,24 +120,29 @@ public class CompilerShell implements IASConfigCCompiler
             {
                 //if we have a new command, start with a fresh instance of the
                 //compiler shell.
-                //we don't need to wait for the prompt because we'll just wait
-                //for the process to end.
-                executeCommand(COMMAND_QUIT);
-                try
-                {
-                    Process oldProcess = process;
-                    process = null;
-                    int exitCode = oldProcess.waitFor();
-                    languageClient.logCompilerShellOutput("Compiler shell exited with code: " + exitCode + "\n");
-                }
-                catch(InterruptedException e)
-                {
-                    e.printStackTrace(System.err);
-                }
+                quit();
             }
         }
         startProcess(sdkPath, workspaceRoot);
         executeCommandAndWaitForPrompt(command, true);
+    }
+
+    private void quit() throws ASConfigCException
+    {
+        //we don't need to wait for the prompt because we'll just wait
+        //for the process to end.
+        executeCommand(COMMAND_QUIT);
+        try
+        {
+            Process oldProcess = process;
+            process = null;
+            int exitCode = oldProcess.waitFor();
+            languageClient.logCompilerShellOutput("Compiler shell exited with code: " + exitCode + "\n");
+        }
+        catch(InterruptedException e)
+        {
+            e.printStackTrace(System.err);
+        }
     }
 
     private void startProcess(Path sdkPath, Path workspaceRoot) throws ASConfigCException
