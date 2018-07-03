@@ -740,53 +740,71 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             //if we haven't successfully compiled the project, we can't do this
             return CompletableFuture.completedFuture(Collections.emptyList());
         }
+        Set<String> qualifiedNames = new HashSet<>();
         List<SymbolInformation> result = new ArrayList<>();
         String query = params.getQuery();
         String lowerCaseQuery = query.toLowerCase();
-        for (ICompilationUnit unit : compilationUnits)
+        for (WorkspaceFolderData folderData : workspaceFolderToData.values())
         {
-            if (unit == null || unit instanceof ResourceBundleCompilationUnit)
+            RoyaleProject project = folderData.project;
+            if (project == null)
             {
                 continue;
             }
-            if (unit instanceof SWCCompilationUnit)
+            for (ICompilationUnit unit : project.getCompilationUnits())
             {
-                List<IDefinition> definitions = unit.getDefinitionPromises();
-                for (IDefinition definition : definitions)
+                if (unit == null || unit instanceof ResourceBundleCompilationUnit)
                 {
-                    if (definition.isImplicit() || !definition.getQualifiedName().toLowerCase().contains(lowerCaseQuery))
+                    continue;
+                }
+                if (unit instanceof SWCCompilationUnit)
+                {
+                    List<IDefinition> definitions = unit.getDefinitionPromises();
+                    for (IDefinition definition : definitions)
                     {
-                        continue;
-                    }
-                    if (definition instanceof DefinitionPromise)
-                    {
-                        //we won't be able to detect what type of definition
-                        //this is without getting the actual definition from the
-                        //promise.
-                        DefinitionPromise promise = (DefinitionPromise) definition;
-                        definition = promise.getActualDefinition();
-                    }
-                    SymbolInformation symbol = definitionToSymbol(definition);
-                    if (symbol != null)
-                    {
-                        result.add(symbol);
+                        if (definition.isImplicit() || !definition.getQualifiedName().toLowerCase().contains(lowerCaseQuery))
+                        {
+                            continue;
+                        }
+                        if (definition instanceof DefinitionPromise)
+                        {
+                            //we won't be able to detect what type of definition
+                            //this is without getting the actual definition from the
+                            //promise.
+                            DefinitionPromise promise = (DefinitionPromise) definition;
+                            definition = promise.getActualDefinition();
+                        }
+                        String qualifiedName = definition.getQualifiedName();
+                        if (qualifiedNames.contains(qualifiedName))
+                        {
+                            //we've already added this symbol
+                            //this can happen when there are multiple root
+                            //folders in the workspace
+                            continue;
+                        }
+                        SymbolInformation symbol = definitionToSymbol(definition);
+                        if (symbol != null)
+                        {
+                            qualifiedNames.add(qualifiedName);
+                            result.add(symbol);
+                        }
                     }
                 }
-            }
-            else
-            {
-                IASScope[] scopes;
-                try
+                else
                 {
-                    scopes = unit.getFileScopeRequest().get().getScopes();
-                }
-                catch (Exception e)
-                {
-                    return CompletableFuture.completedFuture(Collections.emptyList());
-                }
-                for (IASScope scope : scopes)
-                {
-                    querySymbolsInScope(lowerCaseQuery, scope, result);
+                    IASScope[] scopes;
+                    try
+                    {
+                        scopes = unit.getFileScopeRequest().get().getScopes();
+                    }
+                    catch (Exception e)
+                    {
+                        return CompletableFuture.completedFuture(Collections.emptyList());
+                    }
+                    for (IASScope scope : scopes)
+                    {
+                        querySymbolsInScope(lowerCaseQuery, scope, result);
+                    }
                 }
             }
         }
