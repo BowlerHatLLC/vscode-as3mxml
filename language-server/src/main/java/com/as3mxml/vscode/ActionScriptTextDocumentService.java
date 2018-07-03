@@ -843,6 +843,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return CompletableFuture.completedFuture(Collections.emptyList());
         }
+        WorkspaceFolderData folderData = getWorkspaceFolderDataForSourceFile(path);
+        currentProject = getProject(folderData);
+        if (currentProject == null || !SourcePathUtils.isInProjectSourcePath(path, currentProject))
+        {
+            //the path must be in the workspace or source-path
+            return CompletableFuture.completedFuture(Collections.emptyList());
+        }
         ArrayList<Command> commands = new ArrayList<>();
         for (Diagnostic diagnostic : diagnostics)
         {
@@ -4885,6 +4892,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private ICompilationUnit findCompilationUnit(Path pathToFind, RoyaleProject project)
     {
+        if(project == null)
+        {
+            return null;
+        }
         //make sure that the compilation units collection isn't modified while
         //we're looping over it, or we'll get concurrent modification exceptions
         compilerWorkspace.startIdleState();
@@ -5037,6 +5048,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 {
                     //only display an error if the compilation unit should definitely exist
                     System.err.println("Could not create compilation unit for file (final fallback): " + absolutePath);
+                    new Exception().printStackTrace(System.err);
                 }
                 return null;
             }
@@ -5166,7 +5178,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
         //if we haven't accessed a compilation unit yet, the project may be null
         currentProject = getProject(folderData);
-        if (currentProject != null && !SourcePathUtils.isInProjectSourcePath(path, currentProject))
+        if (currentProject == null || !SourcePathUtils.isInProjectSourcePath(path, currentProject))
         {
             publishDiagnosticForFileOutsideSourcePath(path, folderData.codeProblemTracker);
             return;
