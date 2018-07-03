@@ -312,12 +312,28 @@ export function activate(context: vscode.ExtensionContext)
 	}
 	startClient();
 
+	//this is the public API of the extension that may be accessed from other
+	//extensions.
 	return (
 		{
+			/**
+			 * Indicates if the connection between the language client and the
+			 * language server has initialized.
+			 */
 			get isLanguageClientReady(): boolean
 			{
 				return isLanguageClientReady;
-			}
+			},
+
+			/**
+			 * The absolute file path of the currently selected framework SDK.
+			 * May be null or undefined if no SDK is selected or the currently
+			 * selected SDK is invalid.
+			 */
+			get frameworkSDKPath(): string
+			{
+				return frameworkSDKHome;
+			},
 		}
 	)
 }
