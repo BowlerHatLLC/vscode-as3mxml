@@ -384,12 +384,43 @@ public class SWFDebugSession extends DebugSession
                         }
                     }
                 }
+                AIRLaunchInfo airLaunchInfo = null;
+                if (program.endsWith(FILE_EXTENSION_XML) && adlPath != null)
+                {
+                    String extdir = swfArgs.extdir;
+                    if (extdir != null)
+                    {
+                        Path extdirPath = Paths.get(extdir);
+                        if (!extdirPath.isAbsolute())
+                        {
+                            String workspacePath = System.getProperty(WORKSPACE_PROPERTY);
+                            if (workspacePath != null)
+                            {
+                                extdir = Paths.get(workspacePath)
+                                        .resolve(extdirPath).toAbsolutePath().toString();
+                            }
+                        }
+                    }
+                    airLaunchInfo = new AIRLaunchInfo();
+                    airLaunchInfo.profile = swfArgs.profile;
+                    airLaunchInfo.screenSize = swfArgs.screensize;
+                    airLaunchInfo.dpi = swfArgs.screenDPI;
+                    airLaunchInfo.versionPlatform = swfArgs.versionPlatform;
+                    airLaunchInfo.airDebugLauncher = adlPath.toFile();
+                    airLaunchInfo.extDir = extdir;
+                    airLaunchInfo.applicationArgumentsArray = swfArgs.args;
+                }
+
                 Player player = null;
                 CustomRuntimeLauncher launcher = null;
                 if (swfArgs.runtimeExecutable != null)
                 {
                     //if runtimeExecutable is specified, we'll launch that
                     launcher = new CustomRuntimeLauncher(swfArgs.runtimeExecutable, swfArgs.runtimeArgs);
+                    if (airLaunchInfo != null)
+                    {
+                        launcher.isAIR = true;
+                    }
                 }
                 else
                 {
@@ -406,12 +437,13 @@ public class SWFDebugSession extends DebugSession
                     {
                         //safe to ignore
                     }
-                    player = manager.playerForUri(playerPath, null);
+                    player = manager.playerForUri(playerPath, airLaunchInfo);
                     if (player == null
                             && !playerPath.startsWith("http:")
                             && !playerPath.startsWith("https:")
                             && playerPath.endsWith(".swf"))
                     {
+                        //fallback: try to find standalone Flash Player
                         if (System.getProperty("os.name").toLowerCase().startsWith("windows"))
                         {
                             launcher = findWindowsStandalonePlayer();
@@ -427,54 +459,16 @@ public class SWFDebugSession extends DebugSession
                     sendErrorResponse(response, 10001, "Error launching SWF debug session. Runtime not found for program: " + program);
                     return;
                 }
+                //notice that we use the value of launcher if it isn't null, but
+                //we don't actually use the value of player. player's purpose is
+                //more about verifying that a runtime can be auto-detected.
+                if(launcher != null)
+                {
+                    swfSession = (ThreadSafeSession) manager.launch(program, airLaunchInfo, true, null, null, launcher);
+                }
                 else
                 {
-                    AIRLaunchInfo launchInfo = null;
-                    //check if the debugger automatically detected AIR
-                    boolean isAIR = player != null && player.getType() == Player.AIR;
-                    if (!isAIR && player == null && program.endsWith(FILE_EXTENSION_XML))
-                    {
-                        //otherwise, check if the program to launch is an AIR
-                        //application descriptor
-                        isAIR = true;
-                    }
-                    if (isAIR && adlPath != null)
-                    {
-                        String extdir = swfArgs.extdir;
-                        if (extdir != null)
-                        {
-                            Path extdirPath = Paths.get(extdir);
-                            if (!extdirPath.isAbsolute())
-                            {
-                                String workspacePath = System.getProperty(WORKSPACE_PROPERTY);
-                                if (workspacePath != null)
-                                {
-                                    extdir = Paths.get(workspacePath)
-                                            .resolve(extdirPath).toAbsolutePath().toString();
-                                }
-                            }
-                        }
-                        launchInfo = new AIRLaunchInfo();
-                        launchInfo.profile = swfArgs.profile;
-                        launchInfo.screenSize = swfArgs.screensize;
-                        launchInfo.dpi = swfArgs.screenDPI;
-                        launchInfo.versionPlatform = swfArgs.versionPlatform;
-                        launchInfo.airDebugLauncher = adlPath.toFile();
-                        launchInfo.extDir = extdir;
-                        launchInfo.applicationArgumentsArray = swfArgs.args;
-                        if (launcher != null)
-                        {
-                            launcher.isAIR = true;
-                        }
-                    }
-                    if (launcher != null)
-                    {
-                        swfSession = (ThreadSafeSession) manager.launch(program, launchInfo, true, null, null, launcher);
-                    }
-                    else
-                    {
-                        swfSession = (ThreadSafeSession) manager.launch(program, launchInfo, true, null, null);
-                    }
+                    swfSession = (ThreadSafeSession) manager.launch(program, airLaunchInfo, true, null, null);
                 }
             }
         }
