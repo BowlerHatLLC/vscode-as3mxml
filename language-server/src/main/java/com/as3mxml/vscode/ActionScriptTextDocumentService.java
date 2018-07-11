@@ -2266,13 +2266,20 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         boolean tagsNeedOpenBracket = false;
         if(currentOffset > 0)
         {
+            Reader reader = getReaderForPath(Paths.get(offsetTag.getSourcePath()));
             try
             {
-                Reader reader = getReaderForPath(Paths.get(offsetTag.getSourcePath()));
                 reader.skip(currentOffset - 1);
                 char prevChar = (char) reader.read();
-                reader.close();
                 tagsNeedOpenBracket = prevChar != '<';
+            }
+            catch(IOException e)
+            {
+                //just ignore it
+            }
+            try
+            {
+                reader.close();
             }
             catch(IOException e)
             {
@@ -6008,7 +6015,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private void organizeImportsInUri(String uri)
     {
         Path pathForImport = Paths.get(URI.create(uri));
-        Reader reader = getReaderForPath(pathForImport);
         String text = null;
         boolean isOpen = sourceByPath.containsKey(pathForImport);
         if (isOpen)
@@ -6021,14 +6027,26 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             //if the file isn't open in an editor, we need to read it from the
             //file system instead.
+            Reader reader = getReaderForPath(pathForImport);
             try
             {
                 text = IOUtils.toString(reader);
             }
             catch (IOException e)
             {
+            }
+            try
+            {
+                reader.close();
+            }
+            catch(IOException e)
+            {
+            }
+            if(text == null)
+            {
                 return;
             }
+
             //for some reason, the full AST is not populated if the file is not
             //already open in the editor. we use a similar workaround to didOpen
             //to force the AST to be populated.
