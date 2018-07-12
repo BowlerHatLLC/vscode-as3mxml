@@ -2062,17 +2062,27 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         boolean tagsNeedOpenBracket = false;
         if(currentOffset > 0)
         {
-            try
+            Reader reader = getReaderForPath(Paths.get(offsetTag.getSourcePath()));
+            if (reader != null)
             {
-                Reader reader = getReaderForPath(Paths.get(offsetTag.getSourcePath()));
-                reader.skip(currentOffset - 1);
-                char prevChar = (char) reader.read();
-                reader.close();
-                tagsNeedOpenBracket = prevChar != '<';
-            }
-            catch(IOException e)
-            {
-                //just ignore it
+                try
+                {
+                    reader.skip(currentOffset - 1);
+                    char prevChar = (char) reader.read();
+                    tagsNeedOpenBracket = prevChar != '<';
+                }
+                catch(IOException e)
+                {
+                    //just ignore it
+                }
+                try
+                {
+                    reader.close();
+                }
+                catch(IOException e)
+                {
+                    //just ignore it
+                }
             }
         }
 
@@ -4261,6 +4271,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
 
             Position position = LanguageServerCompilerUtils.getPositionFromOffset(reader, nameOffset);
+            try
+            {
+                reader.close();
+            }
+            catch(IOException e) {}
             nameLine = position.getLine();
             nameColumn = position.getCharacter();
         }
@@ -4699,6 +4714,16 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             //we seem to have loaded the project configuration and we could
             //parse the file, but something still went wrong.
             diagnostic.setMessage("A fatal error occurred. Error checking disabled, except for simple syntax problems.");
+        }
+
+        if (reader != null)
+        {
+            try
+            {
+                reader.close();
+            }
+            catch(IOException e) {}
+            reader = null;
         }
 
         diagnostics.add(diagnostic);
@@ -5874,9 +5899,17 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             //node associated with them, so we need to figure this out from the
             //offset instead of a pre-calculated line and column -JT
             Reader definitionReader = getReaderForPath(definitionPath);
-            LanguageServerCompilerUtils.getPositionFromOffset(definitionReader, definition.getNameStart(), start);
-            end.setLine(start.getLine());
-            end.setCharacter(start.getCharacter());
+            if (definitionReader != null)
+            {
+                LanguageServerCompilerUtils.getPositionFromOffset(definitionReader, definition.getNameStart(), start);
+                end.setLine(start.getLine());
+                end.setCharacter(start.getCharacter());                
+                try
+                {
+                    definitionReader.close();
+                }
+                catch(IOException e) {}
+            }
         }
         else
         {
@@ -5933,6 +5966,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     {
         Path pathForImport = Paths.get(URI.create(uri));
         Reader reader = getReaderForPath(pathForImport);
+        if (reader == null)
+        {
+            System.err.println("Error opening file to organize imports: " + pathForImport);
+            return;
+        }
         String text = null;
         try
         {
@@ -5945,6 +5983,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return;
         }
+        try
+        {
+            reader.close();
+        }
+        catch(IOException e) {}
         boolean isOpen = sourceByPath.containsKey(pathForImport);
         if(!isOpen)
         {
