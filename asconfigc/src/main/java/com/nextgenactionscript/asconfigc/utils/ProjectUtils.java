@@ -337,6 +337,6 @@ public class ProjectUtils
 
 	public static String populateAdobeAIRDescriptorContent(String descriptor, String contentValue)
 	{
-		return descriptor.replaceFirst("<content>.+<\\/content>", "<content>" + contentValue + "</content>");
+		return descriptor.replaceFirst("<content>.*<\\/content>", "<content>" + contentValue + "</content>");
 	}
 }
