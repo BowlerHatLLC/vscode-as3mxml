@@ -1866,6 +1866,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         currentProjectOptions = folderData.options = currentConfig.getOptions();
         if (currentProjectOptions == null)
         {
+            folderData.codeProblemTracker.cleanUpStaleProblems();
+            folderData.configProblemTracker.cleanUpStaleProblems();
             return;
         }
         prepareNewProject(folderData);
