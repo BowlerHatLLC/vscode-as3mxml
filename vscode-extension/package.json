@@ -18,6 +18,11 @@
     "Programming Languages",
     "Debuggers"
   ],
+  "keywords": [
+    "Flash",
+    "AIR",
+    "Royale"
+  ],
   "main": "extension",
   "icon": "as3.png",
   "scripts": {
