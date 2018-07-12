@@ -1,3 +1,13 @@
+## v0.12.1
+
+## Fixed Issues
+
+* Build: Fixed issue where an empty `content` field in an Adobe AIR application descriptor would not get automatically populated.
+* Syntax: fixed issue where MXML script tags with attributes like `fb:purpose="styling"` would cause embedded ActionScript to not have syntax highlighting.
+* General: Fixed issue where extension kept some files open after reading their contents, which could prevent them from being modified.
+* General: Fixed issues handling changes made by other programs to files and folders in the current workspace.
+* General: Fixed issue where compiler tokens like `{locale}` in the source path were not properly parsed.
+
 ## v0.12.0
 
 ### New Features
