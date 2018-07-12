@@ -49,6 +49,7 @@ import java.util.concurrent.CompletableFuture;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.royale.abc.ABCConstants;
+import org.apache.royale.compiler.clients.problems.ProblemQuery;
 import org.apache.royale.compiler.common.ASModifier;
 import org.apache.royale.compiler.common.ISourceLocation;
 import org.apache.royale.compiler.common.PrefixMap;
@@ -80,6 +81,7 @@ import org.apache.royale.compiler.internal.parsing.as.RepairingTokenBuffer;
 import org.apache.royale.compiler.internal.parsing.as.StreamingASTokenizer;
 import org.apache.royale.compiler.internal.projects.CompilerProject;
 import org.apache.royale.compiler.internal.projects.RoyaleProject;
+import org.apache.royale.compiler.internal.projects.RoyaleProjectConfigurator;
 import org.apache.royale.compiler.internal.scopes.ASScope;
 import org.apache.royale.compiler.internal.scopes.TypeScope;
 import org.apache.royale.compiler.internal.scopes.ASProjectScope.DefinitionPromise;
@@ -95,7 +97,9 @@ import org.apache.royale.compiler.mxml.IMXMLTagAttributeData;
 import org.apache.royale.compiler.mxml.IMXMLTagData;
 import org.apache.royale.compiler.mxml.IMXMLTextData;
 import org.apache.royale.compiler.mxml.IMXMLUnitData;
+import org.apache.royale.compiler.problems.ConfigurationProblem;
 import org.apache.royale.compiler.problems.ICompilerProblem;
+import org.apache.royale.compiler.problems.InternalCompilerProblem;
 import org.apache.royale.compiler.scopes.IASScope;
 import org.apache.royale.compiler.tree.ASTNodeID;
 import org.apache.royale.compiler.tree.as.IASNode;
@@ -1422,7 +1426,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             //performance while typing. we'll do a full check when we save the
             //file later
             currentProject = getProject(folderData);
-            realTimeProblemAnalyzer.setProject(currentProject);
             if (currentProject != null && !SourcePathUtils.isInProjectSourcePath(path, currentProject))
             {
                 realTimeProblemAnalyzer.setCompilationUnit(null);
@@ -1435,6 +1438,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(normalizedPath);
             realTimeProblemAnalyzer.languageClient = languageClient;
             realTimeProblemAnalyzer.compilerProblemFilter = compilerProblemFilter;
+            realTimeProblemAnalyzer.setWorkspaceFolderData(folderData);
             realTimeProblemAnalyzer.setCompilationUnit(unit);
             realTimeProblemAnalyzer.setFileSpecification(fileSpec);
             if (realTimeProblemAnalyzerThread == null || !realTimeProblemAnalyzerThread.isAlive())
@@ -1862,10 +1866,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         currentProjectOptions = folderData.options = currentConfig.getOptions();
         if (currentProjectOptions == null)
         {
-            compilerProblemFilter.warnings = true;
             return;
         }
-        compilerProblemFilter.warnings = currentProjectOptions.warnings;
         prepareNewProject(folderData);
     }
 
@@ -4830,27 +4832,17 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         diagnostics.add(diagnostic);
     }
 
-    private void checkFilePathForSyntaxProblems(Path path, ProblemTracker codeProblemTracker)
+    private void checkFilePathForSyntaxProblems(Path path, ProblemQuery problemQuery)
     {
-        URI uri = path.toUri();
-        PublishDiagnosticsParams publish = new PublishDiagnosticsParams();
-        ArrayList<Diagnostic> diagnostics = new ArrayList<>();
-        publish.setDiagnostics(diagnostics);
-        publish.setUri(uri.toString());
-        codeProblemTracker.trackFileWithProblems(uri);
-
         ASParser parser = null;
         Reader reader = getReaderForPath(path);
         if (reader != null)
         {
-            StreamingASTokenizer tokenizer = StreamingASTokenizer.createForRepairingASTokenizer(reader, uri.toString(), null);
+            StreamingASTokenizer tokenizer = StreamingASTokenizer.createForRepairingASTokenizer(reader, path.toString(), null);
             ASToken[] tokens = tokenizer.getTokens(reader);
             if (tokenizer.hasTokenizationProblems())
             {
-                for (ICompilerProblem problem : tokenizer.getTokenizationProblems())
-                {
-                    addCompilerProblem(problem, publish);
-                }
+                problemQuery.addAll(tokenizer.getTokenizationProblems());
             }
             RepairingTokenBuffer buffer = new RepairingTokenBuffer(tokens);
 
@@ -4871,48 +4863,41 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             //if an error occurred above, parser will be null
             if (parser != null)
             {
-                for (ICompilerProblem problem : parser.getSyntaxProblems())
-                {
-                    addCompilerProblem(problem, publish);
-                }
+                problemQuery.addAll(parser.getSyntaxProblems());
             }
         }
 
-        Diagnostic diagnostic = LSPUtils.createDiagnosticWithoutRange();
-        diagnostic.setSeverity(DiagnosticSeverity.Information);
-
+        ConfigurationProblem syntaxProblem = null;
         if (reader == null)
         {
             //the file does not exist
-            diagnostic.setSeverity(DiagnosticSeverity.Error);
-            diagnostic.setMessage("File not found: " + path.toAbsolutePath().toString() + ". Error checking disabled.");
+            syntaxProblem = new ConfigurationProblem(path.toString(), 0, "File not found: " + path.toAbsolutePath().toString() + ". Error checking disabled.");
         }
         else if (parser == null && currentProjectOptions == null)
         {
             //we couldn't load the project configuration and we couldn't parse
             //the file. we can't provide any information here.
-            diagnostic.setSeverity(DiagnosticSeverity.Error);
-            diagnostic.setMessage("Failed to load project configuration options. Error checking disabled.");
+            syntaxProblem = new ConfigurationProblem(path.toString(), 0, "Failed to load project configuration options. Error checking disabled.");
         }
         else if (parser == null)
         {
             //something terrible happened, and this is the best we can do
-            diagnostic.setSeverity(DiagnosticSeverity.Error);
-            diagnostic.setMessage("A fatal error occurred while checking for simple syntax problems.");
+            syntaxProblem = new ConfigurationProblem(path.toString(), 0, "A fatal error occurred while checking for simple syntax problems.");
         }
         else if (currentProjectOptions == null)
         {
             //something went wrong while attempting to load and parse the
             //project configuration, but we could successfully parse the syntax
             //tree.
-            diagnostic.setMessage("Failed to load project configuration options. Error checking disabled, except for simple syntax problems.");
+            syntaxProblem = new ConfigurationProblem(path.toString(), 0, "Failed to load project configuration options. Error checking disabled, except for simple syntax problems.");
         }
         else
         {
             //we seem to have loaded the project configuration and we could
             //parse the file, but something still went wrong.
-            diagnostic.setMessage("A fatal error occurred. Error checking disabled, except for simple syntax problems.");
+            syntaxProblem = new ConfigurationProblem(path.toString(), 0, "A fatal error occurred. Error checking disabled, except for simple syntax problems.");
         }
+        problemQuery.add(syntaxProblem);
 
         if (reader != null)
         {
@@ -4922,14 +4907,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             catch(IOException e) {}
             reader = null;
-        }
-
-        diagnostics.add(diagnostic);
-
-        codeProblemTracker.cleanUpStaleProblems();
-        if (languageClient != null)
-        {
-            languageClient.publishDiagnostics(publish);
         }
     }
 
@@ -5148,44 +5125,51 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
 
         List<ICompilerProblem> configProblems = new ArrayList<>();
-        RoyaleProject project = CompilerProjectUtils.createProject(currentProjectOptions, compilerWorkspace, configProblems);
+        RoyaleProject project = CompilerProjectUtils.createProject(currentProjectOptions, compilerWorkspace);
+        RoyaleProjectConfigurator configurator = CompilerProjectUtils.configureProject(project, currentProjectOptions, configProblems);
         ProblemTracker configProblemTracker = folderData.configProblemTracker;
         if (configProblems.size() > 0)
         {
-            Map<URI, PublishDiagnosticsParams> filesMap = new HashMap<>();
-            for (ICompilerProblem configProblem : configProblems)
+            ProblemQuery problemQuery = new ProblemQuery(configurator.getCompilerProblemSettings());
+            problemQuery.addAll(configProblems);
+            if (problemQuery.hasFilteredProblems())
             {
-                String problemSourcePath = configProblem.getSourcePath();
-                if (problemSourcePath == null)
+                Map<URI, PublishDiagnosticsParams> filesMap = new HashMap<>();
+                for (ICompilerProblem configProblem : problemQuery.getFilteredProblems())
                 {
-                    //since we're processing configuration problems, the best
-                    //default location to send the user is probably to the
-                    //asconfig.json file.
-                    problemSourcePath = currentConfig.getDefaultConfigurationProblemPath();
+                    String problemSourcePath = configProblem.getSourcePath();
+                    if (problemSourcePath == null)
+                    {
+                        //since we're processing configuration problems, the best
+                        //default location to send the user is probably to the
+                        //asconfig.json file.
+                        problemSourcePath = currentConfig.getDefaultConfigurationProblemPath();
+                    }
+                    URI uri = Paths.get(problemSourcePath).toUri();
+                    configProblemTracker.trackFileWithProblems(uri);
+                    PublishDiagnosticsParams params = null;
+                    if (filesMap.containsKey(uri))
+                    {
+                        params = filesMap.get(uri);
+                    }
+                    else
+                    {
+                        params = new PublishDiagnosticsParams();
+                        params.setUri(uri.toString());
+                        params.setDiagnostics(new ArrayList<>());
+                        filesMap.put(uri, params);
+                    }
+                    addCompilerProblem(configProblem, params);
                 }
-                URI uri = Paths.get(problemSourcePath).toUri();
-                configProblemTracker.trackFileWithProblems(uri);
-                PublishDiagnosticsParams params = null;
-                if (filesMap.containsKey(uri))
+                if (languageClient != null)
                 {
-                    params = filesMap.get(uri);
+                    filesMap.values().forEach(languageClient::publishDiagnostics);
                 }
-                else
-                {
-                    params = new PublishDiagnosticsParams();
-                    params.setUri(uri.toString());
-                    params.setDiagnostics(new ArrayList<>());
-                    filesMap.put(uri, params);
-                }
-                addCompilerProblem(configProblem, params);
-            }
-            if (languageClient != null)
-            {
-                filesMap.values().forEach(languageClient::publishDiagnostics);
             }
         }
         configProblemTracker.cleanUpStaleProblems();
         folderData.project = project;
+        folderData.configurator = configurator;
         return project;
     }
 
@@ -5221,15 +5205,42 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
         //if we haven't accessed a compilation unit yet, the project may be null
         currentProject = getProject(folderData);
+        ProblemTracker codeProblemTracker = folderData.codeProblemTracker;
         if (currentProject == null || !SourcePathUtils.isInProjectSourcePath(path, currentProject))
         {
-            publishDiagnosticForFileOutsideSourcePath(path, folderData.codeProblemTracker);
+            publishDiagnosticForFileOutsideSourcePath(path, codeProblemTracker);
             return;
         }
-        ProblemTracker codeProblemTracker = folderData.codeProblemTracker;
-        if (!checkFilePathForAllProblems(path, codeProblemTracker))
+        ProblemQuery problemQuery = new ProblemQuery(folderData.configurator.getCompilerProblemSettings());
+        problemQuery.clear();
+        if (!checkFilePathForAllProblems(path, problemQuery))
         {
-            checkFilePathForSyntaxProblems(path, codeProblemTracker);
+            checkFilePathForSyntaxProblems(path, problemQuery);
+        }
+
+        Map<String, PublishDiagnosticsParams> sourcePathToParamsMap = new HashMap<>();
+        for(ICompilerProblem problem : problemQuery.getFilteredProblems())
+        {
+            String problemSourcePath = problem.getSourcePath();
+            if (!sourcePathToParamsMap.containsKey(problemSourcePath))
+            {
+                URI uri = Paths.get(problemSourcePath).toUri();
+                PublishDiagnosticsParams publish = new PublishDiagnosticsParams();
+                publish.setDiagnostics(new ArrayList<>());
+                publish.setUri(uri.toString());
+                sourcePathToParamsMap.put(problemSourcePath, publish);
+
+                codeProblemTracker.trackFileWithProblems(uri);
+            }
+            PublishDiagnosticsParams publish = sourcePathToParamsMap.get(problemSourcePath);
+            addCompilerProblem(problem, publish);
+        }
+        problemQuery.clear();
+
+        codeProblemTracker.cleanUpStaleProblems();
+        if (languageClient != null)
+        {
+            sourcePathToParamsMap.values().forEach(languageClient::publishDiagnostics);
         }
     }
 
@@ -5253,11 +5264,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
     }
 
-    private boolean checkFilePathForAllProblems(Path path, ProblemTracker codeProblemTracker)
+    private boolean checkFilePathForAllProblems(Path path, ProblemQuery problemQuery)
     {
         ICompilationUnit mainUnit = getCompilationUnit(path);
         if (mainUnit == null)
         {
+            //fall back to the syntax check instead
             return false;
         }
         CompilerProject project = (CompilerProject) mainUnit.getProject();
@@ -5266,25 +5278,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             fatalProblems = project.getProblems();
         }
+        problemQuery.addAll(fatalProblems);
         if (fatalProblems != null && fatalProblems.size() > 0)
         {
-            URI uri = path.toUri();
-            PublishDiagnosticsParams publish = new PublishDiagnosticsParams();
-            publish.setDiagnostics(new ArrayList<>());
-            publish.setUri(uri.toString());
-            codeProblemTracker.trackFileWithProblems(uri);
-            for (ICompilerProblem problem : fatalProblems)
-            {
-                addCompilerProblem(problem, publish);
-            }
-            codeProblemTracker.cleanUpStaleProblems();
-            if (languageClient != null)
-            {
-                languageClient.publishDiagnostics(publish);
-            }
+            //since we found some problems, we'll skip the syntax check fallback
             return true;
         }
-        Map<URI, PublishDiagnosticsParams> files = new HashMap<>();
         try
         {
             boolean continueCheckingForErrors = true;
@@ -5301,9 +5300,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                             //compiled compilation units won't have problems
                             continue;
                         }
-                        PublishDiagnosticsParams params = checkCompilationUnitForAllProblems(unit, codeProblemTracker);
-                        URI uri = Paths.get(unit.getAbsoluteFilename()).toUri();
-                        files.put(uri, params);
+                        checkCompilationUnitForAllProblems(unit, problemQuery);
                     }
                     continueCheckingForErrors = false;
                 }
@@ -5315,8 +5312,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     //collection.
                 }
             }
-            //only clean up stale errors on a full check
-            codeProblemTracker.cleanUpStaleProblems();
         }
         catch (Exception e)
         {
@@ -5324,44 +5319,27 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             e.printStackTrace(System.err);
             return false;
         }
-        if (languageClient != null)
-        {
-            files.values().forEach(languageClient::publishDiagnostics);
-        }
         return true;
     }
 
-    private PublishDiagnosticsParams checkCompilationUnitForAllProblems(ICompilationUnit unit, ProblemTracker codeProblemTracker)
+    private void checkCompilationUnitForAllProblems(ICompilationUnit unit, ProblemQuery problemQuery)
     {
-        URI uri = Paths.get(unit.getAbsoluteFilename()).toUri();
-        PublishDiagnosticsParams publish = new PublishDiagnosticsParams();
-        ArrayList<Diagnostic> diagnostics = new ArrayList<>();
-        publish.setDiagnostics(diagnostics);
-        publish.setUri(uri.toString());
-        codeProblemTracker.trackFileWithProblems(uri);
         ArrayList<ICompilerProblem> problems = new ArrayList<>();
         try
         {
             //if we pass in null, it's designed to ignore certain errors that
             //don't matter for IDE code intelligence.
             unit.waitForBuildFinish(problems, null);
-            for (ICompilerProblem problem : problems)
-            {
-                addCompilerProblem(problem, publish);
-            }
+            problemQuery.addAll(problems);
         }
         catch (Exception e)
         {
             System.err.println("Exception during waitForBuildFinish(): " + e);
             e.printStackTrace(System.err);
 
-            Diagnostic diagnostic = LSPUtils.createDiagnosticWithoutRange();
-            diagnostic.setSeverity(DiagnosticSeverity.Error);
-            diagnostic.setMessage("A fatal error occurred while checking a file for problems: " + unit.getAbsoluteFilename());
-            diagnostics.add(diagnostic);
+            InternalCompilerProblem problem = new InternalCompilerProblem(e);
+            problemQuery.add(problem);
         }
-
-        return publish;
     }
 
     private Reader getReaderForPath(Path path)

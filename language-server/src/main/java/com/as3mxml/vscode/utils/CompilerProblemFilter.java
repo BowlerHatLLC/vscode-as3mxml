@@ -17,7 +17,6 @@ package com.as3mxml.vscode.utils;
 
 import org.apache.royale.compiler.problems.FontEmbeddingNotSupported;
 import org.apache.royale.compiler.problems.ICompilerProblem;
-import org.eclipse.lsp4j.DiagnosticSeverity;
 
 public class CompilerProblemFilter
 {
@@ -25,19 +24,10 @@ public class CompilerProblemFilter
 	{
 	}
 
-	public boolean warnings = true;
 	public boolean royaleProblems = true;
 
 	public boolean isAllowed(ICompilerProblem problem)
 	{
-		if (!warnings)
-		{
-			DiagnosticSeverity severity = LanguageServerCompilerUtils.getDiagnosticSeverityFromCompilerProblem(problem);
-			if (severity.equals(DiagnosticSeverity.Warning))
-			{
-				return false;
-			}
-		}
         if (!royaleProblems)
         {
             //the following errors get special treatment if the framework SDK's

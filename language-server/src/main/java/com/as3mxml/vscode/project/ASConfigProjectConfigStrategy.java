@@ -116,7 +116,6 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy
         String additionalOptions = null;
         ArrayList<String> compilerOptions = null;
         ArrayList<String> targets = null;
-        boolean warnings = true;
         JsonSchema schema = null;
         try (InputStream schemaInputStream = getClass().getResourceAsStream("/schemas/asconfig.schema.json"))
         {
@@ -194,10 +193,6 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy
                         targets.add(target);
                     }
                 }
-                if (jsonCompilerOptions.has(CompilerOptions.WARNINGS))
-                {
-                    warnings = jsonCompilerOptions.get(CompilerOptions.WARNINGS).asBoolean();
-                }
             }
             //these options are formatted as if sent in through the command line
             if (json.has(TopLevelFields.ADDITIONAL_OPTIONS)) //optional
@@ -235,7 +230,6 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy
         options.compilerOptions = compilerOptions;
         options.additionalOptions = additionalOptions;
         options.targets = targets;
-        options.warnings = warnings;
         return options;
     }
 }

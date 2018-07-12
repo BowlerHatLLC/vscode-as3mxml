@@ -20,10 +20,13 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 
+import com.as3mxml.vscode.project.WorkspaceFolderData;
+
+import org.apache.royale.compiler.clients.problems.ProblemQuery;
 import org.apache.royale.compiler.filespecs.IFileSpecification;
+import org.apache.royale.compiler.internal.projects.RoyaleProject;
 import org.apache.royale.compiler.problems.ICompilerProblem;
 import org.apache.royale.compiler.problems.InternalCompilerProblem2;
-import org.apache.royale.compiler.projects.ICompilerProject;
 import org.apache.royale.compiler.units.ICompilationUnit;
 import org.apache.royale.compiler.workspaces.IWorkspace;
 import org.eclipse.lsp4j.Diagnostic;
@@ -41,16 +44,16 @@ public class RealTimeProblemAnalyzer implements Runnable
 	public CompilerProblemFilter compilerProblemFilter;
 	public LanguageClient languageClient;
 
-	private ICompilerProject project;
+	private WorkspaceFolderData folderData;
 
-	public ICompilerProject getProject()
+	public WorkspaceFolderData getWorkspaceFolderData()
 	{
-		return project;
+		return folderData;
 	}
 
-	public void setProject(ICompilerProject value)
+	public void setWorkspaceFolderData(WorkspaceFolderData value)
 	{
-		project = value;
+		folderData = value;
 	}
 
 	private IFileSpecification fileSpec;
@@ -156,6 +159,7 @@ public class RealTimeProblemAnalyzer implements Runnable
 			//make sure that the workspace sees the latest changes before we
 			//publish any problems!
 			fileChangedPending = false;
+			RoyaleProject project = folderData.project;
 			IWorkspace workspace = project.getWorkspace();
 			workspace.fileChanged(fileSpec);
 		}
@@ -179,11 +183,14 @@ public class RealTimeProblemAnalyzer implements Runnable
 		{
 			return;
 		}
-        URI uri = Paths.get(unit.getAbsoluteFilename()).toUri();
+		ProblemQuery problemQuery = new ProblemQuery(folderData.configurator.getCompilerProblemSettings());
+
+		URI uri = Paths.get(unit.getAbsoluteFilename()).toUri();
         PublishDiagnosticsParams publish = new PublishDiagnosticsParams();
         ArrayList<Diagnostic> diagnostics = new ArrayList<>();
         publish.setDiagnostics(diagnostics);
 		publish.setUri(uri.toString());
+
 		ArrayList<ICompilerProblem> problems = new ArrayList<>();
         try
         {
@@ -210,8 +217,9 @@ public class RealTimeProblemAnalyzer implements Runnable
             diagnostic.setSeverity(DiagnosticSeverity.Error);
             diagnostic.setMessage("A fatal error occurred while checking a file for problems: " + compilationUnit.getAbsoluteFilename());
 			diagnostics.add(diagnostic);
-        }
-		for (ICompilerProblem problem : problems)
+		}
+		problemQuery.addAll(problems);
+		for (ICompilerProblem problem : problemQuery.getFilteredProblems())
 		{
 			if (compilerProblemFilter != null && !compilerProblemFilter.isAllowed(problem))
 			{
@@ -235,6 +243,7 @@ public class RealTimeProblemAnalyzer implements Runnable
 		if (fileChangedPending)
 		{
 			fileChangedPending = false;
+			RoyaleProject project = folderData.project;
 			IWorkspace workspace = project.getWorkspace();
 			workspace.fileChanged(fileSpec);
 			setCompilationUnit(unit);

@@ -25,6 +25,7 @@ import java.util.Map;
 import com.as3mxml.vscode.utils.ProblemTracker;
 
 import org.apache.royale.compiler.internal.projects.RoyaleProject;
+import org.apache.royale.compiler.internal.projects.RoyaleProjectConfigurator;
 import org.apache.royale.compiler.units.IInvisibleCompilationUnit;
 import org.eclipse.lsp4j.WorkspaceFolder;
 
@@ -40,10 +41,12 @@ public class WorkspaceFolderData
 	public IProjectConfigStrategy config;
 	public ProjectOptions options;
 	public RoyaleProject project;
+	//needed for ProblemQuery filtering
+	public RoyaleProjectConfigurator configurator;
 	public Map<WatchKey, Path> sourcePathWatchKeys = new HashMap<>();
 	public List<IInvisibleCompilationUnit> invisibleUnits = new ArrayList<>();
     public ProblemTracker codeProblemTracker = new ProblemTracker();
-    public ProblemTracker configProblemTracker = new ProblemTracker();
+	public ProblemTracker configProblemTracker = new ProblemTracker();
 	
 	public void cleanup()
 	{
@@ -59,7 +62,9 @@ public class WorkspaceFolderData
         {
             watchKey.cancel();
         }
-        sourcePathWatchKeys.clear();
+		sourcePathWatchKeys.clear();
+		
+		configurator = null;
 	}
 
 	public void cleanupInvisibleUnits()

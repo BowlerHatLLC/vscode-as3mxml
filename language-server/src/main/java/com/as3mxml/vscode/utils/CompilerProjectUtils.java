@@ -59,17 +59,13 @@ public class CompilerProjectUtils
 
 	private static final Pattern ADDITIONAL_OPTIONS_PATTERN = Pattern.compile("[^\\s]*'([^'])*?'|[^\\s]*\"([^\"])*?\"|[^\\s]+");
 
-	public static RoyaleProject createProject(ProjectOptions currentProjectOptions, Workspace compilerWorkspace, Collection<ICompilerProblem> problems)
+	public static RoyaleProject createProject(ProjectOptions currentProjectOptions, Workspace compilerWorkspace)
 	{
         Path frameworkLibPath = Paths.get(System.getProperty(PROPERTY_FRAMEWORK_LIB));
         boolean frameworkSDKIsRoyale = ActionScriptSDKUtils.isRoyaleFramework(frameworkLibPath);
 
         Path asjscPath = frameworkLibPath.resolve("../js/bin/asjsc");
         boolean frameworkSDKIsFlexJS = !frameworkSDKIsRoyale && asjscPath.toFile().exists();
-
-        //check if the framework SDK doesn't include the Spark theme
-        Path sparkPath = frameworkLibPath.resolve("./themes/Spark/spark.css");
-        boolean frameworkSDKContainsSparkTheme = sparkPath.toFile().exists();
 
 		RoyaleProject project = null;
 
@@ -160,6 +156,17 @@ public class CompilerProjectUtils
             project = new RoyaleProject(compilerWorkspace);
         }
         project.setProblems(new ArrayList<>());
+        return project;
+    }
+
+    public static RoyaleProjectConfigurator configureProject(RoyaleProject project, ProjectOptions currentProjectOptions, Collection<ICompilerProblem> problems)
+    {
+        Path frameworkLibPath = Paths.get(System.getProperty(PROPERTY_FRAMEWORK_LIB));
+        boolean frameworkSDKIsRoyale = ActionScriptSDKUtils.isRoyaleFramework(frameworkLibPath);
+
+        //check if the framework SDK doesn't include the Spark theme
+        Path sparkPath = frameworkLibPath.resolve("./themes/Spark/spark.css");
+        boolean frameworkSDKContainsSparkTheme = sparkPath.toFile().exists();
 
 		List<String> compilerOptions = currentProjectOptions.compilerOptions;
         RoyaleProjectConfigurator configurator = null;
@@ -246,6 +253,6 @@ public class CompilerProjectUtils
             return null;
         }
         project.setTargetSettings(targetSettings);
-        return project;
+        return configurator;
 	}
 }
