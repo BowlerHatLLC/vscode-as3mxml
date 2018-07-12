@@ -21,7 +21,8 @@
   "keywords": [
     "Flash",
     "AIR",
-    "Royale"
+    "Royale",
+    "Flex"
   ],
   "main": "extension",
   "icon": "as3.png",
