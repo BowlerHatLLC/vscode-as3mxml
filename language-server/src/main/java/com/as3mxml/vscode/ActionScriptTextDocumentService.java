@@ -54,6 +54,7 @@ import org.apache.royale.compiler.common.ASModifier;
 import org.apache.royale.compiler.common.ISourceLocation;
 import org.apache.royale.compiler.common.PrefixMap;
 import org.apache.royale.compiler.common.XMLName;
+import org.apache.royale.compiler.config.ICompilerProblemSettings;
 import org.apache.royale.compiler.constants.IASKeywordConstants;
 import org.apache.royale.compiler.constants.IASLanguageConstants;
 import org.apache.royale.compiler.constants.IMXMLCoreConstants;
@@ -1389,63 +1390,64 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return;
         }
         Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocumentUri);
-        if (path != null)
+        if (path == null)
         {
-            WorkspaceFolderData folderData = getWorkspaceFolderDataForSourceFile(path);
-            for (TextDocumentContentChangeEvent change : params.getContentChanges())
+            return;
+        }
+        WorkspaceFolderData folderData = getWorkspaceFolderDataForSourceFile(path);
+        for (TextDocumentContentChangeEvent change : params.getContentChanges())
+        {
+            if (change.getRange() == null)
             {
-                if (change.getRange() == null)
-                {
-                    sourceByPath.put(path, change.getText());
-                }
-                else if(sourceByPath.containsKey(path))
-                {
-                    String existingText = sourceByPath.get(path);
-                    String newText = patch(existingText, change);
-                    sourceByPath.put(path, newText);
-                }
-                else
-                {
-                    System.err.println("Failed to apply changes to code intelligence from URI: " + textDocumentUri);
-                }
+                sourceByPath.put(path, change.getText());
             }
-            if(realTimeProblemAnalyzer.getCompilationUnit() != null)
+            else if(sourceByPath.containsKey(path))
             {
-                //if the compilation unit is already being analyzed for
-                //problems, set a flag to indicate that it has changed so
-                //that the analyzer can update after the current pass.
-                realTimeProblemAnalyzer.setFileChangedPending(true);
+                String existingText = sourceByPath.get(path);
+                String newText = patch(existingText, change);
+                sourceByPath.put(path, newText);
             }
             else
             {
-                String normalizedPath = FilenameNormalization.normalize(path.toAbsolutePath().toString());
-                IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(normalizedPath);
-                compilerWorkspace.fileChanged(fileSpec);
+                System.err.println("Failed to apply changes to code intelligence from URI: " + textDocumentUri);
             }
-            //we do a quick check of the current file on change for better
-            //performance while typing. we'll do a full check when we save the
-            //file later
-            currentProject = getProject(folderData);
-            if (currentProject != null && !SourcePathUtils.isInProjectSourcePath(path, currentProject))
-            {
-                realTimeProblemAnalyzer.setCompilationUnit(null);
-                realTimeProblemAnalyzer.setFileSpecification(null);
-                publishDiagnosticForFileOutsideSourcePath(path, folderData.codeProblemTracker);
-                return;
-            }
-            ICompilationUnit unit = getCompilationUnit(path);
+        }
+        if(realTimeProblemAnalyzer.getCompilationUnit() != null)
+        {
+            //if the compilation unit is already being analyzed for
+            //problems, set a flag to indicate that it has changed so
+            //that the analyzer can update after the current pass.
+            realTimeProblemAnalyzer.setFileChangedPending(true);
+        }
+        else
+        {
             String normalizedPath = FilenameNormalization.normalize(path.toAbsolutePath().toString());
             IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(normalizedPath);
-            realTimeProblemAnalyzer.languageClient = languageClient;
-            realTimeProblemAnalyzer.compilerProblemFilter = compilerProblemFilter;
-            realTimeProblemAnalyzer.setWorkspaceFolderData(folderData);
-            realTimeProblemAnalyzer.setCompilationUnit(unit);
-            realTimeProblemAnalyzer.setFileSpecification(fileSpec);
-            if (realTimeProblemAnalyzerThread == null || !realTimeProblemAnalyzerThread.isAlive())
-            {
-                realTimeProblemAnalyzerThread = new Thread(realTimeProblemAnalyzer);
-                realTimeProblemAnalyzerThread.start();
-            }
+            compilerWorkspace.fileChanged(fileSpec);
+        }
+        //we do a quick check of the current file on change for better
+        //performance while typing. we'll do a full check when we save the
+        //file later
+        currentProject = getProject(folderData);
+        if (currentProject != null && !SourcePathUtils.isInProjectSourcePath(path, currentProject))
+        {
+            realTimeProblemAnalyzer.setCompilationUnit(null);
+            realTimeProblemAnalyzer.setFileSpecification(null);
+            publishDiagnosticForFileOutsideSourcePath(path, folderData.codeProblemTracker);
+            return;
+        }
+        ICompilationUnit unit = getCompilationUnit(path);
+        String normalizedPath = FilenameNormalization.normalize(path.toAbsolutePath().toString());
+        IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(normalizedPath);
+        realTimeProblemAnalyzer.languageClient = languageClient;
+        realTimeProblemAnalyzer.compilerProblemFilter = compilerProblemFilter;
+        realTimeProblemAnalyzer.setWorkspaceFolderData(folderData);
+        realTimeProblemAnalyzer.setCompilationUnit(unit);
+        realTimeProblemAnalyzer.setFileSpecification(fileSpec);
+        if (realTimeProblemAnalyzerThread == null || !realTimeProblemAnalyzerThread.isAlive())
+        {
+            realTimeProblemAnalyzerThread = new Thread(realTimeProblemAnalyzer);
+            realTimeProblemAnalyzerThread.start();
         }
     }
 
@@ -1866,8 +1868,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         currentProjectOptions = folderData.options = currentConfig.getOptions();
         if (currentProjectOptions == null)
         {
-            folderData.codeProblemTracker.cleanUpStaleProblems();
-            folderData.configProblemTracker.cleanUpStaleProblems();
             return;
         }
         prepareNewProject(folderData);
@@ -5198,6 +5198,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             {
                 checkFilePathForProblems(path, folderData);
             }
+            else
+            {
+                folderData.codeProblemTracker.cleanUpStaleProblems();
+            }
         }
     }
 
@@ -5208,14 +5212,18 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         //if we haven't accessed a compilation unit yet, the project may be null
         currentProject = getProject(folderData);
         ProblemTracker codeProblemTracker = folderData.codeProblemTracker;
-        if (currentProject == null || !SourcePathUtils.isInProjectSourcePath(path, currentProject))
+        if (currentProject != null && !SourcePathUtils.isInProjectSourcePath(path, currentProject))
         {
             publishDiagnosticForFileOutsideSourcePath(path, codeProblemTracker);
             return;
         }
-        ProblemQuery problemQuery = new ProblemQuery(folderData.configurator.getCompilerProblemSettings());
-        problemQuery.clear();
-        if (!checkFilePathForAllProblems(path, problemQuery))
+        ICompilerProblemSettings compilerProblemSettings = null;
+        if (folderData.configurator != null)
+        {
+            compilerProblemSettings = folderData.configurator.getCompilerProblemSettings();
+        }
+        ProblemQuery problemQuery = new ProblemQuery(compilerProblemSettings);
+        if (currentProjectOptions == null || !checkFilePathForAllProblems(path, problemQuery))
         {
             checkFilePathForSyntaxProblems(path, problemQuery);
         }
