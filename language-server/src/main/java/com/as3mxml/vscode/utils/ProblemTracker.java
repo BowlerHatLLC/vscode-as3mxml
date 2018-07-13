@@ -30,7 +30,7 @@ public class ProblemTracker
 {
     private LanguageClient languageClient;
     private HashSet<URI> newFilesWithProblems = new HashSet<>();
-    private HashSet<URI> oldFilesWithProblems = new HashSet<>();
+    private HashSet<URI> staleFilesWithProblems = new HashSet<>();
 
     public ProblemTracker()
     {
@@ -49,14 +49,20 @@ public class ProblemTracker
     public void trackFileWithProblems(URI uri)
     {
         newFilesWithProblems.add(uri);
-        oldFilesWithProblems.remove(uri);
+        staleFilesWithProblems.remove(uri);
     }
 
-    public void cleanUpStaleProblems()
+    public void makeStale()
+    {
+        staleFilesWithProblems.addAll(newFilesWithProblems);
+        newFilesWithProblems.clear();
+    }
+
+    public void releaseStale()
     {
         //if any files have been removed, they will still appear in this set, so
         //clear the errors so that they don't persist
-        for (URI uri : oldFilesWithProblems)
+        for (URI uri : staleFilesWithProblems)
         {
             PublishDiagnosticsParams publish = new PublishDiagnosticsParams();
             publish.setDiagnostics(new ArrayList<>());
@@ -66,9 +72,9 @@ public class ProblemTracker
                 languageClient.publishDiagnostics(publish);
             }
         }
-        oldFilesWithProblems.clear();
+        staleFilesWithProblems.clear();
         HashSet<URI> temp = newFilesWithProblems;
-        newFilesWithProblems = oldFilesWithProblems;
-        oldFilesWithProblems = temp;
+        newFilesWithProblems = staleFilesWithProblems;
+        staleFilesWithProblems = temp;
     }
 }

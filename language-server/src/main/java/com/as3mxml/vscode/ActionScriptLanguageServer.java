@@ -164,6 +164,11 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
 
         RegistrationParams registrationParams = new RegistrationParams(registrations);
         languageClient.registerCapability(registrationParams);
+
+        //we can't notify the client about problems until we receive this
+        //initialized notification. this is the first time that we'll start
+        //checking for errors.
+        textDocumentService.checkForProblemsNow();
     }
 
     @Override

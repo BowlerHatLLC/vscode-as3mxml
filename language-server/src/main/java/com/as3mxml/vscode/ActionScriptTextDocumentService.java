@@ -98,7 +98,6 @@ import org.apache.royale.compiler.mxml.IMXMLTagAttributeData;
 import org.apache.royale.compiler.mxml.IMXMLTagData;
 import org.apache.royale.compiler.mxml.IMXMLTextData;
 import org.apache.royale.compiler.mxml.IMXMLUnitData;
-import org.apache.royale.compiler.problems.ConfigurationProblem;
 import org.apache.royale.compiler.problems.ICompilerProblem;
 import org.apache.royale.compiler.problems.InternalCompilerProblem;
 import org.apache.royale.compiler.scopes.IASScope;
@@ -149,6 +148,7 @@ import com.as3mxml.asconfigc.compiler.ProjectType;
 import com.as3mxml.vscode.asdoc.VSCodeASDocDelegate;
 import com.as3mxml.vscode.commands.ICommandConstants;
 import com.as3mxml.vscode.compiler.CompilerShell;
+import com.as3mxml.vscode.compiler.problems.SyntaxFallbackProblem;
 import com.as3mxml.vscode.project.IProjectConfigStrategy;
 import com.as3mxml.vscode.project.IProjectConfigStrategyFactory;
 import com.as3mxml.vscode.project.ProjectOptions;
@@ -279,6 +279,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private Thread realTimeProblemAnalyzerThread;
     private RealTimeProblemAnalyzer realTimeProblemAnalyzer = new RealTimeProblemAnalyzer();
     private CompilerProblemFilter compilerProblemFilter = new CompilerProblemFilter();
+    private boolean initialized = false;
 
     public ActionScriptTextDocumentService()
     {
@@ -316,6 +317,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(normalizedPath);
             compilerWorkspace.fileChanged(fileSpec);
         }
+
         checkProjectForProblems(folderData);
     }
 
@@ -1290,27 +1292,27 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return;
         }
+
+        //even if it's not in a workspace folder right now, store it just in
+        //case we need it later. example: added to source-path compiler option.
+        String text = textDocument.getText();
+        sourceByPath.put(path, text);
+        
         WorkspaceFolderData folderData = getWorkspaceFolderDataForSourceFile(path);
         if (folderData == null)
         {
             return;
         }
 
-        if (path != null)
-        {
-            String text = textDocument.getText();
-            sourceByPath.put(path, text);
+        //notify the workspace that it should read the file from memory
+        //instead of loading from the file system
+        String normalizedPath = FilenameNormalization.normalize(path.toAbsolutePath().toString());
+        IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(normalizedPath);
+        compilerWorkspace.fileChanged(fileSpec);
 
-            //notify the workspace that it should read the file from memory
-            //instead of loading from the file system
-            String normalizedPath = FilenameNormalization.normalize(path.toAbsolutePath().toString());
-            IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(normalizedPath);
-            compilerWorkspace.fileChanged(fileSpec);
-
-            //we need to check for problems when opening a new file because it
-            //may not have been in the workspace before.
-            checkFilePathForProblems(path, folderData);
-        }
+        //we need to check for problems when opening a new file because it
+        //may not have been in the workspace before.
+        checkFilePathForProblems(path, folderData, true);
     }
 
     private List<WorkspaceFolderData> getAllWorkspaceFolderDataForSourceFile(Path path)
@@ -1385,10 +1387,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return;
         }
-        if (currentProject == null)
-        {
-            return;
-        }
         Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocumentUri);
         if (path == null)
         {
@@ -1411,6 +1409,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             {
                 System.err.println("Failed to apply changes to code intelligence from URI: " + textDocumentUri);
             }
+        }
+        if (currentProject == null)
+        {
+            //we don't have a current project, so we'll fall back to simple
+            //syntax checking for now
+            checkFilePathForProblems(path, folderData, true);
+            return;
         }
         if(realTimeProblemAnalyzer.getCompilationUnit() != null)
         {
@@ -1471,23 +1476,54 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return;
         }
+
+        sourceByPath.remove(path);
+
+        boolean clearProblems = false;
+
         WorkspaceFolderData folderData = getWorkspaceFolderDataForSourceFile(path);
         if (folderData == null)
         {
+            //if we can't figure out which workspace the file is in, then clear
+            //the problems completely because we want to display problems only
+            //while it is open
+            clearProblems = true;
+        }
+        else
+        {
+            currentProject = getProject(folderData);
+            if(currentProject == null)
+            {
+                //if the current project isn't properly configured, we want to
+                //display problems only while a file is open
+                clearProblems = true;
+            }
+            else if(!SourcePathUtils.isInProjectSourcePath(path, currentProject))
+            {
+                //if the file is outside of the project's source path, we want
+                //to display problems only while it is open
+                clearProblems = true;
+            }
+        }
+
+        if (clearProblems)
+        {
+            //immediately clear any diagnostics published for this file
+            URI uri = path.toUri();
+            PublishDiagnosticsParams publish = new PublishDiagnosticsParams();
+            ArrayList<Diagnostic> diagnostics = new ArrayList<>();
+            publish.setDiagnostics(diagnostics);
+            publish.setUri(uri.toString());
+            if (languageClient != null)
+            {
+                languageClient.publishDiagnostics(publish);
+            }
             return;
         }
 
-        //immediately clear any diagnostics published for this file
-        URI uri = path.toUri();
-        PublishDiagnosticsParams publish = new PublishDiagnosticsParams();
-        ArrayList<Diagnostic> diagnostics = new ArrayList<>();
-        publish.setDiagnostics(diagnostics);
-        publish.setUri(uri.toString());
-        if (languageClient != null)
-        {
-            languageClient.publishDiagnostics(publish);
-        }
-        sourceByPath.remove(path);
+        //the contents of the file may have been reverted without saving
+        //changes, so check for errors with the file system version
+        checkFilePathForProblems(path, folderData, true);
     }
 
     /**
@@ -1661,6 +1697,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
      */
     public void checkForProblemsNow()
     {
+        initialized = true;
         updateFrameworkSDK();
         for (WorkspaceFolderData folderData : workspaceFolderToData.values())
         {
@@ -4869,35 +4906,35 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
         }
 
-        ConfigurationProblem syntaxProblem = null;
+        SyntaxFallbackProblem syntaxProblem = null;
         if (reader == null)
         {
             //the file does not exist
-            syntaxProblem = new ConfigurationProblem(path.toString(), 0, "File not found: " + path.toAbsolutePath().toString() + ". Error checking disabled.");
+            syntaxProblem = new SyntaxFallbackProblem(path.toString(), "File not found: " + path.toAbsolutePath().toString() + ". Error checking has been disabled.");
         }
         else if (parser == null && currentProjectOptions == null)
         {
             //we couldn't load the project configuration and we couldn't parse
             //the file. we can't provide any information here.
-            syntaxProblem = new ConfigurationProblem(path.toString(), 0, "Failed to load project configuration options. Error checking disabled.");
+            syntaxProblem = new SyntaxFallbackProblem(path.toString(), "Failed to load project configuration options. Error checking has been disabled.");
         }
         else if (parser == null)
         {
             //something terrible happened, and this is the best we can do
-            syntaxProblem = new ConfigurationProblem(path.toString(), 0, "A fatal error occurred while checking for simple syntax problems.");
+            syntaxProblem = new SyntaxFallbackProblem(path.toString(), "A fatal error occurred while checking for simple syntax problems.");
         }
         else if (currentProjectOptions == null)
         {
             //something went wrong while attempting to load and parse the
             //project configuration, but we could successfully parse the syntax
             //tree.
-            syntaxProblem = new ConfigurationProblem(path.toString(), 0, "Failed to load project configuration options. Error checking disabled, except for simple syntax problems.");
+            syntaxProblem = new SyntaxFallbackProblem(path.toString(), "Failed to load project configuration options. Error checking has been disabled, except for simple syntax problems.");
         }
         else
         {
             //we seem to have loaded the project configuration and we could
             //parse the file, but something still went wrong.
-            syntaxProblem = new ConfigurationProblem(path.toString(), 0, "A fatal error occurred. Error checking disabled, except for simple syntax problems.");
+            syntaxProblem = new SyntaxFallbackProblem(path.toString(), "A fatal error occurred. Error checking has been disabled, except for simple syntax problems.");
         }
         problemQuery.add(syntaxProblem);
 
@@ -5169,7 +5206,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 }
             }
         }
-        configProblemTracker.cleanUpStaleProblems();
+        //clear out any old problems because they will no longer be valid
+        configProblemTracker.releaseStale();
         folderData.project = project;
         folderData.configurator = configurator;
         return project;
@@ -5177,56 +5215,39 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private synchronized void checkProjectForProblems(WorkspaceFolderData folderData)
     {
-        refreshProjectOptions(folderData);
-        if (currentProjectOptions != null && currentProjectOptions.type.equals(ProjectType.LIB))
+        //no reason to check for errors until we can send them to the client
+        if (!initialized)
         {
-            //if we haven't accessed a compilation unit yet, the project may be null
-            currentProject = getProject(folderData);
-            Set<Path> filePaths = sourceByPath.keySet();
-            if (filePaths.size() > 0)
+            return;
+        }
+
+        refreshProjectOptions(folderData);
+        if (currentProjectOptions == null || currentProjectOptions.type.equals(ProjectType.LIB))
+        {
+            ProblemQuery problemQuery = workspaceFolderDataToProblemQuery(folderData);
+            for(Path filePath : sourceByPath.keySet())
             {
-                //it doesn't matter which file we pick here because we're
-                //doing a full build
-                Path path = filePaths.iterator().next();
-                checkFilePathForProblems(path, folderData);
+                if (currentProjectOptions == null)
+                {
+                    System.err.println("File: " + filePath);
+                }
+                checkFilePathForProblems(filePath, problemQuery, folderData, true);
             }
+            publishDiagnosticsForProblemQuery(problemQuery, folderData, true);
         }
         else //app
         {
             Path path = getMainCompilationUnitPath(folderData);
             if (path != null)
             {
-                checkFilePathForProblems(path, folderData);
-            }
-            else
-            {
-                folderData.codeProblemTracker.cleanUpStaleProblems();
+                checkFilePathForProblems(path, folderData, false);
             }
         }
     }
 
-    private void checkFilePathForProblems(Path path, WorkspaceFolderData folderData)
+    private void publishDiagnosticsForProblemQuery(ProblemQuery problemQuery, WorkspaceFolderData folderData, boolean releaseStale)
     {
-        currentUnit = null;
-
-        //if we haven't accessed a compilation unit yet, the project may be null
-        currentProject = getProject(folderData);
         ProblemTracker codeProblemTracker = folderData.codeProblemTracker;
-        if (currentProject != null && !SourcePathUtils.isInProjectSourcePath(path, currentProject))
-        {
-            publishDiagnosticForFileOutsideSourcePath(path, codeProblemTracker);
-            return;
-        }
-        ICompilerProblemSettings compilerProblemSettings = null;
-        if (folderData.configurator != null)
-        {
-            compilerProblemSettings = folderData.configurator.getCompilerProblemSettings();
-        }
-        ProblemQuery problemQuery = new ProblemQuery(compilerProblemSettings);
-        if (currentProjectOptions == null || !checkFilePathForAllProblems(path, problemQuery))
-        {
-            checkFilePathForSyntaxProblems(path, problemQuery);
-        }
 
         Map<String, PublishDiagnosticsParams> sourcePathToParamsMap = new HashMap<>();
         for(ICompilerProblem problem : problemQuery.getFilteredProblems())
@@ -5245,12 +5266,53 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             PublishDiagnosticsParams publish = sourcePathToParamsMap.get(problemSourcePath);
             addCompilerProblem(problem, publish);
         }
-        problemQuery.clear();
 
-        codeProblemTracker.cleanUpStaleProblems();
+        if (releaseStale)
+        {
+            codeProblemTracker.releaseStale();
+        }
+        else
+        {
+            codeProblemTracker.makeStale();
+        }
         if (languageClient != null)
         {
             sourcePathToParamsMap.values().forEach(languageClient::publishDiagnostics);
+        }
+    }
+
+    private ProblemQuery workspaceFolderDataToProblemQuery(WorkspaceFolderData folderData)
+    {
+        ICompilerProblemSettings compilerProblemSettings = null;
+        if (folderData.configurator != null)
+        {
+            compilerProblemSettings = folderData.configurator.getCompilerProblemSettings();
+        }
+        return new ProblemQuery(compilerProblemSettings);
+    }
+
+    private void checkFilePathForProblems(Path path, WorkspaceFolderData folderData, boolean quick)
+    {
+        ProblemQuery problemQuery = workspaceFolderDataToProblemQuery(folderData);
+        checkFilePathForProblems(path, problemQuery, folderData, quick);
+        publishDiagnosticsForProblemQuery(problemQuery, folderData, !quick);
+    }
+
+    private void checkFilePathForProblems(Path path, ProblemQuery problemQuery, WorkspaceFolderData folderData, boolean quick)
+    {
+        currentUnit = null;
+
+        //if we haven't accessed a compilation unit yet, the project may be null
+        currentProject = getProject(folderData);
+        if (currentProject != null && !SourcePathUtils.isInProjectSourcePath(path, currentProject))
+        {
+            ProblemTracker codeProblemTracker = folderData.codeProblemTracker;
+            publishDiagnosticForFileOutsideSourcePath(path, codeProblemTracker);
+            return;
+        }
+        if (currentProjectOptions == null || !checkFilePathForAllProblems(path, problemQuery, false))
+        {
+            checkFilePathForSyntaxProblems(path, problemQuery);
         }
     }
 
@@ -5274,7 +5336,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
     }
 
-    private boolean checkFilePathForAllProblems(Path path, ProblemQuery problemQuery)
+    private boolean checkFilePathForAllProblems(Path path, ProblemQuery problemQuery, boolean quick)
     {
         ICompilationUnit mainUnit = getCompilationUnit(path);
         if (mainUnit == null)
@@ -5296,6 +5358,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         try
         {
+            if (quick)
+            {
+                checkCompilationUnitForAllProblems(mainUnit, problemQuery);
+                return true;
+            }
             boolean continueCheckingForErrors = true;
             while (continueCheckingForErrors)
             {

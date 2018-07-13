@@ -23,6 +23,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 
+import com.as3mxml.vscode.compiler.problems.SyntaxFallbackProblem;
+
 import org.apache.royale.compiler.clients.problems.CompilerProblemCategorizer;
 import org.apache.royale.compiler.common.ISourceLocation;
 import org.apache.royale.compiler.definitions.IAccessorDefinition;
@@ -71,6 +73,11 @@ public class LanguageServerCompilerUtils
      */
     public static DiagnosticSeverity getDiagnosticSeverityFromCompilerProblem(ICompilerProblem problem)
     {
+        if (problem instanceof SyntaxFallbackProblem)
+        {
+            return DiagnosticSeverity.Information;
+        }
+
         CompilerProblemCategorizer categorizer = new CompilerProblemCategorizer(null);
         CompilerProblemSeverity severity = categorizer.getProblemSeverity(problem);
         switch (severity)
