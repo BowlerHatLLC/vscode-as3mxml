@@ -5163,9 +5163,19 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return currentProject;
         }
 
-        List<ICompilerProblem> configProblems = new ArrayList<>();
+        URI rootURI = URI.create(folderData.folder.getUri());
+        Path rootPath = Paths.get(rootURI);
+
+        String oldUserDir = System.getProperty("user.dir");
+        System.setProperty("user.dir", rootPath.toString());
+
         RoyaleProject project = CompilerProjectUtils.createProject(currentProjectOptions, compilerWorkspace);
+
+        List<ICompilerProblem> configProblems = new ArrayList<>();
         RoyaleProjectConfigurator configurator = CompilerProjectUtils.configureProject(project, currentProjectOptions, configProblems);
+
+        System.setProperty("user.dir", oldUserDir);
+
         ProblemTracker configProblemTracker = folderData.configProblemTracker;
         if (configProblems.size() > 0)
         {
