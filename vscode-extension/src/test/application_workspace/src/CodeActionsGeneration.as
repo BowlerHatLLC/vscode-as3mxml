@@ -9,6 +9,8 @@ package
 
 			methodWithoutThis("hi", 2);
 			this.methodWithThis(3);
+
+			new FakeClass();
 		}
 
 		protected var getterAndSetter:String = "getAndSet";

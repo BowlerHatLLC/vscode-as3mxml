@@ -135,7 +135,7 @@ function findImportCommandForType(qualifiedName: string, codeActions: vscode.Com
 
 suite("ActionScript & MXML extension: Application workspace", () =>
 {
-	test("vscode.extensions.getExtension() and isActive", (done) =>
+	test("vscode.extensions.getExtension(), isActive, and isLanguageClientReady", (done) =>
 	{
 		let extension = vscode.extensions.getExtension(EXTENSION_ID);
 		assert.ok(extension, `Extension "${EXTENSION_ID}" not found!`);
@@ -7700,6 +7700,30 @@ suite("code action provider: Application workspace", () =>
 						assert.strictEqual(codeAction.arguments[codeAction.arguments.length - 2], methodName, "Code action provided incorrect method name");
 						assert.deepStrictEqual(codeAction.arguments[codeAction.arguments.length - 1], ["Number"], "Code action provided incorrect argument types for method");
 						assert.strictEqual(vscode.Uri.parse(codeAction.arguments[0]).fsPath, uri.fsPath, "Code action provided incorrect URI");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute code actions provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeCodeActionProvider must not generate method from \"new\" expression", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "CodeActionsGeneration.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			let start = new vscode.Position(0, 0);
+			let end = new vscode.Position(editor.document.lineCount, 0);
+			let range = new vscode.Range(start, end);
+			return vscode.commands.executeCommand("vscode.executeCodeActionProvider", uri, range)
+				.then((codeActions: vscode.Command[]) =>
+					{
+						let methodName = "FakeClass";
+						let codeAction = codeActions.find((codeAction) =>
+						{
+							return codeAction.command === COMMAND_GENERATE_METHOD &&
+								codeAction.arguments[codeAction.arguments.length - 2] === methodName;
+						});
+						assert.strictEqual(codeAction, undefined, "Code action found");
 					}, (err) =>
 					{
 						assert(false, "Failed to execute code actions provider: " + uri);

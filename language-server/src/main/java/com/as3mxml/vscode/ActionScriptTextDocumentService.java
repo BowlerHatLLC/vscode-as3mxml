@@ -1078,7 +1078,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 }
             }
         }
-        if (functionCallNode == null || functionName == null || functionName.length() == 0)
+        if (functionCallNode == null || functionName == null || functionName.length() == 0 || functionCallNode.isNewExpression())
         {
             return;
         }
