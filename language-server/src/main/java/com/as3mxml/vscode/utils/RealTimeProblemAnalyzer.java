@@ -96,9 +96,11 @@ public class RealTimeProblemAnalyzer implements Runnable
 				//the compilation unit hasn't changed
 				return;
 			}
-			else
+			else if (compilationUnit.getProject() != null)
 			{
-				//if we're changing compilation units, publish immediately
+				//if we're changing compilation units, publish immediately...
+				//unless the project has been cleared because that means that
+				//the compilation unit is no longer valid
 				completePendingRequests();
 				publishDiagnostics();
 			}
