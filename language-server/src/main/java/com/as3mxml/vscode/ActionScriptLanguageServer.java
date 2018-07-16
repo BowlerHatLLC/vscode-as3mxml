@@ -168,7 +168,7 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
         //we can't notify the client about problems until we receive this
         //initialized notification. this is the first time that we'll start
         //checking for errors.
-        textDocumentService.checkForProblemsNow();
+        textDocumentService.setInitialized();
     }
 
     @Override

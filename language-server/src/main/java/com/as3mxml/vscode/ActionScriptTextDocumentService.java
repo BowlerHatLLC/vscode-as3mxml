@@ -1692,12 +1692,26 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
     }
 
+    public void setInitialized()
+    {
+        if(initialized)
+        {
+            return;
+        }
+        initialized = true;
+        //this is the first time that we can notify the client about any
+        //diagnostics
+        for (WorkspaceFolderData folderData : workspaceFolderToData.values())
+        {
+            checkProjectForProblems(folderData);
+        }
+    }
+
     /**
      * Called if something in the configuration has changed.
      */
     public void checkForProblemsNow()
     {
-        initialized = true;
         updateFrameworkSDK();
         for (WorkspaceFolderData folderData : workspaceFolderToData.values())
         {
@@ -5225,12 +5239,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private synchronized void checkProjectForProblems(WorkspaceFolderData folderData)
     {
-        //no reason to check for errors until we can send them to the client
-        if (!initialized)
-        {
-            return;
-        }
-
         refreshProjectOptions(folderData);
         if (currentProjectOptions == null || currentProjectOptions.type.equals(ProjectType.LIB))
         {
@@ -5417,10 +5425,23 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         ArrayList<ICompilerProblem> problems = new ArrayList<>();
         try
         {
-            //if we pass in null, it's designed to ignore certain errors that
-            //don't matter for IDE code intelligence.
-            unit.waitForBuildFinish(problems, null);
-            problemQuery.addAll(problems);
+            if(initialized)
+            {
+                //if we pass in null, it's designed to ignore certain errors that
+                //don't matter for IDE code intelligence.
+                unit.waitForBuildFinish(problems, null);
+                problemQuery.addAll(problems);
+            }
+            else
+            {
+                //we can't publish diagnostics yet, but we can start the build
+                //process in the background so that it's faster when we're ready
+                //to publish diagnostics after initialization
+                unit.getSyntaxTreeRequest();
+                unit.getFileScopeRequest();
+                unit.getOutgoingDependenciesRequest();
+                unit.getABCBytesRequest();
+            }
         }
         catch (Exception e)
         {
