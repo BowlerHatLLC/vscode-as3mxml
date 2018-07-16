@@ -5259,6 +5259,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         for(ICompilerProblem problem : problemQuery.getFilteredProblems())
         {
             String problemSourcePath = problem.getSourcePath();
+            if (problemSourcePath == null)
+            {
+                //fall back to the workspace folder path, if the problem doesn't
+                //have a path. that's probably the best that we can do.
+                Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(folderData.folder.getUri());
+                problemSourcePath = path.toString();
+            }
             if (!sourcePathToParamsMap.containsKey(problemSourcePath))
             {
                 URI uri = Paths.get(problemSourcePath).toUri();
