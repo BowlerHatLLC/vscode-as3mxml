@@ -8373,7 +8373,7 @@ suite("organize imports: Application workspace", () =>
 	});
 });
 
-suite("ActionScript & MXML extension: Library workspace", () =>
+/*suite("ActionScript & MXML extension: Library workspace", () =>
 {
 	test("vscode.extensions.getExtension() and isActive", (done) =>
 	{
@@ -8394,7 +8394,7 @@ suite("ActionScript & MXML extension: Library workspace", () =>
 	});
 });
 
-/*suite("document symbol provider: Library workspace", () =>
+suite("document symbol provider: Library workspace", () =>
 {
 	test("vscode.executeDocumentSymbolProvider not empty", () =>
 	{
@@ -8432,6 +8432,45 @@ suite("ActionScript & MXML extension: Library workspace", () =>
 					}, (err) =>
 					{
 						assert(false, "Failed to execute document symbol provider: " + uri);
+					});
+		});
+	});
+});
+
+suite("workspace symbol provider: multiple workspaces", () =>
+{
+	test("vscode.executeWorkspaceSymbolProvider includes classes from all workspaces", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Main.as"));
+
+		let uri1 = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "workspaceSymbols", "WSFindMe1.as"));
+		let className1 = "WSFindMe1";
+		let uri2 = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[1].uri.fsPath, "src", "com", "example", "workspaceSymbols", "WSFindMe2.as"));
+		let className2 = "WSFindMe2";
+		
+		let query = "WSFindMe";
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeWorkspaceSymbolProvider", query)
+				.then((symbols: vscode.SymbolInformation[]) =>
+					{
+						assert.ok(findSymbol(symbols, new vscode.SymbolInformation(
+							className1,
+							vscode.SymbolKind.Class,
+							createRange(2, 14),
+							uri1,
+							"com.example.workspaceSymbols")),
+							"vscode.executeWorkspaceSymbolProvider failed to provide symbol for class: " + className1);
+						assert.ok(findSymbol(symbols, new vscode.SymbolInformation(
+							className2,
+							vscode.SymbolKind.Class,
+							createRange(2, 14),
+							uri2,
+							"com.example.workspaceSymbols")),
+							"vscode.executeWorkspaceSymbolProvider failed to provide symbol for class: " + className2);
+					}, (err) =>
+					{
+						assert(false, "Failed to execute workspace symbol provider: " + uri);
 					});
 		});
 	});
