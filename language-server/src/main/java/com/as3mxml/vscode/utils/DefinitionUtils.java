@@ -102,6 +102,10 @@ public class DefinitionUtils
 	public static String getDefinitionDebugSourceFilePath(IDefinition definition, RoyaleProject project)
 	{
 		ICompilationUnit unit = project.getScope().getCompilationUnitForDefinition(definition);
+		if (unit == null)
+		{
+			return null;
+		}
 		try
 		{
 			byte[] abcBytes = unit.getABCBytesRequest().get().getABCBytes();
