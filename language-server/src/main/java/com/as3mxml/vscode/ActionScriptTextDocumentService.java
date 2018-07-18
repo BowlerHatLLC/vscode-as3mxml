@@ -742,11 +742,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
      */
     public CompletableFuture<List<? extends SymbolInformation>> workspaceSymbol(WorkspaceSymbolParams params)
     {
-        if (compilationUnits == null)
-        {
-            //if we haven't successfully compiled the project, we can't do this
-            return CompletableFuture.completedFuture(Collections.emptyList());
-        }
         Set<String> qualifiedNames = new HashSet<>();
         List<SymbolInformation> result = new ArrayList<>();
         String query = params.getQuery();
@@ -810,7 +805,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     }
                     for (IASScope scope : scopes)
                     {
-                        querySymbolsInScope(lowerCaseQuery, scope, result);
+                        querySymbolsInScope(lowerCaseQuery, scope, qualifiedNames, result);
                     }
                 }
             }
@@ -5844,7 +5839,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return endComment > currentOffset;
     }
 
-    private void querySymbolsInScope(String query, IASScope scope, List<SymbolInformation> result)
+    private void querySymbolsInScope(String query, IASScope scope, Set<String> foundTypes, Collection<SymbolInformation> result)
     {
         Collection<IDefinition> definitions = scope.getAllLocalDefinitions();
         for (IDefinition definition : definitions)
@@ -5853,22 +5848,34 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             {
                 IPackageDefinition packageDefinition = (IPackageDefinition) definition;
                 IASScope packageScope = packageDefinition.getContainedScope();
-                querySymbolsInScope(query, packageScope, result);
+                querySymbolsInScope(query, packageScope, foundTypes, result);
             }
             else if (definition instanceof ITypeDefinition)
             {
-                ITypeDefinition typeDefinition = (ITypeDefinition) definition;
-                if (!definition.isImplicit()
-                        && typeDefinition.getQualifiedName().toLowerCase().contains(query))
+                if (definition.isImplicit())
                 {
-                    SymbolInformation symbol = definitionToSymbol(typeDefinition);
-                    if (symbol != null)
-                    {
-                        result.add(symbol);
-                    }
+                    continue;
+                }
+                String qualifiedName = definition.getQualifiedName();
+                if(!qualifiedName.toLowerCase().contains(query))
+                {
+                    continue;
+                }
+                if (foundTypes.contains(qualifiedName))
+                {
+                    //skip types that we've already encountered because we don't
+                    //want duplicates in the result
+                    continue;
+                }
+                foundTypes.add(qualifiedName);
+                ITypeDefinition typeDefinition = (ITypeDefinition) definition;
+                SymbolInformation symbol = definitionToSymbol(typeDefinition);
+                if (symbol != null)
+                {
+                    result.add(symbol);
                 }
                 IASScope typeScope = typeDefinition.getContainedScope();
-                querySymbolsInScope(query, typeScope, result);
+                querySymbolsInScope(query, typeScope, foundTypes, result);
             }
             else if (definition instanceof IFunctionDefinition)
             {
@@ -5876,14 +5883,15 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 {
                     continue;
                 }
-                IFunctionDefinition functionDefinition = (IFunctionDefinition) definition;
-                if (functionDefinition.getQualifiedName().toLowerCase().contains(query))
+                if (!definition.getQualifiedName().toLowerCase().contains(query))
                 {
-                    SymbolInformation symbol = definitionToSymbol(functionDefinition);
-                    if (symbol != null)
-                    {
-                        result.add(symbol);
-                    }
+                    continue;
+                }
+                IFunctionDefinition functionDefinition = (IFunctionDefinition) definition;
+                SymbolInformation symbol = definitionToSymbol(functionDefinition);
+                if (symbol != null)
+                {
+                    result.add(symbol);
                 }
             }
             else if (definition instanceof IVariableDefinition)
@@ -5892,14 +5900,15 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 {
                     continue;
                 }
-                IVariableDefinition variableDefinition = (IVariableDefinition) definition;
-                if (variableDefinition.getQualifiedName().toLowerCase().contains(query))
+                if (!definition.getQualifiedName().toLowerCase().contains(query))
                 {
-                    SymbolInformation symbol = definitionToSymbol(variableDefinition);
-                    if (symbol != null)
-                    {
-                        result.add(symbol);
-                    }
+                    continue;
+                }
+                IVariableDefinition variableDefinition = (IVariableDefinition) definition;
+                SymbolInformation symbol = definitionToSymbol(variableDefinition);
+                if (symbol != null)
+                {
+                    result.add(symbol);
                 }
             }
         }
