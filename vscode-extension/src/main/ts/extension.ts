@@ -37,16 +37,15 @@ import {LanguageClient, LanguageClientOptions, SettingMonitor,
 	CloseAction, Executable, ExecutableOptions} from "vscode-languageclient";
 import { Message } from "vscode-jsonrpc";
 import logCompilerShellOutput from "./commands/logCompilerShellOutput";
+import quickCompileAndDebug from "./commands/quickCompileAndDebug";
 
 const INVALID_SDK_ERROR = "nextgenas.sdk.editor in settings does not point to a valid SDK. Requires Apache Royale 0.9.0 or newer.";
 const MISSING_FRAMEWORK_SDK_ERROR = "You must configure an SDK to enable all ActionScript & MXML features.";
 const INVALID_JAVA_ERROR = "nextgenas.java in settings does not point to a valid executable. It cannot be a directory, and Java 1.8 or newer is required.";
 const MISSING_JAVA_ERROR = "Could not locate valid Java executable. To configure Java manually, use the nextgenas.java setting.";
 const MISSING_WORKSPACE_ROOT_ERROR = "Open a folder and create a file named asconfig.json to enable all ActionScript & MXML language features.";
-const CANNOT_LAUNCH_QUICK_COMPILE_FAILED_ERROR = "Quick compile failed with errors. Debug launch canceled.";
 const QUICK_COMPILE_LANGUAGE_SERVER_NOT_STARTED_ERROR = "Quick compile failed. Try again after ActionScript & MXML extension is initialized.";
 const INITIALIZING_MESSAGE = "Initializing ActionScript & MXML language server...";
-const QUICK_COMPILE_MESSAGE = "Building ActionScript & MXML project...";
 const RESTART_FAIL_MESSAGE = "Failed to restart ActionScript & MXML server. Please reload the window to continue.";
 const RELOAD_WINDOW_MESSAGE = "To apply new settings for ActionScript & MXML, please reload the window.";
 const RELOAD_WINDOW_BUTTON_LABEL = "Reload Window";
@@ -141,45 +140,6 @@ function restartServer()
 	});
 }
 
-function quickCompileAndDebug(workspaceFolder)
-{
-	if(!workspaceFolder)
-	{
-		//it's possible for no folder to be chosen when using
-		//showWorkspaceFolderPick()
-		return;
-	}
-	let workspaceFolderUri = workspaceFolder.uri.toString();
-	vscode.window.withProgress({location: vscode.ProgressLocation.Window}, (progress) =>
-	{
-		progress.report({message: QUICK_COMPILE_MESSAGE});
-		return new Promise((resolve, reject) =>
-		{
-			return vscode.commands.executeCommand("nextgenas.quickCompile", workspaceFolderUri).then((result) =>
-			{
-				resolve();
-
-				if(result)
-				{
-					vscode.commands.executeCommand("workbench.action.debug.start");
-				}
-				else
-				{
-					vscode.window.showErrorMessage(CANNOT_LAUNCH_QUICK_COMPILE_FAILED_ERROR);
-				}
-			}, 
-			() =>
-			{
-				resolve();
-
-				//if the build failed, notify the user that we're not starting
-				//a debug session
-				vscode.window.showErrorMessage(CANNOT_LAUNCH_QUICK_COMPILE_FAILED_ERROR);
-			});
-		});
-	});
-}
-
 export function activate(context: vscode.ExtensionContext)
 {
 	savedContext = context;
@@ -268,23 +228,13 @@ export function activate(context: vscode.ExtensionContext)
 		}
 	});
 	vscode.commands.registerCommand("nextgenas.quickCompileAndDebug", () =>
-	{
-		if(vscode.workspace.workspaceFolders)
+	{	
+		if(!savedLanguageClient || !isLanguageClientReady)
 		{
-			if(!savedLanguageClient || !isLanguageClientReady)
-			{
-				vscode.window.showErrorMessage(QUICK_COMPILE_LANGUAGE_SERVER_NOT_STARTED_ERROR);
-				return;
-			}
-			if(vscode.workspace.workspaceFolders.length === 1)
-			{
-				quickCompileAndDebug(vscode.workspace.workspaceFolders[0]);
-			}
-			else
-			{
-				vscode.window.showWorkspaceFolderPick().then(quickCompileAndDebug);
-			}
+			vscode.window.showErrorMessage(QUICK_COMPILE_LANGUAGE_SERVER_NOT_STARTED_ERROR);
+			return;
 		}
+		quickCompileAndDebug();
 	});
 	vscode.commands.registerTextEditorCommand("nextgenas.organizeImportsInTextEditor", organizeImportsInTextEditor);
 	
