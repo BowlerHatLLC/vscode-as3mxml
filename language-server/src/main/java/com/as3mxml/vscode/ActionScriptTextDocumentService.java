@@ -745,7 +745,22 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         Set<String> qualifiedNames = new HashSet<>();
         List<SymbolInformation> result = new ArrayList<>();
         String query = params.getQuery();
-        String lowerCaseQuery = query.toLowerCase();
+        StringBuilder currentQuery = new StringBuilder();
+        List<String> queries = new ArrayList<>();
+        for(int i = 0, length = query.length(); i < length; i++)
+        {
+            String charAtI = query.substring(i, i + 1);
+            if(i > 0 && charAtI.toUpperCase().equals(charAtI))
+            {
+                queries.add(currentQuery.toString().toLowerCase());
+                currentQuery = new StringBuilder();
+            }
+            currentQuery.append(charAtI);
+        }
+        if(currentQuery.length() > 0)
+        {
+            queries.add(currentQuery.toString().toLowerCase());
+        }
         for (WorkspaceFolderData folderData : workspaceFolderToData.values())
         {
             RoyaleProject project = folderData.project;
@@ -764,10 +779,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     List<IDefinition> definitions = unit.getDefinitionPromises();
                     for (IDefinition definition : definitions)
                     {
-                        if (definition.isImplicit() || !definition.getQualifiedName().toLowerCase().contains(lowerCaseQuery))
-                        {
-                            continue;
-                        }
                         if (definition instanceof DefinitionPromise)
                         {
                             //we won't be able to detect what type of definition
@@ -775,6 +786,14 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                             //promise.
                             DefinitionPromise promise = (DefinitionPromise) definition;
                             definition = promise.getActualDefinition();
+                        }
+                        if (definition.isImplicit())
+                        {
+                            continue;
+                        }
+                        if (!matchesQueries(queries, definition.getQualifiedName()))
+                        {
+                            continue;
                         }
                         String qualifiedName = definition.getQualifiedName();
                         if (qualifiedNames.contains(qualifiedName))
@@ -805,7 +824,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     }
                     for (IASScope scope : scopes)
                     {
-                        querySymbolsInScope(lowerCaseQuery, scope, qualifiedNames, result);
+                        querySymbolsInScope(queries, scope, qualifiedNames, result);
                     }
                 }
             }
@@ -5839,7 +5858,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return endComment > currentOffset;
     }
 
-    private void querySymbolsInScope(String query, IASScope scope, Set<String> foundTypes, Collection<SymbolInformation> result)
+    private void querySymbolsInScope(List<String> queries, IASScope scope, Set<String> foundTypes, Collection<SymbolInformation> result)
     {
         Collection<IDefinition> definitions = scope.getAllLocalDefinitions();
         for (IDefinition definition : definitions)
@@ -5848,19 +5867,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             {
                 IPackageDefinition packageDefinition = (IPackageDefinition) definition;
                 IASScope packageScope = packageDefinition.getContainedScope();
-                querySymbolsInScope(query, packageScope, foundTypes, result);
+                querySymbolsInScope(queries, packageScope, foundTypes, result);
             }
             else if (definition instanceof ITypeDefinition)
             {
-                if (definition.isImplicit())
-                {
-                    continue;
-                }
                 String qualifiedName = definition.getQualifiedName();
-                if(!qualifiedName.toLowerCase().contains(query))
-                {
-                    continue;
-                }
                 if (foundTypes.contains(qualifiedName))
                 {
                     //skip types that we've already encountered because we don't
@@ -5869,13 +5880,16 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 }
                 foundTypes.add(qualifiedName);
                 ITypeDefinition typeDefinition = (ITypeDefinition) definition;
-                SymbolInformation symbol = definitionToSymbol(typeDefinition);
-                if (symbol != null)
+                if (!definition.isImplicit() && matchesQueries(queries, qualifiedName))
                 {
-                    result.add(symbol);
+                    SymbolInformation symbol = definitionToSymbol(typeDefinition);
+                    if (symbol != null)
+                    {
+                        result.add(symbol);
+                    }
                 }
                 IASScope typeScope = typeDefinition.getContainedScope();
-                querySymbolsInScope(query, typeScope, foundTypes, result);
+                querySymbolsInScope(queries, typeScope, foundTypes, result);
             }
             else if (definition instanceof IFunctionDefinition)
             {
@@ -5883,7 +5897,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 {
                     continue;
                 }
-                if (!definition.getQualifiedName().toLowerCase().contains(query))
+                if (!matchesQueries(queries, definition.getQualifiedName()))
                 {
                     continue;
                 }
@@ -5900,7 +5914,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 {
                     continue;
                 }
-                if (!definition.getQualifiedName().toLowerCase().contains(query))
+                if (!matchesQueries(queries, definition.getQualifiedName()))
                 {
                     continue;
                 }
@@ -5912,6 +5926,22 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 }
             }
         }
+    }
+
+    private boolean matchesQueries(List<String> queries, String target)
+    {
+        String lowerCaseTarget = target.toLowerCase();
+        int fromIndex = 0;
+        for (String query : queries)
+        {
+            int index = lowerCaseTarget.indexOf(query, fromIndex);
+            if (index == -1)
+            {
+                return false;
+            }
+            fromIndex = index + query.length();
+        }
+        return true;
     }
 
     private void scopeToSymbols(IASScope scope, List<SymbolInformation> result)

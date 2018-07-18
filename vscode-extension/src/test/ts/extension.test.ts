@@ -772,6 +772,29 @@ suite("workspace symbol provider: Application workspace", () =>
 					});
 		});
 	});
+	test("vscode.executeWorkspaceSymbolProvider includes class with camel-case shorthand", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Main.as"));
+		let resultUri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "workspaceSymbols", "WSFindMe1.as"));
+		let query = "WFiMe";
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeWorkspaceSymbolProvider", query)
+				.then((symbols: vscode.SymbolInformation[]) =>
+					{
+						assert.ok(findSymbol(symbols, new vscode.SymbolInformation(
+							"WSFindMe1",
+							vscode.SymbolKind.Class,
+							createRange(2, 14),
+							resultUri,
+							"com.example.workspaceSymbols")),
+							"vscode.executeWorkspaceSymbolProvider failed to provide symbol for class: " + query);
+					}, (err) =>
+					{
+						assert(false, "Failed to execute workspace symbol provider: " + uri);
+					});
+		});
+	});
 });
 
 suite("signature help provider: Application workspace", () =>
