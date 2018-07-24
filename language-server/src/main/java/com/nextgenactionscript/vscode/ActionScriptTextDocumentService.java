@@ -4932,6 +4932,14 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         //if needed, we'll recreate invisible compilation units later.
         for (IInvisibleCompilationUnit unit : invisibleUnits)
         {
+            ICompilationUnit editingUnit = realTimeProblemAnalyzer.getCompilationUnit();
+            if(editingUnit != null && editingUnit.equals(unit))
+            {
+                //if the real-time problem analyzer is currently checking for
+                //problems on an invisible unit, stop it immediately
+                realTimeProblemAnalyzer.setCompilationUnit(null);
+                realTimeProblemAnalyzer.setFileSpecification(null);
+            }
             unit.remove();
         }
         invisibleUnits.clear();
