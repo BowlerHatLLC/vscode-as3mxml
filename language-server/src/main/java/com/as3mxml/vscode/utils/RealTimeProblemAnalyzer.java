@@ -96,13 +96,25 @@ public class RealTimeProblemAnalyzer implements Runnable
 				//the compilation unit hasn't changed
 				return;
 			}
-			else if (compilationUnit.getProject() != null)
+			else
 			{
+				if (fileChangedPending)
+				{
+					//make sure that the workspace sees the latest changes before we
+					//publish any problems!
+					fileChangedPending = false;
+					RoyaleProject project = folderData.project;
+					IWorkspace workspace = project.getWorkspace();
+					workspace.fileChanged(fileSpec);
+				}
 				//if we're changing compilation units, publish immediately...
 				//unless the project has been cleared because that means that
 				//the compilation unit is no longer valid
-				completePendingRequests();
-				publishDiagnostics();
+				if (compilationUnit.getProject() != null)
+				{
+					completePendingRequests();
+					publishDiagnostics();
+				}
 			}
 		}
 		compilationUnit = unit;
@@ -155,15 +167,6 @@ public class RealTimeProblemAnalyzer implements Runnable
 		{
 			//no compilation unit is being analyzed right now
 			return;
-		}
-		if (fileChangedPending)
-		{
-			//make sure that the workspace sees the latest changes before we
-			//publish any problems!
-			fileChangedPending = false;
-			RoyaleProject project = folderData.project;
-			IWorkspace workspace = project.getWorkspace();
-			workspace.fileChanged(fileSpec);
 		}
 		try
 		{

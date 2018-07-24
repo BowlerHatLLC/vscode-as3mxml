@@ -50,8 +50,6 @@ public class WorkspaceFolderData
 	
 	public void cleanup()
 	{
-		cleanupInvisibleUnits();
-
 		if(project != null)
 		{
 			project.delete();
@@ -65,18 +63,5 @@ public class WorkspaceFolderData
 		sourcePathWatchKeys.clear();
 		
 		configurator = null;
-	}
-
-	public void cleanupInvisibleUnits()
-	{
-        //invisible units may exist for new files that haven't been saved, so
-        //they don't exist on the file system. the first compilation unit
-        //created will be invisible too, at least to start out.
-        //if needed, we'll recreate invisible compilation units later.
-        for (IInvisibleCompilationUnit unit : invisibleUnits)
-        {
-            unit.remove();
-        }
-        invisibleUnits.clear();
 	}
 }

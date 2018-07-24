@@ -1916,8 +1916,31 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 currentProject = null;
             }
         }
+        cleanupInvisibleUnits(folderData);
         folderData.cleanup();
     }
+    
+	private void cleanupInvisibleUnits(WorkspaceFolderData folderData)
+	{
+        //invisible units may exist for new files that haven't been saved, so
+        //they don't exist on the file system. the first compilation unit
+        //created will be invisible too, at least to start out.
+        //if needed, we'll recreate invisible compilation units later.
+        List<IInvisibleCompilationUnit> invisibleUnits = folderData.invisibleUnits;
+        for (IInvisibleCompilationUnit unit : invisibleUnits)
+        {
+            ICompilationUnit editingUnit = realTimeProblemAnalyzer.getCompilationUnit();
+            if(editingUnit != null && editingUnit.equals(unit))
+            {
+                //if the real-time problem analyzer is currently checking for
+                //problems on an invisible unit, stop it immediately
+                realTimeProblemAnalyzer.setCompilationUnit(null);
+                realTimeProblemAnalyzer.setFileSpecification(null);
+            }
+            unit.remove();
+        }
+        invisibleUnits.clear();
+	}
 
     private void refreshProjectOptions(WorkspaceFolderData folderData)
     {
@@ -5177,7 +5200,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return null;
         }
         currentProject = folderData.project;
-        folderData.cleanupInvisibleUnits();
+        cleanupInvisibleUnits(folderData);
         refreshProjectOptions(folderData);
         if (currentProjectOptions == null)
         {
