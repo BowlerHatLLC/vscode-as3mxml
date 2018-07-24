@@ -1801,11 +1801,25 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             catch (IOException e)
             {
             }
-            if(dynamicDidChangeWatchedFiles && sourcePath.startsWith(workspaceFolderPath))
+            if (dynamicDidChangeWatchedFiles)
             {
-                //if we're already watching for changes in the workspace, avoid
-                //duplicates
-                continue;
+                //we need to check if the source path is inside any of the
+                //workspace folders. not just the current one.
+                for (WorkspaceFolder workspaceFolder : workspaceFolders)
+                {
+                    String uri = workspaceFolder.getUri();
+                    Path folderPath = LanguageServerCompilerUtils.getPathFromLanguageServerURI(uri);
+                    if (sourcePath.startsWith(folderPath))
+                    {
+                        //if we're already watching for changes in the
+                        //workspace, and we need to avoid so that the compiler
+                        //doesn't get confused by duplicates that might have
+                        //slightly different capitalization because the language
+                        //server protocol and Java file watchers don't
+                        //necessarily match
+                        return;
+                    }
+                }
             }
             watchNewSourcePath(sourcePath, folderData);
         }
