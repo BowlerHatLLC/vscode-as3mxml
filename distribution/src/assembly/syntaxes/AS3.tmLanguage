@@ -577,7 +577,7 @@
 			<key>comment</key>
 			<string>Following convention, let's guess that any word starting with one or more capital letters (that contains at least some lower-case letters so that constants aren't detected) refers to a class/type. May be fully-qualified.</string>
 			<key>match</key>
-			<string>\b((?:[A-Za-z0-9_\$]+\.)*[A-Z]+[a-z]+[A-Za-z0-9_\$]*)\b</string>
+			<string>\b((?:[A-Za-z0-9_\$]+\.)*[A-Z][A-Z0-9]*[a-z]+[A-Za-z0-9_\$]*)\b</string>
 		</dict>
 		<key>implements</key>
 		<dict>
