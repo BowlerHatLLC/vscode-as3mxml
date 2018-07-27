@@ -1690,23 +1690,29 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                         continue;
                     }
                     compilerWorkspace.startIdleState();
-                    for (ICompilationUnit unit : project.getCompilationUnits())
+                    try
                     {
-                        String unitFileName = unit.getAbsoluteFilename();
-                        if (unitFileName.startsWith(deletedFilePath)
-                                && (unitFileName.endsWith(AS_EXTENSION) || unitFileName.endsWith(MXML_EXTENSION)))
+                        for (ICompilationUnit unit : project.getCompilationUnits())
                         {
-                            //if we call fileRemoved() here, it will change the
-                            //compilationUnits collection and throw an exception
-                            //so just save the paths to be removed after this loop.
-                            filesToRemove.add(unitFileName);
+                            String unitFileName = unit.getAbsoluteFilename();
+                            if (unitFileName.startsWith(deletedFilePath)
+                                    && (unitFileName.endsWith(AS_EXTENSION) || unitFileName.endsWith(MXML_EXTENSION)))
+                            {
+                                //if we call fileRemoved() here, it will change the
+                                //compilationUnits collection and throw an exception
+                                //so just save the paths to be removed after this loop.
+                                filesToRemove.add(unitFileName);
 
-                            //deleting a file may change errors in other existing files,
-                            //so we need to do a full check
-                            foldersToCheck.add(folderData);
+                                //deleting a file may change errors in other existing files,
+                                //so we need to do a full check
+                                foldersToCheck.add(folderData);
+                            }
                         }
                     }
-                    compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
+                    finally
+                    {
+                        compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
+                    }
                 }
                 for (String fileToRemove : filesToRemove)
                 {
@@ -5046,23 +5052,29 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         //make sure that the compilation units collection isn't modified while
         //we're looping over it, or we'll get concurrent modification exceptions
         compilerWorkspace.startIdleState();
-        for (ICompilationUnit unit : project.getCompilationUnits())
+        try
         {
-            //it's possible for the collection of compilation units to contain
-            //null values, so be sure to check for null values before checking
-            //the file name
-            if (unit == null)
+            for (ICompilationUnit unit : project.getCompilationUnits())
             {
-                continue;
-            }
-            Path unitPath = Paths.get(unit.getAbsoluteFilename());
-            if(unitPath.equals(pathToFind))
-            {
-                compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
-                return unit;
+                //it's possible for the collection of compilation units to contain
+                //null values, so be sure to check for null values before checking
+                //the file name
+                if (unit == null)
+                {
+                    continue;
+                }
+                Path unitPath = Paths.get(unit.getAbsoluteFilename());
+                if(unitPath.equals(pathToFind))
+                {
+                    compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
+                    return unit;
+                }
             }
         }
-        compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
+        finally
+        {
+            compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
+        }
         return null;
     }
 
