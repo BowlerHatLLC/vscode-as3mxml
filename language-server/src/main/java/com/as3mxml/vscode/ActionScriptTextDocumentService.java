@@ -1356,6 +1356,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private WorkspaceFolderData getWorkspaceFolderDataForSourceFile(Path path)
     {
         //first try to find the path in an existing project
+        WorkspaceFolderData fallback = null;
         for (WorkspaceFolderData folderData : workspaceFolderToData.values())
         {
             RoyaleProject project = folderData.project;
@@ -1363,10 +1364,32 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             {
                 continue;
             }
-            if (SourcePathUtils.isInProjectSourcePath(path, project))
+            String uri = folderData.folder.getUri();
+            Path workspacePath = LanguageServerCompilerUtils.getPathFromLanguageServerURI(uri);
+            if (workspacePath != null && SourcePathUtils.isInProjectSourcePath(path, project))
             {
-                return folderData;
+                if(path.startsWith(workspacePath))
+                {
+                    //if the source path is inside the workspace folder, it's a
+                    //perfect match
+                    return folderData;
+                }
+                //if path is in the source path, but not inside the workspace
+                //folder, save it as possible result for later. in other words,
+                //we always prefer a workspace that contains the file, so we'll
+                //check the other workspaces before using the fallback.
+                if (fallback == null)
+                {
+                    fallback = folderData;
+                }
             }
+        }
+        //we found the path in a project's source path, but not inside any the
+        //workspace folders
+        if (fallback != null)
+        {
+            return fallback;
+
         }
         //if none of the existing projects worked, try a folder where a project
         //hasn't been created yet
@@ -1587,15 +1610,15 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             //then, check if source files have changed
             FileChangeType changeType = event.getType();
             String normalizedChangedPathAsString = FilenameNormalization.normalize(changedPath.toString());
-            ICompilationUnit changedUnit = findCompilationUnit(normalizedChangedPathAsString, currentProject);
-            if (changedUnit != null)
-            {
-                //windows drive letter may not match, even after normalization,
-                //so it's better to use the unit's path, if available.
-                normalizedChangedPathAsString = changedUnit.getAbsoluteFilename();
-            }
             if (normalizedChangedPathAsString.endsWith(AS_EXTENSION) || normalizedChangedPathAsString.endsWith(MXML_EXTENSION))
             {
+                ICompilationUnit changedUnit = findCompilationUnit(normalizedChangedPathAsString, currentProject);
+                if (changedUnit != null)
+                {
+                    //windows drive letter may not match, even after normalization,
+                    //so it's better to use the unit's path, if available.
+                    normalizedChangedPathAsString = changedUnit.getAbsoluteFilename();
+                }
                 List<WorkspaceFolderData> allFolderData = getAllWorkspaceFolderDataForSourceFile(changedPath);
                 if (changeType.equals(FileChangeType.Deleted) ||
 
