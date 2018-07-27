@@ -50,6 +50,7 @@ const RESTART_FAIL_MESSAGE = "Failed to restart ActionScript & MXML server. Plea
 const RELOAD_WINDOW_MESSAGE = "To apply new settings for ActionScript & MXML, please reload the window.";
 const RELOAD_WINDOW_BUTTON_LABEL = "Reload Window";
 const CONFIGURE_SDK_LABEL = "Configure SDK";
+const STARTUP_ERROR = "The ActionScript & MXML extension failed to start.";
 const NO_SDK = "$(alert) No SDK";
 let savedContext: vscode.ExtensionContext;
 let savedLanguageClient: LanguageClient;
@@ -445,6 +446,10 @@ function startClient()
 				{
 					logCompilerShellOutput(null, false, true);
 				});
+			}, (reason) =>
+			{
+				resolve();
+				vscode.window.showErrorMessage(STARTUP_ERROR);
 			});
 			let disposable = savedLanguageClient.start();
 			savedContext.subscriptions.push(disposable);
