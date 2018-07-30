@@ -98,21 +98,12 @@ public class RealTimeProblemAnalyzer implements Runnable
 			}
 			else
 			{
-				if (fileChangedPending)
-				{
-					//make sure that the workspace sees the latest changes before we
-					//publish any problems!
-					fileChangedPending = false;
-					RoyaleProject project = folderData.project;
-					IWorkspace workspace = project.getWorkspace();
-					workspace.fileChanged(fileSpec);
-				}
+				handleFileChangedPending();
 				//if we're changing compilation units, publish immediately...
 				//unless the project has been cleared because that means that
 				//the compilation unit is no longer valid
 				if (compilationUnit.getProject() != null)
 				{
-					completePendingRequests();
 					publishDiagnostics();
 				}
 			}
@@ -168,6 +159,7 @@ public class RealTimeProblemAnalyzer implements Runnable
 			//no compilation unit is being analyzed right now
 			return;
 		}
+		handleFileChangedPending();
 		try
 		{
 			unit.getSyntaxTreeRequest().get();
@@ -177,8 +169,19 @@ public class RealTimeProblemAnalyzer implements Runnable
 		}
 		catch(InterruptedException e)
 		{
-
 		}
+	}
+
+	private void handleFileChangedPending()
+	{
+		if (!fileChangedPending)
+		{
+			return;
+		}
+		fileChangedPending = false;
+		RoyaleProject project = folderData.project;
+		IWorkspace workspace = project.getWorkspace();
+		workspace.fileChanged(fileSpec);
 	}
 
 	private void publishDiagnostics()
@@ -247,10 +250,7 @@ public class RealTimeProblemAnalyzer implements Runnable
 		compilationUnit = null;
 		if (fileChangedPending)
 		{
-			fileChangedPending = false;
-			RoyaleProject project = folderData.project;
-			IWorkspace workspace = project.getWorkspace();
-			workspace.fileChanged(fileSpec);
+			handleFileChangedPending();
 			setCompilationUnit(unit);
 		}
 	}

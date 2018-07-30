@@ -385,6 +385,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
         //we need the compilation unit to be fully built or the completion
         //result will be inaccurate
+        //additionally, there could be null reference exceptions caused by old
+        //scopes being referenced
         realTimeProblemAnalyzer.completePendingRequests();
 
         IMXMLTagData offsetTag = getOffsetMXMLTag(params);
@@ -480,6 +482,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             //we couldn't find a node at the specified location
             return CompletableFuture.completedFuture(new SignatureHelp(Collections.emptyList(), -1, -1));
         }
+
+        //we need the compilation unit to be fully built or the signature help
+        //result will be inaccurate
+        //additionally, there could be null reference exceptions caused by old
+        //scopes being referenced
+        realTimeProblemAnalyzer.completePendingRequests();
+        
         IASNode offsetNode = null;
         IMXMLTagData offsetTag = getOffsetMXMLTag(position);
         if (offsetTag != null)
@@ -1454,19 +1463,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             checkFilePathForProblems(path, folderData, true);
             return;
         }
-        if(realTimeProblemAnalyzer.getCompilationUnit() != null)
-        {
-            //if the compilation unit is already being analyzed for
-            //problems, set a flag to indicate that it has changed so
-            //that the analyzer can update after the current pass.
-            realTimeProblemAnalyzer.setFileChangedPending(true);
-        }
-        else
-        {
-            String normalizedPath = FilenameNormalization.normalize(path.toAbsolutePath().toString());
-            IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(normalizedPath);
-            compilerWorkspace.fileChanged(fileSpec);
-        }
         //we do a quick check of the current file on change for better
         //performance while typing. we'll do a full check when we save the
         //file later
@@ -1479,8 +1475,18 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return;
         }
         ICompilationUnit unit = getCompilationUnit(path);
-        String normalizedPath = FilenameNormalization.normalize(path.toAbsolutePath().toString());
-        IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(normalizedPath);
+        IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(unit.getAbsoluteFilename());
+        if(realTimeProblemAnalyzer.getCompilationUnit() != null)
+        {
+            //if the compilation unit is already being analyzed for
+            //problems, set a flag to indicate that it has changed so
+            //that the analyzer can update after the current pass.
+            realTimeProblemAnalyzer.setFileChangedPending(true);
+        }
+        else
+        {
+            compilerWorkspace.fileChanged(fileSpec);
+        }
         realTimeProblemAnalyzer.languageClient = languageClient;
         realTimeProblemAnalyzer.compilerProblemFilter = compilerProblemFilter;
         realTimeProblemAnalyzer.setWorkspaceFolderData(folderData);
