@@ -206,6 +206,16 @@ public class CompilerProjectUtils
                 combinedOptions.add(option);
             }
         }
+
+        //Github #245: avoid errors from -inline
+        combinedOptions.removeIf((option) ->
+        {
+            return option.equals("-inline")
+                    || option.equals("--inline")
+                    || option.equals("-inline=true")
+                    || option.equals("--inline=true");
+        });
+        
         //not all framework SDKs support a theme (such as Adobe's AIR SDK), so
         //we clear it for the editor to avoid a missing spark.css file.
         if (!frameworkSDKContainsSparkTheme)
@@ -237,7 +247,6 @@ public class CompilerProjectUtils
 		problems.addAll(configurator.getConfigurationProblems());
         if (!result)
         {
-            project.delete();
             return null;
         }
         ITarget.TargetType targetType = ITarget.TargetType.SWF;
@@ -249,7 +258,6 @@ public class CompilerProjectUtils
         if (targetSettings == null)
         {
             System.err.println("Failed to get compile settings for +configname=" + currentProjectOptions.config + ".");
-            project.delete();
             return null;
         }
         project.setTargetSettings(targetSettings);

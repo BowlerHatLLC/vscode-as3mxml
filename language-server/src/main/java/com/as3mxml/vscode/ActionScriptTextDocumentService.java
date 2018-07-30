@@ -5279,6 +5279,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
         List<ICompilerProblem> configProblems = new ArrayList<>();
         RoyaleProjectConfigurator configurator = CompilerProjectUtils.configureProject(project, currentProjectOptions, configProblems);
+        if (configurator == null)
+        {
+            project.delete();
+            return null;
+        }
 
         System.setProperty("user.dir", oldUserDir);
 
