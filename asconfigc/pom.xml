@@ -108,7 +108,7 @@ limitations under the License.
     <dependency>
       <groupId>com.networknt</groupId>
       <artifactId>json-schema-validator</artifactId>
-      <version>0.1.2</version>
+      <version>0.1.19</version>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>

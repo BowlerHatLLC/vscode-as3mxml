@@ -214,7 +214,7 @@ public class ASConfigC
         JsonSchema schema = null;
         try (InputStream schemaInputStream = getClass().getResourceAsStream("/schemas/asconfig.schema.json"))
         {
-            JsonSchemaFactory factory = new JsonSchemaFactory();
+            JsonSchemaFactory factory = JsonSchemaFactory.getInstance();
             schema = factory.getSchema(schemaInputStream);
         }
         catch(Exception e)
@@ -229,6 +229,7 @@ public class ASConfigC
             ObjectMapper mapper = new ObjectMapper();
             //VSCode allows comments, so we should too
             mapper.configure(JsonParser.Feature.ALLOW_COMMENTS, true);
+            mapper.configure(JsonParser.Feature.ALLOW_TRAILING_COMMA, true);
             json = mapper.readTree(contents);
             Set<ValidationMessage> errors = schema.validate(json);
             if (!errors.isEmpty())
