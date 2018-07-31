@@ -1,3 +1,33 @@
+## v0.13.0
+
+### New Features
+
+* Workspaces: Code intelligence is now supported in [workspaces with multiple root folders](https://code.visualstudio.com/docs/editor/multi-root-workspaces). Open multiple projects in the same window!
+* Go to Type Definition: Navigate to the definition of a variable's type. Similar to Go to Definition, which jumps to the definition of the variable itself.
+* Go to Implementation: See a list of all implementations of an ActionScript interface.
+* Workspace Symbol: Added support for camel-case abbreviations in workspace symbol search. For example, searching for `DiObCo` will find `DisplayObjectContainer`.
+* Workspace Symbol: Added classes and interfaces defined in *.swc* files to search results.
+* Extension API: added `framworkSDKPath` getter for third-party extensions to use.
+* Extension API: added `isLanguageClientReady` getter for third-party extensions to use.
+
+### Fixed Issues
+
+* asconfig.json: Fixed issue where compiler tokens like `{locale}` in the source path were not properly parsed.
+* Build: Fixed issue where the *Quick Compile & Debug* command would continue to use the old SDK after switching to another.
+* Build: If the output path of an Adobe AIR application is not defined, the application file name will be based on the SWF file name.
+* Build: Fixed issue where an empty `content` field in an Adobe AIR application descriptor would not get automatically populated.
+* Hover: Fixed issues where a type annotation could be displayed as `:` instead of `:*` when untyped.
+* Problems: Fixed issue where compiler options that affected compiler errors and warnings were ignored. Now problem list better matches the compiler's console output.
+* SWF Debugger: Fixed issue where Adobe AIR application descriptor could not be detected if the name did not end with *-app.xml*. Now simply needs an *.xml* file extension.
+* Syntax: Fixed issue where MXML script tags with attributes like `fb:purpose="styling"` would cause embedded ActionScript to not have syntax highlighting.
+* Syntax: Fixed issue where some classes with numbers in name were not colored correctly.
+* Fixed issue where extension kept some files open after reading their contents, which could prevent them from being modified.
+* Fixed issues handling changes made by other programs to files and folders in the current workspace.
+* Fixed issue will a null pointer exception could be thrown when searching for a symbol's source file path.
+* Fixed issue where a *Generate Method* code action was incorrectly created for a constructor called with the `new` keyword.
+* Fixed issue where the `-inline` compiler option caused errors in code intelligence. This compiler option is now used during builds only.
+* Fixed issue where initializing message in status bar was not cleared if initialization of extension failed.
+
 ## v0.12.0
 
 ### New Features

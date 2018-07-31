@@ -7,16 +7,16 @@
 * **Signature Help** shows a list of parameters when calling functions.
 * **Errors and Warnings** are updated in real time as you type.
 * **Hover** over a symbol to see more details such as types, namespaces, and more.
-* **Goto Definition** with a `Ctrl+Click` on any usage of a symbol.
+* **Go to Definition** with a `Ctrl+Click` on any usage of a symbol.
 * **Find All References** for any symbol in the project.
-* **Goto Symbol** lists all symbols in the current file with `Ctrl+Shift+O`.
-* **Open Symbol by Name** with `Ctrl+T` and type the name of any symbol in the project.
-* **Rename Symbol** for classes, interfaces, methods, and both local an member variables.
+* **Go to Symbol in File** lists all symbols in the current file with `Ctrl+Shift+O`.
+* **Go to Symbol in Workspace** with `Ctrl+T` and type the name of any symbol in the workspace.
+* **Rename Symbol** for classes, interfaces, methods, and both local and member variables.
 * **Organize Imports** sorts imports alphabetically and removes unused imports.
 * **Code Generation** supports adding getters/setters, methods, and both local and member variables.
-* **Build** a project with `Ctrl+Shift+B`.
-* **Debug** Apache Royale (formerly known as FlexJS) projects in web browsers and Node.js.
+* **Build** a project with `Ctrl+Shift+B` or **Quick Compile & Debug** with `Ctrl+Enter`.
 * **Debug** SWF projects in Adobe AIR and Flash Player.
+* **Debug** Apache Royale (formerly known as FlexJS) projects in web browsers and Node.js.
 
 ## Help and Support
 
@@ -25,7 +25,7 @@
 
 ## Minimum Requirements
 
-* Visual Studio Code 1.20
+* Visual Studio Code 1.24
 * Java 1.8 Runtime
 
 ## asconfig.json
