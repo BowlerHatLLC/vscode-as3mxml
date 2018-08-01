@@ -12,7 +12,7 @@
 	<array>
 		<dict>
 			<key>begin</key>
-			<string>(?=&lt;(?:fx|mx):Script.*&gt;)</string>
+			<string>(?=&lt;(?:fx|mx):Script(?:\s+(?:\w+:)?\w+=(["']).+\1)*\s*&gt;)</string>
 			<key>end</key>
 			<string>(?&lt;=&lt;\/(?:fx|mx):Script&gt;)</string>
 			<key>name</key>
