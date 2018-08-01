@@ -21,6 +21,8 @@
 * SWF Debugger: Fixed issue where Adobe AIR application descriptor could not be detected if the name did not end with *-app.xml*. Now simply needs an *.xml* file extension.
 * Syntax: Fixed issue where MXML script tags with attributes like `fb:purpose="styling"` would cause embedded ActionScript to not have syntax highlighting.
 * Syntax: Fixed issue where some classes with numbers in name were not colored correctly.
+* Syntax: Fixed issue where MXML elements after `<fx:Script source="path/to/file.as"/>` were not colored correctly.
+* Syntax: Fixed issue where the contents of `<fx:Metadata>` was not colored correctly.
 * Fixed issue where extension kept some files open after reading their contents, which could prevent them from being modified.
 * Fixed issues handling changes made by other programs to files and folders in the current workspace.
 * Fixed issue will a null pointer exception could be thrown when searching for a symbol's source file path.
