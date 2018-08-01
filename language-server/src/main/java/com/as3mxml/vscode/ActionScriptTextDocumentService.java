@@ -5342,6 +5342,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             ProblemQuery problemQuery = workspaceFolderDataToProblemQuery(folderData);
             for(Path filePath : sourceByPath.keySet())
             {
+                WorkspaceFolderData otherFolderData = getWorkspaceFolderDataForSourceFile(filePath);
+                if (!folderData.equals(otherFolderData))
+                {
+                    //don't check files from other projects!
+                    continue;
+                }
                 checkFilePathForProblems(filePath, problemQuery, folderData, true);
             }
             publishDiagnosticsForProblemQuery(problemQuery, folderData, true);
