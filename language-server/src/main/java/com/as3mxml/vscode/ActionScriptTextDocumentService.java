@@ -892,6 +892,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return CompletableFuture.completedFuture(Collections.emptyList());
         }
         WorkspaceFolderData folderData = getWorkspaceFolderDataForSourceFile(path);
+        if (folderData == null)
+        {
+            //the path must be in the workspace or source-path
+            return CompletableFuture.completedFuture(Collections.emptyList());
+        }
         currentProject = getProject(folderData);
         if (currentProject == null || !SourcePathUtils.isInProjectSourcePath(path, currentProject))
         {
@@ -1213,6 +1218,20 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return CompletableFuture.completedFuture(new WorkspaceEdit(new HashMap<>()));
         }
+
+        Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocumentUri);
+        if (path == null)
+        {
+            return CompletableFuture.completedFuture(new WorkspaceEdit(new HashMap<>()));
+        }
+
+        WorkspaceFolderData folderData = getWorkspaceFolderDataForSourceFile(path);
+        if (folderData == null)
+        {
+            languageClient.showMessage(new MessageParams(MessageType.Error, "Rename Symbol failed. File is not in source path."));
+            return CompletableFuture.completedFuture(new WorkspaceEdit(new HashMap<>()));
+        }
+
         IMXMLTagData offsetTag = getOffsetMXMLTag(params.getTextDocument(), params.getPosition());
         if (offsetTag != null)
         {
@@ -1324,6 +1343,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         WorkspaceFolderData folderData = getWorkspaceFolderDataForSourceFile(path);
         if (folderData == null)
         {
+            //this file isn't in any of the workspace folders
+            publishDiagnosticForFileOutsideSourcePath(path);
             return;
         }
 
@@ -1456,6 +1477,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 System.err.println("Failed to apply changes to code intelligence from URI: " + textDocumentUri);
             }
         }
+        if (folderData == null)
+        {
+            //this file isn't in any of the workspace folders
+            publishDiagnosticForFileOutsideSourcePath(path);
+            return;
+        }
         if (currentProject == null)
         {
             //we don't have a current project, so we'll fall back to simple
@@ -1471,7 +1498,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             realTimeProblemAnalyzer.setCompilationUnit(null);
             realTimeProblemAnalyzer.setFileSpecification(null);
-            publishDiagnosticForFileOutsideSourcePath(path, folderData.codeProblemTracker);
+            publishDiagnosticForFileOutsideSourcePath(path);
             return;
         }
         ICompilationUnit unit = getCompilationUnit(path);
@@ -1957,13 +1984,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private void cleanupProject(WorkspaceFolderData folderData)
     {
         RoyaleProject project = folderData.project;
-        if (project != null)
+        if (currentProject != null && currentProject.equals(project))
         {
-            if(currentProject.equals(project))
-            {
-                compilationUnits = null;
-                currentProject = null;
-            }
+            compilationUnits = null;
+            currentProject = null;
         }
         cleanupInvisibleUnits(folderData);
         folderData.cleanup();
@@ -5139,6 +5163,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         WorkspaceFolderData folderData = getWorkspaceFolderDataForSourceFile(path);
         String absolutePath = path.toAbsolutePath().toString();
         currentUnit = null;
+        currentProject = null;
+        if (folderData == null)
+        {
+            return null;
+        }
         currentProject = getProject(folderData);
         if (currentProject == null)
         {
@@ -5430,8 +5459,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         currentProject = getProject(folderData);
         if (currentProject != null && !SourcePathUtils.isInProjectSourcePath(path, currentProject))
         {
-            ProblemTracker codeProblemTracker = folderData.codeProblemTracker;
-            publishDiagnosticForFileOutsideSourcePath(path, codeProblemTracker);
+            publishDiagnosticForFileOutsideSourcePath(path);
             return;
         }
         if (currentProjectOptions == null || !checkFilePathForAllProblems(path, problemQuery, false))
@@ -5440,14 +5468,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
     }
 
-    private void publishDiagnosticForFileOutsideSourcePath(Path path, ProblemTracker codeProblemTracker)
+    private void publishDiagnosticForFileOutsideSourcePath(Path path)
     {
         URI uri = path.toUri();
         PublishDiagnosticsParams publish = new PublishDiagnosticsParams();
         ArrayList<Diagnostic> diagnostics = new ArrayList<>();
         publish.setDiagnostics(diagnostics);
         publish.setUri(uri.toString());
-        codeProblemTracker.trackFileWithProblems(uri);
 
         Diagnostic diagnostic = LSPUtils.createDiagnosticWithoutRange();
         diagnostic.setSeverity(DiagnosticSeverity.Information);
@@ -5610,6 +5637,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return null;
         }
         WorkspaceFolderData folderData = getWorkspaceFolderDataForSourceFile(path);
+        if (folderData == null)
+        {
+            return null;
+        }
         currentProject = getProject(folderData);
         if (!SourcePathUtils.isInProjectSourcePath(path, currentProject))
         {
@@ -5731,6 +5762,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return null;
         }
         WorkspaceFolderData folderData = getWorkspaceFolderDataForSourceFile(path);
+        if (folderData == null)
+        {
+            return null;
+        }
         currentProject = getProject(folderData);
         if (!SourcePathUtils.isInProjectSourcePath(path, currentProject))
         {
@@ -6222,7 +6257,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         JsonObject uriObject = (JsonObject) args.get(0);
         String uri = uriObject.get("external").getAsString();
 
-        File rootDir = Paths.get(URI.create(uri)).toFile();
+        Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(uri);
+        if (path == null)
+        {
+            return CompletableFuture.completedFuture(new Object());
+        }
+
+        File rootDir = path.toFile();
         if (!rootDir.isDirectory())
         {
             return CompletableFuture.completedFuture(new Object());
@@ -6351,6 +6392,19 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         List<Object> args = params.getArguments();
         JsonObject uriObject = (JsonObject) args.get(0);
         String uri = uriObject.get("external").getAsString();
+
+        Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(uri);
+        if (path == null)
+        {
+            return CompletableFuture.completedFuture(new Object());
+        }
+
+        WorkspaceFolderData folderData = getWorkspaceFolderDataForSourceFile(path);
+        if (folderData == null)
+        {
+            languageClient.showMessage(new MessageParams(MessageType.Error, "Organize Imports failed. File is not in source path."));
+            return CompletableFuture.completedFuture(new Object());
+        }
 
         organizeImportsInUri(uri);
 
