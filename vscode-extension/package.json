@@ -22,7 +22,8 @@
     "Flash",
     "AIR",
     "Royale",
-    "Flex"
+    "Flex",
+    "multi-root ready"
   ],
   "main": "extension",
   "icon": "as3.png",
