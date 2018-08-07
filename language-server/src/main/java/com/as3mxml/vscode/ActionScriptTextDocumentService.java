@@ -383,10 +383,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return CompletableFuture.completedFuture(Either.forRight(result));
         }
 
-        //we need the compilation unit to be fully built or the completion
-        //result will be inaccurate
-        //additionally, there could be null reference exceptions caused by old
-        //scopes being referenced
+        //we need the compilation unit to be fully built or the result will be
+        //inaccurate. additionally, there could be null reference exceptions
+        //caused by old scopes being referenced
         realTimeProblemAnalyzer.completePendingRequests();
 
         IMXMLTagData offsetTag = getOffsetMXMLTag(params);
@@ -448,6 +447,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return CompletableFuture.completedFuture(new Hover(Collections.emptyList(), null));
         }
+
+        //we need the compilation unit to be fully built or the result will be
+        //inaccurate. additionally, there could be null reference exceptions
+        //caused by old scopes being referenced
+        realTimeProblemAnalyzer.completePendingRequests();
+
         IMXMLTagData offsetTag = getOffsetMXMLTag(position);
         if (offsetTag != null)
         {
@@ -483,10 +488,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return CompletableFuture.completedFuture(new SignatureHelp(Collections.emptyList(), -1, -1));
         }
 
-        //we need the compilation unit to be fully built or the signature help
-        //result will be inaccurate
-        //additionally, there could be null reference exceptions caused by old
-        //scopes being referenced
+        //we need the compilation unit to be fully built or the result will be
+        //inaccurate. additionally, there could be null reference exceptions
+        //caused by old scopes being referenced
         realTimeProblemAnalyzer.completePendingRequests();
         
         IASNode offsetNode = null;
@@ -634,6 +638,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return CompletableFuture.completedFuture(Collections.emptyList());
         }
+
+        //we need the compilation unit to be fully built or the result will be
+        //inaccurate. additionally, there could be null reference exceptions
+        //caused by old scopes being referenced
+        realTimeProblemAnalyzer.completePendingRequests();
+
         IMXMLTagData offsetTag = getOffsetMXMLTag(position);
         if (offsetTag != null)
         {
@@ -664,6 +674,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return CompletableFuture.completedFuture(Collections.emptyList());
         }
+
+        //we need the compilation unit to be fully built or the result will be
+        //inaccurate. additionally, there could be null reference exceptions
+        //caused by old scopes being referenced
+        realTimeProblemAnalyzer.completePendingRequests();
+
         IMXMLTagData offsetTag = getOffsetMXMLTag(position);
         if (offsetTag != null)
         {
@@ -693,6 +709,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return CompletableFuture.completedFuture(Collections.emptyList());
         }
+
+        //we need the compilation unit to be fully built or the result will be
+        //inaccurate. additionally, there could be null reference exceptions
+        //caused by old scopes being referenced
+        realTimeProblemAnalyzer.completePendingRequests();
+
         IMXMLTagData offsetTag = getOffsetMXMLTag(position);
         if (offsetTag != null)
         {
@@ -719,6 +741,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return CompletableFuture.completedFuture(Collections.emptyList());
         }
+
+        //we need the compilation unit to be fully built or the result will be
+        //inaccurate. additionally, there could be null reference exceptions
+        //caused by old scopes being referenced
+        realTimeProblemAnalyzer.completePendingRequests();
+
         IMXMLTagData offsetTag = getOffsetMXMLTag(params);
         if (offsetTag != null)
         {
@@ -751,6 +779,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
      */
     public CompletableFuture<List<? extends SymbolInformation>> workspaceSymbol(WorkspaceSymbolParams params)
     {
+        //we need the compilation unit to be fully built or the result will be
+        //inaccurate. additionally, there could be null reference exceptions
+        //caused by old scopes being referenced
+        realTimeProblemAnalyzer.completePendingRequests();
+
         Set<String> qualifiedNames = new HashSet<>();
         List<SymbolInformation> result = new ArrayList<>();
         String query = params.getQuery();
@@ -854,6 +887,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return CompletableFuture.completedFuture(Collections.emptyList());
         }
+
+        //we need the compilation unit to be fully built or the result will be
+        //inaccurate. additionally, there could be null reference exceptions
+        //caused by old scopes being referenced
+        realTimeProblemAnalyzer.completePendingRequests();
+
         ICompilationUnit unit = getCompilationUnit(path);
         if (unit == null)
         {
@@ -887,7 +926,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         List<? extends Diagnostic> diagnostics = params.getContext().getDiagnostics();
         TextDocumentIdentifier textDocument = params.getTextDocument();
         Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocument.getUri());
-        if (path == null || !sourceByPath.containsKey(path))
+        if (path == null)
+        {
+            return CompletableFuture.completedFuture(Collections.emptyList());
+        }
+        if (!sourceByPath.containsKey(path))
         {
             return CompletableFuture.completedFuture(Collections.emptyList());
         }
@@ -897,6 +940,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             //the path must be in the workspace or source-path
             return CompletableFuture.completedFuture(Collections.emptyList());
         }
+
+        //we need the compilation unit to be fully built or the result will be
+        //inaccurate. additionally, there could be null reference exceptions
+        //caused by old scopes being referenced
+        realTimeProblemAnalyzer.completePendingRequests();
+
         currentProject = getProject(folderData);
         if (currentProject == null || !SourcePathUtils.isInProjectSourcePath(path, currentProject))
         {
@@ -1232,6 +1281,15 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return CompletableFuture.completedFuture(new WorkspaceEdit(new HashMap<>()));
         }
 
+        //we need the compilation unit to be fully built or the result will be
+        //inaccurate. additionally, there could be null reference exceptions
+        //caused by old scopes being referenced
+        if (realTimeProblemAnalyzer.getCompilationUnit() != null)
+        {
+            System.err.println("rename: needs complete pending requests");
+        }
+        //realTimeProblemAnalyzer.completePendingRequests();
+
         IMXMLTagData offsetTag = getOffsetMXMLTag(params.getTextDocument(), params.getPosition());
         if (offsetTag != null)
         {
@@ -1256,6 +1314,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
      */
     public CompletableFuture<Object> executeCommand(ExecuteCommandParams params)
     {
+        //we need the compilation unit to be fully built or the result will be
+        //inaccurate. additionally, there could be null reference exceptions
+        //caused by old scopes being referenced
+        realTimeProblemAnalyzer.completePendingRequests();
+
         switch(params.getCommand())
         {
             case ICommandConstants.ADD_IMPORT:
