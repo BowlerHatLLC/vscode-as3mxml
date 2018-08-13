@@ -72,6 +72,6 @@ The [ActionScript & MXML extension for Visual Studio Code](https://marketplace.v
 
 Special thanks to the following sponsors for their generous support:
 
-* [YETi CGI](http://yeticgi.com/)
-
 * [Moonshine IDE](http://moonshine-ide.com/)
+
+* [Dedoose](https://www.dedoose.com/)
