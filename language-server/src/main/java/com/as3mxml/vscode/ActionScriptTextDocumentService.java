@@ -123,6 +123,7 @@ import org.apache.royale.compiler.tree.as.IScopedDefinitionNode;
 import org.apache.royale.compiler.tree.as.IScopedNode;
 import org.apache.royale.compiler.tree.as.ITypeNode;
 import org.apache.royale.compiler.tree.as.IVariableNode;
+import org.apache.royale.compiler.tree.mxml.IMXMLClassDefinitionNode;
 import org.apache.royale.compiler.tree.mxml.IMXMLClassReferenceNode;
 import org.apache.royale.compiler.tree.mxml.IMXMLConcatenatedDataBindingNode;
 import org.apache.royale.compiler.tree.mxml.IMXMLEventSpecifierNode;
@@ -2740,6 +2741,19 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 stateItem.setKind(CompletionItemKind.Field);
                 stateItem.setLabel(stateName);
                 items.add(stateItem);
+            }
+            ITypeNode typeNode = classDefinition.getNode();
+            if(typeNode != null && typeNode instanceof IMXMLClassDefinitionNode)
+            {
+                IMXMLClassDefinitionNode mxmlClassNode = (IMXMLClassDefinitionNode) typeNode;
+                Set<String> stateGroupNames = mxmlClassNode.getStateGroupNames();
+                for (String stateGroupName : stateGroupNames)
+                {
+                    CompletionItem stateItem = new CompletionItem();
+                    stateItem.setKind(CompletionItemKind.Field);
+                    stateItem.setLabel(stateGroupName);
+                    items.add(stateItem);
+                }
             }
             return result;
         }
