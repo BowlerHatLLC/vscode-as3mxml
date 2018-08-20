@@ -503,6 +503,33 @@
 			<array>
 				<dict>
 					<key>include</key>
+					<string>#parameters</string>
+				</dict>
+			</array>
+		</dict>
+		<key>parameters</key>
+		<dict>
+			<key>begin</key>
+			<string>(\.\.\.)?\s*([A-Za-z0-9_\$]+)</string>
+			<key>end</key>
+			<string>,|(?=\))</string>
+			<key>captures</key>
+			<dict>
+				<key>1</key>
+				<dict>
+					<key>name</key>
+					<string>keyword.operator.actionscript.3</string>
+				</dict>
+				<key>2</key>
+				<dict>
+					<key>name</key>
+					<string>variable.parameter.actionscript.3</string>
+				</dict>
+			</dict>
+			<key>patterns</key>
+			<array>
+				<dict>
+					<key>include</key>
 					<string>#strings</string>
 				</dict>
 				<dict>
@@ -532,6 +559,10 @@
 				<dict>
 					<key>include</key>
 					<string>#guess_type</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#guess_constant</string>
 				</dict>
 			</array>
 		</dict>
