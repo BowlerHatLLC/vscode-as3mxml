@@ -185,28 +185,28 @@ public class ASConfigC
 
 	private File findConfigurationFile(String projectPath) throws ASConfigCException
 	{
-		File configFile = null;
+		File projectFile = null;
 		if(projectPath != null)
 		{
-			configFile = new File(projectPath);
+			projectFile = new File(projectPath);
 		}
 		else
 		{
-			configFile = new File(System.getProperty("user.dir"));
+			projectFile = new File(System.getProperty("user.dir"));
 		}
-		if(!configFile.exists())
+		if(!projectFile.exists())
 		{
-			throw new ASConfigCException("Project directory or JSON file not found: " + projectPath);
+			throw new ASConfigCException("Project directory or JSON file not found: " + projectFile.getAbsolutePath());
 		}
-		if(configFile.isDirectory())
+		if(projectFile.isDirectory())
 		{
-			configFile = new File(configFile, ASCONFIG_JSON);
+			File configFile = new File(projectFile, ASCONFIG_JSON);
 			if(!configFile.exists())
 			{
-				throw new ASConfigCException("asconfig.json not found in directory: " + projectPath);
+				throw new ASConfigCException("asconfig.json not found in directory: " + projectFile.getAbsolutePath());
 			}
 		}
-		return configFile;
+		return projectFile;
 	}
 
 	private JsonNode loadConfig(File configFile) throws ASConfigCException
