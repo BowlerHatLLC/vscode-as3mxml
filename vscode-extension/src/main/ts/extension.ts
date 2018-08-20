@@ -250,16 +250,20 @@ export function activate(context: vscode.ExtensionContext)
 
 		let rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
 		sourcePathDataProvider = new ActionScriptSourcePathDataProvider(rootPath);
-		vscode.window.registerTreeDataProvider("actionScriptSourcePaths", sourcePathDataProvider);
+		let sourcePathDisposable = vscode.window.registerTreeDataProvider("actionScriptSourcePaths", sourcePathDataProvider);
+		context.subscriptions.push(sourcePathDisposable);
 
 		actionScriptTaskProvider = new ActionScriptTaskProvider(context, javaExecutablePath);
-		vscode.workspace.registerTaskProvider("actionscript", actionScriptTaskProvider);
+		let taskProviderDisposable = vscode.tasks.registerTaskProvider("actionscript", actionScriptTaskProvider);
+		context.subscriptions.push(taskProviderDisposable);
 
 		debugConfigurationProvider = new SWFDebugConfigurationProvider();
-		vscode.debug.registerDebugConfigurationProvider("swf", debugConfigurationProvider);
+		let debugConfigDisposable = vscode.debug.registerDebugConfigurationProvider("swf", debugConfigurationProvider);
+		context.subscriptions.push(debugConfigDisposable);
 
 		swcTextDocumentContentProvider = new SWCTextDocumentContentProvider();
-		vscode.workspace.registerTextDocumentContentProvider("swc", swcTextDocumentContentProvider);
+		let swcContentDisposable = vscode.workspace.registerTextDocumentContentProvider("swc", swcTextDocumentContentProvider);
+		context.subscriptions.push(swcContentDisposable);
 	}
 	startClient();
 

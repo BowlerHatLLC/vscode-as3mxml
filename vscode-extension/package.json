@@ -53,7 +53,8 @@
   "activationEvents": [
     "onLanguage:nextgenas",
     "onLanguage:mxml",
-    "workspaceContains:asconfig.json",
+    "workspaceContains:**/asconfig.json",
+    "workspaceContains:**/asconfig.*.json",
     "onView:actionScriptSourcePaths",
     "onCommand:nextgenas.adapterExecutableCommandSWF",
     "onCommand:nextgenas.organizeImportsInTextEditor",
@@ -63,7 +64,8 @@
     "onCommand:nextgenas.restartServer",
     "onCommand:nextgenas.migrateFlashBuilderProject",
     "onCommand:nextgenas.quickCompile",
-    "onCommand:nextgenas.quickCompileAndDebug"
+    "onCommand:nextgenas.quickCompileAndDebug",
+    "onCommand:workbench.action.tasks.runTask"
   ],
   "contributes": {
     "commands": [
@@ -294,6 +296,10 @@
           "air": {
             "type": "string",
             "description": "Optionally indicates the platform name of the Adobe AIR package"
+          },
+          "asconfig": {
+            "type": "string",
+            "description": "Optional path to asconfig.json or asconfig.*.json file in workspace"
           }
         }
       }
