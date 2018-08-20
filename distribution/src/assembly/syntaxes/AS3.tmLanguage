@@ -510,10 +510,10 @@
 		<key>parameters</key>
 		<dict>
 			<key>begin</key>
-			<string>(\.\.\.)?\s*([A-Za-z0-9_\$]+)</string>
+			<string>(\.\.\.)?\s*([A-Za-z0-9_\$]+)(?:\s*(\:)\s*([A-Za-z_\$]+))?(?:\s*(=))?</string>
 			<key>end</key>
 			<string>,|(?=\))</string>
-			<key>captures</key>
+			<key>beginCaptures</key>
 			<dict>
 				<key>1</key>
 				<dict>
@@ -524,6 +524,21 @@
 				<dict>
 					<key>name</key>
 					<string>variable.parameter.actionscript.3</string>
+				</dict>
+				<key>3</key>
+				<dict>
+					<key>name</key>
+					<string>keyword.operator.actionscript.3</string>
+				</dict>
+				<key>4</key>
+				<dict>
+					<key>name</key>
+					<string>support.class.actionscript.3</string>
+				</dict>
+				<key>5</key>
+				<dict>
+					<key>name</key>
+					<string>keyword.operator.actionscript.3</string>
 				</dict>
 			</dict>
 			<key>patterns</key>
@@ -1201,6 +1216,11 @@
 		<dict>
 			<key>captures</key>
 			<dict>
+				<key>1</key>
+				<dict>
+					<key>name</key>
+					<string>keyword.operator.actionscript.3</string>
+				</dict>
 				<key>3</key>
 				<dict>
 					<key>name</key>
