@@ -56,7 +56,15 @@
 		</dict>
 		<dict>
 			<key>include</key>
+			<string>#primitive_error_types</string>
+		</dict>
+		<dict>
+			<key>include</key>
 			<string>#dynamic_type</string>
+		</dict>
+		<dict>
+			<key>include</key>
+			<string>#primitive_functions</string>
 		</dict>
 		<dict>
 			<key>include</key>
@@ -189,7 +197,15 @@
 				</dict>
 				<dict>
 					<key>include</key>
+					<string>#primitive_error_types</string>
+				</dict>
+				<dict>
+					<key>include</key>
 					<string>#dynamic_type</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#primitive_functions</string>
 				</dict>
 				<dict>
 					<key>include</key>
@@ -318,7 +334,15 @@
 				</dict>
 				<dict>
 					<key>include</key>
+					<string>#primitive_error_types</string>
+				</dict>
+				<dict>
+					<key>include</key>
 					<string>#dynamic_type</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#primitive_functions</string>
 				</dict>
 				<dict>
 					<key>include</key>
@@ -418,7 +442,7 @@
 		<key>control_keywords</key>
 		<dict>
 			<key>match</key>
-			<string>\b(if|else|do|while|for|each|continue|return|switch|case|default|break|try|catch|finally|throw|trace)\b</string>
+			<string>\b(if|else|do|while|for|each|continue|return|switch|case|default|break|try|catch|finally|throw)\b</string>
 			<key>name</key>
 			<string>keyword.control.actionscript.3</string>
 		</dict>
@@ -496,6 +520,10 @@
 				<dict>
 					<key>include</key>
 					<string>#primitive_types</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#primitive_error_types</string>
 				</dict>
 				<dict>
 					<key>include</key>
@@ -705,7 +733,7 @@
 		<key>language_variables</key>
 		<dict>
 			<key>match</key>
-			<string>\b(super|this)\b</string>
+			<string>\b(super|this|arguments)\b</string>
 			<key>name</key>
 			<string>variable.language.actionscript.3</string>
 		</dict>
@@ -845,7 +873,15 @@
 				</dict>
 				<dict>
 					<key>include</key>
+					<string>#primitive_error_types</string>
+				</dict>
+				<dict>
+					<key>include</key>
 					<string>#dynamic_type</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#primitive_functions</string>
 				</dict>
 				<dict>
 					<key>include</key>
@@ -932,7 +968,15 @@
 				</dict>
 				<dict>
 					<key>include</key>
+					<string>#primitive_error_types</string>
+				</dict>
+				<dict>
+					<key>include</key>
 					<string>#dynamic_type</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#primitive_functions</string>
 				</dict>
 				<dict>
 					<key>include</key>
@@ -1066,11 +1110,37 @@
 				<key>1</key>
 				<dict>
 					<key>name</key>
-					<string>support.type.actionscript.3</string>
+					<string>support.class.builtin.actionscript.3</string>
 				</dict>
 			</dict>
 			<key>match</key>
-			<string>\b(int|uint|Number|Boolean|String|\*(?&lt;=a))\b</string>
+			<string>\b(Array|Boolean|Class|Date|Function|int|JSON|Math|Namespace|Number|Object|QName|RegExp|String|uint|Vector|XML|XMLList|\*(?&lt;=a))\b</string>
+		</dict>
+		<key>primitive_error_types</key>
+		<dict>
+			<key>captures</key>
+			<dict>
+				<key>1</key>
+				<dict>
+					<key>name</key>
+					<string>support.class.error.actionscript.3</string>
+				</dict>
+			</dict>
+			<key>match</key>
+			<string>\b((Argument|Definition|Eval|Internal|Range|Reference|Security|Syntax|Type|URI|Verify)?Error)\b</string>
+		</dict>
+		<key>primitive_functions</key>
+		<dict>
+			<key>captures</key>
+			<dict>
+				<key>1</key>
+				<dict>
+					<key>name</key>
+					<string>support.function.actionscript.3</string>
+				</dict>
+			</dict>
+			<key>match</key>
+			<string>\b(decodeURI|decodeURIComponent|encodeURI|encodeURIComponent|escape|isFinite|isNaN|isXMLName|parseFloat|parseInt|trace|unescape)(?=\s*\()</string>
 		</dict>
 		<key>regexp</key>
 		<dict>
