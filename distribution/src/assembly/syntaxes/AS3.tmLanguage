@@ -1075,16 +1075,24 @@
 		<key>regexp</key>
 		<dict>
 			<key>begin</key>
-			<string>(?&lt;=[=(:]|^|return)\s*(/)(?![/*+{}?])</string>
+			<string>(?&lt;=[=(:,\[]|^|return|&amp;&amp;|\|\||!)\s*(/)(?![/*+{}?])</string>
 			<key>end</key>
-			<string>[^\\](/)[igsmx]*</string>
+			<string>$|(/)[igm]*</string>
+			<key>name</key>
+			<string>string.regex.actionscript.3</string>
 			<key>patterns</key>
 			<array>
 				<dict>
 					<key>match</key>
-					<string>.</string>
+					<string>\\.</string>
 					<key>name</key>
 					<string>constant.character.escape.actionscript.3</string>
+				</dict>
+				<dict>
+					<key>match</key>
+					<string>\[(\\\]|[^\]])*\]</string>
+					<key>name</key>
+					<string>constant.character.class.actionscript.3</string>
 				</dict>
 			</array>
 		</dict>
