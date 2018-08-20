@@ -562,7 +562,7 @@
 			<key>comment</key>
 			<string>Following convention, let's guess that anything in all caps/digits (possible underscores) is a constant.</string>
 			<key>match</key>
-			<string>\b([A-Z0-9_]+)\b</string>
+			<string>\b([A-Z\$][A-Z0-9_]+)\b</string>
 		</dict>
 		<key>guess_type</key>
 		<dict>
