@@ -810,9 +810,14 @@
 							<key>name</key>
 							<string>variable.parameter.actionscript.3</string>
 						</dict>
+						<key>2</key>
+						<dict>
+							<key>name</key>
+							<string>keyword.operator.actionscript.3</string>
+						</dict>
 					</dict>
 					<key>match</key>
-					<string>(\w+)\s*=</string>
+					<string>(\w+)\s*(=)</string>
 				</dict>
 			</array>
 		</dict>
