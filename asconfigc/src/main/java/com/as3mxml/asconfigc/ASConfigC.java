@@ -48,6 +48,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.networknt.schema.JsonSchema;
 import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.ValidationMessage;
+import com.as3mxml.asconfigc.air.AIROptions;
 import com.as3mxml.asconfigc.air.AIROptionsParser;
 import com.as3mxml.asconfigc.air.AIRSigningOptions;
 import com.as3mxml.asconfigc.compiler.CompilerOptions;
@@ -160,12 +161,14 @@ public class ASConfigC
 		compileProject();
 		copySourcePathAssets();
 		processAdobeAIRDescriptor();
+		copyAIRFiles();
 		packageAIR();
 	}
 
 	private ASConfigCOptions options;
 	private List<String> compilerOptions;
 	private List<String> airOptions;
+	private JsonNode airOptionsJSON;
 	private String projectType;
 	private boolean debugBuild;
 	private boolean copySourcePathAssets;
@@ -365,8 +368,8 @@ public class ASConfigC
 			{
 				throw new ASConfigCException("Adobe AIR packaging options found, but the \"application\" field is empty.");
 			}
-			JsonNode airOptions = json.get(TopLevelFields.AIR_OPTIONS);
-			readAIROptions(airOptions);
+			airOptionsJSON = json.get(TopLevelFields.AIR_OPTIONS);
+			readAIROptions(airOptionsJSON);
 		}
 		if(json.has(TopLevelFields.COPY_SOURCE_PATH_ASSETS))
 		{
@@ -614,6 +617,86 @@ public class ASConfigC
 			else //swf
 			{
 				copySourcePathAssetToOutputDirectory(assetPath, outputDirectory);
+			}
+		}
+	}
+	
+	private void copyAIRFiles() throws ASConfigCException
+	{
+		if(options.air != null)
+		{
+			//don't copy anything when packaging an app. these files are used
+			//for debug builds only.
+			return;
+		}
+		if(airOptionsJSON == null)
+		{
+			//the airOptions field is not defined, so there's nothing to copy
+			return;
+		}
+		if(!airOptionsJSON.has(AIROptions.FILES))
+		{
+			//the files field is not defined, so there's nothing to copy
+			return;
+		}
+
+		String outputDirectoryPath = ProjectUtils.findOutputDirectory(mainFile, outputPath, !outputIsJS);
+		File outputDirectory = new File(outputDirectoryPath);
+
+		JsonNode filesJSON = airOptionsJSON.get(AIROptions.FILES);
+		for(int i = 0, size = filesJSON.size(); i < size; i++)
+		{
+			JsonNode fileJSON = filesJSON.get(i);
+			if(fileJSON.isTextual())
+			{
+				String filePath = fileJSON.asText();
+				File srcFile = new File(filePath);
+				File destFile = new File(outputDirectory, srcFile.getName());
+				try
+				{
+					Files.copy(srcFile.toPath(), destFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+				}
+				catch(IOException e)
+				{
+					throw new ASConfigCException(e.getMessage());
+				}
+			}
+			else
+			{
+				String srcFilePath = fileJSON.get(AIROptions.FILES__FILE).asText();
+				File srcFile = new File(srcFilePath);
+
+				String destFilePath = fileJSON.get(AIROptions.FILES__PATH).asText();
+				File destFile = new File(outputDirectory, destFilePath);
+
+				Path relativePath = outputDirectory.toPath().relativize(destFile.toPath());
+				try
+				{
+					if(relativePath.toString().startsWith("..") || destFile.getCanonicalPath().equals(outputDirectory.getCanonicalPath()))
+					{
+						throw new ASConfigCException("Invalid destination path for file in Adobe AIR application. Source: " + srcFilePath + ", Destination: " + destFilePath);
+					}
+				}
+				catch(IOException e)
+				{
+					throw new ASConfigCException(e.getMessage());
+				}
+
+				if(srcFile.isDirectory())
+				{
+					//TODO: copy directory
+				}
+				else
+				{
+					try
+					{
+						Files.copy(srcFile.toPath(), destFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+					}
+					catch(IOException e)
+					{
+						throw new ASConfigCException(e.getMessage());
+					}
+				}
 			}
 		}
 	}
