@@ -205,6 +205,7 @@ public class ASConfigC
 			{
 				throw new ASConfigCException("asconfig.json not found in directory: " + projectFile.getAbsolutePath());
 			}
+			return configFile;
 		}
 		return projectFile;
 	}
