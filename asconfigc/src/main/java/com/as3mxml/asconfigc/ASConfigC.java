@@ -26,6 +26,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -71,6 +72,9 @@ import com.as3mxml.asconfigc.utils.ProjectUtils;
  */
 public class ASConfigC
 {
+	private static final String FILE_EXTENSION_AS = ".as";
+	private static final String FILE_EXTENSION_MXML = ".mxml";
+
 	public static void main(String[] args)
 	{
 		CommandLineParser parser = new DefaultParser();
@@ -549,7 +553,7 @@ public class ASConfigC
 		options.compiler.compile(projectType, compilerOptions, Paths.get(System.getProperty("user.dir")), Paths.get(sdkHome));
 	}
 
-	private void copySourcePathAssetToOutputDirectory(String assetPath, String outputDirectory) throws ASConfigCException
+	private void copySourcePathAssetToOutputDirectory(String assetPath, String mainFile, List<String> sourcePaths, String outputDirectory) throws ASConfigCException
 	{
 		String targetPath = null;
 		try
@@ -596,7 +600,7 @@ public class ASConfigC
 		List<String> assetPaths = null;
 		try
 		{
-			assetPaths = ProjectUtils.findSourcePathAssets(mainFile, sourcePaths, outputDirectory, excludes);
+			assetPaths = ProjectUtils.findSourcePathAssets(mainFile, sourcePaths, outputDirectory, excludes, Arrays.asList(FILE_EXTENSION_AS, FILE_EXTENSION_MXML));
 		}
 		catch(IOException e)
 		{
@@ -607,16 +611,16 @@ public class ASConfigC
 			if(outputIsJS)
 			{
 				File outputDirectoryJSDebug = new File(outputDirectory, "bin/js-debug");
-				copySourcePathAssetToOutputDirectory(assetPath, outputDirectoryJSDebug.getAbsolutePath());
+				copySourcePathAssetToOutputDirectory(assetPath, mainFile, sourcePaths, outputDirectoryJSDebug.getAbsolutePath());
 				if(!debugBuild)
 				{
 					File outputDirectoryJSRelease = new File(outputDirectory, "bin/js-release");
-					copySourcePathAssetToOutputDirectory(assetPath, outputDirectoryJSRelease.getAbsolutePath());
+					copySourcePathAssetToOutputDirectory(assetPath, mainFile, sourcePaths, outputDirectoryJSRelease.getAbsolutePath());
 				}
 			}
 			else //swf
 			{
-				copySourcePathAssetToOutputDirectory(assetPath, outputDirectory);
+				copySourcePathAssetToOutputDirectory(assetPath, mainFile, sourcePaths, outputDirectory);
 			}
 		}
 	}
@@ -651,10 +655,25 @@ public class ASConfigC
 			{
 				String filePath = fileJSON.asText();
 				File srcFile = new File(filePath);
-				File destFile = new File(outputDirectory, srcFile.getName());
 				try
 				{
-					Files.copy(srcFile.toPath(), destFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+					if(outputIsJS)
+					{
+						File outputDirectoryJSDebug = new File(outputDirectory, "bin/js-debug");
+						File destFileKSDebug = new File(outputDirectoryJSDebug, srcFile.getName());
+						Files.copy(srcFile.toPath(), destFileKSDebug.toPath(), StandardCopyOption.REPLACE_EXISTING);
+						if(!debugBuild)
+						{
+							File outputDirectoryJSRelease = new File(outputDirectory, "bin/js-release");
+							File destFileJSRelease = new File(outputDirectoryJSRelease, srcFile.getName());
+							Files.copy(srcFile.toPath(), destFileJSRelease.toPath(), StandardCopyOption.REPLACE_EXISTING);
+						}
+					}
+					else //swf
+					{
+						File destFile = new File(outputDirectory, srcFile.getName());
+						Files.copy(srcFile.toPath(), destFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+					}
 				}
 				catch(IOException e)
 				{
@@ -665,6 +684,10 @@ public class ASConfigC
 			{
 				String srcFilePath = fileJSON.get(AIROptions.FILES__FILE).asText();
 				File srcFile = new File(srcFilePath);
+				if(!srcFile.isAbsolute())
+				{
+					srcFile = new File(System.getProperty("user.dir"), srcFilePath);
+				}
 
 				String destFilePath = fileJSON.get(AIROptions.FILES__PATH).asText();
 				File destFile = new File(outputDirectory, destFilePath);
@@ -684,13 +707,55 @@ public class ASConfigC
 
 				if(srcFile.isDirectory())
 				{
-					//TODO: copy directory
+					List<String> assetDirList = Arrays.asList(srcFile.getAbsolutePath());
+					List<String> assetPaths = null;
+					try
+					{
+						assetPaths = ProjectUtils.findSourcePathAssets(null, assetDirList, outputDirectory.getAbsolutePath(), null, null);
+					}
+					catch(IOException e)
+					{
+						throw new ASConfigCException(e.getMessage());
+					}
+					assetDirList = Arrays.asList(srcFile.getParentFile().getAbsolutePath());
+					for(String assetPath : assetPaths)
+					{
+						if(outputIsJS)
+						{
+							File outputDirectoryJSDebug = new File(outputDirectory, "bin/js-debug");
+							copySourcePathAssetToOutputDirectory(assetPath, null, assetDirList, outputDirectoryJSDebug.getAbsolutePath());
+							if(!debugBuild)
+							{
+								File outputDirectoryJSRelease = new File(outputDirectory, "bin/js-release");
+								copySourcePathAssetToOutputDirectory(assetPath, null, assetDirList, outputDirectoryJSRelease.getAbsolutePath());
+							}
+						}
+						else //swf
+						{
+							copySourcePathAssetToOutputDirectory(assetPath, null, assetDirList, outputDirectory.getAbsolutePath());
+						}
+					}
 				}
 				else
 				{
 					try
 					{
-						Files.copy(srcFile.toPath(), destFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+						if(outputIsJS)
+						{
+							File outputDirectoryJSDebug = new File(outputDirectory, "bin/js-debug");
+							File destFileKSDebug = new File(outputDirectoryJSDebug, destFilePath);
+							Files.copy(srcFile.toPath(), destFileKSDebug.toPath(), StandardCopyOption.REPLACE_EXISTING);
+							if(!debugBuild)
+							{
+								File outputDirectoryJSRelease = new File(outputDirectory, "bin/js-release");
+								File destFileJSRelease = new File(outputDirectoryJSRelease, destFilePath);
+								Files.copy(srcFile.toPath(), destFileJSRelease.toPath(), StandardCopyOption.REPLACE_EXISTING);
+							}
+						}
+						else //swf
+						{
+							Files.copy(srcFile.toPath(), destFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+						}
 					}
 					catch(IOException e)
 					{

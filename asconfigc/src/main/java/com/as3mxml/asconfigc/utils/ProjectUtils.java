@@ -28,8 +28,6 @@ import com.as3mxml.asconfigc.compiler.ProjectType;
 
 public class ProjectUtils
 {
-	private static final String FILE_EXTENSION_AS = ".as";
-	private static final String FILE_EXTENSION_MXML = ".mxml";
 	private static final String JAR_NAME_ADT = "adt.jar";
 
 	public static String findAIRDescriptorOutputPath(String mainFile, String airDescriptor, String outputPath, boolean isSWF, boolean debugBuild)
@@ -207,7 +205,7 @@ public class ProjectUtils
 		return null;
 	}
 
-	public static List<String> findSourcePathAssets(String mainFile, List<String> sourcePaths, String outputDirectory, List<String> excludes) throws IOException
+	public static List<String> findSourcePathAssets(String mainFile, List<String> sourcePaths, String outputDirectory, List<String> excludes, List<String> excludedExtensions) throws IOException
 	{
 		List<String> result = new ArrayList<>();
 		List<String> sourcePathsCopy = new ArrayList<>();
@@ -279,7 +277,8 @@ public class ProjectUtils
 				{
 					extension = innerFilePath.substring(index);
 				}
-				if(extension != null && (extension.equals(FILE_EXTENSION_AS) || extension.equals(FILE_EXTENSION_MXML)))
+				if(extension != null && excludedExtensions != null &&
+					excludedExtensions.contains(extension))
 				{
 					continue;
 				}
