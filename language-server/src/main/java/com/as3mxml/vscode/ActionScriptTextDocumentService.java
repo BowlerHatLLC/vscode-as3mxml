@@ -259,12 +259,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private String oldFrameworkSDKPath;
     private Map<Path, String> sourceByPath = new HashMap<>();
     private List<String> completionTypes = new ArrayList<>();
-    private ICompilationUnit currentUnit;
-    private IProjectConfigStrategy currentConfig;
     private Workspace compilerWorkspace;
     private List<WorkspaceFolder> workspaceFolders = new ArrayList<>();
     private Map<WorkspaceFolder, WorkspaceFolderData> workspaceFolderToData = new HashMap<>();
-    private ProjectOptions currentProjectOptions;
     private int currentOffset = -1;
     private ImportRange importRange = new ImportRange();
     private int namespaceStartIndex = -1;
@@ -389,6 +386,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     result.setItems(new ArrayList<>());
                     return Either.forRight(result);
                 }
+                Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(params.getTextDocument().getUri());
+                if(path == null)
+                {
+                    return null;
+                }
 
                 IMXMLTagData offsetTag = getOffsetMXMLTag(params);
                 if (offsetTag != null)
@@ -403,7 +405,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     //so that's why we call isMXMLTagValidForCompletion()
                     if (MXMLDataUtils.isMXMLTagValidForCompletion(offsetTag))
                     {
-                        CompletionList result = mxmlCompletion(params, project, offsetTag);
+                        ICompilationUnit offsetUnit = findCompilationUnit(path);
+                        CompletionList result = mxmlCompletion(params, project, offsetUnit, offsetTag);
                         return Either.forRight(result);
                     }
                 }
@@ -2196,17 +2199,17 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private void refreshProjectOptions(WorkspaceFolderData folderData)
     {
-        currentConfig = folderData.config;
-        currentProjectOptions = folderData.options;
-        if (!currentConfig.getChanged() && currentProjectOptions != null)
+        IProjectConfigStrategy currentConfig = folderData.config;
+        ProjectOptions projectOptions = folderData.options;
+        if (!currentConfig.getChanged() && projectOptions != null)
         {
             //the options are fully up-to-date
             return;
         }
         //if the configuration changed, start fresh with a whole new workspace
         cleanupProject(folderData);
-        currentProjectOptions = folderData.options = currentConfig.getOptions();
-        if (currentProjectOptions == null)
+        projectOptions = folderData.options = currentConfig.getOptions();
+        if (projectOptions == null)
         {
             return;
         }
@@ -2378,7 +2381,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             if (fileNode.getChildCount() == 0 && fileNode.getAbsoluteEnd() == 0)
             {
                 //the file is completely empty
-                autoCompletePackageBlock(project, result);
+                autoCompletePackageBlock(fileNode.getFileSpecification(), project, result);
                 return result;
             }
         }
@@ -2393,7 +2396,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 if (IASKeywordConstants.PACKAGE.startsWith(identifier))
                 {
                     //the file contains only a substring of the package keyword
-                    autoCompletePackageBlock(project, result);
+                    autoCompletePackageBlock(offsetNode.getFileSpecification(), project, result);
                     return result;
                 }
             }
@@ -2401,7 +2404,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         if (offsetNode instanceof IPackageNode)
         {
             IPackageNode packageNode = (IPackageNode) offsetNode;
-            autoCompletePackageName(packageNode.getPackageName(), project, result);
+            autoCompletePackageName(packageNode.getPackageName(), offsetNode.getFileSpecification(), project, result);
             return result;
         }
         if (parentNode != null
@@ -2411,7 +2414,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             if (gpNode != null && gpNode instanceof IPackageNode)
             {
                 IPackageNode packageNode = (IPackageNode) gpNode;
-                autoCompletePackageName(packageNode.getPackageName(), project, result);
+                autoCompletePackageName(packageNode.getPackageName(), offsetNode.getFileSpecification(), project, result);
             }
         }
         if (parentNode != null
@@ -2424,11 +2427,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             {
                 if (currentOffset == IASKeywordConstants.PACKAGE.length())
                 {
-                    autoCompletePackageBlock(project, result);
+                    autoCompletePackageBlock(offsetNode.getFileSpecification(), project, result);
                 }
                 else
                 {
-                    autoCompletePackageName(packageNode.getPackageName(), project, result);
+                    autoCompletePackageName(packageNode.getPackageName(), offsetNode.getFileSpecification(), project, result);
                 }
                 return result;
             }
@@ -2596,7 +2599,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return result;
     }
 
-    private CompletionList mxmlCompletion(CompletionParams params, RoyaleProject project, IMXMLTagData offsetTag)
+    private CompletionList mxmlCompletion(CompletionParams params, RoyaleProject project, ICompilationUnit offsetUnit, IMXMLTagData offsetTag)
     {
         CompletionList result = new CompletionList();
         result.setIsIncomplete(false);
@@ -2686,7 +2689,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             if (!isAttribute)
             {
-                autoCompleteDefinitionsForMXML(result, project, true, tagsNeedOpenBracket, null);
+                autoCompleteDefinitionsForMXML(result, project, offsetUnit, true, tagsNeedOpenBracket, null);
             }
             return result;
         }
@@ -2714,7 +2717,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     }
                     if (!isAttribute)
                     {
-                        MXMLNamespace fxNS = MXMLNamespaceUtils.getMXMLLanguageNamespace(currentUnit, fileSpecGetter, compilerWorkspace);
+                        IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(offsetUnit.getAbsoluteFilename());
+                        MXMLNamespace fxNS = MXMLNamespaceUtils.getMXMLLanguageNamespace(fileSpec, compilerWorkspace);
                         IMXMLData mxmlParent = offsetTag.getParent();
                         if (mxmlParent != null && parentTag.equals(mxmlParent.getRootTag()))
                         {
@@ -2744,7 +2748,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                         {
                             //only add types if the class defines [DefaultProperty]
                             //metadata
-                            autoCompleteTypesForMXMLFromExistingTag(result, project, offsetTag);
+                            autoCompleteTypesForMXMLFromExistingTag(result, project, offsetUnit, offsetTag);
                         }
                     }
                 }
@@ -2752,13 +2756,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 {
                     //the parent is something like a property, so matching the
                     //prefix is not required
-                    autoCompleteTypesForMXMLFromExistingTag(result, project, offsetTag);
+                    autoCompleteTypesForMXMLFromExistingTag(result, project, offsetUnit, offsetTag);
                 }
                 return result;
             }
             else if (MXMLDataUtils.isDeclarationsTag(parentTag))
             {
-                autoCompleteTypesForMXMLFromExistingTag(result, project, offsetTag);
+                autoCompleteTypesForMXMLFromExistingTag(result, project, offsetUnit, offsetTag);
                 return result;
             }
             return result;
@@ -2774,7 +2778,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             if (attribute != null
                     && currentOffset > (attribute.getAbsoluteStart() + attribute.getXMLName().toString().length()))
             {
-                return mxmlStatesCompletion(currentUnit, result);
+                return mxmlStatesCompletion(offsetUnit, result);
             }
 
             IClassDefinition classDefinition = (IClassDefinition) offsetDefinition;
@@ -2783,7 +2787,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             if (!isAttribute)
             {
                 IMXMLData mxmlParent = offsetTag.getParent();
-                MXMLNamespace fxNS = MXMLNamespaceUtils.getMXMLLanguageNamespace(currentUnit, fileSpecGetter, compilerWorkspace);
+                IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(offsetUnit.getAbsoluteFilename());
+                MXMLNamespace fxNS = MXMLNamespaceUtils.getMXMLLanguageNamespace(fileSpec, compilerWorkspace);
                 if (mxmlParent != null && offsetTag.equals(mxmlParent.getRootTag()))
                 {
                     addRootMXMLLanguageTagsToAutoComplete(offsetTag, fxNS.prefix, true, tagsNeedOpenBracket, result);
@@ -2805,7 +2810,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     //if [DefaultProperty] is set, then we can instantiate
                     //types as child elements
                     //but we don't want to do that when in an attribute
-                    autoCompleteDefinitionsForMXML(result, project, true, tagsNeedOpenBracket, typeFilter);
+                    autoCompleteDefinitionsForMXML(result, project, offsetUnit, true, tagsNeedOpenBracket, typeFilter);
                 }
             }
             return result;
@@ -2817,7 +2822,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             if (!isAttribute)
             {
                 String typeFilter = DefinitionUtils.getMXMLChildElementTypeForDefinition(offsetDefinition, project);
-                autoCompleteDefinitionsForMXML(result, project, true, tagsNeedOpenBracket, typeFilter);
+                autoCompleteDefinitionsForMXML(result, project, offsetUnit, true, tagsNeedOpenBracket, typeFilter);
             }
             return result;
         }
@@ -3214,7 +3219,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             if (MXMLDataUtils.isInsideTagPrefix(offsetTag, currentOffset))
             {
                 //ignore the tag's prefix
-            return Collections.emptyList();
+                return Collections.emptyList();
             }
             ArrayList<Location> result = new ArrayList<>();
             referencesForDefinition(definition, project, result);
@@ -3451,10 +3456,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
      * Using an existing tag, that may already have a prefix or short name,
      * populate the completion list.
      */
-    private void autoCompleteTypesForMXMLFromExistingTag(CompletionList result, RoyaleProject project, IMXMLTagData offsetTag)
+    private void autoCompleteTypesForMXMLFromExistingTag(CompletionList result, RoyaleProject project, ICompilationUnit offsetUnit, IMXMLTagData offsetTag)
     {
         IMXMLDataManager mxmlDataManager = compilerWorkspace.getMXMLDataManager();
-        MXMLData mxmlData = (MXMLData) mxmlDataManager.get(fileSpecGetter.getFileSpecification(currentUnit.getAbsoluteFilename()));
+        MXMLData mxmlData = (MXMLData) mxmlDataManager.get(fileSpecGetter.getFileSpecification(offsetUnit.getAbsoluteFilename()));
         String tagStartShortNameForComparison = offsetTag.getShortName().toLowerCase();
         String tagPrefix = offsetTag.getPrefix();
         PrefixMap prefixMap = mxmlData.getRootTagPrefixMap();
@@ -3543,7 +3548,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
     }
 
-    private void autoCompleteDefinitionsForMXML(CompletionList result, RoyaleProject project, boolean typesOnly, boolean tagsNeedOpenBracket, String typeFilter)
+    private void autoCompleteDefinitionsForMXML(CompletionList result, RoyaleProject project, ICompilationUnit offsetUnit, boolean typesOnly, boolean tagsNeedOpenBracket, String typeFilter)
     {
         for (ICompilationUnit unit : project.getCompilationUnits())
         {
@@ -3583,7 +3588,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                             continue;
                         }
 
-                        addMXMLTypeDefinitionAutoComplete(typeDefinition, tagsNeedOpenBracket, project, result);
+                        addMXMLTypeDefinitionAutoComplete(typeDefinition, offsetUnit, tagsNeedOpenBracket, project, result);
                     }
                     else
                     {
@@ -4033,19 +4038,19 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return result + "." + identifierNode.getName();
     }
 
-    private void autoCompletePackageBlock(RoyaleProject project, CompletionList result)
+    private void autoCompletePackageBlock(IFileSpecification fileSpec, RoyaleProject project, CompletionList result)
     {
         //we'll guess the package name based on path of the parent directory
-        File unitFile = new File(currentUnit.getAbsoluteFilename());
+        File unitFile = new File(fileSpec.getPath());
         unitFile = unitFile.getParentFile();
         String expectedPackage = SourcePathUtils.getPackageForDirectoryPath(unitFile.toPath(), project);
         CompletionItem packageItem = CompletionItemUtils.createPackageBlockItem(expectedPackage, completionSupportsSnippets);
         result.getItems().add(packageItem);
     }
 
-    private void autoCompletePackageName(String partialPackageName, RoyaleProject project, CompletionList result)
+    private void autoCompletePackageName(String partialPackageName, IFileSpecification fileSpec, RoyaleProject project, CompletionList result)
     {
-        File unitFile = new File(currentUnit.getAbsoluteFilename());
+        File unitFile = new File(fileSpec.getPath());
         unitFile = unitFile.getParentFile();
         String expectedPackage = SourcePathUtils.getPackageForDirectoryPath(unitFile.toPath(), project);
         if (expectedPackage.length() == 0)
@@ -4573,10 +4578,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
     }
 
-    private void addMXMLTypeDefinitionAutoComplete(ITypeDefinition definition, boolean tagsNeedOpenBracket, RoyaleProject project, CompletionList result)
+    private void addMXMLTypeDefinitionAutoComplete(ITypeDefinition definition, ICompilationUnit offsetUnit, boolean tagsNeedOpenBracket, RoyaleProject project, CompletionList result)
     {
         IMXMLDataManager mxmlDataManager = compilerWorkspace.getMXMLDataManager();
-        MXMLData mxmlData = (MXMLData) mxmlDataManager.get(fileSpecGetter.getFileSpecification(currentUnit.getAbsoluteFilename()));
+        MXMLData mxmlData = (MXMLData) mxmlDataManager.get(fileSpecGetter.getFileSpecification(offsetUnit.getAbsoluteFilename()));
         MXMLNamespace discoveredNS = MXMLNamespaceUtils.getMXMLNamespaceForTypeDefinition(definition, mxmlData, project);
         addDefinitionAutoCompleteMXML(definition, false, discoveredNS.prefix, discoveredNS.uri, tagsNeedOpenBracket, project, result);
     }
@@ -5118,7 +5123,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         diagnostics.add(diagnostic);
     }
 
-    private void checkFilePathForSyntaxProblems(Path path, ProblemQuery problemQuery)
+    private void checkFilePathForSyntaxProblems(Path path, WorkspaceFolderData folderData, ProblemQuery problemQuery)
     {
         ASParser parser = null;
         Reader reader = getReaderForPath(path);
@@ -5153,13 +5158,14 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
         }
 
+        ProjectOptions projectOptions = folderData.options;
         SyntaxFallbackProblem syntaxProblem = null;
         if (reader == null)
         {
             //the file does not exist
             syntaxProblem = new SyntaxFallbackProblem(path.toString(), "File not found: " + path.toAbsolutePath().toString() + ". Error checking has been disabled.");
         }
-        else if (parser == null && currentProjectOptions == null)
+        else if (parser == null && projectOptions == null)
         {
             //we couldn't load the project configuration and we couldn't parse
             //the file. we can't provide any information here.
@@ -5170,7 +5176,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             //something terrible happened, and this is the best we can do
             syntaxProblem = new SyntaxFallbackProblem(path.toString(), "A fatal error occurred while checking for simple syntax problems.");
         }
-        else if (currentProjectOptions == null)
+        else if (projectOptions == null)
         {
             //something went wrong while attempting to load and parse the
             //project configuration, but we could successfully parse the syntax
@@ -5253,11 +5259,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private Path getMainCompilationUnitPath(WorkspaceFolderData folderData)
     {
         refreshProjectOptions(folderData);
-        if (currentProjectOptions == null)
+        ProjectOptions projectOptions = folderData.options;
+        if (projectOptions == null)
         {
             return null;
         }
-        String[] files = currentProjectOptions.files;
+        String[] files = projectOptions.files;
         if (files == null || files.length == 0)
         {
             return null;
@@ -5298,7 +5305,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     {
         WorkspaceFolderData folderData = getWorkspaceFolderDataForSourceFile(path);
         String absolutePath = path.toAbsolutePath().toString();
-        currentUnit = null;
         if (folderData == null)
         {
             return null;
@@ -5308,8 +5314,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return null;
         }
+        ICompilationUnit foundUnit = null;
+        ProjectOptions projectOptions = folderData.options;
         //we're going to start with the files passed into the compiler
-        String[] files = currentProjectOptions.files;
+        String[] files = projectOptions.files;
         if (files != null)
         {
             for (int i = files.length - 1; i >= 0; i--)
@@ -5322,7 +5330,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 {
                     if (file.equals(absolutePath))
                     {
-                        currentUnit = existingUnit;
+                        foundUnit = existingUnit;
                     }
                     continue;
                 }
@@ -5351,21 +5359,21 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 folderData.invisibleUnits.add(unit);
                 if (file.equals(absolutePath))
                 {
-                    currentUnit = unit;
+                    foundUnit = unit;
                 }
             }
         }
 
         //if we didn't find the unit already, search the complete set of units
-        if (currentUnit == null)
+        if (foundUnit == null)
         {
             //first, search the existing compilation units for the file because it
             //might already be created
-            currentUnit = findCompilationUnit(absolutePath, project);
+            foundUnit = findCompilationUnit(absolutePath, project);
         }
 
         //if we still haven't found it, create it manually
-        if (currentUnit == null)
+        if (foundUnit == null)
         {
             //if all else fails, create the compilation unit manually
             IInvisibleCompilationUnit unit = project.createInvisibleCompilationUnit(absolutePath, fileSpecGetter);
@@ -5380,7 +5388,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 return null;
             }
             folderData.invisibleUnits.add(unit);
-            currentUnit = unit;
+            foundUnit = unit;
         }
 
         //for some reason, function nodes may not always be populated, but we
@@ -5388,7 +5396,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         IASNode ast = null;
         try
         {
-            ast = currentUnit.getSyntaxTreeRequest().get().getAST();
+            ast = foundUnit.getSyntaxTreeRequest().get().getAST();
         }
         catch (InterruptedException e)
         {
@@ -5406,7 +5414,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             //necessarily know that it exists, this fallback is almost as good
             fileNode.populateFunctionNodes();
         }
-        return currentUnit;
+        return foundUnit;
     }
 
     private RoyaleProject getProject(WorkspaceFolderData folderData)
@@ -5419,7 +5427,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         RoyaleProject project = folderData.project;
         cleanupInvisibleUnits(folderData);
         refreshProjectOptions(folderData);
-        if (currentProjectOptions == null)
+        ProjectOptions projectOptions = folderData.options;
+        IProjectConfigStrategy config = folderData.config;
+        if (projectOptions == null)
         {
             cleanupProject(folderData);
             return null;
@@ -5437,10 +5447,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         String oldUserDir = System.getProperty("user.dir");
         System.setProperty("user.dir", rootPath.toString());
 
-        project = CompilerProjectUtils.createProject(currentProjectOptions, compilerWorkspace);
+        project = CompilerProjectUtils.createProject(projectOptions, compilerWorkspace);
 
         List<ICompilerProblem> configProblems = new ArrayList<>();
-        RoyaleProjectConfigurator configurator = CompilerProjectUtils.configureProject(project, currentProjectOptions, configProblems);
+        RoyaleProjectConfigurator configurator = CompilerProjectUtils.configureProject(project, projectOptions, configProblems);
         if (configurator == null)
         {
             project.delete();
@@ -5465,7 +5475,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                         //since we're processing configuration problems, the best
                         //default location to send the user is probably to the
                         //asconfig.json file.
-                        problemSourcePath = currentConfig.getDefaultConfigurationProblemPath();
+                        problemSourcePath = config.getDefaultConfigurationProblemPath();
                     }
                     URI uri = Paths.get(problemSourcePath).toUri();
                     configProblemTracker.trackFileWithProblems(uri);
@@ -5499,7 +5509,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private synchronized void checkProjectForProblems(WorkspaceFolderData folderData)
     {
         refreshProjectOptions(folderData);
-        if (currentProjectOptions == null || currentProjectOptions.type.equals(ProjectType.LIB))
+        ProjectOptions projectOptions = folderData.options;
+        if (projectOptions == null || projectOptions.type.equals(ProjectType.LIB))
         {
             ProblemQuery problemQuery = workspaceFolderDataToProblemQuery(folderData);
             for(Path filePath : sourceByPath.keySet())
@@ -5586,8 +5597,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private void checkFilePathForProblems(Path path, ProblemQuery problemQuery, WorkspaceFolderData folderData, boolean quick)
     {
-        currentUnit = null;
-
         //if we haven't accessed a compilation unit yet, the project may be null
         RoyaleProject project = getProject(folderData);
         if (project != null && !SourcePathUtils.isInProjectSourcePath(path, project))
@@ -5595,9 +5604,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             publishDiagnosticForFileOutsideSourcePath(path);
             return;
         }
-        if (currentProjectOptions == null || !checkFilePathForAllProblems(path, problemQuery, false))
+        ProjectOptions projectOptions = folderData.options;
+        if (projectOptions == null || !checkFilePathForAllProblems(path, problemQuery, false))
         {
-            checkFilePathForSyntaxProblems(path, problemQuery);
+            checkFilePathForSyntaxProblems(path, folderData, problemQuery);
         }
     }
 
