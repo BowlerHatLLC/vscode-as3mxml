@@ -22,7 +22,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.royale.compiler.definitions.IClassDefinition;
 import org.apache.royale.compiler.definitions.IDefinition;
+import org.apache.royale.compiler.definitions.IFunctionDefinition;
+import org.apache.royale.compiler.definitions.IGetterDefinition;
+import org.apache.royale.compiler.definitions.ISetterDefinition;
 import org.apache.royale.compiler.definitions.ITypeDefinition;
 import org.apache.royale.compiler.projects.ICompilerProject;
 import org.apache.royale.compiler.tree.ASTNodeID;
@@ -122,7 +126,75 @@ public class ASTUtils
             }
 		}
 		return result;
-	}
+    }
+    
+    public static void findIdentifiersForDefinition(IASNode node, IDefinition definition, ICompilerProject project, List<IIdentifierNode> result)
+    {
+        if (node.isTerminal())
+        {
+            if (node instanceof IIdentifierNode)
+            {
+                IIdentifierNode identifierNode = (IIdentifierNode) node;
+                IDefinition resolvedDefinition = identifierNode.resolve(project);
+                if (resolvedDefinition == definition)
+                {
+                    result.add(identifierNode);
+                }
+                else if (resolvedDefinition instanceof IClassDefinition
+                    && definition instanceof IFunctionDefinition
+                    && ((IFunctionDefinition) definition).isConstructor())
+                {
+                    //if renaming the constructor, also rename the class
+                    IClassDefinition classDefinition = (IClassDefinition) resolvedDefinition;
+                    IFunctionDefinition constructorDefinition = classDefinition.getConstructor();
+                    if (constructorDefinition != null && definition == constructorDefinition)
+                    {
+                        result.add(identifierNode);
+                    }
+                }
+                else if (resolvedDefinition instanceof IFunctionDefinition
+                    && ((IFunctionDefinition) resolvedDefinition).isConstructor()
+                    && definition instanceof IClassDefinition)
+                {
+                    //if renaming the class, also rename the constructor
+                    IClassDefinition classDefinition = (IClassDefinition) definition;
+                    IFunctionDefinition constructorDefinition = classDefinition.getConstructor();
+                    if (constructorDefinition != null && resolvedDefinition == constructorDefinition)
+                    {
+                        result.add(identifierNode);
+                    }
+                }
+                else if (resolvedDefinition instanceof ISetterDefinition
+                        && definition instanceof IGetterDefinition)
+                {
+                    //if renaming the getter, also rename the setter
+                    IGetterDefinition getterDefinition = (IGetterDefinition) definition;
+                    ISetterDefinition setterDefinition = getterDefinition.resolveSetter(project);
+                    if (setterDefinition != null && resolvedDefinition == setterDefinition)
+                    {
+                        result.add(identifierNode);
+                    }
+                }
+                else if (resolvedDefinition instanceof IGetterDefinition
+                        && definition instanceof ISetterDefinition)
+                {
+                    //if renaming the setter, also rename the getter
+                    ISetterDefinition setterDefinition = (ISetterDefinition) definition;
+                    IGetterDefinition getterDefinition = setterDefinition.resolveGetter(project);
+                    if (getterDefinition != null && resolvedDefinition == getterDefinition)
+                    {
+                        result.add(identifierNode);
+                    }
+                }
+            }
+            return;
+        }
+        for (int i = 0, count = node.getChildCount(); i < count; i++)
+        {
+            IASNode childNode = node.getChild(i);
+            findIdentifiersForDefinition(childNode, definition, project, result);
+        }
+    }
     
     protected static void findUnresolvedIdentifiersToImport(IASNode node, ICompilerProject project, Set<String> importsToAdd)
     {
