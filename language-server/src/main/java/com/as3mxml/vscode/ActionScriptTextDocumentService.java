@@ -134,6 +134,7 @@ import org.apache.royale.compiler.tree.mxml.IMXMLSingleDataBindingNode;
 import org.apache.royale.compiler.tree.mxml.IMXMLSpecifierNode;
 import org.apache.royale.compiler.units.ICompilationUnit;
 import org.apache.royale.compiler.units.IInvisibleCompilationUnit;
+import org.apache.royale.compiler.workspaces.IWorkspace;
 import org.apache.royale.utils.FilenameNormalization;
 
 import com.google.common.io.Files;
@@ -1754,7 +1755,17 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             String normalizedChangedPathAsString = FilenameNormalization.normalize(changedPath.toString());
             if (normalizedChangedPathAsString.endsWith(AS_EXTENSION) || normalizedChangedPathAsString.endsWith(MXML_EXTENSION))
             {
-                ICompilationUnit changedUnit = findCompilationUnit(normalizedChangedPathAsString, currentProject);
+                compilerWorkspace.startIdleState();
+                ICompilationUnit changedUnit = null;
+                try
+                {
+                    changedUnit = findCompilationUnit(normalizedChangedPathAsString, currentProject);
+                }
+                finally
+                {
+                    compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
+                }
+
                 if (changedUnit != null)
                 {
                     //windows drive letter may not match, even after normalization,
@@ -1850,7 +1861,16 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 }
                 for (String fileToRemove : filesToRemove)
                 {
-                    ICompilationUnit unit = findCompilationUnit(fileToRemove, currentProject);
+                    compilerWorkspace.startIdleState();
+                    ICompilationUnit unit = null;
+                    try
+                    {
+                        unit = findCompilationUnit(fileToRemove, currentProject);
+                    }
+                    finally
+                    {
+                        compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
+                    }
                     if (unit != null)
                     {
                         fileToRemove = unit.getAbsoluteFilename();
