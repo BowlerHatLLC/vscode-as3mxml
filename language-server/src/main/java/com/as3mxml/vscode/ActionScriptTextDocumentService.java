@@ -368,9 +368,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     {
         return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken ->
         {
+            cancelToken.checkCanceled();
+
             //don't start the build until all other builds are done
             compilerWorkspace.startIdleState();
             compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
+            cancelToken.checkCanceled();
 
             compilerWorkspace.startBuilding();
             try
@@ -385,6 +388,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     CompletionList result = new CompletionList();
                     result.setIsIncomplete(false);
                     result.setItems(new ArrayList<>());
+                    cancelToken.checkCanceled();
                     return Either.forRight(result);
                 }
                 Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(params.getTextDocument().getUri());
@@ -400,6 +404,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     if (embeddedNode != null)
                     {
                         CompletionList result = actionScriptCompletionWithNode(params, project, embeddedNode);
+                        cancelToken.checkCanceled();
                         return Either.forRight(result);
                     }
                     //if we're inside an <fx:Script> tag, we want ActionScript completion,
@@ -408,6 +413,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     {
                         ICompilationUnit offsetUnit = findCompilationUnit(path);
                         CompletionList result = mxmlCompletion(params, project, offsetUnit, offsetTag);
+                        cancelToken.checkCanceled();
                         return Either.forRight(result);
                     }
                 }
@@ -421,9 +427,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     CompletionList result = new CompletionList();
                     result.setIsIncomplete(false);
                     result.setItems(new ArrayList<>());
+                    cancelToken.checkCanceled();
                     return Either.forRight(result);
                 }
                 CompletionList result = actionScriptCompletion(params, project);
+                cancelToken.checkCanceled();
                 return Either.forRight(result);
             }
             finally
@@ -453,9 +461,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     {
         return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken ->
         {
+            cancelToken.checkCanceled();
+
             //don't start the build until all other builds are done
             compilerWorkspace.startIdleState();
             compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
+            cancelToken.checkCanceled();
 
             compilerWorkspace.startBuilding();
             try
@@ -463,6 +474,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 RoyaleProject project = textDocumentPositionParamsToProject(params);
                 if(project == null)
                 {
+                    cancelToken.checkCanceled();
                     return new Hover(Collections.emptyList(), null);
                 }
 
@@ -472,16 +484,22 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     IASNode embeddedNode = getEmbeddedActionScriptNodeInMXMLTag(offsetTag, currentOffset, params, project);
                     if (embeddedNode != null)
                     {
-                        return actionScriptHoverWithNode(params, project, embeddedNode);
+                        Hover result = actionScriptHoverWithNode(params, project, embeddedNode);
+                        cancelToken.checkCanceled();
+                        return result;
                     }
                     //if we're inside an <fx:Script> tag, we want ActionScript hover,
                     //so that's why we call isMXMLTagValidForCompletion()
                     if (MXMLDataUtils.isMXMLTagValidForCompletion(offsetTag))
                     {
-                        return mxmlHover(params, project, offsetTag);
+                        Hover result = mxmlHover(params, project, offsetTag);
+                        cancelToken.checkCanceled();
+                        return result;
                     }
                 }
-                return actionScriptHover(params, project);
+                Hover result = actionScriptHover(params, project);
+                cancelToken.checkCanceled();
+                return result;
             }
             finally
             {
@@ -501,9 +519,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     {
         return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken ->
         {
+            cancelToken.checkCanceled();
+
             //don't start the build until all other builds are done
             compilerWorkspace.startIdleState();
             compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
+            cancelToken.checkCanceled();
 
             compilerWorkspace.startBuilding();
             try
@@ -511,6 +532,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 RoyaleProject project = textDocumentPositionParamsToProject(params);
                 if(project == null)
                 {
+                    cancelToken.checkCanceled();
                     return new SignatureHelp(Collections.emptyList(), -1, -1);
                 }
 
@@ -550,6 +572,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 }
                 if (offsetNode == null)
                 {
+                    cancelToken.checkCanceled();
                     //we couldn't find a node at the specified location
                     return new SignatureHelp(Collections.emptyList(), -1, -1);
                 }
@@ -641,8 +664,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     {
                         result.setActiveParameter(index);
                     }
+                    cancelToken.checkCanceled();
                     return result;
                 }
+                cancelToken.checkCanceled();
                 return new SignatureHelp(Collections.emptyList(), -1, -1);
             }
             finally
@@ -661,9 +686,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     {
         return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken ->
         {
+            cancelToken.checkCanceled();
+
             //don't start the build until all other builds are done
             compilerWorkspace.startIdleState();
             compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
+            cancelToken.checkCanceled();
 
             compilerWorkspace.startBuilding();
             try
@@ -671,6 +699,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 RoyaleProject project = textDocumentPositionParamsToProject(params);
                 if(project == null)
                 {
+                    cancelToken.checkCanceled();
                     return Collections.emptyList();
                 }
 
@@ -680,16 +709,22 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     IASNode embeddedNode = getEmbeddedActionScriptNodeInMXMLTag(offsetTag, currentOffset, params, project);
                     if (embeddedNode != null)
                     {
-                        return actionScriptDefinitionWithNode(params, project, embeddedNode);
+                        List<? extends Location> result = actionScriptDefinitionWithNode(params, project, embeddedNode);
+                        cancelToken.checkCanceled();
+                        return result;
                     }
                     //if we're inside an <fx:Script> tag, we want ActionScript lookup,
                     //so that's why we call isMXMLTagValidForCompletion()
                     if (MXMLDataUtils.isMXMLTagValidForCompletion(offsetTag))
                     {
-                        return mxmlDefinition(params, project, offsetTag);
+                        List<? extends Location> result = mxmlDefinition(params, project, offsetTag);
+                        cancelToken.checkCanceled();
+                        return result;
                     }
                 }
-                return actionScriptDefinition(params, project);
+                List<? extends Location> result = actionScriptDefinition(params, project);
+                cancelToken.checkCanceled();
+                return result;
             }
             finally
             {
@@ -739,9 +774,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     {
         return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken ->
         {
+            cancelToken.checkCanceled();
+
             //don't start the build until all other builds are done
             compilerWorkspace.startIdleState();
             compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
+            cancelToken.checkCanceled();
 
             compilerWorkspace.startBuilding();
             try
@@ -749,6 +787,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 RoyaleProject project = textDocumentPositionParamsToProject(params);
                 if(project == null)
                 {
+                    cancelToken.checkCanceled();
                     return Collections.emptyList();
                 }
 
@@ -758,16 +797,22 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     IASNode embeddedNode = getEmbeddedActionScriptNodeInMXMLTag(offsetTag, currentOffset, params, project);
                     if (embeddedNode != null)
                     {
-                        return actionScriptTypeDefinitionWithNode(params, project, embeddedNode);
+                        List<? extends Location> result = actionScriptTypeDefinitionWithNode(params, project, embeddedNode);
+                        cancelToken.checkCanceled();
+                        return result;
                     }
                     //if we're inside an <fx:Script> tag, we want ActionScript lookup,
                     //so that's why we call isMXMLTagValidForCompletion()
                     if (MXMLDataUtils.isMXMLTagValidForCompletion(offsetTag))
                     {
-                        return mxmlTypeDefinition(params, project, offsetTag);
+                        List<? extends Location> result = mxmlTypeDefinition(params, project, offsetTag);
+                        cancelToken.checkCanceled();
+                        return result;
                     }
                 }
-                return actionScriptTypeDefinition(params, project);
+                List<? extends Location> result = actionScriptTypeDefinition(params, project);
+                cancelToken.checkCanceled();
+                return result;
             }
             finally
             {
@@ -783,9 +828,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     {
         return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken ->
         {
+            cancelToken.checkCanceled();
+
             //don't start the build until all other builds are done
             compilerWorkspace.startIdleState();
             compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
+            cancelToken.checkCanceled();
 
             compilerWorkspace.startBuilding();
             try
@@ -793,6 +841,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 RoyaleProject project = textDocumentPositionParamsToProject(params);
                 if(project == null)
                 {
+                    cancelToken.checkCanceled();
                     return Collections.emptyList();
                 }
 
@@ -802,10 +851,14 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     IASNode embeddedNode = getEmbeddedActionScriptNodeInMXMLTag(offsetTag, currentOffset, params, project);
                     if (embeddedNode != null)
                     {
-                        return actionScriptImplementationWithNode(params, project, embeddedNode);
+                        List<? extends Location> result = actionScriptImplementationWithNode(params, project, embeddedNode);
+                        cancelToken.checkCanceled();
+                        return result;
                     }
                 }
-                return actionScriptImplementation(params, project);
+                List<? extends Location> result = actionScriptImplementation(params, project);
+                cancelToken.checkCanceled();
+                return result;
             }
             finally
             {
@@ -824,9 +877,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     {
         return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken ->
         {
+            cancelToken.checkCanceled();
+
             //don't start the build until all other builds are done
             compilerWorkspace.startIdleState();
             compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
+            cancelToken.checkCanceled();
 
             compilerWorkspace.startBuilding();
             try
@@ -834,6 +890,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 RoyaleProject project = textDocumentPositionParamsToProject(params);
                 if(project == null)
                 {
+                    cancelToken.checkCanceled();
                     return Collections.emptyList();
                 }
 
@@ -843,16 +900,22 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     IASNode embeddedNode = getEmbeddedActionScriptNodeInMXMLTag(offsetTag, currentOffset, params.getTextDocument(), params.getPosition(), project);
                     if (embeddedNode != null)
                     {
-                        return actionScriptReferencesWithNode(params, project, embeddedNode);
+                        List<? extends Location> result = actionScriptReferencesWithNode(params, project, embeddedNode);
+                        cancelToken.checkCanceled();
+                        return result;
                     }
                     //if we're inside an <fx:Script> tag, we want ActionScript lookup,
                     //so that's why we call isMXMLTagValidForCompletion()
                     if (MXMLDataUtils.isMXMLTagValidForCompletion(offsetTag))
                     {
-                        return mxmlReferences(params, project, offsetTag);
+                        List<? extends Location> result = mxmlReferences(params, project, offsetTag);
+                        cancelToken.checkCanceled();
+                        return result;
                     }
                 }
-                return actionScriptReferences(params, project);
+                List<? extends Location> result = actionScriptReferences(params, project);
+                cancelToken.checkCanceled();
+                return result;
             }
             finally
             {
@@ -877,9 +940,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     {
         return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken ->
         {
+            cancelToken.checkCanceled();
+
             //don't start the build until all other builds are done
             compilerWorkspace.startIdleState();
             compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
+            cancelToken.checkCanceled();
 
             compilerWorkspace.startBuilding();
             try
@@ -971,6 +1037,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                         }
                     }
                 }
+                cancelToken.checkCanceled();
                 return result;
             }
             finally
@@ -989,9 +1056,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     {
         return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken ->
         {
+            cancelToken.checkCanceled();
+
             //don't start the build until all other builds are done
             compilerWorkspace.startIdleState();
             compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
+            cancelToken.checkCanceled();
 
             compilerWorkspace.startBuilding();
             try
@@ -1000,17 +1070,20 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 RoyaleProject project = textDocumentIdentifierToProject(textDocument);
                 if(project == null)
                 {
+                    cancelToken.checkCanceled();
                     return Collections.emptyList();
                 }
                 Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocument.getUri());
                 if (path == null)
                 {
+                    cancelToken.checkCanceled();
                     return Collections.emptyList();
                 }
 
                 ICompilationUnit unit = getCompilationUnit(path);
                 if (unit == null)
                 {
+                    cancelToken.checkCanceled();
                     //we couldn't find a compilation unit with the specified path
                     return Collections.emptyList();
                 }
@@ -1022,6 +1095,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 }
                 catch (Exception e)
                 {
+                    cancelToken.checkCanceled();
                     return Collections.emptyList();
                 }
                 List<SymbolInformation> result = new ArrayList<>();
@@ -1029,6 +1103,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 {
                     scopeToSymbols(scope, project, result);
                 }
+                cancelToken.checkCanceled();
                 return result;
             }
             finally
@@ -1046,9 +1121,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     {
         return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken ->
         {
+            cancelToken.checkCanceled();
+
             //don't start the build until all other builds are done
             compilerWorkspace.startIdleState();
             compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
+            cancelToken.checkCanceled();
 
             compilerWorkspace.startBuilding();
             try
@@ -1058,15 +1136,18 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocument.getUri());
                 if (path == null)
                 {
+                    cancelToken.checkCanceled();
                     return Collections.emptyList();
                 }
                 if (!sourceByPath.containsKey(path))
                 {
+                    cancelToken.checkCanceled();
                     return Collections.emptyList();
                 }
                 WorkspaceFolderData folderData = getWorkspaceFolderDataForSourceFile(path);
                 if (folderData == null)
                 {
+                    cancelToken.checkCanceled();
                     //the path must be in the workspace or source-path
                     return Collections.emptyList();
                 }
@@ -1074,6 +1155,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 RoyaleProject currentProject = getProject(folderData);
                 if (currentProject == null || !SourcePathUtils.isInProjectSourcePath(path, currentProject))
                 {
+                    cancelToken.checkCanceled();
                     //the path must be in the workspace or source-path
                     return Collections.emptyList();
                 }
@@ -1170,6 +1252,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                         }
                     }
                 }
+                cancelToken.checkCanceled();
                 return commands;
             }
             finally
@@ -1404,9 +1487,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     {
         return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken ->
         {
+            cancelToken.checkCanceled();
+
             //don't start the build until all other builds are done
             compilerWorkspace.startIdleState();
             compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
+            cancelToken.checkCanceled();
 
             compilerWorkspace.startBuilding();
             try
@@ -1414,6 +1500,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 RoyaleProject project = textDocumentIdentifierToProject(params.getTextDocument());
                 if(project == null)
                 {
+                    cancelToken.checkCanceled();
                     return new WorkspaceEdit(new HashMap<>());
                 }
 
@@ -1423,16 +1510,22 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     IASNode embeddedNode = getEmbeddedActionScriptNodeInMXMLTag(offsetTag, currentOffset, params.getTextDocument(), params.getPosition(), project);
                     if (embeddedNode != null)
                     {
-                        return actionScriptRenameWithNode(params, project, embeddedNode);
+                        WorkspaceEdit result = actionScriptRenameWithNode(params, project, embeddedNode);
+                        cancelToken.checkCanceled();
+                        return result;
                     }
                     //if we're inside an <fx:Script> tag, we want ActionScript rename,
                     //so that's why we call isMXMLTagValidForCompletion()
                     if (MXMLDataUtils.isMXMLTagValidForCompletion(offsetTag))
                     {
-                        return mxmlRename(params, project, offsetTag);
+                        WorkspaceEdit result = mxmlRename(params, project, offsetTag);
+                        cancelToken.checkCanceled();
+                        return result;
                     }
                 }
-                return actionScriptRename(params, project);
+                WorkspaceEdit result = actionScriptRename(params, project);
+                cancelToken.checkCanceled();
+                return result;
             }
             finally
             {
@@ -1449,65 +1542,82 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     {
         return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken ->
         {
+            cancelToken.checkCanceled();
+
             //don't start the build until all other builds are done
             compilerWorkspace.startIdleState();
             compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
+            cancelToken.checkCanceled();
 
             compilerWorkspace.startBuilding();
             try
             {
+                Object result = null;
                 switch(params.getCommand())
                 {
                     case ICommandConstants.ADD_IMPORT:
                     {
-                        return executeAddImportCommand(params);
+                        result = executeAddImportCommand(params);
+                        break;
                     }
                     case ICommandConstants.ADD_MXML_NAMESPACE:
                     {
-                        return executeAddMXMLNamespaceCommand(params);
+                        result = executeAddMXMLNamespaceCommand(params);
+                        break;
                     }
                     case ICommandConstants.ORGANIZE_IMPORTS_IN_URI:
                     {
-                        return executeOrganizeImportsInUriCommand(params);
+                        result = executeOrganizeImportsInUriCommand(params);
+                        break;
                     }
                     case ICommandConstants.ORGANIZE_IMPORTS_IN_DIRECTORY:
                     {
-                        return executeOrganizeImportsInDirectoryCommand(params);
+                        result = executeOrganizeImportsInDirectoryCommand(params);
+                        break;
                     }
                     case ICommandConstants.GENERATE_GETTER_AND_SETTER:
                     {
-                        return executeGenerateGetterAndSetterCommand(params, true, true);
+                        result = executeGenerateGetterAndSetterCommand(params, true, true);
+                        break;
                     }
                     case ICommandConstants.GENERATE_GETTER:
                     {
-                        return executeGenerateGetterAndSetterCommand(params, true, false);
+                        result = executeGenerateGetterAndSetterCommand(params, true, false);
+                        break;
                     }
                     case ICommandConstants.GENERATE_SETTER:
                     {
-                        return executeGenerateGetterAndSetterCommand(params, false, true);
+                        result = executeGenerateGetterAndSetterCommand(params, false, true);
+                        break;
                     }
                     case ICommandConstants.GENERATE_LOCAL_VARIABLE:
                     {
-                        return executeGenerateLocalVariableCommand(params);
+                        result = executeGenerateLocalVariableCommand(params);
+                        break;
                     }
                     case ICommandConstants.GENERATE_FIELD_VARIABLE:
                     {
-                        return executeGenerateFieldVariableCommand(params);
+                        result = executeGenerateFieldVariableCommand(params);
+                        break;
                     }
                     case ICommandConstants.GENERATE_METHOD:
                     {
-                        return executeGenerateMethodCommand(params);
+                        result = executeGenerateMethodCommand(params);
+                        break;
                     }
                     case ICommandConstants.QUICK_COMPILE:
                     {
-                        return executeQuickCompileCommand(params);
+                        result = executeQuickCompileCommand(params);
+                        break;
                     }
                     default:
                     {
                         System.err.println("Unknown command: " + params.getCommand());
-                        return CompletableFuture.completedFuture(new Object());
+                        result = new Object();
                     }
                 }
+                cancelToken.checkCanceled();
+                return result;
             }
             finally
             {
