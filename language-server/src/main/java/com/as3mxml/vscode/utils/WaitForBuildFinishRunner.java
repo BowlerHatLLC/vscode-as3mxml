@@ -26,6 +26,11 @@ import org.apache.royale.compiler.clients.problems.ProblemQuery;
 import org.apache.royale.compiler.problems.ICompilerProblem;
 import org.apache.royale.compiler.problems.InternalCompilerProblem2;
 import org.apache.royale.compiler.units.ICompilationUnit;
+import org.apache.royale.compiler.units.requests.IABCBytesRequestResult;
+import org.apache.royale.compiler.units.requests.IFileScopeRequestResult;
+import org.apache.royale.compiler.units.requests.IOutgoingDependenciesRequestResult;
+import org.apache.royale.compiler.units.requests.IRequest;
+import org.apache.royale.compiler.units.requests.ISyntaxTreeRequestResult;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
@@ -44,27 +49,117 @@ public class WaitForBuildFinishRunner implements Runnable
 	public CompilerProblemFilter compilerProblemFilter;
 	public LanguageClient languageClient;
 	private WorkspaceFolderData folderData;
+
 	private ICompilationUnit compilationUnit;
+
+	public ICompilationUnit getCompilationUnit()
+	{
+		return compilationUnit;
+	}
+
+	private IRequest<ISyntaxTreeRequestResult, ICompilationUnit> syntaxTreeRequest;
+	private IRequest<IFileScopeRequestResult, ICompilationUnit> fileScopeRequest;
+	private IRequest<IOutgoingDependenciesRequestResult, ICompilationUnit> outgoingDepsRequest;
+	private IRequest<IABCBytesRequestResult, ICompilationUnit> abcBytesRequest;
+
+	private boolean running = false;
+
+	public boolean isRunning()
+	{
+		return running;
+	}
+
+	private boolean changed = false;
+
+	public boolean getChanged()
+	{
+		return changed;
+	}
+
+	public void setChanged()
+	{
+		changed = true;
+	}
+
+	private boolean cancelled = false;
+
+	public boolean getCancelled()
+	{
+		return cancelled;
+	}
+
+	public void setCancelled()
+	{
+		cancelled = true;
+	}
 
 	public void run()
 	{
-		ProblemQuery problemQuery = new ProblemQuery(folderData.configurator.getCompilerProblemSettings());
+		running = true;
+		while (true)
+		{
+			if (cancelled)
+			{
+				break;
+			}
+			if (compilationUnit.getProject() == null)
+			{
+				//this compilation unit is no longer valid
+				break;
+			}
+			if (syntaxTreeRequest == null)
+			{
+				syntaxTreeRequest = compilationUnit.getSyntaxTreeRequest();
+			}
+			if (fileScopeRequest == null)
+			{
+				fileScopeRequest = compilationUnit.getFileScopeRequest();
+			}
+			if (outgoingDepsRequest == null)
+			{
+				outgoingDepsRequest = compilationUnit.getOutgoingDependenciesRequest();
+			}
+			if (abcBytesRequest == null)
+			{
+				abcBytesRequest = compilationUnit.getABCBytesRequest();
+			}
+			if(syntaxTreeRequest.isDone()
+					&& fileScopeRequest.isDone()
+					&& outgoingDepsRequest.isDone()
+					&& abcBytesRequest.isDone())
+			{
+				publishDiagnostics();
+				syntaxTreeRequest = null;
+				fileScopeRequest = null;
+				outgoingDepsRequest = null;
+				abcBytesRequest = null;
+				if(!changed)
+				{
+					break;
+				}
+				changed = false;
+			}
+			try
+			{
+				//wait a short time between checks
+				//it's okay if problems are updated a little slowly
+				Thread.sleep(100);
+			}
+			catch(InterruptedException e) {}
+		}
+		running = false;
+	}
 
-		URI uri = Paths.get(compilationUnit.getAbsoluteFilename()).toUri();
-        PublishDiagnosticsParams publish = new PublishDiagnosticsParams();
-        ArrayList<Diagnostic> diagnostics = new ArrayList<>();
-        publish.setDiagnostics(diagnostics);
-		publish.setUri(uri.toString());
-
+	private void publishDiagnostics()
+	{
+		ArrayList<Diagnostic> diagnostics = new ArrayList<>();
 		ArrayList<ICompilerProblem> problems = new ArrayList<>();
         try
         {
-            //if we pass in null, it's designed to ignore certain errors that
-            //don't matter for IDE code intelligence.
-			Collections.addAll(problems, compilationUnit.getSyntaxTreeRequest().get().getProblems());
-			Collections.addAll(problems, compilationUnit.getFileScopeRequest().get().getProblems());
-			Collections.addAll(problems, compilationUnit.getOutgoingDependenciesRequest().get().getProblems());
-			ICompilerProblem[] probs = compilationUnit.getABCBytesRequest().get().getProblems();
+			Collections.addAll(problems, syntaxTreeRequest.get().getProblems());
+			Collections.addAll(problems, fileScopeRequest.get().getProblems());
+			Collections.addAll(problems, outgoingDepsRequest.get().getProblems());
+			ICompilerProblem[] probs = abcBytesRequest.get().getProblems();
 			for (ICompilerProblem prob : probs)
 			{
 				if (!(prob instanceof InternalCompilerProblem2))
@@ -83,6 +178,8 @@ public class WaitForBuildFinishRunner implements Runnable
             diagnostic.setMessage("A fatal error occurred while checking a file for problems: " + compilationUnit.getAbsoluteFilename());
 			diagnostics.add(diagnostic);
 		}
+
+		ProblemQuery problemQuery = new ProblemQuery(folderData.configurator.getCompilerProblemSettings());
 		problemQuery.addAll(problems);
 		for (ICompilerProblem problem : problemQuery.getFilteredProblems())
 		{
@@ -94,6 +191,14 @@ public class WaitForBuildFinishRunner implements Runnable
 			diagnostics.add(diagnostic);
 		}
 
+		URI uri = Paths.get(compilationUnit.getAbsoluteFilename()).toUri();
+        PublishDiagnosticsParams publish = new PublishDiagnosticsParams();
+        publish.setDiagnostics(diagnostics);
+		publish.setUri(uri.toString());
+		if (cancelled)
+		{
+			return;
+		}
 		languageClient.publishDiagnostics(publish);
 	}
 }

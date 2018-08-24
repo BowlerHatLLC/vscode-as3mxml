@@ -275,6 +275,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private CompilerShell compilerShell;
     private CompilerProblemFilter compilerProblemFilter = new CompilerProblemFilter();
     private boolean initialized = false;
+    private WaitForBuildFinishRunner waitForBuildFinishRunner;
 
     public ActionScriptTextDocumentService()
     {
@@ -1707,7 +1708,18 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         else
         {
-            compilerWorkspace.getExecutorService().submit(new WaitForBuildFinishRunner(unit, folderData, languageClient, compilerProblemFilter));
+            //try to keep using the existing instance, if possible
+            if(waitForBuildFinishRunner == null
+                    || !waitForBuildFinishRunner.isRunning()
+                    || !unit.equals(waitForBuildFinishRunner.getCompilationUnit()))
+            {
+                waitForBuildFinishRunner = new WaitForBuildFinishRunner(unit, folderData, languageClient, compilerProblemFilter);
+                compilerWorkspace.getExecutorService().submit(waitForBuildFinishRunner);
+            }
+            else
+            {
+                waitForBuildFinishRunner.setChanged();
+            }
         }
     }
 
@@ -5637,6 +5649,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             //fall back to the syntax check instead
             return false;
+        }
+        if (waitForBuildFinishRunner != null
+            && mainUnit.equals(waitForBuildFinishRunner.getCompilationUnit())
+            && waitForBuildFinishRunner.isRunning())
+        {
+            //take precedence over the real time problem checker
+            waitForBuildFinishRunner.setCancelled();
         }
         CompilerProject project = (CompilerProject) mainUnit.getProject();
         Collection<ICompilerProblem> fatalProblems = project.getFatalProblems();
