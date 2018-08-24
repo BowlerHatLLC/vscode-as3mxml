@@ -24,7 +24,6 @@ import java.util.regex.Pattern;
 
 import com.as3mxml.vscode.mxml.IMXMLLibraryConstants;
 
-import org.apache.royale.compiler.common.IFileSpecificationGetter;
 import org.apache.royale.compiler.common.PrefixMap;
 import org.apache.royale.compiler.common.XMLName;
 import org.apache.royale.compiler.definitions.ITypeDefinition;
