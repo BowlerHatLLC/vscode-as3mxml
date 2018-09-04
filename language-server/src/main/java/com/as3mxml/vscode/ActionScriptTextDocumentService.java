@@ -181,6 +181,7 @@ import com.as3mxml.vscode.utils.DefinitionTextUtils.DefinitionAsText;
 
 import org.eclipse.lsp4j.ApplyWorkspaceEditParams;
 import org.eclipse.lsp4j.ClientCapabilities;
+import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.CodeLensParams;
@@ -202,6 +203,7 @@ import org.eclipse.lsp4j.DocumentFormattingParams;
 import org.eclipse.lsp4j.DocumentHighlight;
 import org.eclipse.lsp4j.DocumentOnTypeFormattingParams;
 import org.eclipse.lsp4j.DocumentRangeFormattingParams;
+import org.eclipse.lsp4j.DocumentSymbol;
 import org.eclipse.lsp4j.DocumentSymbolParams;
 import org.eclipse.lsp4j.ExecuteCommandParams;
 import org.eclipse.lsp4j.FileChangeType;
@@ -1103,7 +1105,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
      * workspace)
      */
     @Override
-    public CompletableFuture<List<? extends SymbolInformation>> documentSymbol(DocumentSymbolParams params)
+    public CompletableFuture<List<Either<SymbolInformation, DocumentSymbol>>> documentSymbol(DocumentSymbolParams params)
     {
         return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken ->
         {
@@ -1149,7 +1151,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     cancelToken.checkCanceled();
                     return Collections.emptyList();
                 }
-                List<SymbolInformation> result = new ArrayList<>();
+                List<Either<SymbolInformation, DocumentSymbol>> result = new ArrayList<>();
                 for (IASScope scope : scopes)
                 {
                     scopeToSymbols(scope, project, result);
@@ -1168,7 +1170,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
      * Can be used to "quick fix" an error or warning.
      */
     @Override
-    public CompletableFuture<List<? extends Command>> codeAction(CodeActionParams params)
+    public CompletableFuture<List<Either<Command, CodeAction>>> codeAction(CodeActionParams params)
     {
         return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken ->
         {
@@ -1210,7 +1212,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     //the path must be in the workspace or source-path
                     return Collections.emptyList();
                 }
-                ArrayList<Command> commands = new ArrayList<>();
+                List<Either<Command, CodeAction>> commands = new ArrayList<>();
                 for (Diagnostic diagnostic : diagnostics)
                 {
                     //I don't know why this can be null
@@ -1297,7 +1299,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                                 Range paramRange = params.getRange();
                                 if (LSPUtils.rangesIntersect(savedRange, paramRange))
                                 {
-                                    commands.add(codeAction.command);
+                                    commands.add(Either.forLeft(codeAction.command));
                                 }
                             }
                         }
@@ -1313,7 +1315,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         });
     }
 
-    private void createCodeActionForMissingField(TextDocumentIdentifier textDocument, Diagnostic diagnostic, List<Command> commands)
+    private void createCodeActionForMissingField(TextDocumentIdentifier textDocument, Diagnostic diagnostic, List<Either<Command, CodeAction>> commands)
     {
         IASNode offsetNode = getOffsetNode(textDocument, diagnostic.getRange().getStart());
         IIdentifierNode identifierNode = null;
@@ -1355,10 +1357,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             diagnostic.getRange().getEnd().getCharacter(),
             identifierName
         ));
-        commands.add(generateVariableCommand);
+        commands.add(Either.forLeft(generateVariableCommand));
     }
     
-    private void createCodeActionForMissingLocalVariable(TextDocumentIdentifier textDocument, Diagnostic diagnostic, List<Command> commands)
+    private void createCodeActionForMissingLocalVariable(TextDocumentIdentifier textDocument, Diagnostic diagnostic, List<Either<Command, CodeAction>> commands)
     {
         IASNode offsetNode = getOffsetNode(textDocument, diagnostic.getRange().getStart());
         IIdentifierNode identifierNode = null;
@@ -1383,10 +1385,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             diagnostic.getRange().getEnd().getCharacter(),
             identifierName
         ));
-        commands.add(generateVariableCommand);
+        commands.add(Either.forLeft(generateVariableCommand));
     }
 
-    private void createCodeActionForMissingMethod(TextDocumentIdentifier textDocument, Diagnostic diagnostic, List<Command> commands)
+    private void createCodeActionForMissingMethod(TextDocumentIdentifier textDocument, Diagnostic diagnostic, List<Either<Command, CodeAction>> commands)
     {
         RoyaleProject project = textDocumentIdentifierToProject(textDocument);
         if(project == null)
@@ -1456,10 +1458,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             functionName,
             argTypes.toArray()
         ));
-        commands.add(generateMethodCommand);
+        commands.add(Either.forLeft(generateMethodCommand));
     }
 
-    private void createCodeActionsForImport(TextDocumentIdentifier textDocument, Diagnostic diagnostic, List<Command> commands)
+    private void createCodeActionsForImport(TextDocumentIdentifier textDocument, Diagnostic diagnostic, List<Either<Command, CodeAction>> commands)
     {
         RoyaleProject project = textDocumentIdentifierToProject(textDocument);
         if(project == null)
@@ -1482,7 +1484,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             Command command = createImportCommand(definitionToImport, importRange);
             if (command != null)
             {
-                commands.add(command);
+                commands.add(Either.forLeft(command));
             }
         }
     }
@@ -6345,7 +6347,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return true;
     }
 
-    private void scopeToSymbols(IASScope scope, RoyaleProject project, List<SymbolInformation> result)
+    private void scopeToSymbols(IASScope scope, RoyaleProject project, List<Either<SymbolInformation, DocumentSymbol>> result)
     {
         Collection<IDefinition> definitions = scope.getAllLocalDefinitions();
         for (IDefinition definition : definitions)
@@ -6364,7 +6366,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     SymbolInformation typeSymbol = definitionToSymbol(typeDefinition, project);
                     if (typeSymbol != null)
                     {
-                        result.add(typeSymbol);
+                        result.add(Either.forLeft(typeSymbol));
                     }
                 }
                 IASScope typeScope = typeDefinition.getContainedScope();
@@ -6380,7 +6382,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 SymbolInformation localSymbol = definitionToSymbol(definition, project);
                 if (localSymbol != null)
                 {
-                    result.add(localSymbol);
+                    result.add(Either.forLeft(localSymbol));
                 }
             }
         }
