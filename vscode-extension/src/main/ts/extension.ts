@@ -214,21 +214,21 @@ export function activate(context: vscode.ExtensionContext)
 		]
 	});
 
-	vscode.commands.registerCommand("nextgenas.adapterExecutableCommandSWF", function(workspaceUri)
+	vscode.commands.registerCommand("as3mxml.adapterExecutableCommandSWF", function(workspaceUri)
 	{
 		return adapterExecutableCommandSWF(workspaceUri, javaExecutablePath, editorSDKHome, frameworkSDKHome);
 	});
-	vscode.commands.registerCommand("nextgenas.selectWorkspaceSDK", selectWorkspaceSDK);
-	vscode.commands.registerCommand("nextgenas.restartServer", restartServer);
-	vscode.commands.registerCommand("nextgenas.logCompilerShellOutput", logCompilerShellOutput);
-	vscode.commands.registerCommand("nextgenas.migrateFlashBuilderProject", () =>
+	vscode.commands.registerCommand("as3mxml.selectWorkspaceSDK", selectWorkspaceSDK);
+	vscode.commands.registerCommand("as3mxml.restartServer", restartServer);
+	vscode.commands.registerCommand("as3mxml.logCompilerShellOutput", logCompilerShellOutput);
+	vscode.commands.registerCommand("as3mxml.migrateFlashBuilderProject", () =>
 	{
 		if(vscode.workspace.workspaceFolders)
 		{
 			migrateFlashBuilderProject(vscode.workspace.workspaceFolders[0].uri);
 		}
 	});
-	vscode.commands.registerCommand("nextgenas.quickCompileAndDebug", () =>
+	vscode.commands.registerCommand("as3mxml.quickCompileAndDebug", () =>
 	{	
 		if(!savedLanguageClient || !isLanguageClientReady)
 		{
@@ -237,7 +237,7 @@ export function activate(context: vscode.ExtensionContext)
 		}
 		quickCompileAndDebug();
 	});
-	vscode.commands.registerTextEditorCommand("nextgenas.organizeImportsInTextEditor", organizeImportsInTextEditor);
+	vscode.commands.registerTextEditorCommand("as3mxml.organizeImportsInTextEditor", organizeImportsInTextEditor);
 	
 	//don't activate these things unless we're in a workspace
 	if(vscode.workspace.workspaceFolders !== undefined)
@@ -245,7 +245,7 @@ export function activate(context: vscode.ExtensionContext)
 		sdkStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
 		updateSDKStatusBarItem();
 		sdkStatusBarItem.tooltip = "Select ActionScript SDK";
-		sdkStatusBarItem.command = "nextgenas.selectWorkspaceSDK";
+		sdkStatusBarItem.command = "as3mxml.selectWorkspaceSDK";
 		sdkStatusBarItem.show();
 
 		let rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;

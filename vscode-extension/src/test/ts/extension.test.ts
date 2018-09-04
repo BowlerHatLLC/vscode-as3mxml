@@ -18,13 +18,15 @@ import * as path from "path";
 import * as vscode from "vscode";
 
 const EXTENSION_ID = "bowlerhatllc.vscode-nextgenas";
-const COMMAND_ADD_IMPORT = "nextgenas.addImport";
-const COMMAND_GENERATE_GETTER = "nextgenas.generateGetter";
-const COMMAND_GENERATE_SETTER = "nextgenas.generateSetter";
-const COMMAND_GENERATE_GETTER_AND_SETTER = "nextgenas.generateGetterAndSetter";
-const COMMAND_GENERATE_LOCAL_VARIABLE = "nextgenas.generateLocalVariable";
-const COMMAND_GENERATE_FIELD_VARIABLE = "nextgenas.generateFieldVariable";
-const COMMAND_GENERATE_METHOD = "nextgenas.generateMethod";
+const COMMAND_ADD_IMPORT = "as3mxml.addImport";
+const COMMAND_ADD_MXML_NAMESPACE = "as3mxml.addMXMLNamespace";
+const COMMAND_GENERATE_GETTER = "as3mxml.generateGetter";
+const COMMAND_GENERATE_SETTER = "as3mxml.generateSetter";
+const COMMAND_GENERATE_GETTER_AND_SETTER = "as3mxml.generateGetterAndSetter";
+const COMMAND_GENERATE_LOCAL_VARIABLE = "as3mxml.generateLocalVariable";
+const COMMAND_GENERATE_FIELD_VARIABLE = "as3mxml.generateFieldVariable";
+const COMMAND_GENERATE_METHOD = "as3mxml.generateMethod";
+const COMMAND_ORGANIZE_IMPORTS_IN_URI = "as3mxml.organizeImportsInUri";
 
 function openAndEditDocument(uri: vscode.Uri, callback: (editor: vscode.TextEditor) => PromiseLike<void>): PromiseLike<void>
 {
@@ -7232,13 +7234,13 @@ suite("imports: Application workspace", () =>
 			});
 		});
 	});
-	test("nextgenas.addImport adds import for qualified class with no range", () =>
+	test("as3mxml.addImport adds import for qualified class with no range", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Imports.as"));
 		let qualifiedName = "com.example.PackageClass";
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
-			return vscode.commands.executeCommand("nextgenas.addImport", "com.example.PackageClass", uri.toString(), -1, -1)
+			return vscode.commands.executeCommand(COMMAND_ADD_IMPORT, "com.example.PackageClass", uri.toString(), -1, -1)
 				.then(() =>
 					{
 						return new Promise((resolve, reject) =>
@@ -7251,7 +7253,7 @@ suite("imports: Application workspace", () =>
 								let end = new vscode.Position(4, 0);
 								let range = new vscode.Range(start, end);
 								let importText = editor.document.getText(range);
-								assert.strictEqual(importText, "\timport com.example.PackageClass;\n\n", "nextgenas.addImport failed to add import for class: " + uri);
+								assert.strictEqual(importText, "\timport com.example.PackageClass;\n\n", "as3mxml.addImport failed to add import for class: " + uri);
 								resolve();
 							}, 250);
 						})
@@ -7261,13 +7263,13 @@ suite("imports: Application workspace", () =>
 					});
 		});
 	});
-	test("nextgenas.addImport adds import for qualified class in specific range", () =>
+	test("as3mxml.addImport adds import for qualified class in specific range", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Imports.as"));
 		let qualifiedName = "com.example.PackageClass";
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
-			return vscode.commands.executeCommand("nextgenas.addImport", "com.example.PackageClass", uri.toString(), 0, 126)
+			return vscode.commands.executeCommand(COMMAND_ADD_IMPORT, "com.example.PackageClass", uri.toString(), 0, 126)
 				.then(() =>
 					{
 						return new Promise((resolve, reject) =>
@@ -7280,7 +7282,7 @@ suite("imports: Application workspace", () =>
 								let end = new vscode.Position(4, 0);
 								let range = new vscode.Range(start, end);
 								let importText = editor.document.getText(range);
-								assert.strictEqual(importText, "\timport com.example.PackageClass;\n\n", "nextgenas.addImport failed to add import for class: " + uri);
+								assert.strictEqual(importText, "\timport com.example.PackageClass;\n\n", "as3mxml.addImport failed to add import for class: " + uri);
 								resolve();
 							}, 250);
 						})
@@ -7290,13 +7292,13 @@ suite("imports: Application workspace", () =>
 					});
 		});
 	});
-	test("nextgenas.addImport adds import for qualified class after package block", () =>
+	test("as3mxml.addImport adds import for qualified class after package block", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Imports.as"));
 		let qualifiedName = "com.example.PackageClass";
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
-			return vscode.commands.executeCommand("nextgenas.addImport", "com.example.PackageClass", uri.toString(), 127, -1)
+			return vscode.commands.executeCommand(COMMAND_ADD_IMPORT, "com.example.PackageClass", uri.toString(), 127, -1)
 				.then(() =>
 					{
 						return new Promise((resolve, reject) =>
@@ -7309,7 +7311,7 @@ suite("imports: Application workspace", () =>
 								let end = new vscode.Position(13, 0);
 								let range = new vscode.Range(start, end);
 								let importText = editor.document.getText(range);
-								assert.strictEqual(importText, "import com.example.PackageClass;\n\n", "nextgenas.addImport failed to add import for class: " + uri);
+								assert.strictEqual(importText, "import com.example.PackageClass;\n\n", "as3mxml.addImport failed to add import for class: " + uri);
 								resolve();
 							}, 250);
 						})
@@ -7336,14 +7338,14 @@ suite("mxml namespaces: Application workspace", () =>
 			});
 		});
 	});
-	test("nextgenas.addMXMLNamespace adds new namespace", () =>
+	test("as3mxml.addMXMLNamespace adds new namespace", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "MXMLNamespace.mxml"));
 		let nsPrefix = "mx";
 		let nsUri = "library://ns.adobe.com/flex/mx";
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
-			return vscode.commands.executeCommand("nextgenas.addMXMLNamespace", nsPrefix, nsUri, uri.toString(), 48, 140)
+			return vscode.commands.executeCommand(COMMAND_ADD_MXML_NAMESPACE, nsPrefix, nsUri, uri.toString(), 48, 140)
 				.then(() =>
 					{
 						return new Promise((resolve, reject) =>
@@ -7356,7 +7358,7 @@ suite("mxml namespaces: Application workspace", () =>
 								let end = new vscode.Position(2, 93);
 								let range = new vscode.Range(start, end);
 								let importText = editor.document.getText(range);
-								assert.strictEqual(importText, " xmlns:mx=\"library://ns.adobe.com/flex/mx\"", "nextgenas.addMXMLNamespace failed to add MXML namspace in file: " + uri);
+								assert.strictEqual(importText, " xmlns:mx=\"library://ns.adobe.com/flex/mx\"", "as3mxml.addMXMLNamespace failed to add MXML namspace in file: " + uri);
 								resolve();
 							}, 250);
 						})
@@ -7366,7 +7368,7 @@ suite("mxml namespaces: Application workspace", () =>
 					});
 		});
 	});
-	test("nextgenas.addMXMLNamespace skips duplicate namespace", () =>
+	test("as3mxml.addMXMLNamespace skips duplicate namespace", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "MXMLNamespace.mxml"));
 		let nsPrefix = "fx";
@@ -7374,7 +7376,7 @@ suite("mxml namespaces: Application workspace", () =>
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			let originalText = editor.document.getText();
-			return vscode.commands.executeCommand("nextgenas.addMXMLNamespace", nsPrefix, nsUri, uri.toString(), 48, 140)
+			return vscode.commands.executeCommand(COMMAND_ADD_MXML_NAMESPACE, nsPrefix, nsUri, uri.toString(), 48, 140)
 				.then(() =>
 					{
 						return new Promise((resolve, reject) =>
@@ -7387,7 +7389,7 @@ suite("mxml namespaces: Application workspace", () =>
 								let end = new vscode.Position(2, 93);
 								let range = new vscode.Range(start, end);
 								let newText = editor.document.getText();
-								assert.strictEqual(newText, originalText, "nextgenas.addMXMLNamespace incorrectly added duplicate MXML namespace in file: " + uri);
+								assert.strictEqual(newText, originalText, "as3mxml.addMXMLNamespace incorrectly added duplicate MXML namespace in file: " + uri);
 								resolve();
 							}, 250);
 						})
@@ -7894,12 +7896,12 @@ suite("generate getter/setter: Application workspace", () =>
 			});
 		});
 	});
-	test("nextgenas.generateGetter generates getter without assignment", () =>
+	test("as3mxml.generateGetter generates getter without assignment", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "GenerateGetterAndSetter.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
-			return vscode.commands.executeCommand("nextgenas.generateGetter", uri.toString(), 7, 2, 7, 32, "noAssignment", "public", false, "Object", null)
+			return vscode.commands.executeCommand(COMMAND_GENERATE_GETTER, uri.toString(), 7, 2, 7, 32, "noAssignment", "public", false, "Object", null)
 				.then(() =>
 					{
 						return new Promise((resolve, reject) =>
@@ -7912,7 +7914,9 @@ suite("generate getter/setter: Application workspace", () =>
 								let end = new vscode.Position(13, 0);
 								let range = new vscode.Range(start, end);
 								let generatedText = editor.document.getText(range);
-								assert.strictEqual(generatedText, "\t\tprivate var _noAssignment:Object;\n\n\t\tpublic function get noAssignment():Object\n\t\t{\n\t\t\treturn _noAssignment;\n\t\t}\n", "nextgenas.generateGetter failed to generate getter");
+								assert.strictEqual(generatedText,
+									"\t\tprivate var _noAssignment:Object;\n\n\t\tpublic function get noAssignment():Object\n\t\t{\n\t\t\treturn _noAssignment;\n\t\t}\n",
+									"as3mxml.generateGetter failed to generate getter");
 								resolve();
 							}, 250);
 						})
@@ -7922,12 +7926,12 @@ suite("generate getter/setter: Application workspace", () =>
 					});
 		});
 	});
-	test("nextgenas.generateGetter generates getter with a type and assignment", () =>
+	test("as3mxml.generateGetter generates getter with a type and assignment", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "GenerateGetterAndSetter.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
-			return vscode.commands.executeCommand("nextgenas.generateGetter", uri.toString(), 9, 2, 9, 40, "assignment", "public", false, "String", "\"hello\"")
+			return vscode.commands.executeCommand(COMMAND_GENERATE_GETTER, uri.toString(), 9, 2, 9, 40, "assignment", "public", false, "String", "\"hello\"")
 				.then(() =>
 					{
 						return new Promise((resolve, reject) =>
@@ -7940,7 +7944,9 @@ suite("generate getter/setter: Application workspace", () =>
 								let end = new vscode.Position(15, 0);
 								let range = new vscode.Range(start, end);
 								let generatedText = editor.document.getText(range);
-								assert.strictEqual(generatedText, "\t\tprivate var _assignment:String = \"hello\";\n\n\t\tpublic function get assignment():String\n\t\t{\n\t\t\treturn _assignment;\n\t\t}\n", "nextgenas.generateGetter failed to generate getter");
+								assert.strictEqual(generatedText,
+									"\t\tprivate var _assignment:String = \"hello\";\n\n\t\tpublic function get assignment():String\n\t\t{\n\t\t\treturn _assignment;\n\t\t}\n",
+									"as3mxml.generateGetter failed to generate getter");
 								resolve();
 							}, 250);
 						})
@@ -7950,12 +7956,12 @@ suite("generate getter/setter: Application workspace", () =>
 					});
 		});
 	});
-	test("nextgenas.generateGetter generates getter with static", () =>
+	test("as3mxml.generateGetter generates getter with static", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "GenerateGetterAndSetter.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
-			return vscode.commands.executeCommand("nextgenas.generateGetter", uri.toString(), 11, 2, 11, 37, "isStatic", "private", true, "Boolean", null)
+			return vscode.commands.executeCommand(COMMAND_GENERATE_GETTER, uri.toString(), 11, 2, 11, 37, "isStatic", "private", true, "Boolean", null)
 				.then(() =>
 					{
 						return new Promise((resolve, reject) =>
@@ -7968,7 +7974,9 @@ suite("generate getter/setter: Application workspace", () =>
 								let end = new vscode.Position(17, 0);
 								let range = new vscode.Range(start, end);
 								let generatedText = editor.document.getText(range);
-								assert.strictEqual(generatedText, "\t\tprivate static var _isStatic:Boolean;\n\n\t\tprivate static function get isStatic():Boolean\n\t\t{\n\t\t\treturn _isStatic;\n\t\t}\n", "nextgenas.generateGetter failed to generate getter");
+								assert.strictEqual(generatedText,
+									"\t\tprivate static var _isStatic:Boolean;\n\n\t\tprivate static function get isStatic():Boolean\n\t\t{\n\t\t\treturn _isStatic;\n\t\t}\n",
+									"as3mxml.generateGetter failed to generate getter");
 								resolve();
 							}, 250);
 						})
@@ -7978,12 +7986,12 @@ suite("generate getter/setter: Application workspace", () =>
 					});
 		});
 	});
-	test("nextgenas.generateSetter generates setter without assignment", () =>
+	test("as3mxml.generateSetter generates setter without assignment", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "GenerateGetterAndSetter.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
-			return vscode.commands.executeCommand("nextgenas.generateSetter", uri.toString(), 7, 2, 7, 32, "noAssignment", "public", false, "Object", null)
+			return vscode.commands.executeCommand(COMMAND_GENERATE_SETTER, uri.toString(), 7, 2, 7, 32, "noAssignment", "public", false, "Object", null)
 				.then(() =>
 					{
 						return new Promise((resolve, reject) =>
@@ -7996,7 +8004,9 @@ suite("generate getter/setter: Application workspace", () =>
 								let end = new vscode.Position(13, 0);
 								let range = new vscode.Range(start, end);
 								let generatedText = editor.document.getText(range);
-								assert.strictEqual(generatedText, "\t\tprivate var _noAssignment:Object;\n\n\t\tpublic function set noAssignment(value:Object):void\n\t\t{\n\t\t\t_noAssignment = value;\n\t\t}\n", "nextgenas.generateSetter failed to generate setter");
+								assert.strictEqual(generatedText,
+									"\t\tprivate var _noAssignment:Object;\n\n\t\tpublic function set noAssignment(value:Object):void\n\t\t{\n\t\t\t_noAssignment = value;\n\t\t}\n",
+									"as3mxml.generateSetter failed to generate setter");
 								resolve();
 							}, 250);
 						})
@@ -8006,12 +8016,12 @@ suite("generate getter/setter: Application workspace", () =>
 					});
 		});
 	});
-	test("nextgenas.generateSetter generates setter with a type and assignment", () =>
+	test("as3mxml.generateSetter generates setter with a type and assignment", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "GenerateGetterAndSetter.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
-			return vscode.commands.executeCommand("nextgenas.generateSetter", uri.toString(), 9, 2, 9, 40, "assignment", "public", false, "String", "\"hello\"")
+			return vscode.commands.executeCommand(COMMAND_GENERATE_SETTER, uri.toString(), 9, 2, 9, 40, "assignment", "public", false, "String", "\"hello\"")
 				.then(() =>
 					{
 						return new Promise((resolve, reject) =>
@@ -8024,7 +8034,9 @@ suite("generate getter/setter: Application workspace", () =>
 								let end = new vscode.Position(15, 0);
 								let range = new vscode.Range(start, end);
 								let generatedText = editor.document.getText(range);
-								assert.strictEqual(generatedText, "\t\tprivate var _assignment:String = \"hello\";\n\n\t\tpublic function set assignment(value:String):void\n\t\t{\n\t\t\t_assignment = value;\n\t\t}\n", "nextgenas.generateSetter failed to generate setter");
+								assert.strictEqual(generatedText,
+									"\t\tprivate var _assignment:String = \"hello\";\n\n\t\tpublic function set assignment(value:String):void\n\t\t{\n\t\t\t_assignment = value;\n\t\t}\n",
+									"as3mxml.generateSetter failed to generate setter");
 								resolve();
 							}, 250);
 						})
@@ -8034,12 +8046,12 @@ suite("generate getter/setter: Application workspace", () =>
 					});
 		});
 	});
-	test("nextgenas.generateSetter generates setter with static", () =>
+	test("as3mxml.generateSetter generates setter with static", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "GenerateGetterAndSetter.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
-			return vscode.commands.executeCommand("nextgenas.generateSetter", uri.toString(), 11, 2, 11, 37, "isStatic", "private", true, "Boolean", null)
+			return vscode.commands.executeCommand(COMMAND_GENERATE_SETTER, uri.toString(), 11, 2, 11, 37, "isStatic", "private", true, "Boolean", null)
 				.then(() =>
 					{
 						return new Promise((resolve, reject) =>
@@ -8052,7 +8064,9 @@ suite("generate getter/setter: Application workspace", () =>
 								let end = new vscode.Position(17, 0);
 								let range = new vscode.Range(start, end);
 								let generatedText = editor.document.getText(range);
-								assert.strictEqual(generatedText, "\t\tprivate static var _isStatic:Boolean;\n\n\t\tprivate static function set isStatic(value:Boolean):void\n\t\t{\n\t\t\t_isStatic = value;\n\t\t}\n", "nextgenas.generateSetter failed to generate setter");
+								assert.strictEqual(generatedText,
+									"\t\tprivate static var _isStatic:Boolean;\n\n\t\tprivate static function set isStatic(value:Boolean):void\n\t\t{\n\t\t\t_isStatic = value;\n\t\t}\n",
+									"as3mxml.generateSetter failed to generate setter");
 								resolve();
 							}, 250);
 						})
@@ -8062,12 +8076,12 @@ suite("generate getter/setter: Application workspace", () =>
 					});
 		});
 	});
-	test("nextgenas.generateGetterAndSetter generates getter and setter without assignment", () =>
+	test("as3mxml.generateGetterAndSetter generates getter and setter without assignment", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "GenerateGetterAndSetter.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
-			return vscode.commands.executeCommand("nextgenas.generateGetterAndSetter", uri.toString(), 7, 2, 7, 32, "noAssignment", "public", false, "Object", null)
+			return vscode.commands.executeCommand(COMMAND_GENERATE_GETTER_AND_SETTER, uri.toString(), 7, 2, 7, 32, "noAssignment", "public", false, "Object", null)
 				.then(() =>
 					{
 						return new Promise((resolve, reject) =>
@@ -8080,7 +8094,9 @@ suite("generate getter/setter: Application workspace", () =>
 								let end = new vscode.Position(18, 0);
 								let range = new vscode.Range(start, end);
 								let generatedText = editor.document.getText(range);
-								assert.strictEqual(generatedText, "\t\tprivate var _noAssignment:Object;\n\n\t\tpublic function get noAssignment():Object\n\t\t{\n\t\t\treturn _noAssignment;\n\t\t}\n\n\t\tpublic function set noAssignment(value:Object):void\n\t\t{\n\t\t\t_noAssignment = value;\n\t\t}\n", "nextgenas.generateSetter failed to generate getter and setter");
+								assert.strictEqual(generatedText,
+									"\t\tprivate var _noAssignment:Object;\n\n\t\tpublic function get noAssignment():Object\n\t\t{\n\t\t\treturn _noAssignment;\n\t\t}\n\n\t\tpublic function set noAssignment(value:Object):void\n\t\t{\n\t\t\t_noAssignment = value;\n\t\t}\n",
+									"as3mxml.generateSetter failed to generate getter and setter");
 								resolve();
 							}, 250);
 						})
@@ -8090,12 +8106,12 @@ suite("generate getter/setter: Application workspace", () =>
 					});
 		});
 	});
-	test("nextgenas.generateGetterAndSetter generates getter and setter with a type and assignment", () =>
+	test("as3mxml.generateGetterAndSetter generates getter and setter with a type and assignment", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "GenerateGetterAndSetter.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
-			return vscode.commands.executeCommand("nextgenas.generateGetterAndSetter", uri.toString(), 9, 2, 9, 40, "assignment", "public", false, "String", "\"hello\"")
+			return vscode.commands.executeCommand(COMMAND_GENERATE_GETTER_AND_SETTER, uri.toString(), 9, 2, 9, 40, "assignment", "public", false, "String", "\"hello\"")
 				.then(() =>
 					{
 						return new Promise((resolve, reject) =>
@@ -8108,7 +8124,9 @@ suite("generate getter/setter: Application workspace", () =>
 								let end = new vscode.Position(20, 0);
 								let range = new vscode.Range(start, end);
 								let generatedText = editor.document.getText(range);
-								assert.strictEqual(generatedText, "\t\tprivate var _assignment:String = \"hello\";\n\n\t\tpublic function get assignment():String\n\t\t{\n\t\t\treturn _assignment;\n\t\t}\n\n\t\tpublic function set assignment(value:String):void\n\t\t{\n\t\t\t_assignment = value;\n\t\t}\n", "nextgenas.generateSetter failed to generate getter and setter");
+								assert.strictEqual(generatedText,
+									"\t\tprivate var _assignment:String = \"hello\";\n\n\t\tpublic function get assignment():String\n\t\t{\n\t\t\treturn _assignment;\n\t\t}\n\n\t\tpublic function set assignment(value:String):void\n\t\t{\n\t\t\t_assignment = value;\n\t\t}\n",
+									"as3mxml.generateSetter failed to generate getter and setter");
 								resolve();
 							}, 250);
 						})
@@ -8118,12 +8136,12 @@ suite("generate getter/setter: Application workspace", () =>
 					});
 		});
 	});
-	test("nextgenas.generateGetterAndSetter generates getter and setter with static", () =>
+	test("as3mxml.generateGetterAndSetter generates getter and setter with static", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "GenerateGetterAndSetter.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
-			return vscode.commands.executeCommand("nextgenas.generateGetterAndSetter", uri.toString(), 11, 2, 11, 37, "isStatic", "private", true, "Boolean", null)
+			return vscode.commands.executeCommand(COMMAND_GENERATE_GETTER_AND_SETTER, uri.toString(), 11, 2, 11, 37, "isStatic", "private", true, "Boolean", null)
 				.then(() =>
 					{
 						return new Promise((resolve, reject) =>
@@ -8136,7 +8154,9 @@ suite("generate getter/setter: Application workspace", () =>
 								let end = new vscode.Position(22, 0);
 								let range = new vscode.Range(start, end);
 								let generatedText = editor.document.getText(range);
-								assert.strictEqual(generatedText, "\t\tprivate static var _isStatic:Boolean;\n\n\t\tprivate static function get isStatic():Boolean\n\t\t{\n\t\t\treturn _isStatic;\n\t\t}\n\n\t\tprivate static function set isStatic(value:Boolean):void\n\t\t{\n\t\t\t_isStatic = value;\n\t\t}\n", "nextgenas.generateGetterAndSetter failed to generate getter and setter");
+								assert.strictEqual(generatedText,
+									"\t\tprivate static var _isStatic:Boolean;\n\n\t\tprivate static function get isStatic():Boolean\n\t\t{\n\t\t\treturn _isStatic;\n\t\t}\n\n\t\tprivate static function set isStatic(value:Boolean):void\n\t\t{\n\t\t\t_isStatic = value;\n\t\t}\n",
+									"as3mxml.generateGetterAndSetter failed to generate getter and setter");
 								resolve();
 							}, 250);
 						})
@@ -8163,12 +8183,12 @@ suite("generate variable: Application workspace", () =>
 			});
 		});
 	});
-	test("nextgenas.generateLocalVariable generates local variable", () =>
+	test("as3mxml.generateLocalVariable generates local variable", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "GenerateVariable.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
-			return vscode.commands.executeCommand("nextgenas.generateLocalVariable", uri.toString(), 6, 3, 6, 8, "myVar")
+			return vscode.commands.executeCommand(COMMAND_GENERATE_LOCAL_VARIABLE, uri.toString(), 6, 3, 6, 8, "myVar")
 				.then(() =>
 					{
 						return new Promise((resolve, reject) =>
@@ -8181,7 +8201,9 @@ suite("generate variable: Application workspace", () =>
 								let end = new vscode.Position(8, 0);
 								let range = new vscode.Range(start, end);
 								let generatedText = editor.document.getText(range);
-								assert.strictEqual(generatedText, "\t\t\tvar myVar:Object;\n\t\t\tmyVar = 12;\n", "nextgenas.generateLocalVariable failed to generate local variable");
+								assert.strictEqual(generatedText,
+									"\t\t\tvar myVar:Object;\n\t\t\tmyVar = 12;\n",
+									"as3mxml.generateLocalVariable failed to generate local variable");
 								resolve();
 							}, 250);
 						})
@@ -8191,12 +8213,12 @@ suite("generate variable: Application workspace", () =>
 					});
 		});
 	});
-	test("nextgenas.generateFieldVariable generates field variable", () =>
+	test("as3mxml.generateFieldVariable generates field variable", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "GenerateVariable.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
-			return vscode.commands.executeCommand("nextgenas.generateFieldVariable", uri.toString(), 6, 3, 6, 8, "myVar")
+			return vscode.commands.executeCommand(COMMAND_GENERATE_FIELD_VARIABLE, uri.toString(), 6, 3, 6, 8, "myVar")
 				.then(() =>
 					{
 						return new Promise((resolve, reject) =>
@@ -8209,7 +8231,9 @@ suite("generate variable: Application workspace", () =>
 								let end = new vscode.Position(10, 0);
 								let range = new vscode.Range(start, end);
 								let generatedText = editor.document.getText(range);
-								assert.strictEqual(generatedText, "\t\tpublic var myVar:Object;\n", "nextgenas.generateFieldVariable failed to generate field variable");
+								assert.strictEqual(generatedText,
+									"\t\tpublic var myVar:Object;\n",
+									"as3mxml.generateFieldVariable failed to generate field variable");
 								resolve();
 							}, 250);
 						})
@@ -8236,12 +8260,12 @@ suite("generate method: Application workspace", () =>
 			});
 		});
 	});
-	test("nextgenas.generateMethod generates method with no parameters", () =>
+	test("as3mxml.generateMethod generates method with no parameters", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "GenerateMethod.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
-			return vscode.commands.executeCommand("nextgenas.generateMethod", uri.toString(), 6, 3, 6, 11, "myMethod", null)
+			return vscode.commands.executeCommand(COMMAND_GENERATE_METHOD, uri.toString(), 6, 3, 6, 11, "myMethod", null)
 				.then(() =>
 					{
 						return new Promise((resolve, reject) =>
@@ -8254,7 +8278,9 @@ suite("generate method: Application workspace", () =>
 								let end = new vscode.Position(13, 0);
 								let range = new vscode.Range(start, end);
 								let generatedText = editor.document.getText(range);
-								assert.strictEqual(generatedText, "\t\tprivate function myMethod():void\n\t\t{\n\t\t}\n", "nextgenas.generateMethod failed to generate method");
+								assert.strictEqual(generatedText,
+									"\t\tprivate function myMethod():void\n\t\t{\n\t\t}\n",
+									"as3mxml.generateMethod failed to generate method");
 								resolve();
 							}, 250);
 						})
@@ -8264,12 +8290,12 @@ suite("generate method: Application workspace", () =>
 					});
 		});
 	});
-	test("nextgenas.generateMethod generates method with parameters", () =>
+	test("as3mxml.generateMethod generates method with parameters", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "GenerateMethod.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
-			return vscode.commands.executeCommand("nextgenas.generateMethod", uri.toString(), 7, 3, 7, 11, "myMethod", ["Number", "Boolean", "String"])
+			return vscode.commands.executeCommand(COMMAND_GENERATE_METHOD, uri.toString(), 7, 3, 7, 11, "myMethod", ["Number", "Boolean", "String"])
 				.then(() =>
 					{
 						return new Promise((resolve, reject) =>
@@ -8282,7 +8308,9 @@ suite("generate method: Application workspace", () =>
 								let end = new vscode.Position(13, 0);
 								let range = new vscode.Range(start, end);
 								let generatedText = editor.document.getText(range);
-								assert.strictEqual(generatedText, "\t\tprivate function myMethod(param0:Number, param1:Boolean, param2:String):void\n\t\t{\n\t\t}\n", "nextgenas.generateMethod failed to generate method");
+								assert.strictEqual(generatedText,
+									"\t\tprivate function myMethod(param0:Number, param1:Boolean, param2:String):void\n\t\t{\n\t\t}\n",
+									"as3mxml.generateMethod failed to generate method");
 								resolve();
 							}, 250);
 						})
@@ -8309,12 +8337,12 @@ suite("organize imports: Application workspace", () =>
 			});
 		});
 	});
-	test("nextgenas.organizeImportsInUri organizes imports in ActionScript: removes unused imports, adds missing imports, and reorganizes remaining imports in alphabetical order", () =>
+	test("as3mxml.organizeImportsInUri organizes imports in ActionScript: removes unused imports, adds missing imports, and reorganizes remaining imports in alphabetical order", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "OrganizeImports.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
-			return vscode.commands.executeCommand("nextgenas.organizeImportsInUri", uri)
+			return vscode.commands.executeCommand(COMMAND_ORGANIZE_IMPORTS_IN_URI, uri)
 				.then(() =>
 					{
 						return new Promise((resolve, reject) =>
@@ -8327,7 +8355,9 @@ suite("organize imports: Application workspace", () =>
 								let end = new vscode.Position(11, 0);
 								let range = new vscode.Range(start, end);
 								let generatedText = editor.document.getText(range);
-								assert.strictEqual(generatedText, "\timport com.example.organizeImports.ImportToAdd;\n\timport com.example.organizeImports.ImportToAddFromAsOperator;\n\timport com.example.organizeImports.ImportToAddFromCast;\n\timport com.example.organizeImports.ImportToAddFromIsOperator;\n\timport com.example.organizeImports.ImportToAddFromNew;\n\timport com.example.organizeImports.ImportToAddFromReturnType;\n\timport com.example.organizeImports.ImportToKeepClass;\n\timport com.example.organizeImports.ImportToKeepInterface;\n\n", "nextgenas.organizeImportsInUri failed to organize imports");
+								assert.strictEqual(generatedText,
+									"\timport com.example.organizeImports.ImportToAdd;\n\timport com.example.organizeImports.ImportToAddFromAsOperator;\n\timport com.example.organizeImports.ImportToAddFromCast;\n\timport com.example.organizeImports.ImportToAddFromIsOperator;\n\timport com.example.organizeImports.ImportToAddFromNew;\n\timport com.example.organizeImports.ImportToAddFromReturnType;\n\timport com.example.organizeImports.ImportToKeepClass;\n\timport com.example.organizeImports.ImportToKeepInterface;\n\n",
+									"as3mxml.organizeImportsInUri failed to organize imports");
 								resolve();
 							}, 1000);
 						})
@@ -8337,12 +8367,12 @@ suite("organize imports: Application workspace", () =>
 					});
 		});
 	});
-	test("nextgenas.organizeImportsInUri organizes imports in MXML: removes unused imports, adds missing imports, and reorganizes remaining imports in alphabetical order", () =>
+	test("as3mxml.organizeImportsInUri organizes imports in MXML: removes unused imports, adds missing imports, and reorganizes remaining imports in alphabetical order", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "MXMLOrganizeImports.mxml"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
-			return vscode.commands.executeCommand("nextgenas.organizeImportsInUri", uri)
+			return vscode.commands.executeCommand(COMMAND_ORGANIZE_IMPORTS_IN_URI, uri)
 				.then(() =>
 					{
 						return new Promise((resolve, reject) =>
@@ -8355,7 +8385,9 @@ suite("organize imports: Application workspace", () =>
 								let end = new vscode.Position(14, 0);
 								let range = new vscode.Range(start, end);
 								let generatedText = editor.document.getText(range);
-								assert.strictEqual(generatedText, "\t\t\timport com.example.organizeImports.ImportToAdd;\n\t\t\timport com.example.organizeImports.ImportToAddFromAsOperator;\n\t\t\timport com.example.organizeImports.ImportToAddFromCast;\n\t\t\timport com.example.organizeImports.ImportToAddFromIsOperator;\n\t\t\timport com.example.organizeImports.ImportToAddFromNew;\n\t\t\timport com.example.organizeImports.ImportToAddFromReturnType;\n\t\t\timport com.example.organizeImports.ImportToKeepClass;\n\t\t\timport com.example.organizeImports.ImportToKeepInterface;\n\n", "nextgenas.organizeImportsInUri failed to organize imports");
+								assert.strictEqual(generatedText,
+									"\t\t\timport com.example.organizeImports.ImportToAdd;\n\t\t\timport com.example.organizeImports.ImportToAddFromAsOperator;\n\t\t\timport com.example.organizeImports.ImportToAddFromCast;\n\t\t\timport com.example.organizeImports.ImportToAddFromIsOperator;\n\t\t\timport com.example.organizeImports.ImportToAddFromNew;\n\t\t\timport com.example.organizeImports.ImportToAddFromReturnType;\n\t\t\timport com.example.organizeImports.ImportToKeepClass;\n\t\t\timport com.example.organizeImports.ImportToKeepInterface;\n\n",
+									"as3mxml.organizeImportsInUri failed to organize imports");
 								resolve();
 							}, 1000);
 						})
@@ -8366,12 +8398,12 @@ suite("organize imports: Application workspace", () =>
 		});
 	});
 	//BowlerHatLLC/vscode-nextgenas#182
-	test("nextgenas.organizeImportsInUri must be able to remove all imports, if necessary", () =>
+	test("as3mxml.organizeImportsInUri must be able to remove all imports, if necessary", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "RemoveAllImports.as"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
-			return vscode.commands.executeCommand("nextgenas.organizeImportsInUri", uri)
+			return vscode.commands.executeCommand(COMMAND_ORGANIZE_IMPORTS_IN_URI, uri)
 				.then(() =>
 					{
 						return new Promise((resolve, reject) =>
@@ -8384,7 +8416,7 @@ suite("organize imports: Application workspace", () =>
 								let end = new vscode.Position(3, 0);
 								let range = new vscode.Range(start, end);
 								let generatedText = editor.document.getText(range);
-								assert.strictEqual(generatedText, "\n", "nextgenas.organizeImportsInUri failed to organize imports");
+								assert.strictEqual(generatedText, "\n", "as3mxml.organizeImportsInUri failed to organize imports");
 								resolve();
 							}, 1000);
 						})

@@ -29,5 +29,5 @@ export default function organizeImportsInTextEditor(editor: vscode.TextEditor, e
 		//we can't organize imports in this file
 		return;
 	}
-	vscode.commands.executeCommand("nextgenas.organizeImportsInUri", document.uri);
+	vscode.commands.executeCommand("as3mxml.organizeImportsInUri", document.uri);
 }

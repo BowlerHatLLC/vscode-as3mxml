@@ -76,7 +76,7 @@ function quickCompileAndDebugWorkspaceFolder(workspaceFolder)
 		progress.report({message: QUICK_COMPILE_MESSAGE});
 		return new Promise((resolve, reject) =>
 		{
-			return vscode.commands.executeCommand("nextgenas.quickCompile", workspaceFolderUri).then((result) =>
+			return vscode.commands.executeCommand("as3mxml.quickCompile", workspaceFolderUri).then((result) =>
 			{
 				resolve();
 

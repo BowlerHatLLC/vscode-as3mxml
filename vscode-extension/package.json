@@ -70,27 +70,27 @@
   "contributes": {
     "commands": [
       {
-        "command": "nextgenas.selectWorkspaceSDK",
+        "command": "as3mxml.selectWorkspaceSDK",
         "title": "ActionScript: Select Workspace SDK"
       },
       {
-        "command": "nextgenas.restartServer",
+        "command": "as3mxml.restartServer",
         "title": "ActionScript: Restart ActionScript/MXML server"
       },
       {
-        "command": "nextgenas.organizeImportsInTextEditor",
+        "command": "as3mxml.organizeImportsInTextEditor",
         "title": "ActionScript: Organize Imports"
       },
       {
-        "command": "nextgenas.organizeImportsInUri",
+        "command": "as3mxml.organizeImportsInUri",
         "title": "Organize Imports"
       },
       {
-        "command": "nextgenas.organizeImportsInDirectory",
+        "command": "as3mxml.organizeImportsInDirectory",
         "title": "Organize Imports (Recursive)"
       },
       {
-        "command": "nextgenas.quickCompileAndDebug",
+        "command": "as3mxml.quickCompileAndDebug",
         "title": "ActionScript: Quick Compile & Debug (Experimental)"
       }
     ],
@@ -98,61 +98,61 @@
       {
         "key": "ctrl+enter",
         "mac": "cmd+enter",
-        "command": "nextgenas.quickCompileAndDebug"
+        "command": "as3mxml.quickCompileAndDebug"
       }
     ],
     "menus": {
       "commandPalette": [
         {
-          "command": "nextgenas.organizeImportsInTextEditor",
+          "command": "as3mxml.organizeImportsInTextEditor",
           "when": "editorLangId == nextgenas"
         },
         {
-          "command": "nextgenas.organizeImportsInTextEditor",
+          "command": "as3mxml.organizeImportsInTextEditor",
           "when": "editorLangId == mxml"
         },
         {
-          "command": "nextgenas.organizeImportsInUri",
+          "command": "as3mxml.organizeImportsInUri",
           "when": "false"
         },
         {
-          "command": "nextgenas.organizeImportsInDirectory",
+          "command": "as3mxml.organizeImportsInDirectory",
           "when": "false"
         }
       ],
       "editor/context": [
         {
-          "command": "nextgenas.organizeImportsInUri",
+          "command": "as3mxml.organizeImportsInUri",
           "when": "editorLangId == nextgenas",
           "group": "1_modification"
         },
         {
-          "command": "nextgenas.organizeImportsInUri",
+          "command": "as3mxml.organizeImportsInUri",
           "when": "editorLangId == mxml",
           "group": "1_modification"
         }
       ],
       "editor/title/context": [
         {
-          "command": "nextgenas.organizeImportsInUri",
+          "command": "as3mxml.organizeImportsInUri",
           "when": "resourceLangId == nextgenas"
         },
         {
-          "command": "nextgenas.organizeImportsInUri",
+          "command": "as3mxml.organizeImportsInUri",
           "when": "resourceLangId == mxml"
         }
       ],
       "explorer/context": [
         {
-          "command": "nextgenas.organizeImportsInUri",
+          "command": "as3mxml.organizeImportsInUri",
           "when": "resourceLangId == nextgenas"
         },
         {
-          "command": "nextgenas.organizeImportsInUri",
+          "command": "as3mxml.organizeImportsInUri",
           "when": "resourceLangId == mxml"
         },
         {
-          "command": "nextgenas.organizeImportsInDirectory",
+          "command": "as3mxml.organizeImportsInDirectory",
           "when": "explorerResourceIsFolder"
         }
       ]
@@ -370,7 +370,7 @@
       {
         "type": "swf",
         "label": "SWF",
-        "adapterExecutableCommand": "nextgenas.adapterExecutableCommandSWF",
+        "adapterExecutableCommand": "as3mxml.adapterExecutableCommandSWF",
         "configurationAttributes": {
           "attach": {
             "properties": {
