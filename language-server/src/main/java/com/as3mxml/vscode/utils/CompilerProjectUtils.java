@@ -89,6 +89,12 @@ public class CompilerProjectUtils
             String firstTarget = targets.get(0);
             switch (MXMLJSC.JSTargetType.fromString(firstTarget))
             {
+                case SWF:
+                {
+                    //no backend. fall back to RoyaleProject.
+                    backend = null;
+                    break;
+                }
                 case JS_NATIVE:
                 {
                     backend = new JSCBackend();
@@ -106,16 +112,11 @@ public class CompilerProjectUtils
                 }
                 default:
                 {
-                    //SWF and JSRoyale should both use this backend.
-
-                    //previously, we didn't use a backend for SWF, but after
-                    //FlexJS became Royale, something changed in the
-                    //compiler to make it more strict.
-
                     //it actually shouldn't matter too much which JS
                     //backend is used when we're only using the project for
                     //code intelligence, so this is probably an acceptable
                     //fallback for just about everything.
+                    //we just want to rule out SWF.
                     backend = new RoyaleBackend();
                     break;
                 }
@@ -170,7 +171,7 @@ public class CompilerProjectUtils
 
 		List<String> compilerOptions = currentProjectOptions.compilerOptions;
         RoyaleProjectConfigurator configurator = null;
-        if (project instanceof RoyaleJSProject)
+        if (project instanceof RoyaleJSProject || frameworkSDKIsRoyale)
         {
             configurator = new RoyaleProjectConfigurator(JSGoogConfiguration.class);
         }
