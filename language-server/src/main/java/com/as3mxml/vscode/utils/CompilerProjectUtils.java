@@ -153,7 +153,8 @@ public class CompilerProjectUtils
         if (project == null)
         {
             //yes, this is called RoyaleProject, but a *real* Royale project
-            //is RoyaleJSProject... even if it's SWF only! confusing, right?
+            //is RoyaleJSProject...
+            //RoyaleProject is for projects targeting the SWF format.
             project = new RoyaleProject(compilerWorkspace);
         }
         project.setProblems(new ArrayList<>());
