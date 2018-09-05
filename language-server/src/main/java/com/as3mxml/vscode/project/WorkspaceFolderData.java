@@ -43,7 +43,7 @@ public class WorkspaceFolderData
 	public RoyaleProject project;
 	//needed for ProblemQuery filtering
 	public RoyaleProjectConfigurator configurator;
-	public Map<WatchKey, Path> sourcePathWatchKeys = new HashMap<>();
+	public Map<WatchKey, Path> sourceOrLibraryPathWatchKeys = new HashMap<>();
 	public List<IInvisibleCompilationUnit> invisibleUnits = new ArrayList<>();
     public ProblemTracker codeProblemTracker = new ProblemTracker();
 	public ProblemTracker configProblemTracker = new ProblemTracker();
@@ -56,11 +56,11 @@ public class WorkspaceFolderData
 			project = null;
 		}
 		
-        for(WatchKey watchKey : sourcePathWatchKeys.keySet())
+        for(WatchKey watchKey : sourceOrLibraryPathWatchKeys.keySet())
         {
             watchKey.cancel();
         }
-		sourcePathWatchKeys.clear();
+		sourceOrLibraryPathWatchKeys.clear();
 		
 		configurator = null;
 	}

@@ -2046,16 +2046,33 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 List<WorkspaceFolderData> allFolderData = getAllWorkspaceFolderDataForSWCFile(Paths.get(normalizedChangedPathAsString));
                 if (allFolderData.size() > 0)
                 {
+                    compilerWorkspace.startIdleState();
+                    ICompilationUnit changedUnit = null;
+                    try
+                    {
+                        changedUnit = findCompilationUnit(normalizedChangedPathAsString);
+                    }
+                    finally
+                    {
+                        compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
+                    }
+                    if (changedUnit != null)
+                    {
+                        //windows drive letter may not match, even after normalization,
+                        //so it's better to use the unit's path, if available.
+                        normalizedChangedPathAsString = changedUnit.getAbsoluteFilename();
+                    }
+
                     IFileSpecification swcFileSpec = fileSpecGetter.getFileSpecification(normalizedChangedPathAsString);
-                    if(changeType.equals(FileChangeType.Deleted))
+                    if (changeType.equals(FileChangeType.Deleted))
                     {
                         compilerWorkspace.fileRemoved(swcFileSpec);
                     }
-                    else if(changeType.equals(FileChangeType.Created))
+                    else if (changeType.equals(FileChangeType.Created))
                     {
                         compilerWorkspace.fileAdded(swcFileSpec);
                     }
-                    else if(changeType.equals(FileChangeType.Changed))
+                    else if (changeType.equals(FileChangeType.Changed))
                     {
                         compilerWorkspace.fileChanged(swcFileSpec);
                     }
@@ -2243,24 +2260,24 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         compilerProblemFilter.royaleProblems = sdkPath.toFile().exists();
     }
 
-    private void watchNewSourcePath(Path sourcePath, WorkspaceFolderData folderData)
+    private void watchNewSourceOrLibraryPath(Path sourceOrLibraryPath, WorkspaceFolderData folderData)
     {
         try
         {
-            java.nio.file.Files.walkFileTree(sourcePath, new SimpleFileVisitor<Path>()
+            java.nio.file.Files.walkFileTree(sourceOrLibraryPath, new SimpleFileVisitor<Path>()
             {
                 @Override
                 public FileVisitResult preVisitDirectory(Path subPath, BasicFileAttributes attrs) throws IOException
                 {
                     WatchKey watchKey = subPath.register(sourcePathWatcher, StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_DELETE, StandardWatchEventKinds.ENTRY_MODIFY);
-                    folderData.sourcePathWatchKeys.put(watchKey, subPath);
+                    folderData.sourceOrLibraryPathWatchKeys.put(watchKey, subPath);
                     return FileVisitResult.CONTINUE;
                 }
             });
         }
         catch (IOException e)
         {
-            System.err.println("Failed to watch source path: " + sourcePath.toString());
+            System.err.println("Failed to watch source or library path: " + sourceOrLibraryPath.toString());
             e.printStackTrace(System.err);
         }
     }
@@ -2293,6 +2310,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             catch (IOException e)
             {
             }
+            boolean shouldWatch = true;
             if (dynamicDidChangeWatchedFiles)
             {
                 //we need to check if the source path is inside any of the
@@ -2309,11 +2327,89 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                         //slightly different capitalization because the language
                         //server protocol and Java file watchers don't
                         //necessarily match
-                        return;
+                        shouldWatch = false;
+                        break;
                     }
                 }
             }
-            watchNewSourcePath(sourcePath, folderData);
+            if (shouldWatch)
+            {
+                watchNewSourceOrLibraryPath(sourcePath, folderData);
+            }
+        }
+        for (String libraryPathString : project.getCompilerLibraryPath(folderData.configurator.getConfiguration()))
+        {
+            Path libraryPath = Paths.get(libraryPathString);
+            try
+            {
+                libraryPath = libraryPath.toRealPath();
+            }
+            catch (IOException e)
+            {
+            }
+            boolean shouldWatch = true;
+            if (dynamicDidChangeWatchedFiles)
+            {
+                //we need to check if the source path is inside any of the
+                //workspace folders. not just the current one.
+                for (WorkspaceFolder workspaceFolder : workspaceFolders)
+                {
+                    String uri = workspaceFolder.getUri();
+                    Path folderPath = LanguageServerCompilerUtils.getPathFromLanguageServerURI(uri);
+                    if (libraryPath.startsWith(folderPath))
+                    {
+                        //if we're already watching for changes in the
+                        //workspace, and we need to avoid so that the compiler
+                        //doesn't get confused by duplicates that might have
+                        //slightly different capitalization because the language
+                        //server protocol and Java file watchers don't
+                        //necessarily match
+                        shouldWatch = false;
+                        break;
+                    }
+                }
+            }
+            if (shouldWatch)
+            {
+                watchNewSourceOrLibraryPath(libraryPath, folderData);
+            }
+        }
+        for (String externalLibraryPathString : project.getCompilerExternalLibraryPath(folderData.configurator.getConfiguration()))
+        {
+            Path externalLibraryPath = Paths.get(externalLibraryPathString);
+            try
+            {
+                externalLibraryPath = externalLibraryPath.toRealPath();
+            }
+            catch (IOException e)
+            {
+            }
+            boolean shouldWatch = true;
+            if (dynamicDidChangeWatchedFiles)
+            {
+                //we need to check if the source path is inside any of the
+                //workspace folders. not just the current one.
+                for (WorkspaceFolder workspaceFolder : workspaceFolders)
+                {
+                    String uri = workspaceFolder.getUri();
+                    Path folderPath = LanguageServerCompilerUtils.getPathFromLanguageServerURI(uri);
+                    if (externalLibraryPath.startsWith(folderPath))
+                    {
+                        //if we're already watching for changes in the
+                        //workspace, and we need to avoid so that the compiler
+                        //doesn't get confused by duplicates that might have
+                        //slightly different capitalization because the language
+                        //server protocol and Java file watchers don't
+                        //necessarily match
+                        shouldWatch = false;
+                        break;
+                    }
+                }
+            }
+            if (shouldWatch)
+            {
+                watchNewSourceOrLibraryPath(externalLibraryPath, folderData);
+            }
         }
     }
 
@@ -2350,13 +2446,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     {
                         for (WorkspaceFolderData folderData : workspaceFolderToData.values())
                         {
-                            if(!folderData.sourcePathWatchKeys.containsKey(watchKey))
+                            if(!folderData.sourceOrLibraryPathWatchKeys.containsKey(watchKey))
                             {
                                 continue;
                             }
                             foldersToCheckForProblems.add(folderData);
                             List<FileEvent> changes = new ArrayList<>();
-                            Path path = folderData.sourcePathWatchKeys.get(watchKey);
+                            Path path = folderData.sourceOrLibraryPathWatchKeys.get(watchKey);
                             for (WatchEvent<?> event : watchKey.pollEvents())
                             {
                                 WatchEvent.Kind<?> kind = event.kind();
@@ -2369,7 +2465,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                                         //if a new directory has been created under
                                         //an existing that we're already watching,
                                         //then start watching the new one too.
-                                        watchNewSourcePath(childPath, folderData);
+                                        watchNewSourceOrLibraryPath(childPath, folderData);
                                     }
                                 }
                                 FileChangeType changeType = FileChangeType.Changed;
@@ -2386,7 +2482,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                             boolean valid = watchKey.reset();
                             if (!valid)
                             {
-                                folderData.sourcePathWatchKeys.remove(watchKey);
+                                folderData.sourceOrLibraryPathWatchKeys.remove(watchKey);
                             }
                             //convert to DidChangeWatchedFilesParams and pass
                             //to didChangeWatchedFiles, as if a notification
