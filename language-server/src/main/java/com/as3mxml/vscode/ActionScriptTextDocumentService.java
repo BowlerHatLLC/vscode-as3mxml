@@ -54,6 +54,7 @@ import org.apache.royale.compiler.common.ASModifier;
 import org.apache.royale.compiler.common.ISourceLocation;
 import org.apache.royale.compiler.common.PrefixMap;
 import org.apache.royale.compiler.common.XMLName;
+import org.apache.royale.compiler.config.Configuration;
 import org.apache.royale.compiler.config.ICompilerProblemSettings;
 import org.apache.royale.compiler.constants.IASKeywordConstants;
 import org.apache.royale.compiler.constants.IASLanguageConstants;
@@ -1753,9 +1754,37 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     result.add(folderData);
                 }
             }
-            else if(SourcePathUtils.isInProjectSourcePath(path, project))
+            else if (SourcePathUtils.isInProjectSourcePath(path, project))
             {
                 result.add(folderData);
+            }
+        }
+        return result;
+    }
+
+    private List<WorkspaceFolderData> getAllWorkspaceFolderDataForSWCFile(Path path)
+    {
+        List<WorkspaceFolderData> result = new ArrayList<>();
+        for (WorkspaceFolder folder : workspaceFolderToData.keySet())
+        {
+            WorkspaceFolderData folderData = workspaceFolderToData.get(folder);
+            RoyaleProject project = folderData.project;
+            if (project == null)
+            {
+                String folderUri = folder.getUri();
+                Path workspacePath = LanguageServerCompilerUtils.getPathFromLanguageServerURI(folderUri);
+                if (path.startsWith(workspacePath))
+                {
+                    result.add(folderData);
+                }
+            }
+            else
+            {
+                Configuration configuration = folderData.configurator.getConfiguration();
+                if (SourcePathUtils.isInProjectLibraryPathOrExternalLibraryPath(path, project, configuration))
+                {
+                    result.add(folderData);
+                }
             }
         }
         return result;
@@ -2012,7 +2041,28 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             //then, check if source files have changed
             FileChangeType changeType = event.getType();
             String normalizedChangedPathAsString = FilenameNormalization.normalize(changedPath.toString());
-            if (normalizedChangedPathAsString.endsWith(AS_EXTENSION) || normalizedChangedPathAsString.endsWith(MXML_EXTENSION))
+            if (normalizedChangedPathAsString.endsWith(SWC_EXTENSION))
+            {
+                List<WorkspaceFolderData> allFolderData = getAllWorkspaceFolderDataForSWCFile(Paths.get(normalizedChangedPathAsString));
+                if (allFolderData.size() > 0)
+                {
+                    IFileSpecification swcFileSpec = fileSpecGetter.getFileSpecification(normalizedChangedPathAsString);
+                    if(changeType.equals(FileChangeType.Deleted))
+                    {
+                        compilerWorkspace.fileRemoved(swcFileSpec);
+                    }
+                    else if(changeType.equals(FileChangeType.Created))
+                    {
+                        compilerWorkspace.fileAdded(swcFileSpec);
+                    }
+                    else if(changeType.equals(FileChangeType.Changed))
+                    {
+                        compilerWorkspace.fileChanged(swcFileSpec);
+                    }
+                    foldersToCheck.addAll(allFolderData);
+                }
+            }
+            else if (normalizedChangedPathAsString.endsWith(AS_EXTENSION) || normalizedChangedPathAsString.endsWith(MXML_EXTENSION))
             {
                 compilerWorkspace.startIdleState();
                 ICompilationUnit changedUnit = null;
