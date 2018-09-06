@@ -2038,7 +2038,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 }
             }
 
-            //then, check if source files have changed
+            //then, check if source or library files have changed
             FileChangeType changeType = event.getType();
             String normalizedChangedPathAsString = FilenameNormalization.normalize(changedPath.toString());
             if (normalizedChangedPathAsString.endsWith(SWC_EXTENSION))
@@ -2063,18 +2063,32 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                         normalizedChangedPathAsString = changedUnit.getAbsoluteFilename();
                     }
 
+                    boolean swcConfigChanged = false;
                     IFileSpecification swcFileSpec = fileSpecGetter.getFileSpecification(normalizedChangedPathAsString);
                     if (changeType.equals(FileChangeType.Deleted))
                     {
+                        swcConfigChanged = true;
                         compilerWorkspace.fileRemoved(swcFileSpec);
                     }
                     else if (changeType.equals(FileChangeType.Created))
                     {
+                        swcConfigChanged = true;
                         compilerWorkspace.fileAdded(swcFileSpec);
                     }
                     else if (changeType.equals(FileChangeType.Changed))
                     {
                         compilerWorkspace.fileChanged(swcFileSpec);
+                    }
+                    if(swcConfigChanged)
+                    {
+                        //for some reason, simply calling fileAdded() or
+                        //fileRemoved() is not enough for SWC files.
+                        //changing the project configuration will force the
+                        //change to be detected, so let's do that manually.
+                        for (WorkspaceFolderData folderData : allFolderData)
+                        {
+                            folderData.config.forceChanged();
+                        }
                     }
                     foldersToCheck.addAll(allFolderData);
                 }
