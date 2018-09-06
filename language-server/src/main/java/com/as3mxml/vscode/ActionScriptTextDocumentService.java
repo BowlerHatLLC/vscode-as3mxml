@@ -73,6 +73,7 @@ import org.apache.royale.compiler.definitions.ISetterDefinition;
 import org.apache.royale.compiler.definitions.IStyleDefinition;
 import org.apache.royale.compiler.definitions.ITypeDefinition;
 import org.apache.royale.compiler.definitions.IVariableDefinition;
+import org.apache.royale.compiler.definitions.metadata.IDeprecationInfo;
 import org.apache.royale.compiler.definitions.metadata.IMetaTag;
 import org.apache.royale.compiler.filespecs.IFileSpecification;
 import org.apache.royale.compiler.internal.mxml.MXMLData;
@@ -5009,6 +5010,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 item.setCommand(command);
             }
         }
+        IDeprecationInfo deprecationInfo = definition.getDeprecationInfo();
+        if (deprecationInfo != null)
+        {
+            item.setDeprecated(true);
+        }
         result.getItems().add(item);
     }
 
@@ -5081,6 +5087,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             {
                 item.setCommand(createMXMLNamespaceCommand(definition, xmlnsRange, prefix, uri));
             }
+        }
+        IDeprecationInfo deprecationInfo = definition.getDeprecationInfo();
+        if (deprecationInfo != null)
+        {
+            item.setDeprecated(true);
         }
         result.getItems().add(item);
     }
@@ -6592,6 +6603,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         symbol.setName(definitionBaseName);
 
         symbol.setLocation(location);
+
+        IDeprecationInfo deprecationInfo = definition.getDeprecationInfo();
+        if (deprecationInfo != null)
+        {
+            symbol.setDeprecated(true);
+        }
+
         return symbol;
     }
 
