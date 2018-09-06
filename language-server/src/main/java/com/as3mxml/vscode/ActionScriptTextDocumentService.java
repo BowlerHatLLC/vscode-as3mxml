@@ -2186,7 +2186,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     {
                         String unitFileName = unit.getAbsoluteFilename();
                         if (unitFileName.startsWith(deletedFilePath)
-                                && (unitFileName.endsWith(AS_EXTENSION) || unitFileName.endsWith(MXML_EXTENSION)))
+                                && (unitFileName.endsWith(AS_EXTENSION)
+                                        || unitFileName.endsWith(MXML_EXTENSION)
+                                        || unitFileName.endsWith(SWC_EXTENSION)))
                         {
                             //if we call fileRemoved() here, it will change the
                             //compilationUnits collection and throw an exception
@@ -2196,6 +2198,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                             //deleting a file may change errors in other existing files,
                             //so we need to do a full check
                             foldersToCheck.add(folderData);
+
+                            if (unitFileName.endsWith(SWC_EXTENSION))
+                            {
+                                folderData.config.forceChanged();
+                            }
                         }
                     }
                 }
