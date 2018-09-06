@@ -34,6 +34,7 @@ import org.apache.royale.compiler.definitions.IDefinition;
 import org.apache.royale.compiler.definitions.IEventDefinition;
 import org.apache.royale.compiler.definitions.IFunctionDefinition;
 import org.apache.royale.compiler.definitions.IInterfaceDefinition;
+import org.apache.royale.compiler.definitions.IPackageDefinition;
 import org.apache.royale.compiler.definitions.IStyleDefinition;
 import org.apache.royale.compiler.definitions.ITypeDefinition;
 import org.apache.royale.compiler.definitions.IVariableDefinition;
@@ -335,7 +336,11 @@ public class LanguageServerCompilerUtils
 
     public static SymbolKind getSymbolKindFromDefinition(IDefinition definition)
     {
-        if (definition instanceof IClassDefinition)
+        if (definition instanceof IPackageDefinition)
+        {
+            return SymbolKind.Package;
+        }
+        else if (definition instanceof IClassDefinition)
         {
             return SymbolKind.Class;
         }

@@ -1066,7 +1066,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                                     //folders in the workspace
                                     continue;
                                 }
-                                SymbolInformation symbol = definitionToSymbol(definition, project);
+                                SymbolInformation symbol = definitionToSymbolInformation(definition, project);
                                 if (symbol != null)
                                 {
                                     qualifiedNames.add(qualifiedName);
@@ -1153,10 +1153,15 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     cancelToken.checkCanceled();
                     return Collections.emptyList();
                 }
-                List<Either<SymbolInformation, DocumentSymbol>> result = new ArrayList<>();
+                List<DocumentSymbol> symbols = new ArrayList<>();
                 for (IASScope scope : scopes)
                 {
-                    scopeToSymbols(scope, project, result);
+                    scopeToDocumentSymbols(scope, project, symbols);
+                }
+                List<Either<SymbolInformation, DocumentSymbol>> result = new ArrayList<>();
+                for (DocumentSymbol symbol : symbols)
+                {
+                    result.add(Either.forRight(symbol));
                 }
                 cancelToken.checkCanceled();
                 return result;
@@ -6463,7 +6468,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 ITypeDefinition typeDefinition = (ITypeDefinition) definition;
                 if (!definition.isImplicit() && matchesQueries(queries, qualifiedName))
                 {
-                    SymbolInformation symbol = definitionToSymbol(typeDefinition, project);
+                    SymbolInformation symbol = definitionToSymbolInformation(typeDefinition, project);
                     if (symbol != null)
                     {
                         result.add(symbol);
@@ -6483,7 +6488,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     continue;
                 }
                 IFunctionDefinition functionDefinition = (IFunctionDefinition) definition;
-                SymbolInformation symbol = definitionToSymbol(functionDefinition, project);
+                SymbolInformation symbol = definitionToSymbolInformation(functionDefinition, project);
                 if (symbol != null)
                 {
                     result.add(symbol);
@@ -6500,7 +6505,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     continue;
                 }
                 IVariableDefinition variableDefinition = (IVariableDefinition) definition;
-                SymbolInformation symbol = definitionToSymbol(variableDefinition, project);
+                SymbolInformation symbol = definitionToSymbolInformation(variableDefinition, project);
                 if (symbol != null)
                 {
                     result.add(symbol);
@@ -6525,7 +6530,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return true;
     }
 
-    private void scopeToSymbols(IASScope scope, RoyaleProject project, List<Either<SymbolInformation, DocumentSymbol>> result)
+    private void scopeToDocumentSymbols(IASScope scope, RoyaleProject project, List<DocumentSymbol> result)
     {
         Collection<IDefinition> definitions = scope.getAllLocalDefinitions();
         for (IDefinition definition : definitions)
@@ -6534,21 +6539,33 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             {
                 IPackageDefinition packageDefinition = (IPackageDefinition) definition;
                 IASScope packageScope = packageDefinition.getContainedScope();
-                scopeToSymbols(packageScope, project, result);
+                scopeToDocumentSymbols(packageScope, project, result);
             }
             else if (definition instanceof ITypeDefinition)
             {
                 ITypeDefinition typeDefinition = (ITypeDefinition) definition;
-                if (!definition.isImplicit())
+                IASScope typeScope = typeDefinition.getContainedScope();
+                List<DocumentSymbol> childSymbols = new ArrayList<>();
+                scopeToDocumentSymbols(typeScope, project, childSymbols);
+
+                if (definition.isImplicit())
                 {
-                    SymbolInformation typeSymbol = definitionToSymbol(typeDefinition, project);
-                    if (typeSymbol != null)
+                    result.addAll(childSymbols);
+                }
+                else
+                {
+                    DocumentSymbol typeSymbol = definitionToDocumentSymbol(typeDefinition, project);
+                    if (typeSymbol == null)
                     {
-                        result.add(Either.forLeft(typeSymbol));
+                        result.addAll(childSymbols);
+                    }
+                    else
+                    {
+                        typeSymbol.setChildren(childSymbols);
+                        result.add(typeSymbol);
                     }
                 }
-                IASScope typeScope = typeDefinition.getContainedScope();
-                scopeToSymbols(typeScope, project, result);
+                
             }
             else if (definition instanceof IFunctionDefinition
                     || definition instanceof IVariableDefinition)
@@ -6557,16 +6574,16 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 {
                     continue;
                 }
-                SymbolInformation localSymbol = definitionToSymbol(definition, project);
+                DocumentSymbol localSymbol = definitionToDocumentSymbol(definition, project);
                 if (localSymbol != null)
                 {
-                    result.add(Either.forLeft(localSymbol));
+                    result.add(localSymbol);
                 }
             }
         }
     }
 
-    private SymbolInformation definitionToSymbol(IDefinition definition, RoyaleProject project)
+    private SymbolInformation definitionToSymbolInformation(IDefinition definition, RoyaleProject project)
     {
         String definitionBaseName = definition.getBaseName();
         if (definitionBaseName.length() == 0)
@@ -6603,6 +6620,41 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         symbol.setName(definitionBaseName);
 
         symbol.setLocation(location);
+
+        IDeprecationInfo deprecationInfo = definition.getDeprecationInfo();
+        if (deprecationInfo != null)
+        {
+            symbol.setDeprecated(true);
+        }
+
+        return symbol;
+    }
+
+    private DocumentSymbol definitionToDocumentSymbol(IDefinition definition, RoyaleProject project)
+    {
+        String definitionBaseName = definition.getBaseName();
+        if (definition instanceof IPackageDefinition)
+        {
+            definitionBaseName = "package " + definitionBaseName;
+        }
+        if (definitionBaseName.length() == 0)
+        {
+            //vscode expects all items to have a name
+            return null;
+        }
+
+        Range range = definitionToRange(definition, project);
+        if (range == null)
+        {
+            //we can't find where the source code for this symbol is located
+            return null;
+        }
+
+        DocumentSymbol symbol = new DocumentSymbol();
+        symbol.setKind(LanguageServerCompilerUtils.getSymbolKindFromDefinition(definition));
+        symbol.setName(definitionBaseName);
+        symbol.setRange(range);
+        symbol.setSelectionRange(range);
 
         IDeprecationInfo deprecationInfo = definition.getDeprecationInfo();
         if (deprecationInfo != null)
@@ -6670,6 +6722,41 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             location = new Location();
             Path definitionPath = Paths.get(sourcePath);
             location.setUri(definitionPath.toUri().toString());
+            Range range = definitionToRange(definition, project);
+            if (range == null)
+            {
+                return null;
+            }
+            location.setRange(range);
+        }
+        return location;
+    }
+
+    private Range definitionToRange(IDefinition definition, RoyaleProject project)
+    {
+        String sourcePath = definitionToSourcePath(definition, project);
+        if (sourcePath == null)
+        {
+            //we can't find where the source code for this symbol is located
+            return null;
+        }
+        Range range = null;
+        if (sourcePath.endsWith(SWC_EXTENSION))
+        {
+            DefinitionAsText definitionText = DefinitionTextUtils.definitionToTextDocument(definition, project);
+            //may be null if definitionToTextDocument() doesn't know how
+            //to parse that type of definition
+            if (definitionText != null)
+            {
+                //if we get here, we couldn't find a framework source file and
+                //the definition path still ends with .swc
+                //we're going to try our best to display "decompiled" content
+                range = definitionText.toRange();
+            }
+        }
+        if (range == null)
+        {
+            Path definitionPath = Paths.get(sourcePath);
             Position start = new Position();
             Position end = new Position();
             //getLine() and getColumn() may include things like metadata, so it
@@ -6707,12 +6794,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 end.setLine(line);
                 end.setCharacter(column);
             }
-            Range range = new Range();
+            range = new Range();
             range.setStart(start);
             range.setEnd(end);
-            location.setRange(range);
         }
-        return location;
+        return range;
     }
 
     private CompletableFuture<Object> executeOrganizeImportsInDirectoryCommand(ExecuteCommandParams params)

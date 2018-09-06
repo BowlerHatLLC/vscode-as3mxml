@@ -61,12 +61,8 @@ public class DefinitionTextUtils
         public String text;
         public String path;
 
-        public Location toLocation()
+        public Range toRange()
         {
-            Location location = new Location();
-            String escapedText = UrlEscapers.urlFragmentEscaper().escape(text);
-            URI uri = URI.create("swc://" + path + "?" + escapedText);
-            location.setUri(uri.toString());
             Position start = new Position();
             start.setLine(startLine);
             start.setCharacter(startColumn);
@@ -76,7 +72,16 @@ public class DefinitionTextUtils
             Range range = new Range();
             range.setStart(start);
             range.setEnd(end);
-            location.setRange(range);
+            return range;
+        }
+
+        public Location toLocation()
+        {
+            Location location = new Location();
+            String escapedText = UrlEscapers.urlFragmentEscaper().escape(text);
+            URI uri = URI.create("swc://" + path + "?" + escapedText);
+            location.setUri(uri.toString());
+            location.setRange(toRange());
             return location;
         }
 	}
