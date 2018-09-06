@@ -33,22 +33,22 @@
     "build-debug": "mvn package"
   },
   "engines": {
-    "vscode": "^1.24.0"
+    "vscode": "^1.27.0"
   },
   "devDependencies": {
     "@types/json5": "0.0.29",
-    "@types/mocha": "^2.2.41",
-    "@types/node": "^6.0.65",
-    "mocha": "^3.5.0",
-    "typescript": "^2.6.2",
-    "vsce": "^1.33.2",
-    "vscode": "^1.1.9"
+    "@types/mocha": "^2.2.48",
+    "@types/node": "^6.0.117",
+    "mocha": "^3.5.3",
+    "typescript": "^2.9.2",
+    "vsce": "^1.48.0",
+    "vscode": "^1.1.21"
   },
   "dependencies": {
     "@rgrove/parse-xml": "^1.1.1",
     "json5": "^0.5.1",
-    "vscode-jsonrpc": "^3.6.0",
-    "vscode-languageclient": "^4.0.0"
+    "vscode-jsonrpc": "^3.6.2",
+    "vscode-languageclient": "^5.0.1"
   },
   "activationEvents": [
     "onLanguage:nextgenas",
