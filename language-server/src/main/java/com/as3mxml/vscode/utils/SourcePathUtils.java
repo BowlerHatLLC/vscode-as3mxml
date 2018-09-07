@@ -21,6 +21,7 @@ import java.nio.file.Paths;
 import java.util.List;
 
 import org.apache.royale.compiler.config.Configuration;
+import org.apache.royale.compiler.internal.projects.RoyaleProjectConfigurator;
 import org.apache.royale.compiler.projects.IASProject;
 import org.apache.royale.compiler.projects.IRoyaleProject;
 
@@ -57,7 +58,7 @@ public class SourcePathUtils
         return expectedPackage;
     }
 
-    public static boolean isInProjectSourcePath(Path path, IASProject project)
+    public static boolean isInProjectSourcePath(Path path, IASProject project, RoyaleProjectConfigurator configurator)
     {
 		if (project == null)
 		{
@@ -69,6 +70,17 @@ public class SourcePathUtils
 			{
 				return true;
 			}
+        }
+        if (configurator != null)
+        {
+            Configuration configuration = configurator.getConfiguration();
+            for (String includedSource : configuration.getIncludeSources())
+            {
+                if (path.startsWith(Paths.get(includedSource)))
+                {
+                    return true;
+                }
+            }
         }
         return false;
     }

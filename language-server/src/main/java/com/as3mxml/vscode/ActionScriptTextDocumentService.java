@@ -1228,7 +1228,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 }
 
                 RoyaleProject currentProject = getProject(folderData);
-                if (currentProject == null || !SourcePathUtils.isInProjectSourcePath(path, currentProject))
+                if (currentProject == null || !SourcePathUtils.isInProjectSourcePath(path, currentProject, folderData.configurator))
                 {
                     cancelToken.checkCanceled();
                     //the path must be in the workspace or source-path
@@ -1775,7 +1775,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     result.add(folderData);
                 }
             }
-            else if (SourcePathUtils.isInProjectSourcePath(path, project))
+            else if (SourcePathUtils.isInProjectSourcePath(path, project, folderData.configurator))
             {
                 result.add(folderData);
             }
@@ -1824,7 +1824,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             String uri = folderData.folder.getUri();
             Path workspacePath = LanguageServerCompilerUtils.getPathFromLanguageServerURI(uri);
-            if (workspacePath != null && SourcePathUtils.isInProjectSourcePath(path, project))
+            if (workspacePath != null && SourcePathUtils.isInProjectSourcePath(path, project, folderData.configurator))
             {
                 if(path.startsWith(workspacePath))
                 {
@@ -1987,7 +1987,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 //display problems only while a file is open
                 clearProblems = true;
             }
-            else if(!SourcePathUtils.isInProjectSourcePath(path, project))
+            else if(!SourcePathUtils.isInProjectSourcePath(path, project, folderData.configurator))
             {
                 //if the file is outside of the project's source path, we want
                 //to display problems only while it is open
@@ -5996,7 +5996,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     {
         //if we haven't accessed a compilation unit yet, the project may be null
         RoyaleProject project = getProject(folderData);
-        if (project != null && !SourcePathUtils.isInProjectSourcePath(path, project))
+        if (project != null && !SourcePathUtils.isInProjectSourcePath(path, project, folderData.configurator))
         {
             publishDiagnosticForFileOutsideSourcePath(path);
             return;
@@ -6183,7 +6183,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return null;
         }
         RoyaleProject project = getProject(folderData);
-        if (!SourcePathUtils.isInProjectSourcePath(path, project))
+        if (!SourcePathUtils.isInProjectSourcePath(path, project, folderData.configurator))
         {
             //the path must be in the workspace or source-path
             return null;
@@ -6267,7 +6267,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return null;
         }
         RoyaleProject project = getProject(folderData);
-        if (!SourcePathUtils.isInProjectSourcePath(path, project))
+        if (!SourcePathUtils.isInProjectSourcePath(path, project, folderData.configurator))
         {
             //the path must be in the workspace or source-path
             return null;
