@@ -1153,15 +1153,30 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     cancelToken.checkCanceled();
                     return Collections.emptyList();
                 }
-                List<DocumentSymbol> symbols = new ArrayList<>();
-                for (IASScope scope : scopes)
-                {
-                    scopeToDocumentSymbols(scope, project, symbols);
-                }
                 List<Either<SymbolInformation, DocumentSymbol>> result = new ArrayList<>();
-                for (DocumentSymbol symbol : symbols)
+                if (clientCapabilities.getTextDocument().getDocumentSymbol().getHierarchicalDocumentSymbolSupport())
                 {
-                    result.add(Either.forRight(symbol));
+                    List<DocumentSymbol> symbols = new ArrayList<>();
+                    for (IASScope scope : scopes)
+                    {
+                        scopeToDocumentSymbols(scope, project, symbols);
+                    }
+                    for (DocumentSymbol symbol : symbols)
+                    {
+                        result.add(Either.forRight(symbol));
+                    }
+                }
+                else //fallback to non-hierarchical
+                {
+                    List<SymbolInformation> symbols = new ArrayList<>();
+                    for (IASScope scope : scopes)
+                    {
+                        scopeToSymbolInformation(scope, project, symbols);
+                    }
+                    for (SymbolInformation symbol : symbols)
+                    {
+                        result.add(Either.forLeft(symbol));
+                    }
                 }
                 cancelToken.checkCanceled();
                 return result;
@@ -6528,6 +6543,45 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             fromIndex = index + query.length();
         }
         return true;
+    }
+
+    private void scopeToSymbolInformation(IASScope scope, RoyaleProject project, List<SymbolInformation> result)
+    {
+        Collection<IDefinition> definitions = scope.getAllLocalDefinitions();
+        for (IDefinition definition : definitions)
+        {
+            if (definition instanceof IPackageDefinition)
+            {
+                IPackageDefinition packageDefinition = (IPackageDefinition) definition;
+                IASScope packageScope = packageDefinition.getContainedScope();
+                scopeToSymbolInformation(packageScope, project, result);
+            }
+            else if (definition instanceof ITypeDefinition)
+            {
+                ITypeDefinition typeDefinition = (ITypeDefinition) definition;
+                IASScope typeScope = typeDefinition.getContainedScope();
+                if (!definition.isImplicit())
+                {
+                    SymbolInformation typeSymbol = definitionToSymbolInformation(typeDefinition, project);
+                    result.add(typeSymbol);
+                }
+                scopeToSymbolInformation(typeScope, project, result);
+                
+            }
+            else if (definition instanceof IFunctionDefinition
+                    || definition instanceof IVariableDefinition)
+            {
+                if (definition.isImplicit())
+                {
+                    continue;
+                }
+                SymbolInformation localSymbol = definitionToSymbolInformation(definition, project);
+                if (localSymbol != null)
+                {
+                    result.add(localSymbol);
+                }
+            }
+        }
     }
 
     private void scopeToDocumentSymbols(IASScope scope, RoyaleProject project, List<DocumentSymbol> result)
