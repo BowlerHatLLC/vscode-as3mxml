@@ -41,6 +41,8 @@ import org.eclipse.lsp4j.ServerCapabilities;
 import org.eclipse.lsp4j.SignatureHelpOptions;
 import org.eclipse.lsp4j.TextDocumentSyncKind;
 import org.eclipse.lsp4j.WorkspaceFolder;
+import org.eclipse.lsp4j.WorkspaceFoldersOptions;
+import org.eclipse.lsp4j.WorkspaceServerCapabilities;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.LanguageClientAware;
 import org.eclipse.lsp4j.services.LanguageServer;
@@ -126,6 +128,13 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
         serverCapabilities.setSignatureHelpProvider(signatureHelpOptions);
 
         serverCapabilities.setWorkspaceSymbolProvider(true);
+
+        WorkspaceServerCapabilities workspaceCapabilities = new WorkspaceServerCapabilities();
+        WorkspaceFoldersOptions workspaceFoldersOptions = new WorkspaceFoldersOptions();
+        workspaceFoldersOptions.setSupported(true);
+        workspaceFoldersOptions.setChangeNotifications(true);
+        workspaceCapabilities.setWorkspaceFolders(workspaceFoldersOptions);
+        serverCapabilities.setWorkspace(workspaceCapabilities);
         
         ExecuteCommandOptions executeCommandOptions = new ExecuteCommandOptions();
         executeCommandOptions.setCommands(Arrays.asList(
