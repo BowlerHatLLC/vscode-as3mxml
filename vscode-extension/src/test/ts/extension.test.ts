@@ -68,7 +68,7 @@ function findSymbol(symbols: vscode.SymbolInformation[], symbolToFind: vscode.Sy
 		{
 			return false;
 		}
-		if(symbol.containerName !== symbolToFind.containerName)
+		if(symbolToFind.containerName && symbol.containerName !== symbolToFind.containerName)
 		{
 			return false;
 		}
@@ -183,8 +183,7 @@ suite("document symbol provider: Application workspace", () =>
 							classQualifiedName,
 							vscode.SymbolKind.Class,
 							createRange(2, 14),
-							uri,
-							"No Package")),
+							uri)),
 							"vscode.executeDocumentSymbolProvider failed to provide symbol for class: " + classQualifiedName);
 					}, (err) =>
 					{
@@ -381,8 +380,7 @@ suite("document symbol provider: Application workspace", () =>
 							internalClassQualifiedName,
 							vscode.SymbolKind.Class,
 							createRange(34, 6),
-							uri,
-							"No Package")),
+							uri)),
 							"vscode.executeDocumentSymbolProvider failed to provide symbol for internal class: " + internalClassQualifiedName);
 					}, (err) =>
 					{
