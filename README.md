@@ -22,7 +22,7 @@ This project is divided into several modules.
 
 ## Build instructions
 
-Requires [Apache Maven](https://maven.apache.org/). Run the following command in the root directory to build the extension:
+Requires [Apache Maven](https://maven.apache.org/) and [Node.js](https://nodejs.org/). Run the following command in the root directory to build the extension:
 
 ```
 mvn clean package -s settings-template.xml
