@@ -30,7 +30,7 @@ import org.apache.royale.compiler.definitions.IDocumentableDefinition;
 import org.apache.royale.compiler.tree.as.IDocumentableDefinitionNode;
 
 /**
- * A custom implementation of IASDocDelegate for vscode-nextgenas.
+ * A custom implementation of IASDocDelegate for the AS3 & MXML language server.
  */
 public final class VSCodeASDocDelegate implements IASDocDelegate
 {

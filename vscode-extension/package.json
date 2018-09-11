@@ -308,7 +308,7 @@
       "type": "object",
       "description": "ActionScript & MXML configuration",
       "properties": {
-        "nextgenas.sdk.framework": {
+        "as3mxml.sdk.framework": {
           "type": [
             "string",
             "null"
@@ -316,7 +316,7 @@
           "default": null,
           "description": "Specifies the folder path of the ActionScript SDK used by the current workspace."
         },
-        "nextgenas.sdk.searchPaths": {
+        "as3mxml.sdk.searchPaths": {
           "type": [
             "string",
             "array",
@@ -328,12 +328,12 @@
             "type": "string"
           }
         },
-        "nextgenas.asconfigc.useBundled": {
+        "as3mxml.asconfigc.useBundled": {
           "type": "boolean",
           "default": true,
           "description": "(Advanced) Indicates if the extension will use the bundled version of asconfigc or a different version that is installed on the system path."
         },
-        "nextgenas.java": {
+        "as3mxml.java.path": {
           "type": [
             "string",
             "null"
@@ -341,13 +341,28 @@
           "default": null,
           "description": "(Advanced) Specifies the path to the java exectuable (Note: this must be an executable, and not a directory). Use this setting if the extension cannot find Java automatically."
         },
-        "nextgenas.sdk.editor": {
+        "as3mxml.sdk.editor": {
           "type": [
             "string",
             "null"
           ],
           "default": null,
           "description": "(Advanced) Specifies the folder path of the Apache Royale SDK used internally by the extension for code intelligence. Unless you know what you're doing, you should probably set nextgenas.sdk.framework instead."
+        },
+        "nextgenas.sdk.framework": {
+          "deprecationMessage": "DEPRECATED: Use as3mxml.sdk.framework instead."
+        },
+        "nextgenas.sdk.searchPaths": {
+          "deprecationMessage": "DEPRECATED: Use as3mxml.sdk.searchPaths instead."
+        },
+        "nextgenas.asconfigc.useBundled": {
+          "deprecationMessage": "DEPRECATED: Use as3mxml.asconfigc.useBundled instead."
+        },
+        "nextgenas.java": {
+          "deprecationMessage": "DEPRECATED: Use as3mxml.java.path instead."
+        },
+        "nextgenas.sdk.editor": {
+          "deprecationMessage": "DEPRECATED: Use as3mxml.sdk.editor instead."
         }
       }
     },

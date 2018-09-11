@@ -30,7 +30,7 @@ export default function getFrameworkSDKPathWithFallbacks(): string
 		return null;
 	}
 	let sdkPath: string = null;
-	let frameworkSetting = <string> vscode.workspace.getConfiguration("nextgenas").get("sdk.framework");
+	let frameworkSetting = <string> vscode.workspace.getConfiguration("as3mxml").get("sdk.framework");
 	if(frameworkSetting)
 	{
 		//no fallbacks if this SDK isn't valid!
@@ -40,7 +40,7 @@ export default function getFrameworkSDKPathWithFallbacks(): string
 	if(!sdkPath)
 	{
 		//for legacy reasons, we support falling back to the editor SDK
-		let editorSetting = <string> vscode.workspace.getConfiguration("nextgenas").get("sdk.editor");
+		let editorSetting = <string> vscode.workspace.getConfiguration("as3mxml").get("sdk.editor");
 		if(editorSetting)
 		{
 			//no fallbacks if this SDK isn't valid!

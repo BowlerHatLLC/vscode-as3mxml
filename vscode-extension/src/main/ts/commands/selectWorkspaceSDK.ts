@@ -78,7 +78,7 @@ function openSettingsForSearchPaths()
 			{
 				return;
 			}
-			let config = vscode.workspace.getConfiguration("nextgenas");
+			let config = vscode.workspace.getConfiguration("as3mxml");
 			let searchPaths: string[] = config.get("sdk.searchPaths");
 			if(!searchPaths)
 			{
@@ -96,7 +96,7 @@ function openSettingsForSearchPaths()
 			});
 			if(searchPaths.length > beforeLength)
 			{
-				let searchPathsInspection = vscode.workspace.getConfiguration("nextgenas").inspect("sdk.searchPaths");
+				let searchPathsInspection = vscode.workspace.getConfiguration("as3mxml").inspect("sdk.searchPaths");
 				if(searchPathsInspection.workspaceValue)
 				{
 					config.update("sdk.searchPaths", searchPaths, vscode.ConfigurationTarget.Workspace);
@@ -186,9 +186,9 @@ export default function selectWorkspaceSDK(): void
 	//for convenience, add an option to open user settings and define custom SDK paths
 	items.push(createSearchPathsItem());
 	//start with the current framework and editor SDKs
-	let frameworkSDK = <string> vscode.workspace.getConfiguration("nextgenas").get("sdk.framework");
+	let frameworkSDK = <string> vscode.workspace.getConfiguration("as3mxml").get("sdk.framework");
 	frameworkSDK = validateFrameworkSDK(frameworkSDK);
-	let editorSDK = <string> vscode.workspace.getConfiguration("nextgenas").get("sdk.editor");
+	let editorSDK = <string> vscode.workspace.getConfiguration("as3mxml").get("sdk.editor");
 	editorSDK = validateFrameworkSDK(editorSDK);
 	let addedEditorSDK = false;
 	if(frameworkSDK)
@@ -214,7 +214,7 @@ export default function selectWorkspaceSDK(): void
 		addSDKItem(flexjsNodeModuleSDK, DESCRIPTION_NODE_MODULE, items, allPaths, true);
 	}
 	//if the user has defined search paths for SDKs, include them
-	let searchPaths = vscode.workspace.getConfiguration("nextgenas").get("sdk.searchPaths");
+	let searchPaths = vscode.workspace.getConfiguration("as3mxml").get("sdk.searchPaths");
 	if(Array.isArray(searchPaths))
 	{
 		searchPaths.forEach((searchPath) =>
@@ -274,7 +274,7 @@ export default function selectWorkspaceSDK(): void
 		}
 		//if they chose an SDK, save it to the workspace settings
 		let newFrameworkPath = value.detail;
-		vscode.workspace.getConfiguration("nextgenas").update("sdk.framework", newFrameworkPath);
+		vscode.workspace.getConfiguration("as3mxml").update("sdk.framework", newFrameworkPath);
 	},
 	() =>
 	{

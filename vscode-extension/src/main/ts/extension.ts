@@ -38,11 +38,12 @@ import {LanguageClient, LanguageClientOptions, SettingMonitor,
 import { Message } from "vscode-jsonrpc";
 import logCompilerShellOutput from "./commands/logCompilerShellOutput";
 import quickCompileAndDebug from "./commands/quickCompileAndDebug";
+import migrateSettings from "./utils/migrateSettings";
 
-const INVALID_SDK_ERROR = "nextgenas.sdk.editor in settings does not point to a valid SDK. Requires Apache Royale 0.9.0 or newer.";
+const INVALID_SDK_ERROR = "as3mxml.sdk.editor in settings does not point to a valid SDK. Requires Apache Royale 0.9.0 or newer.";
 const MISSING_FRAMEWORK_SDK_ERROR = "You must configure an SDK to enable all ActionScript & MXML features.";
-const INVALID_JAVA_ERROR = "nextgenas.java in settings does not point to a valid executable. It cannot be a directory, and Java 1.8 or newer is required.";
-const MISSING_JAVA_ERROR = "Could not locate valid Java executable. To configure Java manually, use the nextgenas.java setting.";
+const INVALID_JAVA_ERROR = "as3mxml.java.path in settings does not point to a valid executable. It cannot be a directory, and Java 1.8 or newer is required.";
+const MISSING_JAVA_ERROR = "Could not locate valid Java executable. To configure Java manually, use the as3mxml.java.path setting.";
 const MISSING_WORKSPACE_ROOT_ERROR = "Open a folder and create a file named asconfig.json to enable all ActionScript & MXML language features.";
 const QUICK_COMPILE_LANGUAGE_SERVER_NOT_STARTED_ERROR = "Quick compile failed. Try again after ActionScript & MXML extension is initialized.";
 const INITIALIZING_MESSAGE = "Initializing ActionScript & MXML language server...";
@@ -66,14 +67,14 @@ let swcTextDocumentContentProvider: SWCTextDocumentContentProvider = null;
 
 function getValidatedEditorSDKConfiguration(javaExecutablePath: string): string
 {
-	let result = <string> vscode.workspace.getConfiguration("nextgenas").get("sdk.editor");
+	let result = <string> vscode.workspace.getConfiguration("as3mxml").get("sdk.editor");
 	//this may return null
 	return validateEditorSDK(savedContext.extensionPath, javaExecutablePath, result);
 }
 
 function onDidChangeConfiguration(event)
 {
-	let javaSettingsPath = <string> vscode.workspace.getConfiguration("nextgenas").get("java");
+	let javaSettingsPath = <string> vscode.workspace.getConfiguration("as3mxml").get("java.path");
 	let newJavaExecutablePath = findJava(javaSettingsPath, (javaPath) =>
 	{
 		return validateJava(savedContext.extensionPath, javaPath);
@@ -144,7 +145,8 @@ function restartServer()
 export function activate(context: vscode.ExtensionContext)
 {
 	savedContext = context;
-	let javaSettingsPath = <string> vscode.workspace.getConfiguration("nextgenas").get("java");
+	migrateSettings();
+	let javaSettingsPath = <string> vscode.workspace.getConfiguration("as3mxml").get("java.path");
 	javaExecutablePath = findJava(javaSettingsPath, (javaPath) =>
 	{
 		return validateJava(savedContext.extensionPath, javaPath);
@@ -317,13 +319,13 @@ function childErrorListener(error)
 
 function hasInvalidJava(): boolean
 {
-	let javaPath = <string> vscode.workspace.getConfiguration("nextgenas").get("java");
+	let javaPath = <string> vscode.workspace.getConfiguration("as3mxml").get("java.path");
 	return !javaExecutablePath && javaPath != null;
 }
 
 function hasInvalidEditorSDK(): boolean
 {
-	let sdkPath = <string> vscode.workspace.getConfiguration("nextgenas").get("sdk.editor");
+	let sdkPath = <string> vscode.workspace.getConfiguration("as3mxml").get("sdk.editor");
 	return !editorSDKHome && sdkPath != null;
 }
 
@@ -394,14 +396,14 @@ function startClient()
 				],
 				synchronize:
 				{
-					configurationSection: "nextgenas",
+					configurationSection: "as3mxml",
 				}
 			};
 			let cpDelimiter = getJavaClassPathDelimiter();
 			let cp = path.resolve(savedContext.extensionPath, "bin", "*");
 			if(editorSDKHome)
 			{
-				//use the nextgenas.sdk.editor configuration
+				//use the as3mxml.sdk.editor configuration
 				cp += cpDelimiter +
 					//the following jars come from apache royale
 					path.resolve(editorSDKHome, "lib", "*") +

@@ -62,16 +62,16 @@ public class ActionScriptWorkspaceService implements WorkspaceService
 			return;
 		}
 		JsonObject settings = (JsonObject) params.getSettings();
-		if (!settings.has("nextgenas"))
+		if (!settings.has("as3mxml"))
 		{
 			return;
 		}
-		JsonObject nextgenas = settings.get("nextgenas").getAsJsonObject();
-		if (!nextgenas.has("sdk"))
+		JsonObject as3mxml = settings.get("as3mxml").getAsJsonObject();
+		if (!as3mxml.has("sdk"))
 		{
 			return;
 		}
-		JsonObject sdk = nextgenas.get("sdk").getAsJsonObject();
+		JsonObject sdk = as3mxml.get("sdk").getAsJsonObject();
 		String frameworkSDK = null;
 		if (sdk.has("framework"))
 		{

@@ -324,7 +324,7 @@ export default class ActionScriptTaskProvider implements vscode.TaskProvider
 			{
 				return [winPath];
 			}
-			let useBundled = <string> vscode.workspace.getConfiguration("nextgenas").get("asconfigc.useBundled");
+			let useBundled = <string> vscode.workspace.getConfiguration("as3mxml").get("asconfigc.useBundled");
 			if(!useBundled)
 			{
 				//use an executable on the system path
@@ -339,7 +339,7 @@ export default class ActionScriptTaskProvider implements vscode.TaskProvider
 		{
 			return [unixPath];
 		}
-		let useBundled = <string> vscode.workspace.getConfiguration("nextgenas").get("asconfigc.useBundled");
+		let useBundled = <string> vscode.workspace.getConfiguration("as3mxml").get("asconfigc.useBundled");
 		if(!useBundled)
 		{
 			//use an executable on the system path
