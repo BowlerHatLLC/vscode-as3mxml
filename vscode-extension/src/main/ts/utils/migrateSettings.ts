@@ -44,28 +44,28 @@ function migrateSetting(oldConfig: vscode.WorkspaceConfiguration, newConfig: vsc
 	}
 	let oldSectionInspect = oldConfig.inspect(oldSection);
 	let newSectionInspect = newConfig.inspect(newSection);
-	if(oldSectionInspect.globalValue)
+	if(oldSectionInspect && oldSectionInspect.globalValue)
 	{
 		//don't overwrite an existing value
-		if(!newSectionInspect.globalValue)
+		if(!newSectionInspect || !newSectionInspect.globalValue)
 		{
 			newConfig.update(newSection, oldSectionInspect.globalValue, vscode.ConfigurationTarget.Global);
 		}
 		oldConfig.update(oldSection, undefined, vscode.ConfigurationTarget.Global);
 	}
-	if(oldSectionInspect.workspaceValue)
+	if(oldSectionInspect && oldSectionInspect.workspaceValue)
 	{
 		//don't overwrite an existing value
-		if(!newSectionInspect.workspaceValue)
+		if(!newSectionInspect || !newSectionInspect.workspaceValue)
 		{
 			newConfig.update(newSection, oldSectionInspect.workspaceValue, vscode.ConfigurationTarget.Workspace);
 		}
 		oldConfig.update(oldSection, undefined, vscode.ConfigurationTarget.Workspace);
 	}
-	if(oldSectionInspect.workspaceFolderValue)
+	if(oldSectionInspect && oldSectionInspect.workspaceFolderValue)
 	{
 		//don't overwrite an existing value
-		if(!newSectionInspect.workspaceFolderValue)
+		if(!newSectionInspect || !newSectionInspect.workspaceFolderValue)
 		{
 			newConfig.update(newSection, oldSectionInspect.workspaceFolderValue, vscode.ConfigurationTarget.WorkspaceFolder);
 		}
