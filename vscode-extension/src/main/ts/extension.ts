@@ -444,11 +444,11 @@ function startClient()
 			{
 				resolve();
 				isLanguageClientReady = true;
-				savedLanguageClient.onNotification("nextgenas/logCompilerShellOutput", (notification: string) =>
+				savedLanguageClient.onNotification("as3mxml/logCompilerShellOutput", (notification: string) =>
 				{
 					logCompilerShellOutput(notification, false, false);
 				});
-				savedLanguageClient.onNotification("nextgenas/clearCompilerShellOutput", () =>
+				savedLanguageClient.onNotification("as3mxml/clearCompilerShellOutput", () =>
 				{
 					logCompilerShellOutput(null, false, true);
 				});
