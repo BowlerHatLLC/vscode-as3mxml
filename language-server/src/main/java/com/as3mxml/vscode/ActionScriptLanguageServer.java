@@ -60,10 +60,10 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
     private static final String PROPERTY_FRAMEWORK_LIB = "royalelib";
     private static final String FRAMEWORKS_RELATIVE_PATH_PARENT = "../frameworks";
 
-    private ActionScriptWorkspaceService workspaceService;
-    private ActionScriptTextDocumentService textDocumentService;
-    private IProjectConfigStrategyFactory projectConfigStrategyFactory;
-    private ActionScriptLanguageClient languageClient;
+    protected ActionScriptWorkspaceService workspaceService;
+    protected ActionScriptTextDocumentService textDocumentService;
+    protected IProjectConfigStrategyFactory projectConfigStrategyFactory;
+    protected ActionScriptLanguageClient languageClient;
 
     public ActionScriptLanguageServer(IProjectConfigStrategyFactory factory)
     {

@@ -295,6 +295,16 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         projectConfigStrategyFactory = value;
     }
 
+    public List<WorkspaceFolder> getWorkspaceFolders()
+    {
+        return workspaceFolders;
+    }
+
+    public WorkspaceFolderData getWorkspaceFolderData(WorkspaceFolder folder)
+    {
+        return workspaceFolderToData.get(folder);
+    }
+
     public void addWorkspaceFolder(WorkspaceFolder folder)
     {
         workspaceFolders.add(folder);
