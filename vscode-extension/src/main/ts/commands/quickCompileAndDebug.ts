@@ -76,26 +76,29 @@ function quickCompileAndDebugWorkspaceFolder(workspaceFolder)
 		progress.report({message: QUICK_COMPILE_MESSAGE});
 		return new Promise((resolve, reject) =>
 		{
-			return vscode.commands.executeCommand("as3mxml.quickCompile", workspaceFolderUri).then((result) =>
+			return vscode.commands.executeCommand("workbench.action.debug.stop").then(() =>
 			{
-				resolve();
-
-				if(result)
+				return vscode.commands.executeCommand("as3mxml.quickCompile", workspaceFolderUri).then((result) =>
 				{
-					vscode.commands.executeCommand("workbench.action.debug.start");
-				}
-				else
+					resolve();
+	
+					if(result)
+					{
+						vscode.commands.executeCommand("workbench.action.debug.start");
+					}
+					else
+					{
+						vscode.window.showErrorMessage(CANNOT_LAUNCH_QUICK_COMPILE_FAILED_ERROR);
+					}
+				}, 
+				() =>
 				{
+					resolve();
+	
+					//if the build failed, notify the user that we're not starting
+					//a debug session
 					vscode.window.showErrorMessage(CANNOT_LAUNCH_QUICK_COMPILE_FAILED_ERROR);
-				}
-			}, 
-			() =>
-			{
-				resolve();
-
-				//if the build failed, notify the user that we're not starting
-				//a debug session
-				vscode.window.showErrorMessage(CANNOT_LAUNCH_QUICK_COMPILE_FAILED_ERROR);
+				});
 			});
 		});
 	});
