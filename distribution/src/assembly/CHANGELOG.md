@@ -1,3 +1,28 @@
+## v0.14.0
+
+### New Features
+
+* Multi-Threading: Improved performance by handling requests from VSCode in multiple threads.
+* Outline: Symbols in the Outline view are now displayed as a tree. For example, you'll now see properties and methods of a class as its children.
+* Quick Compile & Debug: If another debug session is currently active, it is now stopped automatically before starting a new one.
+* Settings: Replaced prefix `nextgenas` with `as3mxml`. For example, `nextgenas.sdk.framework` is now `as3mxml.sdk.framework`. You don't need to do anything to migrate. The extension will detect existing settings and automatically convert them when you open a workspace.
+* Tasks: Provides additional build tasks for workspaces that contain multiple *asconfig* JSON files. For example, you could now create the standard *asconfig.json* for development, with a separate *asconfig.prod.json* for production builds.
+
+### Fixed Issues
+
+* Build: Fixed issue where files that should be included when packaging an Adobe AIR app were not available when debugging in the simulator.
+* Code Intelligence: Fixed issue where adding, removing, or changing *.swc* files in the workspace would not update code intelligence without restaring VSCode.
+* Completion: Fixed issue where the list of states in MXML didn't include state groups.
+* Library projects: In addition to `source-path`, now also checks for `include-sources` to determine if a file should support code intelligence when opened in an editor.
+* Multi-Root Workspaces: Fixed stability issues in workspaces with multiple root folders.
+* Multi-Root Workspaces: Fixed issue where adding a new root folder to a workspace would not activate code intelligence until VSCode is restarted.
+* Royale: Fixed issue where the order of items in the `targets` compiler option did not affect code intelligence anymore.
+* Syntax Highlighting: Fixed a number of issues that should make ActionScript more consistent with other languages.
+
+### Other Changes
+
+* eclipse/lsp4j updated to v0.5.0.
+
 ## v0.13.0
 
 ### New Features
