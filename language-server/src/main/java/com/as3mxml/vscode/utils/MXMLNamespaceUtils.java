@@ -44,6 +44,7 @@ public class MXMLNamespaceUtils
 
     private static final HashMap<String, String> NAMESPACE_TO_PREFIX = new HashMap<>();
 
+    static
     {
         //MXML language
         NAMESPACE_TO_PREFIX.put(IMXMLLanguageConstants.NAMESPACE_MXML_2009, PREFIX_FX);
