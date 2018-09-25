@@ -31,6 +31,7 @@ public interface IMXMLLibraryConstants
     //Royale
     String ROYALE_BASIC = "library://ns.apache.org/royale/basic";
     String ROYALE_EXPRESS = "library://ns.apache.org/royale/express";
+    String ROYALE_JEWEL = "library://ns.apache.org/royale/jewel";
     
     //Feathers
     String FEATHERS = "library://ns.feathersui.com/mxml";
