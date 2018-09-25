@@ -1651,52 +1651,62 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 {
                     case ICommandConstants.ADD_IMPORT:
                     {
-                        result = executeAddImportCommand(params);
+                        executeAddImportCommand(params);
+                        result = new Object();
                         break;
                     }
                     case ICommandConstants.ADD_MXML_NAMESPACE:
                     {
-                        result = executeAddMXMLNamespaceCommand(params);
+                        executeAddMXMLNamespaceCommand(params);
+                        result = new Object();
                         break;
                     }
                     case ICommandConstants.ORGANIZE_IMPORTS_IN_URI:
                     {
-                        result = executeOrganizeImportsInUriCommand(params);
+                        executeOrganizeImportsInUriCommand(params);
+                        result = new Object();
                         break;
                     }
                     case ICommandConstants.ORGANIZE_IMPORTS_IN_DIRECTORY:
                     {
-                        result = executeOrganizeImportsInDirectoryCommand(params);
+                        executeOrganizeImportsInDirectoryCommand(params);
+                        result = new Object();
                         break;
                     }
                     case ICommandConstants.GENERATE_GETTER_AND_SETTER:
                     {
-                        result = executeGenerateGetterAndSetterCommand(params, true, true);
+                        executeGenerateGetterAndSetterCommand(params, true, true);
+                        result = new Object();
                         break;
                     }
                     case ICommandConstants.GENERATE_GETTER:
                     {
-                        result = executeGenerateGetterAndSetterCommand(params, true, false);
+                        executeGenerateGetterAndSetterCommand(params, true, false);
+                        result = new Object();
                         break;
                     }
                     case ICommandConstants.GENERATE_SETTER:
                     {
-                        result = executeGenerateGetterAndSetterCommand(params, false, true);
+                        executeGenerateGetterAndSetterCommand(params, false, true);
+                        result = new Object();
                         break;
                     }
                     case ICommandConstants.GENERATE_LOCAL_VARIABLE:
                     {
-                        result = executeGenerateLocalVariableCommand(params);
+                        executeGenerateLocalVariableCommand(params);
+                        result = new Object();
                         break;
                     }
                     case ICommandConstants.GENERATE_FIELD_VARIABLE:
                     {
-                        result = executeGenerateFieldVariableCommand(params);
+                        executeGenerateFieldVariableCommand(params);
+                        result = new Object();
                         break;
                     }
                     case ICommandConstants.GENERATE_METHOD:
                     {
-                        result = executeGenerateMethodCommand(params);
+                        executeGenerateMethodCommand(params);
+                        result = new Object();
                         break;
                     }
                     case ICommandConstants.QUICK_COMPILE:
@@ -6865,7 +6875,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return range;
     }
 
-    private CompletableFuture<Object> executeOrganizeImportsInDirectoryCommand(ExecuteCommandParams params)
+    private void executeOrganizeImportsInDirectoryCommand(ExecuteCommandParams params)
     {
         List<Object> args = params.getArguments();
         JsonObject uriObject = (JsonObject) args.get(0);
@@ -6874,13 +6884,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(uri);
         if (path == null)
         {
-            return CompletableFuture.completedFuture(new Object());
+            return;
         }
 
         File rootDir = path.toFile();
         if (!rootDir.isDirectory())
         {
-            return CompletableFuture.completedFuture(new Object());
+            return;
         }
         ArrayList<File> directories = new ArrayList<>();
         directories.add(rootDir);
@@ -6904,7 +6914,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 organizeImportsInUri(file.toURI().toString());
             }
         }
-        return CompletableFuture.completedFuture(new Object());
+        return;
     }
 
     private void organizeImportsInUri(String uri)
@@ -7007,7 +7017,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         languageClient.applyEdit(editParams);
     }
     
-    private CompletableFuture<Object> executeOrganizeImportsInUriCommand(ExecuteCommandParams params)
+    private void executeOrganizeImportsInUriCommand(ExecuteCommandParams params)
     {
         List<Object> args = params.getArguments();
         JsonObject uriObject = (JsonObject) args.get(0);
@@ -7016,7 +7026,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(uri);
         if (path == null)
         {
-            return CompletableFuture.completedFuture(new Object());
+            return;
         }
 
         WorkspaceFolderData folderData = getWorkspaceFolderDataForSourceFile(path);
@@ -7031,7 +7041,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return CompletableFuture.completedFuture(new Object());
     }
     
-    private CompletableFuture<Object> executeAddImportCommand(ExecuteCommandParams params)
+    private void executeAddImportCommand(ExecuteCommandParams params)
     {
         List<Object> args = params.getArguments();
         String qualifiedName = ((JsonPrimitive) args.get(0)).getAsString();
@@ -7040,7 +7050,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         int endIndex = ((JsonPrimitive) args.get(3)).getAsInt();
         if(qualifiedName == null)
         {
-            return CompletableFuture.completedFuture(new Object());
+            return;
         }
         Path pathForImport = Paths.get(URI.create(uri));
         String text = sourceByPath.get(pathForImport);
@@ -7048,7 +7058,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         if(edit == null)
         {
             //no edit required
-            return CompletableFuture.completedFuture(new Object());
+            return;
         }
 
         ApplyWorkspaceEditParams editParams = new ApplyWorkspaceEditParams();
@@ -7061,11 +7071,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         editParams.setEdit(workspaceEdit);
 
         languageClient.applyEdit(editParams);
-
-        return CompletableFuture.completedFuture(new Object());
     }
     
-    private CompletableFuture<Object> executeAddMXMLNamespaceCommand(ExecuteCommandParams params)
+    private void executeAddMXMLNamespaceCommand(ExecuteCommandParams params)
     {
         List<Object> args = params.getArguments();
         String nsPrefix = ((JsonPrimitive) args.get(0)).getAsString();
@@ -7075,7 +7083,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         int endIndex = ((JsonPrimitive) args.get(4)).getAsInt();
         if(nsPrefix == null || nsUri == null)
         {
-            return CompletableFuture.completedFuture(new Object());
+            return;
         }
         Path pathForImport = Paths.get(URI.create(uri));
         String text = sourceByPath.get(pathForImport);
@@ -7083,7 +7091,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         if(edit == null)
         {
             //no edit required
-            return CompletableFuture.completedFuture(new Object());
+            return;
         }
 
         ApplyWorkspaceEditParams editParams = new ApplyWorkspaceEditParams();
@@ -7096,11 +7104,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         editParams.setEdit(workspaceEdit);
 
         languageClient.applyEdit(editParams);
-
-        return CompletableFuture.completedFuture(new Object());
     }
     
-    private CompletableFuture<Object> executeGenerateLocalVariableCommand(ExecuteCommandParams params)
+    private void executeGenerateLocalVariableCommand(ExecuteCommandParams params)
     {
         List<Object> args = params.getArguments();
         String uri = ((JsonPrimitive) args.get(0)).getAsString();
@@ -7115,17 +7121,17 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         IASNode offsetNode = getOffsetNode(identifier, position);
         if (offsetNode == null)
         {
-            return CompletableFuture.completedFuture(new Object());
+            return;
         }
         IFunctionNode functionNode = (IFunctionNode) offsetNode.getAncestorOfType(IFunctionNode.class);
         if (functionNode == null)
         {
-            return CompletableFuture.completedFuture(new Object());
+            return;
         }
         IScopedNode scopedNode = functionNode.getScopedNode();
         if (scopedNode == null)
         {
-            return CompletableFuture.completedFuture(new Object());
+            return;
         }
 
         Path pathForImport = Paths.get(URI.create(uri));
@@ -7140,11 +7146,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             uri, startLine, startChar, endLine, endChar, name, indent);
         editParams.setEdit(workspaceEdit);
         languageClient.applyEdit(editParams);
-
-        return CompletableFuture.completedFuture(new Object());
     }
     
-    private CompletableFuture<Object> executeGenerateFieldVariableCommand(ExecuteCommandParams params)
+    private void executeGenerateFieldVariableCommand(ExecuteCommandParams params)
     {
         List<Object> args = params.getArguments();
         String uri = ((JsonPrimitive) args.get(0)).getAsString();
@@ -7162,7 +7166,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         IASNode offsetNode = getOffsetNode(identifier, position);
         if (offsetNode == null)
         {
-            return CompletableFuture.completedFuture(new Object());
+            return;
         }
         IMXMLScriptNode scriptNode = (IMXMLScriptNode) offsetNode.getAncestorOfType(IMXMLScriptNode.class);
         if (scriptNode != null)
@@ -7171,7 +7175,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             int nodeCount = nodes.length;
             if (nodeCount == 0)
             {
-                return CompletableFuture.completedFuture(new Object());
+                return;
             }
             IASNode finalNode = nodes[nodeCount - 1];
             endLine = finalNode.getEndLine() + 1;
@@ -7185,12 +7189,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             IClassNode classNode = (IClassNode) offsetNode.getAncestorOfType(IClassNode.class);
             if (classNode == null)
             {
-                return CompletableFuture.completedFuture(new Object());
+                return;
             }
             IScopedNode scopedNode = classNode.getScopedNode();
             if (scopedNode == null)
             {
-                return CompletableFuture.completedFuture(new Object());
+                return;
             }
             endLine = scopedNode.getEndLine();
 
@@ -7210,11 +7214,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         editParams.setEdit(workspaceEdit);
 
         languageClient.applyEdit(editParams);
-
-        return CompletableFuture.completedFuture(new Object());
     }
     
-    private CompletableFuture<Object> executeGenerateMethodCommand(ExecuteCommandParams params)
+    private void executeGenerateMethodCommand(ExecuteCommandParams params)
     {
         List<Object> args = params.getArguments();
         String uri = ((JsonPrimitive) args.get(0)).getAsString();
@@ -7244,7 +7246,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         IASNode offsetNode = getOffsetNode(identifier, position);
         if (offsetNode == null)
         {
-            return CompletableFuture.completedFuture(new Object());
+            return;
         }
         IMXMLScriptNode scriptNode = (IMXMLScriptNode) offsetNode.getAncestorOfType(IMXMLScriptNode.class);
         if (scriptNode != null)
@@ -7253,7 +7255,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             int nodeCount = nodes.length;
             if (nodeCount == 0)
             {
-                return CompletableFuture.completedFuture(new Object());
+                return;
             }
             IASNode finalNode = nodes[nodeCount - 1];
             endLine = finalNode.getEndLine() + 1;
@@ -7267,12 +7269,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             IClassNode classNode = (IClassNode) offsetNode.getAncestorOfType(IClassNode.class);
             if (classNode == null)
             {
-                return CompletableFuture.completedFuture(new Object());
+                return;
             }
             IScopedNode scopedNode = classNode.getScopedNode();
             if (scopedNode == null)
             {
-                return CompletableFuture.completedFuture(new Object());
+                return;
             }
             endLine = scopedNode.getEndLine();
 
@@ -7296,11 +7298,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         editParams.setEdit(workspaceEdit);
 
         languageClient.applyEdit(editParams);
-
-        return CompletableFuture.completedFuture(new Object());
     }
 
-    private CompletableFuture<Object> executeGenerateGetterAndSetterCommand(ExecuteCommandParams params, boolean generateGetter, boolean generateSetter)
+    private void executeGenerateGetterAndSetterCommand(ExecuteCommandParams params, boolean generateGetter, boolean generateSetter)
     {
         List<Object> args = params.getArguments();
         String uri = ((JsonPrimitive) args.get(0)).getAsString();
@@ -7334,11 +7334,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             fileText, indent, generateGetter, generateSetter);
         editParams.setEdit(workspaceEdit);
         languageClient.applyEdit(editParams);
-
-        return CompletableFuture.completedFuture(new Object());
     }
 
-    private CompletableFuture<Object> executeQuickCompileCommand(ExecuteCommandParams params)
+    private boolean executeQuickCompileCommand(ExecuteCommandParams params)
     {
         List<Object> args = params.getArguments();
         String uri = ((JsonPrimitive) args.get(0)).getAsString();
@@ -7370,6 +7368,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             e.printStackTrace(new PrintStream(buffer));
             languageClient.logCompilerShellOutput("Exception in compiler shell: " + buffer.toString());
         }
-        return CompletableFuture.completedFuture(success);
+        return success;
     }
 }

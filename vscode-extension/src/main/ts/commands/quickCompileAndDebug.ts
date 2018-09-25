@@ -82,7 +82,7 @@ function quickCompileAndDebugWorkspaceFolder(workspaceFolder)
 				{
 					resolve();
 	
-					if(result)
+					if(result === true)
 					{
 						vscode.commands.executeCommand("workbench.action.debug.start");
 					}
