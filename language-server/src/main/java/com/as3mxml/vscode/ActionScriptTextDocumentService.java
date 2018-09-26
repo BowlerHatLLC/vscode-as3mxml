@@ -7033,12 +7033,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         if (folderData == null)
         {
             languageClient.showMessage(new MessageParams(MessageType.Error, "Organize Imports failed. File is not in source path."));
-            return CompletableFuture.completedFuture(new Object());
+            return;
         }
 
         organizeImportsInUri(uri);
-
-        return CompletableFuture.completedFuture(new Object());
     }
     
     private void executeAddImportCommand(ExecuteCommandParams params)
