@@ -1,3 +1,10 @@
+### v0.14.1
+
+### Fixed Issues
+
+* Completion: fixed issue where Apache Flex MX components were given the `adobe` namespace in MXML intead of `mx`.
+* Quick Compile & Debug: Fixed issue where debugger incorrectly launched when compiler reported errors.
+
 ## v0.14.0
 
 ### New Features

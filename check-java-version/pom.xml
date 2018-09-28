@@ -7,7 +7,7 @@
   <parent>
     <groupId>com.as3mxml.vscode</groupId>
     <artifactId>vscode-nextgenas</artifactId>
-    <version>0.14.0</version>
+    <version>0.14.1</version>
   </parent>
 
   <groupId>com.as3mxml.vscode</groupId>
