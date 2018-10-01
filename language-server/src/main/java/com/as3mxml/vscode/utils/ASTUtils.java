@@ -291,6 +291,7 @@ public class ASTUtils
     
     protected static void findImportNodesToRemove(IASNode node, ICompilerProject project, Set<String> referencedDefinitions, Set<IImportNode> importsToRemove)
     {
+        Set<String> mxmlScriptReferencedDefinitions = null;
         Set<IImportNode> childImports = null;
         if (node instanceof IScopedNode || node instanceof IMXMLScriptNode)
         {
@@ -322,6 +323,13 @@ public class ASTUtils
             }
             findImportNodesToRemove(child, project, referencedDefinitions, importsToRemove);
         }
+        if (node instanceof IMXMLScriptNode)
+        {
+            IMXMLScriptNode scriptNode = (IMXMLScriptNode) node;
+            mxmlScriptReferencedDefinitions = new HashSet<>();
+            findReferencedDefinitionsOutsideMXMLScript(scriptNode.getParent(), project, mxmlScriptReferencedDefinitions);
+        }
+        final Set<String> mxmlRefs = mxmlScriptReferencedDefinitions;
         if (childImports != null)
         {
             childImports.removeIf(importNode ->
@@ -334,21 +342,72 @@ public class ASTUtils
                 if (importName.endsWith(DOT_STAR))
                 {
                     String importPackage = importName.substring(0, importName.length() - 2);
-                    for (String reference : referencedDefinitions)
+                    if (mxmlRefs != null)
                     {
-                        if(reference.startsWith(importPackage)
-                            && !reference.substring(importPackage.length() + 1).contains("."))
+                        if (containsReferenceForImportPackage(importPackage, mxmlRefs))
                         {
-                            //an entire package is imported, so check if any
-                            //references are in that package
                             return true;
                         }
                     }
+                    if (containsReferenceForImportPackage(importPackage, referencedDefinitions))
+                    {
+                        return true;
+                    }
                     return false;
+                }
+                if(mxmlRefs != null && mxmlRefs.contains(importName))
+                {
+                    return true;
                 }
                 return referencedDefinitions.contains(importName);
             });
             importsToRemove.addAll(childImports);
+        }
+    }
+
+    private static boolean containsReferenceForImportPackage(String importPackage, Set<String> referencedDefinitions)
+    {
+        for (String reference : referencedDefinitions)
+        {
+            if(reference.startsWith(importPackage)
+                && !reference.substring(importPackage.length() + 1).contains("."))
+            {
+                //an entire package is imported, so check if any
+                //references are in that package
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static void findReferencedDefinitionsOutsideMXMLScript(IASNode node, ICompilerProject project, Set<String> referencedDefinitions)
+    {
+        for (int i = 0, count = node.getChildCount(); i < count; i++)
+        {
+            IASNode child = node.getChild(i);
+            if (child instanceof IMXMLScriptNode)
+            {
+                //skip the script node and children because they are handled in
+                //findImportNodesToRemove()
+                continue;
+            }
+            if (child instanceof IImportNode)
+            {
+                //import nodes can't be references
+                continue;
+            }
+            if (child instanceof IIdentifierNode)
+            {
+                IIdentifierNode identifierNode = (IIdentifierNode) child;
+                IDefinition definition = identifierNode.resolve(project);
+                if (definition != null
+                        && definition.getPackageName().length() > 0
+                        && definition.getQualifiedName().startsWith(definition.getPackageName()))
+                {
+                    referencedDefinitions.add(definition.getQualifiedName());
+                }
+            }
+            findReferencedDefinitionsOutsideMXMLScript(child, project, referencedDefinitions);
         }
     }
 
