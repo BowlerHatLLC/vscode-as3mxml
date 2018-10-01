@@ -123,7 +123,7 @@ public class SWFDebugSession extends DebugSession
     private Path adlPath;
     private Path adtPath;
     private Map<String,PendingBreakpoints> pendingBreakpoints;
-    private List<LogLocation> savedLogLocations = new ArrayList<>();
+    private Map<String,LogLocation> savedLogLocations;
     private int nextBreakpointID = 1;
 
     private class PendingBreakpoints
@@ -210,7 +210,7 @@ public class SWFDebugSession extends DebugSession
                         else if (event instanceof BreakEvent)
                         {
                             BreakEvent breakEvent = (BreakEvent) event;
-                            for(LogLocation logLocation : savedLogLocations)
+                            for(LogLocation logLocation : savedLogLocations.values())
                             {
                                 Location location = logLocation.location;
                                 if(breakEvent.fileId == location.getFile().getId()
@@ -346,6 +346,7 @@ public class SWFDebugSession extends DebugSession
     {
         super(false);
         pendingBreakpoints = new HashMap<>();
+        savedLogLocations = new HashMap<>();
         String flexlibPath = System.getProperty(FLEXLIB_PROPERTY);
         if (flexlibPath != null)
         {
@@ -828,7 +829,7 @@ public class SWFDebugSession extends DebugSession
                     swfSession.clearBreakpoint(location);
                 }
             }
-            savedLogLocations.clear();
+            savedLogLocations.remove(path);
         }
         catch (NoResponseException e)
         {
@@ -873,7 +874,7 @@ public class SWFDebugSession extends DebugSession
                         String logMessage = sourceBreakpoint.logMessage;
                         if(logMessage != null)
                         {
-                            savedLogLocations.add(new LogLocation(breakpointLocation, logMessage));
+                            savedLogLocations.put(path, new LogLocation(breakpointLocation, logMessage));
                         }
                     }
                     else
