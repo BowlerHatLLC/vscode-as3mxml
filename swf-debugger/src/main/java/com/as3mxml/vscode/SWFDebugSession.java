@@ -16,9 +16,11 @@ limitations under the License.
 package com.as3mxml.vscode;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintStream;
 import java.lang.reflect.Type;
 import java.net.ConnectException;
 import java.net.URI;
@@ -26,6 +28,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -119,8 +122,21 @@ public class SWFDebugSession extends DebugSession
     private Path flexHome;
     private Path adlPath;
     private Path adtPath;
-    private Map<String,SourceBreakpoint[]> pendingBreakpoints;
+    private Map<String,PendingBreakpoints> pendingBreakpoints;
     private List<LogLocation> savedLogLocations = new ArrayList<>();
+    private int nextBreakpointID = 1;
+
+    private class PendingBreakpoints
+    {
+        public PendingBreakpoints(SourceBreakpoint[] breakpoints)
+        {
+            this.breakpoints = breakpoints;
+            idStart = nextBreakpointID;
+        }
+
+        SourceBreakpoint[] breakpoints;
+        int idStart;
+    }
 
     private class LogLocation
     {
@@ -266,7 +282,7 @@ public class SWFDebugSession extends DebugSession
                             {
                                 body = new StoppedEvent.StoppedBody();
                                 body.reason = StoppedEvent.REASON_UNKNOWN;
-                                System.err.println("Unknown suspend reason: " + swfSession.suspendReason());
+                                sendOutputEvent("Unknown suspend reason: " + swfSession.suspendReason() + "\n");
                             }
                         }
                         if (body != null)
@@ -285,7 +301,9 @@ public class SWFDebugSession extends DebugSession
                 }
                 catch (Exception e)
                 {
-                    e.printStackTrace(System.err);
+                    ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+                    e.printStackTrace(new PrintStream(buffer));
+                    sendOutputEvent("Exception in debugger: " + buffer.toString() + "\n");
                 }
                 try
                 {
@@ -309,9 +327,7 @@ public class SWFDebugSession extends DebugSession
                     SourceFile file = location.getFile();
                     if (file != null)
                     {
-                        Source source = new Source();
-                        source.name = file.getName();
-                        source.path = transformPath(file.getFullPath());
+                        Source source = sourceFileToSource(file);
                         body.source = source;
                         body.line = location.getLine();
                         body.column = 0;
@@ -320,7 +336,7 @@ public class SWFDebugSession extends DebugSession
             }
             catch (NotConnectedException e)
             {
-                System.err.println("not connected");
+                sendOutputEvent("Not connected\n");
                 return;
             }
         }
@@ -478,13 +494,17 @@ public class SWFDebugSession extends DebugSession
             body.output = e.getMessage() + "\n" + e.getCommandOutput();
             body.category = OutputEvent.CATEGORY_STDERR;
             sendEvent(new OutputEvent(body));
-            e.printStackTrace(System.err);
+            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+            e.printStackTrace(new PrintStream(buffer));
+            sendOutputEvent("Exception in debugger: " + buffer.toString() + "\n");
             sendErrorResponse(response, 10001, "Error launching SWF debug session. Process exited with code: " + e.getExitValue());
             return;
         }
         catch (IOException e)
         {
-            e.printStackTrace(System.err);
+            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+            e.printStackTrace(new PrintStream(buffer));
+            sendOutputEvent("Exception in debugger: " + buffer.toString() + "\n");
             sendErrorResponse(response, 10001, "Error launching SWF debug session.");
             return;
         }
@@ -494,7 +514,9 @@ public class SWFDebugSession extends DebugSession
         }
         catch (VersionException e)
         {
-            e.printStackTrace(System.err);
+            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+            e.printStackTrace(new PrintStream(buffer));
+            sendOutputEvent("Exception in debugger: " + buffer.toString() + "\n");
         }
         try
         {
@@ -502,7 +524,9 @@ public class SWFDebugSession extends DebugSession
         }
         catch (IOException e)
         {
-            e.printStackTrace(System.err);
+            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+            e.printStackTrace(new PrintStream(buffer));
+            sendOutputEvent("Exception in debugger: " + buffer.toString() + "\n");
         }
         sendResponse(response);
         cancelRunner = false;
@@ -679,7 +703,9 @@ public class SWFDebugSession extends DebugSession
         catch (IOException e)
         {
             response.success = false;
-            e.printStackTrace(System.err);
+            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+            e.printStackTrace(new PrintStream(buffer));
+            sendOutputEvent("Exception in debugger: " + buffer.toString() + "\n");
         }
         if(response.success)
         {
@@ -689,7 +715,9 @@ public class SWFDebugSession extends DebugSession
             }
             catch (VersionException e)
             {
-                e.printStackTrace(System.err);
+                ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+                e.printStackTrace(new PrintStream(buffer));
+                sendOutputEvent("Exception in debugger: " + buffer.toString() + "\n");
             }
             try
             {
@@ -697,7 +725,9 @@ public class SWFDebugSession extends DebugSession
             }
             catch (IOException e)
             {
-                e.printStackTrace(System.err);
+                ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+                e.printStackTrace(new PrintStream(buffer));
+                sendOutputEvent("Exception in debugger: " + buffer.toString() + "\n");
             }
 
             cancelRunner = false;
@@ -733,7 +763,7 @@ public class SWFDebugSession extends DebugSession
     {
         //start by trying to find the file ID for this path
         Path pathAsPath = Paths.get(path);
-        int fileId = -1;
+        SourceFile foundSourceFile = null;
         boolean badExtension = false;
         try
         {
@@ -749,7 +779,7 @@ public class SWFDebugSession extends DebugSession
                     {
                         if (path.endsWith(FILE_EXTENSION_AS) || path.endsWith(FILE_EXTENSION_MXML))
                         {
-                            fileId = sourceFile.getId();
+                            foundSourceFile = sourceFile;
                         }
                         else
                         {
@@ -758,7 +788,7 @@ public class SWFDebugSession extends DebugSession
                         break;
                     }
                 }
-                if (fileId != -1)
+                if (foundSourceFile != null)
                 {
                     break;
                 }
@@ -766,25 +796,26 @@ public class SWFDebugSession extends DebugSession
         }
         catch (InProgressException e)
         {
-            e.printStackTrace(System.err);
+            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+            e.printStackTrace(new PrintStream(buffer));
+            sendOutputEvent("Exception in debugger: " + buffer.toString() + "\n");
         }
         catch (NoResponseException e)
         {
-            e.printStackTrace(System.err);
+            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+            e.printStackTrace(new PrintStream(buffer));
+            sendOutputEvent("Exception in debugger: " + buffer.toString() + "\n");
         }
-        if (fileId != -1)
-        {
-            //if we found the fileId, make sure the breakpoints are no longer
-            //pending so that we don't try to add them again
-            pendingBreakpoints.remove(path);
-        }
-        else if (!badExtension)
+        if (foundSourceFile == null && !badExtension)
         {
             //the file was not found, but it has a supported extension,
             //so we'll try to add it again later.
             //SWF is a streaming format, so not all bytecode is loaded
             //immediately.
-            pendingBreakpoints.put(path, breakpoints);
+            if(!pendingBreakpoints.containsKey(path))
+            {
+                pendingBreakpoints.put(path, new PendingBreakpoints(breakpoints));
+            }
         }
         try
         {
@@ -801,11 +832,15 @@ public class SWFDebugSession extends DebugSession
         }
         catch (NoResponseException e)
         {
-            e.printStackTrace(System.err);
+            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+            e.printStackTrace(new PrintStream(buffer));
+            sendOutputEvent("Exception in debugger: " + buffer.toString() + "\n");
         }
         catch (NotConnectedException e)
         {
-            e.printStackTrace(System.err);
+            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+            e.printStackTrace(new PrintStream(buffer));
+            sendOutputEvent("Exception in debugger: " + buffer.toString() + "\n");
         }
         List<Breakpoint> result = new ArrayList<>();
         for (int i = 0, count = breakpoints.length; i < count; i++)
@@ -814,7 +849,9 @@ public class SWFDebugSession extends DebugSession
             int sourceLine = sourceBreakpoint.line;
             Breakpoint responseBreakpoint = new Breakpoint();
             responseBreakpoint.line = sourceLine;
-            if (fileId == -1)
+            responseBreakpoint.id = nextBreakpointID;
+            nextBreakpointID++;
+            if (foundSourceFile == null)
             {
                 //we couldn't find the file, so we can't verify this breakpoint
                 responseBreakpoint.verified = false;
@@ -823,9 +860,10 @@ public class SWFDebugSession extends DebugSession
             {
                 //we found the file, so let's try to add this breakpoint
                 //it may not work, but at least we tried!
+                responseBreakpoint.source = sourceFileToSource(foundSourceFile);
                 try
                 {
-                    Location breakpointLocation = swfSession.setBreakpoint(fileId, sourceLine);
+                    Location breakpointLocation = swfSession.setBreakpoint(foundSourceFile.getId(), sourceLine);
                     if (breakpointLocation != null)
                     {
                         //I don't know if the line could change, but might as well
@@ -848,12 +886,16 @@ public class SWFDebugSession extends DebugSession
                 }
                 catch (NoResponseException e)
                 {
-                    e.printStackTrace(System.err);
+                    ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+                    e.printStackTrace(new PrintStream(buffer));
+                    sendOutputEvent("Exception in debugger: " + buffer.toString() + "\n");
                     responseBreakpoint.verified = false;
                 }
                 catch (NotConnectedException e)
                 {
-                    e.printStackTrace(System.err);
+                    ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+                    e.printStackTrace(new PrintStream(buffer));
+                    sendOutputEvent("Exception in debugger: " + buffer.toString() + "\n");
                     responseBreakpoint.verified = false;
                 }
             }
@@ -870,10 +912,16 @@ public class SWFDebugSession extends DebugSession
         }
         //if we weren't able to add some breakpoints earlier because we
         //we couldn't find the source file, try again!
-        for (String path : pendingBreakpoints.keySet())
+        Iterator<String> iterator = pendingBreakpoints.keySet().iterator();
+        while(iterator.hasNext())
         {
-            SourceBreakpoint[] pending = pendingBreakpoints.get(path);
-            List<Breakpoint> breakpoints = setBreakpoints(path, pending);
+            String path = iterator.next();
+            PendingBreakpoints pending = pendingBreakpoints.get(path);
+            int idToRestore = nextBreakpointID;
+            nextBreakpointID = pending.idStart;
+            List<Breakpoint> breakpoints = setBreakpoints(path, pending.breakpoints);
+            nextBreakpointID = idToRestore;
+            boolean hasVerified = false;
             for (Breakpoint breakpoint : breakpoints)
             {
                 //this breakpoint was unverified, but it may be verified
@@ -881,7 +929,18 @@ public class SWFDebugSession extends DebugSession
                 BreakpointEvent.BreakpointBody body = new BreakpointEvent.BreakpointBody();
                 body.breakpoint = breakpoint;
                 body.reason = BreakpointEvent.REASON_CHANGED;
+                if(breakpoint.verified)
+                {
+                    //if any of the breakpoints are verified, that's good
+                    //enough. we shouldn't keep trying the other unverified
+                    //ones because they will probably always fail
+                    hasVerified = true;
+                }
                 sendEvent(new BreakpointEvent(body));
+            }
+            if(hasVerified)
+            {
+                iterator.remove();
             }
         }
     }
@@ -895,7 +954,9 @@ public class SWFDebugSession extends DebugSession
         }
         catch (Exception e)
         {
-            e.printStackTrace(System.err);
+            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+            e.printStackTrace(new PrintStream(buffer));
+            sendOutputEvent("Exception in debugger: " + buffer.toString() + "\n");
         }
         sendResponse(response);
     }
@@ -909,7 +970,9 @@ public class SWFDebugSession extends DebugSession
         }
         catch (Exception e)
         {
-            e.printStackTrace(System.err);
+            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+            e.printStackTrace(new PrintStream(buffer));
+            sendOutputEvent("Exception in debugger: " + buffer.toString() + "\n");
         }
         sendResponse(response);
     }
@@ -923,7 +986,9 @@ public class SWFDebugSession extends DebugSession
         }
         catch (Exception e)
         {
-            e.printStackTrace(System.err);
+            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+            e.printStackTrace(new PrintStream(buffer));
+            sendOutputEvent("Exception in debugger: " + buffer.toString() + "\n");
         }
         sendResponse(response);
     }
@@ -937,7 +1002,9 @@ public class SWFDebugSession extends DebugSession
         }
         catch (Exception e)
         {
-            e.printStackTrace(System.err);
+            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+            e.printStackTrace(new PrintStream(buffer));
+            sendOutputEvent("Exception in debugger: " + buffer.toString() + "\n");
         }
         sendResponse(response);
     }
@@ -951,7 +1018,9 @@ public class SWFDebugSession extends DebugSession
         }
         catch (Exception e)
         {
-            e.printStackTrace(System.err);
+            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+            e.printStackTrace(new PrintStream(buffer));
+            sendOutputEvent("Exception in debugger: " + buffer.toString() + "\n");
         }
         sendResponse(response);
     }
@@ -972,9 +1041,7 @@ public class SWFDebugSession extends DebugSession
                 stackFrame.name = swfFrame.getCallSignature();
                 if (file != null)
                 {
-                    Source source = new Source();
-                    source.name = file.getName();
-                    source.path = transformPath(file.getFullPath());
+                    Source source = sourceFileToSource(file);
                     stackFrame.source = source;
                     stackFrame.line = location.getLine();
                     //location doesn't include column
@@ -1167,7 +1234,14 @@ public class SWFDebugSession extends DebugSession
         }
         Path transformedPath = flexHome.resolve(sourceFilePath.substring(index + 1));
         return transformedPath.toAbsolutePath().toString();
+    }
 
+    private Source sourceFileToSource(SourceFile sourceFile)
+    {
+        Source source = new Source();
+        source.name = sourceFile.getName();
+        source.path = transformPath(sourceFile.getFullPath());
+        return source;
     }
 
     protected Gson createGson()
