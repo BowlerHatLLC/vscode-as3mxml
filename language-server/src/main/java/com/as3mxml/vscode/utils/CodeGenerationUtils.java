@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import org.apache.royale.compiler.constants.IASKeywordConstants;
 import org.apache.royale.compiler.constants.IASLanguageConstants;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
@@ -39,7 +40,8 @@ public class CodeGenerationUtils
 		StringBuilder builder = new StringBuilder();
 		builder.append(NEW_LINE);
         builder.append(startIndent);
-		builder.append("var ");
+        builder.append(IASKeywordConstants.VAR);
+        builder.append(" ");
 		builder.append(name);
 		builder.append(":");
 		builder.append(IASLanguageConstants.Object);
@@ -70,7 +72,10 @@ public class CodeGenerationUtils
         StringBuilder builder = new StringBuilder();
         builder.append(NEW_LINE);
         builder.append(startIndent);
-        builder.append("public var ");
+        builder.append(IASKeywordConstants.PUBLIC);
+        builder.append(" ");
+        builder.append(IASKeywordConstants.VAR);
+        builder.append(" ");
         builder.append(name);
         builder.append(":");
         builder.append(IASLanguageConstants.Object);
@@ -114,7 +119,10 @@ public class CodeGenerationUtils
         StringBuilder builder = new StringBuilder();
         builder.append(NEW_LINE);
         builder.append(startIndent);
-        builder.append("private function ");
+        builder.append(IASKeywordConstants.PRIVATE);
+        builder.append(" ");
+        builder.append(IASKeywordConstants.FUNCTION);
+        builder.append(" ");
         builder.append(name);
         builder.append("(");
         if(methodArgs != null)
@@ -138,7 +146,7 @@ public class CodeGenerationUtils
                 {
                     builder.append(type.substring(index + 1));
                 }
-                TextEdit importEdit = ImportTextEditUtils.createTextEditForImport(type, fileText, importRange.startIndex, importRange.endIndex);
+                TextEdit importEdit = CodeActionsUtils.createTextEditForAddImport(type, fileText, importRange.startIndex, importRange.endIndex);
                 if (importEdit != null)
                 {
                     edits.add(importEdit);
@@ -147,7 +155,7 @@ public class CodeGenerationUtils
         }
         builder.append(")");
         builder.append(":");
-        builder.append(IASLanguageConstants.void_);
+        builder.append(IASKeywordConstants.VOID);
         builder.append(NEW_LINE);
         builder.append(startIndent);
         builder.append("{");
@@ -180,12 +188,16 @@ public class CodeGenerationUtils
         edits.add(edit);
 
         StringBuilder builder = new StringBuilder();
-        builder.append("private ");
+        builder.append(IASKeywordConstants.PRIVATE);
+        builder.append(" ");
         if(isStatic)
         {
-            builder.append("static ");
+            builder.append(IASKeywordConstants.STATIC);
+            builder.append(" ");
         }
-        builder.append("var _" + name);
+        builder.append(IASKeywordConstants.VAR);
+        builder.append(" _");
+        builder.append(name);
         if(type != null && type.length() > 0)
         {
             builder.append(":" + type);
@@ -204,9 +216,15 @@ public class CodeGenerationUtils
 			builder.append(SPACE);
             if(isStatic)
             {
-                builder.append("static ");
+                builder.append(IASKeywordConstants.STATIC);
+                builder.append(" ");
             }
-            builder.append("function get " + name + "()");
+            builder.append(IASKeywordConstants.FUNCTION);
+			builder.append(" ");
+            builder.append(IASKeywordConstants.GET);
+            builder.append(" ");
+            builder.append(name);
+            builder.append("()");
             if(type != null && type.length() > 0)
             {
                 builder.append(":" + type);
@@ -217,7 +235,10 @@ public class CodeGenerationUtils
 			builder.append(NEW_LINE);
 			builder.append(startIndent);
 			builder.append(INDENT); //extra indent
-			builder.append("return _" + name +";");
+            builder.append(IASKeywordConstants.RETURN);
+            builder.append(" _");
+            builder.append(name);
+            builder.append(";");
 			builder.append(NEW_LINE);
 			builder.append(startIndent);
             builder.append("}");
@@ -231,14 +252,21 @@ public class CodeGenerationUtils
 			builder.append(SPACE);
             if(isStatic)
             {
-                builder.append("static ");
+                builder.append(IASKeywordConstants.STATIC);
+                builder.append(" ");
             }
-            builder.append("function set " + name + "(value");
+            builder.append(IASKeywordConstants.FUNCTION);
+			builder.append(" ");
+            builder.append(IASKeywordConstants.SET);
+            builder.append(" ");
+            builder.append(name);
+            builder.append("(value");
             if(type != null && type.length() > 0)
             {
                 builder.append(":" + type);
             }
-			builder.append("):void");
+			builder.append("):");
+            builder.append(IASKeywordConstants.VOID);
 			builder.append(NEW_LINE);
 			builder.append(startIndent);
 			builder.append("{");
