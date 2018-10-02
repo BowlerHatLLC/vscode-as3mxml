@@ -7415,7 +7415,18 @@ suite("code action provider: Application workspace", () =>
 						assert.strictEqual(codeAction.title, "Import " + typeToImport, "Code action provided incorrect title");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
 						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
-						assert.notEqual(codeAction.edit, undefined, "Code action missing text edit");
+						let workspaceEdit = codeAction.edit;
+						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
+						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
+						let textEdits = workspaceEdit.get(uri);
+						assert.strictEqual(textEdits.length, 1);
+						let textEdit = textEdits[0];
+						assert.strictEqual(textEdit.newText, "\timport " + typeToImport + ";\n\n", "Code action workspace edit provided incorrect new text");
+						let range = textEdit.range;
+						assert.strictEqual(range.start.line, 2, "Code action workspace edit provided incorrect start line");
+						assert.strictEqual(range.start.character, 0, "Code action workspace edit provided incorrect start character");
+						assert.strictEqual(range.end.line, 2, "Code action workspace edit provided incorrect end line");
+						assert.strictEqual(range.end.character, 0, "Code action workspace edit provided incorrect end character");
 					}, (err) =>
 					{
 						assert(false, "Failed to execute code actions provider: " + uri);
@@ -7439,7 +7450,18 @@ suite("code action provider: Application workspace", () =>
 						assert.strictEqual(codeAction.title, "Import " + typeToImport, "Code action provided incorrect title");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
 						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
-						assert.notEqual(codeAction.edit, undefined, "Code action missing text edit");
+						let workspaceEdit = codeAction.edit;
+						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
+						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
+						let textEdits = workspaceEdit.get(uri);
+						assert.strictEqual(textEdits.length, 1);
+						let textEdit = textEdits[0];
+						assert.strictEqual(textEdit.newText, "\timport " + typeToImport + ";\n\n", "Code action workspace edit provided incorrect new text");
+						let range = textEdit.range;
+						assert.strictEqual(range.start.line, 2, "Code action workspace edit provided incorrect start line");
+						assert.strictEqual(range.start.character, 0, "Code action workspace edit provided incorrect start character");
+						assert.strictEqual(range.end.line, 2, "Code action workspace edit provided incorrect end line");
+						assert.strictEqual(range.end.character, 0, "Code action workspace edit provided incorrect end character");
 					}, (err) =>
 					{
 						assert(false, "Failed to execute code actions provider: " + uri);
@@ -7463,7 +7485,18 @@ suite("code action provider: Application workspace", () =>
 						assert.strictEqual(codeAction.title, "Import " + typeToImport, "Code action provided incorrect title");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
 						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
-						assert.notEqual(codeAction.edit, undefined, "Code action missing text edit");
+						let workspaceEdit = codeAction.edit;
+						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
+						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
+						let textEdits = workspaceEdit.get(uri);
+						assert.strictEqual(textEdits.length, 1);
+						let textEdit = textEdits[0];
+						assert.strictEqual(textEdit.newText, "\timport " + typeToImport + ";\n\n", "Code action workspace edit provided incorrect new text");
+						let range = textEdit.range;
+						assert.strictEqual(range.start.line, 2, "Code action workspace edit provided incorrect start line");
+						assert.strictEqual(range.start.character, 0, "Code action workspace edit provided incorrect start character");
+						assert.strictEqual(range.end.line, 2, "Code action workspace edit provided incorrect end line");
+						assert.strictEqual(range.end.character, 0, "Code action workspace edit provided incorrect end character");
 					}, (err) =>
 					{
 						assert(false, "Failed to execute code actions provider: " + uri);
@@ -7487,7 +7520,18 @@ suite("code action provider: Application workspace", () =>
 						assert.strictEqual(codeAction.title, "Import " + typeToImport, "Code action provided incorrect title");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
 						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
-						assert.notEqual(codeAction.edit, undefined, "Code action missing text edit");
+						let workspaceEdit = codeAction.edit;
+						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
+						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
+						let textEdits = workspaceEdit.get(uri);
+						assert.strictEqual(textEdits.length, 1);
+						let textEdit = textEdits[0];
+						assert.strictEqual(textEdit.newText, "\timport " + typeToImport + ";\n\n", "Code action workspace edit provided incorrect new text");
+						let range = textEdit.range;
+						assert.strictEqual(range.start.line, 2, "Code action workspace edit provided incorrect start line");
+						assert.strictEqual(range.start.character, 0, "Code action workspace edit provided incorrect start character");
+						assert.strictEqual(range.end.line, 2, "Code action workspace edit provided incorrect end line");
+						assert.strictEqual(range.end.character, 0, "Code action workspace edit provided incorrect end character");
 					}, (err) =>
 					{
 						assert(false, "Failed to execute code actions provider: " + uri);
@@ -7511,7 +7555,18 @@ suite("code action provider: Application workspace", () =>
 						assert.strictEqual(codeAction.title, "Import " + typeToImport, "Code action provided incorrect title");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
 						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
-						assert.notEqual(codeAction.edit, undefined, "Code action missing text edit");
+						let workspaceEdit = codeAction.edit;
+						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
+						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
+						let textEdits = workspaceEdit.get(uri);
+						assert.strictEqual(textEdits.length, 1);
+						let textEdit = textEdits[0];
+						assert.strictEqual(textEdit.newText, "\timport " + typeToImport + ";\n\n", "Code action workspace edit provided incorrect new text");
+						let range = textEdit.range;
+						assert.strictEqual(range.start.line, 2, "Code action workspace edit provided incorrect start line");
+						assert.strictEqual(range.start.character, 0, "Code action workspace edit provided incorrect start character");
+						assert.strictEqual(range.end.line, 2, "Code action workspace edit provided incorrect end line");
+						assert.strictEqual(range.end.character, 0, "Code action workspace edit provided incorrect end character");
 					}, (err) =>
 					{
 						assert(false, "Failed to execute code actions provider: " + uri);
@@ -7535,7 +7590,18 @@ suite("code action provider: Application workspace", () =>
 						assert.strictEqual(codeAction.title, "Import " + typeToImport, "Code action provided incorrect title");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
 						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
-						assert.notEqual(codeAction.edit, undefined, "Code action missing text edit");
+						let workspaceEdit = codeAction.edit;
+						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
+						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
+						let textEdits = workspaceEdit.get(uri);
+						assert.strictEqual(textEdits.length, 1);
+						let textEdit = textEdits[0];
+						assert.strictEqual(textEdit.newText, "\timport " + typeToImport + ";\n\n", "Code action workspace edit provided incorrect new text");
+						let range = textEdit.range;
+						assert.strictEqual(range.start.line, 2, "Code action workspace edit provided incorrect start line");
+						assert.strictEqual(range.start.character, 0, "Code action workspace edit provided incorrect start character");
+						assert.strictEqual(range.end.line, 2, "Code action workspace edit provided incorrect end line");
+						assert.strictEqual(range.end.character, 0, "Code action workspace edit provided incorrect end character");
 					}, (err) =>
 					{
 						assert(false, "Failed to execute code actions provider: " + uri);
@@ -7559,7 +7625,18 @@ suite("code action provider: Application workspace", () =>
 						assert.strictEqual(codeAction.title, "Import " + typeToImport, "Code action provided incorrect title");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
 						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
-						assert.notEqual(codeAction.edit, undefined, "Code action missing text edit");
+						let workspaceEdit = codeAction.edit;
+						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
+						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
+						let textEdits = workspaceEdit.get(uri);
+						assert.strictEqual(textEdits.length, 1);
+						let textEdit = textEdits[0];
+						assert.strictEqual(textEdit.newText, "\timport " + typeToImport + ";\n\n", "Code action workspace edit provided incorrect new text");
+						let range = textEdit.range;
+						assert.strictEqual(range.start.line, 2, "Code action workspace edit provided incorrect start line");
+						assert.strictEqual(range.start.character, 0, "Code action workspace edit provided incorrect start character");
+						assert.strictEqual(range.end.line, 2, "Code action workspace edit provided incorrect end line");
+						assert.strictEqual(range.end.character, 0, "Code action workspace edit provided incorrect end character");
 					}, (err) =>
 					{
 						assert(false, "Failed to execute code actions provider: " + uri);
@@ -7582,16 +7659,38 @@ suite("code action provider: Application workspace", () =>
 						assert.notEqual(codeAction1, null, "Code action 1 not found");
 						assert.strictEqual(codeAction1.title, "Import " + typeToImport1, "Code action 1 provided incorrect title");
 						assert.strictEqual(codeAction1.command, undefined, "Code action 1 provided incorrect command");
-						assert.strictEqual(codeAction1.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
-						assert.notEqual(codeAction1.edit, undefined, "Code action 1 missing text edit");
+						assert.strictEqual(codeAction1.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action 1 provided incorrect kind");
+						let workspaceEdit1 = codeAction1.edit;
+						assert.notEqual(workspaceEdit1, undefined, "Code action 1 missing workspace edit");
+						assert.ok(workspaceEdit1.has(uri), "Code action 1 workspace edit missing URI: " + uri);
+						let textEdits1 = workspaceEdit1.get(uri);
+						assert.strictEqual(textEdits1.length, 1);
+						let textEdit1 = textEdits1[0];
+						assert.strictEqual(textEdit1.newText, "\timport " + typeToImport1 + ";\n\n", "Code action 1 workspace edit provided incorrect new text");
+						let range1 = textEdit1.range;
+						assert.strictEqual(range1.start.line, 2, "Code action 1 workspace edit provided incorrect start line");
+						assert.strictEqual(range1.start.character, 0, "Code action 1 workspace edit provided incorrect start character");
+						assert.strictEqual(range1.end.line, 2, "Code action 1 workspace edit provided incorrect end line");
+						assert.strictEqual(range1.end.character, 0, "Code action 1 workspace edit provided incorrect end character");
 
 						let typeToImport2 = "com.example.codeActions.more.CodeActionsMultiple";
 						let codeAction2 = findImportCodeActionForType(typeToImport2, codeActions);
 						assert.notEqual(codeAction2, null, "Code action 2 not found");
 						assert.strictEqual(codeAction2.title, "Import " + typeToImport2, "Code action 2 provided incorrect title");
 						assert.strictEqual(codeAction2.command, undefined, "Code action 2 provided incorrect command");
-						assert.strictEqual(codeAction2.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
-						assert.notEqual(codeAction2.edit, undefined, "Code action 2 missing text edit");
+						assert.strictEqual(codeAction2.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action 2 provided incorrect kind");
+						let workspaceEdit2 = codeAction2.edit;
+						assert.notEqual(workspaceEdit2, undefined, "Code action 2 missing workspace edit");
+						assert.ok(workspaceEdit2.has(uri), "Code action 2 workspace edit missing URI: " + uri);
+						let textEdits2 = workspaceEdit2.get(uri);
+						assert.strictEqual(textEdits2.length, 1);
+						let textEdit2 = textEdits2[0];
+						assert.strictEqual(textEdit2.newText, "\timport " + typeToImport2 + ";\n\n", "Code action 2 workspace edit provided incorrect new text");
+						let range2 = textEdit2.range;
+						assert.strictEqual(range2.start.line, 2, "Code action 2 workspace edit provided incorrect start line");
+						assert.strictEqual(range2.start.character, 0, "Code action 2 workspace edit provided incorrect start character");
+						assert.strictEqual(range2.end.line, 2, "Code action 2 workspace edit provided incorrect end line");
+						assert.strictEqual(range2.end.character, 0, "Code action 2 workspace edit provided incorrect end character");
 					}, (err) =>
 					{
 						assert(false, "Failed to execute code actions provider: " + uri);
