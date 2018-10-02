@@ -255,7 +255,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private static final String SDK_LIBRARY_PATH_SIGNATURE_UNIX = "/frameworks/libs/";
     private static final String SDK_LIBRARY_PATH_SIGNATURE_WINDOWS = "\\frameworks\\libs\\";
     private static final String PROPERTY_FRAMEWORK_LIB = "royalelib";
-    private static final String UNDERSCORE_UNDERSCORE_AS3_PACKAGE = "__AS3__.";
     private static final String VECTOR_HIDDEN_PREFIX = "Vector$";
 
     private ActionScriptLanguageClient languageClient;
@@ -1520,16 +1519,24 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         List<IDefinition> types = ASTUtils.findTypesThatMatchName(typeString, project.getCompilationUnits());
         for (IDefinition definitionToImport : types)
         {
-            Command command = createImportCommand(definitionToImport, importRange);
-            if (command != null)
+            String uri = importRange.uri;
+            Path pathForImport = Paths.get(URI.create(uri));
+            String fileText = getFileTextForPath(pathForImport);
+            if(fileText == null)
             {
-                CodeAction codeAction = new CodeAction();
-                codeAction.setDiagnostics(Collections.singletonList(diagnostic));
-                codeAction.setTitle(command.getTitle());
-                codeAction.setCommand(command);
-                codeAction.setKind(CodeActionKind.QuickFix);
-                codeActions.add(Either.forRight(codeAction));
+                continue;
             }
+            WorkspaceEdit edit = CodeActionsUtils.createWorkspaceEditForAddImport(definitionToImport, fileText, uri, importRange.startIndex, importRange.endIndex);
+            if (edit == null)
+            {
+                continue;
+            }
+            CodeAction codeAction = new CodeAction();
+            codeAction.setTitle("Import " + definitionToImport.getQualifiedName());
+            codeAction.setEdit(edit);
+            codeAction.setKind(CodeActionKind.QuickFix);
+            codeAction.setDiagnostics(Collections.singletonList(diagnostic));
+            codeActions.add(Either.forRight(codeAction));
         }
     }
 
@@ -5056,10 +5063,15 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         boolean isInPackage = !definition.getQualifiedName().equals(definition.getBaseName());
         if (isInPackage && (containingPackageName == null || !definition.getPackageName().equals(containingPackageName)))
         {
-            Command command = createImportCommand(definition, importRange);
-            if (command != null)
+            Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(importRange.uri);
+            String fileText = getFileTextForPath(path);
+            if(fileText != null)
             {
-                item.setCommand(command);
+                TextEdit textEdit = CodeActionsUtils.createTextEditForAddImport(definition, fileText, importRange.startIndex, importRange.endIndex);
+                if(textEdit != null)
+                {
+                    item.setAdditionalTextEdits(Collections.singletonList(textEdit));
+                }
             }
         }
         IDeprecationInfo deprecationInfo = definition.getDeprecationInfo();
@@ -5146,29 +5158,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             item.setDeprecated(true);
         }
         result.getItems().add(item);
-    }
-
-    private Command createImportCommand(IDefinition definition, ImportRange importRange)
-    {
-        String packageName = definition.getPackageName();
-        if (packageName == null
-                || packageName.isEmpty()
-                || packageName.startsWith(UNDERSCORE_UNDERSCORE_AS3_PACKAGE))
-        {
-            //don't even bother with these things that don't need importing
-            return null;
-        }
-        String qualifiedName = definition.getQualifiedName();
-        Command importCommand = new Command();
-        importCommand.setTitle("Import " + qualifiedName);
-        importCommand.setCommand(ICommandConstants.ADD_IMPORT);
-        importCommand.setArguments(Arrays.asList(
-            qualifiedName,
-            importRange.uri,
-            importRange.startIndex,
-            importRange.endIndex
-        ));
-        return importCommand;
     }
 
     private Command createMXMLNamespaceCommand(IDefinition definition, XmlnsRange xmlnsRange, String prefix, String uri)
@@ -6162,8 +6151,37 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
     }
 
+    private String getFileTextForPath(Path path)
+    {
+        if(sourceByPath.containsKey(path))
+        {
+            return sourceByPath.get(path);
+        }
+        Reader reader = getReaderForPath(path);
+        if(reader == null)
+        {
+            return null;
+        }
+        String text = null;
+        try
+        {
+            text = IOUtils.toString(reader);
+        }
+        catch (IOException e) {}
+        try
+        {
+            reader.close();
+        }
+        catch(IOException e) {}
+        return text;
+    }
+
     private Reader getReaderForPath(Path path)
     {
+        if(path == null)
+        {
+            return null;
+        }
         Reader reader = null;
         if (sourceByPath.containsKey(path))
         {
@@ -6272,7 +6290,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return -1;
         }
         Reader reader = getReaderForPath(path);
-        return LanguageServerCompilerUtils.getOffsetFromPosition(reader, position);
+        int offset = LanguageServerCompilerUtils.getOffsetFromPosition(reader, position);
+        try
+        {
+            reader.close();
+        }
+        catch(IOException e) {}
+        return offset;
     }
 
     private IASNode getOffsetNode(TextDocumentIdentifier textDocument, Position position)
@@ -6949,22 +6973,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             //if the file isn't open in an editor, we need to read it from the
             //file system instead.
-            Reader reader = getReaderForPath(pathForImport);
-            if (reader == null)
-            {
-                System.err.println("Error opening file to organize imports: " + pathForImport);
-                return;
-            }
-            try
-            {
-                text = IOUtils.toString(reader);
-            }
-            catch (IOException e) {}
-            try
-            {
-                reader.close();
-            }
-            catch(IOException e) {}
+            text = getFileTextForPath(pathForImport);
             if(text == null)
             {
                 return;
@@ -7062,22 +7071,24 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return;
         }
-        Path pathForImport = Paths.get(URI.create(uri));
-        String text = sourceByPath.get(pathForImport);
-        TextEdit edit = ImportTextEditUtils.createTextEditForImport(qualifiedName, text, startIndex, endIndex);
-        if(edit == null)
+        Path pathForImport = LanguageServerCompilerUtils.getPathFromLanguageServerURI(uri);
+        if(pathForImport == null)
+        {
+            return;
+        }
+        String text = getFileTextForPath(pathForImport);
+        if(text == null)
+        {
+            return;
+        }
+        WorkspaceEdit workspaceEdit = CodeActionsUtils.createWorkspaceEditForAddImport(qualifiedName, text, uri, startIndex, endIndex);
+        if(workspaceEdit == null)
         {
             //no edit required
             return;
         }
 
         ApplyWorkspaceEditParams editParams = new ApplyWorkspaceEditParams();
-        WorkspaceEdit workspaceEdit = new WorkspaceEdit();
-        HashMap<String,List<TextEdit>> changes = new HashMap<>();
-        List<TextEdit> edits = new ArrayList<>();
-        edits.add(edit);
-        changes.put(uri, edits);
-        workspaceEdit.setChanges(changes);
         editParams.setEdit(workspaceEdit);
 
         languageClient.applyEdit(editParams);
@@ -7095,8 +7106,16 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return;
         }
-        Path pathForImport = Paths.get(URI.create(uri));
-        String text = sourceByPath.get(pathForImport);
+        Path pathForImport = LanguageServerCompilerUtils.getPathFromLanguageServerURI(uri);
+        if(pathForImport == null)
+        {
+            return;
+        }
+        String text = getFileTextForPath(pathForImport);
+        if(text == null)
+        {
+            return;
+        }
         TextEdit edit = ImportTextEditUtils.createTextEditForMXMLNamespace(nsPrefix, nsUri, text, startIndex, endIndex);
         if(edit == null)
         {

@@ -32,10 +32,7 @@ import org.eclipse.lsp4j.TextEdit;
 public class ImportTextEditUtils
 {
     private static final Pattern organizeImportPattern = Pattern.compile("(?m)^([ \\t]*)import ((\\w+\\.)+\\w+(\\.\\*)?);?");
-    private static final Pattern importPattern = Pattern.compile("(?m)^([ \\t]*)import ([\\w\\.]+)");
-    private static final Pattern indentPattern = Pattern.compile("(?m)^([ \\t]*)\\w");
     private static final Pattern packagePattern = Pattern.compile("(?m)^package(?: [\\w\\.]+)*\\s*\\{(?:[ \\t]*[\\r\\n]+)+([ \\t]*)");
-    private static final String UNDERSCORE_UNDERSCORE_AS3_PACKAGE = "__AS3__.";
 
     protected static int organizeImportsFromStartIndex(String text, int startIndex, Set<IImportNode> importsToRemove, Set<String> importsToAdd, List<TextEdit> edits)
     {
@@ -177,91 +174,6 @@ public class ImportTextEditUtils
         while(index != -1);
         return edits;
     }
-
-	public static TextEdit createTextEditForImport(String qualifiedName, String text, int startIndex, int endIndex)
-	{
-        if(qualifiedName.lastIndexOf(".") == -1)
-        {
-            //if it's not in a package, it doesn't need to be imported
-            return null;
-        }
-        if(qualifiedName.startsWith(UNDERSCORE_UNDERSCORE_AS3_PACKAGE))
-        {
-            //things in this package don't need to be imported
-            return null;
-        }
-        Matcher importMatcher = importPattern.matcher(text);
-        if(startIndex == -1)
-        {
-            startIndex = 0;
-        }
-        if (endIndex == -1)
-        {
-            endIndex = text.length();
-        }
-        importMatcher.region(startIndex, endIndex);
-        String indent = "";
-        int importIndex = -1;
-        while (importMatcher.find())
-        {
-            if(importMatcher.group(2).equals(qualifiedName))
-            {
-                //this class is already imported!
-                return null;
-            }
-            indent = importMatcher.group(1);
-            importIndex = importMatcher.start();
-        }
-        Position position = null;
-        String lineBreaks = "\n";
-        if(importIndex != -1) //found existing imports
-        {
-			position = LanguageServerCompilerUtils.getPositionFromOffset(new StringReader(text), importIndex);
-            position.setLine(position.getLine() + 1);
-            position.setCharacter(0);
-        }
-        else //no existing imports
-        {
-            //start by looking for the package block
-            Matcher packageMatcher = packagePattern.matcher(text);
-            packageMatcher.region(startIndex, endIndex);
-            if (packageMatcher.find()) //found the package
-            {
-                position = LanguageServerCompilerUtils.getPositionFromOffset(
-                    new StringReader(text), packageMatcher.end());
-                if(position.getCharacter() > 0)
-                {
-                    //go to the beginning of the line, if we're not there
-                    position.setCharacter(0);
-                }
-                indent = packageMatcher.group(1);
-            }
-            else //couldn't find the start of a package or existing imports
-            {
-                position = LanguageServerCompilerUtils.getPositionFromOffset(new StringReader(text), startIndex);
-                if (position.getCharacter() > 0)
-                {
-                    //go to the next line, if we're not at the start
-                    position.setLine(position.getLine() + 1);
-                    position.setCharacter(0);
-                }
-                //try to use the same indent as whatever follows
-                Matcher indentMatcher = indentPattern.matcher(text);
-                indentMatcher.region(startIndex, endIndex);
-                if (indentMatcher.find())
-                {
-                    indent = indentMatcher.group(1);
-                }
-            }
-            lineBreaks += "\n"; //add an extra line break
-        }
-        String textToInsert = indent + "import " + qualifiedName + ";" + lineBreaks;
-        
-        TextEdit edit = new TextEdit();
-        edit.setNewText(textToInsert);
-		edit.setRange(new Range(position, position));
-		return edit;
-	}
     
     public static TextEdit createTextEditForMXMLNamespace(String prefix, String uri, String text, int startIndex, int endIndex)
     {

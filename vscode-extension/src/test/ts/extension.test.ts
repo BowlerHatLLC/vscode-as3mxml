@@ -119,18 +119,14 @@ function containsCompletionItemsOtherThanTextOrSnippet(items: vscode.CompletionI
 	})
 }
 
-function findImportCommandForType(qualifiedName: string, codeActions: vscode.CodeAction[])
+function findImportCodeActionForType(qualifiedName: string, codeActions: vscode.CodeAction[])
 {
 	for(let i = 0, count = codeActions.length; i < count; i++)
 	{
 		let codeAction = codeActions[i];
-		let command = codeAction.command;
-		if(command && command.command === COMMAND_ADD_IMPORT)
+		if(codeAction.title === "Import " + qualifiedName)
 		{
-			if(command.arguments[0] === qualifiedName)
-			{
-				return codeAction;
-			}
+			return codeAction;
 		}
 	}
 	return null;
@@ -7414,12 +7410,12 @@ suite("code action provider: Application workspace", () =>
 				.then((codeActions: vscode.CodeAction[]) =>
 					{
 						let typeToImport = "com.example.codeActions.CodeActionsBase";
-						let codeAction = findImportCommandForType(typeToImport, codeActions);
+						let codeAction = findImportCodeActionForType(typeToImport, codeActions);
 						assert.notEqual(codeAction, null, "Code action not found");
-						let command = codeAction.command;
-						assert.strictEqual(command.command, COMMAND_ADD_IMPORT);
-						assert.strictEqual(command.arguments[0], typeToImport, "Code action provided incorrect type to import");
-						assert.strictEqual(vscode.Uri.parse(command.arguments[1]).fsPath, uri.fsPath, "Code action provided incorrect URI");
+						assert.strictEqual(codeAction.title, "Import " + typeToImport, "Code action provided incorrect title");
+						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
+						assert.notEqual(codeAction.edit, undefined, "Code action missing text edit");
 					}, (err) =>
 					{
 						assert(false, "Failed to execute code actions provider: " + uri);
@@ -7438,12 +7434,12 @@ suite("code action provider: Application workspace", () =>
 				.then((codeActions: vscode.CodeAction[]) =>
 					{
 						let typeToImport = "com.example.codeActions.ICodeActionsInterface";
-						let codeAction = findImportCommandForType(typeToImport, codeActions);
+						let codeAction = findImportCodeActionForType(typeToImport, codeActions);
 						assert.notEqual(codeAction, null, "Code action not found");
-						let command = codeAction.command;
-						assert.strictEqual(command.command, COMMAND_ADD_IMPORT);
-						assert.strictEqual(command.arguments[0], typeToImport, "Code action provided incorrect type to import");
-						assert.strictEqual(vscode.Uri.parse(command.arguments[1]).fsPath, uri.fsPath, "Code action provided incorrect URI");
+						assert.strictEqual(codeAction.title, "Import " + typeToImport, "Code action provided incorrect title");
+						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
+						assert.notEqual(codeAction.edit, undefined, "Code action missing text edit");
 					}, (err) =>
 					{
 						assert(false, "Failed to execute code actions provider: " + uri);
@@ -7462,12 +7458,12 @@ suite("code action provider: Application workspace", () =>
 				.then((codeActions: vscode.CodeAction[]) =>
 					{
 						let typeToImport = "com.example.codeActions.CodeActionsNew";
-						let codeAction = findImportCommandForType(typeToImport, codeActions);
+						let codeAction = findImportCodeActionForType(typeToImport, codeActions);
 						assert.notEqual(codeAction, null, "Code action not found");
-						let command = codeAction.command;
-						assert.strictEqual(command.command, COMMAND_ADD_IMPORT);
-						assert.strictEqual(command.arguments[0], typeToImport, "Code action provided incorrect type to import");
-						assert.strictEqual(vscode.Uri.parse(command.arguments[1]).fsPath, uri.fsPath, "Code action provided incorrect URI");
+						assert.strictEqual(codeAction.title, "Import " + typeToImport, "Code action provided incorrect title");
+						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
+						assert.notEqual(codeAction.edit, undefined, "Code action missing text edit");
 					}, (err) =>
 					{
 						assert(false, "Failed to execute code actions provider: " + uri);
@@ -7486,12 +7482,12 @@ suite("code action provider: Application workspace", () =>
 				.then((codeActions: vscode.CodeAction[]) =>
 					{
 						let typeToImport = "com.example.codeActions.CodeActionsVarType";
-						let codeAction = findImportCommandForType(typeToImport, codeActions);
+						let codeAction = findImportCodeActionForType(typeToImport, codeActions);
 						assert.notEqual(codeAction, null, "Code action not found");
-						let command = codeAction.command;
-						assert.strictEqual(command.command, COMMAND_ADD_IMPORT);
-						assert.strictEqual(command.arguments[0], typeToImport, "Code action provided incorrect type to import");
-						assert.strictEqual(vscode.Uri.parse(command.arguments[1]).fsPath, uri.fsPath, "Code action provided incorrect URI");
+						assert.strictEqual(codeAction.title, "Import " + typeToImport, "Code action provided incorrect title");
+						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
+						assert.notEqual(codeAction.edit, undefined, "Code action missing text edit");
 					}, (err) =>
 					{
 						assert(false, "Failed to execute code actions provider: " + uri);
@@ -7510,12 +7506,12 @@ suite("code action provider: Application workspace", () =>
 				.then((codeActions: vscode.CodeAction[]) =>
 					{
 						let typeToImport = "com.example.codeActions.CodeActionsParamType";
-						let codeAction = findImportCommandForType(typeToImport, codeActions);
+						let codeAction = findImportCodeActionForType(typeToImport, codeActions);
 						assert.notEqual(codeAction, null, "Code action not found");
-						let command = codeAction.command;
-						assert.strictEqual(command.command, COMMAND_ADD_IMPORT);
-						assert.strictEqual(command.arguments[0], typeToImport, "Code action provided incorrect type to import");
-						assert.strictEqual(vscode.Uri.parse(command.arguments[1]).fsPath, uri.fsPath, "Code action provided incorrect URI");
+						assert.strictEqual(codeAction.title, "Import " + typeToImport, "Code action provided incorrect title");
+						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
+						assert.notEqual(codeAction.edit, undefined, "Code action missing text edit");
 					}, (err) =>
 					{
 						assert(false, "Failed to execute code actions provider: " + uri);
@@ -7534,12 +7530,12 @@ suite("code action provider: Application workspace", () =>
 				.then((codeActions: vscode.CodeAction[]) =>
 					{
 						let typeToImport = "com.example.codeActions.CodeActionsReturnType";
-						let codeAction = findImportCommandForType(typeToImport, codeActions);
+						let codeAction = findImportCodeActionForType(typeToImport, codeActions);
 						assert.notEqual(codeAction, null, "Code action not found");
-						let command = codeAction.command;
-						assert.strictEqual(command.command, COMMAND_ADD_IMPORT);
-						assert.strictEqual(command.arguments[0], typeToImport, "Code action provided incorrect type to import");
-						assert.strictEqual(vscode.Uri.parse(command.arguments[1]).fsPath, uri.fsPath, "Code action provided incorrect URI");
+						assert.strictEqual(codeAction.title, "Import " + typeToImport, "Code action provided incorrect title");
+						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
+						assert.notEqual(codeAction.edit, undefined, "Code action missing text edit");
 					}, (err) =>
 					{
 						assert(false, "Failed to execute code actions provider: " + uri);
@@ -7558,12 +7554,12 @@ suite("code action provider: Application workspace", () =>
 				.then((codeActions: vscode.CodeAction[]) =>
 					{
 						let typeToImport = "com.example.codeActions.CodeActionsAssign";
-						let codeAction = findImportCommandForType(typeToImport, codeActions);
+						let codeAction = findImportCodeActionForType(typeToImport, codeActions);
 						assert.notEqual(codeAction, null, "Code action not found");
-						let command = codeAction.command;
-						assert.strictEqual(command.command, COMMAND_ADD_IMPORT);
-						assert.strictEqual(command.arguments[0], typeToImport, "Code action provided incorrect type to import");
-						assert.strictEqual(vscode.Uri.parse(command.arguments[1]).fsPath, uri.fsPath, "Code action provided incorrect URI");
+						assert.strictEqual(codeAction.title, "Import " + typeToImport, "Code action provided incorrect title");
+						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
+						assert.notEqual(codeAction.edit, undefined, "Code action missing text edit");
 					}, (err) =>
 					{
 						assert(false, "Failed to execute code actions provider: " + uri);
@@ -7582,20 +7578,20 @@ suite("code action provider: Application workspace", () =>
 				.then((codeActions: vscode.CodeAction[]) =>
 					{
 						let typeToImport1 = "com.example.codeActions.CodeActionsMultiple";
-						let codeAction1 = findImportCommandForType(typeToImport1, codeActions);
+						let codeAction1 = findImportCodeActionForType(typeToImport1, codeActions);
 						assert.notEqual(codeAction1, null, "Code action 1 not found");
-						let command1 = codeAction1.command;
-						assert.strictEqual(command1.command, COMMAND_ADD_IMPORT);
-						assert.strictEqual(command1.arguments[0], typeToImport1, "Code action 1 provided incorrect type to import");
-						assert.strictEqual(vscode.Uri.parse(command1.arguments[1]).fsPath, uri.fsPath, "Code action 1 provided incorrect URI");
+						assert.strictEqual(codeAction1.title, "Import " + typeToImport1, "Code action 1 provided incorrect title");
+						assert.strictEqual(codeAction1.command, undefined, "Code action 1 provided incorrect command");
+						assert.strictEqual(codeAction1.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
+						assert.notEqual(codeAction1.edit, undefined, "Code action 1 missing text edit");
 
 						let typeToImport2 = "com.example.codeActions.more.CodeActionsMultiple";
-						let codeAction2 = findImportCommandForType(typeToImport2, codeActions);
+						let codeAction2 = findImportCodeActionForType(typeToImport2, codeActions);
 						assert.notEqual(codeAction2, null, "Code action 2 not found");
-						let command2 = codeAction2.command;
-						assert.strictEqual(command2.command, COMMAND_ADD_IMPORT);
-						assert.strictEqual(command2.arguments[0], typeToImport2, "Code action 2 provided incorrect type to import");
-						assert.strictEqual(vscode.Uri.parse(command2.arguments[1]).fsPath, uri.fsPath, "Code action 2 provided incorrect URI");
+						assert.strictEqual(codeAction2.title, "Import " + typeToImport2, "Code action 2 provided incorrect title");
+						assert.strictEqual(codeAction2.command, undefined, "Code action 2 provided incorrect command");
+						assert.strictEqual(codeAction2.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
+						assert.notEqual(codeAction2.edit, undefined, "Code action 2 missing text edit");
 					}, (err) =>
 					{
 						assert(false, "Failed to execute code actions provider: " + uri);
