@@ -178,12 +178,12 @@ import com.as3mxml.vscode.utils.ScopeUtils;
 import com.as3mxml.vscode.utils.SourcePathUtils;
 import com.as3mxml.vscode.utils.WaitForBuildFinishRunner;
 import com.as3mxml.vscode.utils.XmlnsRange;
-import com.as3mxml.vscode.utils.CodeActionsUtils.CommandAndRange;
 import com.as3mxml.vscode.utils.DefinitionTextUtils.DefinitionAsText;
 
 import org.eclipse.lsp4j.ApplyWorkspaceEditParams;
 import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.CodeAction;
+import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.CodeLensParams;
@@ -1244,68 +1244,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     //the path must be in the workspace or source-path
                     return Collections.emptyList();
                 }
-                List<Either<Command, CodeAction>> commands = new ArrayList<>();
-                for (Diagnostic diagnostic : diagnostics)
-                {
-                    //I don't know why this can be null
-                    String code = diagnostic.getCode();
-                    if (code == null)
-                    {
-                        continue;
-                    }
-                    switch (code)
-                    {
-                        case "1120": //AccessUndefinedPropertyProblem
-                        {
-                            //see if there's anything we can import
-                            createCodeActionsForImport(textDocument, diagnostic, commands);
-                            createCodeActionForMissingLocalVariable(textDocument, diagnostic, commands);
-                            createCodeActionForMissingField(textDocument, diagnostic, commands);
-                            break;
-                        }
-                        case "1046": //UnknownTypeProblem
-                        {
-                            //see if there's anything we can import
-                            createCodeActionsForImport(textDocument, diagnostic, commands);
-                            break;
-                        }
-                        case "1017": //UnknownSuperclassProblem
-                        {
-                            //see if there's anything we can import
-                            createCodeActionsForImport(textDocument, diagnostic, commands);
-                            break;
-                        }
-                        case "1045": //UnknownInterfaceProblem
-                        {
-                            //see if there's anything we can import
-                            createCodeActionsForImport(textDocument, diagnostic, commands);
-                            break;
-                        }
-                        case "1061": //StrictUndefinedMethodProblem
-                        {
-                            createCodeActionForMissingMethod(textDocument, diagnostic, commands);
-                            break;
-                        }
-                        case "1119": //AccessUndefinedMemberProblem
-                        {
-                            createCodeActionForMissingField(textDocument, diagnostic, commands);
-                            break;
-                        }
-                        case "1178": //InaccessiblePropertyReferenceProblem
-                        {
-                            //see if there's anything we can import
-                            createCodeActionsForImport(textDocument, diagnostic, commands);
-                            break;
-                        }
-                        case "1180": //CallUndefinedMethodProblem
-                        {
-                            //see if there's anything we can import
-                            createCodeActionsForImport(textDocument, diagnostic, commands);
-                            createCodeActionForMissingMethod(textDocument, diagnostic, commands);
-                            break;
-                        }
-                    }
-                }
+                List<Either<Command, CodeAction>> codeActions = new ArrayList<>();
+                findCodeActionsForDiagnostics(textDocument, diagnostics, codeActions);
+
                 ICompilationUnit unit = getCompilationUnit(path);
                 if (unit != null)
                 {
@@ -1320,25 +1261,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     }
                     if (ast != null)
                     {
-                        List<CommandAndRange> codeActions = new ArrayList<>();
                         String fileText = sourceByPath.get(path);
-                        CodeActionsUtils.findCodeActions(ast, currentProject, path, fileText, codeActions);
-                        if (codeActions != null)
-                        {
-                            for (CommandAndRange codeAction : codeActions)
-                            {
-                                Range savedRange = codeAction.range;
-                                Range paramRange = params.getRange();
-                                if (LSPUtils.rangesIntersect(savedRange, paramRange))
-                                {
-                                    commands.add(Either.forLeft(codeAction.command));
-                                }
-                            }
-                        }
+                        CodeActionsUtils.findCodeActions(ast, currentProject, path, fileText, params.getRange(), codeActions);
                     }
                 }
                 cancelToken.checkCanceled();
-                return commands;
+                return codeActions;
             }
             finally
             {
@@ -1346,8 +1274,72 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
         });
     }
+    public void findCodeActionsForDiagnostics(TextDocumentIdentifier textDocument, List<? extends Diagnostic> diagnostics, List<Either<Command, CodeAction>> codeActions)
+    {
+        for (Diagnostic diagnostic : diagnostics)
+        {
+            //I don't know why this can be null
+            String code = diagnostic.getCode();
+            if (code == null)
+            {
+                continue;
+            }
+            switch (code)
+            {
+                case "1120": //AccessUndefinedPropertyProblem
+                {
+                    //see if there's anything we can import
+                    createCodeActionsForImport(textDocument, diagnostic, codeActions);
+                    createCodeActionForMissingLocalVariable(textDocument, diagnostic, codeActions);
+                    createCodeActionForMissingField(textDocument, diagnostic, codeActions);
+                    break;
+                }
+                case "1046": //UnknownTypeProblem
+                {
+                    //see if there's anything we can import
+                    createCodeActionsForImport(textDocument, diagnostic, codeActions);
+                    break;
+                }
+                case "1017": //UnknownSuperclassProblem
+                {
+                    //see if there's anything we can import
+                    createCodeActionsForImport(textDocument, diagnostic, codeActions);
+                    break;
+                }
+                case "1045": //UnknownInterfaceProblem
+                {
+                    //see if there's anything we can import
+                    createCodeActionsForImport(textDocument, diagnostic, codeActions);
+                    break;
+                }
+                case "1061": //StrictUndefinedMethodProblem
+                {
+                    createCodeActionForMissingMethod(textDocument, diagnostic, codeActions);
+                    break;
+                }
+                case "1119": //AccessUndefinedMemberProblem
+                {
+                    createCodeActionForMissingField(textDocument, diagnostic, codeActions);
+                    break;
+                }
+                case "1178": //InaccessiblePropertyReferenceProblem
+                {
+                    //see if there's anything we can import
+                    createCodeActionsForImport(textDocument, diagnostic, codeActions);
+                    break;
+                }
+                case "1180": //CallUndefinedMethodProblem
+                {
+                    //see if there's anything we can import
+                    createCodeActionsForImport(textDocument, diagnostic, codeActions);
+                    createCodeActionForMissingMethod(textDocument, diagnostic, codeActions);
+                    break;
+                }
+            }
+        }
+    }
 
-    private void createCodeActionForMissingField(TextDocumentIdentifier textDocument, Diagnostic diagnostic, List<Either<Command, CodeAction>> commands)
+    private void createCodeActionForMissingField(TextDocumentIdentifier textDocument, Diagnostic diagnostic, List<Either<Command, CodeAction>> codeActions)
     {
         IASNode offsetNode = getOffsetNode(textDocument, diagnostic.getRange().getStart());
         IIdentifierNode identifierNode = null;
@@ -1378,10 +1370,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
 
         String identifierName = identifierNode.getName();
-        Command generateVariableCommand = new Command();
-        generateVariableCommand.setTitle("Generate Field Variable");
-        generateVariableCommand.setCommand(ICommandConstants.GENERATE_FIELD_VARIABLE);
-        generateVariableCommand.setArguments(Arrays.asList(
+        Command command = new Command();
+        command.setTitle("Generate Field Variable");
+        command.setCommand(ICommandConstants.GENERATE_FIELD_VARIABLE);
+        command.setArguments(Arrays.asList(
             textDocument.getUri(),
             diagnostic.getRange().getStart().getLine(),
             diagnostic.getRange().getStart().getCharacter(),
@@ -1389,10 +1381,15 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             diagnostic.getRange().getEnd().getCharacter(),
             identifierName
         ));
-        commands.add(Either.forLeft(generateVariableCommand));
+        CodeAction codeAction = new CodeAction();
+        codeAction.setDiagnostics(Collections.singletonList(diagnostic));
+        codeAction.setTitle(command.getTitle());
+        codeAction.setCommand(command);
+        codeAction.setKind(CodeActionKind.QuickFix);
+        codeActions.add(Either.forRight(codeAction));
     }
     
-    private void createCodeActionForMissingLocalVariable(TextDocumentIdentifier textDocument, Diagnostic diagnostic, List<Either<Command, CodeAction>> commands)
+    private void createCodeActionForMissingLocalVariable(TextDocumentIdentifier textDocument, Diagnostic diagnostic, List<Either<Command, CodeAction>> codeActions)
     {
         IASNode offsetNode = getOffsetNode(textDocument, diagnostic.getRange().getStart());
         IIdentifierNode identifierNode = null;
@@ -1406,10 +1403,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
 
         String identifierName = identifierNode.getName();
-        Command generateVariableCommand = new Command();
-        generateVariableCommand.setTitle("Generate Local Variable");
-        generateVariableCommand.setCommand(ICommandConstants.GENERATE_LOCAL_VARIABLE);
-        generateVariableCommand.setArguments(Arrays.asList(
+        Command command = new Command();
+        command.setTitle("Generate Local Variable");
+        command.setCommand(ICommandConstants.GENERATE_LOCAL_VARIABLE);
+        command.setArguments(Arrays.asList(
             textDocument.getUri(),
             diagnostic.getRange().getStart().getLine(),
             diagnostic.getRange().getStart().getCharacter(),
@@ -1417,10 +1414,15 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             diagnostic.getRange().getEnd().getCharacter(),
             identifierName
         ));
-        commands.add(Either.forLeft(generateVariableCommand));
+        CodeAction codeAction = new CodeAction();
+        codeAction.setDiagnostics(Collections.singletonList(diagnostic));
+        codeAction.setTitle(command.getTitle());
+        codeAction.setCommand(command);
+        codeAction.setKind(CodeActionKind.QuickFix);
+        codeActions.add(Either.forRight(codeAction));
     }
 
-    private void createCodeActionForMissingMethod(TextDocumentIdentifier textDocument, Diagnostic diagnostic, List<Either<Command, CodeAction>> commands)
+    private void createCodeActionForMissingMethod(TextDocumentIdentifier textDocument, Diagnostic diagnostic, List<Either<Command, CodeAction>> codeActions)
     {
         RoyaleProject project = textDocumentIdentifierToProject(textDocument);
         if(project == null)
@@ -1478,10 +1480,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
         }
 
-        Command generateMethodCommand = new Command();
-        generateMethodCommand.setTitle("Generate Method");
-        generateMethodCommand.setCommand(ICommandConstants.GENERATE_METHOD);
-        generateMethodCommand.setArguments(Arrays.asList(
+        Command command = new Command();
+        command.setTitle("Generate Method");
+        command.setCommand(ICommandConstants.GENERATE_METHOD);
+        command.setArguments(Arrays.asList(
             textDocument.getUri(),
             diagnostic.getRange().getStart().getLine(),
             diagnostic.getRange().getStart().getCharacter(),
@@ -1490,10 +1492,15 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             functionName,
             argTypes.toArray()
         ));
-        commands.add(Either.forLeft(generateMethodCommand));
+        CodeAction codeAction = new CodeAction();
+        codeAction.setDiagnostics(Collections.singletonList(diagnostic));
+        codeAction.setTitle(command.getTitle());
+        codeAction.setCommand(command);
+        codeAction.setKind(CodeActionKind.QuickFix);
+        codeActions.add(Either.forRight(codeAction));
     }
 
-    private void createCodeActionsForImport(TextDocumentIdentifier textDocument, Diagnostic diagnostic, List<Either<Command, CodeAction>> commands)
+    private void createCodeActionsForImport(TextDocumentIdentifier textDocument, Diagnostic diagnostic, List<Either<Command, CodeAction>> codeActions)
     {
         RoyaleProject project = textDocumentIdentifierToProject(textDocument);
         if(project == null)
@@ -1516,7 +1523,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             Command command = createImportCommand(definitionToImport, importRange);
             if (command != null)
             {
-                commands.add(Either.forLeft(command));
+                CodeAction codeAction = new CodeAction();
+                codeAction.setDiagnostics(Collections.singletonList(diagnostic));
+                codeAction.setTitle(command.getTitle());
+                codeAction.setCommand(command);
+                codeAction.setKind(CodeActionKind.QuickFix);
+                codeActions.add(Either.forRight(codeAction));
             }
         }
     }

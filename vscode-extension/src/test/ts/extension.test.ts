@@ -119,14 +119,15 @@ function containsCompletionItemsOtherThanTextOrSnippet(items: vscode.CompletionI
 	})
 }
 
-function findImportCommandForType(qualifiedName: string, codeActions: vscode.Command[])
+function findImportCommandForType(qualifiedName: string, codeActions: vscode.CodeAction[])
 {
 	for(let i = 0, count = codeActions.length; i < count; i++)
 	{
 		let codeAction = codeActions[i];
-		if(codeAction.command === COMMAND_ADD_IMPORT)
+		let command = codeAction.command;
+		if(command && command.command === COMMAND_ADD_IMPORT)
 		{
-			if(codeAction.arguments[0] === qualifiedName)
+			if(command.arguments[0] === qualifiedName)
 			{
 				return codeAction;
 			}
@@ -7410,14 +7411,15 @@ suite("code action provider: Application workspace", () =>
 			let end = new vscode.Position(editor.document.lineCount, 0);
 			let range = new vscode.Range(start, end);
 			return vscode.commands.executeCommand("vscode.executeCodeActionProvider", uri, range)
-				.then((codeActions: vscode.Command[]) =>
+				.then((codeActions: vscode.CodeAction[]) =>
 					{
 						let typeToImport = "com.example.codeActions.CodeActionsBase";
 						let codeAction = findImportCommandForType(typeToImport, codeActions);
 						assert.notEqual(codeAction, null, "Code action not found");
-						assert.strictEqual(codeAction.command, COMMAND_ADD_IMPORT);
-						assert.strictEqual(codeAction.arguments[0], typeToImport, "Code action provided incorrect type to import");
-						assert.strictEqual(vscode.Uri.parse(codeAction.arguments[1]).fsPath, uri.fsPath, "Code action provided incorrect URI");
+						let command = codeAction.command;
+						assert.strictEqual(command.command, COMMAND_ADD_IMPORT);
+						assert.strictEqual(command.arguments[0], typeToImport, "Code action provided incorrect type to import");
+						assert.strictEqual(vscode.Uri.parse(command.arguments[1]).fsPath, uri.fsPath, "Code action provided incorrect URI");
 					}, (err) =>
 					{
 						assert(false, "Failed to execute code actions provider: " + uri);
@@ -7433,14 +7435,15 @@ suite("code action provider: Application workspace", () =>
 			let end = new vscode.Position(editor.document.lineCount, 0);
 			let range = new vscode.Range(start, end);
 			return vscode.commands.executeCommand("vscode.executeCodeActionProvider", uri, range)
-				.then((codeActions: vscode.Command[]) =>
+				.then((codeActions: vscode.CodeAction[]) =>
 					{
 						let typeToImport = "com.example.codeActions.ICodeActionsInterface";
 						let codeAction = findImportCommandForType(typeToImport, codeActions);
 						assert.notEqual(codeAction, null, "Code action not found");
-						assert.strictEqual(codeAction.command, COMMAND_ADD_IMPORT);
-						assert.strictEqual(codeAction.arguments[0], typeToImport, "Code action provided incorrect type to import");
-						assert.strictEqual(vscode.Uri.parse(codeAction.arguments[1]).fsPath, uri.fsPath, "Code action provided incorrect URI");
+						let command = codeAction.command;
+						assert.strictEqual(command.command, COMMAND_ADD_IMPORT);
+						assert.strictEqual(command.arguments[0], typeToImport, "Code action provided incorrect type to import");
+						assert.strictEqual(vscode.Uri.parse(command.arguments[1]).fsPath, uri.fsPath, "Code action provided incorrect URI");
 					}, (err) =>
 					{
 						assert(false, "Failed to execute code actions provider: " + uri);
@@ -7456,14 +7459,15 @@ suite("code action provider: Application workspace", () =>
 			let end = new vscode.Position(editor.document.lineCount, 0);
 			let range = new vscode.Range(start, end);
 			return vscode.commands.executeCommand("vscode.executeCodeActionProvider", uri, range)
-				.then((codeActions: vscode.Command[]) =>
+				.then((codeActions: vscode.CodeAction[]) =>
 					{
 						let typeToImport = "com.example.codeActions.CodeActionsNew";
 						let codeAction = findImportCommandForType(typeToImport, codeActions);
 						assert.notEqual(codeAction, null, "Code action not found");
-						assert.strictEqual(codeAction.command, COMMAND_ADD_IMPORT);
-						assert.strictEqual(codeAction.arguments[0], typeToImport, "Code action provided incorrect type to import");
-						assert.strictEqual(vscode.Uri.parse(codeAction.arguments[1]).fsPath, uri.fsPath, "Code action provided incorrect URI");
+						let command = codeAction.command;
+						assert.strictEqual(command.command, COMMAND_ADD_IMPORT);
+						assert.strictEqual(command.arguments[0], typeToImport, "Code action provided incorrect type to import");
+						assert.strictEqual(vscode.Uri.parse(command.arguments[1]).fsPath, uri.fsPath, "Code action provided incorrect URI");
 					}, (err) =>
 					{
 						assert(false, "Failed to execute code actions provider: " + uri);
@@ -7479,14 +7483,15 @@ suite("code action provider: Application workspace", () =>
 			let end = new vscode.Position(editor.document.lineCount, 0);
 			let range = new vscode.Range(start, end);
 			return vscode.commands.executeCommand("vscode.executeCodeActionProvider", uri, range)
-				.then((codeActions: vscode.Command[]) =>
+				.then((codeActions: vscode.CodeAction[]) =>
 					{
 						let typeToImport = "com.example.codeActions.CodeActionsVarType";
 						let codeAction = findImportCommandForType(typeToImport, codeActions);
 						assert.notEqual(codeAction, null, "Code action not found");
-						assert.strictEqual(codeAction.command, COMMAND_ADD_IMPORT);
-						assert.strictEqual(codeAction.arguments[0], typeToImport, "Code action provided incorrect type to import");
-						assert.strictEqual(vscode.Uri.parse(codeAction.arguments[1]).fsPath, uri.fsPath, "Code action provided incorrect URI");
+						let command = codeAction.command;
+						assert.strictEqual(command.command, COMMAND_ADD_IMPORT);
+						assert.strictEqual(command.arguments[0], typeToImport, "Code action provided incorrect type to import");
+						assert.strictEqual(vscode.Uri.parse(command.arguments[1]).fsPath, uri.fsPath, "Code action provided incorrect URI");
 					}, (err) =>
 					{
 						assert(false, "Failed to execute code actions provider: " + uri);
@@ -7502,14 +7507,15 @@ suite("code action provider: Application workspace", () =>
 			let end = new vscode.Position(editor.document.lineCount, 0);
 			let range = new vscode.Range(start, end);
 			return vscode.commands.executeCommand("vscode.executeCodeActionProvider", uri, range)
-				.then((codeActions: vscode.Command[]) =>
+				.then((codeActions: vscode.CodeAction[]) =>
 					{
 						let typeToImport = "com.example.codeActions.CodeActionsParamType";
 						let codeAction = findImportCommandForType(typeToImport, codeActions);
 						assert.notEqual(codeAction, null, "Code action not found");
-						assert.strictEqual(codeAction.command, COMMAND_ADD_IMPORT);
-						assert.strictEqual(codeAction.arguments[0], typeToImport, "Code action provided incorrect type to import");
-						assert.strictEqual(vscode.Uri.parse(codeAction.arguments[1]).fsPath, uri.fsPath, "Code action provided incorrect URI");
+						let command = codeAction.command;
+						assert.strictEqual(command.command, COMMAND_ADD_IMPORT);
+						assert.strictEqual(command.arguments[0], typeToImport, "Code action provided incorrect type to import");
+						assert.strictEqual(vscode.Uri.parse(command.arguments[1]).fsPath, uri.fsPath, "Code action provided incorrect URI");
 					}, (err) =>
 					{
 						assert(false, "Failed to execute code actions provider: " + uri);
@@ -7525,14 +7531,15 @@ suite("code action provider: Application workspace", () =>
 			let end = new vscode.Position(editor.document.lineCount, 0);
 			let range = new vscode.Range(start, end);
 			return vscode.commands.executeCommand("vscode.executeCodeActionProvider", uri, range)
-				.then((codeActions: vscode.Command[]) =>
+				.then((codeActions: vscode.CodeAction[]) =>
 					{
 						let typeToImport = "com.example.codeActions.CodeActionsReturnType";
 						let codeAction = findImportCommandForType(typeToImport, codeActions);
 						assert.notEqual(codeAction, null, "Code action not found");
-						assert.strictEqual(codeAction.command, COMMAND_ADD_IMPORT);
-						assert.strictEqual(codeAction.arguments[0], typeToImport, "Code action provided incorrect type to import");
-						assert.strictEqual(vscode.Uri.parse(codeAction.arguments[1]).fsPath, uri.fsPath, "Code action provided incorrect URI");
+						let command = codeAction.command;
+						assert.strictEqual(command.command, COMMAND_ADD_IMPORT);
+						assert.strictEqual(command.arguments[0], typeToImport, "Code action provided incorrect type to import");
+						assert.strictEqual(vscode.Uri.parse(command.arguments[1]).fsPath, uri.fsPath, "Code action provided incorrect URI");
 					}, (err) =>
 					{
 						assert(false, "Failed to execute code actions provider: " + uri);
@@ -7548,14 +7555,15 @@ suite("code action provider: Application workspace", () =>
 			let end = new vscode.Position(editor.document.lineCount, 0);
 			let range = new vscode.Range(start, end);
 			return vscode.commands.executeCommand("vscode.executeCodeActionProvider", uri, range)
-				.then((codeActions: vscode.Command[]) =>
+				.then((codeActions: vscode.CodeAction[]) =>
 					{
 						let typeToImport = "com.example.codeActions.CodeActionsAssign";
 						let codeAction = findImportCommandForType(typeToImport, codeActions);
 						assert.notEqual(codeAction, null, "Code action not found");
-						assert.strictEqual(codeAction.command, COMMAND_ADD_IMPORT);
-						assert.strictEqual(codeAction.arguments[0], typeToImport, "Code action provided incorrect type to import");
-						assert.strictEqual(vscode.Uri.parse(codeAction.arguments[1]).fsPath, uri.fsPath, "Code action provided incorrect URI");
+						let command = codeAction.command;
+						assert.strictEqual(command.command, COMMAND_ADD_IMPORT);
+						assert.strictEqual(command.arguments[0], typeToImport, "Code action provided incorrect type to import");
+						assert.strictEqual(vscode.Uri.parse(command.arguments[1]).fsPath, uri.fsPath, "Code action provided incorrect URI");
 					}, (err) =>
 					{
 						assert(false, "Failed to execute code actions provider: " + uri);
@@ -7571,21 +7579,23 @@ suite("code action provider: Application workspace", () =>
 			let end = new vscode.Position(editor.document.lineCount, 0);
 			let range = new vscode.Range(start, end);
 			return vscode.commands.executeCommand("vscode.executeCodeActionProvider", uri, range)
-				.then((codeActions: vscode.Command[]) =>
+				.then((codeActions: vscode.CodeAction[]) =>
 					{
 						let typeToImport1 = "com.example.codeActions.CodeActionsMultiple";
 						let codeAction1 = findImportCommandForType(typeToImport1, codeActions);
 						assert.notEqual(codeAction1, null, "Code action 1 not found");
-						assert.strictEqual(codeAction1.command, COMMAND_ADD_IMPORT);
-						assert.strictEqual(codeAction1.arguments[0], typeToImport1, "Code action 1 provided incorrect type to import");
-						assert.strictEqual(vscode.Uri.parse(codeAction1.arguments[1]).fsPath, uri.fsPath, "Code action 1 provided incorrect URI");
+						let command1 = codeAction1.command;
+						assert.strictEqual(command1.command, COMMAND_ADD_IMPORT);
+						assert.strictEqual(command1.arguments[0], typeToImport1, "Code action 1 provided incorrect type to import");
+						assert.strictEqual(vscode.Uri.parse(command1.arguments[1]).fsPath, uri.fsPath, "Code action 1 provided incorrect URI");
 
 						let typeToImport2 = "com.example.codeActions.more.CodeActionsMultiple";
 						let codeAction2 = findImportCommandForType(typeToImport2, codeActions);
 						assert.notEqual(codeAction2, null, "Code action 2 not found");
-						assert.strictEqual(codeAction2.command, COMMAND_ADD_IMPORT);
-						assert.strictEqual(codeAction2.arguments[0], typeToImport2, "Code action 2 provided incorrect type to import");
-						assert.strictEqual(vscode.Uri.parse(codeAction2.arguments[1]).fsPath, uri.fsPath, "Code action 2 provided incorrect URI");
+						let command2 = codeAction2.command;
+						assert.strictEqual(command2.command, COMMAND_ADD_IMPORT);
+						assert.strictEqual(command2.arguments[0], typeToImport2, "Code action 2 provided incorrect type to import");
+						assert.strictEqual(vscode.Uri.parse(command2.arguments[1]).fsPath, uri.fsPath, "Code action 2 provided incorrect URI");
 					}, (err) =>
 					{
 						assert(false, "Failed to execute code actions provider: " + uri);
@@ -7601,18 +7611,21 @@ suite("code action provider: Application workspace", () =>
 			let end = new vscode.Position(editor.document.lineCount, 0);
 			let range = new vscode.Range(start, end);
 			return vscode.commands.executeCommand("vscode.executeCodeActionProvider", uri, range)
-				.then((codeActions: vscode.Command[]) =>
+				.then((codeActions: vscode.CodeAction[]) =>
 					{
 						let variableName = "variableWithoutThis";
 						let codeAction = codeActions.find((codeAction) =>
 						{
-							return codeAction.command === COMMAND_GENERATE_LOCAL_VARIABLE &&
-								codeAction.arguments[codeAction.arguments.length - 1] === variableName;
+							let command = codeAction.command;
+							return command &&
+								command.command === COMMAND_GENERATE_LOCAL_VARIABLE &&
+								command.arguments[command.arguments.length - 1] === variableName;
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
-						assert.strictEqual(codeAction.command, COMMAND_GENERATE_LOCAL_VARIABLE);
-						assert.strictEqual(codeAction.arguments[codeAction.arguments.length - 1], variableName, "Code action provided incorrect variable name");
-						assert.strictEqual(vscode.Uri.parse(codeAction.arguments[0]).fsPath, uri.fsPath, "Code action provided incorrect URI");
+						let command = codeAction.command;
+						assert.strictEqual(command.command, COMMAND_GENERATE_LOCAL_VARIABLE);
+						assert.strictEqual(command.arguments[command.arguments.length - 1], variableName, "Code action provided incorrect variable name");
+						assert.strictEqual(vscode.Uri.parse(command.arguments[0]).fsPath, uri.fsPath, "Code action provided incorrect URI");
 					}, (err) =>
 					{
 						assert(false, "Failed to execute code actions provider: " + uri);
@@ -7628,18 +7641,21 @@ suite("code action provider: Application workspace", () =>
 			let end = new vscode.Position(editor.document.lineCount, 0);
 			let range = new vscode.Range(start, end);
 			return vscode.commands.executeCommand("vscode.executeCodeActionProvider", uri, range)
-				.then((codeActions: vscode.Command[]) =>
+				.then((codeActions: vscode.CodeAction[]) =>
 					{
 						let variableName = "variableWithoutThis";
 						let codeAction = codeActions.find((codeAction) =>
 						{
-							return codeAction.command === COMMAND_GENERATE_FIELD_VARIABLE &&
-								codeAction.arguments[codeAction.arguments.length - 1] === variableName;
+							let command = codeAction.command;
+							return command &&
+								command.command === COMMAND_GENERATE_FIELD_VARIABLE &&
+								command.arguments[command.arguments.length - 1] === variableName;
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
-						assert.strictEqual(codeAction.command, COMMAND_GENERATE_FIELD_VARIABLE);
-						assert.strictEqual(codeAction.arguments[codeAction.arguments.length - 1], variableName, "Code action provided incorrect variable name");
-						assert.strictEqual(vscode.Uri.parse(codeAction.arguments[0]).fsPath, uri.fsPath, "Code action provided incorrect URI");
+						let command = codeAction.command;
+						assert.strictEqual(command.command, COMMAND_GENERATE_FIELD_VARIABLE);
+						assert.strictEqual(command.arguments[command.arguments.length - 1], variableName, "Code action provided incorrect variable name");
+						assert.strictEqual(vscode.Uri.parse(command.arguments[0]).fsPath, uri.fsPath, "Code action provided incorrect URI");
 					}, (err) =>
 					{
 						assert(false, "Failed to execute code actions provider: " + uri);
@@ -7655,18 +7671,21 @@ suite("code action provider: Application workspace", () =>
 			let end = new vscode.Position(editor.document.lineCount, 0);
 			let range = new vscode.Range(start, end);
 			return vscode.commands.executeCommand("vscode.executeCodeActionProvider", uri, range)
-				.then((codeActions: vscode.Command[]) =>
+				.then((codeActions: vscode.CodeAction[]) =>
 					{
 						let variableName = "variableWithThis";
 						let codeAction = codeActions.find((codeAction) =>
 						{
-							return codeAction.command === COMMAND_GENERATE_FIELD_VARIABLE &&
-								codeAction.arguments[codeAction.arguments.length - 1] === variableName;
+							let command = codeAction.command;
+							return command &&
+								command.command === COMMAND_GENERATE_FIELD_VARIABLE &&
+								command.arguments[command.arguments.length - 1] === variableName;
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
-						assert.strictEqual(codeAction.command, COMMAND_GENERATE_FIELD_VARIABLE);
-						assert.strictEqual(codeAction.arguments[codeAction.arguments.length - 1], variableName, "Code action provided incorrect variable name");
-						assert.strictEqual(vscode.Uri.parse(codeAction.arguments[0]).fsPath, uri.fsPath, "Code action provided incorrect URI");
+						let command = codeAction.command;
+						assert.strictEqual(command.command, COMMAND_GENERATE_FIELD_VARIABLE);
+						assert.strictEqual(command.arguments[command.arguments.length - 1], variableName, "Code action provided incorrect variable name");
+						assert.strictEqual(vscode.Uri.parse(command.arguments[0]).fsPath, uri.fsPath, "Code action provided incorrect URI");
 					}, (err) =>
 					{
 						assert(false, "Failed to execute code actions provider: " + uri);
@@ -7682,19 +7701,22 @@ suite("code action provider: Application workspace", () =>
 			let end = new vscode.Position(editor.document.lineCount, 0);
 			let range = new vscode.Range(start, end);
 			return vscode.commands.executeCommand("vscode.executeCodeActionProvider", uri, range)
-				.then((codeActions: vscode.Command[]) =>
+				.then((codeActions: vscode.CodeAction[]) =>
 					{
 						let methodName = "methodWithoutThis";
 						let codeAction = codeActions.find((codeAction) =>
 						{
-							return codeAction.command === COMMAND_GENERATE_METHOD &&
-								codeAction.arguments[codeAction.arguments.length - 2] === methodName;
+							let command = codeAction.command;
+							return command &&
+								command.command === COMMAND_GENERATE_METHOD &&
+								command.arguments[command.arguments.length - 2] === methodName;
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
-						assert.strictEqual(codeAction.command, COMMAND_GENERATE_METHOD);
-						assert.strictEqual(codeAction.arguments[codeAction.arguments.length - 2], methodName, "Code action provided incorrect method name");
-						assert.deepStrictEqual(codeAction.arguments[codeAction.arguments.length - 1], ["String", "Number"], "Code action provided incorrect argument types for method");
-						assert.strictEqual(vscode.Uri.parse(codeAction.arguments[0]).fsPath, uri.fsPath, "Code action provided incorrect URI");
+						let command = codeAction.command;
+						assert.strictEqual(command.command, COMMAND_GENERATE_METHOD);
+						assert.strictEqual(command.arguments[command.arguments.length - 2], methodName, "Code action provided incorrect method name");
+						assert.deepStrictEqual(command.arguments[command.arguments.length - 1], ["String", "Number"], "Code action provided incorrect argument types for method");
+						assert.strictEqual(vscode.Uri.parse(command.arguments[0]).fsPath, uri.fsPath, "Code action provided incorrect URI");
 					}, (err) =>
 					{
 						assert(false, "Failed to execute code actions provider: " + uri);
@@ -7710,19 +7732,22 @@ suite("code action provider: Application workspace", () =>
 			let end = new vscode.Position(editor.document.lineCount, 0);
 			let range = new vscode.Range(start, end);
 			return vscode.commands.executeCommand("vscode.executeCodeActionProvider", uri, range)
-				.then((codeActions: vscode.Command[]) =>
+				.then((codeActions: vscode.CodeAction[]) =>
 					{
 						let methodName = "methodWithThis";
 						let codeAction = codeActions.find((codeAction) =>
 						{
-							return codeAction.command === COMMAND_GENERATE_METHOD &&
-								codeAction.arguments[codeAction.arguments.length - 2] === methodName;
+							let command = codeAction.command;
+							return command &&
+								command.command === COMMAND_GENERATE_METHOD &&
+								command.arguments[command.arguments.length - 2] === methodName;
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
-						assert.strictEqual(codeAction.command, COMMAND_GENERATE_METHOD);
-						assert.strictEqual(codeAction.arguments[codeAction.arguments.length - 2], methodName, "Code action provided incorrect method name");
-						assert.deepStrictEqual(codeAction.arguments[codeAction.arguments.length - 1], ["Number"], "Code action provided incorrect argument types for method");
-						assert.strictEqual(vscode.Uri.parse(codeAction.arguments[0]).fsPath, uri.fsPath, "Code action provided incorrect URI");
+						let command = codeAction.command;
+						assert.strictEqual(command.command, COMMAND_GENERATE_METHOD);
+						assert.strictEqual(command.arguments[command.arguments.length - 2], methodName, "Code action provided incorrect method name");
+						assert.deepStrictEqual(command.arguments[command.arguments.length - 1], ["Number"], "Code action provided incorrect argument types for method");
+						assert.strictEqual(vscode.Uri.parse(command.arguments[0]).fsPath, uri.fsPath, "Code action provided incorrect URI");
 					}, (err) =>
 					{
 						assert(false, "Failed to execute code actions provider: " + uri);
@@ -7738,13 +7763,15 @@ suite("code action provider: Application workspace", () =>
 			let end = new vscode.Position(editor.document.lineCount, 0);
 			let range = new vscode.Range(start, end);
 			return vscode.commands.executeCommand("vscode.executeCodeActionProvider", uri, range)
-				.then((codeActions: vscode.Command[]) =>
+				.then((codeActions: vscode.CodeAction[]) =>
 					{
 						let methodName = "FakeClass";
 						let codeAction = codeActions.find((codeAction) =>
 						{
-							return codeAction.command === COMMAND_GENERATE_METHOD &&
-								codeAction.arguments[codeAction.arguments.length - 2] === methodName;
+							let command = codeAction.command;
+							return command &&
+								command.command === COMMAND_GENERATE_METHOD &&
+								command.arguments[command.arguments.length - 2] === methodName;
 						});
 						assert.strictEqual(codeAction, undefined, "Code action found");
 					}, (err) =>
@@ -7762,22 +7789,25 @@ suite("code action provider: Application workspace", () =>
 			let end = new vscode.Position(editor.document.lineCount, 0);
 			let range = new vscode.Range(start, end);
 			return vscode.commands.executeCommand("vscode.executeCodeActionProvider", uri, range)
-				.then((codeActions: vscode.Command[]) =>
+				.then((codeActions: vscode.CodeAction[]) =>
 					{
 						let methodName = "getterAndSetter";
 						let codeAction = codeActions.find((codeAction) =>
 						{
-							return codeAction.command === COMMAND_GENERATE_GETTER &&
-								codeAction.arguments[codeAction.arguments.length - 5] === methodName;
+							let command = codeAction.command;
+							return command &&
+								command.command === COMMAND_GENERATE_GETTER &&
+								command.arguments[command.arguments.length - 5] === methodName;
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
-						assert.strictEqual(codeAction.command, COMMAND_GENERATE_GETTER);
-						assert.strictEqual(codeAction.arguments[codeAction.arguments.length - 5], methodName, "Code action provided incorrect name");
-						assert.strictEqual(codeAction.arguments[codeAction.arguments.length - 4], "protected", "Code action provided incorrect namespace");
-						assert.strictEqual(codeAction.arguments[codeAction.arguments.length - 3], false, "Code action provided incorrect static modifier");
-						assert.deepStrictEqual(codeAction.arguments[codeAction.arguments.length - 2], "String", "Code action provided incorrect type");
-						assert.deepStrictEqual(codeAction.arguments[codeAction.arguments.length - 1], "\"getAndSet\"", "Code action provided incorrect assignment");
-						assert.strictEqual(vscode.Uri.parse(codeAction.arguments[0]).fsPath, uri.fsPath, "Code action provided incorrect URI");
+						let command = codeAction.command;
+						assert.strictEqual(command.command, COMMAND_GENERATE_GETTER);
+						assert.strictEqual(command.arguments[command.arguments.length - 5], methodName, "Code action provided incorrect name");
+						assert.strictEqual(command.arguments[command.arguments.length - 4], "protected", "Code action provided incorrect namespace");
+						assert.strictEqual(command.arguments[command.arguments.length - 3], false, "Code action provided incorrect static modifier");
+						assert.deepStrictEqual(command.arguments[command.arguments.length - 2], "String", "Code action provided incorrect type");
+						assert.deepStrictEqual(command.arguments[command.arguments.length - 1], "\"getAndSet\"", "Code action provided incorrect assignment");
+						assert.strictEqual(vscode.Uri.parse(command.arguments[0]).fsPath, uri.fsPath, "Code action provided incorrect URI");
 					}, (err) =>
 					{
 						assert(false, "Failed to execute code actions provider: " + uri);
@@ -7793,22 +7823,25 @@ suite("code action provider: Application workspace", () =>
 			let end = new vscode.Position(editor.document.lineCount, 0);
 			let range = new vscode.Range(start, end);
 			return vscode.commands.executeCommand("vscode.executeCodeActionProvider", uri, range)
-				.then((codeActions: vscode.Command[]) =>
+				.then((codeActions: vscode.CodeAction[]) =>
 					{
 						let methodName = "getterAndSetter";
 						let codeAction = codeActions.find((codeAction) =>
 						{
-							return codeAction.command === COMMAND_GENERATE_SETTER &&
-								codeAction.arguments[codeAction.arguments.length - 5] === methodName;
+							let command = codeAction.command;
+							return command &&
+								command.command === COMMAND_GENERATE_SETTER &&
+								command.arguments[command.arguments.length - 5] === methodName;
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
-						assert.strictEqual(codeAction.command, COMMAND_GENERATE_SETTER);
-						assert.strictEqual(codeAction.arguments[codeAction.arguments.length - 5], methodName, "Code action provided incorrect name");
-						assert.strictEqual(codeAction.arguments[codeAction.arguments.length - 4], "protected", "Code action provided incorrect namespace");
-						assert.strictEqual(codeAction.arguments[codeAction.arguments.length - 3], false, "Code action provided incorrect static modifier");
-						assert.deepStrictEqual(codeAction.arguments[codeAction.arguments.length - 2], "String", "Code action provided incorrect type");
-						assert.deepStrictEqual(codeAction.arguments[codeAction.arguments.length - 1], "\"getAndSet\"", "Code action provided incorrect assignment");
-						assert.strictEqual(vscode.Uri.parse(codeAction.arguments[0]).fsPath, uri.fsPath, "Code action provided incorrect URI");
+						let command = codeAction.command;
+						assert.strictEqual(command.command, COMMAND_GENERATE_SETTER);
+						assert.strictEqual(command.arguments[command.arguments.length - 5], methodName, "Code action provided incorrect name");
+						assert.strictEqual(command.arguments[command.arguments.length - 4], "protected", "Code action provided incorrect namespace");
+						assert.strictEqual(command.arguments[command.arguments.length - 3], false, "Code action provided incorrect static modifier");
+						assert.deepStrictEqual(command.arguments[command.arguments.length - 2], "String", "Code action provided incorrect type");
+						assert.deepStrictEqual(command.arguments[command.arguments.length - 1], "\"getAndSet\"", "Code action provided incorrect assignment");
+						assert.strictEqual(vscode.Uri.parse(command.arguments[0]).fsPath, uri.fsPath, "Code action provided incorrect URI");
 					}, (err) =>
 					{
 						assert(false, "Failed to execute code actions provider: " + uri);
@@ -7824,22 +7857,25 @@ suite("code action provider: Application workspace", () =>
 			let end = new vscode.Position(editor.document.lineCount, 0);
 			let range = new vscode.Range(start, end);
 			return vscode.commands.executeCommand("vscode.executeCodeActionProvider", uri, range)
-				.then((codeActions: vscode.Command[]) =>
+				.then((codeActions: vscode.CodeAction[]) =>
 					{
 						let methodName = "getterAndSetter";
 						let codeAction = codeActions.find((codeAction) =>
 						{
-							return codeAction.command === COMMAND_GENERATE_GETTER_AND_SETTER &&
-								codeAction.arguments[codeAction.arguments.length - 5] === methodName;
+							let command = codeAction.command;
+							return command &&
+								command.command === COMMAND_GENERATE_GETTER_AND_SETTER &&
+								command.arguments[command.arguments.length - 5] === methodName;
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
-						assert.strictEqual(codeAction.command, COMMAND_GENERATE_GETTER_AND_SETTER);
-						assert.strictEqual(codeAction.arguments[codeAction.arguments.length - 5], methodName, "Code action provided incorrect name");
-						assert.strictEqual(codeAction.arguments[codeAction.arguments.length - 4], "protected", "Code action provided incorrect namespace");
-						assert.strictEqual(codeAction.arguments[codeAction.arguments.length - 3], false, "Code action provided incorrect static modifier");
-						assert.deepStrictEqual(codeAction.arguments[codeAction.arguments.length - 2], "String", "Code action provided incorrect type");
-						assert.deepStrictEqual(codeAction.arguments[codeAction.arguments.length - 1], "\"getAndSet\"", "Code action provided incorrect assignment");
-						assert.strictEqual(vscode.Uri.parse(codeAction.arguments[0]).fsPath, uri.fsPath, "Code action provided incorrect URI");
+						let command = codeAction.command;
+						assert.strictEqual(command.command, COMMAND_GENERATE_GETTER_AND_SETTER);
+						assert.strictEqual(command.arguments[command.arguments.length - 5], methodName, "Code action provided incorrect name");
+						assert.strictEqual(command.arguments[command.arguments.length - 4], "protected", "Code action provided incorrect namespace");
+						assert.strictEqual(command.arguments[command.arguments.length - 3], false, "Code action provided incorrect static modifier");
+						assert.deepStrictEqual(command.arguments[command.arguments.length - 2], "String", "Code action provided incorrect type");
+						assert.deepStrictEqual(command.arguments[command.arguments.length - 1], "\"getAndSet\"", "Code action provided incorrect assignment");
+						assert.strictEqual(vscode.Uri.parse(command.arguments[0]).fsPath, uri.fsPath, "Code action provided incorrect URI");
 					}, (err) =>
 					{
 						assert(false, "Failed to execute code actions provider: " + uri);
@@ -7855,22 +7891,25 @@ suite("code action provider: Application workspace", () =>
 			let end = new vscode.Position(editor.document.lineCount, 0);
 			let range = new vscode.Range(start, end);
 			return vscode.commands.executeCommand("vscode.executeCodeActionProvider", uri, range)
-				.then((codeActions: vscode.Command[]) =>
+				.then((codeActions: vscode.CodeAction[]) =>
 					{
 						let methodName = "staticGetterAndSetter";
 						let codeAction = codeActions.find((codeAction) =>
 						{
-							return codeAction.command === COMMAND_GENERATE_GETTER_AND_SETTER &&
-								codeAction.arguments[codeAction.arguments.length - 5] === methodName;
+							let command = codeAction.command;
+							return command &&
+								command.command === COMMAND_GENERATE_GETTER_AND_SETTER &&
+								command.arguments[command.arguments.length - 5] === methodName;
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
-						assert.strictEqual(codeAction.command, COMMAND_GENERATE_GETTER_AND_SETTER);
-						assert.strictEqual(codeAction.arguments[codeAction.arguments.length - 5], methodName, "Code action provided incorrect name");
-						assert.strictEqual(codeAction.arguments[codeAction.arguments.length - 4], "private", "Code action provided incorrect namespace");
-						assert.strictEqual(codeAction.arguments[codeAction.arguments.length - 3], true, "Code action provided incorrect static modifier");
-						assert.deepStrictEqual(codeAction.arguments[codeAction.arguments.length - 2], "Number", "Code action provided incorrect type");
-						assert.deepStrictEqual(codeAction.arguments[codeAction.arguments.length - 1], null, "Code action provided incorrect assignment");
-						assert.strictEqual(vscode.Uri.parse(codeAction.arguments[0]).fsPath, uri.fsPath, "Code action provided incorrect URI");
+						let command = codeAction.command;
+						assert.strictEqual(command.command, COMMAND_GENERATE_GETTER_AND_SETTER);
+						assert.strictEqual(command.arguments[command.arguments.length - 5], methodName, "Code action provided incorrect name");
+						assert.strictEqual(command.arguments[command.arguments.length - 4], "private", "Code action provided incorrect namespace");
+						assert.strictEqual(command.arguments[command.arguments.length - 3], true, "Code action provided incorrect static modifier");
+						assert.deepStrictEqual(command.arguments[command.arguments.length - 2], "Number", "Code action provided incorrect type");
+						assert.deepStrictEqual(command.arguments[command.arguments.length - 1], null, "Code action provided incorrect assignment");
+						assert.strictEqual(vscode.Uri.parse(command.arguments[0]).fsPath, uri.fsPath, "Code action provided incorrect URI");
 					}, (err) =>
 					{
 						assert(false, "Failed to execute code actions provider: " + uri);

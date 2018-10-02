@@ -32,24 +32,15 @@ import org.apache.royale.compiler.tree.as.IASNode;
 import org.apache.royale.compiler.tree.as.IExpressionNode;
 import org.apache.royale.compiler.tree.as.IFunctionNode;
 import org.apache.royale.compiler.tree.as.IVariableNode;
+import org.eclipse.lsp4j.CodeAction;
+import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.Command;
 import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
 
 public class CodeActionsUtils
 {
-    public static class CommandAndRange
-    {
-        public CommandAndRange(Command command, Range range)
-        {
-            this.command = command;
-            this.range = range;
-        }
-        
-        public Command command;
-        public Range range;
-    }
-	
-	public static void findCodeActions(IASNode node, ICompilerProject project, Path path, String fileText, List<CommandAndRange> codeActions)
+	public static void findCodeActions(IASNode node, ICompilerProject project, Path path, String fileText, Range range, List<Either<Command, CodeAction>> codeActions)
     {
         if (node instanceof IVariableNode)
         {
@@ -64,7 +55,7 @@ public class CodeActionsUtils
                 IVariableDefinition variableDefinition = (IVariableDefinition) definition;
                 if (variableDefinition.getVariableClassification().equals(VariableClassification.CLASS_MEMBER))
                 {
-                    createCommandsForGenerateGetterAndSetter(variableNode, path, fileText, codeActions);
+                    createCommandsForGenerateGetterAndSetter(variableNode, path, fileText, range, codeActions);
                 }
             }
         }
@@ -76,13 +67,17 @@ public class CodeActionsUtils
         for (int i = 0, childCount = node.getChildCount(); i < childCount; i++)
         {
             IASNode child = node.getChild(i);
-            findCodeActions(child, project, path, fileText, codeActions);
+            findCodeActions(child, project, path, fileText, range, codeActions);
         }
     }
 
-    private static void createCommandsForGenerateGetterAndSetter(IVariableNode variableNode, Path path, String fileText, List<CommandAndRange> codeActions)
+    private static void createCommandsForGenerateGetterAndSetter(IVariableNode variableNode, Path path, String fileText, Range range, List<Either<Command, CodeAction>> codeActions)
     {
-        Range range = LanguageServerCompilerUtils.getRangeFromSourceLocation(variableNode);
+        Range variableRange = LanguageServerCompilerUtils.getRangeFromSourceLocation(variableNode);
+        if(!LSPUtils.rangesIntersect(variableRange, range))
+        {
+            return;
+        }
         IExpressionNode assignedValueNode = variableNode.getAssignedValueNode();
         String assignedValue = null;
         if (assignedValueNode != null)
@@ -103,10 +98,10 @@ public class CodeActionsUtils
                 assignedValue = fileText.substring(startIndex, endIndex);
             }
         }
-        Command generateGetterAndSetterCommand = new Command();
-        generateGetterAndSetterCommand.setTitle("Generate Getter and Setter");
-        generateGetterAndSetterCommand.setCommand(ICommandConstants.GENERATE_GETTER_AND_SETTER);
-        generateGetterAndSetterCommand.setArguments(Arrays.asList(
+        Command getAndSetCommand = new Command();
+        getAndSetCommand.setTitle("Generate Getter and Setter");
+        getAndSetCommand.setCommand(ICommandConstants.GENERATE_GETTER_AND_SETTER);
+        getAndSetCommand.setArguments(Arrays.asList(
             path.toUri().toString(),
             range.getStart().getLine(),
             range.getStart().getCharacter(),
@@ -118,13 +113,16 @@ public class CodeActionsUtils
             variableNode.getVariableType(),
             assignedValue
         ));
-        CommandAndRange getterSetterCodeAction = new CommandAndRange(generateGetterAndSetterCommand, range);
-        codeActions.add(getterSetterCodeAction);
+        CodeAction getAndSetCodeAction = new CodeAction();
+        getAndSetCodeAction.setTitle(getAndSetCommand.getTitle());
+        getAndSetCodeAction.setCommand(getAndSetCommand);
+        getAndSetCodeAction.setKind(CodeActionKind.RefactorRewrite);
+        codeActions.add(Either.forRight(getAndSetCodeAction));
         
-        Command generateGetterCommand = new Command();
-        generateGetterCommand.setTitle("Generate Getter");
-        generateGetterCommand.setCommand(ICommandConstants.GENERATE_GETTER);
-        generateGetterCommand.setArguments(Arrays.asList(
+        Command getterCommand = new Command();
+        getterCommand.setTitle("Generate Getter");
+        getterCommand.setCommand(ICommandConstants.GENERATE_GETTER);
+        getterCommand.setArguments(Arrays.asList(
             path.toUri().toString(),
             range.getStart().getLine(),
             range.getStart().getCharacter(),
@@ -136,13 +134,16 @@ public class CodeActionsUtils
             variableNode.getVariableType(),
             assignedValue
         ));
-        CommandAndRange getterCodeAction = new CommandAndRange(generateGetterCommand, range);
-        codeActions.add(getterCodeAction);
+        CodeAction getterCodeAction = new CodeAction();
+        getterCodeAction.setTitle(getterCommand.getTitle());
+        getterCodeAction.setCommand(getterCommand);
+        getterCodeAction.setKind(CodeActionKind.RefactorRewrite);
+        codeActions.add(Either.forRight(getterCodeAction));
 
-        Command generateSetterCommand = new Command();
-        generateSetterCommand.setTitle("Generate Setter");
-        generateSetterCommand.setCommand(ICommandConstants.GENERATE_SETTER);
-        generateSetterCommand.setArguments(Arrays.asList(
+        Command setterCommand = new Command();
+        setterCommand.setTitle("Generate Setter");
+        setterCommand.setCommand(ICommandConstants.GENERATE_SETTER);
+        setterCommand.setArguments(Arrays.asList(
             path.toUri().toString(),
             range.getStart().getLine(),
             range.getStart().getCharacter(),
@@ -154,7 +155,10 @@ public class CodeActionsUtils
             variableNode.getVariableType(),
             assignedValue
         ));
-        CommandAndRange setterCodeAction = new CommandAndRange(generateSetterCommand, range);
-        codeActions.add(setterCodeAction);
+        CodeAction setterCodeAction = new CodeAction();
+        setterCodeAction.setTitle(setterCommand.getTitle());
+        setterCodeAction.setCommand(setterCommand);
+        setterCodeAction.setKind(CodeActionKind.RefactorRewrite);
+        codeActions.add(Either.forRight(setterCodeAction));
     }
 }
