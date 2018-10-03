@@ -5149,7 +5149,16 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             item.setInsertText(insertTextBuilder.toString());
             if (definition instanceof ITypeDefinition && prefix != null && uri != null)
             {
-                item.setCommand(createMXMLNamespaceCommand(definition, xmlnsRange, prefix, uri));
+                Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(xmlnsRange.uri);
+                String fileText = getFileTextForPath(path);
+                if(fileText != null)
+                {
+                    TextEdit textEdit = CodeActionsUtils.createTextEditForAddMXMLNamespace(prefix, uri, fileText, xmlnsRange.startIndex, xmlnsRange.endIndex);
+                    if(textEdit != null)
+                    {
+                        item.setAdditionalTextEdits(Collections.singletonList(textEdit));
+                    }
+                }
             }
         }
         IDeprecationInfo deprecationInfo = definition.getDeprecationInfo();
@@ -5158,21 +5167,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             item.setDeprecated(true);
         }
         result.getItems().add(item);
-    }
-
-    private Command createMXMLNamespaceCommand(IDefinition definition, XmlnsRange xmlnsRange, String prefix, String uri)
-    {
-        Command xmlnsCommand = new Command();
-        xmlnsCommand.setTitle("Add Namespace " + uri);
-        xmlnsCommand.setCommand(ICommandConstants.ADD_MXML_NAMESPACE);
-        xmlnsCommand.setArguments(Arrays.asList(
-            prefix,
-            uri,
-            xmlnsRange.uri,
-            xmlnsRange.startIndex,
-            xmlnsRange.endIndex
-        ));
-        return xmlnsCommand;
     }
 
     private void resolveDefinition(IDefinition definition, RoyaleProject project, List<Location> result)
@@ -7116,20 +7110,14 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return;
         }
-        TextEdit edit = ImportTextEditUtils.createTextEditForMXMLNamespace(nsPrefix, nsUri, text, startIndex, endIndex);
-        if(edit == null)
+        WorkspaceEdit workspaceEdit = CodeActionsUtils.createWorkspaceEditForAddMXMLNamespace(nsPrefix, nsUri, text, uri, startIndex, endIndex);
+        if(workspaceEdit == null)
         {
             //no edit required
             return;
         }
 
         ApplyWorkspaceEditParams editParams = new ApplyWorkspaceEditParams();
-        WorkspaceEdit workspaceEdit = new WorkspaceEdit();
-        HashMap<String,List<TextEdit>> changes = new HashMap<>();
-        List<TextEdit> edits = new ArrayList<>();
-        edits.add(edit);
-        changes.put(uri, edits);
-        workspaceEdit.setChanges(changes);
         editParams.setEdit(workspaceEdit);
 
         languageClient.applyEdit(editParams);

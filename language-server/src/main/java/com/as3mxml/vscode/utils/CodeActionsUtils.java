@@ -316,4 +316,40 @@ public class CodeActionsUtils
         textEdit.setRange(new Range(position, position));
         return textEdit;
     }
+
+    public static WorkspaceEdit createWorkspaceEditForAddMXMLNamespace(String nsPrefix, String nsURI, String fileText, String fileURI, int startIndex, int endIndex)
+    {
+        TextEdit textEdit = createTextEditForAddMXMLNamespace(nsPrefix, nsURI, fileText, startIndex, endIndex);
+        if (textEdit == null)
+        {
+            return null;
+        }
+
+        WorkspaceEdit workspaceEdit = new WorkspaceEdit();
+        HashMap<String,List<TextEdit>> changes = new HashMap<>();
+        List<TextEdit> edits = new ArrayList<>();
+        edits.add(textEdit);
+        changes.put(fileURI, edits);
+        workspaceEdit.setChanges(changes);
+        return workspaceEdit;
+    }
+    
+    public static TextEdit createTextEditForAddMXMLNamespace(String nsPrefix, String nsURI, String text, int startIndex, int endIndex)
+    {
+        //exclude the whitespace before the namespace so that finding duplicates
+        //doesn't depend on it
+        String textToInsert = "xmlns:" + nsPrefix + "=\"" + nsURI + "\"";
+        //check if this namespace URI and prefix already exist
+        int index = text.indexOf(textToInsert, startIndex);
+        if(index != -1 && index < endIndex)
+        {
+            return null;
+        }
+        Position position = LanguageServerCompilerUtils.getPositionFromOffset(new StringReader(text), endIndex);
+    
+        TextEdit edit = new TextEdit();
+        edit.setNewText(" " + textToInsert);
+		edit.setRange(new Range(position, position));
+		return edit;
+    }
 }
