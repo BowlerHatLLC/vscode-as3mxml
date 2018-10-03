@@ -23,6 +23,7 @@ import org.apache.royale.compiler.mxml.IMXMLUnitData;
 import org.apache.royale.compiler.tree.as.IASNode;
 import org.apache.royale.compiler.tree.as.IFileNode;
 import org.apache.royale.compiler.tree.as.IPackageNode;
+import org.apache.royale.compiler.tree.mxml.IMXMLScriptNode;
 
 public class ImportRange
 {
@@ -38,9 +39,12 @@ public class ImportRange
             return range;
         }
 
-        if (tagData.getXMLName().equals(tagData.getMXMLDialect().resolveScript()))
+        range.uri = Paths.get(tagData.getSourcePath()).toUri().toString();
+
+        IMXMLTagData scriptTagData = MXMLDataUtils.findMXMLScriptTag(tagData);
+        if (scriptTagData != null)
         {
-            IMXMLUnitData childData = tagData.getFirstChildUnit();
+            IMXMLUnitData childData = scriptTagData.getFirstChildUnit();
             while (childData != null)
             {
                 if (childData instanceof IMXMLTextData)
@@ -48,7 +52,6 @@ public class ImportRange
                     IMXMLTextData textData = (IMXMLTextData) childData;
                     if (textData.getTextType() == IMXMLTextData.TextType.CDATA)
                     {
-                        range.uri = Paths.get(textData.getSourcePath()).toUri().toString();
                         range.startIndex = textData.getCompilableTextStart();
                         range.endIndex = textData.getCompilableTextEnd();
                     }
@@ -66,36 +69,39 @@ public class ImportRange
         {
             return range;
         }
+        range.uri = Paths.get(offsetNode.getSourcePath()).toUri().toString();
+
         IPackageNode packageNode = (IPackageNode) offsetNode.getAncestorOfType(IPackageNode.class);
-        if (packageNode == null)
+        if (packageNode != null)
         {
-            IFileNode fileNode = (IFileNode) offsetNode.getAncestorOfType(IFileNode.class);
-            if (fileNode != null)
+            //we're inside a package block
+            range.endIndex = packageNode.getAbsoluteEnd();
+            return range;
+        }
+
+        IFileNode fileNode = (IFileNode) offsetNode.getAncestorOfType(IFileNode.class);
+        if (fileNode != null)
+        {
+            //we're probably after the package block
+            boolean foundPackage = false;
+            for (int i = 0; i < fileNode.getChildCount(); i++)
             {
-                boolean foundPackage = false;
-                for (int i = 0; i < fileNode.getChildCount(); i++)
+                IASNode childNode = fileNode.getChild(i);
+                if (foundPackage)
                 {
-                    IASNode childNode = fileNode.getChild(i);
-                    if (foundPackage)
-                    {
-                        //this is the node following the package
-                        range.startIndex = childNode.getAbsoluteStart();
-                        break;
-                    }
-                    if (childNode instanceof IPackageNode)
-                    {
-                        //use the start of the the next node after the
-                        //package as the place where the import can be added
-                        foundPackage = true;
-                    }
+                    //this is the node following the package
+                    range.startIndex = childNode.getAbsoluteStart();
+                    break;
+                }
+                if (childNode instanceof IPackageNode)
+                {
+                    //use the start of the the next node after the
+                    //package as the place where the import can be added
+                    foundPackage = true;
                 }
             }
+            return range;
         }
-        else
-        {
-            range.endIndex = packageNode.getAbsoluteEnd();
-        }
-        range.uri = Paths.get(offsetNode.getSourcePath()).toUri().toString();
         return range;
     }
 }

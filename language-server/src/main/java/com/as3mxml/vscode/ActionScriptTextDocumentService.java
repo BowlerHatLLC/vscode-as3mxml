@@ -1512,6 +1512,23 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return;
         }
         ImportRange importRange = ImportRange.fromOffsetNode(offsetNode);
+        String uri = importRange.uri;
+        Path pathForImport = Paths.get(URI.create(uri));
+        String fileText = getFileTextForPath(pathForImport);
+        if(fileText == null)
+        {
+            return;
+        }
+        if(textDocument.getUri().endsWith(MXML_EXTENSION))
+        {
+            Position start = diagnostic.getRange().getStart();
+            int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(new StringReader(fileText), start);
+            IMXMLTagData offsetTag = getOffsetMXMLTag(textDocument, start);
+            if (offsetTag != null)
+            {
+                importRange = ImportRange.fromOffsetTag(offsetTag, currentOffset);
+            }
+        }
 
         IIdentifierNode identifierNode = (IIdentifierNode) offsetNode;
         String typeString = identifierNode.getName();
@@ -1519,13 +1536,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         List<IDefinition> types = ASTUtils.findTypesThatMatchName(typeString, project.getCompilationUnits());
         for (IDefinition definitionToImport : types)
         {
-            String uri = importRange.uri;
-            Path pathForImport = Paths.get(URI.create(uri));
-            String fileText = getFileTextForPath(pathForImport);
-            if(fileText == null)
-            {
-                continue;
-            }
             WorkspaceEdit edit = CodeActionsUtils.createWorkspaceEditForAddImport(definitionToImport, fileText, uri, importRange.startIndex, importRange.endIndex);
             if (edit == null)
             {
@@ -2657,6 +2667,14 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
 
         ImportRange importRange = ImportRange.fromOffsetNode(offsetNode);
+        if (params.getTextDocument().getUri().endsWith(MXML_EXTENSION))
+        {
+            IMXMLTagData offsetTag = getOffsetMXMLTag(params.getTextDocument(), params.getPosition());
+            if (offsetTag != null)
+            {
+                importRange = ImportRange.fromOffsetTag(offsetTag, currentOffset);
+            }
+        }
         String containingPackageName = ASTUtils.nodeToContainingPackageName(offsetNode);
 
         //variable types

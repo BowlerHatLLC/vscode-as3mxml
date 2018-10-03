@@ -59,6 +59,10 @@ public class LanguageServerCompilerUtils
      */
     public static Path getPathFromLanguageServerURI(String apiURI)
     {
+        if (apiURI == null)
+        {
+            return null;
+        }
         URI uri = URI.create(apiURI);
         Optional<Path> optionalPath = getFilePath(uri);
         if (!optionalPath.isPresent())

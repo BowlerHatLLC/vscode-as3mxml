@@ -263,4 +263,38 @@ public class MXMLDataUtils
         }
         return true;
     }
+
+    public static IMXMLTagData findMXMLScriptTag(IMXMLTagData tagData)
+    {
+        //quick check
+        if (tagData.getXMLName().equals(tagData.getMXMLDialect().resolveScript()))
+        {
+            return tagData;
+        }
+        //go to the root tag
+        while(tagData.getParentTag() != null)
+        {
+            tagData = tagData.getParentTag();
+        }
+        return findMXMLScriptTagInternal(tagData);
+    }
+
+    private static IMXMLTagData findMXMLScriptTagInternal(IMXMLTagData tagData)
+    {
+        if (tagData.getXMLName().equals(tagData.getMXMLDialect().resolveScript()))
+        {
+            return tagData;
+        }
+        IMXMLTagData child = tagData.getFirstChild(true);
+        while(child != null)
+        {
+            IMXMLTagData foundScript = findMXMLScriptTagInternal(child);
+            if (foundScript != null)
+            {
+                return foundScript;
+            }
+            child = child.getNextSibling(true);
+        }
+        return null;
+    }
 }
