@@ -161,7 +161,8 @@
       "explorer": [
         {
           "id": "actionScriptSourcePaths",
-          "name": "ActionScript Source Path"
+          "name": "ActionScript Source Path",
+          "when": "resourceLangId =~ /(nextgenas|mxml)/"
         }
       ]
     },
