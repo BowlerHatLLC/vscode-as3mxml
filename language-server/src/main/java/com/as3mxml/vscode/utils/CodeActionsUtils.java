@@ -112,7 +112,7 @@ public class CodeActionsUtils
             }
         }
         Command getAndSetCommand = new Command();
-        getAndSetCommand.setTitle("Generate Getter and Setter");
+        getAndSetCommand.setTitle("Generate 'get' and 'set' accessors");
         getAndSetCommand.setCommand(ICommandConstants.GENERATE_GETTER_AND_SETTER);
         getAndSetCommand.setArguments(Arrays.asList(
             path.toUri().toString(),
@@ -133,7 +133,7 @@ public class CodeActionsUtils
         codeActions.add(Either.forRight(getAndSetCodeAction));
         
         Command getterCommand = new Command();
-        getterCommand.setTitle("Generate Getter");
+        getterCommand.setTitle("Generate 'get' accessor (make read-only)");
         getterCommand.setCommand(ICommandConstants.GENERATE_GETTER);
         getterCommand.setArguments(Arrays.asList(
             path.toUri().toString(),
@@ -154,7 +154,7 @@ public class CodeActionsUtils
         codeActions.add(Either.forRight(getterCodeAction));
 
         Command setterCommand = new Command();
-        setterCommand.setTitle("Generate Setter");
+        setterCommand.setTitle("Generate 'set' accessor (make write-only)");
         setterCommand.setCommand(ICommandConstants.GENERATE_SETTER);
         setterCommand.setArguments(Arrays.asList(
             path.toUri().toString(),

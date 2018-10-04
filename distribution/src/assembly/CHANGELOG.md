@@ -1,3 +1,9 @@
+## v0.15.0
+
+### Other Changes
+
+* The code action for generating a getter and setter for a variable is now named "Generate 'get' and 'set' accessor" to better match other languages. Additionaly, this code action is now considered a *Refactor* rather than a *Quick Fix*. To access refactorings for a variable, use the **Ctrl+Shift+R** keyboard shortcut or select the variable to trigger the light bulb popup.
+
 ## v0.14.1
 
 ### Fixed Issues
