@@ -23,7 +23,6 @@ import org.apache.royale.compiler.mxml.IMXMLUnitData;
 import org.apache.royale.compiler.tree.as.IASNode;
 import org.apache.royale.compiler.tree.as.IFileNode;
 import org.apache.royale.compiler.tree.as.IPackageNode;
-import org.apache.royale.compiler.tree.mxml.IMXMLScriptNode;
 
 public class ImportRange
 {

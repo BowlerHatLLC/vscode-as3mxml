@@ -16,27 +16,33 @@ limitations under the License.
 package com.as3mxml.vscode.utils;
 
 import java.io.StringReader;
-import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.as3mxml.vscode.commands.ICommandConstants;
-
 import org.apache.royale.compiler.common.ASModifier;
+import org.apache.royale.compiler.constants.IASKeywordConstants;
+import org.apache.royale.compiler.constants.IASLanguageConstants;
 import org.apache.royale.compiler.definitions.IAccessorDefinition;
 import org.apache.royale.compiler.definitions.IConstantDefinition;
 import org.apache.royale.compiler.definitions.IDefinition;
+import org.apache.royale.compiler.definitions.ITypeDefinition;
 import org.apache.royale.compiler.definitions.IVariableDefinition;
 import org.apache.royale.compiler.definitions.IVariableDefinition.VariableClassification;
 import org.apache.royale.compiler.projects.ICompilerProject;
 import org.apache.royale.compiler.tree.as.IASNode;
+import org.apache.royale.compiler.tree.as.IClassNode;
 import org.apache.royale.compiler.tree.as.IExpressionNode;
+import org.apache.royale.compiler.tree.as.IFunctionCallNode;
 import org.apache.royale.compiler.tree.as.IFunctionNode;
+import org.apache.royale.compiler.tree.as.IIdentifierNode;
+import org.apache.royale.compiler.tree.as.ILanguageIdentifierNode;
+import org.apache.royale.compiler.tree.as.IMemberAccessExpressionNode;
+import org.apache.royale.compiler.tree.as.IScopedNode;
 import org.apache.royale.compiler.tree.as.IVariableNode;
+import org.apache.royale.compiler.tree.mxml.IMXMLScriptNode;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.Command;
@@ -50,10 +56,13 @@ public class CodeActionsUtils
 {
     private static final Pattern importPattern = Pattern.compile("(?m)^([ \\t]*)import ([\\w\\.]+)");
     private static final Pattern indentPattern = Pattern.compile("(?m)^([ \\t]*)\\w");
-    private static final String UNDERSCORE_UNDERSCORE_AS3_PACKAGE = "__AS3__.";
     private static final Pattern packagePattern = Pattern.compile("(?m)^package(?: [\\w\\.]+)*\\s*\\{(?:[ \\t]*[\\r\\n]+)+([ \\t]*)");
+    private static final String UNDERSCORE_UNDERSCORE_AS3_PACKAGE = "__AS3__.";
+	private static final String NEW_LINE = "\n";
+	private static final String INDENT = "\t";
+	private static final String SPACE = " ";
 
-    public static void findCodeActions(IASNode node, ICompilerProject project, Path path, String fileText, Range range, List<Either<Command, CodeAction>> codeActions)
+    public static void findCodeActions(IASNode node, ICompilerProject project, String uri, String fileText, Range range, List<Either<Command, CodeAction>> codeActions)
     {
         if (node instanceof IVariableNode)
         {
@@ -68,7 +77,7 @@ public class CodeActionsUtils
                 IVariableDefinition variableDefinition = (IVariableDefinition) definition;
                 if (variableDefinition.getVariableClassification().equals(VariableClassification.CLASS_MEMBER))
                 {
-                    createCommandsForGenerateGetterAndSetter(variableNode, path, fileText, range, codeActions);
+                    createCommandsForGenerateGetterAndSetter(variableNode, uri, fileText, range, codeActions);
                 }
             }
         }
@@ -80,97 +89,38 @@ public class CodeActionsUtils
         for (int i = 0, childCount = node.getChildCount(); i < childCount; i++)
         {
             IASNode child = node.getChild(i);
-            findCodeActions(child, project, path, fileText, range, codeActions);
+            findCodeActions(child, project, uri, fileText, range, codeActions);
         }
     }
 
-    private static void createCommandsForGenerateGetterAndSetter(IVariableNode variableNode, Path path, String fileText, Range codeActionsRange, List<Either<Command, CodeAction>> codeActions)
+    private static void createCommandsForGenerateGetterAndSetter(IVariableNode variableNode, String uri, String fileText, Range codeActionsRange, List<Either<Command, CodeAction>> codeActions)
     {
         Range variableRange = LanguageServerCompilerUtils.getRangeFromSourceLocation(variableNode);
         if(!LSPUtils.rangesIntersect(variableRange, codeActionsRange))
         {
             return;
         }
-        IExpressionNode assignedValueNode = variableNode.getAssignedValueNode();
-        String assignedValue = null;
-        if (assignedValueNode != null)
-        {
-            int startIndex = assignedValueNode.getAbsoluteStart();
-            int endIndex = assignedValueNode.getAbsoluteEnd();
-            //if the variables value is assigned by [Embed] metadata, the
-            //assigned value node won't be null, but its start/end will be -1!
-            if (startIndex != -1
-                    && endIndex != -1
-                    //just to be safe
-                    && startIndex < endIndex
-                    //see BowlerHatLLC/vscode-nextgenas#234 for an example where
-                    //the index values could be out of range!
-                    && startIndex <= fileText.length()
-                    && endIndex <= fileText.length())
-            {
-                assignedValue = fileText.substring(startIndex, endIndex);
-            }
-        }
-        Command getAndSetCommand = new Command();
-        getAndSetCommand.setTitle("Generate 'get' and 'set' accessors");
-        getAndSetCommand.setCommand(ICommandConstants.GENERATE_GETTER_AND_SETTER);
-        getAndSetCommand.setArguments(Arrays.asList(
-            path.toUri().toString(),
-            variableRange.getStart().getLine(),
-            variableRange.getStart().getCharacter(),
-            variableRange.getEnd().getLine(),
-            variableRange.getEnd().getCharacter(),
-            variableNode.getName(),
-            variableNode.getNamespace(),
-            variableNode.hasModifier(ASModifier.STATIC),
-            variableNode.getVariableType(),
-            assignedValue
-        ));
+        WorkspaceEdit getSetEdit = createWorkspaceEditForGenerateGetterAndSetter(
+            variableNode, uri, fileText, true, true);
         CodeAction getAndSetCodeAction = new CodeAction();
-        getAndSetCodeAction.setTitle(getAndSetCommand.getTitle());
-        getAndSetCodeAction.setCommand(getAndSetCommand);
+        getAndSetCodeAction.setTitle("Generate 'get' and 'set' accessors");
+        getAndSetCodeAction.setEdit(getSetEdit);
         getAndSetCodeAction.setKind(CodeActionKind.RefactorRewrite);
         codeActions.add(Either.forRight(getAndSetCodeAction));
         
-        Command getterCommand = new Command();
-        getterCommand.setTitle("Generate 'get' accessor (make read-only)");
-        getterCommand.setCommand(ICommandConstants.GENERATE_GETTER);
-        getterCommand.setArguments(Arrays.asList(
-            path.toUri().toString(),
-            variableRange.getStart().getLine(),
-            variableRange.getStart().getCharacter(),
-            variableRange.getEnd().getLine(),
-            variableRange.getEnd().getCharacter(),
-            variableNode.getName(),
-            variableNode.getNamespace(),
-            variableNode.hasModifier(ASModifier.STATIC),
-            variableNode.getVariableType(),
-            assignedValue
-        ));
+        WorkspaceEdit getterEdit = createWorkspaceEditForGenerateGetterAndSetter(
+            variableNode, uri, fileText, true, false);
         CodeAction getterCodeAction = new CodeAction();
-        getterCodeAction.setTitle(getterCommand.getTitle());
-        getterCodeAction.setCommand(getterCommand);
+        getterCodeAction.setTitle("Generate 'get' accessor (make read-only)");
+        getterCodeAction.setEdit(getterEdit);
         getterCodeAction.setKind(CodeActionKind.RefactorRewrite);
         codeActions.add(Either.forRight(getterCodeAction));
 
-        Command setterCommand = new Command();
-        setterCommand.setTitle("Generate 'set' accessor (make write-only)");
-        setterCommand.setCommand(ICommandConstants.GENERATE_SETTER);
-        setterCommand.setArguments(Arrays.asList(
-            path.toUri().toString(),
-            variableRange.getStart().getLine(),
-            variableRange.getStart().getCharacter(),
-            variableRange.getEnd().getLine(),
-            variableRange.getEnd().getCharacter(),
-            variableNode.getName(),
-            variableNode.getNamespace(),
-            variableNode.hasModifier(ASModifier.STATIC),
-            variableNode.getVariableType(),
-            assignedValue
-        ));
+        WorkspaceEdit setterEdit = createWorkspaceEditForGenerateGetterAndSetter(
+            variableNode, uri, fileText, false, true);
         CodeAction setterCodeAction = new CodeAction();
-        setterCodeAction.setTitle(setterCommand.getTitle());
-        setterCodeAction.setCommand(setterCommand);
+        setterCodeAction.setTitle("Generate 'set' accessor (make write-only)");
+        setterCodeAction.setEdit(setterEdit);
         setterCodeAction.setKind(CodeActionKind.RefactorRewrite);
         codeActions.add(Either.forRight(setterCodeAction));
     }
@@ -351,5 +301,459 @@ public class CodeActionsUtils
         edit.setNewText(" " + textToInsert);
 		edit.setRange(new Range(position, position));
 		return edit;
+    }
+
+	public static WorkspaceEdit createWorkspaceEditForGenerateLocalVariable(
+        IIdentifierNode identifierNode, String uri, String text)
+    {
+        TextEdit textEdit = createTextEditForGenerateLocalVariable(identifierNode, text);
+        if (textEdit == null)
+        {
+            return null;
+        }
+
+        WorkspaceEdit workspaceEdit = new WorkspaceEdit();
+        HashMap<String,List<TextEdit>> changes = new HashMap<>();
+        List<TextEdit> edits = new ArrayList<>();
+        edits.add(textEdit);
+        changes.put(uri, edits);
+        workspaceEdit.setChanges(changes);
+        return workspaceEdit;
+    }
+
+	public static TextEdit createTextEditForGenerateLocalVariable(
+        IIdentifierNode identifierNode, String text)
+    {
+        IFunctionNode functionNode = (IFunctionNode) identifierNode.getAncestorOfType(IFunctionNode.class);
+        if (functionNode == null)
+        {
+            return null;
+        }
+        IScopedNode scopedNode = functionNode.getScopedNode();
+        if (scopedNode == null)
+        {
+            return null;
+        }
+
+        IASNode firstChild = scopedNode.getChild(0);
+
+        String indent = ASTUtils.getIndentBeforeNode(firstChild, text);
+
+        StringBuilder builder = new StringBuilder();
+		builder.append(NEW_LINE);
+        builder.append(indent);
+        builder.append(IASKeywordConstants.VAR);
+        builder.append(" ");
+		builder.append(identifierNode.getName());
+		builder.append(":");
+		builder.append(IASLanguageConstants.Object);
+		builder.append(";");
+
+        TextEdit textEdit = new TextEdit();
+        textEdit.setNewText(builder.toString());
+        Position editPosition = new Position(scopedNode.getLine(), scopedNode.getColumn() + 1);
+        textEdit.setRange(new Range(editPosition, editPosition));
+        return textEdit;
+	}
+
+	public static WorkspaceEdit createWorkspaceEditForGenerateFieldVariable(
+        IIdentifierNode identifierNode, String uri, String text)
+    {
+        TextEdit textEdit = createTextEditForGenerateFieldVariable(identifierNode, text);
+        if (textEdit == null)
+        {
+            return null;
+        }
+
+        WorkspaceEdit workspaceEdit = new WorkspaceEdit();
+        HashMap<String,List<TextEdit>> changes = new HashMap<>();
+        List<TextEdit> edits = new ArrayList<>();
+        edits.add(textEdit);
+        changes.put(uri, edits);
+        workspaceEdit.setChanges(changes);
+        return workspaceEdit;
+    }
+
+	public static TextEdit createTextEditForGenerateFieldVariable(
+		IIdentifierNode identifierNode, String text)
+    {
+        String indent = "";
+        int line = identifierNode.getLine();
+        IMXMLScriptNode scriptNode = (IMXMLScriptNode) identifierNode.getAncestorOfType(IMXMLScriptNode.class);
+        if (scriptNode != null)
+        {
+            IASNode[] nodes = scriptNode.getASNodes();
+            int nodeCount = nodes.length;
+            if (nodeCount == 0)
+            {
+                return null;
+            }
+            IASNode finalNode = nodes[nodeCount - 1];
+            line = finalNode.getEndLine() + 1;
+
+            indent = ASTUtils.getIndentBeforeNode(finalNode, text);
+        }
+        else
+        {
+            IClassNode classNode = (IClassNode) identifierNode.getAncestorOfType(IClassNode.class);
+            if (classNode == null)
+            {
+                return null;
+            }
+            IScopedNode scopedNode = classNode.getScopedNode();
+            if (scopedNode == null)
+            {
+                return null;
+            }
+            line = scopedNode.getEndLine();
+
+            IFunctionNode functionNode = (IFunctionNode) identifierNode.getAncestorOfType(IFunctionNode.class);
+            if (functionNode == null)
+            {
+                return null;
+            }
+            indent = ASTUtils.getIndentBeforeNode(functionNode, text);
+        }
+
+        StringBuilder builder = new StringBuilder();
+        builder.append(NEW_LINE);
+        builder.append(indent);
+        builder.append(IASKeywordConstants.PUBLIC);
+        builder.append(" ");
+        builder.append(IASKeywordConstants.VAR);
+        builder.append(" ");
+        builder.append(identifierNode.getName());
+        builder.append(":");
+        builder.append(IASLanguageConstants.Object);
+        builder.append(";");
+        builder.append(NEW_LINE);
+
+        TextEdit textEdit = new TextEdit();
+        textEdit.setNewText(builder.toString());
+        Position editPosition = new Position(line, 0);
+        textEdit.setRange(new Range(editPosition, editPosition));
+        return textEdit;
+    }
+
+	public static WorkspaceEdit createWorkspaceEditForGenerateMethod(
+        IFunctionCallNode functionCallNode, String uri, String text, ICompilerProject project)
+    {
+        List<TextEdit> textEdits = createTextEditsForGenerateMethod(functionCallNode, text, project);
+        if (textEdits == null || textEdits.size() == 0)
+        {
+            return null;
+        }
+
+        WorkspaceEdit workspaceEdit = new WorkspaceEdit();
+        HashMap<String,List<TextEdit>> changes = new HashMap<>();
+        changes.put(uri, textEdits);
+        workspaceEdit.setChanges(changes);
+        return workspaceEdit;
+    }
+
+	private static List<TextEdit> createTextEditsForGenerateMethod(
+		IFunctionCallNode functionCallNode, String text, ICompilerProject project)
+    {
+        if(functionCallNode.isNewExpression())
+        {
+            return null;
+        }
+
+        String functionName = functionCallNode.getFunctionName();
+        if (functionName.length() == 0)
+        {
+            IExpressionNode nameNode = functionCallNode.getNameNode();
+            if (nameNode instanceof IMemberAccessExpressionNode)
+            {
+                IMemberAccessExpressionNode memberAccessExpressionNode = (IMemberAccessExpressionNode) nameNode;
+                IExpressionNode leftOperandNode = memberAccessExpressionNode.getLeftOperandNode();
+                IExpressionNode rightOperandNode = memberAccessExpressionNode.getRightOperandNode();
+                if (rightOperandNode instanceof IIdentifierNode
+                        && leftOperandNode instanceof ILanguageIdentifierNode)
+                {
+                    ILanguageIdentifierNode leftIdentifierNode = (ILanguageIdentifierNode) leftOperandNode;
+                    if (leftIdentifierNode.getKind() == ILanguageIdentifierNode.LanguageIdentifierKind.THIS)
+                    {
+                        IIdentifierNode identifierNode = (IIdentifierNode) rightOperandNode;
+                        functionName = identifierNode.getName();
+                    }
+                }
+            }
+        }
+        if (functionName.length() == 0)
+        {
+            return null;
+        }
+
+        List<TextEdit> edits = new ArrayList<>();
+        TextEdit textEdit = new TextEdit();
+        edits.add(textEdit);
+
+        String indent = "";
+        int line = functionCallNode.getLine();
+        IMXMLScriptNode scriptNode = (IMXMLScriptNode) functionCallNode.getAncestorOfType(IMXMLScriptNode.class);
+        if (scriptNode != null)
+        {
+            IASNode[] nodes = scriptNode.getASNodes();
+            int nodeCount = nodes.length;
+            if (nodeCount == 0)
+            {
+                return null;
+            }
+            IASNode finalNode = nodes[nodeCount - 1];
+            line = finalNode.getEndLine() + 1;
+
+            indent = ASTUtils.getIndentBeforeNode(finalNode, text);
+        }
+        else
+        {
+            IClassNode classNode = (IClassNode) functionCallNode.getAncestorOfType(IClassNode.class);
+            if (classNode == null)
+            {
+                return null;
+            }
+            IScopedNode scopedNode = classNode.getScopedNode();
+            if (scopedNode == null)
+            {
+                return null;
+            }
+            line = scopedNode.getEndLine();
+
+            IFunctionNode functionNode = (IFunctionNode) functionCallNode.getAncestorOfType(IFunctionNode.class);
+            if (functionNode == null)
+            {
+                return null;
+            }
+            indent = ASTUtils.getIndentBeforeNode(functionNode, text);
+        }
+
+        StringBuilder builder = new StringBuilder();
+        builder.append(NEW_LINE);
+        builder.append(indent);
+        builder.append(IASKeywordConstants.PRIVATE);
+        builder.append(" ");
+        builder.append(IASKeywordConstants.FUNCTION);
+        builder.append(" ");
+        builder.append(functionName);
+        builder.append("(");
+
+        IExpressionNode[] args = functionCallNode.getArgumentNodes();
+        if (args.length > 0)
+        {
+            ImportRange importRange = ImportRange.fromOffsetNode(functionCallNode);
+            for (int i = 0; i < args.length; i++)
+            {
+                IExpressionNode arg = args[i];
+                String typeName = IASLanguageConstants.Object;
+                ITypeDefinition typeDefinition = arg.resolveType(project);
+                if (typeDefinition != null)
+                {
+                    typeName = typeDefinition.getQualifiedName();
+                }
+                if(i > 0)
+                {
+                    builder.append(", ");
+                }
+                builder.append("param");
+                builder.append(i);
+                builder.append(":");
+                int index = typeName.lastIndexOf(".");
+                if (index == -1)
+                {
+                    builder.append(typeName);
+                }
+                else
+                {
+                    builder.append(typeName.substring(index + 1));
+                }
+                TextEdit importEdit = CodeActionsUtils.createTextEditForAddImport(typeName, text, importRange.startIndex, importRange.endIndex);
+                if (importEdit != null)
+                {
+                    edits.add(importEdit);
+                }
+            }
+        }
+        builder.append(")");
+        builder.append(":");
+        builder.append(IASKeywordConstants.VOID);
+        builder.append(NEW_LINE);
+        builder.append(indent);
+        builder.append("{");
+        builder.append(NEW_LINE);
+        builder.append(indent);
+        builder.append("}");
+        builder.append(NEW_LINE);
+
+        textEdit.setNewText(builder.toString());
+        Position editPosition = new Position(line, 0);
+        textEdit.setRange(new Range(editPosition, editPosition));
+
+        return edits;
+    }
+
+	public static WorkspaceEdit createWorkspaceEditForGenerateGetterAndSetter(
+        IVariableNode variableNode, String uri, String text, boolean generateGetter, boolean generateSetter)
+    {
+        TextEdit textEdit = createTextEditForGenerateGetterAndSetter(variableNode, text, generateGetter, generateSetter);
+        if (textEdit == null)
+        {
+            return null;
+        }
+
+        WorkspaceEdit workspaceEdit = new WorkspaceEdit();
+        HashMap<String,List<TextEdit>> changes = new HashMap<>();
+        List<TextEdit> edits = new ArrayList<>();
+        edits.add(textEdit);
+        changes.put(uri, edits);
+        workspaceEdit.setChanges(changes);
+        return workspaceEdit;
+    }
+
+	public static TextEdit createTextEditForGenerateGetterAndSetter(
+		IVariableNode variableNode, String text, boolean generateGetter, boolean generateSetter)
+    {
+        String name = variableNode.getName();
+        String namespace = variableNode.getNamespace();
+        boolean isStatic = variableNode.hasModifier(ASModifier.STATIC);
+        String type = variableNode.getVariableType();
+
+        IExpressionNode assignedValueNode = variableNode.getAssignedValueNode();
+        String assignedValue = null;
+        if (assignedValueNode != null)
+        {
+            int startIndex = assignedValueNode.getAbsoluteStart();
+            int endIndex = assignedValueNode.getAbsoluteEnd();
+            //if the variables value is assigned by [Embed] metadata, the
+            //assigned value node won't be null, but its start/end will be -1!
+            if (startIndex != -1
+                    && endIndex != -1
+                    //just to be safe
+                    && startIndex < endIndex
+                    //see BowlerHatLLC/vscode-nextgenas#234 for an example where
+                    //the index values could be out of range!
+                    && startIndex <= text.length()
+                    && endIndex <= text.length())
+            {
+                assignedValue = text.substring(startIndex, endIndex);
+            }
+        }
+
+        String indent = ASTUtils.getIndentBeforeNode(variableNode, text);
+
+        StringBuilder builder = new StringBuilder();
+        builder.append(IASKeywordConstants.PRIVATE);
+        builder.append(" ");
+        if(isStatic)
+        {
+            builder.append(IASKeywordConstants.STATIC);
+            builder.append(" ");
+        }
+        builder.append(IASKeywordConstants.VAR);
+        builder.append(" _");
+        builder.append(name);
+        if(type != null && type.length() > 0)
+        {
+            builder.append(":" + type);
+        }
+        if(assignedValue != null)
+        {
+            builder.append(" = " + assignedValue);
+        }
+        builder.append(";");
+        if (generateGetter)
+        {
+			builder.append(NEW_LINE);
+			builder.append(NEW_LINE);
+			builder.append(indent);
+			builder.append(namespace);
+			builder.append(SPACE);
+            if(isStatic)
+            {
+                builder.append(IASKeywordConstants.STATIC);
+                builder.append(" ");
+            }
+            builder.append(IASKeywordConstants.FUNCTION);
+			builder.append(" ");
+            builder.append(IASKeywordConstants.GET);
+            builder.append(" ");
+            builder.append(name);
+            builder.append("()");
+            if(type != null && type.length() > 0)
+            {
+                builder.append(":" + type);
+            }
+            builder.append(NEW_LINE);
+			builder.append(indent);
+			builder.append("{");
+			builder.append(NEW_LINE);
+			builder.append(indent);
+			builder.append(INDENT); //extra indent
+            builder.append(IASKeywordConstants.RETURN);
+            builder.append(" _");
+            builder.append(name);
+            builder.append(";");
+			builder.append(NEW_LINE);
+			builder.append(indent);
+            builder.append("}");
+        }
+        if (generateSetter)
+        {
+			builder.append(NEW_LINE);
+			builder.append(NEW_LINE);
+			builder.append(indent);
+			builder.append(namespace);
+			builder.append(SPACE);
+            if(isStatic)
+            {
+                builder.append(IASKeywordConstants.STATIC);
+                builder.append(" ");
+            }
+            builder.append(IASKeywordConstants.FUNCTION);
+			builder.append(" ");
+            builder.append(IASKeywordConstants.SET);
+            builder.append(" ");
+            builder.append(name);
+            builder.append("(value");
+            if(type != null && type.length() > 0)
+            {
+                builder.append(":" + type);
+            }
+			builder.append("):");
+            builder.append(IASKeywordConstants.VOID);
+			builder.append(NEW_LINE);
+			builder.append(indent);
+			builder.append("{");
+			builder.append(NEW_LINE);
+			builder.append(indent);
+			builder.append(INDENT); //extra indent
+			builder.append("_" + name + " = value;");
+			builder.append(NEW_LINE);
+			builder.append(indent);
+            builder.append("}");
+        }
+
+        TextEdit edit = new TextEdit();
+        edit.setNewText(builder.toString());
+
+        
+        Range variableRange = LanguageServerCompilerUtils.getRangeFromSourceLocation(variableNode);
+        int startLine = variableRange.getStart().getLine();
+        int startChar = variableRange.getStart().getCharacter();
+        int endLine = variableRange.getEnd().getLine();
+        int endChar = variableRange.getEnd().getCharacter();
+
+        Position startPosition = new Position(startLine, startChar);
+        Position endPosition = new Position(endLine, endChar);
+
+        //we may need to adjust the end position to include the semi-colon
+		int offset = LanguageServerCompilerUtils.getOffsetFromPosition(new StringReader(text), endPosition);
+		if (offset < text.length() && text.charAt(offset) == ';')
+		{
+			endPosition.setCharacter(endChar + 1);
+		}
+
+        edit.setRange(new Range(startPosition, endPosition));
+        
+        return edit;
     }
 }

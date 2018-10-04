@@ -35,7 +35,6 @@ import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.ConcurrentModificationException;
@@ -130,7 +129,6 @@ import org.apache.royale.compiler.tree.mxml.IMXMLConcatenatedDataBindingNode;
 import org.apache.royale.compiler.tree.mxml.IMXMLEventSpecifierNode;
 import org.apache.royale.compiler.tree.mxml.IMXMLNode;
 import org.apache.royale.compiler.tree.mxml.IMXMLPropertySpecifierNode;
-import org.apache.royale.compiler.tree.mxml.IMXMLScriptNode;
 import org.apache.royale.compiler.tree.mxml.IMXMLSingleDataBindingNode;
 import org.apache.royale.compiler.tree.mxml.IMXMLSpecifierNode;
 import org.apache.royale.compiler.units.ICompilationUnit;
@@ -139,8 +137,6 @@ import org.apache.royale.compiler.workspaces.IWorkspace;
 import org.apache.royale.utils.FilenameNormalization;
 
 import com.google.common.io.Files;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.as3mxml.asconfigc.ASConfigC;
@@ -158,7 +154,6 @@ import com.as3mxml.vscode.project.WorkspaceFolderData;
 import com.as3mxml.vscode.services.ActionScriptLanguageClient;
 import com.as3mxml.vscode.utils.ASTUtils;
 import com.as3mxml.vscode.utils.CodeActionsUtils;
-import com.as3mxml.vscode.utils.CodeGenerationUtils;
 import com.as3mxml.vscode.utils.CompilerProblemFilter;
 import com.as3mxml.vscode.utils.CompilerProjectUtils;
 import com.as3mxml.vscode.utils.CompletionItemUtils;
@@ -1261,7 +1256,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     if (ast != null)
                     {
                         String fileText = sourceByPath.get(path);
-                        CodeActionsUtils.findCodeActions(ast, currentProject, path, fileText, params.getRange(), codeActions);
+                        CodeActionsUtils.findCodeActions(ast, currentProject, textDocument.getUri(), fileText, params.getRange(), codeActions);
                     }
                 }
                 cancelToken.checkCanceled();
@@ -1367,23 +1362,28 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return;
         }
+        Path pathForImport = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocument.getUri());
+        if(pathForImport == null)
+        {
+            return;
+        }
+        String fileText = getFileTextForPath(pathForImport);
+        if(fileText == null)
+        {
+            return;
+        }
 
-        String identifierName = identifierNode.getName();
-        Command command = new Command();
-        command.setTitle("Generate Field Variable");
-        command.setCommand(ICommandConstants.GENERATE_FIELD_VARIABLE);
-        command.setArguments(Arrays.asList(
-            textDocument.getUri(),
-            diagnostic.getRange().getStart().getLine(),
-            diagnostic.getRange().getStart().getCharacter(),
-            diagnostic.getRange().getEnd().getLine(),
-            diagnostic.getRange().getEnd().getCharacter(),
-            identifierName
-        ));
+        WorkspaceEdit edit = CodeActionsUtils.createWorkspaceEditForGenerateFieldVariable(
+            identifierNode, textDocument.getUri(), fileText);
+        if(edit == null)
+        {
+            return;
+        }
+        
         CodeAction codeAction = new CodeAction();
         codeAction.setDiagnostics(Collections.singletonList(diagnostic));
-        codeAction.setTitle(command.getTitle());
-        codeAction.setCommand(command);
+        codeAction.setTitle("Generate Field Variable");
+        codeAction.setEdit(edit);
         codeAction.setKind(CodeActionKind.QuickFix);
         codeActions.add(Either.forRight(codeAction));
     }
@@ -1400,23 +1400,28 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return;
         }
+        Path pathForImport = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocument.getUri());
+        if(pathForImport == null)
+        {
+            return;
+        }
+        String fileText = getFileTextForPath(pathForImport);
+        if(fileText == null)
+        {
+            return;
+        }
 
-        String identifierName = identifierNode.getName();
-        Command command = new Command();
-        command.setTitle("Generate Local Variable");
-        command.setCommand(ICommandConstants.GENERATE_LOCAL_VARIABLE);
-        command.setArguments(Arrays.asList(
-            textDocument.getUri(),
-            diagnostic.getRange().getStart().getLine(),
-            diagnostic.getRange().getStart().getCharacter(),
-            diagnostic.getRange().getEnd().getLine(),
-            diagnostic.getRange().getEnd().getCharacter(),
-            identifierName
-        ));
+        WorkspaceEdit edit = CodeActionsUtils.createWorkspaceEditForGenerateLocalVariable(
+            identifierNode, textDocument.getUri(), fileText);
+        if(edit == null)
+        {
+            return;
+        }
+
         CodeAction codeAction = new CodeAction();
         codeAction.setDiagnostics(Collections.singletonList(diagnostic));
-        codeAction.setTitle(command.getTitle());
-        codeAction.setCommand(command);
+        codeAction.setTitle("Generate Local Variable");
+        codeAction.setEdit(edit);
         codeAction.setKind(CodeActionKind.QuickFix);
         codeActions.add(Either.forRight(codeAction));
     }
@@ -1430,71 +1435,51 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         IASNode offsetNode = getOffsetNode(textDocument, diagnostic.getRange().getStart());
         IASNode parentNode = offsetNode.getParent();
+
         IFunctionCallNode functionCallNode = null;
-        String functionName = null;
         if (offsetNode instanceof IFunctionCallNode)
         {
             functionCallNode = (IFunctionCallNode) offsetNode;
-            functionName = functionCallNode.getFunctionName();
         }
         else if (parentNode instanceof IFunctionCallNode)
         {
             functionCallNode = (IFunctionCallNode) offsetNode.getParent();
-            functionName = functionCallNode.getFunctionName();
         }
         else if(offsetNode instanceof IIdentifierNode
                 && parentNode instanceof IMemberAccessExpressionNode)
         {
-            IMemberAccessExpressionNode memberAccessExpressionNode = (IMemberAccessExpressionNode) offsetNode.getParent();
-            IExpressionNode leftOperandNode = memberAccessExpressionNode.getLeftOperandNode();
-            if (leftOperandNode instanceof ILanguageIdentifierNode)
+            IASNode gpNode = parentNode.getParent();
+            if (gpNode instanceof IFunctionCallNode)
             {
-                ILanguageIdentifierNode leftIdentifierNode = (ILanguageIdentifierNode) leftOperandNode;
-                IASNode gpNode = parentNode.getParent();
-                if (leftIdentifierNode.getKind() == ILanguageIdentifierNode.LanguageIdentifierKind.THIS
-                        && gpNode instanceof IFunctionCallNode)
-                {
-                    functionCallNode = (IFunctionCallNode) gpNode;
-                    IIdentifierNode rightIdentifierNode = (IIdentifierNode) offsetNode;
-                    functionName = rightIdentifierNode.getName();
-                }
+                functionCallNode = (IFunctionCallNode) gpNode;
             }
         }
-        if (functionCallNode == null || functionName == null || functionName.length() == 0 || functionCallNode.isNewExpression())
+        if (functionCallNode == null)
+        {
+            return;
+        }
+        Path pathForImport = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocument.getUri());
+        if(pathForImport == null)
+        {
+            return;
+        }
+        String fileText = getFileTextForPath(pathForImport);
+        if(fileText == null)
         {
             return;
         }
 
-        ArrayList<String> argTypes = new ArrayList<>();
-        for (IExpressionNode arg : functionCallNode.getArgumentNodes())
+        WorkspaceEdit edit = CodeActionsUtils.createWorkspaceEditForGenerateMethod(
+            functionCallNode, textDocument.getUri(), fileText, project);
+        if(edit == null)
         {
-            ITypeDefinition typeDefinition = arg.resolveType(project);
-            if (typeDefinition != null)
-            {
-                argTypes.add(typeDefinition.getQualifiedName());
-            }
-            else
-            {
-                argTypes.add(IASLanguageConstants.Object);
-            }
+            return;
         }
 
-        Command command = new Command();
-        command.setTitle("Generate Method");
-        command.setCommand(ICommandConstants.GENERATE_METHOD);
-        command.setArguments(Arrays.asList(
-            textDocument.getUri(),
-            diagnostic.getRange().getStart().getLine(),
-            diagnostic.getRange().getStart().getCharacter(),
-            diagnostic.getRange().getEnd().getLine(),
-            diagnostic.getRange().getEnd().getCharacter(),
-            functionName,
-            argTypes.toArray()
-        ));
         CodeAction codeAction = new CodeAction();
         codeAction.setDiagnostics(Collections.singletonList(diagnostic));
-        codeAction.setTitle(command.getTitle());
-        codeAction.setCommand(command);
+        codeAction.setTitle("Generate Method");
+        codeAction.setEdit(edit);
         codeAction.setKind(CodeActionKind.QuickFix);
         codeActions.add(Either.forRight(codeAction));
     }
@@ -1513,7 +1498,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         ImportRange importRange = ImportRange.fromOffsetNode(offsetNode);
         String uri = importRange.uri;
-        Path pathForImport = Paths.get(URI.create(uri));
+        Path pathForImport = LanguageServerCompilerUtils.getPathFromLanguageServerURI(uri);
+        if(pathForImport == null)
+        {
+            return;
+        }
         String fileText = getFileTextForPath(pathForImport);
         if(fileText == null)
         {
@@ -1699,42 +1688,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     case ICommandConstants.ORGANIZE_IMPORTS_IN_DIRECTORY:
                     {
                         executeOrganizeImportsInDirectoryCommand(params);
-                        result = new Object();
-                        break;
-                    }
-                    case ICommandConstants.GENERATE_GETTER_AND_SETTER:
-                    {
-                        executeGenerateGetterAndSetterCommand(params, true, true);
-                        result = new Object();
-                        break;
-                    }
-                    case ICommandConstants.GENERATE_GETTER:
-                    {
-                        executeGenerateGetterAndSetterCommand(params, true, false);
-                        result = new Object();
-                        break;
-                    }
-                    case ICommandConstants.GENERATE_SETTER:
-                    {
-                        executeGenerateGetterAndSetterCommand(params, false, true);
-                        result = new Object();
-                        break;
-                    }
-                    case ICommandConstants.GENERATE_LOCAL_VARIABLE:
-                    {
-                        executeGenerateLocalVariableCommand(params);
-                        result = new Object();
-                        break;
-                    }
-                    case ICommandConstants.GENERATE_FIELD_VARIABLE:
-                    {
-                        executeGenerateFieldVariableCommand(params);
-                        result = new Object();
-                        break;
-                    }
-                    case ICommandConstants.GENERATE_METHOD:
-                    {
-                        executeGenerateMethodCommand(params);
                         result = new Object();
                         break;
                     }
@@ -7138,236 +7091,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         ApplyWorkspaceEditParams editParams = new ApplyWorkspaceEditParams();
         editParams.setEdit(workspaceEdit);
 
-        languageClient.applyEdit(editParams);
-    }
-    
-    private void executeGenerateLocalVariableCommand(ExecuteCommandParams params)
-    {
-        List<Object> args = params.getArguments();
-        String uri = ((JsonPrimitive) args.get(0)).getAsString();
-        int startLine = ((JsonPrimitive) args.get(1)).getAsInt();
-        int startChar = ((JsonPrimitive) args.get(2)).getAsInt();
-        //int endLine = ((JsonPrimitive) args.get(3)).getAsInt();
-        //int endChar = ((JsonPrimitive) args.get(4)).getAsInt();
-        String name = ((JsonPrimitive) args.get(5)).getAsString();
-
-        TextDocumentIdentifier identifier = new TextDocumentIdentifier(uri);
-        Position position = new Position(startLine, startChar);
-        IASNode offsetNode = getOffsetNode(identifier, position);
-        if (offsetNode == null)
-        {
-            return;
-        }
-        IFunctionNode functionNode = (IFunctionNode) offsetNode.getAncestorOfType(IFunctionNode.class);
-        if (functionNode == null)
-        {
-            return;
-        }
-        IScopedNode scopedNode = functionNode.getScopedNode();
-        if (scopedNode == null)
-        {
-            return;
-        }
-
-        Path pathForImport = Paths.get(URI.create(uri));
-        String fileText = sourceByPath.get(pathForImport);
-        String indent = ASTUtils.getIndentBeforeNode(offsetNode, fileText);
-
-        ApplyWorkspaceEditParams editParams = new ApplyWorkspaceEditParams();
-        
-        int endLine = scopedNode.getLine();
-        int endChar = scopedNode.getColumn() + 1;
-        WorkspaceEdit workspaceEdit = CodeGenerationUtils.createGenerateLocalVariableWorkspaceEdit(
-            uri, startLine, startChar, endLine, endChar, name, indent);
-        editParams.setEdit(workspaceEdit);
-        languageClient.applyEdit(editParams);
-    }
-    
-    private void executeGenerateFieldVariableCommand(ExecuteCommandParams params)
-    {
-        List<Object> args = params.getArguments();
-        String uri = ((JsonPrimitive) args.get(0)).getAsString();
-        int startLine = ((JsonPrimitive) args.get(1)).getAsInt();
-        int startChar = ((JsonPrimitive) args.get(2)).getAsInt();
-        //int endLine = ((JsonPrimitive) args.get(3)).getAsInt();
-        //int endChar = ((JsonPrimitive) args.get(4)).getAsInt();
-        String name = ((JsonPrimitive) args.get(5)).getAsString();
-        
-        int endLine = -1;
-        String indent = "";
-        
-        TextDocumentIdentifier identifier = new TextDocumentIdentifier(uri);
-        Position position = new Position(startLine, startChar);
-        IASNode offsetNode = getOffsetNode(identifier, position);
-        if (offsetNode == null)
-        {
-            return;
-        }
-        IMXMLScriptNode scriptNode = (IMXMLScriptNode) offsetNode.getAncestorOfType(IMXMLScriptNode.class);
-        if (scriptNode != null)
-        {
-            IASNode[] nodes = scriptNode.getASNodes();
-            int nodeCount = nodes.length;
-            if (nodeCount == 0)
-            {
-                return;
-            }
-            IASNode finalNode = nodes[nodeCount - 1];
-            endLine = finalNode.getEndLine() + 1;
-
-            Path pathForImport = Paths.get(URI.create(uri));
-            String fileText = sourceByPath.get(pathForImport);
-            indent = ASTUtils.getIndentBeforeNode(finalNode, fileText);
-        }
-        else
-        {
-            IClassNode classNode = (IClassNode) offsetNode.getAncestorOfType(IClassNode.class);
-            if (classNode == null)
-            {
-                return;
-            }
-            IScopedNode scopedNode = classNode.getScopedNode();
-            if (scopedNode == null)
-            {
-                return;
-            }
-            endLine = scopedNode.getEndLine();
-
-            IFunctionNode functionNode = (IFunctionNode) offsetNode.getAncestorOfType(IFunctionNode.class);
-            if (functionNode != null)
-            {
-                Path pathForImport = Paths.get(URI.create(uri));
-                String fileText = sourceByPath.get(pathForImport);
-                indent = ASTUtils.getIndentBeforeNode(functionNode, fileText);
-            }
-        }
-        
-        int endChar = 0;
-        ApplyWorkspaceEditParams editParams = new ApplyWorkspaceEditParams();
-        WorkspaceEdit workspaceEdit = CodeGenerationUtils.createGenerateFieldWorkspaceEdit(
-            uri, startLine, startChar, endLine, endChar, name, indent);
-        editParams.setEdit(workspaceEdit);
-
-        languageClient.applyEdit(editParams);
-    }
-    
-    private void executeGenerateMethodCommand(ExecuteCommandParams params)
-    {
-        List<Object> args = params.getArguments();
-        String uri = ((JsonPrimitive) args.get(0)).getAsString();
-        int startLine = ((JsonPrimitive) args.get(1)).getAsInt();
-        int startChar = ((JsonPrimitive) args.get(2)).getAsInt();
-        //int endLine = ((JsonPrimitive) args.get(3)).getAsInt();
-        //int endChar = ((JsonPrimitive) args.get(4)).getAsInt();
-        String name = ((JsonPrimitive) args.get(5)).getAsString();
-
-        ArrayList<String> methodArgs = null;
-        JsonElement methodArgsRaw = (JsonElement) args.get(6);
-        if (methodArgsRaw.isJsonArray())
-        {
-            JsonArray methodArgsJson = methodArgsRaw.getAsJsonArray();
-            methodArgs = new ArrayList<>();
-            for (int i = 0, count = methodArgsJson.size(); i < count; i++)
-            {
-                methodArgs.add(methodArgsJson.get(i).getAsString());
-            }
-        }
-
-        int endLine = -1;
-        String indent = "";
-
-        TextDocumentIdentifier identifier = new TextDocumentIdentifier(uri);
-        Position position = new Position(startLine, startChar);
-        IASNode offsetNode = getOffsetNode(identifier, position);
-        if (offsetNode == null)
-        {
-            return;
-        }
-        IMXMLScriptNode scriptNode = (IMXMLScriptNode) offsetNode.getAncestorOfType(IMXMLScriptNode.class);
-        if (scriptNode != null)
-        {
-            IASNode[] nodes = scriptNode.getASNodes();
-            int nodeCount = nodes.length;
-            if (nodeCount == 0)
-            {
-                return;
-            }
-            IASNode finalNode = nodes[nodeCount - 1];
-            endLine = finalNode.getEndLine() + 1;
-
-            Path pathForImport = Paths.get(URI.create(uri));
-            String fileText = sourceByPath.get(pathForImport);
-            indent = ASTUtils.getIndentBeforeNode(finalNode, fileText);
-        }
-        else
-        {
-            IClassNode classNode = (IClassNode) offsetNode.getAncestorOfType(IClassNode.class);
-            if (classNode == null)
-            {
-                return;
-            }
-            IScopedNode scopedNode = classNode.getScopedNode();
-            if (scopedNode == null)
-            {
-                return;
-            }
-            endLine = scopedNode.getEndLine();
-
-            IFunctionNode functionNode = (IFunctionNode) offsetNode.getAncestorOfType(IFunctionNode.class);
-            if (functionNode != null)
-            {
-                Path pathForImport = Paths.get(URI.create(uri));
-                String fileText = sourceByPath.get(pathForImport);
-                indent = ASTUtils.getIndentBeforeNode(functionNode, fileText);
-            }
-        }
-        ImportRange importRange = ImportRange.fromOffsetNode(offsetNode);
-        
-        int endChar = 0;
-        Path pathForImport = Paths.get(URI.create(uri));
-        String fileText = sourceByPath.get(pathForImport);
-        ApplyWorkspaceEditParams editParams = new ApplyWorkspaceEditParams();
-        WorkspaceEdit workspaceEdit = CodeGenerationUtils.createGenerateMethodWorkspaceEdit(
-            uri, startLine, startChar, endLine, endChar,
-            name, methodArgs, importRange, indent, fileText);
-        editParams.setEdit(workspaceEdit);
-
-        languageClient.applyEdit(editParams);
-    }
-
-    private void executeGenerateGetterAndSetterCommand(ExecuteCommandParams params, boolean generateGetter, boolean generateSetter)
-    {
-        List<Object> args = params.getArguments();
-        String uri = ((JsonPrimitive) args.get(0)).getAsString();
-        int startLine = ((JsonPrimitive) args.get(1)).getAsInt();
-        int startChar = ((JsonPrimitive) args.get(2)).getAsInt();
-        int endLine = ((JsonPrimitive) args.get(3)).getAsInt();
-        int endChar = ((JsonPrimitive) args.get(4)).getAsInt();
-        String name = ((JsonPrimitive) args.get(5)).getAsString();
-        String namespace = ((JsonPrimitive) args.get(6)).getAsString();
-        boolean isStatic = ((JsonPrimitive) args.get(7)).getAsBoolean();
-        String type = ((JsonPrimitive) args.get(8)).getAsString();
-        String assignedValue = null;
-        JsonElement assignedValueArg = (JsonElement) args.get(9);
-        if(assignedValueArg instanceof JsonPrimitive)
-        {
-            assignedValue = assignedValueArg.getAsString();
-        }
-
-        Path path = Paths.get(URI.create(uri));
-        String fileText = sourceByPath.get(path);
-
-        TextDocumentIdentifier identifier = new TextDocumentIdentifier(uri);
-        Position position = new Position(startLine, startChar);
-        IASNode offsetNode = getOffsetNode(identifier, position);
-        String indent = ASTUtils.getIndentBeforeNode(offsetNode, fileText);
-
-        ApplyWorkspaceEditParams editParams = new ApplyWorkspaceEditParams();
-        WorkspaceEdit workspaceEdit = CodeGenerationUtils.createGenerateGetterAndSetterWorkspaceEdit(
-            uri, startLine, startChar, endLine, endChar,
-            name, namespace, isStatic, type, assignedValue,
-            fileText, indent, generateGetter, generateSetter);
-        editParams.setEdit(workspaceEdit);
         languageClient.applyEdit(editParams);
     }
 

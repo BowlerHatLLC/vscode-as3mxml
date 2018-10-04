@@ -413,11 +413,15 @@ public class ASTUtils
 
     public static String getIndentBeforeNode(IASNode node, String fileText)
     {
-        int indentLength = node.getColumn();
-        int indentStart = node.getAbsoluteStart() - indentLength;
-        if (indentStart != -1 && indentLength != -1)
+        return getIndentFromOffsetAndColumn(node.getAbsoluteStart(), node.getColumn(), fileText);
+    }
+
+    public static String getIndentFromOffsetAndColumn(int offset, int column, String fileText)
+    {
+        int indentStart = offset - column;
+        if (indentStart != -1 && column != -1)
         {
-            return fileText.substring(indentStart, indentStart + indentLength);
+            return fileText.substring(indentStart, indentStart + column);
         }
         return "";
     }

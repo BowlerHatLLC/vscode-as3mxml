@@ -17,12 +17,6 @@ package com.as3mxml.vscode.commands;
 
 public interface ICommandConstants
 {
-	public static final String GENERATE_GETTER = "as3mxml.generateGetter";
-	public static final String GENERATE_SETTER = "as3mxml.generateSetter";
-	public static final String GENERATE_GETTER_AND_SETTER = "as3mxml.generateGetterAndSetter";
-	public static final String GENERATE_LOCAL_VARIABLE = "as3mxml.generateLocalVariable";
-	public static final String GENERATE_FIELD_VARIABLE = "as3mxml.generateFieldVariable";
-	public static final String GENERATE_METHOD = "as3mxml.generateMethod";
 	public static final String ADD_IMPORT = "as3mxml.addImport";
 	public static final String ADD_MXML_NAMESPACE = "as3mxml.addMXMLNamespace";
 	public static final String ORGANIZE_IMPORTS_IN_URI = "as3mxml.organizeImportsInUri";
