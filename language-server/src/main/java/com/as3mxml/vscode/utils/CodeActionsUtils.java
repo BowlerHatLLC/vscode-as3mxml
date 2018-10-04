@@ -84,10 +84,10 @@ public class CodeActionsUtils
         }
     }
 
-    private static void createCommandsForGenerateGetterAndSetter(IVariableNode variableNode, Path path, String fileText, Range range, List<Either<Command, CodeAction>> codeActions)
+    private static void createCommandsForGenerateGetterAndSetter(IVariableNode variableNode, Path path, String fileText, Range codeActionsRange, List<Either<Command, CodeAction>> codeActions)
     {
         Range variableRange = LanguageServerCompilerUtils.getRangeFromSourceLocation(variableNode);
-        if(!LSPUtils.rangesIntersect(variableRange, range))
+        if(!LSPUtils.rangesIntersect(variableRange, codeActionsRange))
         {
             return;
         }
@@ -116,10 +116,10 @@ public class CodeActionsUtils
         getAndSetCommand.setCommand(ICommandConstants.GENERATE_GETTER_AND_SETTER);
         getAndSetCommand.setArguments(Arrays.asList(
             path.toUri().toString(),
-            range.getStart().getLine(),
-            range.getStart().getCharacter(),
-            range.getEnd().getLine(),
-            range.getEnd().getCharacter(),
+            variableRange.getStart().getLine(),
+            variableRange.getStart().getCharacter(),
+            variableRange.getEnd().getLine(),
+            variableRange.getEnd().getCharacter(),
             variableNode.getName(),
             variableNode.getNamespace(),
             variableNode.hasModifier(ASModifier.STATIC),
@@ -137,10 +137,10 @@ public class CodeActionsUtils
         getterCommand.setCommand(ICommandConstants.GENERATE_GETTER);
         getterCommand.setArguments(Arrays.asList(
             path.toUri().toString(),
-            range.getStart().getLine(),
-            range.getStart().getCharacter(),
-            range.getEnd().getLine(),
-            range.getEnd().getCharacter(),
+            variableRange.getStart().getLine(),
+            variableRange.getStart().getCharacter(),
+            variableRange.getEnd().getLine(),
+            variableRange.getEnd().getCharacter(),
             variableNode.getName(),
             variableNode.getNamespace(),
             variableNode.hasModifier(ASModifier.STATIC),
@@ -158,10 +158,10 @@ public class CodeActionsUtils
         setterCommand.setCommand(ICommandConstants.GENERATE_SETTER);
         setterCommand.setArguments(Arrays.asList(
             path.toUri().toString(),
-            range.getStart().getLine(),
-            range.getStart().getCharacter(),
-            range.getEnd().getLine(),
-            range.getEnd().getCharacter(),
+            variableRange.getStart().getLine(),
+            variableRange.getStart().getCharacter(),
+            variableRange.getEnd().getLine(),
+            variableRange.getEnd().getCharacter(),
             variableNode.getName(),
             variableNode.getNamespace(),
             variableNode.hasModifier(ASModifier.STATIC),
