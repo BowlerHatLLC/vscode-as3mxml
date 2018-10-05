@@ -340,7 +340,6 @@ public class CodeActionsUtils
         String indent = ASTUtils.getIndentBeforeNode(firstChild, text);
 
         StringBuilder builder = new StringBuilder();
-		builder.append(NEW_LINE);
         builder.append(indent);
         builder.append(IASKeywordConstants.VAR);
         builder.append(" ");
@@ -348,10 +347,11 @@ public class CodeActionsUtils
 		builder.append(":");
 		builder.append(IASLanguageConstants.Object);
 		builder.append(";");
+		builder.append(NEW_LINE);
 
         TextEdit textEdit = new TextEdit();
         textEdit.setNewText(builder.toString());
-        Position editPosition = new Position(scopedNode.getLine(), scopedNode.getColumn() + 1);
+        Position editPosition = new Position(scopedNode.getLine() + 1, 0);
         textEdit.setRange(new Range(editPosition, editPosition));
         return textEdit;
 	}
@@ -734,7 +734,6 @@ public class CodeActionsUtils
 
         TextEdit edit = new TextEdit();
         edit.setNewText(builder.toString());
-
         
         Range variableRange = LanguageServerCompilerUtils.getRangeFromSourceLocation(variableNode);
         int startLine = variableRange.getStart().getLine();
