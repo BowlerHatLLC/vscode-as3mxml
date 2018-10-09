@@ -1,8 +1,5 @@
 package com.as3mxml.asconfigc.htmlTemplate;
 
-import java.util.Arrays;
-import java.util.List;
-
 public class HTMLTemplateOptions
 {
 	public static final String TITLE = "title";
@@ -16,19 +13,4 @@ public class HTMLTemplateOptions
 	public static final String SWF = "swf";
 	public static final String WIDTH = "width";
 	public static final String HEIGHT = "height";
-	//don't forget to add new options to the ALL_OPTIONS list
-
-	public static final List<String> ALL_OPTIONS = Arrays.asList(
-		TITLE,
-		BGCOLOR,
-		USE_BROWSER_HISTORY,
-		VERSION_MAJOR,
-		VERSION_MINOR,
-		VERSION_REVISION,
-		EXPRESS_INSTALL_SWF,
-		APPLICATION,
-		SWF,
-		WIDTH,
-		HEIGHT
-	);
 }

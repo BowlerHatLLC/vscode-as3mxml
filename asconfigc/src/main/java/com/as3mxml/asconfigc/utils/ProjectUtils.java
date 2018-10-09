@@ -352,12 +352,8 @@ public class ProjectUtils
 		{
 			return contents;
 		}
-		for(String option : HTMLTemplateOptions.ALL_OPTIONS)
+		for(String option : templateOptions.keySet())
 		{
-			if(!templateOptions.containsKey(option))
-			{
-				continue;
-			}
 			String token = "${" + option + "}";
 			contents = contents.replace(token, templateOptions.get(option));
 		}
