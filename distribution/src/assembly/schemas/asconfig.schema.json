@@ -17,6 +17,7 @@
 				"airOptions": { "$ref": "#/definitions/airOptions" },
 				"copySourcePathAssets": { "$ref": "#/definitions/copySourcePathAssets" },
 				"config": { "$ref": "#/definitions/config" },
+				"htmlTemplate": { "$ref": "#/definitions/htmlTemplate" },
 				"files": { "$ref": "#/definitions/files" }
 			},
 			"required": ["files"]
@@ -45,6 +46,11 @@
 		{
 			"type": "string",
 			"description": "Additional options to send to the compiler, formatted as command line arguments. Useful for testing new options that are not yet supported by the compilerOptions field of asconfig.json."
+		},
+		"htmlTemplate":
+		{
+			"type": "string",
+			"description": "Path to a folder containing an HTML template for a SWF project that will be copied to the output folder. Text files may contain tokens that will be automatically replace. Not to be confused with html-template compiler option used by Apache Royale."
 		},
 		"singleSigningOptions":
 		{
@@ -382,6 +388,11 @@
 					"type": "string",
 					"description": "In a SWF project, an optional password for remote debugging."
 				},
+				"default-background-color":
+				{
+					"type": "string",
+					"description": "In a SWF project, sets the application's background color."
+				},
 				"default-frame-rate":
 				{
 					"type": "number",
@@ -504,7 +515,7 @@
 				"html-template":
 				{
 					"type": "string",
-					"description": "In an Apache Royale project, specifies a custom HTML template file."
+					"description": "In an Apache Royale project, specifies a custom HTML template file. For SWF projects, use the top-level htmlTemplate field instead."
 				},
 				"include-sources":
 				{

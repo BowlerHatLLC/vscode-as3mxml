@@ -84,6 +84,11 @@ public class CompilerOptionsParser
 					OptionsFormatter.setValue(key, options.get(key).asText(), result);
 					break;
 				}
+				case CompilerOptions.DEFAULT_BACKGROUND_COLOR:
+				{
+					OptionsFormatter.setValue(key, options.get(key).asText(), result);
+					break;
+				}
 				case CompilerOptions.DEFAULT_FRAME_RATE:
 				{
 					OptionsFormatter.setValue(key, options.get(key).asText(), result);

@@ -22,6 +22,7 @@ public class CompilerOptions
 	public static final String BENCHMARK = "benchmark";
 	public static final String DEBUG = "debug";
 	public static final String DEBUG_PASSWORD = "debug-password";
+	public static final String DEFAULT_BACKGROUND_COLOR = "default-background-color";
 	public static final String DEFAULT_FRAME_RATE = "default-frame-rate";
 	public static final String DEFAULT_SIZE = "default-size";
 	public static final String DEFINE = "define";

@@ -23,8 +23,10 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import com.as3mxml.asconfigc.compiler.ProjectType;
+import com.as3mxml.asconfigc.htmlTemplate.HTMLTemplateOptions;
 
 public class ProjectUtils
 {
@@ -128,13 +130,8 @@ public class ProjectUtils
 		return outputValueParentPath.toString();
 	}
 
-	public static String findApplicationContent(String mainFile, String outputPath, boolean isSWF)
+	public static String findOutputFileName(String mainFile, String outputPath)
 	{
-		if(!isSWF)
-		{
-			//An Adobe AIR app for Royale will load an HTML file as its main content
-			return "index.html";
-		}
 		if(outputPath == null)
 		{
 			if(mainFile == null)
@@ -153,6 +150,16 @@ public class ProjectUtils
 			return fileName.substring(0, fileName.length() - extension.length()) + ".swf";
 		}
 		return Paths.get(outputPath).getFileName().toString();
+	}
+
+	public static String findApplicationContent(String mainFile, String outputPath, boolean isSWF)
+	{
+		if(!isSWF)
+		{
+			//An Adobe AIR app for Royale will load an HTML file as its main content
+			return "index.html";
+		}
+		return findOutputFileName(mainFile, outputPath);
 	}
 
 	public static Path findCompilerJarPath(String projectType, String sdkPath, boolean isSWF)
@@ -337,5 +344,23 @@ public class ProjectUtils
 	public static String populateAdobeAIRDescriptorContent(String descriptor, String contentValue)
 	{
 		return descriptor.replaceFirst("<content>.*<\\/content>", "<content>" + contentValue + "</content>");
+	}
+
+	public static String populateHTMLTemplateFile(String contents, Map<String,String> templateOptions)
+	{
+		if(templateOptions == null)
+		{
+			return contents;
+		}
+		for(String option : HTMLTemplateOptions.ALL_OPTIONS)
+		{
+			if(!templateOptions.containsKey(option))
+			{
+				continue;
+			}
+			String token = "${" + option + "}";
+			contents = contents.replace(token, templateOptions.get(option));
+		}
+		return contents;
 	}
 }

@@ -28,6 +28,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -58,6 +59,7 @@ import com.as3mxml.asconfigc.compiler.ConfigName;
 import com.as3mxml.asconfigc.compiler.JSOutputType;
 import com.as3mxml.asconfigc.compiler.ProjectType;
 import com.as3mxml.asconfigc.compiler.RoyaleTarget;
+import com.as3mxml.asconfigc.htmlTemplate.HTMLTemplateOptionsParser;
 import com.as3mxml.asconfigc.utils.ApacheFlexJSUtils;
 import com.as3mxml.asconfigc.utils.ApacheRoyaleUtils;
 import com.as3mxml.asconfigc.utils.GenericSDKUtils;
@@ -164,6 +166,7 @@ public class ASConfigC
 		validateSDK();
 		compileProject();
 		copySourcePathAssets();
+		copyHTMLTemplate();
 		processAdobeAIRDescriptor();
 		copyAIRFiles();
 		packageAIR();
@@ -189,6 +192,8 @@ public class ASConfigC
 	private boolean isSWFTargetOnly;
 	private boolean outputIsJS;
 	private String sdkHome;
+	private String htmlTemplate;
+	private Map<String,String> htmlTemplateOptions;
 
 	private File findConfigurationFile(String projectPath) throws ASConfigCException
 	{
@@ -379,6 +384,20 @@ public class ASConfigC
 		{
 			copySourcePathAssets = json.get(TopLevelFields.COPY_SOURCE_PATH_ASSETS).asBoolean();
 		}
+		if(json.has(TopLevelFields.HTML_TEMPLATE))
+		{
+			htmlTemplate = json.get(TopLevelFields.HTML_TEMPLATE).asText();
+
+			//the HTML template needs to be parsed after files and outputPath have
+			//both been parsed
+			JsonNode compilerOptionsJson = null;
+			if(json.has(TopLevelFields.COMPILER_OPTIONS))
+			{
+				compilerOptionsJson = json.get(TopLevelFields.COMPILER_OPTIONS);
+			}
+			readHTMLTemplateOptions(compilerOptionsJson);
+		}
+
 		//if js-output-type was not specified, use the default
 		//swf projects won't have a js-output-type
 		if(jsOutputType != null)
@@ -409,6 +428,21 @@ public class ASConfigC
 				configRequiresRoyale = true;
 				break;
 			}
+		}
+	}
+	
+	private void readHTMLTemplateOptions(JsonNode compilerOptionsJson) throws ASConfigCException
+	{
+		HTMLTemplateOptionsParser parser = new HTMLTemplateOptionsParser();
+		try
+		{
+			htmlTemplateOptions = parser.parse(compilerOptionsJson, mainFile, outputPath);
+		}
+		catch(Exception e)
+		{
+			StringWriter stackTrace = new StringWriter();
+			e.printStackTrace(new PrintWriter(stackTrace));
+			throw new ASConfigCException("Error: Failed to parse HTML template options.\n" + stackTrace.toString());
 		}
 	}
 	
@@ -622,6 +656,86 @@ public class ASConfigC
 			{
 				copySourcePathAssetToOutputDirectory(assetPath, mainFile, sourcePaths, outputDirectory);
 			}
+		}
+	}
+
+	private void copyHTMLTemplate() throws ASConfigCException
+	{
+		if(htmlTemplate == null)
+		{
+			//nothing to copy if this field is omitted
+			return;
+		}
+		File templateDirectory = new File(htmlTemplate);
+		if(!templateDirectory.exists())
+		{
+			throw new ASConfigCException("htmlTemplate directory does not exist: " + htmlTemplate);
+		}
+		if(!templateDirectory.isDirectory())
+		{
+			throw new ASConfigCException("htmlTemplate path must be a directory. Invalid path: " + htmlTemplate);
+		}
+
+		String outputDirectoryPath = ProjectUtils.findOutputDirectory(mainFile, outputPath, !outputIsJS);
+		File outputDirectory = new File(outputDirectoryPath);
+		copyHTMLTemplateDirectory(templateDirectory, outputDirectory);
+	}
+
+	private void copyHTMLTemplateDirectory(File inputDirectory, File outputDirectory) throws ASConfigCException
+	{
+		if(!outputDirectory.exists() && !outputDirectory.mkdirs())
+		{
+			throw new ASConfigCException("Failed to create output directory for HTML template: " + outputDirectory.getAbsolutePath() + ".");
+		}
+		try
+		{
+			for(File file : inputDirectory.listFiles())
+			{
+				if(file.isDirectory())
+				{
+					File newOutputDirectory = new File(outputDirectory, file.getName());
+					copyHTMLTemplateDirectory(file, newOutputDirectory);
+					continue;
+				}
+				String fileName = file.getName();
+				int extensionIndex = fileName.lastIndexOf('.');
+				if(extensionIndex != -1)
+				{
+					String extension = fileName.substring(extensionIndex);
+					String templateExtension = ".template" + extension;
+					if(fileName.endsWith(templateExtension))
+					{
+						String beforeExtension = fileName.substring(0, fileName.length() - templateExtension.length());
+						if(beforeExtension.equals("index"))
+						{
+							if(mainFile != null)
+							{
+								Path mainFilePath = Paths.get(mainFile);
+								//strip any directory names from the beginning
+								String mainFileName = mainFilePath.getFileName().toString();
+								int mainFileExtensionIndex = mainFileName.indexOf(".");
+								if(mainFileExtensionIndex != -1)
+								{
+									//exclude the file extension
+									beforeExtension = mainFileName.substring(0, mainFileExtensionIndex);
+								}
+							}
+						}
+						String contents = new String(Files.readAllBytes(file.toPath()));
+						contents = ProjectUtils.populateHTMLTemplateFile(contents, htmlTemplateOptions);
+						String outputFileName = beforeExtension + extension;
+						File outputFile = new File(outputDirectory, outputFileName);
+						Files.write(outputFile.toPath(), contents.getBytes());
+						continue;
+					}
+				}
+				File outputFile = new File(outputDirectory, fileName);
+				Files.copy(file.toPath(), outputFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+			}
+		}
+		catch(IOException e)
+		{
+			throw new ASConfigCException(e.getMessage());
 		}
 	}
 	
