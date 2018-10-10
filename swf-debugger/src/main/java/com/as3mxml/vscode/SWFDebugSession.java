@@ -107,6 +107,8 @@ public class SWFDebugSession extends DebugSession
     private static final String FILE_EXTENSION_XML = ".xml";
     private static final String ADL_BASE_NAME = "bin/adl";
     private static final String ADT_BASE_NAME = "bin/adt";
+    private static final String ADB_BASE_NAME = "lib/android/bin/adb";
+    private static final String IDB_BASE_NAME = "lib/aot/bin/iOSBin/idb";
     private static final String FLEXLIB_PROPERTY = "flexlib";
     private static final String WORKSPACE_PROPERTY = "workspace";
     private static final String SDK_PATH_SIGNATURE_UNIX = "/frameworks/projects/";
@@ -122,6 +124,8 @@ public class SWFDebugSession extends DebugSession
     private Path flexHome;
     private Path adlPath;
     private Path adtPath;
+    private Path adbPath;
+    private Path idbPath;
     private Map<String,PendingBreakpoints> pendingBreakpoints;
     private Map<String,LogLocation> savedLogLocations;
     private int nextBreakpointID = 1;
@@ -354,13 +358,19 @@ public class SWFDebugSession extends DebugSession
             flexHome = flexlib.getParent();
             String adlRelativePath = ADL_BASE_NAME;
             String adtRelativePath = ADT_BASE_NAME;
+            String adbRelativePath = ADB_BASE_NAME;
+            String idbRelativePath = IDB_BASE_NAME;
             if (System.getProperty("os.name").toLowerCase().startsWith("windows"))
             {
                 adlRelativePath += FILE_EXTENSION_EXE;
                 adtRelativePath += FILE_EXTENSION_BAT;
+                adbRelativePath += FILE_EXTENSION_EXE;
+                idbRelativePath += FILE_EXTENSION_EXE;
             }
             adlPath = flexHome.resolve(adlRelativePath);
             adtPath = flexHome.resolve(adtRelativePath);
+            adbPath = flexHome.resolve(adbRelativePath);
+            idbPath = flexHome.resolve(idbRelativePath);
         }
     }
 
@@ -602,7 +612,7 @@ public class SWFDebugSession extends DebugSession
         SWFAttachRequestArguments swfArgs = (SWFAttachRequestArguments) args;
         if(swfArgs.platform != null)
         {
-            if(!installOnDevice(swfArgs.platform))
+            if(!installOnDevice(swfArgs.platform, swfArgs.connect, swfArgs.port))
             {
                 response.success = false;
                 sendResponse(response);
@@ -619,7 +629,7 @@ public class SWFDebugSession extends DebugSession
         sendEvent(new OutputEvent(body));
     }
 
-    private boolean installOnDevice(String platform)
+    private boolean installOnDevice(String platform, boolean connect, int port)
     {
         sendOutputEvent("Preparing to install Adobe AIR application...\n");
         Path workspacePath = Paths.get(System.getProperty(WORKSPACE_PROPERTY));
@@ -659,6 +669,19 @@ public class SWFDebugSession extends DebugSession
             body.output = installResult.message + "\n";
             sendEvent(new OutputEvent(body));
             return false;
+        }
+        if(connect)
+        {
+            sendOutputEvent("Forwarding port " + port + " over USB...\n");
+            DeviceCommandResult forwardPortResult = DeviceInstallUtils.forwardPortCommand(platform, port, workspacePath, adbPath, idbPath);
+            if(forwardPortResult.error)
+            {
+                OutputEvent.OutputBody body = new OutputEvent.OutputBody();
+                body.category = "stderr";
+                body.output = forwardPortResult.message + "\n";
+                sendEvent(new OutputEvent(body));
+                return false;
+            }
         }
         if(platform.equals(PLATFORM_IOS))
         {

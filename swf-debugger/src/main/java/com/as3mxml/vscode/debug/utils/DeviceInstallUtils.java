@@ -261,4 +261,48 @@ public class DeviceInstallUtils
 		}
 		return new DeviceCommandResult(true, "Launching app on device failed for platform \"" + platform + "\" with status code: " + status + ".");
     }
+
+    public static DeviceCommandResult forwardPortCommand(String platform, int port, Path workspacePath, Path adbPath, Path idbPath)
+    {
+		ArrayList<String> options = new ArrayList<>();
+		if(platform.equals("ios"))
+		{
+			options.add(idbPath.toString());
+			options.add("-forward");
+			options.add(Integer.toString(port));
+			options.add(Integer.toString(port));
+		}
+		else if(platform.equals("android"))
+		{
+			options.add(adbPath.toString());
+			options.add("forward");
+			options.add("tcp:" + port);
+			options.add("tcp:" + port);
+		}
+
+		File cwd = workspacePath.toFile();
+		int status = -1;
+		try
+		{
+			Process process = new ProcessBuilder()
+				.command(options)
+				.directory(cwd)
+				.inheritIO()
+				.start();
+			status = process.waitFor();
+		}
+		catch(InterruptedException e)
+		{
+			return new DeviceCommandResult(true, "Forwarding port for debugging failed for platform \"" + platform + "\" and port " + port + " with error: " + e.toString());
+		}
+		catch(IOException e)
+		{
+			return new DeviceCommandResult(true, "Forwarding port for debugging failed for platform \"" + platform + "\" and port " + port + " with error: " + e.toString());
+		}
+		if(status == 0)
+		{
+			return new DeviceCommandResult(false);
+		}
+		return new DeviceCommandResult(true, "Forwarding port for debugging failed for platform \"" + platform + "\" and port " + port + " with status code: " + status + ".");
+    }
 }
