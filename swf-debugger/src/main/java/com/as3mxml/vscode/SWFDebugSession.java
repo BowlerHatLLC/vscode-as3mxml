@@ -116,6 +116,7 @@ public class SWFDebugSession extends DebugSession
     private static final String PLATFORM_IOS = "ios";
     private static final long LOCAL_VARIABLES_REFERENCE = 1;
     private ThreadSafeSession swfSession;
+    private Process swfRunProcess;
     private java.lang.Thread sessionThread;
     private boolean cancelRunner = false;
     private boolean waitingForResume = false;
@@ -152,6 +153,41 @@ public class SWFDebugSession extends DebugSession
 
         public Location location;
         public String logMessage;
+    }
+
+    private class RunProcessRunner implements Runnable
+    {
+        public RunProcessRunner()
+        {
+        }
+
+        public void run()
+        {
+            while (true)
+            {
+                if (cancelRunner)
+                {
+                    break;
+                }
+                try
+                {
+                    swfRunProcess.exitValue();
+                    cancelRunner = true;
+                    sendEvent(new TerminatedEvent());
+                }
+                catch(IllegalThreadStateException e)
+                {
+                    //safe to ignore
+                }
+                try
+                {
+                    java.lang.Thread.sleep(50);
+                }
+                catch (InterruptedException ie)
+                {
+                }
+            }
+        }
     }
 
     private class SessionRunner implements Runnable
@@ -390,6 +426,7 @@ public class SWFDebugSession extends DebugSession
         SWFLaunchRequestArguments swfArgs = (SWFLaunchRequestArguments) args;
         ThreadSafeSessionManager manager = ThreadSafeBootstrap.sessionManager();
         swfSession = null;
+        swfRunProcess = null;
         try
         {
             manager.startListening();
@@ -486,16 +523,30 @@ public class SWFDebugSession extends DebugSession
                     sendErrorResponse(response, 10001, "Error launching SWF debug session. Runtime not found for program: " + program);
                     return;
                 }
-                //notice that we use the value of launcher if it isn't null, but
-                //we don't actually use the value of player. player's purpose is
-                //more about verifying that a runtime can be auto-detected.
-                if(launcher != null)
+                if(swfArgs.noDebug)
                 {
-                    swfSession = (ThreadSafeSession) manager.launch(program, airLaunchInfo, true, null, null, launcher);
+                    if(launcher != null)
+                    {
+                        swfRunProcess = manager.launchForRun(program, airLaunchInfo, null, null, launcher);
+                    }
+                    else
+                    {
+                        swfRunProcess = manager.launchForRun(program, airLaunchInfo, null, null);
+                    }
                 }
                 else
                 {
-                    swfSession = (ThreadSafeSession) manager.launch(program, airLaunchInfo, true, null, null);
+                    //notice that we use the value of launcher if it isn't null, but
+                    //we don't actually use the value of player. player's purpose is
+                    //more about verifying that a runtime can be auto-detected.
+                    if(launcher != null)
+                    {
+                        swfSession = (ThreadSafeSession) manager.launch(program, airLaunchInfo, !swfArgs.noDebug, null, null, launcher);
+                    }
+                    else
+                    {
+                        swfSession = (ThreadSafeSession) manager.launch(program, airLaunchInfo, !swfArgs.noDebug, null, null);
+                    }
                 }
             }
         }
@@ -519,15 +570,18 @@ public class SWFDebugSession extends DebugSession
             sendErrorResponse(response, 10001, "Error launching SWF debug session.");
             return;
         }
-        try
+        if(swfSession != null)
         {
-            swfSession.bind();
-        }
-        catch (VersionException e)
-        {
-            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-            e.printStackTrace(new PrintStream(buffer));
-            sendOutputEvent("Exception in debugger: " + buffer.toString() + "\n");
+            try
+            {
+                swfSession.bind();
+            }
+            catch (VersionException e)
+            {
+                ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+                e.printStackTrace(new PrintStream(buffer));
+                sendOutputEvent("Exception in debugger: " + buffer.toString() + "\n");
+            }
         }
         try
         {
@@ -541,8 +595,16 @@ public class SWFDebugSession extends DebugSession
         }
         sendResponse(response);
         cancelRunner = false;
-        sessionThread = new java.lang.Thread(new SessionRunner());
-        sessionThread.start();
+        if(swfSession != null)
+        {
+            sessionThread = new java.lang.Thread(new SessionRunner());
+            sessionThread.start();
+        }
+        else if(swfRunProcess != null)
+        {
+            sessionThread = new java.lang.Thread(new RunProcessRunner());
+            sessionThread.start();
+        }
     }
 
     /**
@@ -707,6 +769,7 @@ public class SWFDebugSession extends DebugSession
     {
         ThreadSafeSessionManager manager = ThreadSafeBootstrap.sessionManager();
         swfSession = null;
+        swfRunProcess = null;
         try
         {
             manager.startListening();
@@ -772,6 +835,11 @@ public class SWFDebugSession extends DebugSession
         {
             swfSession.terminate();
             swfSession = null;
+        }
+        if (swfRunProcess != null)
+        {
+            swfRunProcess.destroy();
+            swfRunProcess = null;
         }
         sendResponse(response);
     }

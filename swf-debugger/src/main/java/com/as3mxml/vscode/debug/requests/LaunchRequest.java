@@ -28,6 +28,6 @@ public class LaunchRequest extends Request
         /**
          * If noDebug is true the launch request should launch the program without enabling debugging.
          */
-        public boolean noDebug;
+        public boolean noDebug = false;
     }
 }
