@@ -15,8 +15,11 @@ limitations under the License.
 */
 package com.as3mxml.vscode.debug.utils;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.lang.ProcessBuilder.Redirect;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -184,11 +187,11 @@ public class DeviceInstallUtils
 			return new DeviceCommandResult(true, "Device uninstall failed for platform \"" + platform + "\" with error: " + e.toString());
 		}
 		//14 imeans that the app isn't installed on the device, and that's fine
-		if(status == 0 || status == 14)
+		if(status != 0 && status != 14)
 		{
-			return new DeviceCommandResult(false);
+			return new DeviceCommandResult(true, "Device uninstall failed for platform \"" + platform + "\" with status code " + status + ".");
 		}
-		return new DeviceCommandResult(true, "Device uninstall failed for platform \"" + platform + "\" with status code " + status + ".");
+		return new DeviceCommandResult(false);
     }
 
     public static DeviceCommandResult runInstallCommand(String platform, Path packagePath, Path workspacePath, Path adtPath)
@@ -219,11 +222,11 @@ public class DeviceInstallUtils
 		{
 			return new DeviceCommandResult(true, "Installing app on device failed for platform \"" + platform + "\" with error: " + e.toString());
 		}
-		if(status == 0)
+		if(status != 0)
 		{
-			return new DeviceCommandResult(false);
+			return new DeviceCommandResult(true, "Installing app on device failed for platform \"" + platform + "\" with status code: " + status + ".");
 		}
-		return new DeviceCommandResult(true, "Installing app on device failed for platform \"" + platform + "\" with status code: " + status + ".");
+		return new DeviceCommandResult(false);
     }
 
     public static DeviceCommandResult runLaunchCommand(String platform, String appID, Path workspacePath, Path adtPath)
@@ -255,22 +258,62 @@ public class DeviceInstallUtils
 		{
 			return new DeviceCommandResult(true, "Launching app on device failed for platform \"" + platform + "\" with error: " + e.toString());
 		}
-		if(status == 0)
+		if(status != 0)
 		{
-			return new DeviceCommandResult(false);
+			return new DeviceCommandResult(true, "Launching app on device failed for platform \"" + platform + "\" with status code: " + status + ".");
 		}
-		return new DeviceCommandResult(true, "Launching app on device failed for platform \"" + platform + "\" with status code: " + status + ".");
+		return new DeviceCommandResult(false);
     }
+
+    public static void stopForwardPortCommand(String platform, int port, Path workspacePath, Path adbPath, Path idbPath)
+    {
+		ArrayList<String> options = new ArrayList<>();
+		if(platform.equals("ios"))
+		{
+			options.add(idbPath.toString());
+			options.add("-stopforward");
+			options.add(Integer.toString(port));
+		}
+		else if(platform.equals("android"))
+		{
+			options.add(adbPath.toString());
+			options.add("forward");
+			options.add("--remove");
+			options.add(Integer.toString(port));
+		}
+		File cwd = workspacePath.toFile();
+		try
+		{
+			Process process = new ProcessBuilder()
+				.command(options)
+				.directory(cwd)
+				.inheritIO()
+				.start();
+			process.waitFor();
+		}
+		catch(InterruptedException e)
+		{
+		}
+		catch(IOException e)
+		{
+		}
+	}
 
     public static DeviceCommandResult forwardPortCommand(String platform, int port, Path workspacePath, Path adbPath, Path idbPath)
     {
 		ArrayList<String> options = new ArrayList<>();
 		if(platform.equals("ios"))
 		{
+			String deviceHandle = findDeviceHandle(workspacePath, idbPath);
+			if(deviceHandle == null)
+			{
+				return new DeviceCommandResult(true, "Forwarding port for debugging failed for platform \"" + platform + "\" and port " + port + " because no connected devices could be found.");
+			}
 			options.add(idbPath.toString());
 			options.add("-forward");
 			options.add(Integer.toString(port));
 			options.add(Integer.toString(port));
+			options.add(deviceHandle);
 		}
 		else if(platform.equals("android"))
 		{
@@ -289,7 +332,23 @@ public class DeviceInstallUtils
 				.directory(cwd)
 				.inheritIO()
 				.start();
-			status = process.waitFor();
+			if(platform.equals("ios"))
+			{
+				//if idb starts successfully, it will continue running without
+				//exiting. we'll stop it later!
+				try
+				{
+					status = process.exitValue();
+				}
+				catch(IllegalThreadStateException e)
+				{
+					status = 0;
+				}
+			}
+			else
+			{
+				status = process.waitFor();
+			}
 		}
 		catch(InterruptedException e)
 		{
@@ -299,10 +358,72 @@ public class DeviceInstallUtils
 		{
 			return new DeviceCommandResult(true, "Forwarding port for debugging failed for platform \"" + platform + "\" and port " + port + " with error: " + e.toString());
 		}
-		if(status == 0)
+		if(status != 0)
 		{
-			return new DeviceCommandResult(false);
+			return new DeviceCommandResult(true, "Forwarding port for debugging failed for platform \"" + platform + "\" and port " + port + " with status code: " + status + ".");
 		}
-		return new DeviceCommandResult(true, "Forwarding port for debugging failed for platform \"" + platform + "\" and port " + port + " with status code: " + status + ".");
-    }
+		return new DeviceCommandResult(false);
+	}
+	
+	private static String findDeviceHandle(Path workspacePath, Path idbPath)
+	{
+		ArrayList<String> options = new ArrayList<>();
+		options.add(idbPath.toString());
+		options.add("-devices");
+
+		File cwd = workspacePath.toFile();
+		Process process = null;
+		int status = -1;
+		try
+		{
+			process = new ProcessBuilder()
+				.command(options)
+				.directory(cwd)
+				.redirectInput(Redirect.INHERIT)
+				.redirectError(Redirect.INHERIT)
+				.redirectOutput(Redirect.PIPE)
+				.start();
+			status = process.waitFor();
+		}
+		catch(InterruptedException e)
+		{
+			return null;
+		}
+		catch(IOException e)
+		{
+			return null;
+		}
+		if(status != 0)
+		{
+			return null;
+		}
+		BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+		try
+		{
+			//if no devices are attached, the output looks like this:
+			//No connected device found.
+
+			//otherwise, the output looks like this:
+			//List of attached devices:
+			//Handle	DeviceClass	DeviceUUID					DeviceName
+			//   1	iPhone  	0000000000000000000000000000000000000000	iPhone
+			String line = null;
+			while((line = reader.readLine()) != null)
+			{
+				if(line.startsWith("   "))
+				{
+					int index = line.indexOf("\t");
+					if (index != -1)
+					{
+						return line.substring(3, index);
+					}
+				}
+			}
+			return null;
+		}
+		catch(IOException e)
+		{
+			return null;
+		}
+	}
 }

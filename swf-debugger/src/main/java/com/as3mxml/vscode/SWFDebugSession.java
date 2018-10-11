@@ -130,6 +130,8 @@ public class SWFDebugSession extends DebugSession
     private Map<String,PendingBreakpoints> pendingBreakpoints;
     private Map<String,LogLocation> savedLogLocations;
     private int nextBreakpointID = 1;
+    private String forwardedPortPlatform = null;
+    private int forwardedPort = -1;
 
     private class PendingBreakpoints
     {
@@ -427,6 +429,8 @@ public class SWFDebugSession extends DebugSession
         ThreadSafeSessionManager manager = ThreadSafeBootstrap.sessionManager();
         swfSession = null;
         swfRunProcess = null;
+        forwardedPortPlatform = null;
+        forwardedPort = -1;
         try
         {
             manager.startListening();
@@ -672,6 +676,8 @@ public class SWFDebugSession extends DebugSession
     public void attach(Response response, AttachRequest.AttachRequestArguments args)
     {
         SWFAttachRequestArguments swfArgs = (SWFAttachRequestArguments) args;
+        forwardedPortPlatform = null;
+        forwardedPort = -1;
         if(swfArgs.platform != null)
         {
             if(!installOnDevice(swfArgs.platform, swfArgs.connect, swfArgs.port))
@@ -744,6 +750,8 @@ public class SWFDebugSession extends DebugSession
                 sendEvent(new OutputEvent(body));
                 return false;
             }
+            forwardedPort = port;
+            forwardedPortPlatform = platform;
         }
         if(platform.equals(PLATFORM_IOS))
         {
@@ -826,6 +834,19 @@ public class SWFDebugSession extends DebugSession
 
     public void disconnect(Response response, Request.RequestArguments args)
     {
+        if (forwardedPort != -1)
+        {
+            try
+            {
+                Path workspacePath = Paths.get(System.getProperty(WORKSPACE_PROPERTY));
+                DeviceInstallUtils.stopForwardPortCommand(forwardedPortPlatform, forwardedPort, workspacePath, adbPath, idbPath);
+            }
+            finally
+            {
+                forwardedPortPlatform = null;
+                forwardedPort = -1;
+            }
+        }
         if (sessionThread != null)
         {
             cancelRunner = true;
