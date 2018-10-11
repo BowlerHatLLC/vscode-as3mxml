@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.as3mxml.asconfigc.compiler.ProjectType;
-import com.as3mxml.asconfigc.htmlTemplate.HTMLTemplateOptions;
 
 public class ProjectUtils
 {
