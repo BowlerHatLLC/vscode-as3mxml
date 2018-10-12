@@ -54,7 +54,35 @@ function createRange(startLine: number, startCharacter:number,
 		new vscode.Position(endLine, endCharacter))
 }
 
-function findSymbol(symbols: vscode.SymbolInformation[], symbolToFind: vscode.SymbolInformation): boolean
+function findDocumentSymbol(symbols: vscode.DocumentSymbol[], symbolToFind: vscode.DocumentSymbol): boolean
+{
+	return symbols.some((symbol: vscode.DocumentSymbol) =>
+	{
+		if(symbol.children && findDocumentSymbol(symbol.children, symbolToFind))
+		{
+			return true;
+		}
+		if(symbol.name !== symbolToFind.name)
+		{
+			return false;
+		}
+		if(symbol.kind !== symbolToFind.kind)
+		{
+			return false;
+		}
+		if(symbol.range.start.line !== symbolToFind.range.start.line)
+		{
+			return false;
+		}
+		if(symbol.range.start.character !== symbolToFind.range.start.character)
+		{
+			return false;
+		}
+		return true;
+	});
+}
+
+function findSymbolInformation(symbols: vscode.SymbolInformation[], symbolToFind: vscode.SymbolInformation): boolean
 {
 	return symbols.some((symbol: vscode.SymbolInformation) =>
 	{
@@ -151,7 +179,7 @@ suite("document symbol provider: Application workspace", () =>
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeDocumentSymbolProvider", uri)
-				.then((symbols: vscode.SymbolInformation[]) =>
+				.then((symbols: vscode.DocumentSymbol[]) =>
 					{
 						assert.notStrictEqual(symbols.length, 0,
 							"vscode.executeDocumentSymbolProvider failed to provide symbols in text document: " + uri);
@@ -167,14 +195,15 @@ suite("document symbol provider: Application workspace", () =>
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeDocumentSymbolProvider", uri)
-				.then((symbols: vscode.SymbolInformation[]) =>
+				.then((symbols: vscode.DocumentSymbol[]) =>
 					{
 						let classQualifiedName = "Main";
-						assert.ok(findSymbol(symbols, new vscode.SymbolInformation(
+						assert.ok(findDocumentSymbol(symbols, new vscode.DocumentSymbol(
 							classQualifiedName,
+							null,
 							vscode.SymbolKind.Class,
 							createRange(2, 14),
-							uri)),
+							createRange(2, 14))),
 							"vscode.executeDocumentSymbolProvider failed to provide symbol for class: " + classQualifiedName);
 					}, (err) =>
 					{
@@ -188,15 +217,15 @@ suite("document symbol provider: Application workspace", () =>
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeDocumentSymbolProvider", uri)
-				.then((symbols: vscode.SymbolInformation[]) =>
+				.then((symbols: vscode.DocumentSymbol[]) =>
 					{
 						let classQualifiedName = "Main";
-						assert.ok(findSymbol(symbols, new vscode.SymbolInformation(
+						assert.ok(findDocumentSymbol(symbols, new vscode.DocumentSymbol(
 							classQualifiedName,
+							null,
 							vscode.SymbolKind.Constructor,
 							createRange(16, 18),
-							uri,
-							"Main")),
+							createRange(16, 18))),
 							"vscode.executeDocumentSymbolProvider failed to provide symbol for constructor: " + classQualifiedName);
 					}, (err) =>
 					{
@@ -210,15 +239,15 @@ suite("document symbol provider: Application workspace", () =>
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeDocumentSymbolProvider", uri)
-				.then((symbols: vscode.SymbolInformation[]) =>
+				.then((symbols: vscode.DocumentSymbol[]) =>
 					{
 						let memberVarName = "memberVar";
-						assert.ok(findSymbol(symbols, new vscode.SymbolInformation(
+						assert.ok(findDocumentSymbol(symbols, new vscode.DocumentSymbol(
 							memberVarName,
+							null,
 							vscode.SymbolKind.Field,
 							createRange(21, 13),
-							uri,
-							"Main")),
+							createRange(21, 13))),
 							"vscode.executeDocumentSymbolProvider failed to provide symbol for member variable: " + memberVarName);
 					}, (err) =>
 					{
@@ -232,15 +261,15 @@ suite("document symbol provider: Application workspace", () =>
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeDocumentSymbolProvider", uri)
-				.then((symbols: vscode.SymbolInformation[]) =>
+				.then((symbols: vscode.DocumentSymbol[]) =>
 					{
 						let memberFunctionName = "memberFunction";
-						assert.ok(findSymbol(symbols, new vscode.SymbolInformation(
+						assert.ok(findDocumentSymbol(symbols, new vscode.DocumentSymbol(
 							memberFunctionName,
+							null,
 							vscode.SymbolKind.Method,
 							createRange(23, 19),
-							uri,
-							"Main")),
+							createRange(23, 19))),
 							"vscode.executeDocumentSymbolProvider failed to provide symbol for member function: " + memberFunctionName);
 					}, (err) =>
 					{
@@ -254,15 +283,15 @@ suite("document symbol provider: Application workspace", () =>
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeDocumentSymbolProvider", uri)
-				.then((symbols: vscode.SymbolInformation[]) =>
+				.then((symbols: vscode.DocumentSymbol[]) =>
 					{
 						let memberPropertyName = "memberProperty";
-						assert.ok(findSymbol(symbols, new vscode.SymbolInformation(
+						assert.ok(findDocumentSymbol(symbols, new vscode.DocumentSymbol(
 							memberPropertyName,
+							null,
 							vscode.SymbolKind.Property,
 							createRange(27, 22),
-							uri,
-							"Main")),
+							createRange(27, 22))),
 							"vscode.executeDocumentSymbolProvider failed to provide symbol for member variable: " + memberPropertyName);
 					}, (err) =>
 					{
@@ -276,15 +305,15 @@ suite("document symbol provider: Application workspace", () =>
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeDocumentSymbolProvider", uri)
-				.then((symbols: vscode.SymbolInformation[]) =>
+				.then((symbols: vscode.DocumentSymbol[]) =>
 					{
 						let staticVarName = "staticVar";
-						assert.ok(findSymbol(symbols, new vscode.SymbolInformation(
+						assert.ok(findDocumentSymbol(symbols, new vscode.DocumentSymbol(
 							staticVarName,
+							null,
 							vscode.SymbolKind.Field,
 							createRange(4, 21),
-							uri,
-							"Main")),
+							createRange(4, 21))),
 							"vscode.executeDocumentSymbolProvider failed to provide symbol for static variable: " + staticVarName);
 					}, (err) =>
 					{
@@ -298,15 +327,15 @@ suite("document symbol provider: Application workspace", () =>
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeDocumentSymbolProvider", uri)
-				.then((symbols: vscode.SymbolInformation[]) =>
+				.then((symbols: vscode.DocumentSymbol[]) =>
 					{
 						let staticConstName = "STATIC_CONST";
-						assert.ok(findSymbol(symbols, new vscode.SymbolInformation(
+						assert.ok(findDocumentSymbol(symbols, new vscode.DocumentSymbol(
 							staticConstName,
+							null,
 							vscode.SymbolKind.Constant,
 							createRange(5, 22),
-							uri,
-							"Main")),
+							createRange(5, 22))),
 							"vscode.executeDocumentSymbolProvider failed to provide symbol for static constant: " + staticConstName);
 					}, (err) =>
 					{
@@ -320,15 +349,15 @@ suite("document symbol provider: Application workspace", () =>
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeDocumentSymbolProvider", uri)
-				.then((symbols: vscode.SymbolInformation[]) =>
+				.then((symbols: vscode.DocumentSymbol[]) =>
 					{
 						let staticFunctionName = "staticFunction";
-						assert.ok(findSymbol(symbols, new vscode.SymbolInformation(
+						assert.ok(findDocumentSymbol(symbols, new vscode.DocumentSymbol(
 							staticFunctionName,
+							null,
 							vscode.SymbolKind.Method,
 							createRange(7, 28),
-							uri,
-							"Main")),
+							createRange(7, 28))),
 							"vscode.executeDocumentSymbolProvider failed to provide symbol for static function: " + staticFunctionName);
 					}, (err) =>
 					{
@@ -342,15 +371,15 @@ suite("document symbol provider: Application workspace", () =>
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeDocumentSymbolProvider", uri)
-				.then((symbols: vscode.SymbolInformation[]) =>
+				.then((symbols: vscode.DocumentSymbol[]) =>
 					{
 						let staticPropertyName = "staticProperty";
-						assert.ok(findSymbol(symbols, new vscode.SymbolInformation(
+						assert.ok(findDocumentSymbol(symbols, new vscode.DocumentSymbol(
 							staticPropertyName,
+							null,
 							vscode.SymbolKind.Property,
 							createRange(11, 29),
-							uri,
-							"Main")),
+							createRange(11, 29))),
 							"vscode.executeDocumentSymbolProvider failed to provide symbol for static variable: " + staticPropertyName);
 					}, (err) =>
 					{
@@ -364,14 +393,15 @@ suite("document symbol provider: Application workspace", () =>
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeDocumentSymbolProvider", uri)
-				.then((symbols: vscode.SymbolInformation[]) =>
+				.then((symbols: vscode.DocumentSymbol[]) =>
 					{
 						let internalClassQualifiedName = "MainInternalClass";
-						assert.ok(findSymbol(symbols, new vscode.SymbolInformation(
+						assert.ok(findDocumentSymbol(symbols, new vscode.DocumentSymbol(
 							internalClassQualifiedName,
+							null,
 							vscode.SymbolKind.Class,
 							createRange(34, 6),
-							uri)),
+							createRange(34, 6))),
 							"vscode.executeDocumentSymbolProvider failed to provide symbol for internal class: " + internalClassQualifiedName);
 					}, (err) =>
 					{
@@ -385,15 +415,15 @@ suite("document symbol provider: Application workspace", () =>
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
 			return vscode.commands.executeCommand("vscode.executeDocumentSymbolProvider", uri)
-				.then((symbols: vscode.SymbolInformation[]) =>
+				.then((symbols: vscode.DocumentSymbol[]) =>
 					{
 						let memberVarName = "internalClassMemberVar";
-						assert.ok(findSymbol(symbols, new vscode.SymbolInformation(
+						assert.ok(findDocumentSymbol(symbols, new vscode.DocumentSymbol(
 							memberVarName,
+							null,
 							vscode.SymbolKind.Field,
 							createRange(36, 13),
-							uri,
-							"MainInternalClass")),
+							createRange(36, 13))),
 							"vscode.executeDocumentSymbolProvider failed to provide symbol for member variable in internal class: " + memberVarName);
 					}, (err) =>
 					{
@@ -414,7 +444,7 @@ suite("workspace symbol provider: Application workspace", () =>
 			return vscode.commands.executeCommand("vscode.executeWorkspaceSymbolProvider", query)
 				.then((symbols: vscode.SymbolInformation[]) =>
 					{
-						assert.ok(findSymbol(symbols, new vscode.SymbolInformation(
+						assert.ok(findSymbolInformation(symbols, new vscode.SymbolInformation(
 							query,
 							vscode.SymbolKind.Class,
 							createRange(2, 14),
@@ -436,7 +466,7 @@ suite("workspace symbol provider: Application workspace", () =>
 			return vscode.commands.executeCommand("vscode.executeWorkspaceSymbolProvider", query)
 				.then((symbols: vscode.SymbolInformation[]) =>
 					{
-						assert.ok(findSymbol(symbols, new vscode.SymbolInformation(
+						assert.ok(findSymbolInformation(symbols, new vscode.SymbolInformation(
 							query,
 							vscode.SymbolKind.Constructor,
 							createRange(16, 18),
@@ -460,7 +490,7 @@ suite("workspace symbol provider: Application workspace", () =>
 			return vscode.commands.executeCommand("vscode.executeWorkspaceSymbolProvider", query)
 				.then((symbols: vscode.SymbolInformation[]) =>
 					{
-						assert.ok(findSymbol(symbols, new vscode.SymbolInformation(
+						assert.ok(findSymbolInformation(symbols, new vscode.SymbolInformation(
 							query,
 							vscode.SymbolKind.Class,
 							createRange(2, 14),
@@ -482,7 +512,7 @@ suite("workspace symbol provider: Application workspace", () =>
 			return vscode.commands.executeCommand("vscode.executeWorkspaceSymbolProvider", query)
 				.then((symbols: vscode.SymbolInformation[]) =>
 					{
-						assert.ok(findSymbol(symbols, new vscode.SymbolInformation(
+						assert.ok(findSymbolInformation(symbols, new vscode.SymbolInformation(
 							query,
 							vscode.SymbolKind.Field,
 							createRange(21, 13),
@@ -504,7 +534,7 @@ suite("workspace symbol provider: Application workspace", () =>
 			return vscode.commands.executeCommand("vscode.executeWorkspaceSymbolProvider", query)
 				.then((symbols: vscode.SymbolInformation[]) =>
 					{
-						assert.ok(findSymbol(symbols, new vscode.SymbolInformation(
+						assert.ok(findSymbolInformation(symbols, new vscode.SymbolInformation(
 							query,
 							vscode.SymbolKind.Method,
 							createRange(23, 19),
@@ -526,7 +556,7 @@ suite("workspace symbol provider: Application workspace", () =>
 			return vscode.commands.executeCommand("vscode.executeWorkspaceSymbolProvider", query)
 				.then((symbols: vscode.SymbolInformation[]) =>
 					{
-						assert.ok(findSymbol(symbols, new vscode.SymbolInformation(
+						assert.ok(findSymbolInformation(symbols, new vscode.SymbolInformation(
 							query,
 							vscode.SymbolKind.Property,
 							createRange(27, 22),
@@ -548,7 +578,7 @@ suite("workspace symbol provider: Application workspace", () =>
 			return vscode.commands.executeCommand("vscode.executeWorkspaceSymbolProvider", query)
 				.then((symbols: vscode.SymbolInformation[]) =>
 					{
-						assert.ok(findSymbol(symbols, new vscode.SymbolInformation(
+						assert.ok(findSymbolInformation(symbols, new vscode.SymbolInformation(
 							query,
 							vscode.SymbolKind.Field,
 							createRange(4, 21),
@@ -570,7 +600,7 @@ suite("workspace symbol provider: Application workspace", () =>
 			return vscode.commands.executeCommand("vscode.executeWorkspaceSymbolProvider", query)
 				.then((symbols: vscode.SymbolInformation[]) =>
 					{
-						assert.ok(findSymbol(symbols, new vscode.SymbolInformation(
+						assert.ok(findSymbolInformation(symbols, new vscode.SymbolInformation(
 							query,
 							vscode.SymbolKind.Constant,
 							createRange(5, 22),
@@ -592,7 +622,7 @@ suite("workspace symbol provider: Application workspace", () =>
 			return vscode.commands.executeCommand("vscode.executeWorkspaceSymbolProvider", query)
 				.then((symbols: vscode.SymbolInformation[]) =>
 					{
-						assert.ok(findSymbol(symbols, new vscode.SymbolInformation(
+						assert.ok(findSymbolInformation(symbols, new vscode.SymbolInformation(
 							query,
 							vscode.SymbolKind.Method,
 							createRange(7, 28),
@@ -614,7 +644,7 @@ suite("workspace symbol provider: Application workspace", () =>
 			return vscode.commands.executeCommand("vscode.executeWorkspaceSymbolProvider", query)
 				.then((symbols: vscode.SymbolInformation[]) =>
 					{
-						assert.ok(findSymbol(symbols, new vscode.SymbolInformation(
+						assert.ok(findSymbolInformation(symbols, new vscode.SymbolInformation(
 							query,
 							vscode.SymbolKind.Property,
 							createRange(11, 29),
@@ -636,7 +666,7 @@ suite("workspace symbol provider: Application workspace", () =>
 			return vscode.commands.executeCommand("vscode.executeWorkspaceSymbolProvider", query)
 				.then((symbols: vscode.SymbolInformation[]) =>
 					{
-						assert.ok(findSymbol(symbols, new vscode.SymbolInformation(
+						assert.ok(findSymbolInformation(symbols, new vscode.SymbolInformation(
 							query,
 							vscode.SymbolKind.Class,
 							createRange(34, 6),
@@ -659,7 +689,7 @@ suite("workspace symbol provider: Application workspace", () =>
 			return vscode.commands.executeCommand("vscode.executeWorkspaceSymbolProvider", query)
 				.then((symbols: vscode.SymbolInformation[]) =>
 					{
-						assert.ok(findSymbol(symbols, new vscode.SymbolInformation(
+						assert.ok(findSymbolInformation(symbols, new vscode.SymbolInformation(
 							query,
 							vscode.SymbolKind.Field,
 							createRange(36, 13),
@@ -703,7 +733,7 @@ suite("workspace symbol provider: Application workspace", () =>
 			return vscode.commands.executeCommand("vscode.executeWorkspaceSymbolProvider", query)
 				.then((symbols: vscode.SymbolInformation[]) =>
 					{
-						assert.ok(findSymbol(symbols, new vscode.SymbolInformation(symbolName,
+						assert.ok(findSymbolInformation(symbols, new vscode.SymbolInformation(symbolName,
 							vscode.SymbolKind.Class,
 							createRange(2, 14),
 							classUri,
@@ -727,7 +757,7 @@ suite("workspace symbol provider: Application workspace", () =>
 			return vscode.commands.executeCommand("vscode.executeWorkspaceSymbolProvider", query)
 				.then((symbols: vscode.SymbolInformation[]) =>
 					{
-						assert.ok(findSymbol(symbols, new vscode.SymbolInformation(symbolName,
+						assert.ok(findSymbolInformation(symbols, new vscode.SymbolInformation(symbolName,
 							vscode.SymbolKind.Constructor,
 							createRange(4, 18),
 							classUri,
@@ -751,7 +781,7 @@ suite("workspace symbol provider: Application workspace", () =>
 			return vscode.commands.executeCommand("vscode.executeWorkspaceSymbolProvider", query)
 				.then((symbols: vscode.SymbolInformation[]) =>
 					{
-						assert.ok(findSymbol(symbols, new vscode.SymbolInformation(symbolName,
+						assert.ok(findSymbolInformation(symbols, new vscode.SymbolInformation(symbolName,
 							vscode.SymbolKind.Interface,
 							createRange(2, 18),
 							interfaceUri,
@@ -773,7 +803,7 @@ suite("workspace symbol provider: Application workspace", () =>
 			return vscode.commands.executeCommand("vscode.executeWorkspaceSymbolProvider", query)
 				.then((symbols: vscode.SymbolInformation[]) =>
 					{
-						assert.ok(findSymbol(symbols, new vscode.SymbolInformation(
+						assert.ok(findSymbolInformation(symbols, new vscode.SymbolInformation(
 							"WSFindMe1",
 							vscode.SymbolKind.Class,
 							createRange(2, 14),
@@ -8668,7 +8698,7 @@ suite("code action provider: Application workspace", () =>
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
-						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.RefactorRewrite.value, "Code action provided incorrect kind");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
 						let workspaceEdit = codeAction.edit;
 						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
 						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
@@ -8707,7 +8737,7 @@ suite("code action provider: Application workspace", () =>
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
-						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.RefactorRewrite.value, "Code action provided incorrect kind");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
 						let workspaceEdit = codeAction.edit;
 						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
 						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
@@ -8746,7 +8776,7 @@ suite("code action provider: Application workspace", () =>
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
-						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.RefactorRewrite.value, "Code action provided incorrect kind");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
 						let workspaceEdit = codeAction.edit;
 						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
 						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
@@ -8785,7 +8815,7 @@ suite("code action provider: Application workspace", () =>
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
-						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.RefactorRewrite.value, "Code action provided incorrect kind");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
 						let workspaceEdit = codeAction.edit;
 						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
 						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
@@ -8824,7 +8854,7 @@ suite("code action provider: Application workspace", () =>
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
-						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.RefactorRewrite.value, "Code action provided incorrect kind");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
 						let workspaceEdit = codeAction.edit;
 						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
 						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
@@ -8863,7 +8893,7 @@ suite("code action provider: Application workspace", () =>
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
-						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.RefactorRewrite.value, "Code action provided incorrect kind");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
 						let workspaceEdit = codeAction.edit;
 						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
 						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
@@ -8902,7 +8932,7 @@ suite("code action provider: Application workspace", () =>
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
-						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.RefactorRewrite.value, "Code action provided incorrect kind");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
 						let workspaceEdit = codeAction.edit;
 						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
 						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
@@ -8941,7 +8971,7 @@ suite("code action provider: Application workspace", () =>
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
-						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.RefactorRewrite.value, "Code action provided incorrect kind");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
 						let workspaceEdit = codeAction.edit;
 						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
 						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
@@ -8980,7 +9010,7 @@ suite("code action provider: Application workspace", () =>
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
-						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.RefactorRewrite.value, "Code action provided incorrect kind");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
 						let workspaceEdit = codeAction.edit;
 						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
 						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
@@ -9019,7 +9049,7 @@ suite("code action provider: Application workspace", () =>
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
-						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.RefactorRewrite.value, "Code action provided incorrect kind");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
 						let workspaceEdit = codeAction.edit;
 						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
 						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
@@ -9058,7 +9088,7 @@ suite("code action provider: Application workspace", () =>
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
-						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.RefactorRewrite.value, "Code action provided incorrect kind");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
 						let workspaceEdit = codeAction.edit;
 						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
 						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
@@ -9097,7 +9127,7 @@ suite("code action provider: Application workspace", () =>
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
-						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.RefactorRewrite.value, "Code action provided incorrect kind");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
 						let workspaceEdit = codeAction.edit;
 						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
 						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
@@ -9136,7 +9166,7 @@ suite("code action provider: Application workspace", () =>
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
-						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.RefactorRewrite.value, "Code action provided incorrect kind");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
 						let workspaceEdit = codeAction.edit;
 						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
 						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
@@ -9175,7 +9205,7 @@ suite("code action provider: Application workspace", () =>
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
-						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.RefactorRewrite.value, "Code action provided incorrect kind");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
 						let workspaceEdit = codeAction.edit;
 						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
 						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
@@ -9214,7 +9244,7 @@ suite("code action provider: Application workspace", () =>
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
-						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.RefactorRewrite.value, "Code action provided incorrect kind");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
 						let workspaceEdit = codeAction.edit;
 						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
 						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
@@ -9253,7 +9283,7 @@ suite("code action provider: Application workspace", () =>
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
-						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.RefactorRewrite.value, "Code action provided incorrect kind");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
 						let workspaceEdit = codeAction.edit;
 						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
 						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
@@ -9292,7 +9322,7 @@ suite("code action provider: Application workspace", () =>
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
-						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.RefactorRewrite.value, "Code action provided incorrect kind");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
 						let workspaceEdit = codeAction.edit;
 						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
 						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
@@ -9331,7 +9361,7 @@ suite("code action provider: Application workspace", () =>
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
-						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.RefactorRewrite.value, "Code action provided incorrect kind");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
 						let workspaceEdit = codeAction.edit;
 						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
 						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
@@ -9370,7 +9400,7 @@ suite("code action provider: Application workspace", () =>
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
-						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.RefactorRewrite.value, "Code action provided incorrect kind");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
 						let workspaceEdit = codeAction.edit;
 						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
 						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
@@ -9409,7 +9439,7 @@ suite("code action provider: Application workspace", () =>
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
-						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.RefactorRewrite.value, "Code action provided incorrect kind");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
 						let workspaceEdit = codeAction.edit;
 						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
 						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
@@ -9448,7 +9478,7 @@ suite("code action provider: Application workspace", () =>
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
-						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.RefactorRewrite.value, "Code action provided incorrect kind");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
 						let workspaceEdit = codeAction.edit;
 						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
 						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
@@ -9487,7 +9517,7 @@ suite("code action provider: Application workspace", () =>
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
-						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.RefactorRewrite.value, "Code action provided incorrect kind");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
 						let workspaceEdit = codeAction.edit;
 						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
 						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
@@ -9526,7 +9556,7 @@ suite("code action provider: Application workspace", () =>
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
-						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.RefactorRewrite.value, "Code action provided incorrect kind");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
 						let workspaceEdit = codeAction.edit;
 						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
 						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
@@ -9565,7 +9595,7 @@ suite("code action provider: Application workspace", () =>
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
-						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.RefactorRewrite.value, "Code action provided incorrect kind");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
 						let workspaceEdit = codeAction.edit;
 						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
 						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
@@ -9604,7 +9634,7 @@ suite("code action provider: Application workspace", () =>
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
-						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.RefactorRewrite.value, "Code action provided incorrect kind");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
 						let workspaceEdit = codeAction.edit;
 						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
 						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
@@ -9643,7 +9673,7 @@ suite("code action provider: Application workspace", () =>
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
-						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.RefactorRewrite.value, "Code action provided incorrect kind");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
 						let workspaceEdit = codeAction.edit;
 						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
 						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
@@ -9682,7 +9712,7 @@ suite("code action provider: Application workspace", () =>
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
-						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.RefactorRewrite.value, "Code action provided incorrect kind");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
 						let workspaceEdit = codeAction.edit;
 						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
 						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
@@ -9721,7 +9751,7 @@ suite("code action provider: Application workspace", () =>
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
-						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.RefactorRewrite.value, "Code action provided incorrect kind");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
 						let workspaceEdit = codeAction.edit;
 						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
 						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
@@ -9760,7 +9790,7 @@ suite("code action provider: Application workspace", () =>
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
-						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.RefactorRewrite.value, "Code action provided incorrect kind");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
 						let workspaceEdit = codeAction.edit;
 						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
 						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
@@ -9799,7 +9829,7 @@ suite("code action provider: Application workspace", () =>
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
-						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.RefactorRewrite.value, "Code action provided incorrect kind");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
 						let workspaceEdit = codeAction.edit;
 						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
 						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
