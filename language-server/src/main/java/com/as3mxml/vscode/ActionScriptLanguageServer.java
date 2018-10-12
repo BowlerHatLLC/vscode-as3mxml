@@ -159,7 +159,7 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
         //but there's no way to target directories without *
         watchers.add(new FileSystemWatcher("**/*"));
 
-        String id = "vscode-nextgenas-" + Math.random();
+        String id = "as3mxml-language-server-" + Math.random();
         DidChangeWatchedFilesRegistrationOptions options = new DidChangeWatchedFilesRegistrationOptions(watchers);
         Registration registration = new Registration(id, "workspace/didChangeWatchedFiles", options);
         List<Registration> registrations = new ArrayList<>();
