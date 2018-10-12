@@ -20,7 +20,7 @@
         <include>.vscodeignore</include>
         <include>README*</include>
         <include>CHANGELOG*</include>
-        <include>nextgenas.configuration.json</include>
+        <include>actionscript.configuration.json</include>
         <include>mxml.configuration.json</include>
         <include>as3.png</include>
         <include>schemas/*</include>

@@ -179,7 +179,7 @@
           "AS",
           "as"
         ],
-        "configuration": "./nextgenas.configuration.json"
+        "configuration": "./actionscript.configuration.json"
       },
       {
         "id": "mxml",
