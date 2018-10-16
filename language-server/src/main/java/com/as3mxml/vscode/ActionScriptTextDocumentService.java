@@ -1256,7 +1256,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     if (ast != null)
                     {
                         String fileText = sourceByPath.get(path);
-                        CodeActionsUtils.findCodeActions(ast, currentProject, textDocument.getUri(), fileText, params.getRange(), codeActions);
+                        CodeActionsUtils.findGetSetCodeActions(ast, currentProject, textDocument.getUri(), fileText, params.getRange(), codeActions);
                     }
                 }
                 cancelToken.checkCanceled();

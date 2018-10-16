@@ -38,6 +38,7 @@ import org.apache.royale.compiler.tree.as.IExpressionNode;
 import org.apache.royale.compiler.tree.as.IFunctionCallNode;
 import org.apache.royale.compiler.tree.as.IFunctionNode;
 import org.apache.royale.compiler.tree.as.IIdentifierNode;
+import org.apache.royale.compiler.tree.as.IInterfaceNode;
 import org.apache.royale.compiler.tree.as.ILanguageIdentifierNode;
 import org.apache.royale.compiler.tree.as.IMemberAccessExpressionNode;
 import org.apache.royale.compiler.tree.as.IScopedNode;
@@ -62,11 +63,27 @@ public class CodeActionsUtils
 	private static final String INDENT = "\t";
 	private static final String SPACE = " ";
 
-    public static void findCodeActions(IASNode node, ICompilerProject project, String uri, String fileText, Range range, List<Either<Command, CodeAction>> codeActions)
+    public static void findGetSetCodeActions(IASNode node, ICompilerProject project, String uri, String fileText, Range range, List<Either<Command, CodeAction>> codeActions)
     {
+        if (node instanceof IInterfaceNode)
+        {
+            //no variables to turn into getters and setters in an interface
+            return;
+        }
+        if (node instanceof IFunctionNode)
+        {
+            //no variables to turn into getters and setters in a function
+            return;
+        }
         if (node instanceof IVariableNode)
         {
             IVariableNode variableNode = (IVariableNode) node;
+            Range variableRange = LanguageServerCompilerUtils.getRangeFromSourceLocation(variableNode);
+            if(!LSPUtils.rangesIntersect(variableRange, range))
+            {
+                //this one is outside of the range, so ignore it
+                return;
+            }
             IExpressionNode expressionNode = variableNode.getNameExpressionNode();
             IDefinition definition = expressionNode.resolve(project);
             if (definition instanceof IVariableDefinition
@@ -80,26 +97,18 @@ public class CodeActionsUtils
                     createCodeActionsForGenerateGetterAndSetter(variableNode, uri, fileText, range, codeActions);
                 }
             }
-        }
-        if (node instanceof IFunctionNode)
-        {
-            //a member can't be the child of a function, so no need to continue
+            //no need to look at its children
             return;
         }
         for (int i = 0, childCount = node.getChildCount(); i < childCount; i++)
         {
             IASNode child = node.getChild(i);
-            findCodeActions(child, project, uri, fileText, range, codeActions);
+            findGetSetCodeActions(child, project, uri, fileText, range, codeActions);
         }
     }
 
     private static void createCodeActionsForGenerateGetterAndSetter(IVariableNode variableNode, String uri, String fileText, Range codeActionsRange, List<Either<Command, CodeAction>> codeActions)
     {
-        Range variableRange = LanguageServerCompilerUtils.getRangeFromSourceLocation(variableNode);
-        if(!LSPUtils.rangesIntersect(variableRange, codeActionsRange))
-        {
-            return;
-        }
         WorkspaceEdit getSetEdit = createWorkspaceEditForGenerateGetterAndSetter(
             variableNode, uri, fileText, true, true);
         CodeAction getAndSetCodeAction = new CodeAction();
