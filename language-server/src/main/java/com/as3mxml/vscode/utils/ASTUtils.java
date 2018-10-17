@@ -54,6 +54,24 @@ public class ASTUtils
         return offset >= node.getAbsoluteStart() && offset <= node.getAbsoluteEnd();
     }
 
+    public static IASNode findDescendantOfType(IASNode node, Class<? extends IASNode> classToFind)
+    {
+        for (int i = 0; i < node.getChildCount(); i++)
+        {
+            IASNode child = node.getChild(i);
+            if (classToFind.isInstance(child))
+            {
+                return child;
+            }
+            IASNode result = findDescendantOfType(child, classToFind);
+            if(result != null)
+            {
+                return result;
+            }
+        }
+        return null;
+    }
+
     public static IASNode getContainingNodeIncludingStart(IASNode node, int offset)
     {
         if (!containsWithStart(node, offset))

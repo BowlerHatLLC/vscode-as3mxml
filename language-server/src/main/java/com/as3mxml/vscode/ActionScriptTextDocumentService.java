@@ -127,6 +127,7 @@ import org.apache.royale.compiler.tree.mxml.IMXMLClassDefinitionNode;
 import org.apache.royale.compiler.tree.mxml.IMXMLClassReferenceNode;
 import org.apache.royale.compiler.tree.mxml.IMXMLConcatenatedDataBindingNode;
 import org.apache.royale.compiler.tree.mxml.IMXMLEventSpecifierNode;
+import org.apache.royale.compiler.tree.mxml.IMXMLInstanceNode;
 import org.apache.royale.compiler.tree.mxml.IMXMLNode;
 import org.apache.royale.compiler.tree.mxml.IMXMLPropertySpecifierNode;
 import org.apache.royale.compiler.tree.mxml.IMXMLSingleDataBindingNode;
@@ -1335,7 +1336,21 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private void createCodeActionForMissingField(TextDocumentIdentifier textDocument, Diagnostic diagnostic, List<Either<Command, CodeAction>> codeActions)
     {
+        RoyaleProject project = textDocumentIdentifierToProject(textDocument);
+        if(project == null)
+        {
+            return;
+        }
         IASNode offsetNode = getOffsetNode(textDocument, diagnostic.getRange().getStart());
+        if (offsetNode instanceof IMXMLInstanceNode)
+        {
+            Position position = diagnostic.getRange().getStart();
+            IMXMLTagData tag = getOffsetMXMLTag(textDocument, position);
+            //workaround for bug in Royale compiler
+            position = new Position(position.getLine(), position.getCharacter() + 1);
+            int currentOffset = getOffset(textDocument, position);
+            offsetNode = getEmbeddedActionScriptNodeInMXMLTag(tag, currentOffset, textDocument, position, project);
+        }
         IIdentifierNode identifierNode = null;
         if (offsetNode instanceof IIdentifierNode)
         {
@@ -1390,7 +1405,21 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     
     private void createCodeActionForMissingLocalVariable(TextDocumentIdentifier textDocument, Diagnostic diagnostic, List<Either<Command, CodeAction>> codeActions)
     {
+        RoyaleProject project = textDocumentIdentifierToProject(textDocument);
+        if(project == null)
+        {
+            return;
+        }
         IASNode offsetNode = getOffsetNode(textDocument, diagnostic.getRange().getStart());
+        if (offsetNode instanceof IMXMLInstanceNode)
+        {
+            Position position = diagnostic.getRange().getStart();
+            IMXMLTagData tag = getOffsetMXMLTag(textDocument, position);
+            //workaround for bug in Royale compiler
+            position = new Position(position.getLine(), position.getCharacter() + 1);
+            int currentOffset = getOffset(textDocument, position);
+            offsetNode = getEmbeddedActionScriptNodeInMXMLTag(tag, currentOffset, textDocument, position, project);
+        }
         IIdentifierNode identifierNode = null;
         if (offsetNode instanceof IIdentifierNode)
         {
@@ -1434,6 +1463,15 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return;
         }
         IASNode offsetNode = getOffsetNode(textDocument, diagnostic.getRange().getStart());
+        if (offsetNode instanceof IMXMLInstanceNode)
+        {
+            Position position = diagnostic.getRange().getStart();
+            IMXMLTagData tag = getOffsetMXMLTag(textDocument, position);
+            //workaround for bug in Royale compiler
+            position = new Position(position.getLine(), position.getCharacter() + 1);
+            int currentOffset = getOffset(textDocument, position);
+            offsetNode = getEmbeddedActionScriptNodeInMXMLTag(tag, currentOffset, textDocument, position, project);
+        }
         IASNode parentNode = offsetNode.getParent();
 
         IFunctionCallNode functionCallNode = null;
@@ -1492,6 +1530,15 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return;
         }
         IASNode offsetNode = getOffsetNode(textDocument, diagnostic.getRange().getStart());
+        if (offsetNode instanceof IMXMLInstanceNode)
+        {
+            Position position = diagnostic.getRange().getStart();
+            IMXMLTagData tag = getOffsetMXMLTag(textDocument, position);
+            //workaround for bug in Royale compiler
+            position = new Position(position.getLine(), position.getCharacter() + 1);
+            int currentOffset = getOffset(textDocument, position);
+            offsetNode = getEmbeddedActionScriptNodeInMXMLTag(tag, currentOffset, textDocument, position, project);
+        }
         if (offsetNode == null || !(offsetNode instanceof IIdentifierNode))
         {
             return;

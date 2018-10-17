@@ -43,6 +43,7 @@ import org.apache.royale.compiler.tree.as.ILanguageIdentifierNode;
 import org.apache.royale.compiler.tree.as.IMemberAccessExpressionNode;
 import org.apache.royale.compiler.tree.as.IScopedNode;
 import org.apache.royale.compiler.tree.as.IVariableNode;
+import org.apache.royale.compiler.tree.mxml.IMXMLFileNode;
 import org.apache.royale.compiler.tree.mxml.IMXMLScriptNode;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionKind;
@@ -389,6 +390,14 @@ public class CodeActionsUtils
         String indent = "";
         int line = identifierNode.getLine();
         IMXMLScriptNode scriptNode = (IMXMLScriptNode) identifierNode.getAncestorOfType(IMXMLScriptNode.class);
+        if (scriptNode == null)
+        {
+            IMXMLFileNode fileNode = (IMXMLFileNode) identifierNode.getAncestorOfType(IMXMLFileNode.class);
+            if (fileNode != null)
+            {
+                scriptNode = (IMXMLScriptNode) ASTUtils.findDescendantOfType(fileNode, IMXMLScriptNode.class);
+            }
+        }
         if (scriptNode != null)
         {
             IASNode[] nodes = scriptNode.getASNodes();
@@ -501,6 +510,14 @@ public class CodeActionsUtils
         String indent = "";
         int line = functionCallNode.getLine();
         IMXMLScriptNode scriptNode = (IMXMLScriptNode) functionCallNode.getAncestorOfType(IMXMLScriptNode.class);
+        if (scriptNode == null)
+        {
+            IMXMLFileNode fileNode = (IMXMLFileNode) functionCallNode.getAncestorOfType(IMXMLFileNode.class);
+            if (fileNode != null)
+            {
+                scriptNode = (IMXMLScriptNode) ASTUtils.findDescendantOfType(fileNode, IMXMLScriptNode.class);
+            }
+        }
         if (scriptNode != null)
         {
             IASNode[] nodes = scriptNode.getASNodes();
