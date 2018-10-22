@@ -39,6 +39,7 @@ import org.apache.royale.compiler.tree.as.IFunctionNode;
 import org.apache.royale.compiler.tree.as.IIdentifierNode;
 import org.apache.royale.compiler.tree.as.IImportNode;
 import org.apache.royale.compiler.tree.as.IInterfaceNode;
+import org.apache.royale.compiler.tree.as.IPackageNode;
 import org.apache.royale.compiler.tree.as.IScopedNode;
 import org.apache.royale.compiler.tree.as.ITransparentContainerNode;
 import org.apache.royale.compiler.tree.as.IVariableNode;
@@ -48,6 +49,7 @@ import org.apache.royale.compiler.units.ICompilationUnit;
 public class ASTUtils
 {
     private static final String DOT_STAR = ".*";
+    private static final String UNDERSCORE_UNDERSCORE_AS3_PACKAGE = "__AS3__.";
 
     public static boolean containsWithStart(IASNode node, int offset)
     {
@@ -88,6 +90,52 @@ public class ASTUtils
             }
         }
         return node;
+    }
+
+    public static boolean needsImport(IASNode offsetNode, String qualifiedName)
+    {
+        int packageEndIndex = qualifiedName.lastIndexOf(".");
+        if(packageEndIndex == -1)
+        {
+            //if it's not in a package, it doesn't need to be imported
+            return false;
+        }
+        if(qualifiedName.startsWith(UNDERSCORE_UNDERSCORE_AS3_PACKAGE))
+        {
+            //things in this package don't need to be imported
+            return false;
+        }
+        IASNode node = offsetNode;
+        while(node != null)
+        {
+            if (node instanceof IPackageNode)
+            {
+                String packageName = qualifiedName.substring(0, packageEndIndex);
+                IPackageNode packageNode = (IPackageNode) node;
+                if (packageName.equals(packageNode.getName()))
+                {
+                    //same package, so it doesn't need to be imported
+                    return false;
+                }
+                //imports outside of the package node do not apply to a node
+                //inside the package
+                break;
+            }
+            for (int i = 0; i < node.getChildCount(); i++)
+            {
+                IASNode child = node.getChild(i);
+                if(child instanceof IImportNode)
+                {
+                    IImportNode importNode = (IImportNode) child;
+                    if (qualifiedName.equals(importNode.getImportName()))
+                    {
+                        return false;
+                    }
+                }
+            }
+            node = node.getParent();
+        }
+        return true;
     }
 
 	public static Set<String> findUnresolvedIdentifiersToImport(IASNode node, ICompilerProject project)

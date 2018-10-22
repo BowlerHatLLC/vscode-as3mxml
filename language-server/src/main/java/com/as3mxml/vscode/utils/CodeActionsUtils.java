@@ -59,7 +59,6 @@ public class CodeActionsUtils
     private static final Pattern importPattern = Pattern.compile("(?m)^([ \\t]*)import ([\\w\\.]+)");
     private static final Pattern indentPattern = Pattern.compile("(?m)^([ \\t]*)\\w");
     private static final Pattern packagePattern = Pattern.compile("(?m)^package(?: [\\w\\.]+)*\\s*\\{(?:[ \\t]*[\\r\\n]+)+([ \\t]*)");
-    private static final String UNDERSCORE_UNDERSCORE_AS3_PACKAGE = "__AS3__.";
 	private static final String NEW_LINE = "\n";
 	private static final String INDENT = "\t";
 	private static final String SPACE = " ";
@@ -135,21 +134,9 @@ public class CodeActionsUtils
         codeActions.add(Either.forRight(setterCodeAction));
     }
 
-    private static boolean validatePackageNameForImport(IDefinition definition)
-    {
-        String packageName = definition.getPackageName();
-        if (packageName == null
-                || packageName.isEmpty()
-                || packageName.startsWith(UNDERSCORE_UNDERSCORE_AS3_PACKAGE))
-        {
-            return false;
-        }
-        return true;
-    }
-
     public static WorkspaceEdit createWorkspaceEditForAddImport(IDefinition definition, String fileText, String uri, int startIndex, int endIndex)
     {
-        TextEdit textEdit = createTextEditForAddImport(definition, fileText, startIndex, endIndex);
+        TextEdit textEdit = createTextEditForAddImport(definition.getQualifiedName(), fileText, startIndex, endIndex);
         if (textEdit == null)
         {
             return null;
@@ -181,30 +168,22 @@ public class CodeActionsUtils
         return workspaceEdit;
     }
 
-    public static TextEdit createTextEditForAddImport(IDefinition definition, String fileText, int startIndex, int endIndex)
+    public static class AddImportData
     {
-        if(!validatePackageNameForImport(definition))
+        public AddImportData(Position position, String indent, String newLines)
         {
-            //don't even bother with these things that don't need importing
-            return null;
+            this.position = position;
+            this.indent = indent;
+            this.newLines = newLines;
         }
-        String qualifiedName = definition.getQualifiedName();
-        return createTextEditForAddImport(qualifiedName, fileText, startIndex, endIndex);
+
+        public Position position;
+        public String indent;
+        public String newLines;
     }
 
-    public static TextEdit createTextEditForAddImport(String qualifiedName, String fileText, int startIndex, int endIndex)
+    public static AddImportData findAddImportData(String fileText, int startIndex, int endIndex)
     {
-        if(qualifiedName.lastIndexOf(".") == -1)
-        {
-            //if it's not in a package, it doesn't need to be imported
-            return null;
-        }
-        if(qualifiedName.startsWith(UNDERSCORE_UNDERSCORE_AS3_PACKAGE))
-        {
-            //things in this package don't need to be imported
-            return null;
-        }
-        Matcher importMatcher = importPattern.matcher(fileText);
         if(startIndex == -1)
         {
             startIndex = 0;
@@ -213,21 +192,17 @@ public class CodeActionsUtils
         {
             endIndex = fileText.length();
         }
-        importMatcher.region(startIndex, endIndex);
         String indent = "";
+        String lineBreaks = "\n";
         int importIndex = -1;
+        Matcher importMatcher = importPattern.matcher(fileText);
+        importMatcher.region(startIndex, endIndex);
         while (importMatcher.find())
         {
-            if(importMatcher.group(2).equals(qualifiedName))
-            {
-                //this class is already imported!
-                return null;
-            }
             indent = importMatcher.group(1);
             importIndex = importMatcher.start();
         }
         Position position = null;
-        String lineBreaks = "\n";
         if(importIndex != -1) //found existing imports
         {
 			position = LanguageServerCompilerUtils.getPositionFromOffset(new StringReader(fileText), importIndex);
@@ -269,12 +244,32 @@ public class CodeActionsUtils
             }
             lineBreaks += "\n"; //add an extra line break
         }
-        String textToInsert = indent + "import " + qualifiedName + ";" + lineBreaks;
+        return new AddImportData(position, indent, lineBreaks);
+    }
+
+    public static TextEdit createTextEditForAddImport(String qualifiedName, AddImportData addImportData)
+    {
+        Position position = addImportData.position;
+        String indent = addImportData.indent;
+        String newLines = addImportData.newLines;
+
+        String textToInsert = indent + "import " + qualifiedName + ";" + newLines;
         
         TextEdit textEdit = new TextEdit();
         textEdit.setNewText(textToInsert);
         textEdit.setRange(new Range(position, position));
         return textEdit;
+    }
+
+    public static TextEdit createTextEditForAddImport(IDefinition definition, String fileText, int startIndex, int endIndex)
+    {
+        return createTextEditForAddImport(definition.getQualifiedName(), fileText, startIndex, endIndex);
+    }
+
+    public static TextEdit createTextEditForAddImport(String qualifiedName, String fileText, int startIndex, int endIndex)
+    {
+        AddImportData addImportData = findAddImportData(fileText, startIndex, endIndex);
+        return createTextEditForAddImport(qualifiedName, addImportData);
     }
 
     public static WorkspaceEdit createWorkspaceEditForAddMXMLNamespace(String nsPrefix, String nsURI, String fileText, String fileURI, int startIndex, int endIndex)
@@ -592,10 +587,13 @@ public class CodeActionsUtils
                 {
                     builder.append(typeName.substring(index + 1));
                 }
-                TextEdit importEdit = CodeActionsUtils.createTextEditForAddImport(typeName, text, importRange.startIndex, importRange.endIndex);
-                if (importEdit != null)
+                if (ASTUtils.needsImport(functionCallNode, typeName))
                 {
-                    edits.add(importEdit);
+                    TextEdit importEdit = CodeActionsUtils.createTextEditForAddImport(typeName, text, importRange.startIndex, importRange.endIndex);
+                    if (importEdit != null)
+                    {
+                        edits.add(importEdit);
+                    }
                 }
             }
         }

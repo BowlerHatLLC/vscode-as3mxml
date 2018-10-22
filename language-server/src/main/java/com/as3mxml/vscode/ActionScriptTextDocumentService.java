@@ -2675,7 +2675,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 importRange = ImportRange.fromOffsetTag(offsetTag, currentOffset);
             }
         }
-        String containingPackageName = ASTUtils.nodeToContainingPackageName(offsetNode);
 
         //variable types
         if (offsetNode instanceof IVariableNode)
@@ -2691,7 +2690,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                         || (line == nameExpression.getEndLine() && column > nameExpression.getEndColumn())
                         || (line == typeNode.getLine() && column <= typeNode.getColumn()))
                 {
-                    autoCompleteTypes(offsetNode, importRange, containingPackageName, project, result);
+                    autoCompleteTypes(offsetNode, importRange, project, result);
                 }
                 return result;
             }
@@ -2702,7 +2701,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             IVariableNode variableNode = (IVariableNode) parentNode;
             if (offsetNode == variableNode.getVariableTypeNode())
             {
-                autoCompleteTypes(parentNode, importRange, containingPackageName, project, result);
+                autoCompleteTypes(parentNode, importRange, project, result);
                 return result;
             }
         }
@@ -2721,7 +2720,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                         && line <= typeNode.getLine()
                         && column <= typeNode.getColumn())
                 {
-                    autoCompleteTypes(offsetNode, importRange, containingPackageName, project, result);
+                    autoCompleteTypes(offsetNode, importRange, project, result);
                     return result;
                 }
             }
@@ -2732,7 +2731,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             IFunctionNode functionNode = (IFunctionNode) parentNode;
             if (offsetNode == functionNode.getReturnTypeNode())
             {
-                autoCompleteTypes(parentNode, importRange, containingPackageName, project, result);
+                autoCompleteTypes(parentNode, importRange, project, result);
                 return result;
             }
         }
@@ -2744,7 +2743,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             if (functionCallNode.getNameNode() == offsetNode
                     && functionCallNode.isNewExpression())
             {
-                autoCompleteTypes(parentNode, importRange, containingPackageName, project, result);
+                autoCompleteTypes(parentNode, importRange, project, result);
                 return result;
             }
         }
@@ -2752,7 +2751,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 && nodeAtPreviousOffset instanceof IKeywordNode
                 && nodeAtPreviousOffset.getNodeID() == ASTNodeID.KeywordNewID)
         {
-            autoCompleteTypes(nodeAtPreviousOffset, importRange, containingPackageName, project, result);
+            autoCompleteTypes(nodeAtPreviousOffset, importRange, project, result);
             return result;
         }
         //as and is keyword types
@@ -2764,7 +2763,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             IBinaryOperatorNode binaryOperatorNode = (IBinaryOperatorNode) parentNode;
             if (binaryOperatorNode.getRightOperandNode() == offsetNode)
             {
-                autoCompleteTypes(parentNode, importRange, containingPackageName, project, result);
+                autoCompleteTypes(parentNode, importRange, project, result);
                 return result;
             }
         }
@@ -2773,7 +2772,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 && (nodeAtPreviousOffset.getNodeID() == ASTNodeID.Op_AsID
                 || nodeAtPreviousOffset.getNodeID() == ASTNodeID.Op_IsID))
         {
-            autoCompleteTypes(nodeAtPreviousOffset, importRange, containingPackageName, project, result);
+            autoCompleteTypes(nodeAtPreviousOffset, importRange, project, result);
             return result;
         }
         //class extends keyword
@@ -2782,7 +2781,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 && nodeAtPreviousOffset instanceof IKeywordNode
                 && nodeAtPreviousOffset.getNodeID() == ASTNodeID.KeywordExtendsID)
         {
-            autoCompleteTypes(offsetNode, importRange, containingPackageName, project, result);
+            autoCompleteTypes(offsetNode, importRange, project, result);
             return result;
         }
         //class implements keyword
@@ -2791,7 +2790,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 && nodeAtPreviousOffset instanceof IKeywordNode
                 && nodeAtPreviousOffset.getNodeID() == ASTNodeID.KeywordImplementsID)
         {
-            autoCompleteTypes(offsetNode, importRange, containingPackageName, project, result);
+            autoCompleteTypes(offsetNode, importRange, project, result);
             return result;
         }
         //interface extends keyword
@@ -2800,7 +2799,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 && nodeAtPreviousOffset instanceof IKeywordNode
                 && nodeAtPreviousOffset.getNodeID() == ASTNodeID.KeywordExtendsID)
         {
-            autoCompleteTypes(offsetNode, importRange, containingPackageName, project, result);
+            autoCompleteTypes(offsetNode, importRange, project, result);
             return result;
         }
 
@@ -3013,12 +3012,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 IScopedNode scopedNode = (IScopedNode) currentNodeForScope;
 
                 //include all members and local things that are in scope
-                autoCompleteScope(scopedNode, false, importRange, containingPackageName, project, result);
+                autoCompleteScope(scopedNode, false, importRange, project, result);
 
                 //include all public definitions
                 IASScope scope = scopedNode.getScope();
                 IDefinition definitionToSkip = scope.getDefinition();
-                autoCompleteDefinitionsForActionScript(result, project, false, null, definitionToSkip, containingPackageName, false, null, importRange);
+                autoCompleteDefinitionsForActionScript(result, project, scopedNode, false, null, definitionToSkip, false, null, importRange);
                 autoCompleteKeywords(scopedNode, result);
                 return result;
             }
@@ -3863,7 +3862,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         result.getItems().add(item);
     }
 
-    private void autoCompleteTypes(IASNode withNode, ImportRange importRange, String containingPackageName, RoyaleProject project, CompletionList result)
+    private void autoCompleteTypes(IASNode withNode, ImportRange importRange, RoyaleProject project, CompletionList result)
     {
         //start by getting the types in scope
         IASNode node = withNode;
@@ -3876,13 +3875,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 IScopedNode scopedNode = (IScopedNode) node;
 
                 //include all members and local things that are in scope
-                autoCompleteScope(scopedNode, true, importRange, containingPackageName, project, result);
+                autoCompleteScope(scopedNode, true, importRange, project, result);
                 break;
             }
             node = node.getParent();
         }
         while (node != null);
-        autoCompleteDefinitionsForActionScript(result, project, true, null, null, containingPackageName, false, null, importRange);
+        autoCompleteDefinitionsForActionScript(result, project, withNode, true, null, null, false, null, importRange);
     }
 
     /**
@@ -4033,8 +4032,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     }
 
     private void autoCompleteDefinitionsForActionScript(CompletionList result,
-            RoyaleProject project, boolean typesOnly, String requiredPackageName,
-            IDefinition definitionToSkip, String containingPackageName,
+            RoyaleProject project, IASNode offsetNode,
+            boolean typesOnly, String requiredPackageName, IDefinition definitionToSkip,
             boolean tagsNeedOpenBracket, String typeFilter, ImportRange importRange)
     {
         String skipQualifiedName = null;
@@ -4079,7 +4078,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                                 continue;
                             }
                         }
-                        addDefinitionAutoCompleteActionScript(definition, containingPackageName, importRange, project, result);
+                        addDefinitionAutoCompleteActionScript(definition, offsetNode, importRange, project, result);
                     }
                 }
             }
@@ -4093,7 +4092,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
     }
 
-    private void autoCompleteScope(IScopedNode node, boolean typesOnly, ImportRange importRange, String containingPackageName, RoyaleProject project, CompletionList result)
+    private void autoCompleteScope(IScopedNode node, boolean typesOnly, ImportRange importRange, RoyaleProject project, CompletionList result)
     {
         IScopedNode currentNode = node;
         ASScope scope = (ASScope) node.getScope();
@@ -4136,7 +4135,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                                 continue;
                             }
                         }
-                        addDefinitionAutoCompleteActionScript(localDefinition, containingPackageName, importRange, project, result);
+                        addDefinitionAutoCompleteActionScript(localDefinition, currentNode, importRange, project, result);
                     }
                 }
             }
@@ -4440,7 +4439,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             String packageName = memberAccessToPackageName(memberAccess);
             if (packageName != null)
             {
-                autoCompleteDefinitionsForActionScript(result, project, false, packageName, null, null, false, null, importRange);
+                autoCompleteDefinitionsForActionScript(result, project, node, false, packageName, null, false, null, importRange);
                 return;
             }
         }
@@ -5040,7 +5039,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return false;
     }
 
-    private void addDefinitionAutoCompleteActionScript(IDefinition definition, String containingPackageName, ImportRange importRange, RoyaleProject project, CompletionList result)
+    private void addDefinitionAutoCompleteActionScript(IDefinition definition, IASNode offsetNode, ImportRange importRange, RoyaleProject project, CompletionList result)
     {
         String definitionBaseName = definition.getBaseName();
         if (definitionBaseName.length() == 0)
@@ -5078,8 +5077,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 //TODO: manually activate signature help
             }
         }*/
-        boolean isInPackage = !definition.getQualifiedName().equals(definition.getBaseName());
-        if (isInPackage && (containingPackageName == null || !definition.getPackageName().equals(containingPackageName)))
+        if (ASTUtils.needsImport(offsetNode, definition.getQualifiedName()))
         {
             Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(importRange.uri);
             String fileText = getFileTextForPath(path);
