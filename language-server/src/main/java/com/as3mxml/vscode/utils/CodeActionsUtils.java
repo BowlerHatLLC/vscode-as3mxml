@@ -168,29 +168,18 @@ public class CodeActionsUtils
         return workspaceEdit;
     }
 
-    public static class AddImportData
-    {
-        public AddImportData(Position position, String indent, String newLines)
-        {
-            this.position = position;
-            this.indent = indent;
-            this.newLines = newLines;
-        }
-
-        public Position position;
-        public String indent;
-        public String newLines;
-    }
-
     public static AddImportData findAddImportData(String fileText, int startIndex, int endIndex)
     {
         if(startIndex == -1)
         {
             startIndex = 0;
         }
-        if (endIndex == -1)
+        int textLength = fileText.length();
+        if (endIndex == -1 || endIndex > textLength)
         {
-            endIndex = fileText.length();
+            //it's possible for the end index to be longer than the text
+            //for example, if the package block is incomplete in an .as file
+            endIndex = textLength;
         }
         String indent = "";
         String lineBreaks = "\n";
@@ -245,6 +234,11 @@ public class CodeActionsUtils
             lineBreaks += "\n"; //add an extra line break
         }
         return new AddImportData(position, indent, lineBreaks);
+    }
+
+    public static TextEdit createTextEditForAddImport(IDefinition definition, AddImportData addImportData)
+    {
+        return createTextEditForAddImport(definition.getQualifiedName(), addImportData);
     }
 
     public static TextEdit createTextEditForAddImport(String qualifiedName, AddImportData addImportData)
