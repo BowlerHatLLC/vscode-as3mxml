@@ -283,23 +283,20 @@ public class CodeActionsUtils
         return workspaceEdit;
     }
     
-    public static TextEdit createTextEditForAddMXMLNamespace(String nsPrefix, String nsURI, String text, int startIndex, int endIndex)
+    public static TextEdit createTextEditForAddMXMLNamespace(String nsPrefix, String nsURI, Position position)
     {
-        //exclude the whitespace before the namespace so that finding duplicates
-        //doesn't depend on it
-        String textToInsert = "xmlns:" + nsPrefix + "=\"" + nsURI + "\"";
-        //check if this namespace URI and prefix already exist
-        int index = text.indexOf(textToInsert, startIndex);
-        if(index != -1 && index < endIndex)
-        {
-            return null;
-        }
-        Position position = LanguageServerCompilerUtils.getPositionFromOffset(new StringReader(text), endIndex);
-    
+        String textToInsert = " xmlns:" + nsPrefix + "=\"" + nsURI + "\"";
+
         TextEdit edit = new TextEdit();
-        edit.setNewText(" " + textToInsert);
+        edit.setNewText(textToInsert);
 		edit.setRange(new Range(position, position));
 		return edit;
+    }
+    
+    public static TextEdit createTextEditForAddMXMLNamespace(String nsPrefix, String nsURI, String text, int startIndex, int endIndex)
+    {
+        Position position = LanguageServerCompilerUtils.getPositionFromOffset(new StringReader(text), endIndex);
+        return createTextEditForAddMXMLNamespace(nsPrefix, nsURI, position);
     }
 
 	public static WorkspaceEdit createWorkspaceEditForGenerateLocalVariable(

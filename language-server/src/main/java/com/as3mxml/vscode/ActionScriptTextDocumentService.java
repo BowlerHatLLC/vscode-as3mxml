@@ -3058,6 +3058,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         String fileText = getFileTextForPath(path);
         AddImportData addImportData = CodeActionsUtils.findAddImportData(fileText, importRange.startIndex, importRange.endIndex);
         XmlnsRange xmlnsRange = XmlnsRange.fromOffsetTag(offsetTag, currentOffset);
+        Position xmlnsPosition = LanguageServerCompilerUtils.getPositionFromOffset(new StringReader(fileText), xmlnsRange.endIndex);
 
         boolean tagsNeedOpenBracket = false;
         if(currentOffset > 0)
@@ -3138,7 +3139,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             if (!isAttribute)
             {
-                autoCompleteDefinitionsForMXML(result, project, offsetUnit, true, tagsNeedOpenBracket, null, addImportData, xmlnsRange);
+                autoCompleteDefinitionsForMXML(result, project, offsetUnit, offsetTag, true, tagsNeedOpenBracket, null, addImportData, xmlnsPosition);
             }
             return result;
         }
@@ -3162,7 +3163,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                         //only add members if the prefix is the same as the
                         //parent tag. members can't have different prefixes.
                         //also allow members when we don't have a prefix.
-                        addMembersForMXMLTypeToAutoComplete(classDefinition, parentTag, false, offsetPrefix.length() == 0, false, addImportData, xmlnsRange, project, result);
+                        addMembersForMXMLTypeToAutoComplete(classDefinition, parentTag, false, offsetPrefix.length() == 0, false, addImportData, xmlnsPosition, project, result);
                     }
                     if (!isAttribute)
                     {
@@ -3197,7 +3198,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                         {
                             //only add types if the class defines [DefaultProperty]
                             //metadata
-                            autoCompleteTypesForMXMLFromExistingTag(result, project, offsetUnit, offsetTag, xmlnsRange);
+                            autoCompleteTypesForMXMLFromExistingTag(result, project, offsetUnit, offsetTag, xmlnsPosition);
                         }
                     }
                 }
@@ -3205,13 +3206,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 {
                     //the parent is something like a property, so matching the
                     //prefix is not required
-                    autoCompleteTypesForMXMLFromExistingTag(result, project, offsetUnit, offsetTag, xmlnsRange);
+                    autoCompleteTypesForMXMLFromExistingTag(result, project, offsetUnit, offsetTag, xmlnsPosition);
                 }
                 return result;
             }
             else if (MXMLDataUtils.isDeclarationsTag(parentTag))
             {
-                autoCompleteTypesForMXMLFromExistingTag(result, project, offsetUnit, offsetTag, xmlnsRange);
+                autoCompleteTypesForMXMLFromExistingTag(result, project, offsetUnit, offsetTag, xmlnsPosition);
                 return result;
             }
             return result;
@@ -3231,7 +3232,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
 
             IClassDefinition classDefinition = (IClassDefinition) offsetDefinition;
-            addMembersForMXMLTypeToAutoComplete(classDefinition, offsetTag, isAttribute, !isAttribute, tagsNeedOpenBracket, addImportData, xmlnsRange, project, result);
+            addMembersForMXMLTypeToAutoComplete(classDefinition, offsetTag, isAttribute, !isAttribute, tagsNeedOpenBracket, addImportData, xmlnsPosition, project, result);
 
             if (!isAttribute)
             {
@@ -3259,7 +3260,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     //if [DefaultProperty] is set, then we can instantiate
                     //types as child elements
                     //but we don't want to do that when in an attribute
-                    autoCompleteDefinitionsForMXML(result, project, offsetUnit, true, tagsNeedOpenBracket, typeFilter, addImportData, xmlnsRange);
+                    autoCompleteDefinitionsForMXML(result, project, offsetUnit, offsetTag, true, tagsNeedOpenBracket, typeFilter, addImportData, xmlnsPosition);
                 }
             }
             return result;
@@ -3271,7 +3272,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             if (!isAttribute)
             {
                 String typeFilter = DefinitionUtils.getMXMLChildElementTypeForDefinition(offsetDefinition, project);
-                autoCompleteDefinitionsForMXML(result, project, offsetUnit, true, tagsNeedOpenBracket, typeFilter, addImportData, xmlnsRange);
+                autoCompleteDefinitionsForMXML(result, project, offsetUnit, offsetTag, true, tagsNeedOpenBracket, typeFilter, addImportData, xmlnsPosition);
             }
             return result;
         }
@@ -3905,7 +3906,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
      * Using an existing tag, that may already have a prefix or short name,
      * populate the completion list.
      */
-    private void autoCompleteTypesForMXMLFromExistingTag(CompletionList result, RoyaleProject project, ICompilationUnit offsetUnit, IMXMLTagData offsetTag, XmlnsRange xmlnsRange)
+    private void autoCompleteTypesForMXMLFromExistingTag(CompletionList result, RoyaleProject project, ICompilationUnit offsetUnit, IMXMLTagData offsetTag, Position xmlnsPosition)
     {
         IMXMLDataManager mxmlDataManager = compilerWorkspace.getMXMLDataManager();
         MXMLData mxmlData = (MXMLData) mxmlDataManager.get(fileSpecGetter.getFileSpecification(offsetUnit.getAbsoluteFilename()));
@@ -3976,28 +3977,28 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                             {
                                 if (tagPrefix.equals(otherPrefix))
                                 {
-                                    addDefinitionAutoCompleteMXML(typeDefinition, xmlnsRange, false, null, null, false, project, result);
+                                    addDefinitionAutoCompleteMXML(typeDefinition, xmlnsPosition, false, null, null, false, offsetTag, project, result);
                                 }
                             }
                         }
                         if (tagNamespacePackage != null
                                 && tagNamespacePackage.equals(typeDefinition.getPackageName()))
                         {
-                            addDefinitionAutoCompleteMXML(typeDefinition, xmlnsRange, false, null, null, false, project, result);
+                            addDefinitionAutoCompleteMXML(typeDefinition, xmlnsPosition, false, null, null, false, offsetTag, project, result);
                         }
                     }
                     else
                     {
                         //no prefix yet, so complete the definition with a prefix
                         MXMLNamespace ns = MXMLNamespaceUtils.getMXMLNamespaceForTypeDefinition(typeDefinition, mxmlData, project);
-                        addDefinitionAutoCompleteMXML(typeDefinition, xmlnsRange, false, ns.prefix, ns.uri, false, project, result);
+                        addDefinitionAutoCompleteMXML(typeDefinition, xmlnsPosition, false, ns.prefix, ns.uri, false, offsetTag, project, result);
                     }
                 }
             }
         }
     }
 
-    private void autoCompleteDefinitionsForMXML(CompletionList result, RoyaleProject project, ICompilationUnit offsetUnit, boolean typesOnly, boolean tagsNeedOpenBracket, String typeFilter, AddImportData addImportData, XmlnsRange xmlnsRange)
+    private void autoCompleteDefinitionsForMXML(CompletionList result, RoyaleProject project, ICompilationUnit offsetUnit, IMXMLTagData offsetTag, boolean typesOnly, boolean tagsNeedOpenBracket, String typeFilter, AddImportData addImportData, Position xmlnsPosition)
     {
         for (ICompilationUnit unit : project.getCompilationUnits())
         {
@@ -4037,7 +4038,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                             continue;
                         }
 
-                        addMXMLTypeDefinitionAutoComplete(typeDefinition, xmlnsRange, offsetUnit, tagsNeedOpenBracket, project, result);
+                        addMXMLTypeDefinitionAutoComplete(typeDefinition, xmlnsPosition, offsetUnit, offsetTag, tagsNeedOpenBracket, project, result);
                     }
                     else
                     {
@@ -4121,7 +4122,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             if (currentScope instanceof TypeScope && !typesOnly)
             {
                 TypeScope typeScope = (TypeScope) currentScope;
-                addDefinitionsInTypeScopeToAutoComplete(typeScope, scope, true, true, false, false, null, false, addImportData, null, project, result);
+                addDefinitionsInTypeScopeToAutoComplete(typeScope, scope, true, true, false, false, null, false, addImportData, null, null, project, result);
                 if (!staticOnly)
                 {
                     addDefinitionsInTypeScopeToAutoCompleteActionScript(typeScope, scope, false, addImportData, project, result);
@@ -4694,7 +4695,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private void addMembersForMXMLTypeToAutoComplete(IClassDefinition definition,
             IMXMLTagData offsetTag, boolean isAttribute, boolean includePrefix, boolean tagsNeedOpenBracket,
-            AddImportData addImportData, XmlnsRange xmlnsRange, RoyaleProject project, CompletionList result)
+            AddImportData addImportData, Position xmlnsPosition, RoyaleProject project, CompletionList result)
     {
         ICompilationUnit unit = getCompilationUnit(Paths.get(offsetTag.getSourcePath()));
         if (unit == null)
@@ -4723,7 +4724,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             TypeScope typeScope = (TypeScope) definition.getContainedScope();
             ASScope scope = (ASScope) scopes[0];
-            addDefinitionsInTypeScopeToAutoCompleteMXML(typeScope, scope, isAttribute, propertyElementPrefix, tagsNeedOpenBracket, addImportData, xmlnsRange, project, result);
+            addDefinitionsInTypeScopeToAutoCompleteMXML(typeScope, scope, isAttribute, propertyElementPrefix, tagsNeedOpenBracket, addImportData, xmlnsPosition, offsetTag, project, result);
             addStyleMetadataToAutoCompleteMXML(typeScope, isAttribute, propertyElementPrefix, tagsNeedOpenBracket, project, result);
             addEventMetadataToAutoCompleteMXML(typeScope, isAttribute, propertyElementPrefix, tagsNeedOpenBracket, project, result);
             if(isAttribute)
@@ -4777,22 +4778,22 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         boolean isStatic, AddImportData addImportData,
         RoyaleProject project, CompletionList result)
     {
-        addDefinitionsInTypeScopeToAutoComplete(typeScope, otherScope, isStatic, false, false, false, null, false, addImportData, null, project, result);
+        addDefinitionsInTypeScopeToAutoComplete(typeScope, otherScope, isStatic, false, false, false, null, false, addImportData, null, null, project, result);
     }
 
     private void addDefinitionsInTypeScopeToAutoCompleteMXML(TypeScope typeScope, ASScope otherScope,
         boolean isAttribute, String prefix, boolean tagsNeedOpenBracket,
-        AddImportData addImportData, XmlnsRange xmlnsRange,
-        RoyaleProject project, CompletionList result)
+        AddImportData addImportData, Position xmlnsPosition,
+        IMXMLTagData offsetTag, RoyaleProject project, CompletionList result)
     {
-        addDefinitionsInTypeScopeToAutoComplete(typeScope, otherScope, false, false, true, isAttribute, prefix, tagsNeedOpenBracket, addImportData, xmlnsRange, project, result);
+        addDefinitionsInTypeScopeToAutoComplete(typeScope, otherScope, false, false, true, isAttribute, prefix, tagsNeedOpenBracket, addImportData, xmlnsPosition, offsetTag, project, result);
     }
 
     private void addDefinitionsInTypeScopeToAutoComplete(TypeScope typeScope, ASScope otherScope,
         boolean isStatic, boolean includeSuperStatics,
         boolean forMXML, boolean isAttribute, String prefix, boolean tagsNeedOpenBracket,
-        AddImportData addImportData, XmlnsRange xmlnsRange,
-        RoyaleProject project, CompletionList result)
+        AddImportData addImportData, Position xmlnsPosition,
+        IMXMLTagData offsetTag, RoyaleProject project, CompletionList result)
     {
         IMetaTag[] excludeMetaTags = typeScope.getDefinition().getMetaTagsByName(IMetaAttributeConstants.ATTRIBUTE_EXCLUDE);
         ArrayList<IDefinition> memberAccessDefinitions = new ArrayList<>();
@@ -4875,7 +4876,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             if (forMXML)
             {
-                addDefinitionAutoCompleteMXML(localDefinition, xmlnsRange, isAttribute, prefix, null, tagsNeedOpenBracket, project, result);
+                addDefinitionAutoCompleteMXML(localDefinition, xmlnsPosition, isAttribute, prefix, null, tagsNeedOpenBracket, offsetTag, project, result);
             }
             else //actionscript
             {
@@ -5038,12 +5039,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
     }
 
-    private void addMXMLTypeDefinitionAutoComplete(ITypeDefinition definition, XmlnsRange xmlnsRange, ICompilationUnit offsetUnit, boolean tagsNeedOpenBracket, RoyaleProject project, CompletionList result)
+    private void addMXMLTypeDefinitionAutoComplete(ITypeDefinition definition, Position xmlnsPosition, ICompilationUnit offsetUnit, IMXMLTagData offsetTag, boolean tagsNeedOpenBracket, RoyaleProject project, CompletionList result)
     {
         IMXMLDataManager mxmlDataManager = compilerWorkspace.getMXMLDataManager();
         MXMLData mxmlData = (MXMLData) mxmlDataManager.get(fileSpecGetter.getFileSpecification(offsetUnit.getAbsoluteFilename()));
         MXMLNamespace discoveredNS = MXMLNamespaceUtils.getMXMLNamespaceForTypeDefinition(definition, mxmlData, project);
-        addDefinitionAutoCompleteMXML(definition, xmlnsRange, false, discoveredNS.prefix, discoveredNS.uri, tagsNeedOpenBracket, project, result);
+        addDefinitionAutoCompleteMXML(definition, xmlnsPosition, false, discoveredNS.prefix, discoveredNS.uri, tagsNeedOpenBracket, offsetTag, project, result);
     }
 
     private boolean isDuplicateTypeDefinition(IDefinition definition)
@@ -5110,7 +5111,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         result.getItems().add(item);
     }
 
-    private void addDefinitionAutoCompleteMXML(IDefinition definition, XmlnsRange xmlnsRange, boolean isAttribute, String prefix, String uri, boolean tagsNeedOpenBracket, RoyaleProject project, CompletionList result)
+    private void addDefinitionAutoCompleteMXML(IDefinition definition, Position xmlnsPosition, boolean isAttribute, String prefix, String uri, boolean tagsNeedOpenBracket, IMXMLTagData offsetTag, RoyaleProject project, CompletionList result)
     {
         if (definition.getBaseName().startsWith(VECTOR_HIDDEN_PREFIX))
         {
@@ -5175,17 +5176,14 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 insertTextBuilder.append(">");
             }
             item.setInsertText(insertTextBuilder.toString());
-            if (definition instanceof ITypeDefinition && prefix != null && uri != null)
+            if (definition instanceof ITypeDefinition
+                    && prefix != null && uri != null
+                    && MXMLDataUtils.needsNamespace(offsetTag, prefix, uri))
             {
-                Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(xmlnsRange.uri);
-                String fileText = getFileTextForPath(path);
-                if(fileText != null)
+                TextEdit textEdit = CodeActionsUtils.createTextEditForAddMXMLNamespace(prefix, uri, xmlnsPosition);
+                if(textEdit != null)
                 {
-                    TextEdit textEdit = CodeActionsUtils.createTextEditForAddMXMLNamespace(prefix, uri, fileText, xmlnsRange.startIndex, xmlnsRange.endIndex);
-                    if(textEdit != null)
-                    {
-                        item.setAdditionalTextEdits(Collections.singletonList(textEdit));
-                    }
+                    item.setAdditionalTextEdits(Collections.singletonList(textEdit));
                 }
             }
         }

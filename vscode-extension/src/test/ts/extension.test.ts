@@ -7387,37 +7387,6 @@ suite("mxml namespaces: Application workspace", () =>
 					});
 		});
 	});
-	test("as3mxml.addMXMLNamespace skips duplicate namespace", () =>
-	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "MXMLNamespace.mxml"));
-		let nsPrefix = "fx";
-		let nsUri = "http://ns.adobe.com/mxml/2009";
-		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
-		{
-			let originalText = editor.document.getText();
-			return vscode.commands.executeCommand(COMMAND_ADD_MXML_NAMESPACE, nsPrefix, nsUri, uri.toString(), 48, 140)
-				.then(() =>
-					{
-						return new Promise((resolve, reject) =>
-						{
-							//the text edit is not applied immediately, so give
-							//it a short delay before we check
-							setTimeout(() =>
-							{
-								let start = new vscode.Position(2, 51);
-								let end = new vscode.Position(2, 93);
-								let range = new vscode.Range(start, end);
-								let newText = editor.document.getText();
-								assert.strictEqual(newText, originalText, "as3mxml.addMXMLNamespace incorrectly added duplicate MXML namespace in file: " + uri);
-								resolve();
-							}, 250);
-						})
-					}, (err) =>
-					{
-						assert(false, "Failed to execute add import command: " + uri);
-					});
-		});
-	});
 });
 
 suite("code action provider: Application workspace", () =>

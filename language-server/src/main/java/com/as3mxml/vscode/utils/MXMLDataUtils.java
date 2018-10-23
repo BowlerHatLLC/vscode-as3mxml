@@ -77,6 +77,21 @@ public class MXMLDataUtils
         return true;
     }
 
+    public static boolean needsNamespace(IMXMLTagData offsetTag, String prefix, String uri)
+    {
+        PrefixMap prefixMap = offsetTag.getCompositePrefixMap();
+        if(prefixMap == null)
+        {
+            return true;
+        }
+        String foundURI = prefixMap.getNamespaceForPrefix(prefix);
+        if(foundURI == null)
+        {
+            return true;
+        }
+        return !foundURI.equals(uri);
+    }
+
     public static IMXMLTagAttributeData getMXMLTagAttributeAtOffset(IMXMLTagData tag, int offset)
     {
         IMXMLTagAttributeData[] attributes = tag.getAttributeDatas();
