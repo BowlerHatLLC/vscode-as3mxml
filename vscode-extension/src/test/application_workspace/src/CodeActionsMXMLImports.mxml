@@ -9,4 +9,5 @@
 			}
 		]]>
 	</fx:Script>
+	<js:Button click="new CodeActionsNew()"/>
 </js:View>

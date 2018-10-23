@@ -8079,18 +8079,55 @@ suite("code action provider: Application workspace", () =>
 					});
 		});
 	});
-	test("vscode.executeCodeActionProvider finds import for type in MXML", () =>
+	test("vscode.executeCodeActionProvider finds import for type in MXML script", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "CodeActionsMXMLImports.mxml"));
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
-			let start = new vscode.Position(0, 0);
-			let end = new vscode.Position(editor.document.lineCount, 0);
+			let start = new vscode.Position(7, 0);
+			let end = new vscode.Position(7, 38);
 			let range = new vscode.Range(start, end);
 			return vscode.commands.executeCommand("vscode.executeCodeActionProvider", uri, range)
 				.then((codeActions: vscode.CodeAction[]) =>
 					{
+						assert.strictEqual(codeActions.length, 1, "Code action provider provided incorrect number of code actions");
 						let typeToImport = "com.example.codeActions.CodeActionsVarType";
+						let codeAction = findImportCodeActionForType(typeToImport, codeActions);
+						assert.notEqual(codeAction, null, "Code action not found");
+						assert.strictEqual(codeAction.title, "Import " + typeToImport, "Code action provided incorrect title");
+						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
+						let workspaceEdit = codeAction.edit;
+						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
+						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
+						let textEdits = workspaceEdit.get(uri);
+						assert.strictEqual(textEdits.length, 1);
+						let textEdit = textEdits[0];
+						let range = textEdit.range;
+						assert.strictEqual(range.start.line, 5, "Code action workspace edit provided incorrect start line");
+						assert.strictEqual(range.start.character, 0, "Code action workspace edit provided incorrect start character");
+						assert.strictEqual(range.end.line, 5, "Code action workspace edit provided incorrect end line");
+						assert.strictEqual(range.end.character, 0, "Code action workspace edit provided incorrect end character");
+						assert.strictEqual(textEdit.newText, "\t\t\timport " + typeToImport + ";\n\n", "Code action workspace edit provided incorrect new text");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute code actions provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeCodeActionProvider finds import for type in MXML event", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "CodeActionsMXMLImports.mxml"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			let start = new vscode.Position(11, 0);
+			let end = new vscode.Position(11, 42);
+			let range = new vscode.Range(start, end);
+			return vscode.commands.executeCommand("vscode.executeCodeActionProvider", uri, range)
+				.then((codeActions: vscode.CodeAction[]) =>
+					{
+						assert.strictEqual(codeActions.length, 1, "Code action provider provided incorrect number of code actions");
+						let typeToImport = "com.example.codeActions.CodeActionsNew";
 						let codeAction = findImportCodeActionForType(typeToImport, codeActions);
 						assert.notEqual(codeAction, null, "Code action not found");
 						assert.strictEqual(codeAction.title, "Import " + typeToImport, "Code action provided incorrect title");
