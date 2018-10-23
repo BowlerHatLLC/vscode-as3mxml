@@ -1708,11 +1708,27 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             compilerWorkspace.startIdleState();
             compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
             cancelToken.checkCanceled();
+            
+            //we don't need to pause code intelligence for these commands
+            Object result = null;
+            switch(params.getCommand())
+            {
+                case ICommandConstants.QUICK_COMPILE:
+                {
+                    result = executeQuickCompileCommand(params);
+                    break;
+                }
+            }
+            if(result != null)
+            {
+                cancelToken.checkCanceled();
+                return result;
+            }
 
+            //pause code intelligence until we're done
             compilerWorkspace.startBuilding();
             try
             {
-                Object result = null;
                 switch(params.getCommand())
                 {
                     case ICommandConstants.ADD_IMPORT:
@@ -1737,11 +1753,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     {
                         executeOrganizeImportsInDirectoryCommand(params);
                         result = new Object();
-                        break;
-                    }
-                    case ICommandConstants.QUICK_COMPILE:
-                    {
-                        result = executeQuickCompileCommand(params);
                         break;
                     }
                     default:
