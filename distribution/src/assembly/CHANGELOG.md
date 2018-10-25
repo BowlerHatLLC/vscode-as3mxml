@@ -17,7 +17,8 @@
 
 ### Other Changes
 
-* The code action for generating a getter and setter for a variable is now named "Generate 'get' and 'set' accessors" to better match other languages.
+* Build: The task identifiers for compiling ActionScript or packaging Adobe AIR apps have been simplified a bit to make them easier to use as a `preLaunchTask` in *launch.json*.
+* Code Actions: The code action for generating a getter and setter for a variable is now named "Generate 'get' and 'set' accessors" to better match other languages.
 * Views: The **ActionScript Source Path** view displays only when *.as* or *.mxml* files are open to ensure that the VSCode extension does not initialize for workspaces that use other languages.
 
 ## v0.14.1
