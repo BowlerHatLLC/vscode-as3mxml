@@ -1,8 +1,24 @@
 ## v0.15.0
 
+### New Features
+
+* Build: Supports new `htmlTemplate` field in *asconfig.json* that will copy template to output folder and replace tokens, similar to Flash Builder.
+* Debugging: SWF debugger automatically sets up port forwarding when debugging Adobe AIR apps on Android and iOS mobile devices connected over USB.
+* Debugging: SWFs can be launched with **Start Without Debugging** to simply run without connecting to the debugger.
+
+### Fixed Issues
+
+* Code Actions: Fixed issue where **Generate Method** and **Generate Field Variable** code actions did not work for unrecognized symbols in MXML event attributes.
+* Completion: Fixed issue where an import automatically added to an MXML script block was incorrectly added at top of file if no other imports exist yet.
+* Debugging: Fixed issue where some breakpoints worked correctly, but appeared as unverified in the user interface.
+* Debugging: Fixed issue where logpoints could not be added to multiple files at the same time.
+* Organize Imports: Fixed issue where organize imports command removed imports for constants used in MXML binding after the `<fx:Script>` element.
+* Quick Compile & Debug: Fixed issue where code intelligence was temporarily unavailable until compilation completed.
+
 ### Other Changes
 
-* The code action for generating a getter and setter for a variable is now named "Generate 'get' and 'set' accessors" to better match other languages. Additionaly, this code action is now considered a *Refactor* rather than a *Quick Fix*. To access refactorings for a variable, use the **Ctrl+Shift+R** keyboard shortcut or select the variable to trigger the light bulb popup.
+* The code action for generating a getter and setter for a variable is now named "Generate 'get' and 'set' accessors" to better match other languages.
+* Views: The **ActionScript Source Path** view displays only when *.as* or *.mxml* files are open to ensure that the VSCode extension does not initialize for workspaces that use other languages.
 
 ## v0.14.1
 
