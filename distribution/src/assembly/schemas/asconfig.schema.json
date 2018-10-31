@@ -712,7 +712,7 @@
 				{
 					"type": "string",
 					"description": "In a SWF project, specifies the runtime version. Features requiring a later version of the runtime are not compiled into the application.",
-					"pattern": "^[0-9]+(\\.[0-9]+){0,1}$"
+					"pattern": "^[0-9]+(\\.[0-9]+){0,2}$"
 				},
 				"theme":
 				{
