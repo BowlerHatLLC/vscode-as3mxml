@@ -8,7 +8,7 @@
 			"\t$0",
 			"</s:${1:component}>"
 		],
-		"description": "Spark Component Definition"
+		"description": "Spark (Flex) Component Definition"
 	},
 	"MX Component Definition": {
 		"prefix": "mx component",
@@ -19,7 +19,7 @@
 			"\t$0",
 			"</mx:${1:component}>"
 		],
-		"description": "MX Component Definition"
+		"description": "MX (Flex) Component Definition"
 	},
 	"Feathers Component Definition": {
 		"prefix": "feathers component",
@@ -41,7 +41,7 @@
 			"\t$0",
 			"</js:${1:component}>"
 		],
-		"description": "Jewel Component Definition"
+		"description": "Jewel (Royale) Component Definition"
 	},
 	"Express Component Definition": {
 		"prefix": "express component",
@@ -52,7 +52,7 @@
 			"\t$0",
 			"</js:${1:component}>"
 		],
-		"description": "Express Component Definition"
+		"description": "Express (Royale) Component Definition"
 	},
 	"Basic Component Definition": {
 		"prefix": "basic component",
@@ -63,6 +63,6 @@
 			"\t$0",
 			"</js:${1:component}>"
 		],
-		"description": "Basic Component Definition"
+		"description": "Basic (Royale) Component Definition"
 	}
 }
