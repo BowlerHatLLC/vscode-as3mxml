@@ -154,6 +154,7 @@ import com.as3mxml.vscode.project.ProjectOptions;
 import com.as3mxml.vscode.project.WorkspaceFolderData;
 import com.as3mxml.vscode.services.ActionScriptLanguageClient;
 import com.as3mxml.vscode.utils.ASTUtils;
+import com.as3mxml.vscode.utils.ActionScriptSDKUtils;
 import com.as3mxml.vscode.utils.AddImportData;
 import com.as3mxml.vscode.utils.CodeActionsUtils;
 import com.as3mxml.vscode.utils.CompilerProblemFilter;
@@ -270,6 +271,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private CompilerShell compilerShell;
     private CompilerProblemFilter compilerProblemFilter = new CompilerProblemFilter();
     private boolean initialized = false;
+    private boolean frameworkSDKIsRoyale = false;
     private WaitForBuildFinishRunner waitForBuildFinishRunner;
 
     public ActionScriptTextDocumentService()
@@ -2358,9 +2360,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
         //if the framework SDK doesn't include the Falcon compiler, we can
         //ignore certain errors from the editor SDK, which includes Falcon.
-        Path sdkPath = Paths.get(frameworkSDKPath);
-        sdkPath = sdkPath.resolve("../lib/falcon-mxmlc.jar");
-        compilerProblemFilter.royaleProblems = sdkPath.toFile().exists();
+        Path frameworkPath = Paths.get(frameworkSDKPath);
+        Path compilerPath = frameworkPath.resolve("../lib/falcon-mxmlc.jar");
+        compilerProblemFilter.royaleProblems = compilerPath.toFile().exists();
+
+        frameworkSDKIsRoyale = ActionScriptSDKUtils.isRoyaleFramework(frameworkPath);
     }
 
     private void watchNewSourceOrLibraryPath(Path sourceOrLibraryPath, WorkspaceFolderData folderData)
@@ -4770,8 +4774,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         items.add(excludeFromItem);
 
         Set<INamespaceDefinition> namespaceSet = ScopeUtils.getNamespaceSetForScopes(typeScope, otherScope, project);
-        IDefinition propertyDefinition = typeScope.getPropertyByNameForMemberAccess(project, IMXMLLanguageConstants.ATTRIBUTE_ID, namespaceSet);
-        if (propertyDefinition == null)
+
+        IDefinition idPropertyDefinition = typeScope.getPropertyByNameForMemberAccess(project, IMXMLLanguageConstants.ATTRIBUTE_ID, namespaceSet);
+        if (idPropertyDefinition == null)
         {
             CompletionItem idItem = new CompletionItem();
             idItem.setKind(CompletionItemKind.Keyword);
@@ -4782,6 +4787,23 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 idItem.setInsertText(IMXMLLanguageConstants.ATTRIBUTE_ID + "=\"$0\"");
             }
             items.add(idItem);
+        }
+
+        if (frameworkSDKIsRoyale)
+        {
+            IDefinition localIdPropertyDefinition = typeScope.getPropertyByNameForMemberAccess(project, IMXMLLanguageConstants.ATTRIBUTE_LOCAL_ID, namespaceSet);
+            if (localIdPropertyDefinition == null)
+            {
+                CompletionItem localIdItem = new CompletionItem();
+                localIdItem.setKind(CompletionItemKind.Keyword);
+                localIdItem.setLabel(IMXMLLanguageConstants.ATTRIBUTE_LOCAL_ID);
+                if (completionSupportsSnippets)
+                {
+                    localIdItem.setInsertTextFormat(InsertTextFormat.Snippet);
+                    localIdItem.setInsertText(IMXMLLanguageConstants.ATTRIBUTE_LOCAL_ID + "=\"$0\"");
+                }
+                items.add(localIdItem);
+            }
         }
     }
 
