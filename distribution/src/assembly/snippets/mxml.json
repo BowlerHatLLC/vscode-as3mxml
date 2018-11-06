@@ -32,6 +32,17 @@
 		],
 		"description": "Feathers Component Definition"
 	},
+	"Jewel Component Definition": {
+		"prefix": "jewel component",
+		"body": [
+			"<?xml version=\"1.0\" encoding=\"utf-8\"?>",
+			"<js:${1:component} xmlns:fx=\"http://ns.adobe.com/mxml/2009\"",
+			"\txmlns:js=\"library://ns.apache.org/royale/jewel\">",
+			"\t$0",
+			"</js:${1:component}>"
+		],
+		"description": "Jewel Component Definition"
+	},
 	"Express Component Definition": {
 		"prefix": "express component",
 		"body": [
