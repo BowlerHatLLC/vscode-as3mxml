@@ -36,10 +36,10 @@
 		"prefix": "jewel component",
 		"body": [
 			"<?xml version=\"1.0\" encoding=\"utf-8\"?>",
-			"<js:${1:component} xmlns:fx=\"http://ns.adobe.com/mxml/2009\"",
-			"\txmlns:js=\"library://ns.apache.org/royale/jewel\">",
+			"<j:${1:component} xmlns:fx=\"http://ns.adobe.com/mxml/2009\"",
+			"\txmlns:j=\"library://ns.apache.org/royale/jewel\">",
 			"\t$0",
-			"</js:${1:component}>"
+			"</j:${1:component}>"
 		],
 		"description": "Jewel (Royale) Component Definition"
 	},
