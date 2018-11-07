@@ -4929,7 +4929,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             for (IMetaTag eventMetaTag : eventMetaTags)
             {
                 String eventName = eventMetaTag.getAttributeValue(IMetaAttributeConstants.NAME_EVENT_NAME);
-                if (eventName.length() == 0)
+                if (eventName == null || eventName.length() == 0)
                 {
                     //vscode expects all items to have a name
                     continue;
@@ -4998,7 +4998,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             for (IMetaTag styleMetaTag : styleMetaTags)
             {
                 String styleName = styleMetaTag.getAttributeValue(IMetaAttributeConstants.NAME_STYLE_NAME);
-                if (styleName.length() == 0)
+                if (styleName == null || styleName.length() == 0)
                 {
                     //vscode expects all items to have a name
                     continue;
