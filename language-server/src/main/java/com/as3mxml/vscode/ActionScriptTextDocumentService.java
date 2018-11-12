@@ -3398,6 +3398,24 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return new Hover(Collections.emptyList(), null);
         }
 
+        IASNode parentNode = offsetNode.getParent();
+        if (definition instanceof IClassDefinition
+                && parentNode instanceof IFunctionCallNode)
+        {
+            IFunctionCallNode functionCallNode = (IFunctionCallNode) parentNode;
+            if (functionCallNode.isNewExpression())
+            {
+                IClassDefinition classDefinition = (IClassDefinition) definition;
+                //if it's a class in a new expression, use the constructor
+                //definition instead
+                IFunctionDefinition constructorDefinition = classDefinition.getConstructor();
+                if (constructorDefinition != null)
+                {
+                    definition = constructorDefinition;
+                }
+            }
+        }
+
         Hover result = new Hover();
         String detail = DefinitionTextUtils.definitionToDetail(definition, project);
         MarkedString markedDetail = new MarkedString(MARKED_STRING_LANGUAGE_ACTIONSCRIPT, detail);
@@ -3491,6 +3509,25 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             //definition referenced at the current position.
             return Collections.emptyList();
         }
+        
+        IASNode parentNode = offsetNode.getParent();
+        if (definition instanceof IClassDefinition
+                && parentNode instanceof IFunctionCallNode)
+        {
+            IFunctionCallNode functionCallNode = (IFunctionCallNode) parentNode;
+            if (functionCallNode.isNewExpression())
+            {
+                IClassDefinition classDefinition = (IClassDefinition) definition;
+                //if it's a class in a new expression, use the constructor
+                //definition instead
+                IFunctionDefinition constructorDefinition = classDefinition.getConstructor();
+                if (constructorDefinition != null)
+                {
+                    definition = constructorDefinition;
+                }
+            }
+        }
+
         List<Location> result = new ArrayList<>();
         resolveDefinition(definition, project, result);
         return result;

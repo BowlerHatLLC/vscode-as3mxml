@@ -104,6 +104,8 @@ package
 			InternalDefinitions.internalStaticFunction();
 			InternalDefinitions.internalStaticVar = 4;
 			InternalDefinitions.internalStaticProperty = true;
+
+			new SuperDefinitions();
 		}
 	}
 }

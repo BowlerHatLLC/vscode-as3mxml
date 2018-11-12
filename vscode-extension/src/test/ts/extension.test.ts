@@ -1784,6 +1784,28 @@ suite("definition provider: Application workspace", () =>
 					});
 		});
 	});
+	test("vscode.executeDefinitionProvider finds definition of constructor", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
+		let definitionURI = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "SuperDefinitions.as"));
+		let position = new vscode.Position(107, 10);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDefinitionProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 1,
+							"vscode.executeDefinitionProvider failed to provide location of super member property definition with member access operator on super: " + uri);
+						let location = locations[0];
+						assert.strictEqual(location.uri.path, definitionURI.path, "vscode.executeDefinitionProvider provided incorrect uri for super member property definition with member access operator on super");
+						assert.strictEqual(location.range.start.line, 34, "vscode.executeDefinitionProvider provided incorrect line for super member property definition with member access operator on super");
+						assert.strictEqual(location.range.start.character, 18, "vscode.executeDefinitionProvider provided incorrect character for super member property definition with member access operator on super");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute definition provider: " + uri);
+					});
+		});
+	});
 	test("vscode.executeDefinitionProvider finds definition of file-internal variable", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
@@ -1797,7 +1819,7 @@ suite("definition provider: Application workspace", () =>
 							"vscode.executeDefinitionProvider failed to provide location of file-internal variable definition: " + uri);
 						let location = locations[0];
 						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for file-internal variable definition");
-						assert.strictEqual(location.range.start.line, 111, "vscode.executeDefinitionProvider provided incorrect line for file-internal variable definition");
+						assert.strictEqual(location.range.start.line, 113, "vscode.executeDefinitionProvider provided incorrect line for file-internal variable definition");
 						assert.strictEqual(location.range.start.character, 4, "vscode.executeDefinitionProvider provided incorrect character for file-internal variable definition");
 					}, (err) =>
 					{
@@ -1818,7 +1840,7 @@ suite("definition provider: Application workspace", () =>
 							"vscode.executeDefinitionProvider failed to provide location of file-internal function definition: " + uri);
 						let location = locations[0];
 						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for file-internal function definition");
-						assert.strictEqual(location.range.start.line, 110, "vscode.executeDefinitionProvider provided incorrect line for file-internal function definition");
+						assert.strictEqual(location.range.start.line, 112, "vscode.executeDefinitionProvider provided incorrect line for file-internal function definition");
 						assert.strictEqual(location.range.start.character, 9, "vscode.executeDefinitionProvider provided incorrect character for file-internal function definition");
 					}, (err) =>
 					{
@@ -1839,8 +1861,29 @@ suite("definition provider: Application workspace", () =>
 							"vscode.executeDefinitionProvider failed to provide location of file-internal class definition: " + uri);
 						let location = locations[0];
 						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for file-internal class definition");
-						assert.strictEqual(location.range.start.line, 113, "vscode.executeDefinitionProvider provided incorrect line for file-internal class definition");
+						assert.strictEqual(location.range.start.line, 115, "vscode.executeDefinitionProvider provided incorrect line for file-internal class definition");
 						assert.strictEqual(location.range.start.character, 6, "vscode.executeDefinitionProvider provided incorrect character for file-internal class definition");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute definition provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeDefinitionProvider finds definition of file-internal constructor", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
+		let position = new vscode.Position(97, 64);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDefinitionProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 1,
+							"vscode.executeDefinitionProvider failed to provide location of file-internal class definition: " + uri);
+						let location = locations[0];
+						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for file-internal class definition");
+						assert.strictEqual(location.range.start.line, 147, "vscode.executeDefinitionProvider provided incorrect line for file-internal class definition");
+						assert.strictEqual(location.range.start.character, 17, "vscode.executeDefinitionProvider provided incorrect character for file-internal class definition");
 					}, (err) =>
 					{
 						assert(false, "Failed to execute definition provider: " + uri);
@@ -1860,7 +1903,7 @@ suite("definition provider: Application workspace", () =>
 							"vscode.executeDefinitionProvider failed to provide location of file-internal member function definition: " + uri);
 						let location = locations[0];
 						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for file-internal member function definition");
-						assert.strictEqual(location.range.start.line, 141, "vscode.executeDefinitionProvider provided incorrect line for file-internal member function definition");
+						assert.strictEqual(location.range.start.line, 143, "vscode.executeDefinitionProvider provided incorrect line for file-internal member function definition");
 						assert.strictEqual(location.range.start.character, 17, "vscode.executeDefinitionProvider provided incorrect character for file-internal member function definition");
 					}, (err) =>
 					{
@@ -1881,7 +1924,7 @@ suite("definition provider: Application workspace", () =>
 							"vscode.executeDefinitionProvider failed to provide location of file-internal member variable definition: " + uri);
 						let location = locations[0];
 						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for file-internal member variable definition");
-						assert.strictEqual(location.range.start.line, 130, "vscode.executeDefinitionProvider provided incorrect line for file-internal member variable definition");
+						assert.strictEqual(location.range.start.line, 132, "vscode.executeDefinitionProvider provided incorrect line for file-internal member variable definition");
 						assert.strictEqual(location.range.start.character, 12, "vscode.executeDefinitionProvider provided incorrect character for file-internal member variable definition");
 					}, (err) =>
 					{
@@ -1902,7 +1945,7 @@ suite("definition provider: Application workspace", () =>
 							"vscode.executeDefinitionProvider failed to provide location of file-internal member property definition: " + uri);
 						let location = locations[0];
 						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for file-internal member property definition");
-						assert.strictEqual(location.range.start.line, 132, "vscode.executeDefinitionProvider provided incorrect line for file-internal member property definition");
+						assert.strictEqual(location.range.start.line, 134, "vscode.executeDefinitionProvider provided incorrect line for file-internal member property definition");
 						assert.strictEqual(location.range.start.character, 21, "vscode.executeDefinitionProvider provided incorrect character for file-internal member property definition");
 					}, (err) =>
 					{
@@ -1923,7 +1966,7 @@ suite("definition provider: Application workspace", () =>
 							"vscode.executeDefinitionProvider failed to provide location of file-internal static property definition: " + uri);
 						let location = locations[0];
 						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for file-internal static property definition");
-						assert.strictEqual(location.range.start.line, 117, "vscode.executeDefinitionProvider provided incorrect line for file-internal static property definition");
+						assert.strictEqual(location.range.start.line, 119, "vscode.executeDefinitionProvider provided incorrect line for file-internal static property definition");
 						assert.strictEqual(location.range.start.character, 28, "vscode.executeDefinitionProvider provided incorrect character for file-internal static property definition");
 					}, (err) =>
 					{
@@ -1944,7 +1987,7 @@ suite("definition provider: Application workspace", () =>
 							"vscode.executeDefinitionProvider failed to provide location of file-internal static variable definition: " + uri);
 						let location = locations[0];
 						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for file-internal static variable definition");
-						assert.strictEqual(location.range.start.line, 115, "vscode.executeDefinitionProvider provided incorrect line for file-internal static variable definition");
+						assert.strictEqual(location.range.start.line, 117, "vscode.executeDefinitionProvider provided incorrect line for file-internal static variable definition");
 						assert.strictEqual(location.range.start.character, 19, "vscode.executeDefinitionProvider provided incorrect character for file-internal static variable definition");
 					}, (err) =>
 					{
@@ -1965,7 +2008,7 @@ suite("definition provider: Application workspace", () =>
 							"vscode.executeDefinitionProvider failed to provide location of file-internal static function definition: " + uri);
 						let location = locations[0];
 						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for file-internal static function definition");
-						assert.strictEqual(location.range.start.line, 126, "vscode.executeDefinitionProvider provided incorrect line for file-internal static function definition");
+						assert.strictEqual(location.range.start.line, 128, "vscode.executeDefinitionProvider provided incorrect line for file-internal static function definition");
 						assert.strictEqual(location.range.start.character, 24, "vscode.executeDefinitionProvider provided incorrect character for file-internal static function definition");
 					}, (err) =>
 					{
