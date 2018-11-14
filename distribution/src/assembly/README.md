@@ -20,8 +20,8 @@
 
 ## Help and Support
 
-* [Help & Documentation](https://github.com/BowlerHatLLC/vscode-nextgenas/wiki)
-* [Issue Tracker](https://github.com/BowlerHatLLC/vscode-nextgenas/issues)
+* [Help & Documentation](https://github.com/BowlerHatLLC/vscode-as3mxml/wiki)
+* [Issue Tracker](https://github.com/BowlerHatLLC/vscode-as3mxml/issues)
 
 ## Minimum Requirements
 
@@ -30,7 +30,7 @@
 
 ## asconfig.json
 
-Add a file named [*asconfig.json*](https://github.com/BowlerHatLLC/vscode-nextgenas/wiki/asconfig.json) to the root of your project to enable the ActionScript & MXML extension.
+Add a file named [*asconfig.json*](https://github.com/BowlerHatLLC/vscode-as3mxml/wiki/asconfig.json) to the root of your project to enable the ActionScript & MXML extension.
 
 A sample *asconfig.json* file for an Apache Royale project appears below:
 

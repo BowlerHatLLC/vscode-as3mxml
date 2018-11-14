@@ -76,7 +76,7 @@ public class SWFDebug
             catch (IOException e)
             {
                 System.err.println("SWF debug adapter failed to connect.");
-                System.err.println("Visit the following URL to file an issue, and please include this log: https://github.com/BowlerHatLLC/vscode-nextgenas/issues");
+                System.err.println("Visit the following URL to file an issue, and please include this log: https://github.com/BowlerHatLLC/vscode-as3mxml/issues");
                 e.printStackTrace(System.err);
                 System.exit(SERVER_CONNECT_ERROR);
             }

@@ -644,7 +644,7 @@ public class CodeActionsUtils
                     && endIndex != -1
                     //just to be safe
                     && startIndex < endIndex
-                    //see BowlerHatLLC/vscode-nextgenas#234 for an example where
+                    //see BowlerHatLLC/vscode-as3mxml#234 for an example where
                     //the index values could be out of range!
                     && startIndex <= text.length()
                     && endIndex <= text.length())

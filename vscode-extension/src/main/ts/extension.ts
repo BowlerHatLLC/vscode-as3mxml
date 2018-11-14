@@ -350,7 +350,7 @@ function startClient()
 	if(vscode.workspace.workspaceFolders === undefined)
 	{
 		vscode.window.showInformationMessage(MISSING_WORKSPACE_ROOT_ERROR,
-			{ title: "Help", href: "https://github.com/BowlerHatLLC/vscode-nextgenas/wiki" }
+			{ title: "Help", href: "https://github.com/BowlerHatLLC/vscode-as3mxml/wiki" }
 		).then((value) =>
 		{
 			if(value && value.href)

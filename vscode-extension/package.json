@@ -7,10 +7,10 @@
   "homepage": "https://as3mxml.com/",
   "repository": {
     "type": "git",
-    "url": "https://github.com/BowlerHatLLC/vscode-nextgenas.git"
+    "url": "https://github.com/BowlerHatLLC/vscode-as3mxml.git"
   },
   "bugs": {
-    "url": "https://github.com/BowlerHatLLC/vscode-nextgenas/issues"
+    "url": "https://github.com/BowlerHatLLC/vscode-as3mxml/issues"
   },
   "license": "Apache-2.0",
   "private": true,

@@ -9977,7 +9977,7 @@ suite("organize imports: Application workspace", () =>
 					});
 		});
 	});
-	//BowlerHatLLC/vscode-nextgenas#182
+	//BowlerHatLLC/vscode-as3mxml#182
 	test("as3mxml.organizeImportsInUri must be able to remove all imports, if necessary", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "RemoveAllImports.as"));
