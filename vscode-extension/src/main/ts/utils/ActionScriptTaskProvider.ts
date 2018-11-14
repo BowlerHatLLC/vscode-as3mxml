@@ -304,7 +304,6 @@ export default class ActionScriptTaskProvider implements vscode.TaskProvider
 		let task = new vscode.Task(definition, workspaceFolder, description,
 			source, execution, MATCHER);
 		task.group = vscode.TaskGroup.Build;
-		console.log(task.name);
 		return task;
 	}
 
