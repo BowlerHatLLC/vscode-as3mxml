@@ -27,6 +27,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -98,6 +99,10 @@ public class ASConfigC
 		airOption.setArgName("PLATFORM");
 		airOption.setOptionalArg(true);
 		options.addOption(airOption);
+		Option cleanOption = new Option(null, "clean", true, "Clean the output directory. Will not build the project.");
+		cleanOption.setArgName("true OR false");
+		cleanOption.setOptionalArg(true);
+		options.addOption(cleanOption);
 
 		ASConfigCOptions asconfigcOptions = null;
 		try
@@ -164,6 +169,7 @@ public class ASConfigC
 		JsonNode json = loadConfig(configFile);
 		parseConfig(json);
 		validateSDK();
+		cleanProject();
 		compileProject();
 		copySourcePathAssets();
 		copyHTMLTemplate();
@@ -177,6 +183,7 @@ public class ASConfigC
 	private List<String> airOptions;
 	private JsonNode airOptionsJSON;
 	private String projectType;
+	private boolean clean;
 	private boolean debugBuild;
 	private boolean copySourcePathAssets;
 	private String jsOutputType;
@@ -271,6 +278,7 @@ public class ASConfigC
 	
 	private void parseConfig(JsonNode json) throws ASConfigCException
 	{
+		clean = options.clean != null && options.clean.equals(true);
 		debugBuild = options.debug != null && options.debug.equals(true);
 		compilerOptions = new ArrayList<>();
 		if(options.debug != null)
@@ -580,6 +588,67 @@ public class ASConfigC
 			throw new ASConfigCException("Configuration options in asconfig.json require Apache FlexJS. Path to SDK is not valid: " + sdkHome);
 		}
 		outputIsJS = (sdkIsRoyale || sdkIsFlexJS) && !isSWFTargetOnly;
+	}
+
+	private void cleanProject() throws ASConfigCException
+	{
+		if(!clean)
+		{
+			return;
+		}
+		String outputDirectory = ProjectUtils.findOutputDirectory(mainFile, outputPath, !outputIsJS);
+		Path outputPath = Paths.get(outputDirectory);
+		Path cwd = Paths.get(System.getProperty("user.dir"));
+		if (cwd.startsWith(outputPath))
+		{
+			throw new ASConfigCException("Failed to clean project because the output path overlaps with the current working directory.");
+		}
+
+		List<String> sourcePathsCopy = new ArrayList<>();
+		if(sourcePaths != null)
+		{
+			//we don't want to modify the original list, so copy the items over
+			sourcePathsCopy.addAll(sourcePaths);
+		}
+		if(mainFile != null)
+		{
+			//the parent directory of the main file is automatically added as a
+			//source path by the compiler
+			Path mainFileParent = Paths.get(mainFile).getParent();
+			sourcePathsCopy.add(mainFileParent.toString());
+		}
+		for(int i = 0, size = sourcePathsCopy.size(); i < size; i++)
+		{
+			String sourcePath = sourcePathsCopy.get(i);
+			Path path = Paths.get(sourcePath);
+			if(!path.isAbsolute())
+			{
+				//force all source paths into absolute paths
+				path = Paths.get(System.getProperty("user.dir"), sourcePath);
+			}
+			if (path.startsWith(outputPath))
+			{
+				throw new ASConfigCException("Failed to clean project because the output path overlaps with a source path.");
+			}
+		}
+
+		if(Files.exists(outputPath))
+		{
+			try
+			{
+				Files.walk(outputPath)
+					.sorted(Comparator.reverseOrder())
+					.map(Path::toFile)
+					.forEach(File::delete);
+			}
+			catch(IOException e)
+			{
+				throw new ASConfigCException("Failed to clean project because an I/O exception occurred.");
+			}
+		}
+
+		//immediately exits after cleaning
+		System.exit(0);
 	}
 	
 	private void compileProject() throws ASConfigCException

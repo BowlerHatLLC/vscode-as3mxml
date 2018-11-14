@@ -26,11 +26,13 @@ public class ASConfigCOptions
 	private static final String OPTION_SDK = "sdk";
 	private static final String OPTION_DEBUG = "debug";
 	private static final String OPTION_AIR = "air";
+	private static final String OPTION_CLEAN = "clean";
 
 	public String project = null;
 	public String sdk = null;
 	public Boolean debug = null;
 	public String air = null;
+	public Boolean clean = null;
 	public IASConfigCCompiler compiler = null;
 
 	public ASConfigCOptions(String project, String sdk, Boolean debug, String air, IASConfigCCompiler compiler)
@@ -60,6 +62,11 @@ public class ASConfigCOptions
 		if(line.hasOption(OPTION_AIR))
 		{
 			air = line.getOptionValue(OPTION_AIR, "air");
+		}
+		if(line.hasOption(OPTION_CLEAN))
+		{
+			String cleanString = line.getOptionValue(OPTION_CLEAN, Boolean.TRUE.toString());
+			clean = cleanString.equals(Boolean.TRUE.toString());
 		}
 		compiler = new DefaultCompiler();
 	}
