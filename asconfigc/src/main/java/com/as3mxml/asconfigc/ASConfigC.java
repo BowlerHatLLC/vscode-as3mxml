@@ -626,7 +626,8 @@ public class ASConfigC
 				//force all source paths into absolute paths
 				path = Paths.get(System.getProperty("user.dir"), sourcePath);
 			}
-			if (path.startsWith(outputPath))
+			if (path.startsWith(outputPath) ||
+				outputPath.startsWith(path))
 			{
 				throw new ASConfigCException("Failed to clean project because the output path overlaps with a source path.");
 			}
