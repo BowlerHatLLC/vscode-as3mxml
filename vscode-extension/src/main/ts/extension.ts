@@ -75,7 +75,7 @@ function onDidChangeConfiguration(event: vscode.ConfigurationChangeEvent)
 	let newEditorSDKHome = getValidatedEditorSDKConfiguration(newJavaExecutablePath);
 	let newFrameworkSDKHome = getFrameworkSDKPathWithFallbacks();
 	let restarting = false;
-	if(javaExecutablePath != newJavaExecutablePath ||
+	if(event.affectsConfiguration("as3mxml.java.path") ||
 		event.affectsConfiguration("as3mxml.sdk.editor"))
 	{
 		//we're going to try to kill the language server and then restart
