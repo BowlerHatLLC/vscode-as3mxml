@@ -6497,13 +6497,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                             }
                             if (propertyChild instanceof IMXMLSingleDataBindingNode)
                             {
-                                //IMXMLSingleDataBindingNode dataBinding = (IMXMLSingleDataBindingNode) propertyChild;
-                                //IASNode containingNode = dataBinding.getExpressionNode().getContainingNode(currentOffset);
-                                //we found the correct expression, but due to a bug
-                                //in the compiler its line and column positions
-                                //will be wrong. the resulting completion is too
-                                //quirky, so this feature will be completed later.
-                                //return containingNode;
+                                IMXMLSingleDataBindingNode dataBinding = (IMXMLSingleDataBindingNode) propertyChild;
+                                IASNode containingNode = dataBinding.getExpressionNode().getContainingNode(currentOffset);
+                                if (containingNode == null)
+                                {
+                                    return dataBinding;
+                                }
+                                return containingNode;
                             }
                         }
                     }
