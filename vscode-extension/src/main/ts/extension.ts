@@ -27,15 +27,9 @@ import getFrameworkSDKPathWithFallbacks from "./utils/getFrameworkSDKPathWithFal
 import adapterExecutableCommandSWF from "./commands/adapterExecutableCommandSWF";
 import selectWorkspaceSDK from "./commands/selectWorkspaceSDK";
 import migrateFlashBuilderProject from "./commands/migrateFlashBuilderProject";
-import * as child_process from "child_process";
-import * as fs from "fs";
-import * as net from "net";
 import * as path from "path";
 import * as vscode from "vscode";
-import {LanguageClient, LanguageClientOptions, SettingMonitor,
-	ServerOptions, StreamInfo, ErrorHandler, ErrorAction,
-	CloseAction, Executable, ExecutableOptions} from "vscode-languageclient";
-import { Message } from "vscode-jsonrpc";
+import {LanguageClient, LanguageClientOptions, Executable, ExecutableOptions} from "vscode-languageclient";
 import logCompilerShellOutput from "./commands/logCompilerShellOutput";
 import quickCompileAndDebug from "./commands/quickCompileAndDebug";
 import migrateSettings from "./utils/migrateSettings";
@@ -47,7 +41,6 @@ const MISSING_JAVA_ERROR = "Could not locate valid Java executable. To configure
 const MISSING_WORKSPACE_ROOT_ERROR = "Open a folder and create a file named asconfig.json to enable all ActionScript & MXML language features.";
 const QUICK_COMPILE_LANGUAGE_SERVER_NOT_STARTED_ERROR = "Quick compile failed. Try again after ActionScript & MXML extension is initialized.";
 const INITIALIZING_MESSAGE = "Initializing ActionScript & MXML language server...";
-const RESTART_FAIL_MESSAGE = "Failed to restart ActionScript & MXML server. Please reload the window to continue.";
 const RELOAD_WINDOW_MESSAGE = "To apply new settings for ActionScript & MXML, please reload the window.";
 const RELOAD_WINDOW_BUTTON_LABEL = "Reload Window";
 const CONFIGURE_SDK_LABEL = "Configure SDK";
@@ -72,7 +65,7 @@ function getValidatedEditorSDKConfiguration(javaExecutablePath: string): string
 	return validateEditorSDK(savedContext.extensionPath, javaExecutablePath, result);
 }
 
-function onDidChangeConfiguration(event)
+function onDidChangeConfiguration(event: vscode.ConfigurationChangeEvent)
 {
 	let javaSettingsPath = <string> vscode.workspace.getConfiguration("as3mxml").get("java.path");
 	let newJavaExecutablePath = findJava(javaSettingsPath, (javaPath) =>
@@ -82,8 +75,8 @@ function onDidChangeConfiguration(event)
 	let newEditorSDKHome = getValidatedEditorSDKConfiguration(newJavaExecutablePath);
 	let newFrameworkSDKHome = getFrameworkSDKPathWithFallbacks();
 	let restarting = false;
-	if(editorSDKHome != newEditorSDKHome ||
-		javaExecutablePath != newJavaExecutablePath)
+	if(javaExecutablePath != newJavaExecutablePath ||
+		event.affectsConfiguration("as3mxml.sdk.editor"))
 	{
 		//we're going to try to kill the language server and then restart
 		//it with the new settings
@@ -298,23 +291,6 @@ export function activate(context: vscode.ExtensionContext)
 export function deactivate()
 {
 	 savedContext = null;
-}
-
-function childExitListener(code)
-{
-	console.info("Child process exited", code);
-	if(code === 0)
-	{
-		return;
-	}
-	vscode.window.showErrorMessage("ActionScript & MXML extension exited with error code " + code);
-}
-
-function childErrorListener(error)
-{
-	vscode.window.showErrorMessage("Failed to start ActionScript & MXML extension.");
-	console.error("Error connecting to child process.");
-	console.error(error);
 }
 
 function hasInvalidJava(): boolean
