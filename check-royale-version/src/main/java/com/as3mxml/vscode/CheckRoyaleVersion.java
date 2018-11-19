@@ -27,6 +27,10 @@ public class CheckRoyaleVersion
     public static final int BAD_VERSION = 100;
     public static final int EXCEPTION_VERSION = 101;
 
+    private static final int MIN_MAJOR = 0;
+    private static final int MIN_MINOR = 9;
+    private static final int MIN_REVISION = 4;
+
     public static void main(String[] args)
     {
         try
@@ -36,24 +40,32 @@ public class CheckRoyaleVersion
             String[] versionParts = sdkVersion.split("-")[0].split("\\.");
             int major = 0;
             int minor = 0;
+            int revision = 0;
             if (versionParts.length >= 3)
             {
                 major = Integer.parseInt(versionParts[0]);
                 minor = Integer.parseInt(versionParts[1]);
-                //we don't actually care about the revision
-                //revision = Integer.parseInt(versionParts[2]);
+                revision = Integer.parseInt(versionParts[2]);
             }
-            if (major > 0)
+            if (major > MIN_MAJOR)
             {
                 //major version is valid
                 System.exit(GOOD_VERSION);
             }
-            else if (major == 0)
+            else if (major == MIN_MAJOR)
             {
-                if (minor >= 9)
+                if (minor > MIN_MINOR)
                 {
                     //minor version is valid
                     System.exit(GOOD_VERSION);
+                }
+                else if (minor == MIN_MINOR)
+                {
+                    if (revision >= MIN_REVISION)
+                    {
+                        //revision is valid
+                        System.exit(GOOD_VERSION);
+                    }
                 }
             }
             //version is too old!
