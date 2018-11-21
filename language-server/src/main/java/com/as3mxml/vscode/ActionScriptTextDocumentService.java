@@ -6140,20 +6140,20 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private boolean checkFilePathForAllProblems(Path path, ProblemQuery problemQuery, boolean quick)
     {
-        ICompilationUnit mainUnit = getCompilationUnit(path);
-        if (mainUnit == null)
+        ICompilationUnit unitForPath = getCompilationUnit(path);
+        if (unitForPath == null)
         {
             //fall back to the syntax check instead
             return false;
         }
         if (waitForBuildFinishRunner != null
-            && mainUnit.equals(waitForBuildFinishRunner.getCompilationUnit())
+            && unitForPath.equals(waitForBuildFinishRunner.getCompilationUnit())
             && waitForBuildFinishRunner.isRunning())
         {
             //take precedence over the real time problem checker
             waitForBuildFinishRunner.setCancelled();
         }
-        CompilerProject project = (CompilerProject) mainUnit.getProject();
+        CompilerProject project = (CompilerProject) unitForPath.getProject();
         Collection<ICompilerProblem> fatalProblems = project.getFatalProblems();
         if (fatalProblems == null || fatalProblems.size() == 0)
         {
@@ -6169,7 +6169,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             if (quick)
             {
-                checkCompilationUnitForAllProblems(mainUnit, problemQuery);
+                checkCompilationUnitForAllProblems(unitForPath, problemQuery);
                 return true;
             }
             boolean continueCheckingForErrors = true;
