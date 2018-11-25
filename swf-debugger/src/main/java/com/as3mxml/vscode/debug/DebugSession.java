@@ -29,6 +29,7 @@ import com.as3mxml.vscode.debug.protocol.ProtocolServer;
 import com.as3mxml.vscode.debug.protocol.Request;
 import com.as3mxml.vscode.debug.protocol.Response;
 import com.as3mxml.vscode.debug.requests.AttachRequest;
+import com.as3mxml.vscode.debug.requests.EvaluateRequest;
 import com.as3mxml.vscode.debug.requests.ExceptionInfoRequest;
 import com.as3mxml.vscode.debug.requests.InitializeRequest;
 import com.as3mxml.vscode.debug.requests.LaunchRequest;
@@ -203,7 +204,7 @@ public abstract class DebugSession extends ProtocolServer
                 }
                 case "evaluate":
                 {
-                    evaluate(response, arguments);
+                    evaluate(response, (EvaluateRequest.EvaluateArguments) arguments);
                     break;
                 }
                 case "exceptionInfo":
@@ -270,7 +271,7 @@ public abstract class DebugSession extends ProtocolServer
 
     public abstract void threads(Response response, Request.RequestArguments arguments);
 
-    public abstract void evaluate(Response response, Request.RequestArguments arguments);
+    public abstract void evaluate(Response response, EvaluateRequest.EvaluateArguments arguments);
 
     public abstract void exceptionInfo(Response response, ExceptionInfoRequest.ExceptionInfoArguments arguments);
 
@@ -411,6 +412,10 @@ public abstract class DebugSession extends ProtocolServer
                 case VariablesRequest.REQUEST_COMMAND:
                 {
                     return gson.fromJson(je, VariablesRequest.class);
+                }
+                case EvaluateRequest.REQUEST_COMMAND:
+                {
+                    return gson.fromJson(je, EvaluateRequest.class);
                 }
                 case ExceptionInfoRequest.REQUEST_COMMAND:
                 {

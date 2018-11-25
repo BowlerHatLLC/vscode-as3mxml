@@ -47,6 +47,7 @@ import com.as3mxml.vscode.debug.events.TerminatedEvent;
 import com.as3mxml.vscode.debug.protocol.Request;
 import com.as3mxml.vscode.debug.protocol.Response;
 import com.as3mxml.vscode.debug.requests.AttachRequest;
+import com.as3mxml.vscode.debug.requests.EvaluateRequest;
 import com.as3mxml.vscode.debug.requests.ExceptionInfoRequest;
 import com.as3mxml.vscode.debug.requests.InitializeRequest;
 import com.as3mxml.vscode.debug.requests.LaunchRequest;
@@ -58,6 +59,7 @@ import com.as3mxml.vscode.debug.requests.StackTraceRequest;
 import com.as3mxml.vscode.debug.requests.VariablesRequest;
 import com.as3mxml.vscode.debug.responses.Breakpoint;
 import com.as3mxml.vscode.debug.responses.Capabilities;
+import com.as3mxml.vscode.debug.responses.EvaluateResponseBody;
 import com.as3mxml.vscode.debug.responses.ExceptionDetails;
 import com.as3mxml.vscode.debug.responses.ExceptionInfoResponseBody;
 import com.as3mxml.vscode.debug.responses.Scope;
@@ -1292,11 +1294,97 @@ public class SWFDebugSession extends DebugSession
         sendResponse(response, new ThreadsResponseBody(threads));
     }
 
-    public void evaluate(Response response, Request.RequestArguments arguments)
+    public void evaluate(Response response, EvaluateRequest.EvaluateArguments arguments)
     {
-        sendResponse(response);
-    }
+        EvaluateResponseBody body = new EvaluateResponseBody();
+        
+        try
+        {
+            int frameId = arguments.frameId;
+            Frame[] swfFrames = swfSession.getFrames();
+            flash.tools.debugger.Variable[] members = null;
+            if (frameId >= 0 && frameId < swfFrames.length)
+            {
+                Frame swfFrame = swfFrames[frameId];
+                flash.tools.debugger.Variable[] args = swfFrame.getArguments(swfSession);
+                flash.tools.debugger.Variable[] locals = swfFrame.getLocals(swfSession);
+                flash.tools.debugger.Variable swfThis = swfFrame.getThis(swfSession);
+                flash.tools.debugger.Variable[] globals;
+                int offset = 0;
+                if (swfThis != null)
+                {
+                    globals = swfThis.getValue().getMembers(swfSession);
+                    offset = 1;
+                }
+                else
+                {
+                    globals = new flash.tools.debugger.Variable[0];
+                }
+                int memberCount = locals.length + args.length + globals.length;
+                members = new flash.tools.debugger.Variable[memberCount + offset];
+                if (swfThis != null)
+                {
+                    members[0] = swfThis;
+                }
+                System.arraycopy(args, 0, members, offset, args.length);
+                System.arraycopy(locals, 0, members, args.length + offset, locals.length);
+                
+                if (swfThis != null)
+                {
+                    System.arraycopy(globals, 0, members, args.length + locals.length + offset, globals.length);
+                }
+            }
+            else
+            {
+                members = new flash.tools.debugger.Variable[0];
+            }
+            
+            for (flash.tools.debugger.Variable member : members)
+            {
+                Value memberValue = member.getValue();
+                long id = memberValue.getId();
 
+                // TODO: arguments.expression may not be a simple string, it can be a path like: class1.class2.variable.
+                // So, it would be nice to make this smarter.
+                if(member.getName().equals(arguments.expression))
+                {
+                    if (id != Value.UNKNOWN_ID)
+                    {
+                        body.result = memberValue.getTypeName();
+                        body.variablesReference = memberValue.getId();
+                        body.type = memberValue.getTypeName();
+                    }
+                    else
+                    {
+                        if (memberValue.getType() == VariableType.STRING)
+                        {
+                            body.result = "\"" + memberValue.getValueAsString() + "\"";
+                        }
+                        else
+                        {
+                            body.result = memberValue.getValueAsString();
+                        }
+
+                        body.variablesReference = (long)0;
+                    }
+                    
+                    break;
+                }
+            }
+
+            if(body.result == null)
+            {
+                body.result = "not available";
+            }
+        }
+        catch (PlayerDebugException e)
+        {
+            //ignore
+        }
+
+        sendResponse(response, body);
+    }
+    
     public void exceptionInfo(Response response, ExceptionInfoRequest.ExceptionInfoArguments arguments)
     {
         if(previousFaultEvent == null)
