@@ -1371,18 +1371,21 @@ public class SWFDebugSession extends DebugSession
                     break;
                 }
             }
-
-            if(body.result == null)
-            {
-                body.result = "not available";
-            }
         }
         catch (PlayerDebugException e)
         {
             //ignore
         }
 
-        sendResponse(response, body);
+        // not sending the body at all will output "not available" as the value of evaluation.
+        if(body.result == null)
+        {
+            sendResponse(response);
+        }
+        else
+        {
+            sendResponse(response, body);
+        }
     }
     
     public void exceptionInfo(Response response, ExceptionInfoRequest.ExceptionInfoArguments arguments)
