@@ -33,6 +33,11 @@ public class Variable
     public String type;
 
     /**
+     * Optional evaluatable name of this variable which can be passed to the 'EvaluateRequest' to fetch the variable's value.
+     */
+    public String evaluateName;
+
+    /**
      * If variablesReference is > 0, the variable is structured and its children can be retrieved by passing variablesReference to the VariablesRequest.
      */
     public Long variablesReference = null;
