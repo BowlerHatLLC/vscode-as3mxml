@@ -21,11 +21,13 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.io.StringReader;
 import java.lang.reflect.Type;
 import java.net.ConnectException;
 import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -85,17 +87,24 @@ import flash.tools.debugger.NoResponseException;
 import flash.tools.debugger.NotConnectedException;
 import flash.tools.debugger.Player;
 import flash.tools.debugger.PlayerDebugException;
+import flash.tools.debugger.Session;
 import flash.tools.debugger.SourceFile;
 import flash.tools.debugger.SuspendReason;
 import flash.tools.debugger.SwfInfo;
 import flash.tools.debugger.Value;
 import flash.tools.debugger.VariableType;
 import flash.tools.debugger.VersionException;
+import flash.tools.debugger.concrete.DValue;
 import flash.tools.debugger.events.BreakEvent;
 import flash.tools.debugger.events.DebugEvent;
 import flash.tools.debugger.events.ExceptionFault;
 import flash.tools.debugger.events.FaultEvent;
 import flash.tools.debugger.events.TraceEvent;
+import flash.tools.debugger.expression.ASTBuilder;
+import flash.tools.debugger.expression.Context;
+import flash.tools.debugger.expression.NoSuchVariableException;
+import flash.tools.debugger.expression.PlayerFaultException;
+import flash.tools.debugger.expression.ValueExp;
 import flash.tools.debugger.threadsafe.ThreadSafeBootstrap;
 import flash.tools.debugger.threadsafe.ThreadSafeSession;
 import flash.tools.debugger.threadsafe.ThreadSafeSessionManager;
@@ -1302,80 +1311,64 @@ public class SWFDebugSession extends DebugSession
         {
             int frameId = arguments.frameId;
             Frame[] swfFrames = swfSession.getFrames();
-            flash.tools.debugger.Variable[] members = null;
             if (frameId >= 0 && frameId < swfFrames.length)
             {
                 Frame swfFrame = swfFrames[frameId];
-                flash.tools.debugger.Variable[] args = swfFrame.getArguments(swfSession);
-                flash.tools.debugger.Variable[] locals = swfFrame.getLocals(swfSession);
-                flash.tools.debugger.Variable swfThis = swfFrame.getThis(swfSession);
-                flash.tools.debugger.Variable[] globals;
-                int offset = 0;
-                if (swfThis != null)
-                {
-                    globals = swfThis.getValue().getMembers(swfSession);
-                    offset = 1;
-                }
-                else
-                {
-                    globals = new flash.tools.debugger.Variable[0];
-                }
-                int memberCount = locals.length + args.length + globals.length;
-                members = new flash.tools.debugger.Variable[memberCount + offset];
-                if (swfThis != null)
-                {
-                    members[0] = swfThis;
-                }
-                System.arraycopy(args, 0, members, offset, args.length);
-                System.arraycopy(locals, 0, members, args.length + offset, locals.length);
-                
-                if (swfThis != null)
-                {
-                    System.arraycopy(globals, 0, members, args.length + locals.length + offset, globals.length);
-                }
-            }
-            else
-            {
-                members = new flash.tools.debugger.Variable[0];
-            }
-            
-            for (flash.tools.debugger.Variable member : members)
-            {
-                Value memberValue = member.getValue();
-                long id = memberValue.getId();
 
-                // TODO: arguments.expression may not be a simple string, it can be a path like: class1.class2.variable.
-                // So, it would be nice to make this smarter.
-                if(member.getName().equals(arguments.expression))
+                ASTBuilder builder = new ASTBuilder(false);
+                ValueExp result = builder.parse(new StringReader(arguments.expression));
+                Object evaluateResult = result.evaluate(new SWFExpressionContext(swfSession, Isolate.DEFAULT_ID, swfFrame));
+                Value value = null;
+                if(evaluateResult instanceof flash.tools.debugger.Variable)
                 {
+                    flash.tools.debugger.Variable variable = (flash.tools.debugger.Variable) evaluateResult;
+                    value = variable.getValue();
+                }
+                else if(evaluateResult instanceof Value)
+                {
+                    value = (Value) evaluateResult;
+                }
+                if (value instanceof Value)
+                {
+                    long id = value.getId();
                     if (id != Value.UNKNOWN_ID)
                     {
-                        body.result = memberValue.getTypeName();
-                        body.variablesReference = memberValue.getId();
-                        body.type = memberValue.getTypeName();
+                        body.result = value.getTypeName();
+                        body.variablesReference = value.getId();
+                        body.type = value.getTypeName();
                     }
                     else
                     {
-                        if (memberValue.getType() == VariableType.STRING)
+                        if (value.getType() == VariableType.STRING)
                         {
-                            body.result = "\"" + memberValue.getValueAsString() + "\"";
+                            body.result = "\"" + value.getValueAsString() + "\"";
                         }
                         else
                         {
-                            body.result = memberValue.getValueAsString();
+                            body.result = value.getValueAsString();
                         }
-
-                        body.variablesReference = (long)0;
+                        body.type = value.getTypeName();
                     }
-                    
-                    break;
+                }
+                else
+                {
+                    if(evaluateResult instanceof String)
+                    {
+                        body.result = "\"" + evaluateResult + "\"";
+                    }
+                    else
+                    {
+                        body.result = evaluateResult.toString();
+                    }
                 }
             }
         }
-        catch (PlayerDebugException e)
-        {
-            //ignore
-        }
+        
+        catch (PlayerFaultException e) {}
+        catch (NoSuchVariableException e) {}
+        catch (IOException e) {}
+        catch (ParseException e) {}
+        catch (PlayerDebugException e) {}
 
         // not sending the body at all will output "not available" as the value of evaluation.
         if(body.result == null)
