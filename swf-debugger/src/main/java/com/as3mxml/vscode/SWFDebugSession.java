@@ -1260,6 +1260,12 @@ public class SWFDebugSession extends DebugSession
                 swfValue = swfSession.getValue(arguments.variablesReference);
                 members = swfValue.getMembers(swfSession);
             }
+            boolean isThis = false;
+            Value swfThisValue = swfSession.getValue(Value.THIS_ID);
+            if (swfThisValue != null)
+            {
+                isThis = swfThisValue.getId() == variablesReference;
+            }
             for (flash.tools.debugger.Variable member : members)
             {
                 Value memberValue = member.getValue();
@@ -1269,6 +1275,10 @@ public class SWFDebugSession extends DebugSession
                 if (variablesReference == LOCAL_VARIABLES_REFERENCE)
                 {
                     variable.evaluateName = member.getName();
+                }
+                else if (isThis)
+                {
+                    variable.evaluateName = "this." + member.getName();
                 }
                 long id = memberValue.getId();
                 if (id != Value.UNKNOWN_ID)
