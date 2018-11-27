@@ -1266,6 +1266,10 @@ public class SWFDebugSession extends DebugSession
                 Variable variable = new Variable();
                 variable.name = member.getName();
                 variable.type = memberValue.getTypeName();
+                if (variablesReference == LOCAL_VARIABLES_REFERENCE)
+                {
+                    variable.evaluateName = member.getName();
+                }
                 long id = memberValue.getId();
                 if (id != Value.UNKNOWN_ID)
                 {
