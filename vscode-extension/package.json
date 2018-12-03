@@ -286,9 +286,6 @@
     "taskDefinitions": [
       {
         "type": "actionscript",
-        "required": [
-          "debug"
-        ],
         "properties": {
           "debug": {
             "type": "boolean",
@@ -301,6 +298,10 @@
           "asconfig": {
             "type": "string",
             "description": "Optional path to asconfig.json or asconfig.*.json file in workspace"
+          },
+          "clean": {
+            "type": "boolean",
+            "description": "Indicates if the output folder should be cleaned"
           }
         }
       }
