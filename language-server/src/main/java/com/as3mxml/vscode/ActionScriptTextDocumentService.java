@@ -6162,72 +6162,83 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private boolean checkFilePathForAllProblems(Path path, ProblemQuery problemQuery, boolean quick)
     {
-        ICompilationUnit unitForPath = getCompilationUnit(path);
-        if (unitForPath == null)
-        {
-            //fall back to the syntax check instead
-            return false;
-        }
-        if (waitForBuildFinishRunner != null
-            && unitForPath.equals(waitForBuildFinishRunner.getCompilationUnit())
-            && waitForBuildFinishRunner.isRunning())
-        {
-            //take precedence over the real time problem checker
-            waitForBuildFinishRunner.setCancelled();
-        }
-        CompilerProject project = (CompilerProject) unitForPath.getProject();
-        Collection<ICompilerProblem> fatalProblems = project.getFatalProblems();
-        if (fatalProblems == null || fatalProblems.size() == 0)
-        {
-            fatalProblems = project.getProblems();
-        }
-        problemQuery.addAll(fatalProblems);
-        if (fatalProblems != null && fatalProblems.size() > 0)
-        {
-            //since we found some problems, we'll skip the syntax check fallback
-            return true;
-        }
+        //don't start the build until all other builds are done
+        compilerWorkspace.startIdleState();
+        compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
+        compilerWorkspace.startBuilding();
         try
         {
-            if (quick)
+            ICompilationUnit unitForPath = getCompilationUnit(path);
+            if (unitForPath == null)
             {
-                checkCompilationUnitForAllProblems(unitForPath, problemQuery);
+                //fall back to the syntax check instead
+                return false;
+            }
+            if (waitForBuildFinishRunner != null
+                && unitForPath.equals(waitForBuildFinishRunner.getCompilationUnit())
+                && waitForBuildFinishRunner.isRunning())
+            {
+                //take precedence over the real time problem checker
+                waitForBuildFinishRunner.setCancelled();
+            }
+            CompilerProject project = (CompilerProject) unitForPath.getProject();
+            Collection<ICompilerProblem> fatalProblems = project.getFatalProblems();
+            if (fatalProblems == null || fatalProblems.size() == 0)
+            {
+                fatalProblems = project.getProblems();
+            }
+            problemQuery.addAll(fatalProblems);
+            if (fatalProblems != null && fatalProblems.size() > 0)
+            {
+                //since we found some problems, we'll skip the syntax check fallback
                 return true;
             }
-            boolean continueCheckingForErrors = true;
-            while (continueCheckingForErrors)
+            try
             {
-                try
+                if (quick)
                 {
-                    for (ICompilationUnit unit : project.getCompilationUnits())
-                    {
-                        if (unit == null
-                                || unit instanceof SWCCompilationUnit
-                                || unit instanceof ResourceBundleCompilationUnit)
-                        {
-                            //compiled compilation units won't have problems
-                            continue;
-                        }
-                        checkCompilationUnitForAllProblems(unit, problemQuery);
-                    }
-                    continueCheckingForErrors = false;
+                    checkCompilationUnitForAllProblems(unitForPath, problemQuery);
+                    return true;
                 }
-                catch (ConcurrentModificationException e)
+                boolean continueCheckingForErrors = true;
+                while (continueCheckingForErrors)
                 {
-                    //when we finished building one of the compilation
-                    //units, more were added to the collection, so we need
-                    //to start over because we can't iterate over a modified
-                    //collection.
+                    try
+                    {
+                        for (ICompilationUnit unit : project.getCompilationUnits())
+                        {
+                            if (unit == null
+                                    || unit instanceof SWCCompilationUnit
+                                    || unit instanceof ResourceBundleCompilationUnit)
+                            {
+                                //compiled compilation units won't have problems
+                                continue;
+                            }
+                            checkCompilationUnitForAllProblems(unit, problemQuery);
+                        }
+                        continueCheckingForErrors = false;
+                    }
+                    catch (ConcurrentModificationException e)
+                    {
+                        //when we finished building one of the compilation
+                        //units, more were added to the collection, so we need
+                        //to start over because we can't iterate over a modified
+                        //collection.
+                    }
                 }
             }
+            catch (Exception e)
+            {
+                System.err.println("Exception during build: " + e);
+                e.printStackTrace(System.err);
+                return false;
+            }
+            return true;
         }
-        catch (Exception e)
+        finally
         {
-            System.err.println("Exception during build: " + e);
-            e.printStackTrace(System.err);
-            return false;
+            compilerWorkspace.doneBuilding();
         }
-        return true;
     }
 
     private void checkCompilationUnitForAllProblems(ICompilationUnit unit, ProblemQuery problemQuery)
