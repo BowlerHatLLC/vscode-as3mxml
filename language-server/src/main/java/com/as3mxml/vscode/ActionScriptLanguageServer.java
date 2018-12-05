@@ -26,8 +26,11 @@ import java.util.concurrent.CompletableFuture;
 import com.as3mxml.vscode.commands.ICommandConstants;
 import com.as3mxml.vscode.project.IProjectConfigStrategyFactory;
 import com.as3mxml.vscode.services.ActionScriptLanguageClient;
+import com.google.common.collect.Lists;
 
 import org.apache.royale.compiler.tree.as.IASNode;
+import org.eclipse.lsp4j.CodeActionKind;
+import org.eclipse.lsp4j.CodeActionOptions;
 import org.eclipse.lsp4j.CompletionOptions;
 import org.eclipse.lsp4j.DidChangeWatchedFilesRegistrationOptions;
 import org.eclipse.lsp4j.ExecuteCommandOptions;
@@ -107,7 +110,13 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
         ServerCapabilities serverCapabilities = new ServerCapabilities();
         serverCapabilities.setTextDocumentSync(TextDocumentSyncKind.Incremental);
 
-        serverCapabilities.setCodeActionProvider(true);
+        serverCapabilities.setCodeActionProvider(
+            new CodeActionOptions(
+                Lists.newArrayList(
+                    CodeActionKind.QuickFix,
+                    CodeActionKind.Refactor,
+                    CodeActionKind.RefactorRewrite,
+                    CodeActionKind.SourceOrganizeImports)));
 
         CompletionOptions completionOptions = new CompletionOptions();
         completionOptions.setTriggerCharacters(Arrays.asList(".", ":", " ", "<"));

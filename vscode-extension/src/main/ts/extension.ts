@@ -13,7 +13,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-import organizeImportsInTextEditor from "./commands/organizeImportsInTextEditor";
 import findJava from "./utils/findJava";
 import validateJava from "./utils/validateJava";
 import validateEditorSDK from "./utils/validateEditorSDK";
@@ -232,7 +231,6 @@ export function activate(context: vscode.ExtensionContext)
 		}
 		quickCompileAndDebug();
 	});
-	vscode.commands.registerTextEditorCommand("as3mxml.organizeImportsInTextEditor", organizeImportsInTextEditor);
 	
 	//don't activate these things unless we're in a workspace
 	if(vscode.workspace.workspaceFolders !== undefined)

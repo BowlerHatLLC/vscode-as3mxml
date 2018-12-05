@@ -114,7 +114,7 @@ public class CodeActionsUtils
         CodeAction getAndSetCodeAction = new CodeAction();
         getAndSetCodeAction.setTitle("Generate 'get' and 'set' accessors");
         getAndSetCodeAction.setEdit(getSetEdit);
-        getAndSetCodeAction.setKind(CodeActionKind.QuickFix);
+        getAndSetCodeAction.setKind(CodeActionKind.RefactorRewrite);
         codeActions.add(Either.forRight(getAndSetCodeAction));
         
         WorkspaceEdit getterEdit = createWorkspaceEditForGenerateGetterAndSetter(
@@ -122,7 +122,7 @@ public class CodeActionsUtils
         CodeAction getterCodeAction = new CodeAction();
         getterCodeAction.setTitle("Generate 'get' accessor (make read-only)");
         getterCodeAction.setEdit(getterEdit);
-        getterCodeAction.setKind(CodeActionKind.QuickFix);
+        getterCodeAction.setKind(CodeActionKind.RefactorRewrite);
         codeActions.add(Either.forRight(getterCodeAction));
 
         WorkspaceEdit setterEdit = createWorkspaceEditForGenerateGetterAndSetter(
@@ -130,7 +130,7 @@ public class CodeActionsUtils
         CodeAction setterCodeAction = new CodeAction();
         setterCodeAction.setTitle("Generate 'set' accessor (make write-only)");
         setterCodeAction.setEdit(setterEdit);
-        setterCodeAction.setKind(CodeActionKind.QuickFix);
+        setterCodeAction.setKind(CodeActionKind.RefactorRewrite);
         codeActions.add(Either.forRight(setterCodeAction));
     }
 

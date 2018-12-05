@@ -137,6 +137,7 @@ import org.apache.royale.compiler.units.IInvisibleCompilationUnit;
 import org.apache.royale.compiler.workspaces.IWorkspace;
 import org.apache.royale.utils.FilenameNormalization;
 
+import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
@@ -1243,6 +1244,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     return Collections.emptyList();
                 }
                 List<Either<Command, CodeAction>> codeActions = new ArrayList<>();
+                findSourceActions(textDocument, codeActions);
                 findCodeActionsForDiagnostics(textDocument, diagnostics, codeActions);
 
                 ICompilationUnit unit = getCompilationUnit(path);
@@ -1272,6 +1274,24 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
         });
     }
+
+    public void findSourceActions(TextDocumentIdentifier textDocument, List<Either<Command, CodeAction>> codeActions)
+    {
+        Command organizeCommand = new Command();
+        organizeCommand.setTitle("Organize Imports");
+        organizeCommand.setCommand(ICommandConstants.ORGANIZE_IMPORTS_IN_URI);
+        JsonObject uri = new JsonObject();
+        uri.addProperty("external", textDocument.getUri());
+        organizeCommand.setArguments(Lists.newArrayList(
+            uri
+        ));
+        CodeAction organizeImports = new CodeAction();
+        organizeImports.setKind(CodeActionKind.SourceOrganizeImports);
+        organizeImports.setTitle(organizeCommand.getTitle());
+        organizeImports.setCommand(organizeCommand);
+        codeActions.add(Either.forRight(organizeImports));
+    }
+
     public void findCodeActionsForDiagnostics(TextDocumentIdentifier textDocument, List<? extends Diagnostic> diagnostics, List<Either<Command, CodeAction>> codeActions)
     {
         for (Diagnostic diagnostic : diagnostics)

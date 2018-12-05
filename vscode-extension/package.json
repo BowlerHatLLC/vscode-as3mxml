@@ -57,7 +57,6 @@
     "workspaceContains:**/asconfig.*.json",
     "onView:actionScriptSourcePaths",
     "onCommand:as3mxml.adapterExecutableCommandSWF",
-    "onCommand:as3mxml.organizeImportsInTextEditor",
     "onCommand:as3mxml.organizeImportsInUri",
     "onCommand:as3mxml.organizeImportsInDirectory",
     "onCommand:as3mxml.selectWorkspaceSDK",
@@ -76,10 +75,6 @@
       {
         "command": "as3mxml.restartServer",
         "title": "ActionScript: Restart ActionScript/MXML server"
-      },
-      {
-        "command": "as3mxml.organizeImportsInTextEditor",
-        "title": "ActionScript: Organize Imports"
       },
       {
         "command": "as3mxml.organizeImportsInUri",
@@ -104,14 +99,6 @@
     "menus": {
       "commandPalette": [
         {
-          "command": "as3mxml.organizeImportsInTextEditor",
-          "when": "editorLangId == nextgenas"
-        },
-        {
-          "command": "as3mxml.organizeImportsInTextEditor",
-          "when": "editorLangId == mxml"
-        },
-        {
           "command": "as3mxml.organizeImportsInUri",
           "when": "false"
         },
@@ -120,37 +107,7 @@
           "when": "false"
         }
       ],
-      "editor/context": [
-        {
-          "command": "as3mxml.organizeImportsInUri",
-          "when": "editorLangId == nextgenas",
-          "group": "1_modification"
-        },
-        {
-          "command": "as3mxml.organizeImportsInUri",
-          "when": "editorLangId == mxml",
-          "group": "1_modification"
-        }
-      ],
-      "editor/title/context": [
-        {
-          "command": "as3mxml.organizeImportsInUri",
-          "when": "resourceLangId == nextgenas"
-        },
-        {
-          "command": "as3mxml.organizeImportsInUri",
-          "when": "resourceLangId == mxml"
-        }
-      ],
       "explorer/context": [
-        {
-          "command": "as3mxml.organizeImportsInUri",
-          "when": "resourceLangId == nextgenas"
-        },
-        {
-          "command": "as3mxml.organizeImportsInUri",
-          "when": "resourceLangId == mxml"
-        },
         {
           "command": "as3mxml.organizeImportsInDirectory",
           "when": "explorerResourceIsFolder"

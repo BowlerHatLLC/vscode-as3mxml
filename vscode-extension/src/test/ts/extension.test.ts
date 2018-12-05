@@ -7434,6 +7434,34 @@ suite("mxml namespaces: Application workspace", () =>
 
 suite("code action provider: Application workspace", () =>
 {
+	test("vscode.executeCodeActionProvider finds organize imports", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "OrganizeImports.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			let start = new vscode.Position(2, 45);
+			let end = new vscode.Position(2, 45);
+			let range = new vscode.Range(start, end);
+			return vscode.commands.executeCommand("vscode.executeCodeActionProvider", uri, range)
+				.then((codeActions: vscode.CodeAction[]) =>
+					{
+						let codeAction = codeActions.find((codeAction: vscode.CodeAction) =>
+						{
+							return codeAction.kind.value === vscode.CodeActionKind.SourceOrganizeImports.value;
+						});
+						assert.notEqual(codeAction, null, "Code action not found");
+						assert.strictEqual(codeAction.title, "Organize Imports", "Code action provided incorrect title");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.SourceOrganizeImports.value, "Code action provided incorrect kind");
+						let command = codeAction.command;
+						assert.notEqual(command, null, "Code action command not found");
+						assert.strictEqual(command.command, COMMAND_ORGANIZE_IMPORTS_IN_URI, "Code action provided incorrect command");
+						assert.strictEqual(command.title, "Organize Imports", "Code action provided incorrect command title");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute code actions provider: " + uri);
+					});
+		});
+	});
 	test("vscode.executeCodeActionProvider finds import for base class", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "CodeActionsImports.as"));
@@ -8133,7 +8161,6 @@ suite("code action provider: Application workspace", () =>
 			return vscode.commands.executeCommand("vscode.executeCodeActionProvider", uri, range)
 				.then((codeActions: vscode.CodeAction[]) =>
 					{
-						assert.strictEqual(codeActions.length, 1, "Code action provider provided incorrect number of code actions");
 						let typeToImport = "com.example.codeActions.CodeActionsVarType";
 						let codeAction = findImportCodeActionForType(typeToImport, codeActions);
 						assert.notEqual(codeAction, null, "Code action not found");
@@ -8169,7 +8196,6 @@ suite("code action provider: Application workspace", () =>
 			return vscode.commands.executeCommand("vscode.executeCodeActionProvider", uri, range)
 				.then((codeActions: vscode.CodeAction[]) =>
 					{
-						assert.strictEqual(codeActions.length, 1, "Code action provider provided incorrect number of code actions");
 						let typeToImport = "com.example.codeActions.CodeActionsNew";
 						let codeAction = findImportCodeActionForType(typeToImport, codeActions);
 						assert.notEqual(codeAction, null, "Code action not found");
@@ -8747,7 +8773,7 @@ suite("code action provider: Application workspace", () =>
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
-						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.RefactorRewrite.value, "Code action provided incorrect kind");
 						let workspaceEdit = codeAction.edit;
 						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
 						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
@@ -8786,7 +8812,7 @@ suite("code action provider: Application workspace", () =>
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
-						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.RefactorRewrite.value, "Code action provided incorrect kind");
 						let workspaceEdit = codeAction.edit;
 						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
 						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
@@ -8825,7 +8851,7 @@ suite("code action provider: Application workspace", () =>
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
-						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.RefactorRewrite.value, "Code action provided incorrect kind");
 						let workspaceEdit = codeAction.edit;
 						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
 						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
@@ -8864,7 +8890,7 @@ suite("code action provider: Application workspace", () =>
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
-						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.RefactorRewrite.value, "Code action provided incorrect kind");
 						let workspaceEdit = codeAction.edit;
 						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
 						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
@@ -8903,7 +8929,7 @@ suite("code action provider: Application workspace", () =>
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
-						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.RefactorRewrite.value, "Code action provided incorrect kind");
 						let workspaceEdit = codeAction.edit;
 						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
 						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
@@ -8942,7 +8968,7 @@ suite("code action provider: Application workspace", () =>
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
-						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.RefactorRewrite.value, "Code action provided incorrect kind");
 						let workspaceEdit = codeAction.edit;
 						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
 						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
@@ -8981,7 +9007,7 @@ suite("code action provider: Application workspace", () =>
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
-						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.RefactorRewrite.value, "Code action provided incorrect kind");
 						let workspaceEdit = codeAction.edit;
 						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
 						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
@@ -9020,7 +9046,7 @@ suite("code action provider: Application workspace", () =>
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
-						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.RefactorRewrite.value, "Code action provided incorrect kind");
 						let workspaceEdit = codeAction.edit;
 						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
 						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
@@ -9059,7 +9085,7 @@ suite("code action provider: Application workspace", () =>
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
-						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.RefactorRewrite.value, "Code action provided incorrect kind");
 						let workspaceEdit = codeAction.edit;
 						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
 						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
@@ -9098,7 +9124,7 @@ suite("code action provider: Application workspace", () =>
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
-						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.RefactorRewrite.value, "Code action provided incorrect kind");
 						let workspaceEdit = codeAction.edit;
 						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
 						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
@@ -9137,7 +9163,7 @@ suite("code action provider: Application workspace", () =>
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
-						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.RefactorRewrite.value, "Code action provided incorrect kind");
 						let workspaceEdit = codeAction.edit;
 						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
 						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
@@ -9176,7 +9202,7 @@ suite("code action provider: Application workspace", () =>
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
-						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.RefactorRewrite.value, "Code action provided incorrect kind");
 						let workspaceEdit = codeAction.edit;
 						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
 						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
@@ -9215,7 +9241,7 @@ suite("code action provider: Application workspace", () =>
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
-						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.RefactorRewrite.value, "Code action provided incorrect kind");
 						let workspaceEdit = codeAction.edit;
 						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
 						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
@@ -9254,7 +9280,7 @@ suite("code action provider: Application workspace", () =>
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
-						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.RefactorRewrite.value, "Code action provided incorrect kind");
 						let workspaceEdit = codeAction.edit;
 						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
 						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
@@ -9293,7 +9319,7 @@ suite("code action provider: Application workspace", () =>
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
-						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.RefactorRewrite.value, "Code action provided incorrect kind");
 						let workspaceEdit = codeAction.edit;
 						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
 						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
@@ -9332,7 +9358,7 @@ suite("code action provider: Application workspace", () =>
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
-						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.RefactorRewrite.value, "Code action provided incorrect kind");
 						let workspaceEdit = codeAction.edit;
 						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
 						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
@@ -9371,7 +9397,7 @@ suite("code action provider: Application workspace", () =>
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
-						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.RefactorRewrite.value, "Code action provided incorrect kind");
 						let workspaceEdit = codeAction.edit;
 						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
 						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
@@ -9410,7 +9436,7 @@ suite("code action provider: Application workspace", () =>
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
-						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.RefactorRewrite.value, "Code action provided incorrect kind");
 						let workspaceEdit = codeAction.edit;
 						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
 						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
@@ -9449,7 +9475,7 @@ suite("code action provider: Application workspace", () =>
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
-						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.RefactorRewrite.value, "Code action provided incorrect kind");
 						let workspaceEdit = codeAction.edit;
 						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
 						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
@@ -9488,7 +9514,7 @@ suite("code action provider: Application workspace", () =>
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
-						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.RefactorRewrite.value, "Code action provided incorrect kind");
 						let workspaceEdit = codeAction.edit;
 						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
 						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
@@ -9527,7 +9553,7 @@ suite("code action provider: Application workspace", () =>
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
-						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.RefactorRewrite.value, "Code action provided incorrect kind");
 						let workspaceEdit = codeAction.edit;
 						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
 						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
@@ -9566,7 +9592,7 @@ suite("code action provider: Application workspace", () =>
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
-						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.RefactorRewrite.value, "Code action provided incorrect kind");
 						let workspaceEdit = codeAction.edit;
 						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
 						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
@@ -9605,7 +9631,7 @@ suite("code action provider: Application workspace", () =>
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
-						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.RefactorRewrite.value, "Code action provided incorrect kind");
 						let workspaceEdit = codeAction.edit;
 						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
 						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
@@ -9644,7 +9670,7 @@ suite("code action provider: Application workspace", () =>
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
-						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.RefactorRewrite.value, "Code action provided incorrect kind");
 						let workspaceEdit = codeAction.edit;
 						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
 						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
@@ -9683,7 +9709,7 @@ suite("code action provider: Application workspace", () =>
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
-						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.RefactorRewrite.value, "Code action provided incorrect kind");
 						let workspaceEdit = codeAction.edit;
 						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
 						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
@@ -9722,7 +9748,7 @@ suite("code action provider: Application workspace", () =>
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
-						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.RefactorRewrite.value, "Code action provided incorrect kind");
 						let workspaceEdit = codeAction.edit;
 						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
 						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
@@ -9761,7 +9787,7 @@ suite("code action provider: Application workspace", () =>
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
-						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.RefactorRewrite.value, "Code action provided incorrect kind");
 						let workspaceEdit = codeAction.edit;
 						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
 						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
@@ -9800,7 +9826,7 @@ suite("code action provider: Application workspace", () =>
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
-						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.RefactorRewrite.value, "Code action provided incorrect kind");
 						let workspaceEdit = codeAction.edit;
 						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
 						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
@@ -9839,7 +9865,7 @@ suite("code action provider: Application workspace", () =>
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
-						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.RefactorRewrite.value, "Code action provided incorrect kind");
 						let workspaceEdit = codeAction.edit;
 						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
 						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
@@ -9878,7 +9904,7 @@ suite("code action provider: Application workspace", () =>
 						});
 						assert.notEqual(codeAction, undefined, "Code action not found");
 						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
-						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.RefactorRewrite.value, "Code action provided incorrect kind");
 						let workspaceEdit = codeAction.edit;
 						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
 						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
