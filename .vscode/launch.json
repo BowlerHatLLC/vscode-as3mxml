@@ -12,6 +12,7 @@
 			"stopOnEntry": false,
 			"sourceMaps": true,
 			"outDir": "${workspaceRoot}/distribution/target/vscode-nextgenas/vscode-nextgenas",
+			"internalConsoleOptions": "openOnSessionStart",
 			"preLaunchTask": "build-debug"
 		},
 		{
@@ -27,6 +28,7 @@
 			"stopOnEntry": false,
 			"sourceMaps": true,
 			"outDir": "${workspaceRoot}/vscode-extension/target/test",
+			"internalConsoleOptions": "openOnSessionStart",
 			"preLaunchTask": "build-test"
 		}
 	]
