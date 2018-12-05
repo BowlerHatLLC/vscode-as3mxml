@@ -220,12 +220,16 @@ import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.ReferenceParams;
+import org.eclipse.lsp4j.RenameFile;
 import org.eclipse.lsp4j.RenameParams;
+import org.eclipse.lsp4j.ResourceOperation;
+import org.eclipse.lsp4j.ResourceOperationKind;
 import org.eclipse.lsp4j.SignatureHelp;
 import org.eclipse.lsp4j.SignatureInformation;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.eclipse.lsp4j.TextDocumentContentChangeEvent;
+import org.eclipse.lsp4j.TextDocumentEdit;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.TextDocumentItem;
 import org.eclipse.lsp4j.TextDocumentPositionParams;
@@ -3850,7 +3854,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return new WorkspaceEdit(new HashMap<>());
         }
 
-        WorkspaceEdit result = renameDefinition(definition, params.getNewName(), project);
+        WorkspaceEdit result = renameDefinition(params, definition, project);
         return result;
     }
 
@@ -3864,7 +3868,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 //ignore the tag's prefix
                 return new WorkspaceEdit(new HashMap<>());
             }
-            WorkspaceEdit result = renameDefinition(definition, params.getNewName(), project);
+            WorkspaceEdit result = renameDefinition(params, definition, project);
             return result;
         }
 
@@ -5424,7 +5428,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return null;
     }
 
-    private WorkspaceEdit renameDefinition(IDefinition definition, String newName, RoyaleProject project)
+    private WorkspaceEdit renameDefinition(RenameParams params, IDefinition definition, RoyaleProject project)
     {
         if (definition == null)
         {
@@ -5438,8 +5442,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return new WorkspaceEdit(new HashMap<>());
         }
         WorkspaceEdit result = new WorkspaceEdit();
-        Map<String, List<TextEdit>> changes = new HashMap<>();
-        result.setChanges(changes);
+        List<Either<TextDocumentEdit, ResourceOperation>> documentChanges = new ArrayList<>();
+        result.setDocumentChanges(documentChanges);
         if (definition.getContainingFilePath().endsWith(SWC_EXTENSION))
         {
             if (languageClient != null)
@@ -5462,6 +5466,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             return result;
         }
+        String newName = params.getNewName();
         Path originalDefinitionFilePath = null;
         Path newDefinitionFilePath = null;
         for (ICompilationUnit compilationUnit : project.getCompilationUnits())
@@ -5531,28 +5536,25 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 continue;
             }
 
-            URI uri = Paths.get(compilationUnit.getAbsoluteFilename()).toUri();
+            Path textDocumentPath = Paths.get(compilationUnit.getAbsoluteFilename());
             if (definitionIsMainDefinitionInCompilationUnit(compilationUnit, definition))
             {
-                originalDefinitionFilePath = Paths.get(compilationUnit.getAbsoluteFilename());
+                originalDefinitionFilePath = textDocumentPath;
                 String newBaseName = newName + "." + Files.getFileExtension(originalDefinitionFilePath.toFile().getName());
                 newDefinitionFilePath = originalDefinitionFilePath.getParent().resolve(newBaseName);
-                uri = newDefinitionFilePath.toUri();
             }
-            changes.put(uri.toString(), textEdits);
+            
+            VersionedTextDocumentIdentifier versionedIdentifier =
+                    new VersionedTextDocumentIdentifier(textDocumentPath.toUri().toString(), null);
+            TextDocumentEdit textDocumentEdit = new TextDocumentEdit(versionedIdentifier, textEdits);
+            documentChanges.add(Either.forLeft(textDocumentEdit));
         }
         if (newDefinitionFilePath != null)
         {
-            //wait to actually rename the file because we need to be sure
-            //that finding the identifiers above still works with the old name
-            try
-            {
-                java.nio.file.Files.move(originalDefinitionFilePath, newDefinitionFilePath, StandardCopyOption.ATOMIC_MOVE);
-            }
-            catch(IOException e)
-            {
-                System.err.println("could not move file for rename: " + newDefinitionFilePath.toUri().toString());
-            }
+            RenameFile renameFile = new RenameFile();
+            renameFile.setOldUri(originalDefinitionFilePath.toUri().toString());
+            renameFile.setNewUri(newDefinitionFilePath.toUri().toString());
+            documentChanges.add(Either.forRight(renameFile));
         }
         return result;
     }
