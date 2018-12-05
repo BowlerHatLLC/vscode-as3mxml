@@ -1,3 +1,36 @@
+## v0.16.0
+
+### New Features
+
+* Debugger: Added support for **Watch expressions** in SWF projects.
+* Snippets: Added MXML snippet for Jewel components in Apache Royale.
+* Tasks: Added new **Clean** task that cleans the output folder.
+
+### Fixed Issues
+
+* Build: Updated `target-player` compiler option format in *asconfig.json* to support both **major.minor** and **major.minor.revision**.
+* Completion: Fixed issue where missing name values in `[Event]` or `[Style]` metadata caused null reference exception.
+* Completion: Fixed issue where completion was not available inside MXML data binding curly braces.
+* Completion: Added missing `localId` attribute in MXML for Apache Royale projects.
+* Rename: Fixed issue where old deleted file would remain open after renaming a class or interface.
+* Settings: Fixed issue where changes to `as3mxml.java.path` and `as3mxml.sdk.editor` settings were not always detected.
+* Hover, Goto Definition: Fixed issue where class reference in `new` function call resolved to the clas instead of its constructor.
+
+### Other Changes
+
+* Code Actions: Commands to generate getters and setters now available in **Refactor...** context menu item. Also triggered by the **Ctrl+Shift+R** keyboard shortcut when cursor is on a member variable.
+* Code Actions: Organize Imports now available in **Source Action...** context menu item. Also triggered by the **Shift+Alt+O** keyboard shortcut.
+* eclipse/lsp4j updated to v0.5.0.
+* Apache Royale compiler for code intelligence updated to v0.9.4.
+
+### Tips & Tricks
+
+* To organize imports every time that a file is saved, enable the following setting in Visual Studio Code:
+
+    	"editor.codeActionsOnSave": {
+        	"source.organizeImports": true
+    	}
+
 ## v0.15.0
 
 ### New Features
