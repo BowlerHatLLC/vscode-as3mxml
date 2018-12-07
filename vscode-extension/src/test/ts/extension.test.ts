@@ -9926,6 +9926,43 @@ suite("code action provider: Application workspace", () =>
 					});
 		});
 	});
+	test("vscode.executeCodeActionProvider can generate catch", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "CodeActionsTry.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			let start = new vscode.Position(6, 4);
+			let end = new vscode.Position(6, 4);
+			let range = new vscode.Range(start, end);
+			return vscode.commands.executeCommand("vscode.executeCodeActionProvider", uri, range)
+				.then((codeActions: vscode.CodeAction[]) =>
+					{
+						let codeAction = codeActions.find((codeAction) =>
+						{
+							return codeAction.title == "Generate catch";
+						});
+						assert.notEqual(codeAction, undefined, "Code action not found");
+						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
+						let workspaceEdit = codeAction.edit;
+						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
+						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
+						let textEdits = workspaceEdit.get(uri);
+						assert.strictEqual(textEdits.length, 1);
+						let textEdit = textEdits[0];
+						assert.strictEqual(textEdit.newText, "\n\t\t\tcatch(e:Error)\n\t\t\t{\n\t\t\t}", "Code action workspace edit provided incorrect new text");
+						let range = textEdit.range;
+						assert.strictEqual(range.start.line, 8, "Code action workspace edit provided incorrect start line");
+						assert.strictEqual(range.start.character, 4, "Code action workspace edit provided incorrect start character");
+						assert.strictEqual(range.end.line, 8, "Code action workspace edit provided incorrect end line");
+						assert.strictEqual(range.end.character, 4, "Code action workspace edit provided incorrect end character");
+
+					}, (err) =>
+					{
+						assert(false, "Failed to execute code actions provider: " + uri);
+					});
+		});
+	});
 });
 
 suite("organize imports: Application workspace", () =>

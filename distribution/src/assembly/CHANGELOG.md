@@ -2,6 +2,7 @@
 
 ### New Features
 
+* Code Actions: New code action to generate `catch` block of try/catch, if it is missing.
 * Debugger: Added support for **Watch expressions** in SWF projects.
 * Snippets: Added MXML snippet for Jewel components in Apache Royale.
 * Tasks: Added new **Clean** task that cleans the output folder.

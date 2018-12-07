@@ -28,7 +28,6 @@ import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
-import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
@@ -121,6 +120,7 @@ import org.apache.royale.compiler.tree.as.INamespaceDecorationNode;
 import org.apache.royale.compiler.tree.as.IPackageNode;
 import org.apache.royale.compiler.tree.as.IScopedDefinitionNode;
 import org.apache.royale.compiler.tree.as.IScopedNode;
+import org.apache.royale.compiler.tree.as.ITryNode;
 import org.apache.royale.compiler.tree.as.ITypeNode;
 import org.apache.royale.compiler.tree.as.IVariableNode;
 import org.apache.royale.compiler.tree.mxml.IMXMLClassDefinitionNode;
@@ -223,7 +223,6 @@ import org.eclipse.lsp4j.ReferenceParams;
 import org.eclipse.lsp4j.RenameFile;
 import org.eclipse.lsp4j.RenameParams;
 import org.eclipse.lsp4j.ResourceOperation;
-import org.eclipse.lsp4j.ResourceOperationKind;
 import org.eclipse.lsp4j.SignatureHelp;
 import org.eclipse.lsp4j.SignatureInformation;
 import org.eclipse.lsp4j.SymbolInformation;
@@ -1339,6 +1338,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     createCodeActionForMissingMethod(textDocument, diagnostic, codeActions);
                     break;
                 }
+                case "1073": //MissingCatchOrFinallyProblem
+                {
+                    createCodeActionForMissingCatchOrFinally(textDocument, diagnostic, codeActions);
+                    break;
+                }
                 case "1119": //AccessUndefinedMemberProblem
                 {
                     createCodeActionForMissingField(textDocument, diagnostic, codeActions);
@@ -1477,6 +1481,45 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         CodeAction codeAction = new CodeAction();
         codeAction.setDiagnostics(Collections.singletonList(diagnostic));
         codeAction.setTitle("Generate Local Variable");
+        codeAction.setEdit(edit);
+        codeAction.setKind(CodeActionKind.QuickFix);
+        codeActions.add(Either.forRight(codeAction));
+    }
+
+    private void createCodeActionForMissingCatchOrFinally(TextDocumentIdentifier textDocument, Diagnostic diagnostic, List<Either<Command, CodeAction>> codeActions)
+    {
+        RoyaleProject project = textDocumentIdentifierToProject(textDocument);
+        if(project == null)
+        {
+            return;
+        }
+        IASNode offsetNode = getOffsetNode(textDocument, diagnostic.getRange().getStart());
+        if(!(offsetNode instanceof ITryNode))
+        {
+            return;
+        }
+        ITryNode tryNode = (ITryNode) offsetNode;
+        Path pathForImport = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocument.getUri());
+        if(pathForImport == null)
+        {
+            return;
+        }
+        String fileText = getFileTextForPath(pathForImport);
+        if(fileText == null)
+        {
+            return;
+        }
+
+        WorkspaceEdit edit = CodeActionsUtils.createWorkspaceEditForGenerateCatch(
+            tryNode, textDocument.getUri(), fileText, project);
+        if(edit == null)
+        {
+            return;
+        }
+
+        CodeAction codeAction = new CodeAction();
+        codeAction.setDiagnostics(Collections.singletonList(diagnostic));
+        codeAction.setTitle("Generate catch");
         codeAction.setEdit(edit);
         codeAction.setKind(CodeActionKind.QuickFix);
         codeActions.add(Either.forRight(codeAction));

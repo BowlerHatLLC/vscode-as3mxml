@@ -33,7 +33,9 @@ import org.apache.royale.compiler.definitions.IVariableDefinition;
 import org.apache.royale.compiler.definitions.IVariableDefinition.VariableClassification;
 import org.apache.royale.compiler.projects.ICompilerProject;
 import org.apache.royale.compiler.tree.as.IASNode;
+import org.apache.royale.compiler.tree.as.IBlockNode;
 import org.apache.royale.compiler.tree.as.IClassNode;
+import org.apache.royale.compiler.tree.as.IContainerNode;
 import org.apache.royale.compiler.tree.as.IExpressionNode;
 import org.apache.royale.compiler.tree.as.IFunctionCallNode;
 import org.apache.royale.compiler.tree.as.IFunctionNode;
@@ -42,7 +44,9 @@ import org.apache.royale.compiler.tree.as.IInterfaceNode;
 import org.apache.royale.compiler.tree.as.ILanguageIdentifierNode;
 import org.apache.royale.compiler.tree.as.IMemberAccessExpressionNode;
 import org.apache.royale.compiler.tree.as.IScopedNode;
+import org.apache.royale.compiler.tree.as.ITryNode;
 import org.apache.royale.compiler.tree.as.IVariableNode;
+import org.apache.royale.compiler.tree.as.IContainerNode.ContainerType;
 import org.apache.royale.compiler.tree.mxml.IMXMLFileNode;
 import org.apache.royale.compiler.tree.mxml.IMXMLScriptNode;
 import org.eclipse.lsp4j.CodeAction;
@@ -769,5 +773,78 @@ public class CodeActionsUtils
         edit.setRange(new Range(startPosition, endPosition));
         
         return edit;
+    }
+
+	public static WorkspaceEdit createWorkspaceEditForGenerateCatch(
+        ITryNode tryNode, String uri, String text, ICompilerProject project)
+    {
+        TextEdit textEdit = createTextEditForGenerateCatch(tryNode, text, project);
+        if (textEdit == null)
+        {
+            return null;
+        }
+
+        WorkspaceEdit workspaceEdit = new WorkspaceEdit();
+        HashMap<String,List<TextEdit>> changes = new HashMap<>();
+        List<TextEdit> edits = new ArrayList<>();
+        edits.add(textEdit);
+        changes.put(uri, edits);
+        workspaceEdit.setChanges(changes);
+        return workspaceEdit;
+    }
+
+	private static TextEdit createTextEditForGenerateCatch(
+		ITryNode tryNode, String text, ICompilerProject project)
+    {
+        IASNode statementContentsNode = tryNode.getStatementContentsNode();
+        if (statementContentsNode == null
+                || !(statementContentsNode instanceof IBlockNode)
+                || !(statementContentsNode instanceof IContainerNode))
+        {
+            return null;
+        }
+        IContainerNode containerNode = (IContainerNode) statementContentsNode;
+        if (containerNode.getContainerType().equals(ContainerType.SYNTHESIZED))
+        {
+            //this should be fixed first
+            return null;
+        }
+        if(tryNode.getCatchNodeCount() > 0)
+        {
+            return null;
+        }
+
+        TextEdit textEdit = new TextEdit();
+
+        String indent = ASTUtils.getIndentBeforeNode(tryNode, text);
+
+        StringBuilder builder = new StringBuilder();
+        builder.append(NEW_LINE);
+        builder.append(indent);
+        builder.append(IASKeywordConstants.CATCH);
+        builder.append("(");
+        builder.append("e");
+        builder.append(":");
+        builder.append(IASLanguageConstants.Error);
+        builder.append(")");
+        builder.append(NEW_LINE);
+        builder.append(indent);
+        builder.append("{");
+        builder.append(NEW_LINE);
+        builder.append(indent);
+        builder.append("}");
+
+        textEdit.setNewText(builder.toString());
+        
+        int column = containerNode.getEndColumn();
+        if (containerNode.getContainerType().equals(ContainerType.BRACES))
+        {
+            column++;
+        }
+
+        Position editPosition = new Position(containerNode.getEndLine(), column);
+        textEdit.setRange(new Range(editPosition, editPosition));
+
+        return textEdit;
     }
 }
