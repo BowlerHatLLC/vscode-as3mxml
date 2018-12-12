@@ -77,6 +77,8 @@ public class ASConfigC
 {
 	private static final String FILE_EXTENSION_AS = ".as";
 	private static final String FILE_EXTENSION_MXML = ".mxml";
+	private static final String FILE_EXTENSION_ANE = ".ane";
+	private static final String FILE_NAME_UNPACKAGED_ANES = ".as3mxml-unpackaged-anes";
 
 	public static void main(String[] args)
 	{
@@ -175,12 +177,14 @@ public class ASConfigC
 		copyHTMLTemplate();
 		processAdobeAIRDescriptor();
 		copyAIRFiles();
+		prepareNativeExtensions();
 		packageAIR();
 	}
 
 	private ASConfigCOptions options;
 	private List<String> compilerOptions;
 	private List<String> airOptions;
+	private JsonNode compilerOptionsJSON;
 	private JsonNode airOptionsJSON;
 	private String projectType;
 	private boolean clean;
@@ -300,21 +304,21 @@ public class ASConfigC
 		}
 		if(json.has(TopLevelFields.COMPILER_OPTIONS))
 		{
-			JsonNode compilerOptions = json.get(TopLevelFields.COMPILER_OPTIONS);
-			readCompilerOptions(compilerOptions);
-			if(options.debug == null && compilerOptions.has(CompilerOptions.DEBUG) &&
-				compilerOptions.get(CompilerOptions.DEBUG).asBoolean() == true)
+			compilerOptionsJSON = json.get(TopLevelFields.COMPILER_OPTIONS);
+			readCompilerOptions(compilerOptionsJSON);
+			if(options.debug == null && compilerOptionsJSON.has(CompilerOptions.DEBUG) &&
+				compilerOptionsJSON.get(CompilerOptions.DEBUG).asBoolean() == true)
 			{
 				debugBuild = true;
 			}
-			if(compilerOptions.has(CompilerOptions.SOURCE_PATH))
+			if(compilerOptionsJSON.has(CompilerOptions.SOURCE_PATH))
 			{
-				JsonNode sourcePath = compilerOptions.get(CompilerOptions.SOURCE_PATH);
+				JsonNode sourcePath = compilerOptionsJSON.get(CompilerOptions.SOURCE_PATH);
 				sourcePaths = JsonUtils.jsonNodeToListOfStrings(sourcePath);
 			}
-			if(compilerOptions.has(CompilerOptions.OUTPUT))
+			if(compilerOptionsJSON.has(CompilerOptions.OUTPUT))
 			{
-				outputPath = compilerOptions.get(CompilerOptions.OUTPUT).asText();
+				outputPath = compilerOptionsJSON.get(CompilerOptions.OUTPUT).asText();
 			}
 		}
 		if(json.has(TopLevelFields.ADDITIONAL_OPTIONS))
@@ -807,6 +811,81 @@ public class ASConfigC
 		{
 			throw new ASConfigCException(e.getMessage());
 		}
+	}
+
+	private void prepareNativeExtensions() throws ASConfigCException
+	{
+		if(options.air != null)
+		{
+			//don't copy anything when packaging an app. these files are used
+			//for debug builds only.
+			return;
+		}
+		if(compilerOptionsJSON == null)
+		{
+			//the compilerOptions field is not defined, so there's nothing to copy
+			return;
+		}
+
+		if(compilerOptionsJSON.has(CompilerOptions.LIBRARY_PATH))
+		{
+			JsonNode libraryPathJSON = compilerOptionsJSON.get(CompilerOptions.LIBRARY_PATH);
+			unpackANEs(libraryPathJSON);
+		}
+		if(compilerOptionsJSON.has(CompilerOptions.EXTERNAL_LIBRARY_PATH))
+		{
+			JsonNode externalLibraryPathJSON = compilerOptionsJSON.get(CompilerOptions.EXTERNAL_LIBRARY_PATH);
+			unpackANEs(externalLibraryPathJSON);
+		}
+	}
+
+	private void unpackANEs(JsonNode libraryPathJSON) throws ASConfigCException
+	{
+		for(int i = 0, size = libraryPathJSON.size(); i < size; i++)
+		{
+			String libraryPath = libraryPathJSON.get(i).asText();
+			if(libraryPath.endsWith(FILE_EXTENSION_ANE))
+			{
+				File file = new File(libraryPath);
+				unpackANE(file);
+			}
+			else
+			{
+				File file = Paths.get(libraryPath).toFile();
+				if(!file.isDirectory())
+				{
+					continue;
+				}
+				for(String child : file.list())
+				{
+					if(!child.endsWith(FILE_EXTENSION_ANE))
+					{
+						continue;
+					}
+					File childFile = new File(file, child);
+					unpackANE(childFile);
+				}
+			}
+		}
+	}
+	
+	private void unpackANE(File aneFile) throws ASConfigCException
+	{
+		if(aneFile.isDirectory())
+		{
+			//this is either an ANE that's already unpacked
+			//...or something else entirely
+			return;
+		}
+		String outputDirectoryPath = ProjectUtils.findOutputDirectory(mainFile, outputPath, !outputIsJS);
+		File outputDirectory = new File(outputDirectoryPath);
+		File unpackedAneDirectory = new File(outputDirectory, FILE_NAME_UNPACKAGED_ANES);
+		File currentAneDirectory = new File(unpackedAneDirectory, aneFile.getName());		
+		if(!currentAneDirectory.exists() && !currentAneDirectory.mkdirs())
+		{
+			throw new ASConfigCException("Failed to copy Adobe AIR native extension to path: " + currentAneDirectory + " because the directories could not be created.");
+		}
+		
 	}
 	
 	private void copyAIRFiles() throws ASConfigCException
