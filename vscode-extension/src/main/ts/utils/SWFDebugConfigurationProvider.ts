@@ -76,7 +76,6 @@ export default class SWFDebugConfigurationProvider implements vscode.DebugConfig
 			return debugConfiguration;
 		}
 		return this.resolveLaunchDebugConfiguration(workspaceFolder, debugConfiguration);
-
 	}
 
 	private resolveLaunchDebugConfiguration(workspaceFolder: vscode.WorkspaceFolder, debugConfiguration: SWFDebugConfiguration): vscode.ProviderResult<SWFDebugConfiguration>
@@ -204,10 +203,19 @@ export default class SWFDebugConfigurationProvider implements vscode.DebugConfig
 			vscode.window.showErrorMessage("Failed to debug SWF. Program not found.");
 			return null;
 		}
-		if(isMobile && !debugConfiguration.profile)
+		if(!debugConfiguration.profile)
 		{
-			//save the user from having to specify the profile manually
-			debugConfiguration.profile = PROFILE_MOBILE_DEVICE;
+			//save the user from having to specify the profile manually, in a
+			//couple of special cases
+			if(isMobile)
+			{
+				debugConfiguration.profile = PROFILE_MOBILE_DEVICE;
+			}
+			else if(!isMobile && debugConfiguration.extdir)
+			{
+				//required for native extensions on desktop
+				debugConfiguration.profile = "extendedDesktop";
+			}
 		}
 		debugConfiguration.program = program;
 		return debugConfiguration;
