@@ -564,21 +564,13 @@ public class SWFDebugSession extends DebugSession
         }
         catch (CommandLineException e)
         {
-            OutputEvent.OutputBody body = new OutputEvent.OutputBody();
-            body.output = e.getMessage() + "\n" + e.getCommandOutput();
-            body.category = OutputEvent.CATEGORY_STDERR;
-            sendEvent(new OutputEvent(body));
-            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-            e.printStackTrace(new PrintStream(buffer));
-            sendOutputEvent("Exception in debugger: " + buffer.toString() + "\n");
-            sendErrorResponse(response, 10001, "Error launching SWF debug session. Process exited with code: " + e.getExitValue());
+            sendErrorResponse(response, 10001, "Error launching SWF debug session. Process exited with code: " + e.getExitValue() + "\n\n" + e.getMessage() + "\n\n" + e.getCommandOutput());
             return;
         }
         catch (IOException e)
         {
-            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-            e.printStackTrace(new PrintStream(buffer));
-            sendOutputEvent("Exception in debugger: " + buffer.toString() + "\n");
+            System.err.println("Exception in debugger on launch request:");
+            e.printStackTrace(System.err);
             sendErrorResponse(response, 10001, "Error launching SWF debug session.");
             return;
         }
@@ -590,9 +582,8 @@ public class SWFDebugSession extends DebugSession
             }
             catch (VersionException e)
             {
-                ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-                e.printStackTrace(new PrintStream(buffer));
-                sendOutputEvent("Exception in debugger: " + buffer.toString() + "\n");
+                System.err.println("Exception in debugger on bind session:");
+                e.printStackTrace(System.err);
             }
         }
         try
@@ -601,9 +592,8 @@ public class SWFDebugSession extends DebugSession
         }
         catch (IOException e)
         {
-            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-            e.printStackTrace(new PrintStream(buffer));
-            sendOutputEvent("Exception in debugger: " + buffer.toString() + "\n");
+            System.err.println("Exception in debugger on stop listening:");
+            e.printStackTrace(System.err);
         }
         sendResponse(response);
         cancelRunner = false;
