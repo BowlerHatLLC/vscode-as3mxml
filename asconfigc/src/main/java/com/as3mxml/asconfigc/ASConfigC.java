@@ -107,6 +107,10 @@ public class ASConfigC
 		airOption.setArgName("PLATFORM");
 		airOption.setOptionalArg(true);
 		options.addOption(airOption);
+		Option unpackageOption = new Option(null, "unpackage-anes", true, "Unpackage native extensions to the output directory when creating a debug build for the Adobe AIR simulator.");
+		unpackageOption.setArgName("true OR false");
+		unpackageOption.setOptionalArg(true);
+		options.addOption(unpackageOption);
 		Option cleanOption = new Option(null, "clean", true, "Clean the output directory. Will not build the project.");
 		cleanOption.setArgName("true OR false");
 		cleanOption.setOptionalArg(true);
@@ -824,7 +828,17 @@ public class ASConfigC
 		if(options.air != null)
 		{
 			//don't copy anything when packaging an app. these files are used
-			//for debug builds only.
+			//for debug builds that run in the AIR simulator only.
+			return;
+		}
+		if(!options.unpackageANEs)
+		{
+			//don't copy anything if it's not requested.
+			return;
+		}
+		if(!debugBuild)
+		{
+			//don't copy anything when it's a release build.
 			return;
 		}
 		if(compilerOptionsJSON == null)

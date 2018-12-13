@@ -26,21 +26,24 @@ public class ASConfigCOptions
 	private static final String OPTION_SDK = "sdk";
 	private static final String OPTION_DEBUG = "debug";
 	private static final String OPTION_AIR = "air";
+	private static final String OPTION_UNPACKAGE_ANES = "unpackage-anes";
 	private static final String OPTION_CLEAN = "clean";
 
 	public String project = null;
 	public String sdk = null;
 	public Boolean debug = null;
 	public String air = null;
+	public boolean unpackageANEs = false;
 	public Boolean clean = null;
 	public IASConfigCCompiler compiler = null;
 
-	public ASConfigCOptions(String project, String sdk, Boolean debug, String air, IASConfigCCompiler compiler)
+	public ASConfigCOptions(String project, String sdk, Boolean debug, String air, Boolean unpackageANEs, IASConfigCCompiler compiler)
 	{
 		this.project = project;
 		this.sdk = sdk;
 		this.debug = debug;
 		this.air = air;
+		this.unpackageANEs = unpackageANEs;
 		this.compiler = compiler;
 	}
 
@@ -62,6 +65,11 @@ public class ASConfigCOptions
 		if(line.hasOption(OPTION_AIR))
 		{
 			air = line.getOptionValue(OPTION_AIR, "air");
+		}
+		if(line.hasOption(OPTION_UNPACKAGE_ANES))
+		{
+			String unpackageString = line.getOptionValue(OPTION_UNPACKAGE_ANES, Boolean.TRUE.toString());
+			unpackageANEs = unpackageString.equals(Boolean.TRUE.toString());
 		}
 		if(line.hasOption(OPTION_CLEAN))
 		{
