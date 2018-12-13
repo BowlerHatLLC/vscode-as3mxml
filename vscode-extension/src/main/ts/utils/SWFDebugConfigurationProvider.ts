@@ -19,6 +19,9 @@ import * as path from "path";
 import * as json5 from "json5";
 
 const FILE_EXTENSION_SWF = ".swf";
+const FILE_EXTENSION_ANE = ".ane";
+const FILE_EXTENSION_XML = ".xml";
+const FILE_NAME_UNPACKAGED_ANES = ".as3mxml-unpackaged-anes";
 
 const CONFIG_AIR = "air";
 const CONFIG_AIRMOBILE = "airmobile";
@@ -105,6 +108,8 @@ export default class SWFDebugConfigurationProvider implements vscode.DebugConfig
 		let appDescriptorPath: string = null;
 		let outputPath: string = null;
 		let mainClassPath: string = null;
+		let libraryPath: string[] = null;
+		let externalLibraryPath: string[] = null;
 		let requireAIR = false;
 		let isMobile = false;
 		if("config" in asconfigJSON)
@@ -135,6 +140,14 @@ export default class SWFDebugConfigurationProvider implements vscode.DebugConfig
 			{
 				outputPath = asconfigJSON.compilerOptions.output;
 			}
+			if("library-path" in compilerOptions)
+			{
+				libraryPath = asconfigJSON.compilerOptions["library-path"];
+			}
+			if("external-library-path" in compilerOptions)
+			{
+				externalLibraryPath = asconfigJSON.compilerOptions["external-library-path"];
+			}
 		}
 		if("files" in asconfigJSON)
 		{
@@ -145,6 +158,10 @@ export default class SWFDebugConfigurationProvider implements vscode.DebugConfig
 				//class used as the entry point.
 				mainClassPath = files[files.length - 1];
 			}
+		}
+		if(program && program.endsWith(FILE_EXTENSION_XML))
+		{
+			requireAIR = true;
 		}
 		if(!program)
 		{
@@ -202,6 +219,54 @@ export default class SWFDebugConfigurationProvider implements vscode.DebugConfig
 			//this will catch any missing programs
 			vscode.window.showErrorMessage("Failed to debug SWF. Program not found.");
 			return null;
+		}
+		if(requireAIR && !debugConfiguration.extdir)
+		{
+			let programDir = path.dirname(program);
+			if(!path.isAbsolute(programDir))
+			{
+				programDir = path.resolve(workspaceFolder.uri.fsPath, programDir);
+			}
+			let unpackagedDir = path.resolve(programDir, FILE_NAME_UNPACKAGED_ANES);
+			//if ANEs haven't been unpackaged, don't bother checking the library
+			//path or external library path
+			if(fs.existsSync(unpackagedDir) && fs.statSync(unpackagedDir).isDirectory())
+			{
+				let reduceCallback = (result: string[], newItem: string) =>
+				{
+					if(!path.isAbsolute(newItem))
+					{
+						newItem = path.resolve(workspaceFolder.uri.fsPath, newItem);
+					}
+					if(newItem.endsWith(FILE_EXTENSION_ANE))
+					{
+						result.push(newItem);
+					}
+					else if(fs.existsSync(newItem) && fs.statSync(newItem).isDirectory())
+					{
+						result.push(...fs.readdirSync(newItem)
+							.filter(child => child.endsWith(FILE_EXTENSION_ANE))
+							.map(child => path.resolve(newItem, child))
+						);
+					}
+					return result;
+				};
+				let anePaths = [];
+				if(libraryPath !== null)
+				{
+					libraryPath.reduce(reduceCallback, anePaths);
+				}
+				if(externalLibraryPath !== null)
+				{
+					externalLibraryPath.reduce(reduceCallback, anePaths);
+				}
+				if(anePaths.length > 0)
+				{
+					//if we found any ANEs in the library path or external
+					//library path, populate extdir
+					debugConfiguration.extdir = unpackagedDir;
+				}
+			}
 		}
 		if(!debugConfiguration.profile)
 		{
