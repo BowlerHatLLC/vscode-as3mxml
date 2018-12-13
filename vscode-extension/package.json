@@ -56,7 +56,6 @@
     "workspaceContains:**/asconfig.json",
     "workspaceContains:**/asconfig.*.json",
     "onView:actionScriptSourcePaths",
-    "onCommand:as3mxml.adapterExecutableCommandSWF",
     "onCommand:as3mxml.organizeImportsInUri",
     "onCommand:as3mxml.organizeImportsInDirectory",
     "onCommand:as3mxml.selectWorkspaceSDK",
@@ -344,7 +343,6 @@
       {
         "type": "swf",
         "label": "SWF",
-        "adapterExecutableCommand": "as3mxml.adapterExecutableCommandSWF",
         "configurationAttributes": {
           "attach": {
             "properties": {

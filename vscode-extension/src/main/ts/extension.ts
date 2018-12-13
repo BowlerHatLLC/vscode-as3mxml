@@ -23,7 +23,6 @@ import SWCTextDocumentContentProvider from "./utils/SWCTextDocumentContentProvid
 import getJavaClassPathDelimiter from "./utils/getJavaClassPathDelimiter";
 import findSDKShortName from "./utils/findSDKShortName";
 import getFrameworkSDKPathWithFallbacks from "./utils/getFrameworkSDKPathWithFallbacks";
-import adapterExecutableCommandSWF from "./commands/adapterExecutableCommandSWF";
 import selectWorkspaceSDK from "./commands/selectWorkspaceSDK";
 import migrateFlashBuilderProject from "./commands/migrateFlashBuilderProject";
 import * as path from "path";
@@ -32,6 +31,7 @@ import {LanguageClient, LanguageClientOptions, Executable, ExecutableOptions} fr
 import logCompilerShellOutput from "./commands/logCompilerShellOutput";
 import quickCompileAndDebug from "./commands/quickCompileAndDebug";
 import migrateSettings from "./utils/migrateSettings";
+import SWFDebugAdapterDescriptorFactory from "./utils/SWFDebugAdapterDescriptorFactory";
 
 const INVALID_SDK_ERROR = "as3mxml.sdk.editor in settings does not point to a valid SDK. Requires Apache Royale 0.9.4 or newer.";
 const MISSING_FRAMEWORK_SDK_ERROR = "You must configure an SDK to enable all ActionScript & MXML features.";
@@ -56,6 +56,7 @@ let sourcePathDataProvider: ActionScriptSourcePathDataProvider = null;
 let actionScriptTaskProvider: ActionScriptTaskProvider = null;
 let debugConfigurationProvider: SWFDebugConfigurationProvider = null;
 let swcTextDocumentContentProvider: SWCTextDocumentContentProvider = null;
+let swfDebugAdapterDescriptorFactory: SWFDebugAdapterDescriptorFactory = null;
 
 function getValidatedEditorSDKConfiguration(javaExecutablePath: string): string
 {
@@ -208,10 +209,6 @@ export function activate(context: vscode.ExtensionContext)
 		]
 	});
 
-	vscode.commands.registerCommand("as3mxml.adapterExecutableCommandSWF", function(workspaceUri)
-	{
-		return adapterExecutableCommandSWF(workspaceUri, javaExecutablePath, editorSDKHome, frameworkSDKHome);
-	});
 	vscode.commands.registerCommand("as3mxml.selectWorkspaceSDK", selectWorkspaceSDK);
 	vscode.commands.registerCommand("as3mxml.restartServer", restartServer);
 	vscode.commands.registerCommand("as3mxml.logCompilerShellOutput", logCompilerShellOutput);
@@ -257,6 +254,19 @@ export function activate(context: vscode.ExtensionContext)
 		swcTextDocumentContentProvider = new SWCTextDocumentContentProvider();
 		let swcContentDisposable = vscode.workspace.registerTextDocumentContentProvider("swc", swcTextDocumentContentProvider);
 		context.subscriptions.push(swcContentDisposable);
+
+		swfDebugAdapterDescriptorFactory = new SWFDebugAdapterDescriptorFactory(() =>
+		{
+			return(
+				{
+					javaPath: javaExecutablePath,
+					frameworkSDKPath: frameworkSDKHome,
+					editorSDKPath: editorSDKHome,
+				}
+			);
+		});
+		let debugAdapterDisposable = vscode.debug.registerDebugAdapterDescriptorFactory("swf", swfDebugAdapterDescriptorFactory);
+		context.subscriptions.push(debugAdapterDisposable);
 	}
 	startClient();
 
