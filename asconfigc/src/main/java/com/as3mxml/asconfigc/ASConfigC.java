@@ -15,8 +15,11 @@ limitations under the License.
 */
 package com.as3mxml.asconfigc;
 
+import java.io.BufferedInputStream;
 import java.io.Console;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
@@ -28,11 +31,14 @@ import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -886,6 +892,44 @@ public class ASConfigC
 			throw new ASConfigCException("Failed to copy Adobe AIR native extension to path: " + currentAneDirectory + " because the directories could not be created.");
 		}
 		
+		try
+		{
+			ZipFile zipFile = new ZipFile(aneFile);
+			Enumeration<?> zipEntries = zipFile.entries();
+			while(zipEntries.hasMoreElements())
+			{
+				ZipEntry zipEntry = (ZipEntry) zipEntries.nextElement();
+				if(zipEntry.isDirectory())
+				{
+					continue;
+				}
+				
+				File destFile = new File(currentAneDirectory, zipEntry.getName());
+				File destParent = new File(destFile.getParent());
+				destParent.mkdirs();
+
+				BufferedInputStream inStream = new BufferedInputStream(zipFile.getInputStream(zipEntry));
+				FileOutputStream fileOutStream = new FileOutputStream(destFile);
+				byte buffer[] = new byte[2048];
+                int len = 0;
+				while ((len = inStream.read(buffer)) > 0)
+				{
+					fileOutStream.write(buffer, 0, len);
+				}
+				fileOutStream.flush();
+				fileOutStream.close();
+				inStream.close();
+			}
+			zipFile.close();
+		}
+		catch(FileNotFoundException e)
+		{
+			throw new ASConfigCException("Failed to copy Adobe AIR native extension from path: " + aneFile.getAbsolutePath() + " because the file was not found.");
+		}
+		catch(IOException e)
+		{
+			throw new ASConfigCException("Failed to copy Adobe AIR native extension from path: " + aneFile.getAbsolutePath() + ".");
+		}
 	}
 	
 	private void copyAIRFiles() throws ASConfigCException
