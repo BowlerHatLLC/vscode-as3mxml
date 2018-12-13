@@ -33,7 +33,7 @@
     "build-debug": "mvn package"
   },
   "engines": {
-    "vscode": "^1.28.0"
+    "vscode": "^1.30.0"
   },
   "devDependencies": {
     "@types/json5": "0.0.30",
