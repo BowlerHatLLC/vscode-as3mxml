@@ -21,7 +21,7 @@ limitations under the License.
 
   <parent>
     <groupId>com.as3mxml.vscode</groupId>
-    <artifactId>vscode-nextgenas</artifactId>
+    <artifactId>vscode-as3mxml</artifactId>
     <version>0.17.0-SNAPSHOT</version>
   </parent>
 
@@ -47,7 +47,7 @@ limitations under the License.
         <artifactId>maven-assembly-plugin</artifactId>
         <version>2.2-beta-5</version>
         <configuration>
-          <finalName>vscode-nextgenas</finalName>
+          <finalName>vscode-as3mxml</finalName>
           <descriptor>src/assembly/bin.xml</descriptor>
           <appendAssemblyId>false</appendAssemblyId>
         </configuration>
@@ -70,7 +70,7 @@ limitations under the License.
             <phase>package</phase>
             <configuration>
               <skip>${skip-vsce}</skip>
-              <workingDirectory>${project.basedir}/target/vscode-nextgenas/vscode-nextgenas</workingDirectory>
+              <workingDirectory>${project.basedir}/target/vscode-as3mxml/vscode-as3mxml</workingDirectory>
               <executable>${vsce.executable}</executable>
               <arguments>
                 <argument>package</argument>

@@ -28,7 +28,7 @@ Requires [Apache Maven](https://maven.apache.org/) and [Node.js](https://nodejs.
 mvn clean package -s settings-template.xml
 ```
 
-The extension will be generated in *distribution/target/vscode-nextgenas/vscode-nextgenas*. This directory may be run inside Visual Studio Code's extension host. Additionally, a *.vsix* file will be generated that may be installed in Visual Studio Code.
+The extension will be generated in *distribution/target/vscode-as3mxml/vscode-as3mxml*. This directory may be run inside Visual Studio Code's extension host. Additionally, a *.vsix* file will be generated that may be installed in Visual Studio Code.
 
 ## Running tests
 

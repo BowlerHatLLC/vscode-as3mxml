@@ -332,7 +332,7 @@
 * Fixed issue where searching by workspace symbol would throw error because some files were not opened in the editor.
 * Fixed syntax highlighting for `/**/` being incorrectly detected as an asdoc comment, which caused the coloring to extend beyond the `*/` to the following lines.
 * Fixed syntax highlighting of single line comments that start at end of the same line as a class, interface, or function declaration.
-* Fixed issue where building the vscode-nextgenas extension from source would fail if Adobe dependencies were not already installed with Maven from another project, and updated the build instructions to use settings-template.xml.
+* Fixed issue where building the vscode extension from source would fail if Adobe dependencies were not already installed with Maven from another project, and updated the build instructions to use settings-template.xml.
 
 ## 0.5.0
 

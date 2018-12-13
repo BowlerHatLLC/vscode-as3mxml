@@ -7,11 +7,11 @@
 			"request": "launch",
 			"runtimeExecutable": "${execPath}",
 			"args": [
-				"--extensionDevelopmentPath=${workspaceRoot}/distribution/target/vscode-nextgenas/vscode-nextgenas"
+				"--extensionDevelopmentPath=${workspaceRoot}/distribution/target/vscode-as3mxml/vscode-as3mxml"
 			],
 			"stopOnEntry": false,
 			"sourceMaps": true,
-			"outDir": "${workspaceRoot}/distribution/target/vscode-nextgenas/vscode-nextgenas",
+			"outDir": "${workspaceRoot}/distribution/target/vscode-as3mxml/vscode-as3mxml",
 			"internalConsoleOptions": "openOnSessionStart",
 			"preLaunchTask": "build-debug"
 		},
@@ -22,7 +22,7 @@
 			"runtimeExecutable": "${execPath}",
 			"args": [
 				"${workspaceRoot}/vscode-extension/src/test/application_workspace",
-				"--extensionDevelopmentPath=${workspaceRoot}/distribution/target/vscode-nextgenas/vscode-nextgenas",
+				"--extensionDevelopmentPath=${workspaceRoot}/distribution/target/vscode-as3mxml/vscode-as3mxml",
 				"--extensionTestsPath=${workspaceRoot}/vscode-extension/target/test"
 			],
 			"stopOnEntry": false,
