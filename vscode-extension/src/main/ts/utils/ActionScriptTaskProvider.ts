@@ -139,9 +139,9 @@ export default class ActionScriptTaskProvider implements vscode.TaskProvider
 
 		//compile SWF or Royale JS
 		result.push(this.getTask("compile debug" + taskNameSuffix,
-			jsonURI, workspaceFolder, command, frameworkSDK, true, null));
+			jsonURI, workspaceFolder, command, frameworkSDK, true, null, isAIRDesktop || isAIRMobile));
 		result.push(this.getTask("compile release" + taskNameSuffix,
-			jsonURI, workspaceFolder, command, frameworkSDK, false, null));
+			jsonURI, workspaceFolder, command, frameworkSDK, false, null, false));
 		result.push(this.getCleanTask("clean" + taskNameSuffix,
 			jsonURI, workspaceFolder, command, frameworkSDK));
 
@@ -149,17 +149,17 @@ export default class ActionScriptTaskProvider implements vscode.TaskProvider
 		if(isAIRMobile)
 		{
 			result.push(this.getTask("package iOS debug" + taskNameSuffix,
-				jsonURI, workspaceFolder, command, frameworkSDK, true, PLATFORM_IOS));
+				jsonURI, workspaceFolder, command, frameworkSDK, true, PLATFORM_IOS, false));
 			result.push(this.getTask("package iOS release" + taskNameSuffix,
-				jsonURI, workspaceFolder, command, frameworkSDK, false, PLATFORM_IOS));
+				jsonURI, workspaceFolder, command, frameworkSDK, false, PLATFORM_IOS, false));
 			result.push(this.getTask("package iOS simulator debug" + taskNameSuffix,
-				jsonURI, workspaceFolder, command, frameworkSDK, true, PLATFORM_IOS_SIMULATOR));
+				jsonURI, workspaceFolder, command, frameworkSDK, true, PLATFORM_IOS_SIMULATOR, false));
 			result.push(this.getTask("package iOS simulator release" + taskNameSuffix,
-				jsonURI, workspaceFolder, command, frameworkSDK, false, PLATFORM_IOS_SIMULATOR));
+				jsonURI, workspaceFolder, command, frameworkSDK, false, PLATFORM_IOS_SIMULATOR, false));
 			result.push(this.getTask("package Android debug" + taskNameSuffix,
-				jsonURI, workspaceFolder, command, frameworkSDK, true, PLATFORM_ANDROID));
+				jsonURI, workspaceFolder, command, frameworkSDK, true, PLATFORM_ANDROID, false));
 			result.push(this.getTask("package Android release" + taskNameSuffix,
-				jsonURI, workspaceFolder, command, frameworkSDK, false, PLATFORM_ANDROID));
+				jsonURI, workspaceFolder, command, frameworkSDK, false, PLATFORM_ANDROID, false));
 		}
 
 		//desktop platform targets are a little trickier because some can only
@@ -173,38 +173,38 @@ export default class ActionScriptTaskProvider implements vscode.TaskProvider
 		if(isWindowsOverrideBundle)
 		{
 			result.push(this.getTask("package Windows release (captive runtime)" + taskNameSuffix,
-				jsonURI, workspaceFolder, command, frameworkSDK, false, PLATFORM_WINDOWS));
+				jsonURI, workspaceFolder, command, frameworkSDK, false, PLATFORM_WINDOWS, false));
 		}
 		else if(isMacOverrideBundle)
 		{
 			result.push(this.getTask("package macOS release (captive runtime)" + taskNameSuffix,
-				jsonURI, workspaceFolder, command, frameworkSDK, false, PLATFORM_MAC));
+				jsonURI, workspaceFolder, command, frameworkSDK, false, PLATFORM_MAC, false));
 		}
 		//shared runtime with platform overrides
 		else if(isWindowsOverrideShared)
 		{
 			result.push(this.getTask("package Windows debug (shared runtime)" + taskNameSuffix,
-				jsonURI, workspaceFolder, command, frameworkSDK, true, PLATFORM_WINDOWS));
+				jsonURI, workspaceFolder, command, frameworkSDK, true, PLATFORM_WINDOWS, false));
 			result.push(this.getTask("package Windows release (shared runtime)" + taskNameSuffix,
-				jsonURI, workspaceFolder, command, frameworkSDK, false, PLATFORM_WINDOWS));
+				jsonURI, workspaceFolder, command, frameworkSDK, false, PLATFORM_WINDOWS, false));
 		}
 		else if(isMacOverrideShared)
 		{
 			result.push(this.getTask("package macOS debug (shared runtime)" + taskNameSuffix,
-				jsonURI, workspaceFolder, command, frameworkSDK, false, PLATFORM_MAC));
+				jsonURI, workspaceFolder, command, frameworkSDK, false, PLATFORM_MAC, false));
 			result.push(this.getTask("package macOS release (shared runtime)" + taskNameSuffix,
-				jsonURI, workspaceFolder, command, frameworkSDK, true, PLATFORM_MAC));
+				jsonURI, workspaceFolder, command, frameworkSDK, true, PLATFORM_MAC, false));
 		}
 		//native installers
 		else if(isWindowsOverrideNativeInstaller)
 		{
 			result.push(this.getTask("package Windows release (native installer)" + taskNameSuffix,
-				jsonURI, workspaceFolder, command, frameworkSDK, false, PLATFORM_WINDOWS));
+				jsonURI, workspaceFolder, command, frameworkSDK, false, PLATFORM_WINDOWS, false));
 		}
 		else if(isMacOverrideNativeInstaller)
 		{
 			result.push(this.getTask("package macOS release (native installer)" + taskNameSuffix,
-				jsonURI, workspaceFolder, command, frameworkSDK, false, PLATFORM_MAC));
+				jsonURI, workspaceFolder, command, frameworkSDK, false, PLATFORM_MAC, false));
 		}
 
 		//--- root target in airOptions
@@ -216,19 +216,19 @@ export default class ActionScriptTaskProvider implements vscode.TaskProvider
 		if(isRootTargetBundle && !isWindowsOverrideBundle && !isMacOverrideBundle)
 		{
 			result.push(this.getTask("package desktop release (captive runtime)" + taskNameSuffix,
-				jsonURI, workspaceFolder, command, frameworkSDK, false, PLATFORM_AIR));
+				jsonURI, workspaceFolder, command, frameworkSDK, false, PLATFORM_AIR, false));
 		}
 		else if(isRootTargetNativeInstaller && !isWindowsOverrideNativeInstaller && !isMacOverrideNativeInstaller)
 		{
 			result.push(this.getTask("package desktop release (native installer)" + taskNameSuffix,
-				jsonURI, workspaceFolder, command, frameworkSDK, false, PLATFORM_AIR));
+				jsonURI, workspaceFolder, command, frameworkSDK, false, PLATFORM_AIR, false));
 		}
 		else if((isRootTargetShared || isSharedOverride) && !isWindowsOverrideShared && !isMacOverrideShared)
 		{
 			result.push(this.getTask("package desktop debug (shared runtime)" + taskNameSuffix,
-				jsonURI, workspaceFolder, command, frameworkSDK, true, PLATFORM_AIR));
+				jsonURI, workspaceFolder, command, frameworkSDK, true, PLATFORM_AIR, false));
 			result.push(this.getTask("package desktop release (shared runtime)" + taskNameSuffix,
-				jsonURI, workspaceFolder, command, frameworkSDK, false, PLATFORM_AIR));
+				jsonURI, workspaceFolder, command, frameworkSDK, false, PLATFORM_AIR, false));
 		}
 	}
 
@@ -257,7 +257,7 @@ export default class ActionScriptTaskProvider implements vscode.TaskProvider
 	}
 
 	private getTask(description: string, jsonURI: vscode.Uri, workspaceFolder: vscode.WorkspaceFolder,
-		command: string[], sdk: string, debug: boolean, airPlatform: string): vscode.Task
+		command: string[], sdk: string, debug: boolean, airPlatform: string, unpackageANEs: boolean): vscode.Task
 	{
 		let asconfig: string = undefined;
 		if(jsonURI)
@@ -297,6 +297,10 @@ export default class ActionScriptTaskProvider implements vscode.TaskProvider
 		if(airPlatform)
 		{
 			options.push("--air", airPlatform);
+		}
+		if(unpackageANEs)
+		{
+			options.push("--unpackage-anes=true");
 		}
 		if(command.length > 1)
 		{
