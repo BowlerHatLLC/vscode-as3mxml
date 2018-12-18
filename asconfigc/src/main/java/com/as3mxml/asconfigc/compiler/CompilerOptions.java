@@ -72,7 +72,7 @@ public class CompilerOptions
 
 	//library options
 	public static final String INCLUDE_CLASSES = "include-classes";
-	public static final String INCLUDE_NAMESPACES = "include-namespace";
+	public static final String INCLUDE_NAMESPACES = "include-namespaces";
 	public static final String INCLUDE_SOURCES = "include-sources";
 
 	//sub-values
