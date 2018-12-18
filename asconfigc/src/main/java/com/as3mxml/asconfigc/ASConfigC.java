@@ -972,36 +972,63 @@ public class ASConfigC
 		for(int i = 0, size = filesJSON.size(); i < size; i++)
 		{
 			JsonNode fileJSON = filesJSON.get(i);
-			if(fileJSON.isTextual())
+			if(fileJSON.isTextual()) //just a string
 			{
 				String filePath = fileJSON.asText();
 				File srcFile = new File(filePath);
-				try
+				if(outputIsJS)
 				{
-					if(outputIsJS)
+					File outputDirectoryJSDebug = new File(outputDirectory, "bin/js-debug");
+					if(!outputDirectoryJSDebug.exists() && !outputDirectoryJSDebug.mkdirs())
 					{
-						File outputDirectoryJSDebug = new File(outputDirectory, "bin/js-debug");
-						File destFileKSDebug = new File(outputDirectoryJSDebug, srcFile.getName());
-						Files.copy(srcFile.toPath(), destFileKSDebug.toPath(), StandardCopyOption.REPLACE_EXISTING);
-						if(!debugBuild)
+						throw new ASConfigCException("Failed to copy file from source " + srcFile.getAbsolutePath() + " to destination " + outputDirectoryJSDebug.getAbsolutePath() + " because the directories could not be created.");
+					}
+					File destFileJSDebug = new File(outputDirectoryJSDebug, srcFile.getName());
+					try
+					{
+						Files.copy(srcFile.toPath(), destFileJSDebug.toPath(), StandardCopyOption.REPLACE_EXISTING);
+					}
+					catch(IOException e)
+					{
+						throw new ASConfigCException("Failed to copy file from source " + srcFile.getAbsolutePath() + " to destination " + destFileJSDebug.getAbsolutePath());
+					}
+					if(!debugBuild)
+					{
+						File outputDirectoryJSRelease = new File(outputDirectory, "bin/js-release");
+						if(!outputDirectoryJSRelease.exists() && !outputDirectoryJSRelease.mkdirs())
 						{
-							File outputDirectoryJSRelease = new File(outputDirectory, "bin/js-release");
-							File destFileJSRelease = new File(outputDirectoryJSRelease, srcFile.getName());
+							throw new ASConfigCException("Failed to copy file from source " + srcFile.getAbsolutePath() + " to destination " + outputDirectoryJSRelease.getAbsolutePath() + " because the directories could not be created.");
+						}
+						File destFileJSRelease = new File(outputDirectoryJSRelease, srcFile.getName());
+						try
+						{
 							Files.copy(srcFile.toPath(), destFileJSRelease.toPath(), StandardCopyOption.REPLACE_EXISTING);
 						}
+						catch(IOException e)
+						{
+							throw new ASConfigCException("Failed to copy file from source " + srcFile.getAbsolutePath() + " to destination " + destFileJSRelease.getAbsolutePath());
+						}
 					}
-					else //swf
+				}
+				else //swf
+				{
+					File destFile = new File(outputDirectory, srcFile.getName());
+					File destParent = destFile.getParentFile();
+					if(!destParent.exists() && !destParent.mkdirs())
 					{
-						File destFile = new File(outputDirectory, srcFile.getName());
+						throw new ASConfigCException("Failed to copy file from source " + srcFile.getAbsolutePath() + " to destination " + destParent.getAbsolutePath() + " because the directories could not be created.");
+					}
+					try
+					{
 						Files.copy(srcFile.toPath(), destFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
 					}
-				}
-				catch(IOException e)
-				{
-					throw new ASConfigCException(e.getMessage());
+					catch(IOException e)
+					{
+						throw new ASConfigCException("Failed to copy file from source " + srcFile.getAbsolutePath() + " to destination " + destFile.getAbsolutePath());
+					}
 				}
 			}
-			else
+			else //JSON object
 			{
 				String srcFilePath = fileJSON.get(AIROptions.FILES__FILE).asText();
 				File srcFile = new File(srcFilePath);
@@ -1057,30 +1084,57 @@ public class ASConfigC
 						}
 					}
 				}
-				else
+				else //not a directory
 				{
-					try
+					if(outputIsJS)
 					{
-						if(outputIsJS)
+						File outputDirectoryJSDebug = new File(outputDirectory, "bin/js-debug");
+						if(!outputDirectoryJSDebug.exists() && !outputDirectoryJSDebug.mkdirs())
 						{
-							File outputDirectoryJSDebug = new File(outputDirectory, "bin/js-debug");
-							File destFileKSDebug = new File(outputDirectoryJSDebug, destFilePath);
-							Files.copy(srcFile.toPath(), destFileKSDebug.toPath(), StandardCopyOption.REPLACE_EXISTING);
-							if(!debugBuild)
+							throw new ASConfigCException("Failed to copy file from source " + srcFile.getAbsolutePath() + " to destination " + outputDirectoryJSDebug.getAbsolutePath() + " because the directories could not be created.");
+						}
+						File destFileJSDebug = new File(outputDirectoryJSDebug, destFilePath);
+						try
+						{
+							Files.copy(srcFile.toPath(), destFileJSDebug.toPath(), StandardCopyOption.REPLACE_EXISTING);
+						}
+						catch(IOException e)
+						{
+							throw new ASConfigCException("Failed to copy file from source " + srcFile.getAbsolutePath() + " to destination " + destFileJSDebug.getAbsolutePath());
+						}
+						if(!debugBuild)
+						{
+							File outputDirectoryJSRelease = new File(outputDirectory, "bin/js-release");
+							if(!outputDirectoryJSRelease.exists() && !outputDirectoryJSRelease.mkdirs())
 							{
-								File outputDirectoryJSRelease = new File(outputDirectory, "bin/js-release");
-								File destFileJSRelease = new File(outputDirectoryJSRelease, destFilePath);
+								throw new ASConfigCException("Failed to copy file from source " + srcFile.getAbsolutePath() + " to destination " + outputDirectoryJSRelease.getAbsolutePath() + " because the directories could not be created.");
+							}
+							File destFileJSRelease = new File(outputDirectoryJSRelease, destFilePath);
+							try
+							{
 								Files.copy(srcFile.toPath(), destFileJSRelease.toPath(), StandardCopyOption.REPLACE_EXISTING);
 							}
+							catch(IOException e)
+							{
+								throw new ASConfigCException("Failed to copy file from source " + srcFile.getAbsolutePath() + " to destination " + destFileJSRelease.getAbsolutePath());
+							}
 						}
-						else //swf
+					}
+					else //swf
+					{
+						File destParent = destFile.getParentFile();
+						if(!destParent.exists() && !destParent.mkdirs())
+						{
+							throw new ASConfigCException("Failed to copy file from source " + srcFile.getAbsolutePath() + " to destination " + destParent.getAbsolutePath() + " because the directories could not be created.");
+						}
+						try
 						{
 							Files.copy(srcFile.toPath(), destFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
 						}
-					}
-					catch(IOException e)
-					{
-						throw new ASConfigCException(e.getMessage());
+						catch(IOException e)
+						{
+							throw new ASConfigCException("Failed to copy file from source " + srcFile.getAbsolutePath() + " to destination " + destFile.getAbsolutePath());
+						}
 					}
 				}
 			}
