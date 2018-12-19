@@ -3185,7 +3185,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         String fileText = getFileTextForPath(path);
         AddImportData addImportData = CodeActionsUtils.findAddImportData(fileText, importRange.startIndex, importRange.endIndex);
         XmlnsRange xmlnsRange = XmlnsRange.fromOffsetTag(offsetTag, currentOffset);
-        Position xmlnsPosition = LanguageServerCompilerUtils.getPositionFromOffset(new StringReader(fileText), xmlnsRange.endIndex);
+        Position xmlnsPosition = null;
+        if (xmlnsRange.endIndex >= 0)
+        {
+            xmlnsPosition = LanguageServerCompilerUtils.getPositionFromOffset(new StringReader(fileText), xmlnsRange.endIndex);
+        }
 
         boolean tagsNeedOpenBracket = getTagsNeedOpenBracket(path, currentOffset);
 
@@ -3316,6 +3320,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             {
                 autoCompleteTypesForMXMLFromExistingTag(result, project, offsetUnit, offsetTag, xmlnsPosition);
                 return result;
+            }
+            else if (offsetTag.getParent().getRootTag().equals(offsetTag))
+            {
+                autoCompleteTypesForMXMLFromExistingTag(result, project, offsetUnit, offsetTag, xmlnsPosition);
             }
             return result;
         }
@@ -4097,8 +4105,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         MXMLData mxmlData = (MXMLData) mxmlDataManager.get(fileSpecGetter.getFileSpecification(offsetUnit.getAbsoluteFilename()));
         String tagStartShortNameForComparison = offsetTag.getShortName().toLowerCase();
         String tagPrefix = offsetTag.getPrefix();
+        String tagNamespace = null;
         PrefixMap prefixMap = mxmlData.getRootTagPrefixMap();
-        String tagNamespace = prefixMap.getNamespaceForPrefix(tagPrefix);
+        if (prefixMap != null)
+        {
+            //could be null if this is the root tag and no prefixes are defined
+            tagNamespace = prefixMap.getNamespaceForPrefix(tagPrefix);
+        }
         String tagNamespacePackage = null;
         if (tagNamespace != null && tagNamespace.endsWith("*"))
         {
@@ -4157,12 +4170,15 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                                 //use the language namespace of the root tag instead
                                 tagNameNamespace = mxmlData.getRootTag().getMXMLDialect().getLanguageNamespace();
                             }
-                            String[] prefixes = prefixMap.getPrefixesForNamespace(tagNameNamespace);
-                            for (String otherPrefix : prefixes)
+                            if (prefixMap != null)
                             {
-                                if (tagPrefix.equals(otherPrefix))
+                                String[] prefixes = prefixMap.getPrefixesForNamespace(tagNameNamespace);
+                                for (String otherPrefix : prefixes)
                                 {
-                                    addDefinitionAutoCompleteMXML(typeDefinition, xmlnsPosition, false, null, null, false, offsetTag, project, result);
+                                    if (tagPrefix.equals(otherPrefix))
+                                    {
+                                        addDefinitionAutoCompleteMXML(typeDefinition, xmlnsPosition, false, null, null, false, offsetTag, project, result);
+                                    }
                                 }
                             }
                         }
@@ -5364,8 +5380,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 insertTextBuilder.append(IMXMLCoreConstants.colon);
             }
             insertTextBuilder.append(definitionBaseName);
-            if (definition instanceof ITypeDefinition && prefix != null
-                    && offsetTag == null && xmlnsPosition == null)
+            if (definition instanceof ITypeDefinition
+                    && prefix != null
+                    && (offsetTag == null || offsetTag.equals(offsetTag.getParent().getRootTag()))
+                    && xmlnsPosition == null)
             {
                 //if this is the root tag, we should add the XML namespace and
                 //close the tag automatically
@@ -5412,7 +5430,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             item.setInsertText(insertTextBuilder.toString());
             if (definition instanceof ITypeDefinition
                     && prefix != null && uri != null
-                    && MXMLDataUtils.needsNamespace(offsetTag, prefix, uri))
+                    && MXMLDataUtils.needsNamespace(offsetTag, prefix, uri)
+                    && xmlnsPosition != null)
             {
                 TextEdit textEdit = CodeActionsUtils.createTextEditForAddMXMLNamespace(prefix, uri, xmlnsPosition);
                 if(textEdit != null)
