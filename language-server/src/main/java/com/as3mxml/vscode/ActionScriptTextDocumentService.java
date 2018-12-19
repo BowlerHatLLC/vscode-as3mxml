@@ -58,6 +58,7 @@ import org.apache.royale.compiler.constants.IASKeywordConstants;
 import org.apache.royale.compiler.constants.IASLanguageConstants;
 import org.apache.royale.compiler.constants.IMXMLCoreConstants;
 import org.apache.royale.compiler.constants.IMetaAttributeConstants;
+import org.apache.royale.compiler.definitions.IAccessorDefinition;
 import org.apache.royale.compiler.definitions.IClassDefinition;
 import org.apache.royale.compiler.definitions.IDefinition;
 import org.apache.royale.compiler.definitions.IEventDefinition;
@@ -73,6 +74,7 @@ import org.apache.royale.compiler.definitions.ITypeDefinition;
 import org.apache.royale.compiler.definitions.IVariableDefinition;
 import org.apache.royale.compiler.definitions.metadata.IDeprecationInfo;
 import org.apache.royale.compiler.definitions.metadata.IMetaTag;
+import org.apache.royale.compiler.definitions.metadata.IMetaTagAttribute;
 import org.apache.royale.compiler.filespecs.IFileSpecification;
 import org.apache.royale.compiler.internal.mxml.MXMLData;
 import org.apache.royale.compiler.internal.mxml.MXMLTagData;
@@ -3430,6 +3432,52 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 trueItem.setLabel(IASLanguageConstants.TRUE);
                 items.add(trueItem);
                 return result;
+            }
+            IMetaTag inspectableTag = variableDefinition.getMetaTagByName(IMetaAttributeConstants.ATTRIBUTE_INSPECTABLE);
+            if (inspectableTag == null)
+            {
+                if (variableDefinition instanceof IAccessorDefinition)
+                {
+                    IAccessorDefinition accessorDefinition = (IAccessorDefinition) variableDefinition;
+                    IAccessorDefinition otherAccessorDefinition = accessorDefinition.resolveCorrespondingAccessor(project);
+                    if (otherAccessorDefinition != null)
+                    {
+                        inspectableTag = otherAccessorDefinition.getMetaTagByName(IMetaAttributeConstants.ATTRIBUTE_INSPECTABLE);
+                    }
+                }
+            }
+            if (inspectableTag != null)
+            {
+                IMetaTagAttribute enumAttribute = inspectableTag.getAttribute(IMetaAttributeConstants.NAME_INSPECTABLE_ENUMERATION);
+                if (enumAttribute != null)
+                {
+                    String joinedValue = enumAttribute.getValue();
+                    String[] values = joinedValue.split(",");
+                    for (String value : values)
+                    {
+                        value = value.trim();
+                        if (value.length() == 0)
+                        {
+                            //skip empty values
+                            continue;
+                        }
+                        CompletionItem enumItem = new CompletionItem();
+                        enumItem.setKind(CompletionItemKind.Value);
+                        enumItem.setLabel(value);
+                        items.add(enumItem);
+                    }
+                }
+            }
+        }
+        if (attributeDefinition instanceof IStyleDefinition)
+        {
+            IStyleDefinition styleDefinition = (IStyleDefinition) attributeDefinition;
+            for (String enumValue : styleDefinition.getEnumeration())
+            {
+                CompletionItem styleItem = new CompletionItem();
+                styleItem.setKind(CompletionItemKind.Value);
+                styleItem.setLabel(enumValue);
+                items.add(styleItem);
             }
         }
         return result;
