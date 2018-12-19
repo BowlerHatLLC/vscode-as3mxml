@@ -445,6 +445,17 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                         return Either.forRight(result);
                     }
                 }
+                else if(mxmlData != null && mxmlData.getRootTag() == null)
+                {
+                    ICompilationUnit offsetUnit = findCompilationUnit(path);
+                    boolean tagsNeedOpenBracket = getTagsNeedOpenBracket(path, currentOffset);
+                    CompletionList result = new CompletionList();
+                    result.setIsIncomplete(false);
+                    result.setItems(new ArrayList<>());
+                    autoCompleteDefinitionsForMXML(result, project, offsetUnit, offsetTag, true, tagsNeedOpenBracket, null, null, null);
+                    cancelToken.checkCanceled();
+                    return Either.forRight(result);
+                }
                 if (offsetTag == null && params.getTextDocument().getUri().endsWith(MXML_EXTENSION))
                 {
                     //it's possible for the offset tag to be null in an MXML file, but
@@ -5353,6 +5364,37 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 insertTextBuilder.append(IMXMLCoreConstants.colon);
             }
             insertTextBuilder.append(definitionBaseName);
+            if (definition instanceof ITypeDefinition && prefix != null
+                    && offsetTag == null && xmlnsPosition == null)
+            {
+                //if this is the root tag, we should add the XML namespace and
+                //close the tag automatically
+                insertTextBuilder.append(" ");
+                if(!uri.equals(IMXMLLanguageConstants.NAMESPACE_MXML_2009))
+                {
+                    insertTextBuilder.append("xmlns");
+                    insertTextBuilder.append(IMXMLCoreConstants.colon);
+                    insertTextBuilder.append("fx=\"");
+                    insertTextBuilder.append(IMXMLLanguageConstants.NAMESPACE_MXML_2009);
+                    insertTextBuilder.append("\"\n\t");
+                }
+                insertTextBuilder.append("xmlns");
+                insertTextBuilder.append(IMXMLCoreConstants.colon);
+                insertTextBuilder.append(prefix);
+                insertTextBuilder.append("=\"");
+                insertTextBuilder.append(uri);
+                insertTextBuilder.append("\">\n\t");
+                if (completionSupportsSnippets)
+                {
+                    item.setInsertTextFormat(InsertTextFormat.Snippet);
+                    insertTextBuilder.append("$0");
+                }
+                insertTextBuilder.append("\n</");
+                insertTextBuilder.append(prefix);
+                insertTextBuilder.append(IMXMLCoreConstants.colon);
+                insertTextBuilder.append(definitionBaseName);
+                insertTextBuilder.append(">");
+            }
             if (completionSupportsSnippets && !(definition instanceof ITypeDefinition))
             {
                 item.setInsertTextFormat(InsertTextFormat.Snippet);
