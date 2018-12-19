@@ -414,7 +414,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     return Either.forRight(result);
                 }
 
-                int currentOffset = getOffset(params);
+                int currentOffset = getOffsetFromTextDocumentPosition(params);
                 if (currentOffset == -1)
                 {
                     CompletionList result = new CompletionList();
@@ -424,7 +424,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     return Either.forRight(result);
                 }
 
-                IMXMLTagData offsetTag = getOffsetMXMLTag(params);
+                MXMLData mxmlData = getMXMLDataForTextDocument(params.getTextDocument());
+                IMXMLTagData offsetTag = getOffsetMXMLTag(mxmlData, currentOffset);
                 if (offsetTag != null)
                 {
                     IASNode embeddedNode = getEmbeddedActionScriptNodeInMXMLTag(offsetTag, currentOffset, params, project);
@@ -505,7 +506,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     return new Hover(Collections.emptyList(), null);
                 }
 
-                int currentOffset = getOffset(params);
+                int currentOffset = getOffsetFromTextDocumentPosition(params);
                 if (currentOffset == -1)
                 {
                     cancelToken.checkCanceled();
@@ -570,7 +571,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     return new SignatureHelp(Collections.emptyList(), -1, -1);
                 }
 
-                int currentOffset = getOffset(params);
+                int currentOffset = getOffsetFromTextDocumentPosition(params);
                 if (currentOffset == -1)
                 {
                     cancelToken.checkCanceled();
@@ -744,7 +745,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     return Collections.emptyList();
                 }
 
-                int currentOffset = getOffset(params);
+                int currentOffset = getOffsetFromTextDocumentPosition(params);
                 if (currentOffset == -1)
                 {
                     cancelToken.checkCanceled();
@@ -839,7 +840,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     return Collections.emptyList();
                 }
 
-                int currentOffset = getOffset(params);
+                int currentOffset = getOffsetFromTextDocumentPosition(params);
                 if (currentOffset == -1)
                 {
                     cancelToken.checkCanceled();
@@ -900,7 +901,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     return Collections.emptyList();
                 }
 
-                int currentOffset = getOffset(params);
+                int currentOffset = getOffsetFromTextDocumentPosition(params);
                 if (currentOffset == -1)
                 {
                     cancelToken.checkCanceled();
@@ -956,7 +957,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     return Collections.emptyList();
                 }
 
-                int currentOffset = getOffset(params);
+                int currentOffset = getOffsetFromTextDocumentPosition(params);
                 if (currentOffset == -1)
                 {
                     cancelToken.checkCanceled();
@@ -1381,7 +1382,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             IMXMLTagData tag = getOffsetMXMLTag(textDocument, position);
             //workaround for bug in Royale compiler
             position = new Position(position.getLine(), position.getCharacter() + 1);
-            int currentOffset = getOffset(textDocument, position);
+            int currentOffset = getOffsetFromTextDocumentPosition(textDocument, position);
             offsetNode = getEmbeddedActionScriptNodeInMXMLTag(tag, currentOffset, textDocument, position, project);
         }
         IIdentifierNode identifierNode = null;
@@ -1450,7 +1451,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             IMXMLTagData tag = getOffsetMXMLTag(textDocument, position);
             //workaround for bug in Royale compiler
             position = new Position(position.getLine(), position.getCharacter() + 1);
-            int currentOffset = getOffset(textDocument, position);
+            int currentOffset = getOffsetFromTextDocumentPosition(textDocument, position);
             offsetNode = getEmbeddedActionScriptNodeInMXMLTag(tag, currentOffset, textDocument, position, project);
         }
         IIdentifierNode identifierNode = null;
@@ -1541,7 +1542,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             IMXMLTagData tag = getOffsetMXMLTag(textDocument, position);
             //workaround for bug in Royale compiler
             position = new Position(position.getLine(), position.getCharacter() + 1);
-            int currentOffset = getOffset(textDocument, position);
+            int currentOffset = getOffsetFromTextDocumentPosition(textDocument, position);
             offsetNode = getEmbeddedActionScriptNodeInMXMLTag(tag, currentOffset, textDocument, position, project);
         }
         IASNode parentNode = offsetNode.getParent();
@@ -1608,7 +1609,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             IMXMLTagData tag = getOffsetMXMLTag(textDocument, position);
             //workaround for bug in Royale compiler
             position = new Position(position.getLine(), position.getCharacter() + 1);
-            int currentOffset = getOffset(textDocument, position);
+            int currentOffset = getOffsetFromTextDocumentPosition(textDocument, position);
             offsetNode = getEmbeddedActionScriptNodeInMXMLTag(tag, currentOffset, textDocument, position, project);
         }
         if (offsetNode == null || !(offsetNode instanceof IIdentifierNode))
@@ -1728,7 +1729,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     return new WorkspaceEdit(new HashMap<>());
                 }
 
-                int currentOffset = getOffset(params.getTextDocument(), params.getPosition());
+                int currentOffset = getOffsetFromTextDocumentPosition(params.getTextDocument(), params.getPosition());
                 if (currentOffset == -1)
                 {
                     cancelToken.checkCanceled();
@@ -3121,6 +3122,37 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return result;
     }
 
+    private boolean getTagsNeedOpenBracket(Path path, int currentOffset)
+    {
+        boolean tagsNeedOpenBracket = currentOffset == 0;
+        if (currentOffset > 0)
+        {
+            Reader reader = getReaderForPath(path);
+            if (reader != null)
+            {
+                try
+                {
+                    reader.skip(currentOffset - 1);
+                    char prevChar = (char) reader.read();
+                    tagsNeedOpenBracket = prevChar != '<';
+                }
+                catch(IOException e)
+                {
+                    //just ignore it
+                }
+                try
+                {
+                    reader.close();
+                }
+                catch(IOException e)
+                {
+                    //just ignore it
+                }
+            }
+        }
+        return tagsNeedOpenBracket;
+    }
+
     private CompletionList mxmlCompletion(CompletionParams params, RoyaleProject project, ICompilationUnit offsetUnit, IMXMLTagData offsetTag, int currentOffset)
     {
         CompletionList result = new CompletionList();
@@ -3144,32 +3176,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         XmlnsRange xmlnsRange = XmlnsRange.fromOffsetTag(offsetTag, currentOffset);
         Position xmlnsPosition = LanguageServerCompilerUtils.getPositionFromOffset(new StringReader(fileText), xmlnsRange.endIndex);
 
-        boolean tagsNeedOpenBracket = false;
-        if(currentOffset > 0)
-        {
-            Reader reader = getReaderForPath(Paths.get(offsetTag.getSourcePath()));
-            if (reader != null)
-            {
-                try
-                {
-                    reader.skip(currentOffset - 1);
-                    char prevChar = (char) reader.read();
-                    tagsNeedOpenBracket = prevChar != '<';
-                }
-                catch(IOException e)
-                {
-                    //just ignore it
-                }
-                try
-                {
-                    reader.close();
-                }
-                catch(IOException e)
-                {
-                    //just ignore it
-                }
-            }
-        }
+        boolean tagsNeedOpenBracket = getTagsNeedOpenBracket(path, currentOffset);
 
         IMXMLTagData parentTag = offsetTag.getParentTag();
 
@@ -6423,12 +6430,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return reader;
     }
 
-    private IMXMLTagData getOffsetMXMLTag(TextDocumentPositionParams params)
-    {
-        return getOffsetMXMLTag(params.getTextDocument(), params.getPosition());
-    }
-
-    private IMXMLTagData getOffsetMXMLTag(TextDocumentIdentifier textDocument, Position position)
+    private MXMLData getMXMLDataForTextDocument(TextDocumentIdentifier textDocument)
     {
         String uri = textDocument.getUri();
         if (!uri.endsWith(MXML_EXTENSION))
@@ -6465,13 +6467,31 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         IMXMLDataManager mxmlDataManager = compilerWorkspace.getMXMLDataManager();
         String normalizedPath = FilenameNormalization.normalize(path.toAbsolutePath().toString());
         IFileSpecification fileSpecification = fileSpecGetter.getFileSpecification(normalizedPath);
-        MXMLData mxmlData = (MXMLData) mxmlDataManager.get(fileSpecification);
+        return (MXMLData) mxmlDataManager.get(fileSpecification);
+    }
+
+    private IMXMLTagData getOffsetMXMLTag(TextDocumentPositionParams params)
+    {
+        return getOffsetMXMLTag(params.getTextDocument(), params.getPosition());
+    }
+
+    private IMXMLTagData getOffsetMXMLTag(TextDocumentIdentifier textDocument, Position position)
+    {
+        MXMLData mxmlData = getMXMLDataForTextDocument(textDocument);
         if (mxmlData == null)
         {
             return null;
         }
+        int currentOffset = getOffsetFromTextDocumentPosition(textDocument, position);
+        return getOffsetMXMLTag(mxmlData, currentOffset);
+    }
 
-        int currentOffset = getOffset(textDocument, position);
+    private IMXMLTagData getOffsetMXMLTag(MXMLData mxmlData, int currentOffset)
+    {
+        if (mxmlData == null)
+        {
+            return null;
+        }
         IMXMLUnitData unitData = mxmlData.findContainmentReferenceUnit(currentOffset);
         IMXMLUnitData currentUnitData = unitData;
         while (currentUnitData != null)
@@ -6491,12 +6511,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return getOffsetNode(params.getTextDocument(), params.getPosition());
     }
 
-    private int getOffset(TextDocumentPositionParams params)
+    private int getOffsetFromTextDocumentPosition(TextDocumentPositionParams params)
     {
-        return getOffset(params.getTextDocument(), params.getPosition());
+        return getOffsetFromTextDocumentPosition(params.getTextDocument(), params.getPosition());
     }
 
-    private int getOffset(TextDocumentIdentifier textDocument, Position position)
+    private int getOffsetFromTextDocumentPosition(TextDocumentIdentifier textDocument, Position position)
     {
         Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocument.getUri());
         if (path == null)
@@ -6520,7 +6540,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return null;
         }
-        int currentOffset = getOffset(textDocument, position);
+        int currentOffset = getOffsetFromTextDocumentPosition(textDocument, position);
         if (currentOffset == -1)
         {
             System.err.println("Could not find code at position " + position.getLine() + ":" + position.getCharacter() + " in file " + path.toAbsolutePath().toString());
