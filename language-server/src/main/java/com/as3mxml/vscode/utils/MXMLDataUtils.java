@@ -79,6 +79,10 @@ public class MXMLDataUtils
 
     public static boolean needsNamespace(IMXMLTagData offsetTag, String prefix, String uri)
     {
+        if(offsetTag == null)
+        {
+            return false;
+        }
         PrefixMap prefixMap = offsetTag.getCompositePrefixMap();
         if(prefixMap == null)
         {
