@@ -72,7 +72,11 @@ public class DefinitionUtils
 				ISetterDefinition setterDefinition = getterDefinition.resolveSetter(project);
 				if (setterDefinition != null)
 				{
-					return getMXMLChildElementTypeForDefinition(setterDefinition, project, false);
+					String result = getMXMLChildElementTypeForDefinition(setterDefinition, project, false);
+					if (result != null)
+					{
+						return result;
+					}
 				}
 			}
 			else if (definition instanceof ISetterDefinition)
@@ -81,7 +85,11 @@ public class DefinitionUtils
 				IGetterDefinition getterDefinition = setterDefinition.resolveGetter(project);
 				if (getterDefinition != null)
 				{
-					return getMXMLChildElementTypeForDefinition(getterDefinition, project, false);
+					String result = getMXMLChildElementTypeForDefinition(getterDefinition, project, false);
+					if (result != null)
+					{
+						return result;
+					}
 				}
 			}
 		}
@@ -95,6 +103,7 @@ public class DefinitionUtils
 				//[ArrayElementType] metadata, default to Object
 				return IASLanguageConstants.Object;
 			}
+			return qualifiedName;
 		}
 		return null;
 	}

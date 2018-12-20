@@ -3300,11 +3300,32 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                             addMXMLLanguageTagToAutoComplete(IMXMLLanguageConstants.COMPONENT, fxNS.prefix, false, false, result);
                         }
                         String defaultPropertyName = classDefinition.getDefaultPropertyName(project);
-                        if (defaultPropertyName != null)
+                        //if [DefaultProperty] is set, then we can instantiate
+                        //types as child elements
+                        //but we don't want to do that when in an attribute
+                        boolean allowTypesAsChildren = defaultPropertyName != null;
+                        if (!allowTypesAsChildren)
                         {
-                            //only add types if the class defines [DefaultProperty]
-                            //metadata
-                            autoCompleteTypesForMXMLFromExistingTag(result, project, offsetUnit, offsetTag, xmlnsPosition);
+                            //similar to [DefaultProperty], if a component implements
+                            //mx.core.IContainer, we can instantiate types as children
+                            String containerInterface = project.getContainerInterface();
+                            allowTypesAsChildren = classDefinition.isInstanceOf(containerInterface, project);
+                        }
+                        if (allowTypesAsChildren)
+                        {
+                            String typeFilter = null;
+                            if (defaultPropertyName != null)
+                            {
+                                TypeScope typeScope = (TypeScope) classDefinition.getContainedScope();
+                                Set<INamespaceDefinition> namespaceSet = ScopeUtils.getNamespaceSetForScopes(typeScope, typeScope, project);
+                                List<IDefinition> propertiesByName = typeScope.getPropertiesByNameForMemberAccess(project, defaultPropertyName, namespaceSet);
+                                if (propertiesByName.size() > 0)
+                                {
+                                    IDefinition propertyDefinition = propertiesByName.get(0);
+                                    typeFilter = DefinitionUtils.getMXMLChildElementTypeForDefinition(propertyDefinition, project);
+                                }
+                            }
+                            autoCompleteTypesForMXMLFromExistingTag(result, project, offsetUnit, offsetTag, typeFilter, xmlnsPosition);
                         }
                     }
                 }
@@ -3312,18 +3333,18 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 {
                     //the parent is something like a property, so matching the
                     //prefix is not required
-                    autoCompleteTypesForMXMLFromExistingTag(result, project, offsetUnit, offsetTag, xmlnsPosition);
+                    autoCompleteTypesForMXMLFromExistingTag(result, project, offsetUnit, offsetTag, null, xmlnsPosition);
                 }
                 return result;
             }
             else if (MXMLDataUtils.isDeclarationsTag(parentTag))
             {
-                autoCompleteTypesForMXMLFromExistingTag(result, project, offsetUnit, offsetTag, xmlnsPosition);
+                autoCompleteTypesForMXMLFromExistingTag(result, project, offsetUnit, offsetTag, null, xmlnsPosition);
                 return result;
             }
             else if (offsetTag.getParent().getRootTag().equals(offsetTag))
             {
-                autoCompleteTypesForMXMLFromExistingTag(result, project, offsetUnit, offsetTag, xmlnsPosition);
+                autoCompleteTypesForMXMLFromExistingTag(result, project, offsetUnit, offsetTag, null, xmlnsPosition);
             }
             return result;
         }
@@ -3355,21 +3376,32 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 }
                 addMXMLLanguageTagToAutoComplete(IMXMLLanguageConstants.COMPONENT, fxNS.prefix, true, tagsNeedOpenBracket, result);
                 String defaultPropertyName = classDefinition.getDefaultPropertyName(project);
-                if (defaultPropertyName != null)
+                //if [DefaultProperty] is set, then we can instantiate
+                //types as child elements
+                //but we don't want to do that when in an attribute
+                boolean allowTypesAsChildren = defaultPropertyName != null;
+                if (!allowTypesAsChildren)
+                {
+                    //similar to [DefaultProperty], if a component implements
+                    //mx.core.IContainer, we can instantiate types as children
+                    String containerInterface = project.getContainerInterface();
+                    allowTypesAsChildren = classDefinition.isInstanceOf(containerInterface, project);
+                }
+                if (allowTypesAsChildren)
                 {
                     String typeFilter = null;
-                    TypeScope typeScope = (TypeScope) classDefinition.getContainedScope();
-                    Set<INamespaceDefinition> namespaceSet = ScopeUtils.getNamespaceSetForScopes(typeScope, typeScope, project);
-                    List<IDefinition> propertiesByName = typeScope.getPropertiesByNameForMemberAccess(project, defaultPropertyName, namespaceSet);
-                    if (propertiesByName.size() > 0)
+                    if (defaultPropertyName != null)
                     {
-                        IDefinition propertyDefinition = propertiesByName.get(0);
-                        typeFilter = DefinitionUtils.getMXMLChildElementTypeForDefinition(propertyDefinition, project);
+                        TypeScope typeScope = (TypeScope) classDefinition.getContainedScope();
+                        Set<INamespaceDefinition> namespaceSet = ScopeUtils.getNamespaceSetForScopes(typeScope, typeScope, project);
+                        List<IDefinition> propertiesByName = typeScope.getPropertiesByNameForMemberAccess(project, defaultPropertyName, namespaceSet);
+                        if (propertiesByName.size() > 0)
+                        {
+                            IDefinition propertyDefinition = propertiesByName.get(0);
+                            typeFilter = DefinitionUtils.getMXMLChildElementTypeForDefinition(propertyDefinition, project);
+                        }
                     }
 
-                    //if [DefaultProperty] is set, then we can instantiate
-                    //types as child elements
-                    //but we don't want to do that when in an attribute
                     autoCompleteDefinitionsForMXML(result, project, offsetUnit, offsetTag, true, tagsNeedOpenBracket, typeFilter, addImportData, xmlnsPosition);
                 }
             }
@@ -4099,7 +4131,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
      * Using an existing tag, that may already have a prefix or short name,
      * populate the completion list.
      */
-    private void autoCompleteTypesForMXMLFromExistingTag(CompletionList result, RoyaleProject project, ICompilationUnit offsetUnit, IMXMLTagData offsetTag, Position xmlnsPosition)
+    private void autoCompleteTypesForMXMLFromExistingTag(CompletionList result, RoyaleProject project, ICompilationUnit offsetUnit, IMXMLTagData offsetTag, String typeFilter, Position xmlnsPosition)
     {
         IMXMLDataManager mxmlDataManager = compilerWorkspace.getMXMLDataManager();
         MXMLData mxmlData = (MXMLData) mxmlDataManager.get(fileSpecGetter.getFileSpecification(offsetUnit.getAbsoluteFilename()));
@@ -4149,6 +4181,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     continue;
                 }
                 ITypeDefinition typeDefinition = (ITypeDefinition) definition;
+                if (typeFilter != null && !DefinitionUtils.extendsOrImplements(project, typeDefinition, typeFilter))
+                {
+                    continue;
+                }
 
                 //first check that the tag either doesn't have a short name yet
                 //or that the definition's base name matches the short name 
