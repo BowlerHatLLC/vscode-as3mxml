@@ -212,7 +212,7 @@ public class CompilerOptionsParser
 				}
 				case CompilerOptions.NAMESPACE:
 				{
-					setNamespace(options.get(key), result);
+					appendNamespace(options.get(key), result);
 					break;
 				}
 				case CompilerOptions.OPTIMIZE:
@@ -347,7 +347,7 @@ public class CompilerOptionsParser
 		}
 	}
 	
-	private void setNamespace(JsonNode values, List<String> result)
+	private void appendNamespace(JsonNode values, List<String> result)
 	{
 		int size = values.size();
 		if(size == 0)
@@ -359,9 +359,7 @@ public class CompilerOptionsParser
 			JsonNode currentValue = values.get(i);
 			String uri = currentValue.get(CompilerOptions.NAMESPACE__URI).asText();
 			String manifest = currentValue.get(CompilerOptions.NAMESPACE__MANIFEST).asText();
-			result.add("--" + CompilerOptions.NAMESPACE);
-			result.add(uri);
-			result.add(manifest);
+			result.add("--" + CompilerOptions.NAMESPACE + "+=" + uri + "," + manifest);
 		}
 	}
 
