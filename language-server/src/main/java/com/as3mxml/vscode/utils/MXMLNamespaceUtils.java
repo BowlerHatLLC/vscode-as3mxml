@@ -162,41 +162,65 @@ public class MXMLNamespaceUtils
         return prefix;
     }
 
+    private static boolean isPreferredNamespace(String tagNamespace, List<String> tagNamespaces, MXMLData mxmlData)
+    {
+        if (tagNamespace.equals(IMXMLLibraryConstants.MX) && tagNamespaces.contains(IMXMLLibraryConstants.SPARK))
+        {
+            //if we find mx, but spark also exists, we prefer spark
+            //while mx and spark usually have different implementations,
+            //sometimes, the same component class is defined in both namespaces!
+            return false;
+        }
+        if (tagNamespace.equals(IMXMLLanguageConstants.NAMESPACE_MXML_2006))
+        {
+            String rootLanguageNamespace = mxmlData.getRootTag().getMXMLDialect().getLanguageNamespace();
+            if(!rootLanguageNamespace.equals(tagNamespace))
+            {
+                if(tagNamespaces.contains(IMXMLLibraryConstants.MX))
+                {
+                    //if we find the mxml 2006 language namepace, but
+                    //we're using a newer language namespace, and the mx
+                    //library also exists, we prefer the library
+                    return false;
+                }
+                if(tagNamespaces.contains(rootLanguageNamespace))
+                {
+                    //getTagNamesForClass() may sometimes return the
+                    //mxml 2006 namespace, even if that's not what we're
+                    //using in this file.
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
     public static MXMLNamespace getMXMLNamespaceForTypeDefinition(ITypeDefinition definition, MXMLData mxmlData, IRoyaleProject currentProject)
     {
         //the prefix map may be null, if the file is empty
         PrefixMap prefixMap = mxmlData.getRootTagPrefixMap();
 
         Collection<XMLName> tagNames = currentProject.getTagNamesForClass(definition.getQualifiedName());
+        List<String> xmlNamespaces = new ArrayList<>();
+        for (XMLName tagName : tagNames)
+        {
+            //creating a new collection with only the namespace strings for easy
+            //searching for other values
+            String tagNamespace = tagName.getXMLNamespace();
+            xmlNamespaces.add(tagNamespace);
+        }
 
         //1. try to use an existing xmlns with an uri
         if (prefixMap != null)
         {
-            List<String> xmlNamespaces = new ArrayList<>();
-            for (XMLName tagName : tagNames)
-            {
-                //creating a new collection with only the namespace strings for easy
-                //searching for other values
-                String tagNamespace = tagName.getXMLNamespace();
-                xmlNamespaces.add(tagNamespace);
-            }
             for (String tagNamespace : xmlNamespaces)
             {
-                if (tagNamespace.equals(IMXMLLibraryConstants.MX) && xmlNamespaces.contains(IMXMLLibraryConstants.SPARK))
+                if (!isPreferredNamespace(tagNamespace, xmlNamespaces, mxmlData))
                 {
-                    //if we find mx, but spark also exists, we prefer spark
+                    //skip namespaces that we'd rather not use in the current
+                    //context. for example, we prefer spark over mx, and this
+                    //class may be defined in both namespaces.
                     continue;
-                }
-                if (tagNamespace.equals(IMXMLLanguageConstants.NAMESPACE_MXML_2006))
-                {
-                    //getTagNamesForClass() may sometimes return the 2006 namespace,
-                    //even if that's not what we're using in this file.
-                    String rootLanguageNamespace = mxmlData.getRootTag().getMXMLDialect().getLanguageNamespace();
-                    if (!rootLanguageNamespace.equals(tagNamespace)
-                            && xmlNamespaces.contains(rootLanguageNamespace))
-                    {
-                        continue;
-                    }
                 }
                 String[] uriPrefixes = prefixMap.getPrefixesForNamespace(tagNamespace);
                 if (uriPrefixes.length > 0)
@@ -240,18 +264,40 @@ public class MXMLNamespaceUtils
             }
         }
 
+        //we're going to save our best option and keep trying to use it later
+        //if the preferred prefix is already in use
         String fallbackNamespace = null;
-        for (XMLName tagName : tagNames)
+        //we're searching again through the available namespaces. previously,
+        //we looked for uris that were already used. now we want to find one
+        //that hasn't been used yet
+        for (String tagNamespace : xmlNamespaces)
         {
-            //we know this type is in one or more namespaces
-            //let's try to figure out a nice prefix to use
-            fallbackNamespace = tagName.getXMLNamespace();
-            MXMLNamespace resultNS = MXMLNamespaceUtils.getNamespaceFromURI(fallbackNamespace, prefixMap);
-            if (resultNS != null)
+            if (!isPreferredNamespace(tagNamespace, xmlNamespaces, mxmlData))
             {
-                return resultNS;
+                //same as above, we should skip over certain namespaces when
+                //there's a better option available.
+                continue;
+            }
+            String[] uriPrefixes = null;
+            if (prefixMap != null)
+            {
+                uriPrefixes = prefixMap.getPrefixesForNamespace(tagNamespace);
+            }
+            if (uriPrefixes == null || uriPrefixes.length == 0)
+            {
+                //we know this type is in one or more namespaces
+                //let's try to figure out a nice prefix to use.
+                //if we don't find our preferred prefix, we'll still
+                //remember the uri for later.
+                fallbackNamespace = tagNamespace;
+                MXMLNamespace resultNS = MXMLNamespaceUtils.getNamespaceFromURI(fallbackNamespace, prefixMap);
+                if (resultNS != null)
+                {
+                    return resultNS;
+                }
             }
         }
+
         if (fallbackNamespace != null)
         {
             //if we couldn't find a known prefix, use a numbered one
@@ -261,7 +307,7 @@ public class MXMLNamespaceUtils
 		
 		//4. special case: if the package namespace is simply *, try to use
 		//local as the prefix, if it's not already defined. this matches the
-		//behavior of Adoboe Flash Builder.
+		//behavior of Adobe Flash Builder.
 		if (packageNamespace.equals(STAR) && (prefixMap == null || !prefixMap.containsPrefix(PREFIX_LOCAL)))
 		{
 			return new MXMLNamespace(PREFIX_LOCAL, packageNamespace);
