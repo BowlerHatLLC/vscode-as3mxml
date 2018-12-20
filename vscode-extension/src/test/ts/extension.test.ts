@@ -7279,6 +7279,69 @@ suite("MXML completion item provider: Application workspace", () =>
 					});
 		});
 	});
+	test("vscode.executeCompletionItemProvider works in an empty MXML file", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "mxmlCompletion", "MXMLCompletionEmpty.mxml"));
+		let position = new vscode.Position(0, 0);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
+				.then((list: vscode.CompletionList) =>
+					{
+						let items = list.items;
+						let mxmlItem = findCompletionItemOfKind("example:PackageClass", vscode.CompletionItemKind.Class, items);
+						assert.notEqual(mxmlItem, null, "vscode.executeCompletionItemProvider failed to provide class: " + uri);
+						assert.strictEqual(mxmlItem.kind, vscode.CompletionItemKind.Class, "vscode.executeCompletionItemProvider failed to provide correct kind of class: " + uri);
+						let snippet = mxmlItem.insertText as vscode.SnippetString;
+						assert.strictEqual(snippet.value, "<example:PackageClass xmlns:fx=\"http://ns.adobe.com/mxml/2009\"\n\txmlns:example=\"com.example.*\">\n\t$0\n</example:PackageClass>");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute completion item provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeCompletionItemProvider works in an MXML file with only <", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "mxmlCompletion", "MXMLCompletionEmptyExceptBracket.mxml"));
+		let position = new vscode.Position(0, 1);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
+				.then((list: vscode.CompletionList) =>
+					{
+						let items = list.items;
+						let mxmlItem = findCompletionItemOfKind("example:PackageClass", vscode.CompletionItemKind.Class, items);
+						assert.notEqual(mxmlItem, null, "vscode.executeCompletionItemProvider failed to provide class: " + uri);
+						assert.strictEqual(mxmlItem.kind, vscode.CompletionItemKind.Class, "vscode.executeCompletionItemProvider failed to provide correct kind of class: " + uri);
+						let snippet = mxmlItem.insertText as vscode.SnippetString;
+						assert.strictEqual(snippet.value, "example:PackageClass xmlns:fx=\"http://ns.adobe.com/mxml/2009\"\n\txmlns:example=\"com.example.*\">\n\t$0\n</example:PackageClass>");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute completion item provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeCompletionItemProvider works in an MXML file with partial root tag", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "mxmlCompletion", "MXMLCompletionPartialRootTag.mxml"));
+		let position = new vscode.Position(0, 12);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
+				.then((list: vscode.CompletionList) =>
+					{
+						let items = list.items;
+						let mxmlItem = findCompletionItemOfKind("example:PackageClass", vscode.CompletionItemKind.Class, items);
+						assert.notEqual(mxmlItem, null, "vscode.executeCompletionItemProvider failed to provide class: " + uri);
+						assert.strictEqual(mxmlItem.kind, vscode.CompletionItemKind.Class, "vscode.executeCompletionItemProvider failed to provide correct kind of class: " + uri);
+						let snippet = mxmlItem.insertText as vscode.SnippetString;
+						assert.strictEqual(snippet.value, "example:PackageClass xmlns:fx=\"http://ns.adobe.com/mxml/2009\"\n\txmlns:example=\"com.example.*\">\n\t$0\n</example:PackageClass>");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute completion item provider: " + uri);
+					});
+		});
+	});
 });
 
 suite("imports: Application workspace", () =>
