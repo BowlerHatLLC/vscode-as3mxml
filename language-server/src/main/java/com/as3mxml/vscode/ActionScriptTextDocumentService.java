@@ -7474,7 +7474,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             String frameworkLib = System.getProperty(PROPERTY_FRAMEWORK_LIB);
             Path frameworkSDKHome = Paths.get(frameworkLib, "..");
             Path workspaceRootPath = LanguageServerCompilerUtils.getPathFromLanguageServerURI(uri);
-            ASConfigCOptions options = new ASConfigCOptions(workspaceRootPath.toString(), frameworkSDKHome.toString(), true, null, true, compilerShell);
+            ASConfigCOptions options = new ASConfigCOptions(workspaceRootPath.toString(), frameworkSDKHome.toString(), true, null, null, true, compilerShell);
             try
             {
                 new ASConfigC(options);

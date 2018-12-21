@@ -107,6 +107,10 @@ public class ASConfigC
 		airOption.setArgName("PLATFORM");
 		airOption.setOptionalArg(true);
 		options.addOption(airOption);
+		Option storepassOption = new Option(null, "storepass", true, "The password required to access the keystore used when packging the Adobe AIR application. If not specified, prompts for the password.");
+		storepassOption.setArgName("PASSWORD");
+		storepassOption.setOptionalArg(true);
+		options.addOption(storepassOption);
 		Option unpackageOption = new Option(null, "unpackage-anes", true, "Unpackage native extensions to the output directory when creating a debug build for the Adobe AIR simulator.");
 		unpackageOption.setArgName("true OR false");
 		unpackageOption.setOptionalArg(true);
@@ -1223,11 +1227,17 @@ public class ASConfigC
 			int keystoreIndex = airOptions.indexOf("-" + AIRSigningOptions.KEYSTORE);
 			if(keystoreIndex != -1)
 			{
-				//only ask for password if -keystore is specified
-				Console console = System.console();
-				char[] password = console.readPassword("Adobe AIR code signing password: ");
+				String storepass = options.storepass;
+				if(storepass == null)
+				{
+					//ask for password if keystore is specified in airOptions,
+					//but storepass is not passed to asconfigc
+					Console console = System.console();
+					char[] password = console.readPassword("Adobe AIR code signing password: ");
+					storepass = new String(password);
+				}
 				airOptions.add(keystoreIndex + 2, "-" + AIRSigningOptions.STOREPASS);
-				airOptions.add(keystoreIndex + 3, new String(password));
+				airOptions.add(keystoreIndex + 3, storepass);
 			}
 		}
 
