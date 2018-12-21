@@ -473,7 +473,7 @@
             }
           },
           {
-            "label": "SWF: Launch Adobe AIR mobile",
+            "label": "SWF: Launch Adobe AIR mobile simulator",
             "description": "Launch Adobe AIR mobile application using AIR Debug Launcher",
             "body": {
               "type": "swf",
@@ -483,6 +483,37 @@
               "screensize": "${1|iPhoneRetina,iPhone,iPhone5Retina,iPhone6,iPhone6Plus,iPad,iPadRetina,Droid,NexusOne,SamsungGalaxyS,SamsungGalaxyTab,480,720,1080,WVGA,WQVGA,QVGA,HVGA,FWVGA,FWQVGA|}",
               "screenDPI": "^${2:326}",
               "versionPlatform": "${3|IOS,AND|}"
+            }
+          },
+          {
+            "label": "SWF: Attach SWF",
+            "description": "Attach to Adobe AIR or Flash Player that was launched externally",
+            "body": {
+              "type": "swf",
+              "request": "attach",
+              "name": "${4:Attach SWF}"
+            }
+          },
+          {
+            "label": "SWF: Install & Attach Adobe AIR (iOS)",
+            "description": "Install and attach to Adobe AIR on iOS device",
+            "body": {
+              "type": "swf",
+              "request": "attach",
+              "name": "${4:Install & Attach Adobe AIR (iOS)}",
+              "connect": true,
+              "platform": "ios"
+            }
+          },
+          {
+            "label": "SWF: Install & Attach Adobe AIR (Android)",
+            "description": "Install and attach to Adobe AIR on Android device",
+            "body": {
+              "type": "swf",
+              "request": "attach",
+              "name": "${4:Install & Attach Adobe AIR (Android)}",
+              "connect": true,
+              "platform": "android"
             }
           }
         ]
