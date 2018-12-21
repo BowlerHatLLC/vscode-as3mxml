@@ -56,33 +56,19 @@ export default class SWFDebugConfigurationProvider implements vscode.DebugConfig
 				type: "swf",
 				request: "launch",
 				name: "Launch SWF"
-			},
-			{
-				type: "swf",
-				request: "attach",
-				name: "Attach SWF"
 			}
 		];
 		return initialConfigurations;
 	}
 
-	resolveDebugConfiguration?(workspaceFolder: vscode.WorkspaceFolder | undefined, debugConfiguration: SWFDebugConfiguration, token?: vscode.CancellationToken): vscode.ProviderResult<SWFDebugConfiguration>
+	async resolveDebugConfiguration?(workspaceFolder: vscode.WorkspaceFolder | undefined, debugConfiguration: SWFDebugConfiguration, token?: vscode.CancellationToken): Promise<SWFDebugConfiguration>
 	{
 		if(workspaceFolder === undefined)
 		{
 			vscode.window.showErrorMessage("Failed to debug SWF. A workspace must be open.");
 			return null;
 		}
-		if(debugConfiguration.request === "attach")
-		{
-			//nothing to resolve
-			return debugConfiguration;
-		}
-		return this.resolveLaunchDebugConfiguration(workspaceFolder, debugConfiguration);
-	}
 
-	private resolveLaunchDebugConfiguration(workspaceFolder: vscode.WorkspaceFolder, debugConfiguration: SWFDebugConfiguration): vscode.ProviderResult<SWFDebugConfiguration>
-	{	
 		//see if we can find the SWF file
 		let workspaceFolderPath = workspaceFolder.uri.fsPath;
 		let asconfigPath = path.resolve(workspaceFolderPath, "asconfig.json");
@@ -92,6 +78,27 @@ export default class SWFDebugConfigurationProvider implements vscode.DebugConfig
 			return null;
 		}
 
+		if(!debugConfiguration.type)
+		{
+			debugConfiguration.type = "swf";
+		}
+		if(!debugConfiguration.request)
+		{
+			//attach is an advanced option, so it should be configured in
+			//launch.json
+			debugConfiguration.request = "launch";
+		}
+		if(debugConfiguration.request === "attach")
+		{
+			//nothing else to resolve
+			return debugConfiguration;
+		}
+		let result = this.resolveLaunchDebugConfiguration(workspaceFolder, asconfigPath, debugConfiguration);
+		return Promise.resolve(result);
+	}
+
+	private resolveLaunchDebugConfiguration(workspaceFolder: vscode.WorkspaceFolder, asconfigPath: string, debugConfiguration: SWFDebugConfiguration): SWFDebugConfiguration
+	{
 		let program: string = debugConfiguration.program;
 		let asconfigJSON: any = null;
 		try
