@@ -58,6 +58,7 @@
     "onView:actionScriptSourcePaths",
     "onCommand:as3mxml.organizeImportsInUri",
     "onCommand:as3mxml.organizeImportsInDirectory",
+    "onCommand:as3mxml.saveSessionPassword",
     "onCommand:as3mxml.selectWorkspaceSDK",
     "onCommand:as3mxml.restartServer",
     "onCommand:as3mxml.migrateFlashBuilderProject",
@@ -67,6 +68,10 @@
   ],
   "contributes": {
     "commands": [
+      {
+        "command": "as3mxml.saveSessionPassword",
+        "title": "Adobe AIR: Save Session Password"
+      },
       {
         "command": "as3mxml.selectWorkspaceSDK",
         "title": "ActionScript: Select Workspace SDK"
@@ -97,6 +102,10 @@
     ],
     "menus": {
       "commandPalette": [
+        {
+          "command": "as3mxml.saveSessionPassword",
+          "when": "false"
+        },
         {
           "command": "as3mxml.organizeImportsInUri",
           "when": "false"
