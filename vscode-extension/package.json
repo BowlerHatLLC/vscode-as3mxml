@@ -70,15 +70,18 @@
     "commands": [
       {
         "command": "as3mxml.saveSessionPassword",
-        "title": "Adobe AIR: Save Session Password"
+        "title": "Save Session Password",
+        "category": "Adobe AIR"
       },
       {
         "command": "as3mxml.selectWorkspaceSDK",
-        "title": "ActionScript: Select Workspace SDK"
+        "title": "Select Workspace SDK",
+        "category": "ActionScript"
       },
       {
         "command": "as3mxml.restartServer",
-        "title": "ActionScript: Restart ActionScript/MXML server"
+        "title": "Restart ActionScript/MXML server",
+        "category": "ActionScript"
       },
       {
         "command": "as3mxml.organizeImportsInUri",
@@ -90,7 +93,8 @@
       },
       {
         "command": "as3mxml.quickCompileAndDebug",
-        "title": "ActionScript: Quick Compile & Debug (Experimental)"
+        "title": "Quick Compile & Debug (Experimental)",
+        "category": "ActionScript"
       }
     ],
     "keybindings": [
