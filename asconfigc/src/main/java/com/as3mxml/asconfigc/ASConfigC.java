@@ -614,8 +614,27 @@ public class ASConfigC
 		{
 			return;
 		}
+
 		String outputDirectory = ProjectUtils.findOutputDirectory(mainFile, outputPath, !outputIsJS);
 		Path outputPath = Paths.get(outputDirectory);
+		if(outputIsJS)
+		{
+			Path debugOutputPath = outputPath.resolve("bin/js-debug");
+			deleteOutputDirectory(debugOutputPath);
+			Path releaseOutputPath = outputPath.resolve("bin/js-release");
+			deleteOutputDirectory(releaseOutputPath);
+		}
+		else //swf
+		{
+			deleteOutputDirectory(outputPath);
+		}
+
+		//immediately exits after cleaning
+		System.exit(0);
+	}
+
+	private void deleteOutputDirectory(Path outputPath) throws ASConfigCException
+	{
 		Path cwd = Paths.get(System.getProperty("user.dir"));
 		if (cwd.startsWith(outputPath))
 		{
@@ -665,9 +684,6 @@ public class ASConfigC
 				throw new ASConfigCException("Failed to clean project because an I/O exception occurred.");
 			}
 		}
-
-		//immediately exits after cleaning
-		System.exit(0);
 	}
 	
 	private void compileProject() throws ASConfigCException
