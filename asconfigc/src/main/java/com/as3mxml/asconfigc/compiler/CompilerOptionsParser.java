@@ -101,7 +101,12 @@ public class CompilerOptionsParser
 				}
 				case CompilerOptions.DEFINE:
 				{
-					setDefine(options.get(key), result);
+					setDefine(key, options.get(key), result);
+					break;
+				}
+				case CompilerOptions.JS_DEFINE:
+				{
+					setDefine(key, options.get(key), result);
 					break;
 				}
 				case CompilerOptions.DUMP_CONFIG:
@@ -199,6 +204,12 @@ public class CompilerOptionsParser
 					break;
 				}
 				case CompilerOptions.LOAD_CONFIG:
+				{
+					List<String> values = JsonUtils.jsonNodeToListOfStrings(options.get(key));
+					OptionsFormatter.appendPaths(key, values, result);
+					break;
+				}
+				case CompilerOptions.JS_LOAD_CONFIG:
 				{
 					List<String> values = JsonUtils.jsonNodeToListOfStrings(options.get(key));
 					OptionsFormatter.appendPaths(key, values, result);
@@ -386,7 +397,7 @@ public class CompilerOptionsParser
 		result.add(Integer.toString(height));
 	}
 
-	private void setDefine(JsonNode values, List<String> result)
+	private void setDefine(String optionName, JsonNode values, List<String> result)
 	{
 		int size = values.size();
 		if(size == 0)
@@ -404,7 +415,7 @@ public class CompilerOptionsParser
 				defineValueAsString = defineValueAsString.replace("\"", "\\\"");
 				defineValueAsString = "\"" + defineValueAsString + "\"";
 			}
-			result.add("--" + CompilerOptions.DEFINE + "+=" +
+			result.add("--" + optionName + "+=" +
 				defineName + "," + defineValueAsString);
 		}
 	}

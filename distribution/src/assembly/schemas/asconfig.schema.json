@@ -457,6 +457,38 @@
 						]
 					}
 				},
+				"js-define":
+				{
+					"type": "array",
+					"description": "In an Apache Royale project, defines a global constant at compile time for the generated JavaScript output.",
+					"items":
+					{
+						"type": "object",
+						"additionalProperties": false,
+						"properties":
+						{
+							"name":
+							{
+								"type": "string",
+								"description": "The name of the constant."
+							},
+							"value":
+							{
+								"type": [
+									"string",
+									"boolean",
+									"number"
+								],
+								"description": "The value of the constant."
+							}
+						},
+						"required":
+						[
+							"name",
+							"value"
+						]
+					}
+				},
 				"dump-config":
 				{
 					"type": "string",
@@ -595,6 +627,15 @@
 				{
 					"type": "array",
 					"description": "Specifies the locations of XML configuration files that define extra compiler options.",
+					"items":
+					{
+						"type": "string"
+					}
+				},
+				"js-load-config":
+				{
+					"type": "array",
+					"description": "In an Apache Royale project, specifies the locations of XML configuration files that define extra compiler options only for the generated JavaScript output.",
 					"items":
 					{
 						"type": "string"

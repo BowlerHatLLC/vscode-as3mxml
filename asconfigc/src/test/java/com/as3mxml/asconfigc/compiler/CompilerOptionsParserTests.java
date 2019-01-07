@@ -274,6 +274,70 @@ class CompilerOptionsParserTests
 	}
 	
 	@Test
+	void testJSDefine()
+	{
+		String name1 = "CONFIG::bool";
+		boolean value1 = true;
+		String name2 = "CONFIG::str";
+		String value2 = "'test'";
+		String name3 = "CONFIG::str2";
+		String value3 = "\"test\"";
+		String name4 = "CONFIG::num";
+		double value4 = 12.3;
+		String name5 = "CONFIG::expr";
+		String value5 = "2 + 4";
+
+		ObjectNode options = JsonNodeFactory.instance.objectNode();
+		ArrayNode define = JsonNodeFactory.instance.arrayNode();
+
+		ObjectNode define1 = JsonNodeFactory.instance.objectNode();
+		define1.set(CompilerOptions.DEFINE__NAME, JsonNodeFactory.instance.textNode(name1));
+		define1.set(CompilerOptions.DEFINE__VALUE, JsonNodeFactory.instance.booleanNode(value1));
+		define.add(define1);
+		
+		ObjectNode define2 = JsonNodeFactory.instance.objectNode();
+		define2.set(CompilerOptions.DEFINE__NAME, JsonNodeFactory.instance.textNode(name2));
+		define2.set(CompilerOptions.DEFINE__VALUE, JsonNodeFactory.instance.textNode(value2));
+		define.add(define2);
+		
+		ObjectNode define3 = JsonNodeFactory.instance.objectNode();
+		define3.set(CompilerOptions.DEFINE__NAME, JsonNodeFactory.instance.textNode(name3));
+		define3.set(CompilerOptions.DEFINE__VALUE, JsonNodeFactory.instance.textNode(value3));
+		define.add(define3);
+
+		ObjectNode define4 = JsonNodeFactory.instance.objectNode();
+		define4.set(CompilerOptions.DEFINE__NAME, JsonNodeFactory.instance.textNode(name4));
+		define4.set(CompilerOptions.DEFINE__VALUE, JsonNodeFactory.instance.numberNode(value4));
+		define.add(define4);
+		
+		ObjectNode define5 = JsonNodeFactory.instance.objectNode();
+		define5.set(CompilerOptions.DEFINE__NAME, JsonNodeFactory.instance.textNode(name5));
+		define5.set(CompilerOptions.DEFINE__VALUE, JsonNodeFactory.instance.textNode(value5));
+		define.add(define5);
+
+		options.set(CompilerOptions.JS_DEFINE, define);
+
+		ArrayList<String> result = new ArrayList<>();
+		try
+		{
+			parser.parse(options, null, result);
+		}
+		catch(UnknownCompilerOptionException e) {}
+		Assertions.assertEquals(5, result.size(),
+			"CompilerOptionsParser.parse() created incorrect number of options.");
+		Assertions.assertEquals("--" + CompilerOptions.JS_DEFINE + "+=" + name1 + "," + Boolean.toString(value1), result.get(0),
+			"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
+		Assertions.assertEquals("--" + CompilerOptions.JS_DEFINE + "+=" + name2 + ",\"" + value2 + "\"", result.get(1),
+			"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
+		Assertions.assertEquals("--" + CompilerOptions.JS_DEFINE + "+=" + name3 + ",\"\\\"test\\\"\"", result.get(2),
+			"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
+		Assertions.assertEquals("--" + CompilerOptions.JS_DEFINE + "+=" + name4 + "," + Double.toString(value4), result.get(3),
+			"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
+		Assertions.assertEquals("--" + CompilerOptions.JS_DEFINE + "+=" + name5 + ",\"" + value5 + "\"", result.get(4),
+			"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
+	}
+	
+	@Test
 	void testDumpConfig()
 	{
 		String value = "path/to/file.xml";
@@ -722,6 +786,34 @@ class CompilerOptionsParserTests
 		Assertions.assertEquals("--" + CompilerOptions.LOAD_CONFIG + "+=" + value1, result.get(0),
 			"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
 		Assertions.assertEquals("--" + CompilerOptions.LOAD_CONFIG + "+=" + value2, result.get(1),
+			"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
+	}
+	
+	@Test
+	void testJSLoadConfig()
+	{
+		String value1 = "path/to/config.xml";
+		String value2 = "path/with spaces/to/config.xml";
+
+		ObjectNode options = JsonNodeFactory.instance.objectNode();
+		ArrayNode loadConfig = JsonNodeFactory.instance.arrayNode();
+
+		loadConfig.add(JsonNodeFactory.instance.textNode(value1));
+		loadConfig.add(JsonNodeFactory.instance.textNode(value2));
+
+		options.set(CompilerOptions.JS_LOAD_CONFIG, loadConfig);
+
+		ArrayList<String> result = new ArrayList<>();
+		try
+		{
+			parser.parse(options, null, result);
+		}
+		catch(UnknownCompilerOptionException e) {}
+		Assertions.assertEquals(2, result.size(),
+			"CompilerOptionsParser.parse() created incorrect number of options.");
+		Assertions.assertEquals("--" + CompilerOptions.JS_LOAD_CONFIG + "+=" + value1, result.get(0),
+			"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
+		Assertions.assertEquals("--" + CompilerOptions.JS_LOAD_CONFIG + "+=" + value2, result.get(1),
 			"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
 	}
 	
