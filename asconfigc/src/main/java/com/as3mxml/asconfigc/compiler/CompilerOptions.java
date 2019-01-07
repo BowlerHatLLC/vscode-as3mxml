@@ -26,7 +26,6 @@ public class CompilerOptions
 	public static final String DEFAULT_FRAME_RATE = "default-frame-rate";
 	public static final String DEFAULT_SIZE = "default-size";
 	public static final String DEFINE = "define";
-	public static final String JS_DEFINE = "js-define";
 	public static final String DUMP_CONFIG = "dump-config";
 	public static final String EXTERNAL_LIBRARY_PATH = "external-library-path";
 	public static final String KEEP_AS3_METADATA = "keep-as3-metadata";
@@ -34,7 +33,6 @@ public class CompilerOptions
 	public static final String LIBRARY_PATH = "library-path";
 	public static final String LINK_REPORT = "link-report";
 	public static final String LOAD_CONFIG = "load-config";
-	public static final String JS_LOAD_CONFIG = "js-load-config";
 	public static final String LOCALE = "locale";
 	public static final String NAMESPACE = "namespace";
 	public static final String OPTIMIZE = "optimize";
@@ -61,8 +59,10 @@ public class CompilerOptions
 	public static final String HTML_TEMPLATE = "html-template";
 	public static final String JS_COMPILER_OPTION = "js-compiler-option";
 	public static final String JS_DEFAULT_INITIALIZERS = "js-default-initializers";
+	public static final String JS_DEFINE = "js-define";
 	public static final String JS_EXTERNAL_LIBRARY_PATH = "js-external-library-path";
 	public static final String JS_LIBRARY_PATH = "js-library-path";
+	public static final String JS_LOAD_CONFIG = "js-load-config";
 	public static final String JS_OUTPUT = "js-output";
 	public static final String JS_OUTPUT_TYPE = "js-output-type";
 	public static final String REMOVE_CIRCULARS = "remove-circulars";
