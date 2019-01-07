@@ -163,8 +163,8 @@ public class CompilerProjectUtils
 
     public static RoyaleProjectConfigurator configureProject(RoyaleProject project, ProjectOptions currentProjectOptions, Collection<ICompilerProblem> problems)
     {
-        Path frameworkLibPath = Paths.get(System.getProperty(PROPERTY_FRAMEWORK_LIB));
-        boolean frameworkSDKIsRoyale = ActionScriptSDKUtils.isRoyaleFramework(frameworkLibPath);
+        final Path frameworkLibPath = Paths.get(System.getProperty(PROPERTY_FRAMEWORK_LIB));
+        final boolean frameworkSDKIsRoyale = ActionScriptSDKUtils.isRoyaleFramework(frameworkLibPath);
 
         //check if the framework SDK doesn't include the Spark theme
         Path sparkPath = frameworkLibPath.resolve("./themes/Spark/spark.css");
@@ -238,12 +238,20 @@ public class CompilerProjectUtils
         //this needs to be set before applyToProject() so that it's in the
         //configuration buffer before addExternalLibraryPath() is called
         configurator.setExcludeNativeJSLibraries(false);
-        Path appendConfigPath = Paths.get(System.getProperty(PROPERTY_FRAMEWORK_LIB));
-        appendConfigPath = appendConfigPath.resolve("../ide/vscode-nextgenas/vscode-nextgenas-config.xml");
+        Path appendConfigPath = frameworkLibPath.resolve("../ide/vscode-as3mxml/vscode-as3mxml-config.xml");
         File appendConfigFile = appendConfigPath.toFile();
         if (appendConfigFile.exists())
         {
             configurator.addConfiguration(appendConfigFile);
+        }
+        else
+        {
+            appendConfigPath = frameworkLibPath.resolve("../ide/vscode-nextgenas/vscode-nextgenas-config.xml");
+            appendConfigFile = appendConfigPath.toFile();
+            if (appendConfigFile.exists())
+            {
+                configurator.addConfiguration(appendConfigFile);
+            }
         }
 		boolean result = configurator.applyToProject(project);
 		problems.addAll(configurator.getConfigurationProblems());
