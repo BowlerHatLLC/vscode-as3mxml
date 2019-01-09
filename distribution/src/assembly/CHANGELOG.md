@@ -1,3 +1,50 @@
+## v0.17.0
+
+### New Features
+
+* Debug: A *launch.json* file is no longer required to launch the SWF debugger. If *launch.json* is missing, and you start a debugging session, you can choose *SWF*, and the extension will choose reasonable defaults based on your project's *asconfig.json*.
+* Debug: ANEs are detected in *asconfig.json* and automatically unpackaged for debugging in the Adobe AIR simulator. It is no longer necessary to unpackage ANEs manually.
+* Debug: The `extdir` and `profile` fields for SWF debugging in *launch.json* are populated automatically based on your project's *asconfig.json*.
+* Completion: MXML completion now provides enumeration values for properties with `[Inspectable]` metadata and styles.
+
+### Fixed Issues
+
+* Build: Fixed the clean task when used in an Apache Royale project with the default output folder.
+* Build: Fixed the formatting for the `namespace` compiler option because it was failing in some situations.
+* Build: Fixed issue where some files could not be copied to the output folder when creating a debug build for the Adobe AIR simulator.
+* Completion: Fixed issue where completion did not work in an empty MXML file. Now provides all components and will insert appropriate MXML namespaces.
+* Completion: Fixed issue where the 2006 MXML namespace might be incorrectly chosen for certain components when the 2009 MXML namespace was already included in the file.
+* Completion: Fixed issue where MXML completion would not provide types for children of Flex MX containers.
+* General: Fixed issue where the `include-namespaces` compiler option was not validated correctly in *asconfig.json*.
+
+### Other Changes
+
+* Build: Added missing `js-load-config` and `js-define` compiler options.
+* Debug: Migrated from Visual Studio Code's deprecated `adapterExecutableCommand` to `DebugAdapterDescriptorFactory`.
+* Advanced: SDKs may include a file named *ide/vscode-as3mxml/vscode-as3mxml-config.xml* to configure the extension with their own default compiler options.
+* Commands: Added new `as3mxml.saveSessionPassword` command that may be used when packaging an Adobe AIR Application. See *Tips & Tricks* below for an example.
+
+### Tips & Tricks
+
+* You can now save your Adobe AIR code signing password for the current session. A new `as3mxml.saveSessionPassword` command may be called from a custom task:
+
+	``` json
+	{
+		"label": "package Adobe AIR app (Android)",
+		"type": "shell",
+		"command": "asconfigc",
+		"args": [
+			"--sdk=${config:as3mxml.sdk.framework}",
+			"--debug=false",
+			"--air=android",
+			"--storepass=${command:as3mxml.saveSessionPassword}"
+		],
+		"problemMatcher": []
+	}
+	```
+
+	You must install the command line version of [**asconfigc**](https://www.npmjs.com/package/asconfigc) to use it in a custom task.
+
 ## v0.16.0
 
 ### New Features
