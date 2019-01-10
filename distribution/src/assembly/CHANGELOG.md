@@ -1,3 +1,9 @@
+## v0.17.1
+
+### Fixed Issues
+
+* Completion: Fixed issue where completion *still* did not work in an empty MXML file when using Flex as the workspace SDK.
+
 ## v0.17.0
 
 ### New Features
