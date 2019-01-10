@@ -173,22 +173,26 @@ public class MXMLNamespaceUtils
         }
         if (tagNamespace.equals(IMXMLLanguageConstants.NAMESPACE_MXML_2006))
         {
-            String rootLanguageNamespace = mxmlData.getRootTag().getMXMLDialect().getLanguageNamespace();
-            if(!rootLanguageNamespace.equals(tagNamespace))
+            IMXMLTagData rootTag = mxmlData.getRootTag();
+            if (rootTag != null)
             {
-                if(tagNamespaces.contains(IMXMLLibraryConstants.MX))
+                String rootLanguageNamespace = rootTag.getMXMLDialect().getLanguageNamespace();
+                if(!rootLanguageNamespace.equals(tagNamespace))
                 {
-                    //if we find the mxml 2006 language namepace, but
-                    //we're using a newer language namespace, and the mx
-                    //library also exists, we prefer the library
-                    return false;
-                }
-                if(tagNamespaces.contains(rootLanguageNamespace))
-                {
-                    //getTagNamesForClass() may sometimes return the
-                    //mxml 2006 namespace, even if that's not what we're
-                    //using in this file.
-                    return false;
+                    if(tagNamespaces.contains(IMXMLLibraryConstants.MX))
+                    {
+                        //if we find the mxml 2006 language namepace, but
+                        //we're using a newer language namespace, and the mx
+                        //library also exists, we prefer the library
+                        return false;
+                    }
+                    if(tagNamespaces.contains(rootLanguageNamespace))
+                    {
+                        //getTagNamesForClass() may sometimes return the
+                        //mxml 2006 namespace, even if that's not what we're
+                        //using in this file.
+                        return false;
+                    }
                 }
             }
         }
