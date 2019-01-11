@@ -34,11 +34,19 @@ public class ProjectUtils
 	public static String findAIRDescriptorOutputPath(String mainFile, String airDescriptor, String outputPath, boolean isSWF, boolean debugBuild)
 	{
 		String outputDir = ProjectUtils.findOutputDirectory(mainFile, outputPath, isSWF);
-		Path path = Paths.get(airDescriptor);
+		String fileName = null;
+		if(airDescriptor == null)
+		{
+			fileName = generateApplicationID(mainFile, outputPath) + "-app.xml";
+		}
+		else
+		{
+			fileName = Paths.get(airDescriptor).getFileName().toString();
+		}
 		if(isSWF)
 		{
 			Path outputDirPath = Paths.get(outputDir);
-			return outputDirPath.resolve(path.getFileName().toString()).toString();
+			return outputDirPath.resolve(fileName).toString();
 		}
 		String jsDir = "js-release";
 		if(debugBuild)
@@ -46,7 +54,7 @@ public class ProjectUtils
 			jsDir = "js-debug";
 		}
 		Path outputDirPath = Paths.get(outputDir, "bin", jsDir);
-		return outputDirPath.resolve(path.getFileName().toString()).toString();
+		return outputDirPath.resolve(fileName).toString();
 	}
 
 	public static String findApplicationContentOutputPath(String mainFile, String outputPath, boolean isSWF, boolean debugBuild)
@@ -127,6 +135,29 @@ public class ProjectUtils
 		}
 		Path outputValueParentPath = outputPath.getParent();
 		return outputValueParentPath.toString();
+	}
+
+	public static String generateApplicationID(String mainFile, String outputPath)
+	{
+		if(outputPath == null && mainFile == null)
+		{
+			return null;
+		}
+		String fileName = null;
+		if(outputPath == null)
+		{
+			fileName = Paths.get(mainFile).getFileName().toString();
+		}
+		else
+		{
+			fileName = Paths.get(outputPath).getFileName().toString();
+		}
+		int extensionIndex = fileName.indexOf('.');
+		if(extensionIndex == -1)
+		{
+			return fileName;
+		}
+		return fileName.substring(0, extensionIndex);
 	}
 
 	public static String findOutputFileName(String mainFile, String outputPath)
@@ -340,9 +371,16 @@ public class ProjectUtils
 		return new File(outputDirectory, relativePath).getAbsolutePath();
 	}
 
+	public static String populateAdobeAIRDescriptorTemplate(String descriptor, String id)
+	{
+		//these fields are required
+		descriptor = descriptor.replaceFirst("<id>.*?<\\/id>", "<id>" + id + "</id>");
+		return descriptor.replaceFirst("<filename>.*?<\\/filename>", "<filename>" + id + "</filename>");
+	}
+
 	public static String populateAdobeAIRDescriptorContent(String descriptor, String contentValue)
 	{
-		return descriptor.replaceFirst("<content>.*<\\/content>", "<content>" + contentValue + "</content>");
+		return descriptor.replaceFirst("<content>.*?<\\/content>", "<content>" + contentValue + "</content>");
 	}
 
 	public static String populateHTMLTemplateFile(String contents, Map<String,String> templateOptions)
