@@ -21,6 +21,7 @@ import * as json5 from "json5";
 const FILE_EXTENSION_SWF = ".swf";
 const FILE_EXTENSION_ANE = ".ane";
 const FILE_EXTENSION_XML = ".xml";
+const SUFFIX_AIR_APP = "-app.xml";
 const FILE_NAME_UNPACKAGED_ANES = ".as3mxml-unpackaged-anes";
 
 const CONFIG_AIR = "air";
@@ -181,7 +182,7 @@ export default class SWFDebugConfigurationProvider implements vscode.DebugConfig
 					//version of the AIR application descriptor that is copied
 					//to the output directory.
 					let appDescriptorBaseName = path.basename(appDescriptorPath);
-					let outputDir: string = path.dirname(outputPath);
+					let outputDir = path.dirname(outputPath);
 					program = path.join(outputDir, appDescriptorBaseName);
 				}
 				else
@@ -193,8 +194,10 @@ export default class SWFDebugConfigurationProvider implements vscode.DebugConfig
 			}
 			else if(requireAIR)
 			{
-				vscode.window.showErrorMessage("Failed to debug SWF. Field \"application\" is missing in asconfig.json.");
-				return null;
+				//it's an AIR app, but no application descriptor is specified.
+				//the build will copy the descriptor from the SDK instead, and
+				//we can generate the name automatically.
+				program = generateApplicationDescriptorProgram(outputPath, mainClassPath);
 			}
 			else if(outputPath !== null)
 			{
@@ -292,4 +295,25 @@ export default class SWFDebugConfigurationProvider implements vscode.DebugConfig
 		debugConfiguration.program = program;
 		return debugConfiguration;
 	}
+}
+
+function generateApplicationDescriptorProgram(outputPath: string, mainClassPath: string)
+{
+	if(outputPath === null || mainClassPath === null)
+	{
+		return null;
+	}
+	if(outputPath !== null)
+	{
+		let descriptorName = path.basename(outputPath)
+		let index = descriptorName.indexOf(".");
+		if(index !== -1)
+		{
+			descriptorName = descriptorName.substr(0, index);
+		}
+		return path.join(path.dirname(outputPath), descriptorName + SUFFIX_AIR_APP);
+	}
+
+	let extension = path.extname(mainClassPath);
+	return mainClassPath.substr(0, mainClassPath.length - extension.length) + SUFFIX_AIR_APP;
 }
