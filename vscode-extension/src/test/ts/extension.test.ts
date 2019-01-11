@@ -3560,6 +3560,142 @@ suite("hover provider: Application workspace", () =>
 					});
 		});
 	});
+	test("vscode.executeHoverProvider displays hover of Number static constant", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "hover", "HoverConstants.as"));
+		let position = new vscode.Position(4, 24);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeHoverProvider", uri, position)
+				.then((hovers: vscode.Hover[]) =>
+					{
+						assert.strictEqual(hovers.length, 1,
+							"vscode.executeHoverProvider failed to provide hover for file-internal static function reference: " + uri);
+						let hover = hovers[0];
+						let contents = hover.contents;
+						assert.strictEqual(contents.length, 1,
+							"vscode.executeHoverProvider failed to provide hover contents for file-internal static function reference: " + uri);
+						let content = contents[0];
+						let contentValue: string;
+						if(typeof content === "string")
+						{
+							contentValue = content;
+						}
+						else
+						{
+							contentValue = content.value;
+						}
+						assert.strictEqual(contentValue.indexOf("(const) com.example.hover.HoverConstants.NUMBER:Number = 2") >= 0, true, "vscode.executeHoverProvider provided incorrect hover");
+						assert.strictEqual(hover.range.start.line, 4, "vscode.executeHoverProvider provided incorrect line");
+						assert.strictEqual(hover.range.start.character, 22, "vscode.executeHoverProvider provided incorrect character");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute hover provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeHoverProvider displays hover of Boolean static constant", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "hover", "HoverConstants.as"));
+		let position = new vscode.Position(5, 25);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeHoverProvider", uri, position)
+				.then((hovers: vscode.Hover[]) =>
+					{
+						assert.strictEqual(hovers.length, 1,
+							"vscode.executeHoverProvider failed to provide hover for file-internal static function reference: " + uri);
+						let hover = hovers[0];
+						let contents = hover.contents;
+						assert.strictEqual(contents.length, 1,
+							"vscode.executeHoverProvider failed to provide hover contents for file-internal static function reference: " + uri);
+						let content = contents[0];
+						let contentValue: string;
+						if(typeof content === "string")
+						{
+							contentValue = content;
+						}
+						else
+						{
+							contentValue = content.value;
+						}
+						assert.strictEqual(contentValue.indexOf("(const) com.example.hover.HoverConstants.BOOLEAN:Boolean = false") >= 0, true, "vscode.executeHoverProvider provided incorrect hover");
+						assert.strictEqual(hover.range.start.line, 5, "vscode.executeHoverProvider provided incorrect line");
+						assert.strictEqual(hover.range.start.character, 23, "vscode.executeHoverProvider provided incorrect character");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute hover provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeHoverProvider displays hover of String static constant", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "hover", "HoverConstants.as"));
+		let position = new vscode.Position(6, 27);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeHoverProvider", uri, position)
+				.then((hovers: vscode.Hover[]) =>
+					{
+						assert.strictEqual(hovers.length, 1,
+							"vscode.executeHoverProvider failed to provide hover for file-internal static function reference: " + uri);
+						let hover = hovers[0];
+						let contents = hover.contents;
+						assert.strictEqual(contents.length, 1,
+							"vscode.executeHoverProvider failed to provide hover contents for file-internal static function reference: " + uri);
+						let content = contents[0];
+						let contentValue: string;
+						if(typeof content === "string")
+						{
+							contentValue = content;
+						}
+						else
+						{
+							contentValue = content.value;
+						}
+						assert.strictEqual(contentValue.indexOf("(const) com.example.hover.HoverConstants.STRING:String = \"hello\"") >= 0, true, "vscode.executeHoverProvider provided incorrect hover");
+						assert.strictEqual(hover.range.start.line, 6, "vscode.executeHoverProvider provided incorrect line");
+						assert.strictEqual(hover.range.start.character, 25, "vscode.executeHoverProvider provided incorrect character");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute hover provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeHoverProvider displays hover of Object static constant", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "hover", "HoverConstants.as"));
+		let position = new vscode.Position(7, 24);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeHoverProvider", uri, position)
+				.then((hovers: vscode.Hover[]) =>
+					{
+						assert.strictEqual(hovers.length, 1,
+							"vscode.executeHoverProvider failed to provide hover for file-internal static function reference: " + uri);
+						let hover = hovers[0];
+						let contents = hover.contents;
+						assert.strictEqual(contents.length, 1,
+							"vscode.executeHoverProvider failed to provide hover contents for file-internal static function reference: " + uri);
+						let content = contents[0];
+						let contentValue: string;
+						if(typeof content === "string")
+						{
+							contentValue = content;
+						}
+						else
+						{
+							contentValue = content.value;
+						}
+						assert.strictEqual(contentValue.indexOf("(const) com.example.hover.HoverConstants.OBJECT:Object") >= 0, true, "vscode.executeHoverProvider provided incorrect hover");
+						assert.strictEqual(hover.range.start.line, 7, "vscode.executeHoverProvider provided incorrect line");
+						assert.strictEqual(hover.range.start.character, 22, "vscode.executeHoverProvider provided incorrect character");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute hover provider: " + uri);
+					});
+		});
+	});
 });
 
 suite("completion item provider: Application workspace", () =>

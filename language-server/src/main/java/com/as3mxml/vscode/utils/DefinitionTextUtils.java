@@ -20,6 +20,7 @@ import java.util.Collection;
 
 import com.google.common.net.UrlEscapers;
 
+import org.apache.royale.abc.ABCConstants;
 import org.apache.royale.compiler.constants.IASKeywordConstants;
 import org.apache.royale.compiler.constants.IASLanguageConstants;
 import org.apache.royale.compiler.constants.IMetaAttributeConstants;
@@ -504,6 +505,27 @@ public class DefinitionTextUtils
         }
     }
 
+    public static String valueToString(Object value)
+    {
+        if (value == null)
+        {
+            return null;
+        }
+        if (value instanceof String)
+        {
+            return "\"" + value + "\"";
+        }
+        else if(value == ABCConstants.UNDEFINED_VALUE)
+        {
+            return IASLanguageConstants.UNDEFINED;
+        }
+        else if(value == ABCConstants.NULL_VALUE)
+        {
+            return IASLanguageConstants.NULL;
+        }
+        return value.toString();
+    }
+
     public static String definitionToDetail(IDefinition definition, ICompilerProject currentProject)
     {
         StringBuilder detailBuilder = new StringBuilder();
@@ -616,6 +638,17 @@ public class DefinitionTextUtils
             detailBuilder.append(variableDefinition.getQualifiedName());
             detailBuilder.append(":");
             detailBuilder.append(getTypeAsDisplayString(variableDefinition));
+            if (variableDefinition instanceof IConstantDefinition)
+            {
+                IConstantDefinition constantDefinition = (IConstantDefinition) variableDefinition;
+                Object initialValue = constantDefinition.resolveInitialValue(currentProject);
+                String initialValueAsString = valueToString(initialValue);
+                if (initialValueAsString != null)
+                {
+                    detailBuilder.append(" = ");
+                    detailBuilder.append(initialValueAsString);
+                }
+            }
         }
         else if (definition instanceof IFunctionDefinition)
         {

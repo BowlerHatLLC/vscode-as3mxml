@@ -4636,21 +4636,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 {
                     insertText.append(" = ");
                     Object defaultValue = param.resolveDefaultValue(project);
-                    if (defaultValue instanceof String)
+                    String valueAsString = DefinitionTextUtils.valueToString(defaultValue);
+                    if (valueAsString != null)
                     {
-                        insertText.append("\"" + defaultValue + "\"");
-                    }
-                    else if(defaultValue == ABCConstants.UNDEFINED_VALUE)
-                    {
-                        insertText.append(IASLanguageConstants.UNDEFINED);
-                    }
-                    else if(defaultValue == ABCConstants.NULL_VALUE)
-                    {
-                        insertText.append(IASLanguageConstants.NULL);
-                    }
-                    else
-                    {
-                        insertText.append(defaultValue);
+                        insertText.append(valueAsString);
                     }
                 }
             }
