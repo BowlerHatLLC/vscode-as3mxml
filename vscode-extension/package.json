@@ -299,6 +299,13 @@
             "type": "string"
           }
         },
+        "as3mxml.problems.realTime": {
+          "type": [
+            "boolean"
+          ],
+          "default": true,
+          "description": "Specifies whether to check for problems in real-time as you type, or only on save."
+        },
         "as3mxml.asconfigc.useBundled": {
           "type": "boolean",
           "default": true,

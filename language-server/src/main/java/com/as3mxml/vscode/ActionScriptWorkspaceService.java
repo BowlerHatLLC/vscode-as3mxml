@@ -62,6 +62,46 @@ public class ActionScriptWorkspaceService implements WorkspaceService
 			return;
 		}
 		JsonObject settings = (JsonObject) params.getSettings();
+		this.updateSDK(settings);
+		this.updateRealTimeProblems(settings);
+	}
+
+	@Override
+	public void didChangeWatchedFiles(DidChangeWatchedFilesParams params)
+	{
+		//delegate to the ActionScriptTextDocumentService, since that's
+		//where the compiler is running, and the compiler may need to
+		//know about file changes
+		textDocumentService.didChangeWatchedFiles(params);
+	}
+
+	@Override
+	public void didChangeWorkspaceFolders(DidChangeWorkspaceFoldersParams params)
+	{
+		for(WorkspaceFolder folder : params.getEvent().getRemoved())
+		{
+			textDocumentService.removeWorkspaceFolder(folder);
+		}
+		for(WorkspaceFolder folder : params.getEvent().getAdded())
+		{
+			textDocumentService.addWorkspaceFolder(folder);
+		}
+	}
+     
+	@JsonNotification("$/setTraceNotification")
+	public void setTraceNotification(Object params)
+	{
+		//this may be ignored. see: eclipse/lsp4j#22
+	}
+
+	@Override
+	public CompletableFuture<Object> executeCommand(ExecuteCommandParams params)
+	{
+		return textDocumentService.executeCommand(params);
+	}
+
+	private void updateSDK(JsonObject settings)
+	{
 		if (!settings.has("as3mxml"))
 		{
 			return;
@@ -128,37 +168,23 @@ public class ActionScriptWorkspaceService implements WorkspaceService
 		textDocumentService.checkForProblemsNow();
 	}
 
-	@Override
-	public void didChangeWatchedFiles(DidChangeWatchedFilesParams params)
+	private void updateRealTimeProblems(JsonObject settings)
 	{
-		//delegate to the ActionScriptTextDocumentService, since that's
-		//where the compiler is running, and the compiler may need to
-		//know about file changes
-		textDocumentService.didChangeWatchedFiles(params);
-	}
-
-	@Override
-	public void didChangeWorkspaceFolders(DidChangeWorkspaceFoldersParams params)
-	{
-		for(WorkspaceFolder folder : params.getEvent().getRemoved())
+		if (!settings.has("as3mxml"))
 		{
-			textDocumentService.removeWorkspaceFolder(folder);
+			return;
 		}
-		for(WorkspaceFolder folder : params.getEvent().getAdded())
+		JsonObject as3mxml = settings.get("as3mxml").getAsJsonObject();
+		if (!as3mxml.has("problems"))
 		{
-			textDocumentService.addWorkspaceFolder(folder);
+			return;
 		}
-	}
-     
-	@JsonNotification("$/setTraceNotification")
-	public void setTraceNotification(Object params)
-	{
-		//this may be ignored. see: eclipse/lsp4j#22
-	}
-
-	@Override
-	public CompletableFuture<Object> executeCommand(ExecuteCommandParams params)
-	{
-		return textDocumentService.executeCommand(params);
+		JsonObject problems = as3mxml.get("problems").getAsJsonObject();
+		if (!problems.has("realTime"))
+		{
+			return;
+		}
+		boolean realTime = problems.get("realTime").getAsBoolean();
+		textDocumentService.setRealTimeProblems(realTime);
 	}
 }

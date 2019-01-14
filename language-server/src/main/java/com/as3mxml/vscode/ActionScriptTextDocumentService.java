@@ -279,6 +279,26 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private boolean initialized = false;
     private boolean frameworkSDKIsRoyale = false;
     private WaitForBuildFinishRunner waitForBuildFinishRunner;
+    
+    private boolean realTimeProblems = true;
+
+    public boolean getRealTimeProblems()
+    {
+        return realTimeProblems;
+    }
+
+    public void setRealTimeProblems(boolean value)
+    {
+        if(realTimeProblems == value)
+        {
+            return;
+        }
+        realTimeProblems = value;
+        if(value)
+        {
+            checkForProblemsNow();
+        }
+    }
 
     public ActionScriptTextDocumentService()
     {
@@ -2072,7 +2092,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             //to simple syntax checking for now
             checkFilePathForProblems(path, folderData, true);
         }
-        else
+        else if(realTimeProblems)
         {
             //try to keep using the existing instance, if possible
             if(waitForBuildFinishRunner == null
@@ -2086,6 +2106,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             {
                 waitForBuildFinishRunner.setChanged();
             }
+        }
+        else if(waitForBuildFinishRunner != null)
+        {
+            waitForBuildFinishRunner.setCancelled();
+            waitForBuildFinishRunner = null;
         }
     }
 
@@ -2165,8 +2190,34 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     @Override
     public void didSave(DidSaveTextDocumentParams params)
     {
-        //as long as we're checking on change, we shouldn't need to do anything
-        //on save
+        if(realTimeProblems)
+        {
+            //as long as we're checking on change, we shouldn't need to do anything
+            //on save
+            return;
+        }
+
+        TextDocumentIdentifier textDocument = params.getTextDocument();
+        String textDocumentUri = textDocument.getUri();
+        if (!textDocumentUri.endsWith(AS_EXTENSION)
+                && !textDocumentUri.endsWith(MXML_EXTENSION))
+        {
+            return;
+        }
+        Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocumentUri);
+        if (path == null)
+        {
+            return;
+        }
+        WorkspaceFolderData folderData = getWorkspaceFolderDataForSourceFile(path);
+        if (folderData == null)
+        {
+            //this file isn't in any of the workspace folders
+            publishDiagnosticForFileOutsideSourcePath(path);
+            return;
+        }
+        
+        checkFilePathForProblems(path, folderData, true);
     }
 
     public void didChangeWatchedFiles(DidChangeWatchedFilesParams params)
