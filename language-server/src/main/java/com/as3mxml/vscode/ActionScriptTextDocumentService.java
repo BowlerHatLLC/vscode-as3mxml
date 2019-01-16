@@ -52,6 +52,7 @@ import org.apache.royale.compiler.common.ASModifier;
 import org.apache.royale.compiler.common.ISourceLocation;
 import org.apache.royale.compiler.common.PrefixMap;
 import org.apache.royale.compiler.common.XMLName;
+import org.apache.royale.compiler.config.CommandLineConfigurator;
 import org.apache.royale.compiler.config.Configuration;
 import org.apache.royale.compiler.config.ICompilerProblemSettings;
 import org.apache.royale.compiler.constants.IASKeywordConstants;
@@ -1892,6 +1893,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return;
         }
 
+        RoyaleProject project = getProject(folderData);
+        if (project == null)
+        {
+            //something went wrong while creating the project
+            return;
+        }
+
         //notify the workspace that it should read the file from memory
         //instead of loading from the file system
         String normalizedPath = FilenameNormalization.normalize(path.toAbsolutePath().toString());
@@ -2053,6 +2061,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             //this file isn't in any of the workspace folders
             publishDiagnosticForFileOutsideSourcePath(path);
+            return;
+        }
+
+        RoyaleProject project = getProject(folderData);
+        if (project == null)
+        {
+            //something went wrong while creating the project
             return;
         }
 
@@ -6165,6 +6180,14 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             project.getProblems().clear();
             return project;
         }
+        if (compilerWorkspace.isBuilding())
+        {
+            //somewhere up the call stack, the workspace started building.
+            //if the project doesn't exist yet, we shouldn't try to create it
+            //because configuring the project will try to get an idle state and
+            //cause the thread to hang. we'll need to try again later.
+            return null;
+        }
 
         URI rootURI = URI.create(folderData.folder.getUri());
         Path rootPath = Paths.get(rootURI);
@@ -6179,7 +6202,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         if (configurator == null)
         {
             project.delete();
-            return null;
+            project = null;
         }
 
         System.setProperty("user.dir", oldUserDir);
@@ -6187,7 +6210,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         ProblemTracker configProblemTracker = folderData.configProblemTracker;
         if (configProblems.size() > 0)
         {
-            ProblemQuery problemQuery = new ProblemQuery(configurator.getCompilerProblemSettings());
+            ICompilerProblemSettings compilerProblemSettings = null;
+            if (configurator != null)
+            {
+                compilerProblemSettings = configurator.getCompilerProblemSettings();
+            }
+            ProblemQuery problemQuery = new ProblemQuery(compilerProblemSettings);
             problemQuery.addAll(configProblems);
             if (problemQuery.hasFilteredProblems())
             {
@@ -6195,7 +6223,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 for (ICompilerProblem configProblem : problemQuery.getFilteredProblems())
                 {
                     String problemSourcePath = configProblem.getSourcePath();
-                    if (problemSourcePath == null)
+                    if (problemSourcePath == null || problemSourcePath.equals(CommandLineConfigurator.SOURCE_COMMAND_LINE))
                     {
                         //since we're processing configuration problems, the best
                         //default location to send the user is probably to the
@@ -6443,7 +6471,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             if(initialized)
             {
-                //if we pass in null, it's designed to ignore certain errors that
+                //if we pass in null, it's desigfned to ignore certain errors that
                 //don't matter for IDE code intelligence.
                 unit.waitForBuildFinish(problems, null);
                 problemQuery.addAll(problems);
