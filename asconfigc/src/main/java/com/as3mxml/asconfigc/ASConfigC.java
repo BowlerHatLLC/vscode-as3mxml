@@ -212,6 +212,7 @@ public class ASConfigC
 	private boolean configRequiresRoyale;
 	private boolean configRequiresRoyaleOrFlexJS;
 	private boolean configRequiresFlexJS;
+	private boolean configRequiresAIR;
 	private boolean sdkIsRoyale;
 	private boolean sdkIsFlexJS;
 	private boolean isSWFTargetOnly;
@@ -313,7 +314,7 @@ public class ASConfigC
 		if(json.has(TopLevelFields.CONFIG))
 		{
 			String configName = json.get(TopLevelFields.CONFIG).asText();
-			detectJavaScript(configName);
+			detectConfigRequirements(configName);
 			compilerOptions.add("+configname=" + configName);
 		}
 		if(json.has(TopLevelFields.COMPILER_OPTIONS))
@@ -359,6 +360,7 @@ public class ASConfigC
 		}
 		if(json.has(TopLevelFields.APPLICATION))
 		{
+			configRequiresAIR = true;
 			airDescriptorPath = json.get(TopLevelFields.APPLICATION).asText();
 			File airDescriptor = new File(airDescriptorPath);
 			if(!airDescriptor.isAbsolute())
@@ -399,6 +401,7 @@ public class ASConfigC
 		}
 		if(json.has(TopLevelFields.AIR_OPTIONS))
 		{
+			configRequiresAIR = true;
 			airOptionsJSON = json.get(TopLevelFields.AIR_OPTIONS);
 			readAIROptions(airOptionsJSON);
 		}
@@ -428,7 +431,7 @@ public class ASConfigC
 		}
 	}
 
-	private void detectJavaScript(String configName)
+	private void detectConfigRequirements(String configName)
 	{
 		switch(configName)
 		{
@@ -448,6 +451,16 @@ public class ASConfigC
 			{
 				//this option is not supported by FlexJS
 				configRequiresRoyale = true;
+				break;
+			}
+			case ConfigName.AIR:
+			{
+				configRequiresAIR = true;
+				break;
+			}
+			case ConfigName.AIRMOBILE:
+			{
+				configRequiresAIR = true;
 				break;
 			}
 		}
@@ -1177,6 +1190,10 @@ public class ASConfigC
 	
 	private void processAdobeAIRDescriptor() throws ASConfigCException
 	{
+		if (!configRequiresAIR)
+		{
+			return;
+		}
 		boolean populateTemplate = false;
 		Path resolvedDescriptorPath = null;
 		if(airDescriptorPath == null)
