@@ -138,7 +138,7 @@
 		<key>class</key>
 		<dict>
 			<key>begin</key>
-			<string>(?x) (^|\s+|;) (\b(dynamic|final)\b\s+)? (\b(internal|public)\b\s+)? (\b(dynamic|final)\b\s+)? (?=\bclass\b)</string>
+			<string>(?x) (^|\s+|;) (\b(dynamic|final|abstract)\b\s+)? (\b(internal|public)\b\s+)? (\b(dynamic|final|abstract)\b\s+)? (?=\bclass\b)</string>
 			<key>beginCaptures</key>
 			<dict>
 				<key>3</key>
