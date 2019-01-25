@@ -133,7 +133,7 @@ public class CompilerOptionsParser
 				case CompilerOptions.INCLUDE_CLASSES:
 				{
 					List<String> values = JsonUtils.jsonNodeToListOfStrings(options.get(key));
-					OptionsFormatter.appendValues(key, values, result);
+					OptionsFormatter.setValuesWithCommas(key, values, result);
 					break;
 				}
 				case CompilerOptions.INCLUDE_NAMESPACES:
