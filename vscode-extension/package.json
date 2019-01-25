@@ -55,6 +55,7 @@
     "onLanguage:mxml",
     "workspaceContains:**/asconfig.json",
     "workspaceContains:**/asconfig.*.json",
+    "workspaceContains:.actionScriptProperties",
     "onView:actionScriptSourcePaths",
     "onCommand:as3mxml.organizeImportsInUri",
     "onCommand:as3mxml.organizeImportsInDirectory",
