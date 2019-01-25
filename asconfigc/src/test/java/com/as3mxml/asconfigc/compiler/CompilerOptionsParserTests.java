@@ -445,13 +445,9 @@ class CompilerOptionsParserTests
 			parser.parse(options, null, result);
 		}
 		catch(UnknownCompilerOptionException e) {}
-		Assertions.assertEquals(3, result.size(),
+		Assertions.assertEquals(1, result.size(),
 			"CompilerOptionsParser.parse() created incorrect number of options.");
-		Assertions.assertEquals("--" + CompilerOptions.INCLUDE_CLASSES + "+=" + value1, result.get(0),
-			"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
-		Assertions.assertEquals("--" + CompilerOptions.INCLUDE_CLASSES + "+=" + value2, result.get(1),
-			"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
-		Assertions.assertEquals("--" + CompilerOptions.INCLUDE_CLASSES + "+=" + value3, result.get(2),
+		Assertions.assertEquals("--" + CompilerOptions.INCLUDE_CLASSES + "=" + value1 + "," + value2 + "," + value3, result.get(0),
 			"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
 	}
 	
