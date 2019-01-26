@@ -24,7 +24,7 @@ import getJavaClassPathDelimiter from "./utils/getJavaClassPathDelimiter";
 import findSDKShortName from "./utils/findSDKShortName";
 import getFrameworkSDKPathWithFallbacks from "./utils/getFrameworkSDKPathWithFallbacks";
 import selectWorkspaceSDK from "./commands/selectWorkspaceSDK";
-import migrateFlashBuilderProject from "./commands/migrateFlashBuilderProject";
+import { pickFlashBuilderProjectInWorkspace } from "./commands/importFlashBuilderProject";
 import * as path from "path";
 import * as vscode from "vscode";
 import {LanguageClient, LanguageClientOptions, Executable, ExecutableOptions} from "vscode-languageclient";
@@ -214,12 +214,9 @@ export function activate(context: vscode.ExtensionContext)
 	vscode.commands.registerCommand("as3mxml.restartServer", restartServer);
 	vscode.commands.registerCommand("as3mxml.logCompilerShellOutput", logCompilerShellOutput);
 	vscode.commands.registerCommand("as3mxml.saveSessionPassword", saveSessionPassword);
-	vscode.commands.registerCommand("as3mxml.migrateFlashBuilderProject", () =>
+	vscode.commands.registerCommand("as3mxml.importFlashBuilderProject", () =>
 	{
-		if(vscode.workspace.workspaceFolders)
-		{
-			migrateFlashBuilderProject(vscode.workspace.workspaceFolders[0].uri);
-		}
+		pickFlashBuilderProjectInWorkspace();
 	});
 	vscode.commands.registerCommand("as3mxml.quickCompileAndDebug", () =>
 	{	

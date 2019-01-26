@@ -62,7 +62,7 @@
     "onCommand:as3mxml.saveSessionPassword",
     "onCommand:as3mxml.selectWorkspaceSDK",
     "onCommand:as3mxml.restartServer",
-    "onCommand:as3mxml.migrateFlashBuilderProject",
+    "onCommand:as3mxml.importFlashBuilderProject",
     "onCommand:as3mxml.quickCompile",
     "onCommand:as3mxml.quickCompileAndDebug",
     "onCommand:workbench.action.tasks.runTask"
@@ -95,6 +95,11 @@
       {
         "command": "as3mxml.quickCompileAndDebug",
         "title": "Quick Compile & Debug (Experimental)",
+        "category": "ActionScript"
+      },
+      {
+        "command": "as3mxml.importFlashBuilderProject",
+        "title": "Import Adobe Flash Builder Project (Experimental)",
         "category": "ActionScript"
       }
     ],
