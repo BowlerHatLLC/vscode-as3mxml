@@ -46,7 +46,6 @@ import java.util.concurrent.CompletableFuture;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.ByteArrayOutputStream;
-import org.apache.royale.abc.ABCConstants;
 import org.apache.royale.compiler.clients.problems.ProblemQuery;
 import org.apache.royale.compiler.common.ASModifier;
 import org.apache.royale.compiler.common.ISourceLocation;
@@ -1640,7 +1639,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return;
         }
-        if(textDocument.getUri().endsWith(MXML_EXTENSION))
+        boolean isMXML = textDocument.getUri().endsWith(MXML_EXTENSION);
+        if(isMXML)
         {
             Position start = diagnostic.getRange().getStart();
             int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(new StringReader(fileText), start);
@@ -1657,7 +1657,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         List<IDefinition> types = ASTUtils.findTypesThatMatchName(typeString, project.getCompilationUnits());
         for (IDefinition definitionToImport : types)
         {
-            WorkspaceEdit edit = CodeActionsUtils.createWorkspaceEditForAddImport(definitionToImport, fileText, uri, importRange.startIndex, importRange.endIndex);
+            WorkspaceEdit edit = CodeActionsUtils.createWorkspaceEditForAddImport(definitionToImport, fileText, uri, importRange.startIndex, importRange.endIndex, isMXML);
             if (edit == null)
             {
                 continue;
@@ -2784,8 +2784,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             //something went terribly wrong!
             return result;
         }
+        boolean isMXML = params.getTextDocument().getUri().endsWith(MXML_EXTENSION);
         ImportRange importRange = ImportRange.fromOffsetNode(offsetNode);
-        if (params.getTextDocument().getUri().endsWith(MXML_EXTENSION))
+        if (isMXML)
         {
             IMXMLTagData offsetTag = getOffsetMXMLTag(params.getTextDocument(), params.getPosition());
             if (offsetTag != null)
@@ -2794,7 +2795,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
         }
         String fileText = getFileTextForPath(path);
-        AddImportData addImportData = CodeActionsUtils.findAddImportData(fileText, importRange.startIndex, importRange.endIndex);
+        AddImportData addImportData = CodeActionsUtils.findAddImportData(fileText, importRange.startIndex, importRange.endIndex, isMXML);
 
         //variable types
         if (offsetNode instanceof IVariableNode)
@@ -3198,7 +3199,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         ImportRange importRange = ImportRange.fromOffsetTag(offsetTag, currentOffset);
         String fileText = getFileTextForPath(path);
-        AddImportData addImportData = CodeActionsUtils.findAddImportData(fileText, importRange.startIndex, importRange.endIndex);
+        AddImportData addImportData = CodeActionsUtils.findAddImportData(fileText, importRange.startIndex, importRange.endIndex, true);
         XmlnsRange xmlnsRange = XmlnsRange.fromOffsetTag(offsetTag, currentOffset);
         Position xmlnsPosition = null;
         if (xmlnsRange.endIndex >= 0)
@@ -7440,7 +7441,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return;
         }
-        WorkspaceEdit workspaceEdit = CodeActionsUtils.createWorkspaceEditForAddImport(qualifiedName, text, uri, startIndex, endIndex);
+        boolean isMXML = pathForImport.toString().endsWith(MXML_EXTENSION);
+        WorkspaceEdit workspaceEdit = CodeActionsUtils.createWorkspaceEditForAddImport(
+            qualifiedName, text, uri, startIndex, endIndex, isMXML);
         if(workspaceEdit == null)
         {
             //no edit required
