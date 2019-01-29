@@ -358,6 +358,12 @@ public class ASConfigC
 				}
 			}
 		}
+		//if js-output-type was not specified, use the default
+		//swf projects won't have a js-output-type
+		if(jsOutputType != null)
+		{
+			compilerOptions.add("--" + CompilerOptions.JS_OUTPUT_TYPE + "=" + jsOutputType);
+		}
 		if(json.has(TopLevelFields.APPLICATION))
 		{
 			configRequiresAIR = true;
@@ -426,13 +432,6 @@ public class ASConfigC
 				compilerOptionsJson = json.get(TopLevelFields.COMPILER_OPTIONS);
 			}
 			readHTMLTemplateOptions(compilerOptionsJson);
-		}
-
-		//if js-output-type was not specified, use the default
-		//swf projects won't have a js-output-type
-		if(jsOutputType != null)
-		{
-			compilerOptions.add("--" + CompilerOptions.JS_OUTPUT_TYPE + "=" + jsOutputType);
 		}
 	}
 
