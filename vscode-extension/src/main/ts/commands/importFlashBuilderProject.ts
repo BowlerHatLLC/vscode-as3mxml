@@ -29,6 +29,7 @@ const TOKEN_SDKS_PREF = "com.adobe.flexbuilder.project.flex_sdks=";
 const ERROR_CANNOT_FIND_PROJECT = "No Adobe Flash Builder project found in workspace.";
 const ERROR_CANNOT_PARSE_PROJECT = "Failed to parse Adobe Flash Builder project.";
 const ERROR_ASCONFIG_JSON_EXISTS = "Cannot migrate Adobe Flash Builder project because asconfig.json already exists.";
+const ERROR_MODULES = "Importing Adobe Flash Builder projects with modules is not supported.";
 
 interface FlashBuilderSDK
 {
@@ -165,7 +166,8 @@ export function importFlashBuilderProject(workspaceFolder: vscode.WorkspaceFolde
 	let actionScriptProperties = null;
 	try
 	{
-		actionScriptProperties = parseXML(actionScriptPropertiesText)
+		let parsedXML = parseXML(actionScriptPropertiesText)
+		actionScriptProperties = parsedXML.children[0];
 	}
 	catch(error)
 	{
@@ -175,49 +177,150 @@ export function importFlashBuilderProject(workspaceFolder: vscode.WorkspaceFolde
 
 	let sdks = findSDKs(workspaceFolder);
 
-	let result: any =
+	createProjectFiles(folderPath, actionScriptProperties, sdks, isFlexApp);
+}
+
+function findApplications(actionScriptProperties: any)
+{
+	if(!actionScriptProperties)
 	{
-		compilerOptions: {},
-		files: [],
-	};
-	migrateActionScriptProperties(actionScriptProperties, isFlexApp, sdks, result);
-	
-	let resultText = JSON.stringify(result, undefined, "\t");
-	fs.writeFileSync(asconfigPath, resultText);
-	vscode.workspace.openTextDocument(asconfigPath).then((document) =>
+		return [];
+	}
+	let rootChildren = actionScriptProperties.children as any[];
+	if(!rootChildren)
 	{
-		vscode.window.showTextDocument(document)
+		return [];
+	}
+	let applicationsElement = rootChildren.find((child) =>
+	{
+		return child.type === "element" && child.name === "applications";
+	});
+	if(!applicationsElement)
+	{
+		return [];
+	}
+	let appChildren = applicationsElement.children as any[];
+	if(!appChildren)
+	{
+		return [];
+	}
+	return appChildren.filter((child) =>
+	{
+		return child.type === "element" && child.name === "application";
+	})
+}
+
+function findMainApplicationPath(actionScriptProperties: any)
+{
+	let attributes = actionScriptProperties.attributes;
+	if(!attributes)
+	{
+		return null;
+	}
+	return attributes.mainApplicationPath;
+}
+
+function getApplicationNameFromPath(appPath: string)
+{
+	appPath = path.basename(appPath);
+	return appPath.substr(0, appPath.length - path.extname(appPath).length);
+}
+
+function createProjectFiles(folderPath: string, actionScriptProperties: any, sdks: FlashBuilderSDK[], isFlexApp: boolean)
+{
+	let mainAppPath = findMainApplicationPath(actionScriptProperties);
+
+	let applications = findApplications(actionScriptProperties);
+	applications.forEach((application) =>
+	{
+		let result: any =
+		{
+			compilerOptions: {},
+			files: [],
+		};
+		migrateActionScriptProperties(application, actionScriptProperties, isFlexApp, sdks, result);
+		
+		let resultText = JSON.stringify(result, undefined, "\t");
+
+		let appPath = application.attributes.path;
+		let fileName = FILE_ASCONFIG_JSON;
+		if(appPath !== mainAppPath && applications.length > 1)
+		{
+			let appName = getApplicationNameFromPath(appPath);
+			fileName = "asconfig." + appName + ".json";
+		}
+		let asconfigPath = path.resolve(folderPath, fileName);
+		fs.writeFileSync(asconfigPath, resultText);
+
+		vscode.workspace.openTextDocument(asconfigPath).then((document) =>
+		{
+			vscode.window.showTextDocument(document)
+		});
 	});
 }
 
-function migrateActionScriptProperties(actionScriptProperties: any, isFlexApp: boolean, sdks: FlashBuilderSDK[], result: any)
+function migrateActionScriptProperties(application: any, actionScriptProperties: any, isFlexApp: boolean, sdks: FlashBuilderSDK[], result: any)
 {
-	let rootElement = actionScriptProperties.children[0];
-	let mainApplicationFileName = isFlexApp ? "MyProject.mxml" : "MyProject.as";
-	if("mainApplicationPath" in rootElement.attributes)
+	let rootChildren = actionScriptProperties.children as any[];
+	if(!rootChildren)
 	{
-		mainApplicationFileName = rootElement.attributes.mainApplicationPath;
+		return null;
 	}
-	let rootChildren = rootElement.children as any[];
+	let rootAttributes = actionScriptProperties.attributes;
+	if(!rootAttributes)
+	{
+		return null;
+	}
+	let appAttributes = application.attributes;
+	if(!appAttributes)
+	{
+		return null;
+	}
+
+	let applicationPath = null;
+	if("path" in appAttributes)
+	{
+		applicationPath = appAttributes.path;
+	}
+	if(!applicationPath)
+	{
+		applicationPath = isFlexApp ? "MyProject.mxml" : "MyProject.as";
+	}
+
 	let compilerElement = rootChildren.find((child) =>
 	{
 		return child.type === "element" && child.name === "compiler";
 	});
 	if(compilerElement)
 	{
-		migrateCompilerElement(compilerElement, mainApplicationFileName, sdks, result);
+		migrateCompilerElement(compilerElement, applicationPath, sdks, result);
 	}
+
 	let buildTargetsElement = rootChildren.find((child) =>
 	{
 		return child.type === "element" && child.name === "buildTargets";
-	})
+	});
 	if(buildTargetsElement)
 	{
-		migrateBuildTargetsElement(buildTargetsElement, mainApplicationFileName, result);
+		migrateBuildTargetsElement(buildTargetsElement, applicationPath, result);
+	}
+
+	let modulesElement = rootChildren.find((child) =>
+	{
+		return child.type === "element" && child.name === "modules";
+	});
+	if(modulesElement)
+	{
+		let moduleAppPath = applicationPath;
+		if(compilerElement)
+		{
+			moduleAppPath = path.posix.join(compilerElement.attributes.sourceFolderPath, moduleAppPath);
+		}
+		migrateModulesElement(modulesElement, moduleAppPath, result);
 	}
 }
 
-function migrateCompilerElement(compilerElement: any, mainApplicationFileName: string, sdks: FlashBuilderSDK[], result: any)
+function migrateCompilerElement(compilerElement: any, appPath: string, sdks: FlashBuilderSDK[], result: any)
 {
 	let attributes = compilerElement.attributes;
 	vscode.workspace.getConfiguration()
@@ -265,7 +368,7 @@ function migrateCompilerElement(compilerElement: any, mainApplicationFileName: s
 	}
 	if("useApolloConfig" in attributes && attributes.useApolloConfig === "true")
 	{
-		result.application = path.posix.join(attributes.sourceFolderPath, getMainApplicationNameFromFileName(mainApplicationFileName) + "-app.xml");
+		result.application = path.posix.join(attributes.sourceFolderPath, getApplicationNameFromPath(appPath) + "-app.xml");
 	}
 	if("copyDependentFiles" in attributes && attributes.copyDependentFiles === "true")
 	{
@@ -273,7 +376,7 @@ function migrateCompilerElement(compilerElement: any, mainApplicationFileName: s
 	}
 	if("outputFolderPath" in attributes)
 	{
-		result.compilerOptions.output = path.posix.join(attributes.outputFolderPath, getMainApplicationNameFromFileName(mainApplicationFileName) + ".swf");
+		result.compilerOptions.output = path.posix.join(attributes.outputFolderPath, getApplicationNameFromPath(appPath) + ".swf");
 	}
 	if("additionalCompilerArguments" in attributes)
 	{
@@ -291,7 +394,7 @@ function migrateCompilerElement(compilerElement: any, mainApplicationFileName: s
 	if("sourceFolderPath" in attributes)
 	{
 		sourceFolderPath = attributes.sourceFolderPath;
-		let mainFilePath = path.posix.join(attributes.sourceFolderPath, mainApplicationFileName);
+		let mainFilePath = path.posix.join(attributes.sourceFolderPath, appPath);
 		result.files.push(mainFilePath);
 	}
 	let children = compilerElement.children as any[];
@@ -313,131 +416,7 @@ function migrateCompilerElement(compilerElement: any, mainApplicationFileName: s
 	}
 }
 
-function getMainApplicationNameFromFileName(fileName: string)
-{
-	return fileName.substr(0, fileName.length - path.extname(fileName).length);
-}
-
-function migrateBuildTargetsElement(buildTargetsElement, mainApplicationFileName: string, result)
-{
-	let children = buildTargetsElement.children as any[];
-	children.forEach((buildTarget) =>
-	{
-		if(buildTarget.type !== "element" || buildTarget.name !== "buildTarget")
-		{
-			return;
-		}
-		let buildTargetAttributes = buildTarget.attributes;
-		if(!("platformId" in buildTargetAttributes))
-		{
-			return;
-		}
-		let platformId = buildTargetAttributes.platformId;
-		let isIOS = platformId === "com.adobe.flexide.multiplatform.ios.platform";
-		let isAndroid = platformId === "com.adobe.flexide.multiplatform.android.platform";
-		let isDefault = platformId === "default";
-		let buildTargetChildren = buildTarget.children;
-		let multiPlatformSettings = children.find((child) =>
-		{
-			return child.type === "element" && child.name === "multiPlatformSettings";
-		})
-		if(multiPlatformSettings)
-		{
-			let multiPlatformSettingsAttributes = multiPlatformSettings.attributes;
-			if("enabled" in multiPlatformSettingsAttributes)
-			{
-				let enabled = multiPlatformSettingsAttributes.enabled === "true";
-				if(!enabled)
-				{
-					//we can skip this one because it's not enabled
-					return;
-				}
-			}
-		}
-		result.airOptions = result.airOptions || {};
-		let platformOptions = null;
-		if(isIOS)
-		{
-			platformOptions = result.airOptions.ios || {};
-			platformOptions.output = path.posix.join(getMainApplicationNameFromFileName(mainApplicationFileName) + ".ipa");
-			if("provisioningFile" in buildTargetAttributes)
-			{
-				let provisioningFile = buildTargetAttributes.provisioningFile;
-				if(provisioningFile)
-				{
-					platformOptions.signingOptions = platformOptions.signingOptions || {};
-					platformOptions.signingOptions["provisioning-profile"] = provisioningFile;
-				}
-			}
-		}
-		else if(isAndroid)
-		{
-			platformOptions = result.airOptions.android || {};
-			platformOptions.output = path.posix.join(getMainApplicationNameFromFileName(mainApplicationFileName) + ".apk");
-		}
-		else if(isDefault)
-		{
-			result.config = "air";
-			platformOptions = result.airOptions;
-			platformOptions.output = path.posix.join(getMainApplicationNameFromFileName(mainApplicationFileName) + ".air");
-		}
-		else
-		{
-			vscode.window.showErrorMessage("Unknown Adobe AIR platform in Flash Builder project: " + platformId);
-			return;
-		}
-		if(isIOS || isAndroid)
-		{
-			result.config = "airmobile";
-		}
-		let airSettings = buildTargetChildren.find((child) =>
-		{
-			return child.type === "element" && child.name === "airSettings";
-		});
-		if(airSettings)
-		{
-			let airSettingsAttributes = airSettings.attributes;
-			if("airCertificatePath" in airSettingsAttributes)
-			{
-				let airCertificatePath = airSettingsAttributes.airCertificatePath;
-				if(airCertificatePath)
-				{
-					platformOptions.signingOptions = platformOptions.signingOptions || {};
-					platformOptions.signingOptions.keystore = airCertificatePath;
-					platformOptions.signingOptions.storetype = "pkcs12";
-				}
-			}
-			let airSettingsChildren = airSettings.children;
-			let anePaths = airSettingsChildren.find((child) =>
-			{
-				return child.type === "element" && child.name === "anePaths";
-			});
-			if(anePaths)
-			{
-				let anePathsChildren = anePaths.children;
-				let anePathEntries = anePathsChildren.filter((child) =>
-				{
-					return child.type === "element" && child.name === "anePathEntry";
-				});
-				if(anePathEntries.length > 0)
-				{
-					let extdir = [];
-					anePathEntries.forEach((anePathEntry) =>
-					{
-						let anePathEntryAttributes = anePathEntry.attributes;
-						if("path" in anePathEntryAttributes)
-						{
-							extdir.push(anePathEntryAttributes.path);
-						}
-					});
-					platformOptions.extdir = extdir;
-				}
-			}
-		}
-	});
-}
-
-function migrateCompilerSourcePathElement(compilerSourcePathElement, sourceFolderPath: string, result)
+function migrateCompilerSourcePathElement(compilerSourcePathElement: any, sourceFolderPath: string, result: any)
 {
 	let sourcePaths = [];
 	if(sourceFolderPath)
@@ -479,7 +458,7 @@ function replaceSourceOrLibraryPathTokens(sourceOrLibraryPath: string)
 	return sourceOrLibraryPath;
 }
 
-function migrateCompilerLibraryPathElement(libraryPathElement, result)
+function migrateCompilerLibraryPathElement(libraryPathElement: any, result: any)
 {
 	let libraryPaths = [];
 	let externalLibraryPaths = [];
@@ -548,5 +527,144 @@ function migrateCompilerLibraryPathElement(libraryPathElement, result)
 	if(externalLibraryPaths.length > 0)
 	{
 		result.compilerOptions["external-library-path"] = externalLibraryPaths;
+	}
+}
+
+function migrateBuildTargetsElement(buildTargetsElement: any, applicationFileName: string, result: any)
+{
+	let children = buildTargetsElement.children as any[];
+	children.forEach((buildTarget) =>
+	{
+		if(buildTarget.type !== "element" || buildTarget.name !== "buildTarget")
+		{
+			return;
+		}
+		let buildTargetAttributes = buildTarget.attributes;
+		if(!("platformId" in buildTargetAttributes))
+		{
+			return;
+		}
+		let platformId = buildTargetAttributes.platformId;
+		let isIOS = platformId === "com.adobe.flexide.multiplatform.ios.platform";
+		let isAndroid = platformId === "com.adobe.flexide.multiplatform.android.platform";
+		let isDefault = platformId === "default";
+		let buildTargetChildren = buildTarget.children;
+		let multiPlatformSettings = children.find((child) =>
+		{
+			return child.type === "element" && child.name === "multiPlatformSettings";
+		})
+		if(multiPlatformSettings)
+		{
+			let multiPlatformSettingsAttributes = multiPlatformSettings.attributes;
+			if("enabled" in multiPlatformSettingsAttributes)
+			{
+				let enabled = multiPlatformSettingsAttributes.enabled === "true";
+				if(!enabled)
+				{
+					//we can skip this one because it's not enabled
+					return;
+				}
+			}
+		}
+		result.airOptions = result.airOptions || {};
+		let platformOptions = null;
+		if(isIOS)
+		{
+			platformOptions = result.airOptions.ios || {};
+			platformOptions.output = path.posix.join(getApplicationNameFromPath(applicationFileName) + ".ipa");
+			if("provisioningFile" in buildTargetAttributes)
+			{
+				let provisioningFile = buildTargetAttributes.provisioningFile;
+				if(provisioningFile)
+				{
+					platformOptions.signingOptions = platformOptions.signingOptions || {};
+					platformOptions.signingOptions["provisioning-profile"] = provisioningFile;
+				}
+			}
+		}
+		else if(isAndroid)
+		{
+			platformOptions = result.airOptions.android || {};
+			platformOptions.output = path.posix.join(getApplicationNameFromPath(applicationFileName) + ".apk");
+		}
+		else if(isDefault)
+		{
+			result.config = "air";
+			platformOptions = result.airOptions;
+			platformOptions.output = path.posix.join(getApplicationNameFromPath(applicationFileName) + ".air");
+		}
+		else
+		{
+			vscode.window.showErrorMessage("Unknown Adobe AIR platform in Adobe Flash Builder project: " + platformId);
+			return;
+		}
+		if(isIOS || isAndroid)
+		{
+			result.config = "airmobile";
+		}
+		let airSettings = buildTargetChildren.find((child) =>
+		{
+			return child.type === "element" && child.name === "airSettings";
+		});
+		if(airSettings)
+		{
+			let airSettingsAttributes = airSettings.attributes;
+			if("airCertificatePath" in airSettingsAttributes)
+			{
+				let airCertificatePath = airSettingsAttributes.airCertificatePath;
+				if(airCertificatePath)
+				{
+					platformOptions.signingOptions = platformOptions.signingOptions || {};
+					platformOptions.signingOptions.keystore = airCertificatePath;
+					platformOptions.signingOptions.storetype = "pkcs12";
+				}
+			}
+			let airSettingsChildren = airSettings.children;
+			let anePaths = airSettingsChildren.find((child) =>
+			{
+				return child.type === "element" && child.name === "anePaths";
+			});
+			if(anePaths)
+			{
+				let anePathsChildren = anePaths.children;
+				let anePathEntries = anePathsChildren.filter((child) =>
+				{
+					return child.type === "element" && child.name === "anePathEntry";
+				});
+				if(anePathEntries.length > 0)
+				{
+					let extdir = [];
+					anePathEntries.forEach((anePathEntry) =>
+					{
+						let anePathEntryAttributes = anePathEntry.attributes;
+						if("path" in anePathEntryAttributes)
+						{
+							extdir.push(anePathEntryAttributes.path);
+						}
+					});
+					platformOptions.extdir = extdir;
+				}
+			}
+		}
+	});
+}
+
+let alreadyWarned = false;
+function migrateModulesElement(modulesElement: any, appPath: string, result: any)
+{
+	if(alreadyWarned)
+	{
+		return;
+	}
+	let children = modulesElement.children as any[];
+	let modules = children.filter((module) =>
+	{
+		return module.type === "element" && module.name === "module" && module.attributes.application === appPath;
+	});
+	let hasModules = modules.length > 0;
+	if(hasModules)
+	{
+		alreadyWarned = true;
+		vscode.window.showErrorMessage(ERROR_MODULES);
 	}
 }
