@@ -63,6 +63,7 @@ public class CodeActionsUtils
     private static final Pattern importPattern = Pattern.compile("(?m)^([ \\t]*)import ([\\w\\.]+)");
     private static final Pattern indentPattern = Pattern.compile("(?m)^([ \\t]*)\\w");
     private static final Pattern packagePattern = Pattern.compile("(?m)^package(?: [\\w\\.]+)*\\s*\\{(?:[ \\t]*[\\r\\n]+)+([ \\t]*)");
+    private static final Pattern scriptPattern = Pattern.compile("(?m)^<\\w+:Script>\\s*<!\\[CDATA\\[");
 	private static final String NEW_LINE = "\n";
 	private static final String INDENT = "\t";
 	private static final String SPACE = " ";
@@ -138,9 +139,9 @@ public class CodeActionsUtils
         codeActions.add(Either.forRight(setterCodeAction));
     }
 
-    public static WorkspaceEdit createWorkspaceEditForAddImport(IDefinition definition, String fileText, String uri, int startIndex, int endIndex)
+    public static WorkspaceEdit createWorkspaceEditForAddImport(IDefinition definition, String fileText, String uri, int startIndex, int endIndex, boolean mxml)
     {
-        TextEdit textEdit = createTextEditForAddImport(definition.getQualifiedName(), fileText, startIndex, endIndex);
+        TextEdit textEdit = createTextEditForAddImport(definition.getQualifiedName(), fileText, startIndex, endIndex, mxml);
         if (textEdit == null)
         {
             return null;
@@ -155,9 +156,9 @@ public class CodeActionsUtils
         return workspaceEdit;
     }
 
-    public static WorkspaceEdit createWorkspaceEditForAddImport(String qualfiedName, String fileText, String uri, int startIndex, int endIndex)
+    public static WorkspaceEdit createWorkspaceEditForAddImport(String qualfiedName, String fileText, String uri, int startIndex, int endIndex, boolean mxml)
     {
-        TextEdit textEdit = createTextEditForAddImport(qualfiedName, fileText, startIndex, endIndex);
+        TextEdit textEdit = createTextEditForAddImport(qualfiedName, fileText, startIndex, endIndex, mxml);
         if (textEdit == null)
         {
             return null;
@@ -172,7 +173,7 @@ public class CodeActionsUtils
         return workspaceEdit;
     }
 
-    public static AddImportData findAddImportData(String fileText, int startIndex, int endIndex)
+    public static AddImportData findAddImportData(String fileText, int startIndex, int endIndex, boolean mxml)
     {
         if(startIndex == -1)
         {
@@ -187,6 +188,7 @@ public class CodeActionsUtils
         }
         String indent = "";
         String lineBreaks = "\n";
+        boolean needsScriptForMXML = false;
         int importIndex = -1;
         Matcher importMatcher = importPattern.matcher(fileText);
         importMatcher.region(startIndex, endIndex);
@@ -204,6 +206,16 @@ public class CodeActionsUtils
         }
         else //no existing imports
         {
+            if(mxml && startIndex <= 0)
+            {
+                Matcher scriptMatcher = scriptPattern.matcher(fileText);
+                scriptMatcher.region(startIndex, endIndex);
+                if (!scriptMatcher.find())
+                {
+                    needsScriptForMXML = true;
+                }
+            }
+
             //start by looking for the package block
             Matcher packageMatcher = packagePattern.matcher(fileText);
             packageMatcher.region(startIndex, endIndex);
@@ -237,7 +249,7 @@ public class CodeActionsUtils
             }
             lineBreaks += "\n"; //add an extra line break
         }
-        return new AddImportData(position, indent, lineBreaks);
+        return new AddImportData(position, indent, lineBreaks, needsScriptForMXML);
     }
 
     public static TextEdit createTextEditForAddImport(IDefinition definition, AddImportData addImportData)
@@ -251,22 +263,41 @@ public class CodeActionsUtils
         String indent = addImportData.indent;
         String newLines = addImportData.newLines;
 
-        String textToInsert = indent + "import " + qualifiedName + ";" + newLines;
+        StringBuilder builder = new StringBuilder();
+
+        if(addImportData.needsScriptForMXML)
+        {
+            builder.append("<fx:Script>\n\t<![CDATA[\n\t\t");
+        }
+        else
+        {
+            builder.append(indent);
+        }
+        builder.append(IASKeywordConstants.IMPORT);
+        builder.append(" ");
+        builder.append(qualifiedName);
+        builder.append(";");
+        builder.append(newLines);
+
+        if(addImportData.needsScriptForMXML)
+        {
+            builder.append("\t]]>\n</fx:Script>");
+        }
         
         TextEdit textEdit = new TextEdit();
-        textEdit.setNewText(textToInsert);
+        textEdit.setNewText(builder.toString());
         textEdit.setRange(new Range(position, position));
         return textEdit;
     }
 
-    public static TextEdit createTextEditForAddImport(IDefinition definition, String fileText, int startIndex, int endIndex)
+    public static TextEdit createTextEditForAddImport(IDefinition definition, String fileText, int startIndex, int endIndex, boolean mxml)
     {
-        return createTextEditForAddImport(definition.getQualifiedName(), fileText, startIndex, endIndex);
+        return createTextEditForAddImport(definition.getQualifiedName(), fileText, startIndex, endIndex, mxml);
     }
 
-    public static TextEdit createTextEditForAddImport(String qualifiedName, String fileText, int startIndex, int endIndex)
+    public static TextEdit createTextEditForAddImport(String qualifiedName, String fileText, int startIndex, int endIndex, boolean mxml)
     {
-        AddImportData addImportData = findAddImportData(fileText, startIndex, endIndex);
+        AddImportData addImportData = findAddImportData(fileText, startIndex, endIndex, mxml);
         return createTextEditForAddImport(qualifiedName, addImportData);
     }
 
@@ -584,7 +615,7 @@ public class CodeActionsUtils
                 }
                 if (ASTUtils.needsImport(functionCallNode, typeName))
                 {
-                    TextEdit importEdit = CodeActionsUtils.createTextEditForAddImport(typeName, text, importRange.startIndex, importRange.endIndex);
+                    TextEdit importEdit = CodeActionsUtils.createTextEditForAddImport(typeName, text, importRange.startIndex, importRange.endIndex, false);
                     if (importEdit != null)
                     {
                         edits.add(importEdit);
