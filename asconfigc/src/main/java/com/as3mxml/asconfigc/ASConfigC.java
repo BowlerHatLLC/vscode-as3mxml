@@ -388,6 +388,11 @@ public class ASConfigC
 				int size = files.size();
 				for(int i = 0; i < size; i++)
 				{
+					if(i == 0)
+					{
+						//terminate previous options and start default options
+						compilerOptions.add("--");
+					}
 					String file = files.get(i).asText();
 					compilerOptions.add(file);
 				}
