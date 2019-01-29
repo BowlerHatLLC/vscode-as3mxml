@@ -374,6 +374,10 @@ function migrateCompilerElement(compilerElement: any, appPath: string, sdks: Fla
 	{
 		result.copySourcePathAssets = true;
 	}
+	if("htmlGenerate" in attributes && attributes.htmlGenerate === "true")
+	{
+		result.htmlTemplate = "html-template";
+	}
 	if("outputFolderPath" in attributes)
 	{
 		result.compilerOptions.output = path.posix.join(attributes.outputFolderPath, getApplicationNameFromPath(appPath) + ".swf");
