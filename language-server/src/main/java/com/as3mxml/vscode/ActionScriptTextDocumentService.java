@@ -46,6 +46,7 @@ import java.util.concurrent.CompletableFuture;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.ByteArrayOutputStream;
+import org.apache.royale.abc.ABCConstants;
 import org.apache.royale.compiler.clients.problems.ProblemQuery;
 import org.apache.royale.compiler.common.ASModifier;
 import org.apache.royale.compiler.common.ISourceLocation;
