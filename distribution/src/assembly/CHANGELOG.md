@@ -1,3 +1,12 @@
+## v0.17.2
+
+### Fixed Issues
+
+* Build: Fixed issue where multiple values in the `include-classes` compiler option were not passed to the compiler correctly.
+* Build: Fixed issue where formatting perfectly valid options in `additionalOptions` in a certain way could cause compiles to fail.
+* Completion: Fixed issue where ActionScript imports added in MXML were added to the beginning of the file when it contains no `<fx:Script>` element yet.
+* General: Fixed issue where code intelligence might hang with if certain invalid compiler options are specified. On startup, the issue caused the "Initializing ActionScript & MXML language server..." message in the status bar to get stuck.
+
 ## v0.17.1
 
 ### Fixed Issues
