@@ -38,6 +38,20 @@ function openAndEditDocument(uri: vscode.Uri, callback: (editor: vscode.TextEdit
 			});
 }
 
+function revertAndCloseActiveEditor()
+{
+	return vscode.commands.executeCommand("workbench.action.revertAndCloseActiveEditor").then(() =>
+	{
+		return new Promise((resolve, reject) =>
+		{
+			setTimeout(() =>
+			{
+				resolve();
+			}, 100);
+		});
+	});
+}
+
 function createRange(startLine: number, startCharacter:number,
 	endLine?: number, endCharacter? : number): vscode.Range
 {
@@ -7346,26 +7360,14 @@ suite("MXML completion item provider: Application workspace", () =>
 
 suite("imports: Application workspace", () =>
 {
-	teardown(() =>
+	teardown(revertAndCloseActiveEditor);
+	test("as3mxml.addImport adds import for qualified class inside package block", () =>
 	{
-		return vscode.commands.executeCommand("workbench.action.revertAndCloseActiveEditor").then(() =>
-		{
-			return new Promise((resolve, reject) =>
-			{
-				setTimeout(() =>
-				{
-					resolve();
-				}, 100);
-			});
-		});
-	});
-	test("as3mxml.addImport adds import for qualified class with no range", () =>
-	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Imports.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "addImport", "AddImport.as"));
 		let qualifiedName = "com.example.PackageClass";
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
-			return vscode.commands.executeCommand(COMMAND_ADD_IMPORT, "com.example.PackageClass", uri.toString(), -1, -1)
+			return vscode.commands.executeCommand(COMMAND_ADD_IMPORT, qualifiedName, uri.toString(), 6, 9)
 				.then(() =>
 					{
 						return new Promise((resolve, reject) =>
@@ -7378,7 +7380,7 @@ suite("imports: Application workspace", () =>
 								let end = new vscode.Position(4, 0);
 								let range = new vscode.Range(start, end);
 								let importText = editor.document.getText(range);
-								assert.strictEqual(importText, "\timport com.example.PackageClass;\n\n", "as3mxml.addImport failed to add import for class: " + uri);
+								assert.strictEqual(importText, "\timport com.example.PackageClass;\n\n", "as3mxml.addImport failed to add import in file: " + uri);
 								resolve();
 							}, 250);
 						})
@@ -7388,13 +7390,13 @@ suite("imports: Application workspace", () =>
 					});
 		});
 	});
-	test("as3mxml.addImport adds import for qualified class in specific range", () =>
+	test("as3mxml.addImport adds import for qualified interface inside package block", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Imports.as"));
-		let qualifiedName = "com.example.PackageClass";
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "addImport", "AddImport.as"));
+		let qualifiedName = "com.example.IPackageInterface";
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
-			return vscode.commands.executeCommand(COMMAND_ADD_IMPORT, "com.example.PackageClass", uri.toString(), 0, 126)
+			return vscode.commands.executeCommand(COMMAND_ADD_IMPORT, qualifiedName, uri.toString(), 7, 26)
 				.then(() =>
 					{
 						return new Promise((resolve, reject) =>
@@ -7407,7 +7409,7 @@ suite("imports: Application workspace", () =>
 								let end = new vscode.Position(4, 0);
 								let range = new vscode.Range(start, end);
 								let importText = editor.document.getText(range);
-								assert.strictEqual(importText, "\timport com.example.PackageClass;\n\n", "as3mxml.addImport failed to add import for class: " + uri);
+								assert.strictEqual(importText, "\timport com.example.IPackageInterface;\n\n", "as3mxml.addImport failed to add import in file: " + uri);
 								resolve();
 							}, 250);
 						})
@@ -7419,11 +7421,11 @@ suite("imports: Application workspace", () =>
 	});
 	test("as3mxml.addImport adds import for qualified class after package block", () =>
 	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Imports.as"));
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "addImport", "AddImport.as"));
 		let qualifiedName = "com.example.PackageClass";
 		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
 		{
-			return vscode.commands.executeCommand(COMMAND_ADD_IMPORT, "com.example.PackageClass", uri.toString(), 127, -1)
+			return vscode.commands.executeCommand(COMMAND_ADD_IMPORT, qualifiedName, uri.toString(), 11, 25)
 				.then(() =>
 					{
 						return new Promise((resolve, reject) =>
@@ -7436,7 +7438,123 @@ suite("imports: Application workspace", () =>
 								let end = new vscode.Position(13, 0);
 								let range = new vscode.Range(start, end);
 								let importText = editor.document.getText(range);
-								assert.strictEqual(importText, "import com.example.PackageClass;\n\n", "as3mxml.addImport failed to add import for class: " + uri);
+								assert.strictEqual(importText, "import com.example.PackageClass;\n\n", "as3mxml.addImport failed to add import in file: " + uri);
+								resolve();
+							}, 250);
+						})
+					}, (err) =>
+					{
+						assert(false, "Failed to execute add import command: " + uri);
+					});
+		});
+	});
+	test("as3mxml.addImport adds import for qualified class inside MXML <fx:Script> tag", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "addImport", "MXMLAddImport.mxml"));
+		let qualifiedName = "com.example.PackageClass";
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand(COMMAND_ADD_IMPORT, qualifiedName, uri.toString(), 7, 17)
+				.then(() =>
+					{
+						return new Promise((resolve, reject) =>
+						{
+							//the text edit is not applied immediately, so give
+							//it a short delay before we check
+							setTimeout(() =>
+							{
+								let start = new vscode.Position(5, 0);
+								let end = new vscode.Position(7, 0);
+								let range = new vscode.Range(start, end);
+								let importText = editor.document.getText(range);
+								assert.strictEqual(importText, "\t\t\timport com.example.PackageClass;\n\n", "as3mxml.addImport failed to add import in file: " + uri);
+								resolve();
+							}, 250);
+						})
+					}, (err) =>
+					{
+						assert(false, "Failed to execute add import command: " + uri);
+					});
+		});
+	});
+	test("as3mxml.addImport adds import for qualified class inside MXML event to an empty <fx:Script> tag", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "addImport", "MXMLAddImportFromEventEmptyScript.mxml"));
+		let qualifiedName = "com.example.PackageClass";
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand(COMMAND_ADD_IMPORT, qualifiedName, uri.toString(), 3, 24)
+				.then(() =>
+					{
+						return new Promise((resolve, reject) =>
+						{
+							//the text edit is not applied immediately, so give
+							//it a short delay before we check
+							setTimeout(() =>
+							{
+								let start = new vscode.Position(6, 0);
+								let end = new vscode.Position(8, 0);
+								let range = new vscode.Range(start, end);
+								let importText = editor.document.getText(range);
+								assert.strictEqual(importText, "import com.example.PackageClass;\n\n", "as3mxml.addImport failed to add import in file: " + uri);
+								resolve();
+							}, 250);
+						})
+					}, (err) =>
+					{
+						assert(false, "Failed to execute add import command: " + uri);
+					});
+		});
+	});
+	test("as3mxml.addImport adds import for qualified class inside MXML event with no <fx:Script> tag", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "addImport", "MXMLAddImportFromEventNoScript.mxml"));
+		let qualifiedName = "com.example.PackageClass";
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand(COMMAND_ADD_IMPORT, qualifiedName, uri.toString(), 3, 24)
+				.then(() =>
+					{
+						return new Promise((resolve, reject) =>
+						{
+							//the text edit is not applied immediately, so give
+							//it a short delay before we check
+							setTimeout(() =>
+							{
+								let start = new vscode.Position(4, 0);
+								let end = new vscode.Position(10, 0);
+								let range = new vscode.Range(start, end);
+								let importText = editor.document.getText(range);
+								assert.strictEqual(importText, "\t<fx:Script>\n\t\t<![CDATA[\n\t\t\timport com.example.PackageClass;\n\n\t\t]]>\n\t</fx:Script>\n", "as3mxml.addImport failed to add import in file: " + uri);
+								resolve();
+							}, 250);
+						})
+					}, (err) =>
+					{
+						assert(false, "Failed to execute add import command: " + uri);
+					});
+		});
+	});
+	test("as3mxml.addImport adds import for qualified class inside MXML event with no <mx:Script> tag", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "addImport", "MXMLAddImportNoScript2006.mxml"));
+		let qualifiedName = "com.example.PackageClass";
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand(COMMAND_ADD_IMPORT, qualifiedName, uri.toString(), 3, 24)
+				.then(() =>
+					{
+						return new Promise((resolve, reject) =>
+						{
+							//the text edit is not applied immediately, so give
+							//it a short delay before we check
+							setTimeout(() =>
+							{
+								let start = new vscode.Position(4, 0);
+								let end = new vscode.Position(10, 0);
+								let range = new vscode.Range(start, end);
+								let importText = editor.document.getText(range);
+								assert.strictEqual(importText, "\t<mx:Script>\n\t\t<![CDATA[\n\t\t\timport com.example.PackageClass;\n\n\t\t]]>\n\t</mx:Script>\n", "as3mxml.addImport failed to add import in file: " + uri);
 								resolve();
 							}, 250);
 						})
@@ -7450,19 +7568,7 @@ suite("imports: Application workspace", () =>
 
 suite("mxml namespaces: Application workspace", () =>
 {
-	teardown(() =>
-	{
-		return vscode.commands.executeCommand("workbench.action.revertAndCloseActiveEditor").then(() =>
-		{
-			return new Promise((resolve, reject) =>
-			{
-				setTimeout(() =>
-				{
-					resolve();
-				}, 100);
-			});
-		});
-	});
+	teardown(revertAndCloseActiveEditor);
 	test("as3mxml.addMXMLNamespace adds new namespace", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "MXMLNamespace.mxml"));
@@ -10030,19 +10136,7 @@ suite("code action provider: Application workspace", () =>
 
 suite("organize imports: Application workspace", () =>
 {
-	teardown(() =>
-	{
-		return vscode.commands.executeCommand("workbench.action.revertAndCloseActiveEditor").then(() =>
-		{
-			return new Promise((resolve, reject) =>
-			{
-				setTimeout(() =>
-				{
-					resolve();
-				}, 100);
-			});
-		});
-	});
+	teardown(revertAndCloseActiveEditor);
 	test("as3mxml.organizeImportsInUri organizes imports in ActionScript: removes unused imports, adds missing imports, and reorganizes remaining imports in alphabetical order", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "OrganizeImports.as"));

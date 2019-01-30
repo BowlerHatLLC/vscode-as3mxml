@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<js:View xmlns:mx="http://www.adobe.com/2006/mxml"
+    xmlns:js="library://ns.apache.org/royale/basic">
+	<js:Button click="Alert.show('hi', this)"/>
+</js:View>

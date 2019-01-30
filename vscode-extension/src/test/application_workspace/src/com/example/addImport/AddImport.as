@@ -1,8 +1,8 @@
-package
+package com.example.addImport
 {
-	public class Imports
+	public class AddImport
 	{
-		public function Imports()
+		public function AddImport()
 		{
 			var a:PackageClass;
 			var b:IPackageInterface;

@@ -19,16 +19,16 @@ import org.eclipse.lsp4j.Position;
 
 public class AddImportData
 {
-	public AddImportData(Position position, String indent, String newLines, boolean needsScriptForMXML)
+	public AddImportData(Position position, String indent, String newLines, ImportRange importRange)
 	{
 		this.position = position;
 		this.indent = indent;
 		this.newLines = newLines;
-		this.needsScriptForMXML = needsScriptForMXML;
+		this.importRange = importRange;
 	}
 
 	public Position position;
 	public String indent;
 	public String newLines;
-	public boolean needsScriptForMXML;
+	public ImportRange importRange;
 }
