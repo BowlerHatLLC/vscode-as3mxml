@@ -69,7 +69,7 @@ Here's another sample *asconfig.json* file for a pure ActionScript project targe
 			"output": "bin/HelloAIR.apk",
 			"signingOptions": {
 				"storetype": "pkcs12",
-				"keystore": "ios_certificate.p12"
+				"keystore": "android_certificate.p12"
 			}
 		},
 		"ios": {
