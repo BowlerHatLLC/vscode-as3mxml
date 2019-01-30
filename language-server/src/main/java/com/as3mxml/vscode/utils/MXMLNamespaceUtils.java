@@ -87,14 +87,19 @@ public class MXMLNamespaceUtils
     private static final String DOT_STAR = ".*";
     private static final String UNDERSCORE_UNDERSCORE_AS3_PACKAGE = "__AS3__.";
 
+	public static MXMLNamespace getMXMLLanguageNamespace(IMXMLTagData tagData)
+    {
+        PrefixMap prefixMap = tagData.getCompositePrefixMap();
+        String fxURI = tagData.getMXMLDialect().getLanguageNamespace();
+        MXMLNamespace fxNS = getNamespaceFromURI(fxURI, prefixMap);
+        return fxNS;
+    }
+
 	public static MXMLNamespace getMXMLLanguageNamespace(IFileSpecification fileSpec, IWorkspace workspace)
     {
         IMXMLDataManager mxmlDataManager = workspace.getMXMLDataManager();
         MXMLData mxmlData = (MXMLData) mxmlDataManager.get(fileSpec);
-        PrefixMap prefixMap = mxmlData.getRootTagPrefixMap();
-        String fxURI = mxmlData.getRootTag().getMXMLDialect().getLanguageNamespace();
-        MXMLNamespace fxNS = getNamespaceFromURI(fxURI, prefixMap);
-        return fxNS;
+        return getMXMLLanguageNamespace(mxmlData.getRootTag());
     }
 
     public static MXMLNamespace getNamespaceFromURI(String uri, PrefixMap prefixMap)

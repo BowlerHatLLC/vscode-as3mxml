@@ -1677,7 +1677,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         List<IDefinition> types = ASTUtils.findTypesThatMatchName(typeString, project.getCompilationUnits());
         for (IDefinition definitionToImport : types)
         {
-            WorkspaceEdit edit = CodeActionsUtils.createWorkspaceEditForAddImport(definitionToImport, fileText, uri, importRange.startIndex, importRange.endIndex, isMXML);
+            WorkspaceEdit edit = CodeActionsUtils.createWorkspaceEditForAddImport(definitionToImport, fileText, uri, importRange);
             if (edit == null)
             {
                 continue;
@@ -2853,7 +2853,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
         }
         String fileText = getFileTextForPath(path);
-        AddImportData addImportData = CodeActionsUtils.findAddImportData(fileText, importRange.startIndex, importRange.endIndex, isMXML);
+        AddImportData addImportData = CodeActionsUtils.findAddImportData(fileText, importRange);
 
         //variable types
         if (offsetNode instanceof IVariableNode)
@@ -3257,7 +3257,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         ImportRange importRange = ImportRange.fromOffsetTag(offsetTag, currentOffset);
         String fileText = getFileTextForPath(path);
-        AddImportData addImportData = CodeActionsUtils.findAddImportData(fileText, importRange.startIndex, importRange.endIndex, true);
+        AddImportData addImportData = CodeActionsUtils.findAddImportData(fileText, importRange);
         XmlnsRange xmlnsRange = XmlnsRange.fromOffsetTag(offsetTag, currentOffset);
         Position xmlnsPosition = null;
         if (xmlnsRange.endIndex >= 0)
@@ -6606,6 +6606,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private MXMLData getMXMLDataForTextDocument(TextDocumentIdentifier textDocument)
     {
         String uri = textDocument.getUri();
+        return getMXMLDataForURI(uri);
+    }
+
+    private MXMLData getMXMLDataForURI(String uri)
+    {
         if (!uri.endsWith(MXML_EXTENSION))
         {
             // don't try to parse ActionScript files as MXML
@@ -7472,8 +7477,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         List<Object> args = params.getArguments();
         String qualifiedName = ((JsonPrimitive) args.get(0)).getAsString();
         String uri = ((JsonPrimitive) args.get(1)).getAsString();
-        int startIndex = ((JsonPrimitive) args.get(2)).getAsInt();
-        int endIndex = ((JsonPrimitive) args.get(3)).getAsInt();
+        int line = ((JsonPrimitive) args.get(2)).getAsInt();
+        int character = ((JsonPrimitive) args.get(3)).getAsInt();
         if(qualifiedName == null)
         {
             return;
@@ -7488,9 +7493,21 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return;
         }
-        boolean isMXML = pathForImport.toString().endsWith(MXML_EXTENSION);
+        int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(new StringReader(text), new Position(line, character));
+        ImportRange importRange = null;
+        if(uri.endsWith(MXML_EXTENSION))
+        {
+            MXMLData mxmlData = getMXMLDataForURI(uri);
+            IMXMLTagData offsetTag = getOffsetMXMLTag(mxmlData, currentOffset);
+            importRange = ImportRange.fromOffsetTag(offsetTag, currentOffset);
+        }
+        else
+        {
+            IASNode offsetNode = getOffsetNode(pathForImport, currentOffset);
+            importRange = ImportRange.fromOffsetNode(offsetNode);
+        }
         WorkspaceEdit workspaceEdit = CodeActionsUtils.createWorkspaceEditForAddImport(
-            qualifiedName, text, uri, startIndex, endIndex, isMXML);
+            qualifiedName, text, uri, importRange);
         if(workspaceEdit == null)
         {
             //no edit required

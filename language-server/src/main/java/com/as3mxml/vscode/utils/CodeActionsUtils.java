@@ -139,9 +139,9 @@ public class CodeActionsUtils
         codeActions.add(Either.forRight(setterCodeAction));
     }
 
-    public static WorkspaceEdit createWorkspaceEditForAddImport(IDefinition definition, String fileText, String uri, int startIndex, int endIndex, boolean mxml)
+    public static WorkspaceEdit createWorkspaceEditForAddImport(IDefinition definition, String fileText, String uri, ImportRange importRange)
     {
-        TextEdit textEdit = createTextEditForAddImport(definition.getQualifiedName(), fileText, startIndex, endIndex, mxml);
+        TextEdit textEdit = createTextEditForAddImport(definition.getQualifiedName(), fileText, importRange);
         if (textEdit == null)
         {
             return null;
@@ -156,9 +156,9 @@ public class CodeActionsUtils
         return workspaceEdit;
     }
 
-    public static WorkspaceEdit createWorkspaceEditForAddImport(String qualfiedName, String fileText, String uri, int startIndex, int endIndex, boolean mxml)
+    public static WorkspaceEdit createWorkspaceEditForAddImport(String qualfiedName, String fileText, String uri, ImportRange importRange)
     {
-        TextEdit textEdit = createTextEditForAddImport(qualfiedName, fileText, startIndex, endIndex, mxml);
+        TextEdit textEdit = createTextEditForAddImport(qualfiedName, fileText, importRange);
         if (textEdit == null)
         {
             return null;
@@ -173,8 +173,10 @@ public class CodeActionsUtils
         return workspaceEdit;
     }
 
-    public static AddImportData findAddImportData(String fileText, int startIndex, int endIndex, boolean mxml)
+    public static AddImportData findAddImportData(String fileText, ImportRange importRange)
     {
+        int startIndex = importRange.startIndex;
+        int endIndex = importRange.endIndex;
         if(startIndex == -1)
         {
             startIndex = 0;
@@ -188,7 +190,6 @@ public class CodeActionsUtils
         }
         String indent = "";
         String lineBreaks = "\n";
-        boolean needsScriptForMXML = false;
         int importIndex = -1;
         Matcher importMatcher = importPattern.matcher(fileText);
         importMatcher.region(startIndex, endIndex);
@@ -206,50 +207,47 @@ public class CodeActionsUtils
         }
         else //no existing imports
         {
-            if(mxml && startIndex <= 0)
+            if(importRange.needsMXMLScript)
             {
-                Matcher scriptMatcher = scriptPattern.matcher(fileText);
-                scriptMatcher.region(startIndex, endIndex);
-                if (!scriptMatcher.find())
-                {
-                    needsScriptForMXML = true;
-                }
+                position = LanguageServerCompilerUtils.getPositionFromOffset(new StringReader(fileText), importRange.endIndex);
             }
-
-            //start by looking for the package block
-            Matcher packageMatcher = packagePattern.matcher(fileText);
-            packageMatcher.region(startIndex, endIndex);
-            if (packageMatcher.find()) //found the package
+            else
             {
-                position = LanguageServerCompilerUtils.getPositionFromOffset(
-                    new StringReader(fileText), packageMatcher.end());
-                if(position.getCharacter() > 0)
+                //start by looking for the package block
+                Matcher packageMatcher = packagePattern.matcher(fileText);
+                packageMatcher.region(startIndex, endIndex);
+                if (packageMatcher.find()) //found the package
                 {
-                    //go to the beginning of the line, if we're not there
-                    position.setCharacter(0);
+                    position = LanguageServerCompilerUtils.getPositionFromOffset(
+                        new StringReader(fileText), packageMatcher.end());
+                    if(position.getCharacter() > 0)
+                    {
+                        //go to the beginning of the line, if we're not there
+                        position.setCharacter(0);
+                    }
+                    indent = packageMatcher.group(1);
                 }
-                indent = packageMatcher.group(1);
-            }
-            else //couldn't find the start of a package or existing imports
-            {
-                position = LanguageServerCompilerUtils.getPositionFromOffset(new StringReader(fileText), startIndex);
-                if (position.getCharacter() > 0)
+                else //couldn't find the start of a package or existing imports
                 {
-                    //go to the next line, if we're not at the start
-                    position.setLine(position.getLine() + 1);
-                    position.setCharacter(0);
-                }
-                //try to use the same indent as whatever follows
-                Matcher indentMatcher = indentPattern.matcher(fileText);
-                indentMatcher.region(startIndex, endIndex);
-                if (indentMatcher.find())
-                {
-                    indent = indentMatcher.group(1);
+                    position = LanguageServerCompilerUtils.getPositionFromOffset(new StringReader(fileText), startIndex);
+                    if (position.getCharacter() > 0)
+                    {
+                        //go to the next line, if we're not at the start
+                        position.setLine(position.getLine() + 1);
+                        position.setCharacter(0);
+                    }
+                    //try to use the same indent as whatever follows
+                    Matcher indentMatcher = indentPattern.matcher(fileText);
+                    indentMatcher.region(startIndex, endIndex);
+                    if (indentMatcher.find())
+                    {
+                        indent = indentMatcher.group(1);
+                    }
                 }
             }
             lineBreaks += "\n"; //add an extra line break
         }
-        return new AddImportData(position, indent, lineBreaks, needsScriptForMXML);
+        return new AddImportData(position, indent, lineBreaks, importRange);
     }
 
     public static TextEdit createTextEditForAddImport(IDefinition definition, AddImportData addImportData)
@@ -265,9 +263,17 @@ public class CodeActionsUtils
 
         StringBuilder builder = new StringBuilder();
 
-        if(addImportData.needsScriptForMXML)
+        if(addImportData.importRange.needsMXMLScript)
         {
-            builder.append("<fx:Script>\n\t<![CDATA[\n\t\t");
+            builder.append("\t");
+            builder.append("<");
+            builder.append(addImportData.importRange.mxmlLanguageNS.prefix);
+            builder.append(":");
+            builder.append("Script");
+            builder.append(">");
+            builder.append("\n\t\t");
+            builder.append("<![CDATA[");
+            builder.append("\n\t\t\t");
         }
         else
         {
@@ -279,9 +285,17 @@ public class CodeActionsUtils
         builder.append(";");
         builder.append(newLines);
 
-        if(addImportData.needsScriptForMXML)
+        if(addImportData.importRange.needsMXMLScript)
         {
-            builder.append("\t]]>\n</fx:Script>");
+            builder.append("\t\t");
+            builder.append("]]>");
+            builder.append("\n\t");
+            builder.append("</");
+            builder.append(addImportData.importRange.mxmlLanguageNS.prefix);
+            builder.append(":");
+            builder.append("Script");
+            builder.append(">");
+            builder.append("\n");
         }
         
         TextEdit textEdit = new TextEdit();
@@ -290,14 +304,14 @@ public class CodeActionsUtils
         return textEdit;
     }
 
-    public static TextEdit createTextEditForAddImport(IDefinition definition, String fileText, int startIndex, int endIndex, boolean mxml)
+    public static TextEdit createTextEditForAddImport(IDefinition definition, String fileText, ImportRange importRange)
     {
-        return createTextEditForAddImport(definition.getQualifiedName(), fileText, startIndex, endIndex, mxml);
+        return createTextEditForAddImport(definition.getQualifiedName(), fileText, importRange);
     }
 
-    public static TextEdit createTextEditForAddImport(String qualifiedName, String fileText, int startIndex, int endIndex, boolean mxml)
+    public static TextEdit createTextEditForAddImport(String qualifiedName, String fileText, ImportRange importRange)
     {
-        AddImportData addImportData = findAddImportData(fileText, startIndex, endIndex, mxml);
+        AddImportData addImportData = findAddImportData(fileText, importRange);
         return createTextEditForAddImport(qualifiedName, addImportData);
     }
 
@@ -615,7 +629,7 @@ public class CodeActionsUtils
                 }
                 if (ASTUtils.needsImport(functionCallNode, typeName))
                 {
-                    TextEdit importEdit = CodeActionsUtils.createTextEditForAddImport(typeName, text, importRange.startIndex, importRange.endIndex, false);
+                    TextEdit importEdit = CodeActionsUtils.createTextEditForAddImport(typeName, text, importRange);
                     if (importEdit != null)
                     {
                         edits.add(importEdit);

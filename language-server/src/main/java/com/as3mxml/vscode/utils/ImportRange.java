@@ -17,6 +17,7 @@ package com.as3mxml.vscode.utils;
 
 import java.nio.file.Paths;
 
+import org.apache.royale.compiler.common.ISourceLocation;
 import org.apache.royale.compiler.mxml.IMXMLTagData;
 import org.apache.royale.compiler.mxml.IMXMLTextData;
 import org.apache.royale.compiler.mxml.IMXMLUnitData;
@@ -28,7 +29,9 @@ public class ImportRange
 {
 	public String uri = null;
 	public int startIndex = -1;
-	public int endIndex = -1;
+    public int endIndex = -1;
+    public boolean needsMXMLScript = false;
+    public MXMLNamespace mxmlLanguageNS = null;
 
     public static ImportRange fromOffsetTag(IMXMLTagData tagData, int currentOffset)
     {
@@ -58,6 +61,22 @@ public class ImportRange
                 childData = childData.getNextSiblingUnit();
             }
         }
+        else
+        {
+            IMXMLTagData rootTag = tagData.getParent().getRootTag();
+            if(rootTag.hasExplicitCloseTag())
+            {
+                ISourceLocation rootChildRange = rootTag.getLocationOfChildUnits();
+                range.startIndex = rootChildRange.getAbsoluteEnd();
+            }
+            else
+            {
+                range.startIndex = rootTag.getAbsoluteEnd();
+            }
+            range.endIndex = range.startIndex;
+            range.needsMXMLScript = true;
+        }
+        range.mxmlLanguageNS = MXMLNamespaceUtils.getMXMLLanguageNamespace(tagData);
         return range;
     }
 
