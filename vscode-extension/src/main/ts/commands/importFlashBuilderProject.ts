@@ -251,6 +251,23 @@ function createProjectFiles(folderPath: string, actionScriptProperties: any, sdk
 			result.files = [];
 		}
 		migrateActionScriptProperties(application, actionScriptProperties, isFlexApp, isFlexLibrary, sdks, result);
+		if(isFlexLibrary)
+		{
+			let flexLibPropertiesPath = path.resolve(folderPath, FILE_FLEX_LIB_PROPERTIES);
+			let flexLibPropertiesText = fs.readFileSync(flexLibPropertiesPath, "utf8");
+			let flexLibProperties = null;
+			try
+			{
+				let parsedXML = parseXML(flexLibPropertiesText)
+				flexLibProperties = parsedXML.children[0];
+			}
+			catch(error)
+			{
+				vscode.window.showErrorMessage(ERROR_CANNOT_PARSE_PROJECT);
+				return;
+			}
+			migrateFlexLibProperties(flexLibProperties, folderPath, result);
+		}
 		
 		let resultText = JSON.stringify(result, undefined, "\t");
 
@@ -269,6 +286,63 @@ function createProjectFiles(folderPath: string, actionScriptProperties: any, sdk
 			vscode.window.showTextDocument(document)
 		});
 	});
+}
+
+function migrateFlexLibProperties(flexLibProperties: any, folderPath: string, result: any)
+{
+	let rootChildren = flexLibProperties.children as any[];
+	if(!rootChildren)
+	{
+		return null;
+	}
+	let rootAttributes = flexLibProperties.attributes;
+	if(!rootAttributes)
+	{
+		return null;
+	}
+
+	let includeAllClasses = false;
+	if("includeAllClasses" in rootAttributes && rootAttributes.includeAllClasses === "true")
+	{
+		includeAllClasses = true;
+		let includeSources = result.compilerOptions["include-sources"] || [];
+		let sourcePaths = result.compilerOptions["source-paths"] || [];
+		includeSources = includeSources.concat(sourcePaths);
+		if(includeSources.length > 0)
+		{
+			result.compilerOptions["include-sources"] = includeSources;
+		}
+	}
+
+	if(!includeAllClasses)
+	{
+		let includeClassesElement = rootChildren.find((child) =>
+		{
+			return child.type === "element" && child.name === "includeClasses";
+		});
+		if(includeClassesElement)
+		{
+			migrateIncludeClassesElement(includeClassesElement, result);
+		}
+	}
+
+	let includeResourcesElement = rootChildren.find((child) =>
+	{
+		return child.type === "element" && child.name === "includeResources";
+	});
+	if(includeResourcesElement)
+	{
+		migrateIncludeResourcesElement(includeResourcesElement, folderPath, result);
+	}
+
+	let namespaceManifestsElement = rootChildren.find((child) =>
+	{
+		return child.type === "element" && child.name === "namespaceManifests";
+	});
+	if(namespaceManifestsElement)
+	{
+		migrateNamespaceManifestsElement(namespaceManifestsElement, folderPath, result);
+	}
 }
 
 function migrateActionScriptProperties(application: any, actionScriptProperties: any,
@@ -490,6 +564,35 @@ function resolveSourceOrLibraryPath(sourceOrLibraryPath: string)
 	return sourceOrLibraryPath;
 }
 
+function findOnSourcePath(thePath: string, folderPath: string, result: any)
+{
+	if(path.isAbsolute(thePath))
+	{
+		//only search for relative paths on the source path
+		return thePath;
+	}
+	let sourcePath = result.compilerOptions["source-path"];
+	if(sourcePath)
+	{
+		sourcePath.some((sourcePath) =>
+		{
+			let newPath = path.posix.join(sourcePath, thePath);
+			let absolutePath = newPath;
+			if(!path.isAbsolute(absolutePath))
+			{
+				absolutePath = path.resolve(folderPath, absolutePath);
+			}
+			if(fs.existsSync(absolutePath))
+			{
+				thePath = newPath;
+				return true;
+			}
+			return false;
+		});
+	}
+	return thePath;
+}
+
 function migrateCompilerLibraryPathElement(libraryPathElement: any, result: any)
 {
 	let libraryPaths = [];
@@ -698,5 +801,83 @@ function migrateModulesElement(modulesElement: any, appPath: string, result: any
 	{
 		alreadyWarned = true;
 		vscode.window.showErrorMessage(ERROR_MODULES);
+	}
+}
+
+function migrateIncludeClassesElement(includeClassesElement: any, result: any)
+{
+	let children = includeClassesElement.children as any[];
+	if(!children)
+	{
+		return null;
+	}
+	let newClasses = children
+		.filter((child) =>
+		{
+			return child.type === "element" && child.name === "classEntry";
+		})
+		.map((child) =>
+		{
+			return child.attributes.path;
+		});
+	if(newClasses.length > 0)
+	{
+		result.compilerOptions["include-classes"] = newClasses;
+	}
+}
+
+function migrateIncludeResourcesElement(includeResourcesElement: any, folderPath: string, result: any)
+{
+	let children = includeResourcesElement.children as any[];
+	if(!children)
+	{
+		return null;
+	}
+	let newFiles = children
+		.filter((child) =>
+		{
+			return child.type === "element" && child.name === "resourceEntry";
+		})
+		.map((child) =>
+		{
+			let file = child.attributes.sourcePath;
+			file = findOnSourcePath(file, folderPath, result);
+			return { file, path: child.attributes.destPath };
+		});
+	if(newFiles.length > 0)
+	{
+		result.compilerOptions["include-file"] = newFiles;
+	}
+}
+
+function migrateNamespaceManifestsElement(namespaceManifestsElement: any, folderPath: string, result: any)
+{
+	let children = namespaceManifestsElement.children as any[];
+	if(!children)
+	{
+		return null;
+	}
+	let newManifests = children
+		.filter((child) =>
+		{
+			return child.type === "element" && child.name === "namespaceManifestEntry";
+		})
+		.map((child) =>
+		{
+			let manifest = child.attributes.manifest;
+			manifest = findOnSourcePath(manifest, folderPath, result);
+			return { uri: child.attributes.namespace, manifest };
+		});
+	if(newManifests.length > 0)
+	{
+		result.compilerOptions["namespace"] = newManifests;
+	}
+	let uris = newManifests.map((child) =>
+	{
+		return child.uri;
+	});
+	if(uris.length > 0)
+	{
+		result.compilerOptions["include-namespaces"] = uris;
 	}
 }
