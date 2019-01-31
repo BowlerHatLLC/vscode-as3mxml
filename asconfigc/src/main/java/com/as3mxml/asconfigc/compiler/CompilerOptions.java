@@ -74,6 +74,7 @@ public class CompilerOptions
 
 	//library options
 	public static final String INCLUDE_CLASSES = "include-classes";
+	public static final String INCLUDE_FILE = "include-file";
 	public static final String INCLUDE_NAMESPACES = "include-namespaces";
 	public static final String INCLUDE_SOURCES = "include-sources";
 
@@ -84,4 +85,6 @@ public class CompilerOptions
 	public static final String DEFINE__VALUE = "value";
 	public static final String NAMESPACE__URI = "uri";
 	public static final String NAMESPACE__MANIFEST = "manifest";
+	public static final String INCLUDE_FILE__FILE = "file";
+	public static final String INCLUDE_FILE__PATH = "path";
 }

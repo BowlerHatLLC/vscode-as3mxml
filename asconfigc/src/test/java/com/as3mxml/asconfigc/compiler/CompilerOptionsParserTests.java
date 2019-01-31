@@ -452,6 +452,34 @@ class CompilerOptionsParserTests
 	}
 	
 	@Test
+	void testIncludeFile()
+	{	
+		String src = "file.txt";
+		String dest = "assets/file.txt";
+
+		ObjectNode options = JsonNodeFactory.instance.objectNode();
+		ArrayNode includeFile = JsonNodeFactory.instance.arrayNode();
+
+		ObjectNode value = JsonNodeFactory.instance.objectNode();
+		value.set(CompilerOptions.INCLUDE_FILE__FILE, JsonNodeFactory.instance.textNode(src));
+		value.set(CompilerOptions.INCLUDE_FILE__PATH, JsonNodeFactory.instance.textNode(dest));
+		includeFile.add(value);
+
+		options.set(CompilerOptions.INCLUDE_FILE, includeFile);
+
+		ArrayList<String> result = new ArrayList<>();
+		try
+		{
+			parser.parse(options, null, result);
+		}
+		catch(UnknownCompilerOptionException e) {}
+		Assertions.assertEquals(1, result.size(),
+			"CompilerOptionsParser.parse() created incorrect number of options.");
+		Assertions.assertEquals("--" + CompilerOptions.INCLUDE_FILE + "+=" + dest + "," + src, result.get(0),
+			"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
+	}
+	
+	@Test
 	void testIncludeNamespaces()
 	{	
 		String value1 = "http://ns.example.com";

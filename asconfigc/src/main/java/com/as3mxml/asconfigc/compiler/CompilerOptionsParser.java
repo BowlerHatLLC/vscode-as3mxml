@@ -136,6 +136,11 @@ public class CompilerOptionsParser
 					OptionsFormatter.setValuesWithCommas(key, values, result);
 					break;
 				}
+				case CompilerOptions.INCLUDE_FILE:
+				{
+					parseIncludeFile(options.get(key), result);
+					break;
+				}
 				case CompilerOptions.INCLUDE_NAMESPACES:
 				{
 					List<String> values = JsonUtils.jsonNodeToListOfStrings(options.get(key));
@@ -417,6 +422,28 @@ public class CompilerOptionsParser
 			}
 			result.add("--" + optionName + "+=" +
 				defineName + "," + defineValueAsString);
+		}
+	}
+
+	private void parseIncludeFile(JsonNode files, List<String> result)
+	{
+		for(int i = 0, size = files.size(); i < size; i++)
+		{
+			JsonNode file = files.get(i);
+			String src = null;
+			String dest = null;
+			if(file.isTextual())
+			{
+				String filePath = file.asText();
+				src = filePath;
+				dest = filePath;
+			}
+			else
+			{
+				src = file.get(CompilerOptions.INCLUDE_FILE__FILE).asText();
+				dest = file.get(CompilerOptions.INCLUDE_FILE__PATH).asText();
+			}
+			result.add("--" + CompilerOptions.INCLUDE_FILE + "+=" + dest + "," + src);
 		}
 	}
 }
