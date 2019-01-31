@@ -306,7 +306,7 @@ function migrateFlexLibProperties(flexLibProperties: any, folderPath: string, re
 	{
 		includeAllClasses = true;
 		let includeSources = result.compilerOptions["include-sources"] || [];
-		let sourcePaths = result.compilerOptions["source-paths"] || [];
+		let sourcePaths = result.compilerOptions["source-path"] || [];
 		includeSources = includeSources.concat(sourcePaths);
 		if(includeSources.length > 0)
 		{
