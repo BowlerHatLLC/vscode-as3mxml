@@ -22,11 +22,14 @@ import validateFrameworkSDK from "../utils/validateFrameworkSDK";
 const FILE_ASCONFIG_JSON = "asconfig.json";
 const FILE_ACTIONSCRIPT_PROPERTIES = ".actionScriptProperties";
 const FILE_FLEX_PROPERTIES = ".flexProperties";
+const FILE_FLEX_LIB_PROPERTIES = ".flexLibProperties";
 const PATH_FLASH_BUILDER_WORKSPACE_SDK_PREFS = "../.metadata/.plugins/org.eclipse.core.runtime/.settings/com.adobe.flexbuilder.project.prefs";
+const FILE_EXTENSION_SWF = ".swf";
+const FILE_EXTENSION_SWC = ".swc";
 
 const TOKEN_SDKS_PREF = "com.adobe.flexbuilder.project.flex_sdks=";
 
-const ERROR_CANNOT_FIND_PROJECT = "No Adobe Flash Builder project found in workspace.";
+const ERROR_CANNOT_FIND_PROJECT = "No Adobe Flash Builder projects to import found in workspace.";
 const ERROR_CANNOT_PARSE_PROJECT = "Failed to parse Adobe Flash Builder project.";
 const ERROR_ASCONFIG_JSON_EXISTS = "Cannot migrate Adobe Flash Builder project because asconfig.json already exists.";
 const ERROR_MODULES = "Importing Adobe Flash Builder projects with modules is not supported.";
@@ -159,8 +162,10 @@ export function importFlashBuilderProject(workspaceFolder: vscode.WorkspaceFolde
 		return;
 	}
 
-	let flexProperties = path.resolve(folderPath, FILE_FLEX_PROPERTIES);
-	let isFlexApp = fs.existsSync(flexProperties);
+	let flexPropertiesPath = path.resolve(folderPath, FILE_FLEX_PROPERTIES);
+	let isFlexApp = fs.existsSync(flexPropertiesPath);
+	let flexLibPropertiesPath = path.resolve(folderPath, FILE_FLEX_LIB_PROPERTIES);
+	let isFlexLibrary = fs.existsSync(flexLibPropertiesPath);
 
 	let actionScriptPropertiesText = fs.readFileSync(actionScriptPropertiesPath, "utf8");
 	let actionScriptProperties = null;
@@ -177,7 +182,7 @@ export function importFlashBuilderProject(workspaceFolder: vscode.WorkspaceFolde
 
 	let sdks = findSDKs(workspaceFolder);
 
-	createProjectFiles(folderPath, actionScriptProperties, sdks, isFlexApp);
+	createProjectFiles(folderPath, actionScriptProperties, sdks, isFlexApp, isFlexLibrary);
 }
 
 function findApplications(actionScriptProperties: any)
@@ -226,7 +231,7 @@ function getApplicationNameFromPath(appPath: string)
 	return appPath.substr(0, appPath.length - path.extname(appPath).length);
 }
 
-function createProjectFiles(folderPath: string, actionScriptProperties: any, sdks: FlashBuilderSDK[], isFlexApp: boolean)
+function createProjectFiles(folderPath: string, actionScriptProperties: any, sdks: FlashBuilderSDK[], isFlexApp: boolean, isFlexLibrary: boolean)
 {
 	let mainAppPath = findMainApplicationPath(actionScriptProperties);
 
@@ -236,9 +241,16 @@ function createProjectFiles(folderPath: string, actionScriptProperties: any, sdk
 		let result: any =
 		{
 			compilerOptions: {},
-			files: [],
 		};
-		migrateActionScriptProperties(application, actionScriptProperties, isFlexApp, sdks, result);
+		if(isFlexLibrary)
+		{
+			result.type = "lib";
+		}
+		else
+		{
+			result.files = [];
+		}
+		migrateActionScriptProperties(application, actionScriptProperties, isFlexApp, isFlexLibrary, sdks, result);
 		
 		let resultText = JSON.stringify(result, undefined, "\t");
 
@@ -259,7 +271,8 @@ function createProjectFiles(folderPath: string, actionScriptProperties: any, sdk
 	});
 }
 
-function migrateActionScriptProperties(application: any, actionScriptProperties: any, isFlexApp: boolean, sdks: FlashBuilderSDK[], result: any)
+function migrateActionScriptProperties(application: any, actionScriptProperties: any,
+	isFlexApp: boolean, isFlexLibrary: boolean, sdks: FlashBuilderSDK[], result: any)
 {
 	let rootChildren = actionScriptProperties.children as any[];
 	if(!rootChildren)
@@ -293,34 +306,40 @@ function migrateActionScriptProperties(application: any, actionScriptProperties:
 	});
 	if(compilerElement)
 	{
-		migrateCompilerElement(compilerElement, applicationPath, sdks, result);
+		migrateCompilerElement(compilerElement, applicationPath, isFlexLibrary, sdks, result);
 	}
 
-	let buildTargetsElement = rootChildren.find((child) =>
+	if(!isFlexLibrary)
 	{
-		return child.type === "element" && child.name === "buildTargets";
-	});
-	if(buildTargetsElement)
-	{
-		migrateBuildTargetsElement(buildTargetsElement, applicationPath, result);
-	}
-
-	let modulesElement = rootChildren.find((child) =>
-	{
-		return child.type === "element" && child.name === "modules";
-	});
-	if(modulesElement)
-	{
-		let moduleAppPath = applicationPath;
-		if(compilerElement)
+		let buildTargetsElement = rootChildren.find((child) =>
 		{
-			moduleAppPath = path.posix.join(compilerElement.attributes.sourceFolderPath, moduleAppPath);
+			return child.type === "element" && child.name === "buildTargets";
+		});
+		if(buildTargetsElement)
+		{
+			migrateBuildTargetsElement(buildTargetsElement, applicationPath, result);
 		}
-		migrateModulesElement(modulesElement, moduleAppPath, result);
+	}
+
+	if(!isFlexLibrary)
+	{
+		let modulesElement = rootChildren.find((child) =>
+		{
+			return child.type === "element" && child.name === "modules";
+		});
+		if(modulesElement)
+		{
+			let moduleAppPath = applicationPath;
+			if(compilerElement)
+			{
+				moduleAppPath = path.posix.join(compilerElement.attributes.sourceFolderPath, moduleAppPath);
+			}
+			migrateModulesElement(modulesElement, moduleAppPath, result);
+		}
 	}
 }
 
-function migrateCompilerElement(compilerElement: any, appPath: string, sdks: FlashBuilderSDK[], result: any)
+function migrateCompilerElement(compilerElement: any, appPath: string, isFlexLibrary: boolean, sdks: FlashBuilderSDK[], result: any)
 {
 	let attributes = compilerElement.attributes;
 	vscode.workspace.getConfiguration()
@@ -366,21 +385,22 @@ function migrateCompilerElement(compilerElement: any, appPath: string, sdks: Fla
 			}
 		}
 	}
-	if("useApolloConfig" in attributes && attributes.useApolloConfig === "true")
+	if(!isFlexLibrary && "useApolloConfig" in attributes && attributes.useApolloConfig === "true")
 	{
 		result.application = path.posix.join(attributes.sourceFolderPath, getApplicationNameFromPath(appPath) + "-app.xml");
 	}
-	if("copyDependentFiles" in attributes && attributes.copyDependentFiles === "true")
+	if(!isFlexLibrary && "copyDependentFiles" in attributes && attributes.copyDependentFiles === "true")
 	{
 		result.copySourcePathAssets = true;
 	}
-	if("htmlGenerate" in attributes && attributes.htmlGenerate === "true")
+	if(!isFlexLibrary && "htmlGenerate" in attributes && attributes.htmlGenerate === "true")
 	{
 		result.htmlTemplate = "html-template";
 	}
 	if("outputFolderPath" in attributes)
 	{
-		result.compilerOptions.output = path.posix.join(attributes.outputFolderPath, getApplicationNameFromPath(appPath) + ".swf");
+		let fileExtension = isFlexLibrary ? FILE_EXTENSION_SWC : FILE_EXTENSION_SWF;
+		result.compilerOptions.output = path.posix.join(attributes.outputFolderPath, getApplicationNameFromPath(appPath) + fileExtension);
 	}
 	if("additionalCompilerArguments" in attributes)
 	{
@@ -398,8 +418,11 @@ function migrateCompilerElement(compilerElement: any, appPath: string, sdks: Fla
 	if("sourceFolderPath" in attributes)
 	{
 		sourceFolderPath = attributes.sourceFolderPath;
-		let mainFilePath = path.posix.join(attributes.sourceFolderPath, appPath);
-		result.files.push(mainFilePath);
+		if(!isFlexLibrary)
+		{
+			let mainFilePath = path.posix.join(attributes.sourceFolderPath, appPath);
+			result.files.push(mainFilePath);
+		}
 	}
 	let children = compilerElement.children as any[];
 	let compilerSourcePathElement = children.find((child) =>
@@ -437,7 +460,7 @@ function migrateCompilerSourcePathElement(compilerSourcePathElement: any, source
 		let attributes = child.attributes;
 		if("path" in attributes && "kind" in attributes)
 		{
-			let sourcePath = replaceSourceOrLibraryPathTokens(attributes.path as string);
+			let sourcePath = resolveSourceOrLibraryPath(attributes.path as string);
 			let kind = attributes.kind as string;
 			if(kind !== "1")
 			{
@@ -453,12 +476,17 @@ function migrateCompilerSourcePathElement(compilerSourcePathElement: any, source
 	}
 }
 
-function replaceSourceOrLibraryPathTokens(sourceOrLibraryPath: string)
+function resolveSourceOrLibraryPath(sourceOrLibraryPath: string)
 {
 	//relative to the Flash Builder workspace
 	sourceOrLibraryPath = sourceOrLibraryPath.replace("${DOCUMENTS}", "..");
 	//relative to the SDK frameworks folder
 	sourceOrLibraryPath = sourceOrLibraryPath.replace("${PROJECT_FRAMEWORKS}", "${flexlib}");
+	//relative to parent folder
+	if(sourceOrLibraryPath.startsWith("/"))
+	{
+		sourceOrLibraryPath = ".." + sourceOrLibraryPath;
+	}
 	return sourceOrLibraryPath;
 }
 
@@ -486,7 +514,7 @@ function migrateCompilerLibraryPathElement(libraryPathElement: any, result: any)
 			"kind" in libraryPathEntryAttributes &&
 			"linkType" in libraryPathEntryAttributes)
 		{
-			let libraryPath = replaceSourceOrLibraryPathTokens(libraryPathEntryAttributes.path as string);
+			let libraryPath = resolveSourceOrLibraryPath(libraryPathEntryAttributes.path as string);
 			
 			let kind = libraryPathEntryAttributes.kind as string;
 			if(kind !== "1" && //folder
