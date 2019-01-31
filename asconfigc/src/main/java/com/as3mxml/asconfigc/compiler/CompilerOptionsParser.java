@@ -220,6 +220,12 @@ public class CompilerOptionsParser
 					OptionsFormatter.appendPaths(key, values, result);
 					break;
 				}
+				case CompilerOptions.LOAD_EXTERNS:
+				{
+					List<String> values = JsonUtils.jsonNodeToListOfStrings(options.get(key));
+					OptionsFormatter.appendPaths(key, values, result);
+					break;
+				}
 				case CompilerOptions.LOCALE:
 				{
 					List<String> values = JsonUtils.jsonNodeToListOfStrings(options.get(key));

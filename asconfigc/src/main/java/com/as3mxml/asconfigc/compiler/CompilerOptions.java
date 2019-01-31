@@ -33,6 +33,7 @@ public class CompilerOptions
 	public static final String LIBRARY_PATH = "library-path";
 	public static final String LINK_REPORT = "link-report";
 	public static final String LOAD_CONFIG = "load-config";
+	public static final String LOAD_EXTERNS = "load-externs";
 	public static final String LOCALE = "locale";
 	public static final String NAMESPACE = "namespace";
 	public static final String OPTIMIZE = "optimize";

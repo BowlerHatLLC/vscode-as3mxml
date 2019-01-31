@@ -660,6 +660,15 @@
 						"type": "string"
 					}
 				},
+				"load-externs":
+				{
+					"type": "array",
+					"description": "Specifies the locations of XML files that define extra symbols to omit from the output.",
+					"items":
+					{
+						"type": "string"
+					}
+				},
 				"js-load-config":
 				{
 					"type": "array",

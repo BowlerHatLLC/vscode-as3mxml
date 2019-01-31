@@ -814,6 +814,34 @@ class CompilerOptionsParserTests
 	}
 	
 	@Test
+	void testLoadExterns()
+	{
+		String value1 = "path/to/externs.xml";
+		String value2 = "path/with spaces/to/externs.xml";
+
+		ObjectNode options = JsonNodeFactory.instance.objectNode();
+		ArrayNode loadExterns = JsonNodeFactory.instance.arrayNode();
+
+		loadExterns.add(JsonNodeFactory.instance.textNode(value1));
+		loadExterns.add(JsonNodeFactory.instance.textNode(value2));
+
+		options.set(CompilerOptions.LOAD_EXTERNS, loadExterns);
+
+		ArrayList<String> result = new ArrayList<>();
+		try
+		{
+			parser.parse(options, null, result);
+		}
+		catch(UnknownCompilerOptionException e) {}
+		Assertions.assertEquals(2, result.size(),
+			"CompilerOptionsParser.parse() created incorrect number of options.");
+		Assertions.assertEquals("--" + CompilerOptions.LOAD_EXTERNS + "+=" + value1, result.get(0),
+			"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
+		Assertions.assertEquals("--" + CompilerOptions.LOAD_EXTERNS + "+=" + value2, result.get(1),
+			"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
+	}
+	
+	@Test
 	void testJSLoadConfig()
 	{
 		String value1 = "path/to/config.xml";
