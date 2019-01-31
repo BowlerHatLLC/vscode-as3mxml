@@ -489,6 +489,11 @@
 						]
 					}
 				},
+				"directory":
+				{
+					"type": "boolean",
+					"description": "(Library projects only) Outputs the library as a directory instead of a SWC file."
+				},
 				"dump-config":
 				{
 					"type": "string",

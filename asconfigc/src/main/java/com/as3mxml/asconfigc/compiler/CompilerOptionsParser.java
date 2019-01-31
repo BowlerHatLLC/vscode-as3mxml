@@ -109,6 +109,11 @@ public class CompilerOptionsParser
 					setDefine(key, options.get(key), result);
 					break;
 				}
+				case CompilerOptions.DIRECTORY:
+				{
+					OptionsFormatter.setBoolean(key, options.get(key).asBoolean(), result);
+					break;
+				}
 				case CompilerOptions.DUMP_CONFIG:
 				{
 					OptionsFormatter.setPathValue(key, options.get(key).asText(), result);

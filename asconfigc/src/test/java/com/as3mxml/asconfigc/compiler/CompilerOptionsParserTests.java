@@ -338,6 +338,24 @@ class CompilerOptionsParserTests
 	}
 	
 	@Test
+	void testDirectory()
+	{
+		boolean value = true;
+		ObjectNode options = JsonNodeFactory.instance.objectNode();
+		options.set(CompilerOptions.DIRECTORY, JsonNodeFactory.instance.booleanNode(value));
+		ArrayList<String> result = new ArrayList<>();
+		try
+		{
+			parser.parse(options, null, result);
+		}
+		catch(UnknownCompilerOptionException e) {}
+		Assertions.assertEquals(1, result.size(),
+			"CompilerOptionsParser.parse() created incorrect number of options.");
+		Assertions.assertEquals("--" + CompilerOptions.DIRECTORY + "=" + Boolean.toString(value), result.get(0),
+			"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
+	}
+	
+	@Test
 	void testDumpConfig()
 	{
 		String value = "path/to/file.xml";

@@ -26,6 +26,7 @@ public class CompilerOptions
 	public static final String DEFAULT_FRAME_RATE = "default-frame-rate";
 	public static final String DEFAULT_SIZE = "default-size";
 	public static final String DEFINE = "define";
+	public static final String DIRECTORY = "directory";
 	public static final String DUMP_CONFIG = "dump-config";
 	public static final String EXTERNAL_LIBRARY_PATH = "external-library-path";
 	public static final String KEEP_AS3_METADATA = "keep-as3-metadata";
