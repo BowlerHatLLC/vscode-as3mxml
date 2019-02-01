@@ -29,11 +29,19 @@ const FILE_EXTENSION_SWC = ".swc";
 
 const TOKEN_SDKS_PREF = "com.adobe.flexbuilder.project.flex_sdks=";
 
-const ERROR_CANNOT_FIND_PROJECT = "No Adobe Flash Builder projects to import found in workspace.";
-const ERROR_CANNOT_PARSE_PROJECT = "Failed to parse Adobe Flash Builder project.";
-const ERROR_ASCONFIG_JSON_EXISTS = "Cannot migrate Adobe Flash Builder project because asconfig.json already exists.";
-const ERROR_MODULES = "Importing Adobe Flash Builder projects with modules is not supported.";
-const ERROR_WORKERS = "Importing Adobe Flash Builder projects with workers is not supported.";
+const MESSAGE_IMPORT_START = "🚀 Importing Adobe Flash Builder project...";
+const MESSAGE_IMPORT_COMPLETE = "✅ Import complete.";
+const MESSAGE_IMPORT_FAILED = "❌ Import failed."
+const ERROR_NO_FOLDER = "Workspace folder parameter is missing.";
+const ERROR_NO_PROJECTS = "No Adobe Flash Builder projects found in workspace.";
+const ERROR_PROJECT_HAS_ASCONFIG = "No new Adobe Flash Builder projects found in workspace. If a project already contains asconfig.json, it cannot be imported.";
+const ERROR_FILE_READ = "Failed to read file: ";
+const ERROR_XML_PARSE = "Failed to parse Adobe Flash Builder project. Invalid XML.";
+const ERROR_PROJECT_PARSE = "Failed to parse Adobe Flash Builder project.";
+const ERROR_CANNOT_FIND_SDKS = "Failed to parse SDKs in Adobe Flash Builder workspace.";
+const ERROR_ASCONFIG_JSON_EXISTS = "Cannot migrate Adobe Flash Builder project because configuration file already exists... ";
+const WARNING_MODULE = "Flex modules are not supported. Skipping... ";
+const WARNING_WORKER = "ActionScript workers are not supported. Skipping... ";
 
 interface FlashBuilderSDK
 {
@@ -50,8 +58,7 @@ export function pickFlashBuilderProjectInWorkspace()
 		let workspaceFolders = vscode.workspace.workspaceFolders.filter((folder) =>
 		{
 			let asPropsPath = path.resolve(folder.uri.fsPath, FILE_ACTIONSCRIPT_PROPERTIES);
-			let asconfigPath = path.resolve(folder.uri.fsPath, FILE_ASCONFIG_JSON);
-			if(!fs.existsSync(asPropsPath) || fs.statSync(asPropsPath).isDirectory() || fs.existsSync(asconfigPath))
+			if(!fs.existsSync(asPropsPath) || fs.statSync(asPropsPath).isDirectory())
 			{
 				return false;
 			}
@@ -59,10 +66,22 @@ export function pickFlashBuilderProjectInWorkspace()
 		});
 		if(workspaceFolders.length === 0)
 		{
-			vscode.window.showErrorMessage(ERROR_CANNOT_FIND_PROJECT);
+			vscode.window.showErrorMessage(ERROR_NO_PROJECTS);
 			return;
 		}
-		else if(workspaceFolders.length === 1)
+
+		workspaceFolders = workspaceFolders.filter((folder) =>
+		{
+			let asconfigPath = path.resolve(folder.uri.fsPath, FILE_ASCONFIG_JSON);
+			return !fs.existsSync(asconfigPath);
+		});
+		if(workspaceFolders.length === 0)
+		{
+			vscode.window.showErrorMessage(ERROR_PROJECT_HAS_ASCONFIG);
+			return;
+		}
+
+		if(workspaceFolders.length === 1)
 		{
 			importFlashBuilderProject(workspaceFolders[0]);
 		}
@@ -74,6 +93,12 @@ export function pickFlashBuilderProjectInWorkspace()
 			})
 			vscode.window.showQuickPick(items).then((result) =>
 			{
+				if(!result)
+				{
+					//it's possible for no folder to be chosen when using
+					//showWorkspaceFolderPick()
+					return;
+				}
 				importFlashBuilderProject(result.folder);
 			});
 		}
@@ -91,7 +116,16 @@ function findSDKs(workspaceFolder: vscode.WorkspaceFolder): FlashBuilderSDK[]
 	let sdksElement = null;
 	try
 	{
-		let sdkPrefsText = fs.readFileSync(sdkPrefsPath, "utf8");
+		let sdkPrefsText = null;
+		try
+		{
+			sdkPrefsText = fs.readFileSync(sdkPrefsPath, "utf8");
+		}
+		catch(error)
+		{
+			addWarning(ERROR_FILE_READ + sdkPrefsPath);
+			return [];
+		}
 		let startIndex = sdkPrefsText.indexOf(TOKEN_SDKS_PREF);
 		if(startIndex === -1)
 		{
@@ -143,24 +177,39 @@ function findSDKs(workspaceFolder: vscode.WorkspaceFolder): FlashBuilderSDK[]
 
 export function importFlashBuilderProject(workspaceFolder: vscode.WorkspaceFolder)
 {
+	getOutputChannel().clear();
+	getOutputChannel().appendLine(MESSAGE_IMPORT_START);
+	getOutputChannel().show();
+	let result = importFlashBuilderProjectInternal(workspaceFolder);
+	if(result)
+	{
+		getOutputChannel().appendLine(MESSAGE_IMPORT_COMPLETE);
+	}
+	else
+	{
+		getOutputChannel().appendLine(MESSAGE_IMPORT_FAILED);
+	}
+}
+
+function importFlashBuilderProjectInternal(workspaceFolder: vscode.WorkspaceFolder): boolean
+{
 	if(!workspaceFolder)
 	{
-		//it's possible for no folder to be chosen when using
-		//showWorkspaceFolderPick()
+		addError(ERROR_NO_FOLDER);
 		return false;
 	}
 	let folderPath = workspaceFolder.uri.fsPath;
 	let actionScriptPropertiesPath = path.resolve(folderPath, FILE_ACTIONSCRIPT_PROPERTIES);
 	if(!fs.existsSync(actionScriptPropertiesPath))
 	{
-		vscode.window.showErrorMessage(ERROR_CANNOT_FIND_PROJECT);
-		return;
+		addError(ERROR_NO_PROJECTS);
+		return false;
 	}
 	let asconfigPath = path.resolve(folderPath, FILE_ASCONFIG_JSON);
 	if(fs.existsSync(asconfigPath))
 	{
-		vscode.window.showErrorMessage(ERROR_ASCONFIG_JSON_EXISTS);
-		return;
+		addError(ERROR_ASCONFIG_JSON_EXISTS + FILE_ASCONFIG_JSON);
+		return false;
 	}
 
 	let flexPropertiesPath = path.resolve(folderPath, FILE_FLEX_PROPERTIES);
@@ -168,22 +217,83 @@ export function importFlashBuilderProject(workspaceFolder: vscode.WorkspaceFolde
 	let flexLibPropertiesPath = path.resolve(folderPath, FILE_FLEX_LIB_PROPERTIES);
 	let isFlexLibrary = fs.existsSync(flexLibPropertiesPath);
 
-	let actionScriptPropertiesText = fs.readFileSync(actionScriptPropertiesPath, "utf8");
+	let actionScriptPropertiesText = null;
+	try
+	{
+		actionScriptPropertiesText = fs.readFileSync(actionScriptPropertiesPath, "utf8");
+	}
+	catch(error)
+	{
+		addError(ERROR_FILE_READ + actionScriptPropertiesPath);
+		return false;
+	}
 	let actionScriptProperties = null;
 	try
 	{
-		let parsedXML = parseXML(actionScriptPropertiesText)
+		let parsedXML = parseXML(actionScriptPropertiesText);
 		actionScriptProperties = parsedXML.children[0];
 	}
 	catch(error)
 	{
-		vscode.window.showErrorMessage(ERROR_CANNOT_PARSE_PROJECT);
-		return;
+		addError(ERROR_XML_PARSE);
+		return false;
 	}
 
-	let sdks = findSDKs(workspaceFolder);
+	let sdks = null;
+	try
+	{
+		sdks = findSDKs(workspaceFolder);
+	}
+	catch(error)
+	{
+		addError(ERROR_CANNOT_FIND_SDKS);
+		if(error instanceof Error)
+		{
+			getOutputChannel().appendLine(error.stack);
+		}
+		return false;
+	}
 
-	createProjectFiles(folderPath, actionScriptProperties, sdks, isFlexApp, isFlexLibrary);
+	try
+	{
+		let result = createProjectFiles(folderPath, actionScriptProperties, sdks, isFlexApp, isFlexLibrary);
+		if(!result)
+		{
+			return false;
+		}
+	}
+	catch(error)
+	{
+		addError(ERROR_PROJECT_PARSE);
+		if(error instanceof Error)
+		{
+			getOutputChannel().appendLine(error.stack);
+		}
+		return false;
+	}
+
+	return true;
+}
+
+let outputChannel: vscode.OutputChannel;
+
+function getOutputChannel()
+{
+	if(!outputChannel)
+	{
+		outputChannel = vscode.window.createOutputChannel("Flash Builder Importer");
+	}
+	return outputChannel;
+}
+
+function addWarning(message: string)
+{
+	getOutputChannel().appendLine("🚧 " + message);
+}
+
+function addError(message: string)
+{
+	getOutputChannel().appendLine("⛔ " + message);
 }
 
 function findApplications(actionScriptProperties: any)
@@ -234,8 +344,22 @@ function createProjectFiles(folderPath: string, actionScriptProperties: any, sdk
 	let mainAppPath = findMainApplicationPath(actionScriptProperties);
 
 	let applications = findApplications(actionScriptProperties);
-	applications.forEach((application) =>
+	return applications.every((application) =>
 	{
+		let appPath = application.attributes.path;
+		let appName = getApplicationNameFromPath(appPath);
+		let fileName = FILE_ASCONFIG_JSON;
+		if(appPath !== mainAppPath && applications.length > 1)
+		{
+			fileName = "asconfig." + appName + ".json";
+		}
+		let asconfigPath = path.resolve(folderPath, fileName);
+		if(fs.existsSync(asconfigPath))
+		{
+			addError(ERROR_ASCONFIG_JSON_EXISTS + fileName);
+			return false;
+		}
+
 		let result: any =
 		{
 			compilerOptions: {},
@@ -252,37 +376,44 @@ function createProjectFiles(folderPath: string, actionScriptProperties: any, sdk
 		if(isFlexLibrary)
 		{
 			let flexLibPropertiesPath = path.resolve(folderPath, FILE_FLEX_LIB_PROPERTIES);
-			let flexLibPropertiesText = fs.readFileSync(flexLibPropertiesPath, "utf8");
+			let flexLibPropertiesText = null;
+			try
+			{
+				flexLibPropertiesText = fs.readFileSync(flexLibPropertiesPath, "utf8");
+			}
+			catch(error)
+			{
+				addError(ERROR_FILE_READ + flexLibPropertiesPath);
+				return false;
+			}
 			let flexLibProperties = null;
 			try
 			{
-				let parsedXML = parseXML(flexLibPropertiesText)
+				let parsedXML = parseXML(flexLibPropertiesText);
 				flexLibProperties = parsedXML.children[0];
 			}
 			catch(error)
 			{
-				vscode.window.showErrorMessage(ERROR_CANNOT_PARSE_PROJECT);
-				return;
+				addError(ERROR_PROJECT_PARSE);
+				if(error instanceof Error)
+				{
+					getOutputChannel().appendLine(error.stack);
+				}
+				return false;
 			}
 			migrateFlexLibProperties(flexLibProperties, folderPath, result);
 		}
 		
 		let resultText = JSON.stringify(result, undefined, "\t");
-
-		let appPath = application.attributes.path;
-		let fileName = FILE_ASCONFIG_JSON;
-		if(appPath !== mainAppPath && applications.length > 1)
-		{
-			let appName = getApplicationNameFromPath(appPath);
-			fileName = "asconfig." + appName + ".json";
-		}
-		let asconfigPath = path.resolve(folderPath, fileName);
 		fs.writeFileSync(asconfigPath, resultText);
 
 		vscode.workspace.openTextDocument(asconfigPath).then((document) =>
 		{
 			vscode.window.showTextDocument(document)
 		});
+
+		getOutputChannel().appendLine(appName + " ➡ " + fileName);
+		return true;
 	});
 }
 
@@ -778,44 +909,34 @@ function migrateBuildTargetsElement(buildTargetsElement: any, applicationFileNam
 	});
 }
 
-let alreadyWarnedModules = false;
 function migrateModulesElement(modulesElement: any, appPath: string, result: any)
 {
-	if(alreadyWarnedModules)
-	{
-		return;
-	}
 	let children = modulesElement.children as any[];
 	let modules = children.filter((child) =>
 	{
 		return child.type === "element" && child.name === "module" && child.attributes.application === appPath;
 	});
-	let hasModules = modules.length > 0;
-	if(hasModules)
+	modules.forEach((module) =>
 	{
-		alreadyWarnedModules = true;
-		vscode.window.showErrorMessage(ERROR_MODULES);
-	}
+		let attributes = module.attributes;
+		let moduleSourcePath = "sourcePath" in attributes ? attributes.sourcePath : "";
+		addWarning(WARNING_MODULE + moduleSourcePath);
+	});
 }
 
-let alreadyWarnedWorkers = false;
 function migrateWorkersElement(workersElement: any, result: any)
 {
-	if(alreadyWarnedWorkers)
-	{
-		return;
-	}
 	let children = workersElement.children as any[];
 	let workers = children.filter((child) =>
 	{
 		return child.type === "element" && child.name === "worker";
 	});
-	let hasWorkers = workers.length > 0;
-	if(hasWorkers)
+	workers.forEach((worker) =>
 	{
-		alreadyWarnedWorkers = true;
-		vscode.window.showErrorMessage(ERROR_WORKERS);
-	}
+		let attributes = worker.attributes;
+		let workerPath = "path" in attributes ? attributes.path : "";
+		addWarning(WARNING_WORKER + workerPath);
+	});
 }
 
 function migrateIncludeClassesElement(includeClassesElement: any, result: any)
