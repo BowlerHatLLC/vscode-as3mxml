@@ -42,6 +42,7 @@ const ERROR_CANNOT_FIND_SDKS = "Failed to parse SDKs in Adobe Flash Builder work
 const ERROR_ASCONFIG_JSON_EXISTS = "Cannot migrate Adobe Flash Builder project because configuration file already exists... ";
 const WARNING_MODULE = "Flex modules are not supported. Skipping... ";
 const WARNING_WORKER = "ActionScript workers are not supported. Skipping... ";
+const WARNING_EXTERNAL_THEME = "Themes from outside SDK are not supported. Skipping..."
 
 interface FlashBuilderSDK
 {
@@ -531,6 +532,15 @@ function migrateActionScriptProperties(application: any, actionScriptProperties:
 			migrateWorkersElement(workersElement, result);
 		}
 	}
+
+	if(!isFlexLibrary)
+	{
+		let themeElement = findChildElementByName(rootChildren, "theme");
+		if(themeElement)
+		{
+			migrateThemeElement(themeElement, result);
+		}
+	}
 }
 
 function findChildElementByName(children: any[], name: string)
@@ -937,6 +947,22 @@ function migrateWorkersElement(workersElement: any, result: any)
 		let workerPath = "path" in attributes ? attributes.path : "";
 		addWarning(WARNING_WORKER + workerPath);
 	});
+}
+
+function migrateThemeElement(themeElement: any, result: any)
+{
+	let themeAttributes = themeElement.attributes;
+	if("themeIsSDK" in themeAttributes && themeAttributes.themeIsSDK !== "true")
+	{
+		addWarning(WARNING_EXTERNAL_THEME);
+		return;
+	}
+	if("themeLocation" in themeAttributes)
+	{
+		let themeLocation = themeAttributes.themeLocation;
+		themeLocation = themeLocation.replace("${SDK_THEMES_DIR}", "${flexlib}/..");
+		result.compilerOptions.theme = themeLocation;
+	}
 }
 
 function migrateIncludeClassesElement(includeClassesElement: any, result: any)
