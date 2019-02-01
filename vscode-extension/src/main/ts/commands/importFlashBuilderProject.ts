@@ -197,10 +197,7 @@ function findApplications(actionScriptProperties: any)
 	{
 		return [];
 	}
-	let applicationsElement = rootChildren.find((child) =>
-	{
-		return child.type === "element" && child.name === "applications";
-	});
+	let applicationsElement = findChildElementByName(rootChildren, "applications");
 	if(!applicationsElement)
 	{
 		return [];
@@ -317,29 +314,20 @@ function migrateFlexLibProperties(flexLibProperties: any, folderPath: string, re
 
 	if(!includeAllClasses)
 	{
-		let includeClassesElement = rootChildren.find((child) =>
-		{
-			return child.type === "element" && child.name === "includeClasses";
-		});
+		let includeClassesElement = findChildElementByName(rootChildren, "includeClasses");
 		if(includeClassesElement)
 		{
 			migrateIncludeClassesElement(includeClassesElement, result);
 		}
 	}
 
-	let includeResourcesElement = rootChildren.find((child) =>
-	{
-		return child.type === "element" && child.name === "includeResources";
-	});
+	let includeResourcesElement = findChildElementByName(rootChildren, "includeResources");
 	if(includeResourcesElement)
 	{
 		migrateIncludeResourcesElement(includeResourcesElement, folderPath, result);
 	}
 
-	let namespaceManifestsElement = rootChildren.find((child) =>
-	{
-		return child.type === "element" && child.name === "namespaceManifests";
-	});
+	let namespaceManifestsElement = findChildElementByName(rootChildren, "namespaceManifests");
 	if(namespaceManifestsElement)
 	{
 		migrateNamespaceManifestsElement(namespaceManifestsElement, folderPath, result);
@@ -375,10 +363,7 @@ function migrateActionScriptProperties(application: any, actionScriptProperties:
 		applicationPath = isFlexApp ? "MyProject.mxml" : "MyProject.as";
 	}
 
-	let compilerElement = rootChildren.find((child) =>
-	{
-		return child.type === "element" && child.name === "compiler";
-	});
+	let compilerElement = findChildElementByName(rootChildren, "compiler");
 	if(compilerElement)
 	{
 		migrateCompilerElement(compilerElement, applicationPath, isFlexLibrary, sdks, result);
@@ -386,10 +371,7 @@ function migrateActionScriptProperties(application: any, actionScriptProperties:
 
 	if(!isFlexLibrary)
 	{
-		let buildTargetsElement = rootChildren.find((child) =>
-		{
-			return child.type === "element" && child.name === "buildTargets";
-		});
+		let buildTargetsElement = findChildElementByName(rootChildren, "buildTargets");
 		if(buildTargetsElement)
 		{
 			migrateBuildTargetsElement(buildTargetsElement, applicationPath, result);
@@ -398,10 +380,7 @@ function migrateActionScriptProperties(application: any, actionScriptProperties:
 
 	if(!isFlexLibrary)
 	{
-		let modulesElement = rootChildren.find((child) =>
-		{
-			return child.type === "element" && child.name === "modules";
-		});
+		let modulesElement = findChildElementByName(rootChildren, "modules");
 		if(modulesElement)
 		{
 			let moduleAppPath = applicationPath;
@@ -415,15 +394,20 @@ function migrateActionScriptProperties(application: any, actionScriptProperties:
 
 	if(!isFlexLibrary)
 	{
-		let workersElement = rootChildren.find((child) =>
-		{
-			return child.type === "element" && child.name === "workers";
-		});
+		let workersElement = findChildElementByName(rootChildren, "workers");
 		if(workersElement)
 		{
 			migrateWorkersElement(workersElement, result);
 		}
 	}
+}
+
+function findChildElementByName(children: any[], name: string)
+{
+	return children.find((child) =>
+	{
+		return child.type === "element" && child.name === name;
+	});
 }
 
 function migrateCompilerElement(compilerElement: any, appPath: string, isFlexLibrary: boolean, sdks: FlashBuilderSDK[], result: any)
@@ -524,18 +508,12 @@ function migrateCompilerElement(compilerElement: any, appPath: string, isFlexLib
 		}
 	}
 	let children = compilerElement.children as any[];
-	let compilerSourcePathElement = children.find((child) =>
-	{
-		return child.type === "element" && child.name === "compilerSourcePath";
-	});
+	let compilerSourcePathElement = findChildElementByName(children, "compilerSourcePath");
 	if(compilerSourcePathElement)
 	{
 		migrateCompilerSourcePathElement(compilerSourcePathElement, sourceFolderPath, result);
 	}
-	let libraryPathElement = children.find((child) =>
-	{
-		return child.type === "element" && child.name === "libraryPath";
-	});
+	let libraryPathElement = findChildElementByName(children, "libraryPath");
 	if(libraryPathElement)
 	{
 		migrateCompilerLibraryPathElement(libraryPathElement, result);
@@ -709,10 +687,7 @@ function migrateBuildTargetsElement(buildTargetsElement: any, applicationFileNam
 		let isAndroid = platformId === "com.adobe.flexide.multiplatform.android.platform";
 		let isDefault = platformId === "default";
 		let buildTargetChildren = buildTarget.children;
-		let multiPlatformSettings = children.find((child) =>
-		{
-			return child.type === "element" && child.name === "multiPlatformSettings";
-		})
+		let multiPlatformSettings = findChildElementByName(children, "multiPlatformSettings");
 		if(multiPlatformSettings)
 		{
 			let multiPlatformSettingsAttributes = multiPlatformSettings.attributes;
@@ -762,10 +737,7 @@ function migrateBuildTargetsElement(buildTargetsElement: any, applicationFileNam
 		{
 			result.config = "airmobile";
 		}
-		let airSettings = buildTargetChildren.find((child) =>
-		{
-			return child.type === "element" && child.name === "airSettings";
-		});
+		let airSettings = findChildElementByName(buildTargetChildren, "airSettings");
 		if(airSettings)
 		{
 			let airSettingsAttributes = airSettings.attributes;
@@ -780,10 +752,7 @@ function migrateBuildTargetsElement(buildTargetsElement: any, applicationFileNam
 				}
 			}
 			let airSettingsChildren = airSettings.children;
-			let anePaths = airSettingsChildren.find((child) =>
-			{
-				return child.type === "element" && child.name === "anePaths";
-			});
+			let anePaths = findChildElementByName(airSettingsChildren, "anePaths");
 			if(anePaths)
 			{
 				let anePathsChildren = anePaths.children;
