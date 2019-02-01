@@ -484,6 +484,18 @@ function migrateCompilerElement(compilerElement: any, appPath: string, isFlexLib
 	{
 		result.compilerOptions.accessible = true;
 	}
+	if("strict" in attributes && attributes.strict !== "true")
+	{
+		result.compilerOptions.strict = false;
+	}
+	if("warn" in attributes && attributes.warn !== "true")
+	{
+		result.compilerOptions.warnings = false;
+	}
+	if("verifyDigests" in attributes && attributes.verifyDigests !== "true")
+	{
+		result.compilerOptions["verify-digests"] = false;
+	}
 	if("targetPlayerVersion" in attributes && attributes.targetPlayerVersion !== "0.0.0")
 	{
 		result.compilerOptions["target-player"] = attributes.targetPlayerVersion;
