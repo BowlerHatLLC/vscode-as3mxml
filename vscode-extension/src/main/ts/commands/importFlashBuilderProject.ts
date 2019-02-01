@@ -33,6 +33,7 @@ const ERROR_CANNOT_FIND_PROJECT = "No Adobe Flash Builder projects to import fou
 const ERROR_CANNOT_PARSE_PROJECT = "Failed to parse Adobe Flash Builder project.";
 const ERROR_ASCONFIG_JSON_EXISTS = "Cannot migrate Adobe Flash Builder project because asconfig.json already exists.";
 const ERROR_MODULES = "Importing Adobe Flash Builder projects with modules is not supported.";
+const ERROR_WORKERS = "Importing Adobe Flash Builder projects with workers is not supported.";
 
 interface FlashBuilderSDK
 {
@@ -409,6 +410,18 @@ function migrateActionScriptProperties(application: any, actionScriptProperties:
 				moduleAppPath = path.posix.join(compilerElement.attributes.sourceFolderPath, moduleAppPath);
 			}
 			migrateModulesElement(modulesElement, moduleAppPath, result);
+		}
+	}
+
+	if(!isFlexLibrary)
+	{
+		let workersElement = rootChildren.find((child) =>
+		{
+			return child.type === "element" && child.name === "workers";
+		});
+		if(workersElement)
+		{
+			migrateWorkersElement(workersElement, result);
 		}
 	}
 }
@@ -796,23 +809,43 @@ function migrateBuildTargetsElement(buildTargetsElement: any, applicationFileNam
 	});
 }
 
-let alreadyWarned = false;
+let alreadyWarnedModules = false;
 function migrateModulesElement(modulesElement: any, appPath: string, result: any)
 {
-	if(alreadyWarned)
+	if(alreadyWarnedModules)
 	{
 		return;
 	}
 	let children = modulesElement.children as any[];
-	let modules = children.filter((module) =>
+	let modules = children.filter((child) =>
 	{
-		return module.type === "element" && module.name === "module" && module.attributes.application === appPath;
+		return child.type === "element" && child.name === "module" && child.attributes.application === appPath;
 	});
 	let hasModules = modules.length > 0;
 	if(hasModules)
 	{
-		alreadyWarned = true;
+		alreadyWarnedModules = true;
 		vscode.window.showErrorMessage(ERROR_MODULES);
+	}
+}
+
+let alreadyWarnedWorkers = false;
+function migrateWorkersElement(workersElement: any, result: any)
+{
+	if(alreadyWarnedWorkers)
+	{
+		return;
+	}
+	let children = workersElement.children as any[];
+	let workers = children.filter((child) =>
+	{
+		return child.type === "element" && child.name === "worker";
+	});
+	let hasWorkers = workers.length > 0;
+	if(hasWorkers)
+	{
+		alreadyWarnedWorkers = true;
+		vscode.window.showErrorMessage(ERROR_WORKERS);
 	}
 }
 
