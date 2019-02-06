@@ -1567,6 +1567,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return;
         }
         IASNode offsetNode = getOffsetNode(textDocument, diagnostic.getRange().getStart());
+        if (offsetNode == null)
+        {
+            return;
+        }
         if (offsetNode instanceof IMXMLInstanceNode)
         {
             Position position = diagnostic.getRange().getStart();
