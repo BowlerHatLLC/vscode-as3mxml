@@ -375,7 +375,7 @@ public class CodeActionsUtils
             return null;
         }
         IScopedNode scopedNode = functionNode.getScopedNode();
-        if (scopedNode == null)
+        if (scopedNode == null || scopedNode.getChildCount() == 0)
         {
             return null;
         }

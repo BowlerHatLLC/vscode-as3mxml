@@ -160,6 +160,7 @@ import com.as3mxml.vscode.utils.ASTUtils;
 import com.as3mxml.vscode.utils.ActionScriptSDKUtils;
 import com.as3mxml.vscode.utils.AddImportData;
 import com.as3mxml.vscode.utils.CodeActionsUtils;
+import com.as3mxml.vscode.utils.CompilationUnitUtils;
 import com.as3mxml.vscode.utils.CompilerProblemFilter;
 import com.as3mxml.vscode.utils.CompilerProjectUtils;
 import com.as3mxml.vscode.utils.CompletionItemUtils;
@@ -179,6 +180,7 @@ import com.as3mxml.vscode.utils.ScopeUtils;
 import com.as3mxml.vscode.utils.SourcePathUtils;
 import com.as3mxml.vscode.utils.WaitForBuildFinishRunner;
 import com.as3mxml.vscode.utils.XmlnsRange;
+import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
 import com.as3mxml.vscode.utils.DefinitionTextUtils.DefinitionAsText;
 
 import org.eclipse.lsp4j.ApplyWorkspaceEditParams;
@@ -266,6 +268,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private String oldFrameworkSDKPath;
     private Map<Path, String> sourceByPath = new HashMap<>();
     private List<String> completionTypes = new ArrayList<>();
+    private Map<String,IncludeFileData> includedFiles = new HashMap<>();
     private Workspace compilerWorkspace;
     private List<WorkspaceFolder> workspaceFolders = new ArrayList<>();
     private Map<WorkspaceFolder, WorkspaceFolderData> workspaceFolderToData = new HashMap<>();
@@ -434,7 +437,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     return Either.forRight(result);
                 }
 
-                int currentOffset = getOffsetFromTextDocumentPosition(params);
+                int currentOffset = getOffsetFromPathAndPosition(path, params.getPosition());
                 if (currentOffset == -1)
                 {
                     CompletionList result = new CompletionList();
@@ -1930,6 +1933,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(normalizedPath);
         compilerWorkspace.fileChanged(fileSpec);
 
+        //if it's an included file, switch to the parent file
+        IncludeFileData includeFileData = includedFiles.get(path.toString());
+        if (includeFileData != null)
+        {
+            path = Paths.get(includeFileData.parentPath);
+        }
+
         //we need to check for problems when opening a new file because it
         //may not have been in the workspace before.
         checkFilePathForProblems(path, folderData, true);
@@ -2105,6 +2115,15 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(normalizedChangedPathAsString);
         compilerWorkspace.fileChanged(fileSpec);
+
+        //if it's an included file, switch to the parent file
+        IncludeFileData includeFileData = includedFiles.get(path.toString());
+        if (includeFileData != null)
+        {
+            path = Paths.get(includeFileData.parentPath);
+            unit = getCompilationUnit(path);
+        }
+
         if(unit == null)
         {
             //this file doesn't have a compilation unit yet, so we'll fall back
@@ -2183,6 +2202,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
         }
 
+        //if it's an included file, switch to the parent file
+        IncludeFileData includeFileData = includedFiles.get(path.toString());
+        if (includeFileData != null)
+        {
+            path = Paths.get(includeFileData.parentPath);
+        }
+
         if (clearProblems)
         {
             //immediately clear any diagnostics published for this file
@@ -2241,6 +2267,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             //something went wrong while creating the project
             return;
+        }
+
+        //if it's an included file, switch to the parent file
+        IncludeFileData includeFileData = includedFiles.get(path.toString());
+        if (includeFileData != null)
+        {
+            path = Paths.get(includeFileData.parentPath);
         }
         
         checkFilePathForProblems(path, folderData, true);
@@ -5554,6 +5587,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private void resolveDefinition(IDefinition definition, RoyaleProject project, List<Location> result)
     {
         String definitionPath = definition.getSourcePath();
+        String containingSourceFilePath = definition.getContainingSourceFilePath(project);
+        if(includedFiles.containsKey(containingSourceFilePath))
+        {
+            definitionPath = containingSourceFilePath;
+        }
         if (definitionPath == null)
         {
             //if the definition is in an MXML file, getSourcePath() may return
@@ -5616,6 +5654,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 //we can't find the name, so give up
                 return;
             }
+
             Reader reader = getReaderForPath(resolvedPath);
             if (reader == null)
             {
@@ -6197,13 +6236,14 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         if (ast instanceof FileNode)
         {
             FileNode fileNode = (FileNode) ast;
+            //seems to work better than populateFunctionNodes() alone
             fileNode.parseRequiredFunctionBodies();
         }
-        else if (ast instanceof IFileNode)
+        if (ast instanceof IFileNode)
         {
             IFileNode fileNode = (IFileNode) ast;
-            //ideally, we'd use parseRequiredFunctionBodies(), but if we don't
-            //necessarily know that it exists, this fallback is almost as good
+            //call this in addition to parseRequiredFunctionBodies() because
+            //functions in included files won't be populated without it
             fileNode.populateFunctionNodes();
         }
         return foundUnit;
@@ -6355,6 +6395,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(folderData.folder.getUri());
                 problemSourcePath = path.toString();
             }
+            if (includedFiles.containsKey(problemSourcePath))
+            {
+                //skip files that are included in other files
+                continue;
+            }
             if (!sourcePathToParamsMap.containsKey(problemSourcePath))
             {
                 URI uri = Paths.get(problemSourcePath).toUri();
@@ -6473,8 +6518,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 if (quick)
                 {
                     checkCompilationUnitForAllProblems(unitForPath, problemQuery);
+                    CompilationUnitUtils.findIncludedFiles(unitForPath, includedFiles);
                     return true;
                 }
+                //start fresh when checking all compilation units
+                includedFiles.clear();
                 boolean continueCheckingForErrors = true;
                 while (continueCheckingForErrors)
                 {
@@ -6490,6 +6538,18 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                                 continue;
                             }
                             checkCompilationUnitForAllProblems(unit, problemQuery);
+                        }
+                        for (ICompilationUnit unit : project.getCompilationUnits())
+                        {
+                            if (unit == null
+                                    || unit instanceof SWCCompilationUnit
+                                    || unit instanceof ResourceBundleCompilationUnit)
+                            {
+                                continue;
+                            }
+                            //just to be safe, find all of the included files
+                            //after we've checked for problems
+                            CompilationUnitUtils.findIncludedFiles(unit, includedFiles);
                         }
                         continueCheckingForErrors = false;
                     }
@@ -6705,8 +6765,20 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return -1;
         }
+        return getOffsetFromPathAndPosition(path, position);
+    }
+
+    private int getOffsetFromPathAndPosition(Path path, Position position)
+    {
         Reader reader = getReaderForPath(path);
         int offset = LanguageServerCompilerUtils.getOffsetFromPosition(reader, position);
+        IncludeFileData includeFileData = includedFiles.get(path.toString());
+        if(includeFileData != null)
+        {
+            //we're actually going to use the offset from the file that includes
+            //this one
+            offset += includeFileData.offsetCue.adjustment;
+        }
         try
         {
             reader.close();
@@ -6722,11 +6794,16 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return null;
         }
-        int currentOffset = getOffsetFromTextDocumentPosition(textDocument, position);
+        int currentOffset = getOffsetFromPathAndPosition(path, position);
         if (currentOffset == -1)
         {
             System.err.println("Could not find code at position " + position.getLine() + ":" + position.getCharacter() + " in file " + path.toAbsolutePath().toString());
             return null;
+        }
+        IncludeFileData includeFileData = includedFiles.get(path.toString());
+        if(includeFileData != null)
+        {
+            path = Paths.get(includeFileData.parentPath);
         }
         return getOffsetNode(path, currentOffset);
     }

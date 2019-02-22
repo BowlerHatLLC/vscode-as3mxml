@@ -487,7 +487,11 @@ public class ASTUtils
         int indentStart = offset - column;
         if (indentStart != -1 && column != -1)
         {
-            return fileText.substring(indentStart, indentStart + column);
+            int indentEnd = indentStart + column;
+            if (indentEnd < fileText.length())
+            {
+                return fileText.substring(indentStart, indentEnd);
+            }
         }
         return "";
     }
