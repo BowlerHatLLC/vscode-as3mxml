@@ -15,9 +15,14 @@ limitations under the License.
 */
 package com.as3mxml.vscode.utils;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.Reader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
+
+import javax.print.DocFlavor.READER;
 
 import org.apache.royale.compiler.filespecs.IFileSpecification;
 import org.apache.royale.compiler.internal.mxml.MXMLData;
@@ -160,7 +165,34 @@ public class CompilationUnitUtils
 				continue;
 			}
 
-			includes.put(scriptPath.toString(), new IncludeFileData(parentPath, 0, scriptTag.getAbsoluteStart()));
+			includes.put(scriptPath.toString(), new IncludeFileData(parentPath, 0, offset));
+
+			int scriptLength = 0;
+			try
+			{
+				IFileSpecification fileSpec = workspace.getFileSpecification(scriptPath.toString());
+				Reader scriptReader = fileSpec.createReader();
+				while(scriptReader.read() != -1)
+				{
+					scriptLength++;
+				}
+				scriptReader.close();
+			}
+			catch(FileNotFoundException e)
+			{
+				continue;
+			}
+			catch(IOException e)
+			{
+				//just ignore it
+			}
+
+			if(scriptLength == 0)
+			{
+				continue;
+			}
+
+			includes.put(parentPath, new IncludeFileData(parentPath, offset, scriptLength));
 		}
 	}
 }
