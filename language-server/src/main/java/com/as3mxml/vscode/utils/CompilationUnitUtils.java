@@ -15,28 +15,40 @@ limitations under the License.
 */
 package com.as3mxml.vscode.utils;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Map;
 
+import org.apache.royale.compiler.filespecs.IFileSpecification;
+import org.apache.royale.compiler.internal.mxml.MXMLData;
 import org.apache.royale.compiler.internal.parsing.as.IncludeHandler;
 import org.apache.royale.compiler.internal.parsing.as.OffsetCue;
+import org.apache.royale.compiler.internal.parsing.as.OffsetLookup;
+import org.apache.royale.compiler.internal.scopes.MXMLFileScope;
 import org.apache.royale.compiler.internal.tree.as.FileNode;
 import org.apache.royale.compiler.internal.units.ResourceBundleCompilationUnit;
 import org.apache.royale.compiler.internal.units.SWCCompilationUnit;
+import org.apache.royale.compiler.mxml.IMXMLDataManager;
+import org.apache.royale.compiler.mxml.IMXMLLanguageConstants;
+import org.apache.royale.compiler.mxml.IMXMLTagAttributeData;
+import org.apache.royale.compiler.mxml.IMXMLTagData;
+import org.apache.royale.compiler.scopes.IASScope;
 import org.apache.royale.compiler.tree.as.IASNode;
 import org.apache.royale.compiler.units.ICompilationUnit;
+import org.apache.royale.compiler.workspaces.IWorkspace;
 
 public class CompilationUnitUtils
 {
 	public static class IncludeFileData
 	{
-		public IncludeFileData(String parentPath, OffsetCue offsetCue)
+		public IncludeFileData(String parentPath, int offset)
 		{
 			this.parentPath = parentPath;
-			this.offsetCue = offsetCue;
+			this.offset = offset;
 		}
 
 		public String parentPath;
-		public OffsetCue offsetCue;
+		public int offset;
 	}
 
 	public static void findIncludedFiles(ICompilationUnit unit, Map<String,IncludeFileData> result)
@@ -48,7 +60,15 @@ public class CompilationUnitUtils
 			//compiled compilation units won't have problems
 			return;
 		}
-		findActionScriptIncludes(unit, result);
+		String path = unit.getAbsoluteFilename();
+		if(path.endsWith(".mxml"))
+		{
+			//findMXMLIncludes(unit, result);
+		}
+		else
+		{
+			findActionScriptIncludes(unit, result);
+		}
 	}
 
 	private static void findActionScriptIncludes(ICompilationUnit unit, Map<String,IncludeFileData> includes)
@@ -73,13 +93,72 @@ public class CompilationUnitUtils
 						//ignore because this data isn't valid, for some reason
 						continue;
 					}
-					includes.put(offsetCue.filename, new IncludeFileData(parentPath, offsetCue));
+					includes.put(offsetCue.filename, new IncludeFileData(parentPath, offsetCue.adjustment));
 				}
 			}
 		}
 		catch(InterruptedException e)
 		{
 
+		}
+	}
+
+	private static void findMXMLIncludes(ICompilationUnit unit, Map<String,IncludeFileData> includes)
+	{
+		IWorkspace workspace = unit.getProject().getWorkspace();
+		IMXMLDataManager mxmlDataManager = workspace.getMXMLDataManager();
+		IFileSpecification fileSpecification = workspace.getFileSpecification(unit.getAbsoluteFilename());
+		MXMLData mxmlData = (MXMLData) mxmlDataManager.get(fileSpecification);
+
+		IMXMLTagData rootTag = mxmlData.getRootTag();
+		String parentPath = mxmlData.getPath();
+		IMXMLTagData[] scriptTags = MXMLDataUtils.findMXMLScriptTags(rootTag);
+		for(IMXMLTagData scriptTag : scriptTags)
+		{
+			IMXMLTagAttributeData sourceAttribute = scriptTag.getTagAttributeData(IMXMLLanguageConstants.ATTRIBUTE_SOURCE);
+			if(sourceAttribute == null)
+			{
+				continue;
+			}
+			Path scriptPath = Paths.get(sourceAttribute.getRawValue());
+			if(!scriptPath.isAbsolute())
+			{
+				Path mxmlPath = Paths.get(mxmlData.getPath());
+				scriptPath = mxmlPath.getParent().resolve(scriptPath);
+			}
+
+			int offset = 0;
+			try
+			{
+				IASScope[] scopes = unit.getFileScopeRequest().get().getScopes();
+				if (scopes.length == 0)
+				{
+					continue;
+				}
+				IASScope firstScope = scopes[0];
+				if (firstScope instanceof MXMLFileScope)
+				{
+					MXMLFileScope fileScope = (MXMLFileScope) firstScope;
+					OffsetLookup offsetLookup = fileScope.getOffsetLookup();
+					int[] absoluteOffset = offsetLookup.getAbsoluteOffset(scriptPath.toString(), 0);
+					if (absoluteOffset.length == 0)
+					{
+						continue;
+					}
+					offset = absoluteOffset[0];
+				}
+			}
+			catch(InterruptedException e)
+			{
+				continue;
+			}
+
+			if(offset == 0)
+			{
+				continue;
+			}
+
+			includes.put(scriptPath.toString(), new IncludeFileData(parentPath, scriptTag.getAbsoluteStart()));
 		}
 	}
 }

@@ -6675,14 +6675,24 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private MXMLData getMXMLDataForURI(String uri)
     {
-        if (!uri.endsWith(MXML_EXTENSION))
-        {
-            // don't try to parse ActionScript files as MXML
-            return null;
-        }
         Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(uri);
         if (path == null)
         {
+            return null;
+        }
+        return getMXMLDataForPath(path);
+    }
+
+    private MXMLData getMXMLDataForPath(Path path)
+    {
+        IncludeFileData includeFileData = includedFiles.get(path.toString());
+        if(includeFileData != null)
+        {
+            path = Paths.get(includeFileData.parentPath);
+        }
+        if (!path.toString().endsWith(MXML_EXTENSION))
+        {
+            // don't try to parse ActionScript files as MXML
             return null;
         }
         WorkspaceFolderData folderData = getWorkspaceFolderDataForSourceFile(path);
@@ -6777,7 +6787,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             //we're actually going to use the offset from the file that includes
             //this one
-            offset += includeFileData.offsetCue.adjustment;
+            offset += includeFileData.offset;
         }
         try
         {

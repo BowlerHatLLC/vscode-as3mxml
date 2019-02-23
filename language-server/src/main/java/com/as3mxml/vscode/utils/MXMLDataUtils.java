@@ -15,6 +15,9 @@ limitations under the License.
 */
 package com.as3mxml.vscode.utils;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.royale.compiler.common.PrefixMap;
 import org.apache.royale.compiler.common.XMLName;
 import org.apache.royale.compiler.definitions.IClassDefinition;
@@ -315,5 +318,31 @@ public class MXMLDataUtils
             child = child.getNextSibling(true);
         }
         return null;
+    }
+
+    public static IMXMLTagData[] findMXMLScriptTags(IMXMLTagData tagData)
+    {
+        //go to the root tag
+        while(tagData.getParentTag() != null)
+        {
+            tagData = tagData.getParentTag();
+        }
+        ArrayList<IMXMLTagData> result = new ArrayList<>();
+        findMXMLScriptTagsInternal(tagData, result);
+        return result.toArray(new IMXMLTagData[result.size()]);
+    }
+
+    private static void findMXMLScriptTagsInternal(IMXMLTagData tagData, List<IMXMLTagData> result)
+    {
+        if (tagData.getXMLName().equals(tagData.getMXMLDialect().resolveScript()))
+        {
+            result.add(tagData);
+        }
+        IMXMLTagData child = tagData.getFirstChild(true);
+        while(child != null)
+        {
+            findMXMLScriptTagsInternal(child, result);
+            child = child.getNextSibling(true);
+        }
     }
 }
