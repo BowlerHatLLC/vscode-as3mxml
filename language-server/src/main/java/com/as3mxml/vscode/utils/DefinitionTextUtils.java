@@ -189,7 +189,7 @@ public class DefinitionTextUtils
         textDocumentBuilder.append(" ");
         appendDefinitionName(classDefinition, textDocumentBuilder, definitionToFind, result);
         String baseClassName = classDefinition.getBaseClassAsDisplayString();
-        if (baseClassName != null && !baseClassName.equals(IASLanguageConstants.Object))
+        if (baseClassName != null && baseClassName.length() > 0 && !baseClassName.equals(IASLanguageConstants.Object))
         {
             textDocumentBuilder.append(" ");
             textDocumentBuilder.append(IASKeywordConstants.EXTENDS);
@@ -550,7 +550,7 @@ public class DefinitionTextUtils
                 detailBuilder.append(classDefinition.getQualifiedName());
             }
             String baseClassName = classDefinition.getBaseClassAsDisplayString();
-            if (baseClassName != null && !baseClassName.equals(IASLanguageConstants.Object))
+            if (baseClassName != null && baseClassName.length() > 0 && !baseClassName.equals(IASLanguageConstants.Object))
             {
                 detailBuilder.append(" ");
                 detailBuilder.append(IASKeywordConstants.EXTENDS);
