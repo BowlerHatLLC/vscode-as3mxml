@@ -41,13 +41,15 @@ public class CompilationUnitUtils
 {
 	public static class IncludeFileData
 	{
-		public IncludeFileData(String parentPath, int offset)
+		public IncludeFileData(String parentPath, int localStart, int offset)
 		{
 			this.parentPath = parentPath;
+			this.localStart = localStart;
 			this.offset = offset;
 		}
 
 		public String parentPath;
+		public int localStart;
 		public int offset;
 	}
 
@@ -93,7 +95,7 @@ public class CompilationUnitUtils
 						//ignore because this data isn't valid, for some reason
 						continue;
 					}
-					includes.put(offsetCue.filename, new IncludeFileData(parentPath, offsetCue.adjustment));
+					includes.put(offsetCue.filename, new IncludeFileData(parentPath, offsetCue.local, offsetCue.adjustment));
 				}
 			}
 		}
@@ -158,7 +160,7 @@ public class CompilationUnitUtils
 				continue;
 			}
 
-			includes.put(scriptPath.toString(), new IncludeFileData(parentPath, scriptTag.getAbsoluteStart()));
+			includes.put(scriptPath.toString(), new IncludeFileData(parentPath, 0, scriptTag.getAbsoluteStart()));
 		}
 	}
 }

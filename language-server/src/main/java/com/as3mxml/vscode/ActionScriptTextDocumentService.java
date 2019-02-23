@@ -6787,7 +6787,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             //we're actually going to use the offset from the file that includes
             //this one
-            offset += includeFileData.offset;
+            if(offset >= includeFileData.localStart)
+            {
+                offset += includeFileData.offset;
+            }
         }
         try
         {
