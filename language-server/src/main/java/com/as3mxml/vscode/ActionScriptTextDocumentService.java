@@ -417,9 +417,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 //this shouldn't be necessary, but if we ever forget to do this
                 //somewhere, completion results might be missing items.
                 completionTypes.clear();
-        
-                RoyaleProject project = textDocumentPositionParamsToProject(params);
-                if(project == null)
+                
+                TextDocumentIdentifier textDocument = params.getTextDocument();
+                Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocument.getUri());
+                if (path == null)
                 {
                     CompletionList result = new CompletionList();
                     result.setIsIncomplete(false);
@@ -427,8 +428,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     cancelToken.checkCanceled();
                     return Either.forRight(result);
                 }
-                Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(params.getTextDocument().getUri());
-                if(path == null)
+                WorkspaceFolderData folderData = textDocumentPathToFolderData(path);
+                if(folderData == null || folderData.project == null)
                 {
                     CompletionList result = new CompletionList();
                     result.setIsIncomplete(false);
@@ -436,6 +437,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     cancelToken.checkCanceled();
                     return Either.forRight(result);
                 }
+                RoyaleProject project = folderData.project;
 
                 int currentOffset = getOffsetFromPathAndPosition(path, params.getPosition());
                 if (currentOffset == -1)
@@ -447,7 +449,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     return Either.forRight(result);
                 }
 
-                MXMLData mxmlData = getMXMLDataForTextDocument(params.getTextDocument());
+                MXMLData mxmlData = getMXMLDataForPath(path);
                 IMXMLTagData offsetTag = getOffsetMXMLTag(mxmlData, currentOffset);
                 if (offsetTag != null)
                 {
@@ -533,14 +535,22 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             compilerWorkspace.startBuilding();
             try
             {
-                RoyaleProject project = textDocumentPositionParamsToProject(params);
-                if(project == null)
+                TextDocumentIdentifier textDocument = params.getTextDocument();
+                Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocument.getUri());
+                if (path == null)
                 {
                     cancelToken.checkCanceled();
                     return new Hover(Collections.emptyList(), null);
                 }
+                WorkspaceFolderData folderData = textDocumentPathToFolderData(path);
+                if(folderData == null || folderData.project == null)
+                {
+                    cancelToken.checkCanceled();
+                    return new Hover(Collections.emptyList(), null);
+                }
+                RoyaleProject project = folderData.project;
 
-                int currentOffset = getOffsetFromTextDocumentPosition(params);
+                int currentOffset = getOffsetFromPathAndPosition(path, params.getPosition());
                 if (currentOffset == -1)
                 {
                     cancelToken.checkCanceled();
@@ -598,14 +608,22 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             compilerWorkspace.startBuilding();
             try
             {
-                RoyaleProject project = textDocumentPositionParamsToProject(params);
-                if(project == null)
+                TextDocumentIdentifier textDocument = params.getTextDocument();
+                Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocument.getUri());
+                if (path == null)
                 {
                     cancelToken.checkCanceled();
                     return new SignatureHelp(Collections.emptyList(), -1, -1);
                 }
+                WorkspaceFolderData folderData = textDocumentPathToFolderData(path);
+                if(folderData == null || folderData.project == null)
+                {
+                    cancelToken.checkCanceled();
+                    return new SignatureHelp(Collections.emptyList(), -1, -1);
+                }
+                RoyaleProject project = folderData.project;
 
-                int currentOffset = getOffsetFromTextDocumentPosition(params);
+                int currentOffset = getOffsetFromPathAndPosition(path, params.getPosition());
                 if (currentOffset == -1)
                 {
                     cancelToken.checkCanceled();
@@ -772,14 +790,22 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             compilerWorkspace.startBuilding();
             try
             {
-                RoyaleProject project = textDocumentPositionParamsToProject(params);
-                if(project == null)
+                TextDocumentIdentifier textDocument = params.getTextDocument();
+                Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocument.getUri());
+                if (path == null)
                 {
                     cancelToken.checkCanceled();
                     return Collections.emptyList();
                 }
+                WorkspaceFolderData folderData = textDocumentPathToFolderData(path);
+                if(folderData == null || folderData.project == null)
+                {
+                    cancelToken.checkCanceled();
+                    return Collections.emptyList();
+                }
+                RoyaleProject project = folderData.project;
 
-                int currentOffset = getOffsetFromTextDocumentPosition(params);
+                int currentOffset = getOffsetFromPathAndPosition(path, params.getPosition());
                 if (currentOffset == -1)
                 {
                     cancelToken.checkCanceled();
@@ -816,37 +842,18 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         });
     }
 
-    protected RoyaleProject textDocumentPositionParamsToProject(TextDocumentPositionParams params)
+    protected WorkspaceFolderData textDocumentPathToFolderData(Path path)
     {
-        return textDocumentIdentifierToProject(params.getTextDocument());
-    }
-
-    protected RoyaleProject textDocumentIdentifierToProject(TextDocumentIdentifier textDocument)
-    {
-        return textDocumentUriToProject(textDocument.getUri());
-    }
-
-    protected RoyaleProject textDocumentUriToProject(String uri)
-    {
-        if (!uri.endsWith(AS_EXTENSION)
-                && !uri.endsWith(MXML_EXTENSION))
-        {
-            return null;
-        }
-
-        Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(uri);
-        if(path == null)
-        {
-            return null;
-        }
-
         WorkspaceFolderData folderData = getWorkspaceFolderDataForSourceFile(path);
         if(folderData == null)
         {
             return null;
         }
 
-        return getProject(folderData);
+        //populate the project
+        getProject(folderData);
+
+        return folderData;
     }
 
     /**
@@ -867,14 +874,22 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             compilerWorkspace.startBuilding();
             try
             {
-                RoyaleProject project = textDocumentPositionParamsToProject(params);
-                if(project == null)
+                TextDocumentIdentifier textDocument = params.getTextDocument();
+                Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocument.getUri());
+                if (path == null)
                 {
                     cancelToken.checkCanceled();
                     return Collections.emptyList();
                 }
+                WorkspaceFolderData folderData = textDocumentPathToFolderData(path);
+                if(folderData == null || folderData.project == null)
+                {
+                    cancelToken.checkCanceled();
+                    return Collections.emptyList();
+                }
+                RoyaleProject project = folderData.project;
 
-                int currentOffset = getOffsetFromTextDocumentPosition(params);
+                int currentOffset = getOffsetFromPathAndPosition(path, params.getPosition());
                 if (currentOffset == -1)
                 {
                     cancelToken.checkCanceled();
@@ -928,14 +943,22 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             compilerWorkspace.startBuilding();
             try
             {
-                RoyaleProject project = textDocumentPositionParamsToProject(params);
-                if(project == null)
+                TextDocumentIdentifier textDocument = params.getTextDocument();
+                Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocument.getUri());
+                if (path == null)
                 {
                     cancelToken.checkCanceled();
                     return Collections.emptyList();
                 }
+                WorkspaceFolderData folderData = textDocumentPathToFolderData(path);
+                if(folderData == null || folderData.project == null)
+                {
+                    cancelToken.checkCanceled();
+                    return Collections.emptyList();
+                }
+                RoyaleProject project = folderData.project;
 
-                int currentOffset = getOffsetFromTextDocumentPosition(params);
+                int currentOffset = getOffsetFromPathAndPosition(path, params.getPosition());
                 if (currentOffset == -1)
                 {
                     cancelToken.checkCanceled();
@@ -984,14 +1007,22 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             compilerWorkspace.startBuilding();
             try
             {
-                RoyaleProject project = textDocumentPositionParamsToProject(params);
-                if(project == null)
+                TextDocumentIdentifier textDocument = params.getTextDocument();
+                Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocument.getUri());
+                if (path == null)
                 {
                     cancelToken.checkCanceled();
                     return Collections.emptyList();
                 }
+                WorkspaceFolderData folderData = textDocumentPathToFolderData(path);
+                if(folderData == null || folderData.project == null)
+                {
+                    cancelToken.checkCanceled();
+                    return Collections.emptyList();
+                }
+                RoyaleProject project = folderData.project;
 
-                int currentOffset = getOffsetFromTextDocumentPosition(params);
+                int currentOffset = getOffsetFromPathAndPosition(path, params.getPosition());
                 if (currentOffset == -1)
                 {
                     cancelToken.checkCanceled();
@@ -1012,7 +1043,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     //so that's why we call isMXMLTagValidForCompletion()
                     if (MXMLDataUtils.isMXMLTagValidForCompletion(offsetTag))
                     {
-                        List<? extends Location> result = mxmlReferences(params, project, offsetTag, currentOffset);
+                        ICompilationUnit offsetUnit = findCompilationUnit(path);
+                        List<? extends Location> result = mxmlReferences(params, project, offsetUnit, offsetTag, currentOffset);
                         cancelToken.checkCanceled();
                         return result;
                     }
@@ -1171,20 +1203,21 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             try
             {
                 TextDocumentIdentifier textDocument = params.getTextDocument();
-                RoyaleProject project = textDocumentIdentifierToProject(textDocument);
-                if(project == null)
-                {
-                    cancelToken.checkCanceled();
-                    return Collections.emptyList();
-                }
                 Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocument.getUri());
                 if (path == null)
                 {
                     cancelToken.checkCanceled();
                     return Collections.emptyList();
                 }
+                WorkspaceFolderData folderData = textDocumentPathToFolderData(path);
+                if(folderData == null || folderData.project == null)
+                {
+                    cancelToken.checkCanceled();
+                    return Collections.emptyList();
+                }
+                RoyaleProject project = folderData.project;
 
-                ICompilationUnit unit = getCompilationUnit(path);
+                ICompilationUnit unit = getCompilationUnit(path, folderData);
                 if (unit == null)
                 {
                     cancelToken.checkCanceled();
@@ -1255,7 +1288,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             compilerWorkspace.startBuilding();
             try
             {
-                List<? extends Diagnostic> diagnostics = params.getContext().getDiagnostics();
                 TextDocumentIdentifier textDocument = params.getTextDocument();
                 Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocument.getUri());
                 if (path == null)
@@ -1263,31 +1295,34 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     cancelToken.checkCanceled();
                     return Collections.emptyList();
                 }
+                //we don't need to create code actions for non-open files
                 if (!sourceByPath.containsKey(path))
                 {
                     cancelToken.checkCanceled();
                     return Collections.emptyList();
                 }
-                WorkspaceFolderData folderData = getWorkspaceFolderDataForSourceFile(path);
-                if (folderData == null)
+                WorkspaceFolderData folderData = textDocumentPathToFolderData(path);
+                if (folderData == null || folderData.project == null)
+                {
+                    cancelToken.checkCanceled();
+                    //the path must be in the workspace or source-path
+                    return Collections.emptyList();
+                }
+                RoyaleProject project = folderData.project;
+
+                if (project == null || !SourcePathUtils.isInProjectSourcePath(path, project, folderData.configurator))
                 {
                     cancelToken.checkCanceled();
                     //the path must be in the workspace or source-path
                     return Collections.emptyList();
                 }
 
-                RoyaleProject currentProject = getProject(folderData);
-                if (currentProject == null || !SourcePathUtils.isInProjectSourcePath(path, currentProject, folderData.configurator))
-                {
-                    cancelToken.checkCanceled();
-                    //the path must be in the workspace or source-path
-                    return Collections.emptyList();
-                }
+                List<? extends Diagnostic> diagnostics = params.getContext().getDiagnostics();
                 List<Either<Command, CodeAction>> codeActions = new ArrayList<>();
                 findSourceActions(textDocument, codeActions);
                 findCodeActionsForDiagnostics(textDocument, diagnostics, codeActions);
 
-                ICompilationUnit unit = getCompilationUnit(path);
+                ICompilationUnit unit = getCompilationUnit(path, folderData);
                 if (unit != null)
                 {
                     IASNode ast = null;
@@ -1302,7 +1337,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     if (ast != null)
                     {
                         String fileText = sourceByPath.get(path);
-                        CodeActionsUtils.findGetSetCodeActions(ast, currentProject, textDocument.getUri(), fileText, params.getRange(), codeActions);
+                        CodeActionsUtils.findGetSetCodeActions(ast, project, textDocument.getUri(), fileText, params.getRange(), codeActions);
                     }
                 }
                 cancelToken.checkCanceled();
@@ -1404,11 +1439,17 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private void createCodeActionForMissingField(TextDocumentIdentifier textDocument, Diagnostic diagnostic, List<Either<Command, CodeAction>> codeActions)
     {
-        RoyaleProject project = textDocumentIdentifierToProject(textDocument);
-        if(project == null)
+        Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocument.getUri());
+        if (path == null)
         {
             return;
         }
+        WorkspaceFolderData folderData = textDocumentPathToFolderData(path);
+        if(folderData == null || folderData.project == null)
+        {
+            return;
+        }
+        RoyaleProject project = folderData.project;
         IASNode offsetNode = getOffsetNode(textDocument, diagnostic.getRange().getStart());
         if (offsetNode instanceof IMXMLInstanceNode)
         {
@@ -1416,7 +1457,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             IMXMLTagData tag = getOffsetMXMLTag(textDocument, position);
             //workaround for bug in Royale compiler
             position = new Position(position.getLine(), position.getCharacter() + 1);
-            int currentOffset = getOffsetFromTextDocumentPosition(textDocument, position);
+            int currentOffset = getOffsetFromPathAndPosition(path, position);
             offsetNode = getEmbeddedActionScriptNodeInMXMLTag(tag, currentOffset, textDocument, position, project);
         }
         IIdentifierNode identifierNode = null;
@@ -1473,11 +1514,17 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     
     private void createCodeActionForMissingLocalVariable(TextDocumentIdentifier textDocument, Diagnostic diagnostic, List<Either<Command, CodeAction>> codeActions)
     {
-        RoyaleProject project = textDocumentIdentifierToProject(textDocument);
-        if(project == null)
+        Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocument.getUri());
+        if (path == null)
         {
             return;
         }
+        WorkspaceFolderData folderData = textDocumentPathToFolderData(path);
+        if(folderData == null || folderData.project == null)
+        {
+            return;
+        }
+        RoyaleProject project = folderData.project;
         IASNode offsetNode = getOffsetNode(textDocument, diagnostic.getRange().getStart());
         if (offsetNode instanceof IMXMLInstanceNode)
         {
@@ -1485,7 +1532,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             IMXMLTagData tag = getOffsetMXMLTag(textDocument, position);
             //workaround for bug in Royale compiler
             position = new Position(position.getLine(), position.getCharacter() + 1);
-            int currentOffset = getOffsetFromTextDocumentPosition(textDocument, position);
+            int currentOffset = getOffsetFromPathAndPosition(path, position);
             offsetNode = getEmbeddedActionScriptNodeInMXMLTag(tag, currentOffset, textDocument, position, project);
         }
         IIdentifierNode identifierNode = null;
@@ -1525,11 +1572,17 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private void createCodeActionForMissingCatchOrFinally(TextDocumentIdentifier textDocument, Diagnostic diagnostic, List<Either<Command, CodeAction>> codeActions)
     {
-        RoyaleProject project = textDocumentIdentifierToProject(textDocument);
-        if(project == null)
+        Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocument.getUri());
+        if (path == null)
         {
             return;
         }
+        WorkspaceFolderData folderData = textDocumentPathToFolderData(path);
+        if(folderData == null || folderData.project == null)
+        {
+            return;
+        }
+        RoyaleProject project = folderData.project;
         IASNode offsetNode = getOffsetNode(textDocument, diagnostic.getRange().getStart());
         if(!(offsetNode instanceof ITryNode))
         {
@@ -1564,11 +1617,17 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private void createCodeActionForMissingMethod(TextDocumentIdentifier textDocument, Diagnostic diagnostic, List<Either<Command, CodeAction>> codeActions)
     {
-        RoyaleProject project = textDocumentIdentifierToProject(textDocument);
-        if(project == null)
+        Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocument.getUri());
+        if (path == null)
         {
             return;
         }
+        WorkspaceFolderData folderData = textDocumentPathToFolderData(path);
+        if(folderData == null || folderData.project == null)
+        {
+            return;
+        }
+        RoyaleProject project = folderData.project;
         IASNode offsetNode = getOffsetNode(textDocument, diagnostic.getRange().getStart());
         if (offsetNode == null)
         {
@@ -1580,7 +1639,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             IMXMLTagData tag = getOffsetMXMLTag(textDocument, position);
             //workaround for bug in Royale compiler
             position = new Position(position.getLine(), position.getCharacter() + 1);
-            int currentOffset = getOffsetFromTextDocumentPosition(textDocument, position);
+            int currentOffset = getOffsetFromPathAndPosition(path, position);
             offsetNode = getEmbeddedActionScriptNodeInMXMLTag(tag, currentOffset, textDocument, position, project);
         }
         IASNode parentNode = offsetNode.getParent();
@@ -1635,11 +1694,17 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private void createCodeActionsForImport(TextDocumentIdentifier textDocument, Diagnostic diagnostic, List<Either<Command, CodeAction>> codeActions)
     {
-        RoyaleProject project = textDocumentIdentifierToProject(textDocument);
-        if(project == null)
+        Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocument.getUri());
+        if (path == null)
         {
             return;
         }
+        WorkspaceFolderData folderData = textDocumentPathToFolderData(path);
+        if(folderData == null || folderData.project == null)
+        {
+            return;
+        }
+        RoyaleProject project = folderData.project;
         IASNode offsetNode = getOffsetNode(textDocument, diagnostic.getRange().getStart());
         if (offsetNode instanceof IMXMLInstanceNode)
         {
@@ -1647,7 +1712,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             IMXMLTagData tag = getOffsetMXMLTag(textDocument, position);
             //workaround for bug in Royale compiler
             position = new Position(position.getLine(), position.getCharacter() + 1);
-            int currentOffset = getOffsetFromTextDocumentPosition(textDocument, position);
+            int currentOffset = getOffsetFromPathAndPosition(path, position);
             offsetNode = getEmbeddedActionScriptNodeInMXMLTag(tag, currentOffset, textDocument, position, project);
         }
         if (offsetNode == null || !(offsetNode instanceof IIdentifierNode))
@@ -1761,14 +1826,22 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             compilerWorkspace.startBuilding();
             try
             {
-                RoyaleProject project = textDocumentIdentifierToProject(params.getTextDocument());
-                if(project == null)
+                TextDocumentIdentifier textDocument = params.getTextDocument();
+                Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocument.getUri());
+                if (path == null)
                 {
                     cancelToken.checkCanceled();
                     return new WorkspaceEdit(new HashMap<>());
                 }
+                WorkspaceFolderData folderData = textDocumentPathToFolderData(path);
+                if(folderData == null || folderData.project == null)
+                {
+                    cancelToken.checkCanceled();
+                    return new WorkspaceEdit(new HashMap<>());
+                }
+                RoyaleProject project = folderData.project;
 
-                int currentOffset = getOffsetFromTextDocumentPosition(params.getTextDocument(), params.getPosition());
+                int currentOffset = getOffsetFromPathAndPosition(path, params.getPosition());
                 if (currentOffset == -1)
                 {
                     cancelToken.checkCanceled();
@@ -1912,7 +1985,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         String text = textDocument.getText();
         sourceByPath.put(path, text);
         
-        WorkspaceFolderData folderData = getWorkspaceFolderDataForSourceFile(path);
+        WorkspaceFolderData folderData = textDocumentPathToFolderData(path);
         if (folderData == null)
         {
             //this file isn't in any of the workspace folders
@@ -1920,7 +1993,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return;
         }
 
-        RoyaleProject project = getProject(folderData);
+        RoyaleProject project = folderData.project;
         if (project == null)
         {
             //something went wrong while creating the project
@@ -2073,7 +2146,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return;
         }
-        WorkspaceFolderData folderData = getWorkspaceFolderDataForSourceFile(path);
         for (TextDocumentContentChangeEvent change : params.getContentChanges())
         {
             if (change.getRange() == null)
@@ -2091,6 +2163,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 System.err.println("Failed to apply changes to code intelligence from URI: " + textDocumentUri);
             }
         }
+        WorkspaceFolderData folderData = textDocumentPathToFolderData(path);
         if (folderData == null)
         {
             //this file isn't in any of the workspace folders
@@ -2098,7 +2171,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return;
         }
 
-        RoyaleProject project = getProject(folderData);
+        RoyaleProject project = folderData.project;
         if (project == null)
         {
             //something went wrong while creating the project
@@ -2106,22 +2179,41 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
 
         String normalizedChangedPathAsString = path.toString();
-        ICompilationUnit unit = getCompilationUnit(path);
-        if(unit != null)
+
+        ICompilationUnit unit = null;
+        compilerWorkspace.startIdleState();
+        try
         {
-            //windows drive letter may not match, even after normalization,
-            //so it's better to use the unit's path, if available.
-            normalizedChangedPathAsString = unit.getAbsoluteFilename();
+            unit = getCompilationUnit(path, folderData);
+            if(unit != null)
+            {
+                //windows drive letter may not match, even after normalization,
+                //so it's better to use the unit's path, if available.
+                normalizedChangedPathAsString = unit.getAbsoluteFilename();
+            }
         }
+        finally
+        {
+            compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
+        }
+
         IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(normalizedChangedPathAsString);
         compilerWorkspace.fileChanged(fileSpec);
 
-        //if it's an included file, switch to the parent file
-        IncludeFileData includeFileData = includedFiles.get(path.toString());
-        if (includeFileData != null)
+        compilerWorkspace.startIdleState();
+        try
         {
-            path = Paths.get(includeFileData.parentPath);
-            unit = getCompilationUnit(path);
+            //if it's an included file, switch to the parent file
+            IncludeFileData includeFileData = includedFiles.get(path.toString());
+            if (includeFileData != null)
+            {
+                path = Paths.get(includeFileData.parentPath);
+                unit = getCompilationUnit(path, folderData);
+            }
+        }
+        finally
+        {
+            compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
         }
 
         if(unit == null)
@@ -2177,7 +2269,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
         boolean clearProblems = false;
 
-        WorkspaceFolderData folderData = getWorkspaceFolderDataForSourceFile(path);
+        WorkspaceFolderData folderData = textDocumentPathToFolderData(path);
         if (folderData == null)
         {
             //if we can't figure out which workspace the file is in, then clear
@@ -2187,7 +2279,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         else
         {
-            RoyaleProject project = getProject(folderData);
+            RoyaleProject project = folderData.project;
             if(project == null)
             {
                 //if the current project isn't properly configured, we want to
@@ -2254,7 +2346,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return;
         }
-        WorkspaceFolderData folderData = getWorkspaceFolderDataForSourceFile(path);
+        WorkspaceFolderData folderData = textDocumentPathToFolderData(path);
         if (folderData == null)
         {
             //this file isn't in any of the workspace folders
@@ -2262,7 +2354,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return;
         }
 
-        RoyaleProject project = getProject(folderData);
+        RoyaleProject project = folderData.project;
         if (project == null)
         {
             //something went wrong while creating the project
@@ -2290,7 +2382,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
      * the project configuration strategy has changed. If it has, checks for
      * errors on the whole project.
      */
-    public synchronized void didChangeWatchedFiles(DidChangeWatchedFilesParams params, boolean checkForProblems)
+    public void didChangeWatchedFiles(DidChangeWatchedFilesParams params, boolean checkForProblems)
     {
         Set<WorkspaceFolderData> foldersToCheck = new HashSet<>();
 
@@ -2315,6 +2407,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
             //then, check if source or library files have changed
             FileChangeType changeType = event.getType();
+            System.err.println("~~~ didChangeWatchedFiles: " + changeType + " " + event.getUri());
             String normalizedChangedPathAsString = FilenameNormalization.normalize(changedPath.toString());
             if (normalizedChangedPathAsString.endsWith(SWC_EXTENSION))
             {
@@ -3997,7 +4090,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return Collections.emptyList();
     }
 
-    private List<? extends Location> mxmlReferences(ReferenceParams params, RoyaleProject project, IMXMLTagData offsetTag, int currentOffset)
+    private List<? extends Location> mxmlReferences(ReferenceParams params, RoyaleProject project, ICompilationUnit offsetUnit, IMXMLTagData offsetTag, int currentOffset)
     {
         IDefinition definition = MXMLDataUtils.getDefinitionForMXMLNameAtOffset(offsetTag, currentOffset, project);
         if (definition != null)
@@ -4020,17 +4113,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             //definition referenced at the current position.
             return Collections.emptyList();
         }
-        Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(params.getTextDocument().getUri());
-        if (path == null)
-        {
-            //this probably shouldn't happen, but check just to be safe
-            return Collections.emptyList();
-        }
-        ICompilationUnit unit = getCompilationUnit(path);
         Collection<IDefinition> definitions = null;
         try
         {
-            definitions = unit.getFileScopeRequest().get().getExternallyVisibleDefinitions();
+            definitions = offsetUnit.getFileScopeRequest().get().getExternallyVisibleDefinitions();
         }
         catch (Exception e)
         {
@@ -5034,7 +5120,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             IMXMLTagData offsetTag, boolean isAttribute, boolean includePrefix, boolean tagsNeedOpenBracket,
             AddImportData addImportData, Position xmlnsPosition, RoyaleProject project, CompletionList result)
     {
-        ICompilationUnit unit = getCompilationUnit(Paths.get(offsetTag.getSourcePath()));
+        Path path = Paths.get(offsetTag.getSourcePath());
+        ICompilationUnit unit = findCompilationUnit(path);
         if (unit == null)
         {
             return;
@@ -6104,9 +6191,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return Paths.get(lastFilePath);
     }
 
-    private IASNode getAST(Path path)
+    private IASNode getAST(Path path, WorkspaceFolderData folderData)
     {
-        ICompilationUnit unit = getCompilationUnit(path);
+        ICompilationUnit unit = getCompilationUnit(path, folderData);
         if (unit == null)
         {
             //no need to log this case because it can happen for reasons that
@@ -6132,19 +6219,14 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return ast;
     }
 
-    private ICompilationUnit getCompilationUnit(Path path)
+    private ICompilationUnit getCompilationUnit(Path path, WorkspaceFolderData folderData)
     {
-        WorkspaceFolderData folderData = getWorkspaceFolderDataForSourceFile(path);
-        String absolutePath = path.toAbsolutePath().toString();
-        if (folderData == null)
-        {
-            return null;
-        }
-        RoyaleProject project = getProject(folderData);
+        RoyaleProject project = folderData.project;
         if (project == null)
         {
             return null;
         }
+        String absolutePath = path.toAbsolutePath().toString();
         ICompilationUnit foundUnit = null;
         ProjectOptions projectOptions = folderData.options;
         //we're going to start with the files passed into the compiler
@@ -6351,7 +6433,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return project;
     }
 
-    private synchronized void checkProjectForProblems(WorkspaceFolderData folderData)
+    private void checkProjectForProblems(WorkspaceFolderData folderData)
     {
         refreshProjectOptions(folderData);
         ProjectOptions projectOptions = folderData.options;
@@ -6455,7 +6537,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return;
         }
         ProjectOptions projectOptions = folderData.options;
-        if (projectOptions == null || !checkFilePathForAllProblems(path, problemQuery, false))
+        if (projectOptions == null || !checkFilePathForAllProblems(path, problemQuery, folderData, false))
         {
             checkFilePathForSyntaxProblems(path, folderData, problemQuery);
         }
@@ -6480,7 +6562,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
     }
 
-    private boolean checkFilePathForAllProblems(Path path, ProblemQuery problemQuery, boolean quick)
+    private boolean checkFilePathForAllProblems(Path path, ProblemQuery problemQuery, WorkspaceFolderData folderData, boolean quick)
     {
         //don't start the build until all other builds are done
         compilerWorkspace.startIdleState();
@@ -6488,7 +6570,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         compilerWorkspace.startBuilding();
         try
         {
-            ICompilationUnit unitForPath = getCompilationUnit(path);
+            ICompilationUnit unitForPath = getCompilationUnit(path, folderData);
             if (unitForPath == null)
             {
                 //fall back to the syntax check instead
@@ -6667,22 +6749,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return reader;
     }
 
-    private MXMLData getMXMLDataForTextDocument(TextDocumentIdentifier textDocument)
-    {
-        String uri = textDocument.getUri();
-        return getMXMLDataForURI(uri);
-    }
-
-    private MXMLData getMXMLDataForURI(String uri)
-    {
-        Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(uri);
-        if (path == null)
-        {
-            return null;
-        }
-        return getMXMLDataForPath(path);
-    }
-
     private MXMLData getMXMLDataForPath(Path path)
     {
         IncludeFileData includeFileData = includedFiles.get(path.toString());
@@ -6695,12 +6761,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             // don't try to parse ActionScript files as MXML
             return null;
         }
-        WorkspaceFolderData folderData = getWorkspaceFolderDataForSourceFile(path);
-        if (folderData == null)
+        WorkspaceFolderData folderData = textDocumentPathToFolderData(path);
+        if (folderData == null || folderData.project == null)
         {
             return null;
         }
-        RoyaleProject project = getProject(folderData);
+        RoyaleProject project = folderData.project;
         if (!SourcePathUtils.isInProjectSourcePath(path, project, folderData.configurator))
         {
             //the path must be in the workspace or source-path
@@ -6709,7 +6775,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
         //need to ensure that the compilation unit exists, even though we don't
         //use it directly
-        ICompilationUnit unit = getCompilationUnit(path);
+        ICompilationUnit unit = getCompilationUnit(path, folderData);
         if (unit == null)
         {
             //no need to log this case because it can happen for reasons that
@@ -6729,12 +6795,17 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private IMXMLTagData getOffsetMXMLTag(TextDocumentIdentifier textDocument, Position position)
     {
-        MXMLData mxmlData = getMXMLDataForTextDocument(textDocument);
+        Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocument.getUri());
+        if (path == null)
+        {
+            return null;
+        }
+        MXMLData mxmlData = getMXMLDataForPath(path);
         if (mxmlData == null)
         {
             return null;
         }
-        int currentOffset = getOffsetFromTextDocumentPosition(textDocument, position);
+        int currentOffset = getOffsetFromPathAndPosition(path, position);
         return getOffsetMXMLTag(mxmlData, currentOffset);
     }
 
@@ -6761,21 +6832,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private IASNode getOffsetNode(TextDocumentPositionParams params)
     {
         return getOffsetNode(params.getTextDocument(), params.getPosition());
-    }
-
-    private int getOffsetFromTextDocumentPosition(TextDocumentPositionParams params)
-    {
-        return getOffsetFromTextDocumentPosition(params.getTextDocument(), params.getPosition());
-    }
-
-    private int getOffsetFromTextDocumentPosition(TextDocumentIdentifier textDocument, Position position)
-    {
-        Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocument.getUri());
-        if (path == null)
-        {
-            return -1;
-        }
-        return getOffsetFromPathAndPosition(path, position);
     }
 
     private int getOffsetFromPathAndPosition(Path path, Position position)
@@ -6823,19 +6879,19 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private IASNode getOffsetNode(Path path, int currentOffset)
     {
-        WorkspaceFolderData folderData = getWorkspaceFolderDataForSourceFile(path);
-        if (folderData == null)
+        WorkspaceFolderData folderData = textDocumentPathToFolderData(path);
+        if (folderData == null || folderData.project == null)
         {
             return null;
         }
-        RoyaleProject project = getProject(folderData);
+        RoyaleProject project = folderData.project;
         if (!SourcePathUtils.isInProjectSourcePath(path, project, folderData.configurator))
         {
             //the path must be in the workspace or source-path
             return null;
         }
 
-        IASNode ast = getAST(path);
+        IASNode ast = getAST(path, folderData);
         if (ast == null)
         {
             return null;
@@ -7461,12 +7517,17 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private void organizeImportsInUri(String uri)
     {
-        RoyaleProject project = textDocumentUriToProject(uri);
-        if(project == null)
+        Path pathForImport = LanguageServerCompilerUtils.getPathFromLanguageServerURI(uri);
+        if (pathForImport == null)
         {
-            return;   
+            return;
         }
-        Path pathForImport = Paths.get(URI.create(uri));
+        WorkspaceFolderData folderData = textDocumentPathToFolderData(pathForImport);
+        if(folderData == null || folderData.project == null)
+        {
+            return;
+        }
+        RoyaleProject project = folderData.project;
         String text = null;
         boolean isOpen = sourceByPath.containsKey(pathForImport);
         if (isOpen)
@@ -7502,7 +7563,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         Set<String> missingNames = null;
         Set<String> importsToAdd = null;
         Set<IImportNode> importsToRemove = null;
-        IASNode ast = getAST(pathForImport);
+        IASNode ast = getAST(pathForImport, folderData);
         if (ast != null)
         {
             missingNames = ASTUtils.findUnresolvedIdentifiersToImport(ast, project);
@@ -7556,8 +7617,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return;
         }
 
-        WorkspaceFolderData folderData = getWorkspaceFolderDataForSourceFile(path);
-        if (folderData == null)
+        WorkspaceFolderData folderData = textDocumentPathToFolderData(path);
+        if (folderData == null || folderData.project == null)
         {
             languageClient.showMessage(new MessageParams(MessageType.Error, "Organize Imports failed. File is not in source path."));
             return;
@@ -7591,7 +7652,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         ImportRange importRange = null;
         if(uri.endsWith(MXML_EXTENSION))
         {
-            MXMLData mxmlData = getMXMLDataForURI(uri);
+            MXMLData mxmlData = getMXMLDataForPath(pathForImport);
             IMXMLTagData offsetTag = getOffsetMXMLTag(mxmlData, currentOffset);
             importRange = ImportRange.fromOffsetTag(offsetTag, currentOffset);
         }
