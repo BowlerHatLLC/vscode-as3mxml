@@ -22,8 +22,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 
-import javax.print.DocFlavor.READER;
-
 import org.apache.royale.compiler.filespecs.IFileSpecification;
 import org.apache.royale.compiler.internal.mxml.MXMLData;
 import org.apache.royale.compiler.internal.parsing.as.IncludeHandler;
