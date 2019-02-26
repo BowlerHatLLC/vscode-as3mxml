@@ -62,7 +62,7 @@ export default function quickCompileAndDebug()
 	}
 }
 
-function quickCompileAndDebugWorkspaceFolder(workspaceFolder)
+async function quickCompileAndDebugWorkspaceFolder(workspaceFolder)
 {
 	if(!workspaceFolder)
 	{
@@ -70,6 +70,9 @@ function quickCompileAndDebugWorkspaceFolder(workspaceFolder)
 		//showWorkspaceFolderPick()
 		return;
 	}
+	//before running a task, VSCode saves all files. we should do the same
+	//before running a quick compile, since it's like a task.
+	await vscode.commands.executeCommand("workbench.action.files.saveAll");
 	let workspaceFolderUri = workspaceFolder.uri.toString();
 	vscode.window.withProgress({location: vscode.ProgressLocation.Window}, (progress) =>
 	{
