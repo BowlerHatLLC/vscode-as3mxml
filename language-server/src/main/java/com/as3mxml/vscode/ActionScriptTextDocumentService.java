@@ -361,6 +361,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         workspaceFolders.remove(folder);
         WorkspaceFolderData data = workspaceFolderToData.get(folder);
+        workspaceFolderToData.remove(folder);
         cleanupProject(data);
     }
 
