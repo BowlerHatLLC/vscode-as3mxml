@@ -455,7 +455,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 IMXMLTagData offsetTag = getOffsetMXMLTag(mxmlData, currentOffset);
                 if (offsetTag != null)
                 {
-                    IASNode embeddedNode = getEmbeddedActionScriptNodeInMXMLTag(offsetTag, position, currentOffset, project);
+                    IASNode embeddedNode = getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, position, currentOffset, folderData);
                     if (embeddedNode != null)
                     {
                         CompletionList result = actionScriptCompletion(embeddedNode, path, position, currentOffset, folderData);
@@ -496,7 +496,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     cancelToken.checkCanceled();
                     return Either.forRight(result);
                 }
-                IASNode offsetNode = getOffsetNode(path, position);
+                IASNode offsetNode = getOffsetNode(path, position, folderData);
                 CompletionList result = actionScriptCompletion(offsetNode, path, position, currentOffset, folderData);
                 cancelToken.checkCanceled();
                 return Either.forRight(result);
@@ -565,7 +565,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 IMXMLTagData offsetTag = getOffsetMXMLTag(mxmlData, currentOffset);
                 if (offsetTag != null)
                 {
-                    IASNode embeddedNode = getEmbeddedActionScriptNodeInMXMLTag(offsetTag, position, currentOffset, project);
+                    IASNode embeddedNode = getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, position, currentOffset, folderData);
                     if (embeddedNode != null)
                     {
                         Hover result = actionScriptHover(embeddedNode, project);
@@ -581,7 +581,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                         return result;
                     }
                 }
-                IASNode offsetNode = getOffsetNode(path, position);
+                IASNode offsetNode = getOffsetNode(path, position, folderData);
                 Hover result = actionScriptHover(offsetNode, project);
                 cancelToken.checkCanceled();
                 return result;
@@ -651,7 +651,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                         IDefinition attributeDefinition = project.resolveSpecifier(tagDefinition, attributeData.getShortName());
                         if (attributeDefinition instanceof IEventDefinition)
                         {
-                            IMXMLClassReferenceNode mxmlNode = (IMXMLClassReferenceNode) getOffsetNode(path, position);
+                            IMXMLClassReferenceNode mxmlNode = (IMXMLClassReferenceNode) getOffsetNode(path, position, folderData);
                             IMXMLEventSpecifierNode eventNode = mxmlNode.getEventSpecifierNode(attributeData.getShortName());
                             for (IASNode asNode : eventNode.getASNodes())
                             {
@@ -670,7 +670,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 }
                 if (offsetNode == null)
                 {
-                    offsetNode = getOffsetNode(path, position);
+                    offsetNode = getOffsetNode(path, position, folderData);
                 }
                 if (offsetNode == null)
                 {
@@ -825,7 +825,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 IMXMLTagData offsetTag = getOffsetMXMLTag(mxmlData, currentOffset);
                 if (offsetTag != null)
                 {
-                    IASNode embeddedNode = getEmbeddedActionScriptNodeInMXMLTag(offsetTag, position, currentOffset, project);
+                    IASNode embeddedNode = getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, position, currentOffset, folderData);
                     if (embeddedNode != null)
                     {
                         List<? extends Location> result = actionScriptDefinition(embeddedNode, project);
@@ -841,7 +841,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                         return result;
                     }
                 }
-                IASNode offsetNode = getOffsetNode(path, position);
+                IASNode offsetNode = getOffsetNode(path, position, folderData);
                 List<? extends Location> result = actionScriptDefinition(offsetNode, project);
                 cancelToken.checkCanceled();
                 return result;
@@ -912,7 +912,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 IMXMLTagData offsetTag = getOffsetMXMLTag(mxmlData, currentOffset);
                 if (offsetTag != null)
                 {
-                    IASNode embeddedNode = getEmbeddedActionScriptNodeInMXMLTag(offsetTag, position, currentOffset, project);
+                    IASNode embeddedNode = getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, position, currentOffset, folderData);
                     if (embeddedNode != null)
                     {
                         List<? extends Location> result = actionScriptTypeDefinition(embeddedNode, project);
@@ -928,7 +928,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                         return result;
                     }
                 }
-                IASNode offsetNode = getOffsetNode(path, position);
+                IASNode offsetNode = getOffsetNode(path, position, folderData);
                 List<? extends Location> result = actionScriptTypeDefinition(offsetNode, project);
                 cancelToken.checkCanceled();
                 return result;
@@ -984,7 +984,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 IMXMLTagData offsetTag = getOffsetMXMLTag(mxmlData, currentOffset);
                 if (offsetTag != null)
                 {
-                    IASNode embeddedNode = getEmbeddedActionScriptNodeInMXMLTag(offsetTag, position, currentOffset, project);
+                    IASNode embeddedNode = getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, position, currentOffset, folderData);
                     if (embeddedNode != null)
                     {
                         List<? extends Location> result = actionScriptImplementation(embeddedNode, project);
@@ -992,7 +992,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                         return result;
                     }
                 }
-                IASNode offsetNode = getOffsetNode(path, position);
+                IASNode offsetNode = getOffsetNode(path, position, folderData);
                 List<? extends Location> result = actionScriptImplementation(offsetNode, project);
                 cancelToken.checkCanceled();
                 return result;
@@ -1051,7 +1051,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 IMXMLTagData offsetTag = getOffsetMXMLTag(mxmlData, currentOffset);
                 if (offsetTag != null)
                 {
-                    IASNode embeddedNode = getEmbeddedActionScriptNodeInMXMLTag(offsetTag, position, currentOffset, project);
+                    IASNode embeddedNode = getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, position, currentOffset, folderData);
                     if (embeddedNode != null)
                     {
                         List<? extends Location> result = actionScriptReferences(embeddedNode, project);
@@ -1068,7 +1068,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                         return result;
                     }
                 }
-                IASNode offsetNode = getOffsetNode(path, position);
+                IASNode offsetNode = getOffsetNode(path, position, folderData);
                 List<? extends Location> result = actionScriptReferences(offsetNode, project);
                 cancelToken.checkCanceled();
                 return result;
@@ -1470,7 +1470,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return;
         }
         RoyaleProject project = folderData.project;
-        IASNode offsetNode = getOffsetNode(path, diagnostic.getRange().getStart());
+        IASNode offsetNode = getOffsetNode(path, diagnostic.getRange().getStart(), folderData);
         if (offsetNode instanceof IMXMLInstanceNode)
         {
             MXMLData mxmlData = getMXMLDataForPath(path, folderData);
@@ -1482,7 +1482,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 //workaround for bug in Royale compiler
                 position = new Position(position.getLine(), position.getCharacter() + 1);
                 currentOffset = getOffsetFromPathAndPosition(path, position);
-                offsetNode = getEmbeddedActionScriptNodeInMXMLTag(offsetTag, position, currentOffset, project);
+                offsetNode = getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, position, currentOffset, folderData);
             }
         }
         IIdentifierNode identifierNode = null;
@@ -1550,7 +1550,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return;
         }
         RoyaleProject project = folderData.project;
-        IASNode offsetNode = getOffsetNode(path, diagnostic.getRange().getStart());
+        IASNode offsetNode = getOffsetNode(path, diagnostic.getRange().getStart(), folderData);
         if (offsetNode instanceof IMXMLInstanceNode)
         {
             MXMLData mxmlData = getMXMLDataForPath(path, folderData);
@@ -1562,7 +1562,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 //workaround for bug in Royale compiler
                 position = new Position(position.getLine(), position.getCharacter() + 1);
                 currentOffset = getOffsetFromPathAndPosition(path, position);
-                offsetNode = getEmbeddedActionScriptNodeInMXMLTag(offsetTag, position, currentOffset, project);
+                offsetNode = getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, position, currentOffset, folderData);
             }
         }
         IIdentifierNode identifierNode = null;
@@ -1613,7 +1613,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return;
         }
         RoyaleProject project = folderData.project;
-        IASNode offsetNode = getOffsetNode(path, diagnostic.getRange().getStart());
+        IASNode offsetNode = getOffsetNode(path, diagnostic.getRange().getStart(), folderData);
         if(!(offsetNode instanceof ITryNode))
         {
             return;
@@ -1658,7 +1658,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return;
         }
         RoyaleProject project = folderData.project;
-        IASNode offsetNode = getOffsetNode(path, diagnostic.getRange().getStart());
+        IASNode offsetNode = getOffsetNode(path, diagnostic.getRange().getStart(), folderData);
         if (offsetNode == null)
         {
             return;
@@ -1674,7 +1674,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 //workaround for bug in Royale compiler
                 position = new Position(position.getLine(), position.getCharacter() + 1);
                 currentOffset = getOffsetFromPathAndPosition(path, position);
-                offsetNode = getEmbeddedActionScriptNodeInMXMLTag(offsetTag, position, currentOffset, project);
+                offsetNode = getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, position, currentOffset, folderData);
             }
         }
         IASNode parentNode = offsetNode.getParent();
@@ -1740,7 +1740,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return;
         }
         RoyaleProject project = folderData.project;
-        IASNode offsetNode = getOffsetNode(path, diagnostic.getRange().getStart());
+        IASNode offsetNode = getOffsetNode(path, diagnostic.getRange().getStart(), folderData);
         if (offsetNode instanceof IMXMLInstanceNode)
         {
             MXMLData mxmlData = getMXMLDataForPath(path, folderData);
@@ -1752,7 +1752,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 //workaround for bug in Royale compiler
                 position = new Position(position.getLine(), position.getCharacter() + 1);
                 currentOffset = getOffsetFromPathAndPosition(path, position);
-                offsetNode = getEmbeddedActionScriptNodeInMXMLTag(offsetTag, position, currentOffset, project);
+                offsetNode = getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, position, currentOffset, folderData);
             }
         }
         if (offsetNode == null || !(offsetNode instanceof IIdentifierNode))
@@ -1898,7 +1898,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 IMXMLTagData offsetTag = getOffsetMXMLTag(mxmlData, currentOffset);
                 if (offsetTag != null)
                 {
-                    IASNode embeddedNode = getEmbeddedActionScriptNodeInMXMLTag(offsetTag, position, currentOffset, project);
+                    IASNode embeddedNode = getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, position, currentOffset, folderData);
                     if (embeddedNode != null)
                     {
                         WorkspaceEdit result = actionScriptRename(embeddedNode, params.getNewName(), project);
@@ -1914,7 +1914,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                         return result;
                     }
                 }
-                IASNode offsetNode = getOffsetNode(path, position);
+                IASNode offsetNode = getOffsetNode(path, position, folderData);
                 WorkspaceEdit result = actionScriptRename(offsetNode, params.getNewName(), project);
                 cancelToken.checkCanceled();
                 return result;
@@ -1991,8 +1991,17 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         //case we need it later. example: added to source-path compiler option.
         String text = textDocument.getText();
         sourceByPath.put(path, text);
-        
-        WorkspaceFolderData folderData = textDocumentPathToFolderData(path);
+
+        WorkspaceFolderData folderData = null;
+        compilerWorkspace.startBuilding();
+        try
+        {
+            folderData = textDocumentPathToFolderData(path);
+        }
+        finally
+        {
+            compilerWorkspace.doneBuilding();
+        }
         if (folderData == null)
         {
             //this file isn't in any of the workspace folders
@@ -2286,7 +2295,16 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
         boolean clearProblems = false;
 
-        WorkspaceFolderData folderData = textDocumentPathToFolderData(path);
+        WorkspaceFolderData folderData = null;
+        compilerWorkspace.startBuilding();
+        try
+        {
+            folderData = textDocumentPathToFolderData(path);
+        }
+        finally
+        {
+            compilerWorkspace.doneBuilding();
+        }
         if (folderData == null)
         {
             //if we can't figure out which workspace the file is in, then clear
@@ -2363,14 +2381,22 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return;
         }
-        WorkspaceFolderData folderData = textDocumentPathToFolderData(path);
+        WorkspaceFolderData folderData = null;
+        compilerWorkspace.startBuilding();
+        try
+        {
+            folderData = textDocumentPathToFolderData(path);
+        }
+        finally
+        {
+            compilerWorkspace.doneBuilding();
+        }
         if (folderData == null)
         {
             //this file isn't in any of the workspace folders
             publishDiagnosticForFileOutsideSourcePath(path);
             return;
         }
-
         RoyaleProject project = folderData.project;
         if (project == null)
         {
@@ -3476,7 +3502,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                         //only add members if the prefix is the same as the
                         //parent tag. members can't have different prefixes.
                         //also allow members when we don't have a prefix.
-                        addMembersForMXMLTypeToAutoComplete(classDefinition, parentTag, false, offsetPrefix.length() == 0, false, addImportData, xmlnsPosition, project, result);
+                        addMembersForMXMLTypeToAutoComplete(classDefinition, parentTag, offsetUnit, false, offsetPrefix.length() == 0, false, addImportData, xmlnsPosition, project, result);
                     }
                     if (!isAttribute)
                     {
@@ -3570,7 +3596,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
 
             IClassDefinition classDefinition = (IClassDefinition) offsetDefinition;
-            addMembersForMXMLTypeToAutoComplete(classDefinition, offsetTag, isAttribute, !isAttribute, tagsNeedOpenBracket, addImportData, xmlnsPosition, project, result);
+            addMembersForMXMLTypeToAutoComplete(classDefinition, offsetTag, offsetUnit, isAttribute, !isAttribute, tagsNeedOpenBracket, addImportData, xmlnsPosition, project, result);
 
             if (!isAttribute)
             {
@@ -5084,19 +5110,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     }
 
     private void addMembersForMXMLTypeToAutoComplete(IClassDefinition definition,
-            IMXMLTagData offsetTag, boolean isAttribute, boolean includePrefix, boolean tagsNeedOpenBracket,
+            IMXMLTagData offsetTag, ICompilationUnit offsetUnit, boolean isAttribute, boolean includePrefix, boolean tagsNeedOpenBracket,
             AddImportData addImportData, Position xmlnsPosition, RoyaleProject project, CompletionList result)
     {
-        Path path = Paths.get(offsetTag.getSourcePath());
-        ICompilationUnit unit = findCompilationUnit(path);
-        if (unit == null)
-        {
-            return;
-        }
         IASScope[] scopes;
         try
         {
-            scopes = unit.getFileScopeRequest().get().getScopes();
+            scopes = offsetUnit.getFileScopeRequest().get().getScopes();
         }
         catch (Exception e)
         {
@@ -6791,7 +6811,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return offset;
     }
 
-    private IASNode getOffsetNode(Path path, Position position)
+    private IASNode getOffsetNode(Path path, Position position, WorkspaceFolderData folderData)
     {
         int currentOffset = getOffsetFromPathAndPosition(path, position);
         if (currentOffset == -1)
@@ -6804,16 +6824,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             path = Paths.get(includeFileData.parentPath);
         }
-        return getOffsetNode(path, currentOffset);
+        return getOffsetNode(path, currentOffset, folderData);
     }
 
-    private IASNode getOffsetNode(Path path, int currentOffset)
+    private IASNode getOffsetNode(Path path, int currentOffset, WorkspaceFolderData folderData)
     {
-        WorkspaceFolderData folderData = textDocumentPathToFolderData(path);
-        if (folderData == null || folderData.project == null)
-        {
-            return null;
-        }
         RoyaleProject project = folderData.project;
         if (!SourcePathUtils.isInProjectSourcePath(path, project, folderData.configurator))
         {
@@ -6830,8 +6845,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return ASTUtils.getContainingNodeIncludingStart(ast, currentOffset);
     }
 
-    private IASNode getEmbeddedActionScriptNodeInMXMLTag(IMXMLTagData tag, Position position, int currentOffset, RoyaleProject project)
+    private IASNode getEmbeddedActionScriptNodeInMXMLTag(IMXMLTagData tag, Path path, Position position, int currentOffset, WorkspaceFolderData folderData)
     {
+        RoyaleProject project = folderData.project;
         IMXMLTagAttributeData attributeData = MXMLDataUtils.getMXMLTagAttributeWithValueAtOffset(tag, currentOffset);
         if (attributeData != null)
         {
@@ -6852,8 +6868,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             IDefinition attributeDefinition = project.resolveSpecifier(tagDefinition, attributeData.getShortName());
             if (attributeDefinition instanceof IEventDefinition)
             {
-                Path path = Paths.get(tag.getSourcePath());
-                IMXMLClassReferenceNode mxmlNode = (IMXMLClassReferenceNode) getOffsetNode(path, position);
+                IMXMLClassReferenceNode mxmlNode = (IMXMLClassReferenceNode) getOffsetNode(path, position, folderData);
                 IMXMLEventSpecifierNode eventNode = mxmlNode.getEventSpecifierNode(attributeData.getShortName());
                 //the event node might be null if the MXML document isn't in a
                 //fully valid state (unclosed tags, for instance)
@@ -6872,8 +6887,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             else
             {
-                Path path = Paths.get(tag.getSourcePath());
-                IASNode offsetNode = getOffsetNode(path, position);
+                IASNode offsetNode = getOffsetNode(path, position, folderData);
                 if (offsetNode instanceof IMXMLClassReferenceNode)
                 {
                     IMXMLClassReferenceNode mxmlNode = (IMXMLClassReferenceNode) offsetNode;
@@ -7583,6 +7597,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private void organizeImportsInUri(String uri, Map<String,List<TextEdit>> changes)
     {
         Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(uri);
+        if(path == null)
+        {
+            return;
+        }
         WorkspaceFolderData folderData = textDocumentPathToFolderData(path);
         if(folderData == null || folderData.project == null)
         {
@@ -7677,7 +7695,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 }
                 else
                 {
-                    IASNode offsetNode = getOffsetNode(pathForImport, currentOffset);
+                    IASNode offsetNode = getOffsetNode(pathForImport, currentOffset, folderData);
                     importRange = ImportRange.fromOffsetNode(offsetNode);
                 }
                 WorkspaceEdit workspaceEdit = CodeActionsUtils.createWorkspaceEditForAddImport(
