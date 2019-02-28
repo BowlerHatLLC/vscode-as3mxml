@@ -10364,6 +10364,181 @@ suite("organize imports: Application workspace", () =>
 	});
 });
 
+suite("includes: application workspace", () =>
+{
+	test("vscode.executeDefinitionProvider finds definition of method before include statement", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "includes", "Includes.as"));
+		let position = new vscode.Position(4, 20);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDefinitionProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 1,
+							"vscode.executeDefinitionProvider failed to provide location of local variable definition: " + uri);
+						let location = locations[0];
+						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for definition");
+						assert.strictEqual(location.range.start.line, 4, "vscode.executeDefinitionProvider provided incorrect line for definition");
+						assert.strictEqual(location.range.start.character, 18, "vscode.executeDefinitionProvider provided incorrect character for definition");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute definition provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeDefinitionProvider finds definition of method between include statements", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "includes", "Includes.as"));
+		let position = new vscode.Position(8, 20);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDefinitionProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 1,
+							"vscode.executeDefinitionProvider failed to provide location of local variable definition: " + uri);
+						let location = locations[0];
+						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for definition");
+						assert.strictEqual(location.range.start.line, 8, "vscode.executeDefinitionProvider provided incorrect line for definition");
+						assert.strictEqual(location.range.start.character, 18, "vscode.executeDefinitionProvider provided incorrect character for definition");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute definition provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeDefinitionProvider finds definition of method after include statements", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "includes", "Includes.as"));
+		let position = new vscode.Position(12, 20);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDefinitionProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 1,
+							"vscode.executeDefinitionProvider failed to provide location of local variable definition: " + uri);
+						let location = locations[0];
+						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for definition");
+						assert.strictEqual(location.range.start.line, 12, "vscode.executeDefinitionProvider provided incorrect line for definition");
+						assert.strictEqual(location.range.start.character, 18, "vscode.executeDefinitionProvider provided incorrect character for definition");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute definition provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeDefinitionProvider finds definition of method in first file included with include statement", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "includes", "scripts", "include1.as"));
+		let position = new vscode.Position(0, 18);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDefinitionProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 1,
+							"vscode.executeDefinitionProvider failed to provide location of local variable definition: " + uri);
+						let location = locations[0];
+						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for definition");
+						assert.strictEqual(location.range.start.line, 0, "vscode.executeDefinitionProvider provided incorrect line for definition");
+						assert.strictEqual(location.range.start.character, 16, "vscode.executeDefinitionProvider provided incorrect character for definition");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute definition provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeDefinitionProvider finds definition of method in second file included with include statement", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "includes", "scripts", "include2.as"))
+		let position = new vscode.Position(1, 18);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDefinitionProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 1,
+							"vscode.executeDefinitionProvider failed to provide location of local variable definition: " + uri);
+						let location = locations[0];
+						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for definition");
+						assert.strictEqual(location.range.start.line, 1, "vscode.executeDefinitionProvider provided incorrect line for definition");
+						assert.strictEqual(location.range.start.character, 16, "vscode.executeDefinitionProvider provided incorrect character for definition");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute definition provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeDefinitionProvider finds definition of method in one included file from another included file", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "includes", "scripts", "include2.as"));
+		let position = new vscode.Position(3, 3);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDefinitionProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 1,
+							"vscode.executeDefinitionProvider failed to provide location of local variable definition: " + uri);
+						let location = locations[0];
+						let expectedURI = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "includes", "scripts", "include1.as"));
+						assert.strictEqual(location.uri.path, expectedURI.path, "vscode.executeDefinitionProvider provided incorrect uri for definition");
+						assert.strictEqual(location.range.start.line, 0, "vscode.executeDefinitionProvider provided incorrect line for definition");
+						assert.strictEqual(location.range.start.character, 16, "vscode.executeDefinitionProvider provided incorrect character for definition");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute definition provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeDefinitionProvider finds definition of method in main file from an included file", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "includes", "scripts", "include1.as"));
+		let position = new vscode.Position(2, 3);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDefinitionProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 1,
+							"vscode.executeDefinitionProvider failed to provide location of local variable definition: " + uri);
+						let location = locations[0];
+						let expectedURI = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "includes", "Includes.as"))
+						assert.strictEqual(location.uri.path, expectedURI.path, "vscode.executeDefinitionProvider provided incorrect uri for definition");
+						assert.strictEqual(location.range.start.line, 12, "vscode.executeDefinitionProvider provided incorrect line for definition");
+						assert.strictEqual(location.range.start.character, 18, "vscode.executeDefinitionProvider provided incorrect character for definition");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute definition provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeDefinitionProvider finds definition of method in included file from main file", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "includes", "Includes.as"));
+		let position = new vscode.Position(14, 4);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDefinitionProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 1,
+							"vscode.executeDefinitionProvider failed to provide location of local variable definition: " + uri);
+						let location = locations[0];
+						let expectedURI = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "includes", "scripts", "include1.as"));
+						assert.strictEqual(location.uri.path, expectedURI.path, "vscode.executeDefinitionProvider provided incorrect uri for definition");
+						assert.strictEqual(location.range.start.line, 0, "vscode.executeDefinitionProvider provided incorrect line for definition");
+						assert.strictEqual(location.range.start.character, 16, "vscode.executeDefinitionProvider provided incorrect character for definition");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute definition provider: " + uri);
+					});
+		});
+	});
+});
+
 /*suite("ActionScript & MXML extension: Library workspace", () =>
 {
 	test("vscode.extensions.getExtension() and isActive", (done) =>

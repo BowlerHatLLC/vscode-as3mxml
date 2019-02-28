@@ -20,6 +20,8 @@ import java.io.IOException;
 import java.io.Reader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.royale.compiler.filespecs.IFileSpecification;
@@ -44,16 +46,19 @@ public class CompilationUnitUtils
 {
 	public static class IncludeFileData
 	{
-		public IncludeFileData(String parentPath, int localStart, int offset)
+		public IncludeFileData(String parentPath)
 		{
 			this.parentPath = parentPath;
-			this.localStart = localStart;
-			this.offset = offset;
 		}
 
 		public String parentPath;
-		public int localStart;
-		public int offset;
+
+		private List<OffsetCue> offsetCues = new ArrayList<>();
+
+		public List<OffsetCue> getOffsetCues()
+		{
+			return offsetCues;
+		}
 	}
 
 	public static void findIncludedFiles(ICompilationUnit unit, Map<String,IncludeFileData> result)
@@ -98,7 +103,13 @@ public class CompilationUnitUtils
 						//ignore because this data isn't valid, for some reason
 						continue;
 					}
-					includes.put(offsetCue.filename, new IncludeFileData(parentPath, offsetCue.local, offsetCue.adjustment));
+					String filename = offsetCue.filename;
+					if(!includes.containsKey(filename))
+					{
+						includes.put(filename, new IncludeFileData(parentPath));
+					}
+					IncludeFileData includeFileData = includes.get(filename);
+					includeFileData.getOffsetCues().add(offsetCue);
 				}
 			}
 		}
@@ -163,7 +174,7 @@ public class CompilationUnitUtils
 				continue;
 			}
 
-			includes.put(scriptPath.toString(), new IncludeFileData(parentPath, 0, offset));
+			//includes.put(scriptPath.toString(), new IncludeFileData(parentPath, 0, offset));
 
 			int scriptLength = 0;
 			try
@@ -190,7 +201,7 @@ public class CompilationUnitUtils
 				continue;
 			}
 
-			includes.put(parentPath, new IncludeFileData(parentPath, offset, scriptLength));
+			//includes.put(parentPath, new IncludeFileData(parentPath, offset, scriptLength));
 		}
 	}
 }

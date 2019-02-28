@@ -80,6 +80,7 @@ import org.apache.royale.compiler.internal.mxml.MXMLData;
 import org.apache.royale.compiler.internal.mxml.MXMLTagData;
 import org.apache.royale.compiler.internal.parsing.as.ASParser;
 import org.apache.royale.compiler.internal.parsing.as.ASToken;
+import org.apache.royale.compiler.internal.parsing.as.OffsetCue;
 import org.apache.royale.compiler.internal.parsing.as.RepairingTokenBuffer;
 import org.apache.royale.compiler.internal.parsing.as.StreamingASTokenizer;
 import org.apache.royale.compiler.internal.projects.CompilerProject;
@@ -6743,21 +6744,26 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     {
         Reader reader = getReaderForPath(path);
         int offset = LanguageServerCompilerUtils.getOffsetFromPosition(reader, position);
-        IncludeFileData includeFileData = includedFiles.get(path.toString());
-        if(includeFileData != null)
-        {
-            //we're actually going to use the offset from the file that includes
-            //this one
-            if(offset >= includeFileData.localStart)
-            {
-                offset += includeFileData.offset;
-            }
-        }
         try
         {
             reader.close();
         }
         catch(IOException e) {}
+ 
+        IncludeFileData includeFileData = includedFiles.get(path.toString());
+        if(includeFileData != null)
+        {
+            int originalOffset = offset;
+            //we're actually going to use the offset from the file that includes
+            //this one
+            for(OffsetCue offsetCue : includeFileData.getOffsetCues())
+            {
+                if(originalOffset >= offsetCue.local)
+                {
+                    offset = originalOffset + offsetCue.adjustment;
+                }
+            }
+        }
         return offset;
     }
 
