@@ -2170,7 +2170,17 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 System.err.println("Failed to apply changes to code intelligence from URI: " + textDocumentUri);
             }
         }
-        WorkspaceFolderData folderData = textDocumentPathToFolderData(path);
+
+        WorkspaceFolderData folderData = null;
+        compilerWorkspace.startBuilding();
+        try
+        {
+            folderData = textDocumentPathToFolderData(path);
+        }
+        finally
+        {
+            compilerWorkspace.doneBuilding();
+        }
         if (folderData == null)
         {
             //this file isn't in any of the workspace folders
@@ -2188,7 +2198,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         String normalizedChangedPathAsString = path.toString();
 
         ICompilationUnit unit = null;
-        compilerWorkspace.startIdleState();
+        compilerWorkspace.startBuilding();
         try
         {
             unit = getCompilationUnit(path, folderData);
@@ -2201,13 +2211,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         finally
         {
-            compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
+            compilerWorkspace.doneBuilding();
         }
 
         IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(normalizedChangedPathAsString);
         compilerWorkspace.fileChanged(fileSpec);
 
-        compilerWorkspace.startIdleState();
+        compilerWorkspace.startBuilding();
         try
         {
             //if it's an included file, switch to the parent file
@@ -2215,12 +2225,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             if (includeFileData != null)
             {
                 path = Paths.get(includeFileData.parentPath);
-                unit = getCompilationUnit(path, folderData);
+                unit = findCompilationUnit(path, project);
             }
         }
         finally
         {
-            compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
+            compilerWorkspace.doneBuilding();
         }
 
         if(unit == null)
@@ -2420,7 +2430,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 List<WorkspaceFolderData> allFolderData = getAllWorkspaceFolderDataForSWCFile(Paths.get(normalizedChangedPathAsString));
                 if (allFolderData.size() > 0)
                 {
-                    compilerWorkspace.startIdleState();
+                    compilerWorkspace.startBuilding();
                     ICompilationUnit changedUnit = null;
                     try
                     {
@@ -2428,7 +2438,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     }
                     finally
                     {
-                        compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
+                        compilerWorkspace.doneBuilding();
                     }
                     if (changedUnit != null)
                     {
@@ -2469,7 +2479,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             else if (normalizedChangedPathAsString.endsWith(AS_EXTENSION) || normalizedChangedPathAsString.endsWith(MXML_EXTENSION))
             {
-                compilerWorkspace.startIdleState();
+                compilerWorkspace.startBuilding();
                 ICompilationUnit changedUnit = null;
                 try
                 {
@@ -2477,7 +2487,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 }
                 finally
                 {
-                    compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
+                    compilerWorkspace.doneBuilding();
                 }
 
                 if (changedUnit != null)
@@ -2582,7 +2592,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 }
                 for (String fileToRemove : filesToRemove)
                 {
-                    compilerWorkspace.startIdleState();
+                    compilerWorkspace.startBuilding();
                     ICompilationUnit unit = null;
                     try
                     {
@@ -2590,7 +2600,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     }
                     finally
                     {
-                        compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
+                        compilerWorkspace.doneBuilding();
                     }
                     if (unit != null)
                     {
@@ -7750,53 +7760,37 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     {
         return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken ->
         {
-            cancelToken.checkCanceled();
-
-            //don't start the build until all other builds are done
-            compilerWorkspace.startIdleState();
-            compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
-            cancelToken.checkCanceled();
-
-            //pause code intelligence until we're done
-            compilerWorkspace.startBuilding();
+            List<Object> args = params.getArguments();
+            String uri = ((JsonPrimitive) args.get(0)).getAsString();
+            boolean success = false;
             try
             {
-                List<Object> args = params.getArguments();
-                String uri = ((JsonPrimitive) args.get(0)).getAsString();
-                boolean success = false;
+                if (compilerShell == null)
+                {
+                    compilerShell = new CompilerShell(languageClient);
+                }
+                String frameworkLib = System.getProperty(PROPERTY_FRAMEWORK_LIB);
+                Path frameworkSDKHome = Paths.get(frameworkLib, "..");
+                Path workspaceRootPath = LanguageServerCompilerUtils.getPathFromLanguageServerURI(uri);
+                ASConfigCOptions options = new ASConfigCOptions(workspaceRootPath.toString(), frameworkSDKHome.toString(), true, null, null, true, compilerShell);
                 try
                 {
-                    if (compilerShell == null)
-                    {
-                        compilerShell = new CompilerShell(languageClient);
-                    }
-                    String frameworkLib = System.getProperty(PROPERTY_FRAMEWORK_LIB);
-                    Path frameworkSDKHome = Paths.get(frameworkLib, "..");
-                    Path workspaceRootPath = LanguageServerCompilerUtils.getPathFromLanguageServerURI(uri);
-                    ASConfigCOptions options = new ASConfigCOptions(workspaceRootPath.toString(), frameworkSDKHome.toString(), true, null, null, true, compilerShell);
-                    try
-                    {
-                        new ASConfigC(options);
-                        success = true;
-                    }
-                    catch(ASConfigCException e)
-                    {
-                        languageClient.logCompilerShellOutput("\n" + e.getMessage());
-                        success = false;
-                    }
+                    new ASConfigC(options);
+                    success = true;
                 }
-                catch(Exception e)
+                catch(ASConfigCException e)
                 {
-                    ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-                    e.printStackTrace(new PrintStream(buffer));
-                    languageClient.logCompilerShellOutput("Exception in compiler shell: " + buffer.toString());
+                    languageClient.logCompilerShellOutput("\n" + e.getMessage());
+                    success = false;
                 }
-                return success;
             }
-            finally
+            catch(Exception e)
             {
-                compilerWorkspace.doneBuilding();
+                ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+                e.printStackTrace(new PrintStream(buffer));
+                languageClient.logCompilerShellOutput("Exception in compiler shell: " + buffer.toString());
             }
+            return success;
         });
     }
 }
