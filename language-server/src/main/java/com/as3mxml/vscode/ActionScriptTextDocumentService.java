@@ -136,7 +136,6 @@ import org.apache.royale.compiler.tree.mxml.IMXMLSingleDataBindingNode;
 import org.apache.royale.compiler.tree.mxml.IMXMLSpecifierNode;
 import org.apache.royale.compiler.units.ICompilationUnit;
 import org.apache.royale.compiler.units.IInvisibleCompilationUnit;
-import org.apache.royale.compiler.workspaces.IWorkspace;
 import org.apache.royale.utils.FilenameNormalization;
 
 import com.google.common.collect.Lists;
@@ -407,12 +406,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             cancelToken.checkCanceled();
 
-            //don't start the build until all other builds are done
-            compilerWorkspace.startIdleState();
-            compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
-            cancelToken.checkCanceled();
-
             compilerWorkspace.startBuilding();
+            cancelToken.checkCanceled();
             try
             {
                 //this shouldn't be necessary, but if we ever forget to do this
@@ -530,12 +525,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             cancelToken.checkCanceled();
 
-            //don't start the build until all other builds are done
-            compilerWorkspace.startIdleState();
-            compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
-            cancelToken.checkCanceled();
-
             compilerWorkspace.startBuilding();
+            cancelToken.checkCanceled();
             try
             {
                 TextDocumentIdentifier textDocument = params.getTextDocument();
@@ -606,12 +597,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             cancelToken.checkCanceled();
 
-            //don't start the build until all other builds are done
-            compilerWorkspace.startIdleState();
-            compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
-            cancelToken.checkCanceled();
-
             compilerWorkspace.startBuilding();
+            cancelToken.checkCanceled();
             try
             {
                 TextDocumentIdentifier textDocument = params.getTextDocument();
@@ -790,12 +777,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             cancelToken.checkCanceled();
 
-            //don't start the build until all other builds are done
-            compilerWorkspace.startIdleState();
-            compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
-            cancelToken.checkCanceled();
-
             compilerWorkspace.startBuilding();
+            cancelToken.checkCanceled();
             try
             {
                 TextDocumentIdentifier textDocument = params.getTextDocument();
@@ -877,12 +860,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             cancelToken.checkCanceled();
 
-            //don't start the build until all other builds are done
-            compilerWorkspace.startIdleState();
-            compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
-            cancelToken.checkCanceled();
-
             compilerWorkspace.startBuilding();
+            cancelToken.checkCanceled();
             try
             {
                 TextDocumentIdentifier textDocument = params.getTextDocument();
@@ -949,12 +928,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             cancelToken.checkCanceled();
 
-            //don't start the build until all other builds are done
-            compilerWorkspace.startIdleState();
-            compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
-            cancelToken.checkCanceled();
-
             compilerWorkspace.startBuilding();
+            cancelToken.checkCanceled();
             try
             {
                 TextDocumentIdentifier textDocument = params.getTextDocument();
@@ -1016,12 +991,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             cancelToken.checkCanceled();
 
-            //don't start the build until all other builds are done
-            compilerWorkspace.startIdleState();
-            compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
-            cancelToken.checkCanceled();
-
             compilerWorkspace.startBuilding();
+            cancelToken.checkCanceled();
             try
             {
                 TextDocumentIdentifier textDocument = params.getTextDocument();
@@ -1098,12 +1069,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             cancelToken.checkCanceled();
 
-            //don't start the build until all other builds are done
-            compilerWorkspace.startIdleState();
-            compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
-            cancelToken.checkCanceled();
-
             compilerWorkspace.startBuilding();
+            cancelToken.checkCanceled();
             try
             {
                 Set<String> qualifiedNames = new HashSet<>();
@@ -1214,12 +1181,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             cancelToken.checkCanceled();
 
-            //don't start the build until all other builds are done
-            compilerWorkspace.startIdleState();
-            compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
-            cancelToken.checkCanceled();
-
             compilerWorkspace.startBuilding();
+            cancelToken.checkCanceled();
             try
             {
                 TextDocumentIdentifier textDocument = params.getTextDocument();
@@ -1300,12 +1263,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             cancelToken.checkCanceled();
 
-            //don't start the build until all other builds are done
-            compilerWorkspace.startIdleState();
-            compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
-            cancelToken.checkCanceled();
-
             compilerWorkspace.startBuilding();
+            cancelToken.checkCanceled();
             try
             {
                 TextDocumentIdentifier textDocument = params.getTextDocument();
@@ -1469,7 +1428,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return;
         }
-        RoyaleProject project = folderData.project;
         IASNode offsetNode = getOffsetNode(path, diagnostic.getRange().getStart(), folderData);
         if (offsetNode instanceof IMXMLInstanceNode)
         {
@@ -1549,7 +1507,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return;
         }
-        RoyaleProject project = folderData.project;
         IASNode offsetNode = getOffsetNode(path, diagnostic.getRange().getStart(), folderData);
         if (offsetNode instanceof IMXMLInstanceNode)
         {
@@ -1863,12 +1820,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             cancelToken.checkCanceled();
 
-            //don't start the build until all other builds are done
-            compilerWorkspace.startIdleState();
-            compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
-            cancelToken.checkCanceled();
-
             compilerWorkspace.startBuilding();
+            cancelToken.checkCanceled();
             try
             {
                 TextDocumentIdentifier textDocument = params.getTextDocument();
@@ -6550,9 +6503,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private boolean checkFilePathForAllProblems(Path path, ProblemQuery problemQuery, WorkspaceFolderData folderData, boolean quick)
     {
-        //don't start the build until all other builds are done
-        compilerWorkspace.startIdleState();
-        compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
         compilerWorkspace.startBuilding();
         try
         {
@@ -7464,13 +7414,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             cancelToken.checkCanceled();
 
-            //don't start the build until all other builds are done
-            compilerWorkspace.startIdleState();
-            compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
-            cancelToken.checkCanceled();
-
-            //pause code intelligence until we're done
             compilerWorkspace.startBuilding();
+            cancelToken.checkCanceled();
             ApplyWorkspaceEditParams editParams = null;
             try
             {
@@ -7526,13 +7471,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             cancelToken.checkCanceled();
 
-            //don't start the build until all other builds are done
-            compilerWorkspace.startIdleState();
-            compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
-            cancelToken.checkCanceled();
-
-            //pause code intelligence until we're done
             compilerWorkspace.startBuilding();
+            cancelToken.checkCanceled();
             ApplyWorkspaceEditParams editParams = null;
             try
             {
@@ -7652,13 +7592,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             cancelToken.checkCanceled();
 
-            //don't start the build until all other builds are done
-            compilerWorkspace.startIdleState();
-            compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
-            cancelToken.checkCanceled();
-
-            //pause code intelligence until we're done
             compilerWorkspace.startBuilding();
+            cancelToken.checkCanceled();
             try
             {
                 List<Object> args = params.getArguments();
@@ -7725,13 +7660,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             cancelToken.checkCanceled();
 
-            //don't start the build until all other builds are done
-            compilerWorkspace.startIdleState();
-            compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
-            cancelToken.checkCanceled();
-
-            //pause code intelligence until we're done
             compilerWorkspace.startBuilding();
+            cancelToken.checkCanceled();
             try
             {
                 List<Object> args = params.getArguments();
