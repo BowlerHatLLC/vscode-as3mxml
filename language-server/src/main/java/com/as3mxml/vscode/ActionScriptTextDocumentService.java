@@ -1932,75 +1932,34 @@ public class ActionScriptTextDocumentService implements TextDocumentService
      */
     public CompletableFuture<Object> executeCommand(ExecuteCommandParams params)
     {
-        return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken ->
+        switch(params.getCommand())
         {
-            cancelToken.checkCanceled();
-
-            //don't start the build until all other builds are done
-            compilerWorkspace.startIdleState();
-            compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
-            cancelToken.checkCanceled();
-            
-            //we don't need to pause code intelligence for these commands
-            Object result = null;
-            switch(params.getCommand())
+            case ICommandConstants.QUICK_COMPILE:
             {
-                case ICommandConstants.QUICK_COMPILE:
-                {
-                    result = executeQuickCompileCommand(params);
-                    break;
-                }
+                return executeQuickCompileCommand(params);
             }
-            if(result != null)
+            case ICommandConstants.ADD_IMPORT:
             {
-                cancelToken.checkCanceled();
-                return result;
+                return executeAddImportCommand(params);
             }
-
-            //pause code intelligence until we're done
-            compilerWorkspace.startBuilding();
-            try
+            case ICommandConstants.ADD_MXML_NAMESPACE:
             {
-                switch(params.getCommand())
-                {
-                    case ICommandConstants.ADD_IMPORT:
-                    {
-                        executeAddImportCommand(params);
-                        result = new Object();
-                        break;
-                    }
-                    case ICommandConstants.ADD_MXML_NAMESPACE:
-                    {
-                        executeAddMXMLNamespaceCommand(params);
-                        result = new Object();
-                        break;
-                    }
-                    case ICommandConstants.ORGANIZE_IMPORTS_IN_URI:
-                    {
-                        executeOrganizeImportsInUriCommand(params);
-                        result = new Object();
-                        break;
-                    }
-                    case ICommandConstants.ORGANIZE_IMPORTS_IN_DIRECTORY:
-                    {
-                        executeOrganizeImportsInDirectoryCommand(params);
-                        result = new Object();
-                        break;
-                    }
-                    default:
-                    {
-                        System.err.println("Unknown command: " + params.getCommand());
-                        result = new Object();
-                    }
-                }
-                cancelToken.checkCanceled();
-                return result;
+                return executeAddMXMLNamespaceCommand(params);
             }
-            finally
+            case ICommandConstants.ORGANIZE_IMPORTS_IN_URI:
             {
-                compilerWorkspace.doneBuilding();
+                return executeOrganizeImportsInUriCommand(params);
             }
-        });
+            case ICommandConstants.ORGANIZE_IMPORTS_IN_DIRECTORY:
+            {
+                return executeOrganizeImportsInDirectoryCommand(params);
+            }
+            default:
+            {
+                System.err.println("Unknown command: " + params.getCommand());
+                return CompletableFuture.completedFuture(new Object());
+            }
+        }
     }
 
     /**
@@ -2455,7 +2414,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
             //then, check if source or library files have changed
             FileChangeType changeType = event.getType();
-            System.err.println("~~~ didChangeWatchedFiles: " + changeType + " " + event.getUri());
             String normalizedChangedPathAsString = FilenameNormalization.normalize(changedPath.toString());
             if (normalizedChangedPathAsString.endsWith(SWC_EXTENSION))
             {
@@ -7426,26 +7384,29 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return range;
     }
 
-    private void executeOrganizeImportsInDirectoryCommand(ExecuteCommandParams params)
+    private CompletableFuture<Object> executeOrganizeImportsInDirectoryCommand(ExecuteCommandParams params)
     {
         List<Object> args = params.getArguments();
         JsonObject uriObject = (JsonObject) args.get(0);
-        String uri = uriObject.get("external").getAsString();
+        String directoryURI = uriObject.get("external").getAsString();
 
-        Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(uri);
-        if (path == null)
+        Path directoryPath = LanguageServerCompilerUtils.getPathFromLanguageServerURI(directoryURI);
+        if (directoryPath == null)
         {
-            return;
+            return CompletableFuture.completedFuture(new Object());
         }
 
-        File rootDir = path.toFile();
-        if (!rootDir.isDirectory())
+        File directoryFile = directoryPath.toFile();
+        if (!directoryFile.isDirectory())
         {
-            return;
+            return CompletableFuture.completedFuture(new Object());
         }
-        ArrayList<File> directories = new ArrayList<>();
-        directories.add(rootDir);
-        for(int i = 0, dirCount = 1; i < dirCount; i++)
+
+        List<Path> filesToClose = new ArrayList<>();
+        List<String> fileURIs = new ArrayList<>();
+        List<File> directories = new ArrayList<>();
+        directories.add(directoryFile);
+        for(int i = 0; i < directories.size(); i++)
         {
             File currentDir = directories.get(i);
             File[] files = currentDir.listFiles();
@@ -7455,68 +7416,180 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 {
                     //add this directory to the list to search
                     directories.add(file);
-                    dirCount++;
                     continue;
                 }
                 if (!file.getName().endsWith(AS_EXTENSION) && !file.getName().endsWith(MXML_EXTENSION))
                 {
                     continue;
                 }
-                organizeImportsInUri(file.toURI().toString());
+                fileURIs.add(file.toURI().toString());
+                Path filePath = file.toPath();
+                if(!sourceByPath.containsKey(filePath))
+                {
+                    filesToClose.add(file.toPath());
+                    openFileForOrganizeImports(filePath);
+                }
             }
         }
-        return;
+        if (fileURIs.size() == 0)
+        {
+            return CompletableFuture.completedFuture(new Object());
+        }
+
+        return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken ->
+        {
+            cancelToken.checkCanceled();
+
+            //don't start the build until all other builds are done
+            compilerWorkspace.startIdleState();
+            compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
+            cancelToken.checkCanceled();
+
+            //pause code intelligence until we're done
+            compilerWorkspace.startBuilding();
+            ApplyWorkspaceEditParams editParams = null;
+            try
+            {
+                Map<String,List<TextEdit>> changes = new HashMap<>();
+                for(String fileURI : fileURIs)
+                {
+                    organizeImportsInUri(fileURI, changes);
+                }
+                
+                if(changes.keySet().size() > 0)
+                {
+                    editParams = new ApplyWorkspaceEditParams();
+                    WorkspaceEdit workspaceEdit = new WorkspaceEdit();
+                    workspaceEdit.setChanges(changes);
+                    editParams.setEdit(workspaceEdit);
+                }
+            }
+            finally
+            {
+                compilerWorkspace.doneBuilding();
+            }
+            for(Path filePath : filesToClose)
+            {
+                sourceByPath.remove(filePath);
+            }
+            if(editParams != null)
+            {
+                languageClient.applyEdit(editParams);
+            }
+            return new Object();
+        });
+    }
+    
+    private CompletableFuture<Object> executeOrganizeImportsInUriCommand(ExecuteCommandParams params)
+    {
+        List<Object> args = params.getArguments();
+        JsonObject uriObject = (JsonObject) args.get(0);
+        String uri = uriObject.get("external").getAsString();
+
+        Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(uri);
+        if (path == null)
+        {
+            return CompletableFuture.completedFuture(new Object());
+        }
+
+        boolean isOpen = sourceByPath.containsKey(path);
+        if(!isOpen)
+        {
+            openFileForOrganizeImports(path);
+        }
+        
+        return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken ->
+        {
+            cancelToken.checkCanceled();
+
+            //don't start the build until all other builds are done
+            compilerWorkspace.startIdleState();
+            compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
+            cancelToken.checkCanceled();
+
+            //pause code intelligence until we're done
+            compilerWorkspace.startBuilding();
+            ApplyWorkspaceEditParams editParams = null;
+            try
+            {
+                
+                Map<String,List<TextEdit>> changes = new HashMap<>();
+                organizeImportsInUri(uri, changes);
+
+                if(changes.keySet().size() > 0)
+                {
+                    editParams = new ApplyWorkspaceEditParams();
+                    WorkspaceEdit workspaceEdit = new WorkspaceEdit();
+                    workspaceEdit.setChanges(changes);
+                    editParams.setEdit(workspaceEdit);
+                }
+            }
+            finally
+            {
+                compilerWorkspace.doneBuilding();
+            }
+            if(!isOpen)
+            {
+                sourceByPath.remove(path);
+            }
+            if(editParams != null)
+            {
+                languageClient.applyEdit(editParams);
+            }
+            return new Object();
+        });
     }
 
-    private void organizeImportsInUri(String uri)
+    private void openFileForOrganizeImports(Path path)
     {
-        Path pathForImport = LanguageServerCompilerUtils.getPathFromLanguageServerURI(uri);
-        if (pathForImport == null)
+        if(sourceByPath.containsKey(path))
+        {
+            //already opened
+            return;
+        }
+
+        //if the file isn't open in an editor, we need to read it from the
+        //file system instead.
+        String text = getFileTextForPath(path);
+        if(text == null)
         {
             return;
         }
-        WorkspaceFolderData folderData = textDocumentPathToFolderData(pathForImport);
+
+        //for some reason, the full AST is not populated if the file is not
+        //already open in the editor. we use a similar workaround to didOpen
+        //to force the AST to be populated.
+
+        //we'll clear this out later before we return from this function
+        sourceByPath.put(path, text);
+
+        //notify the workspace that it should read the file from memory
+        //instead of loading from the file system
+        String normalizedPath = FilenameNormalization.normalize(path.toAbsolutePath().toString());
+        IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(normalizedPath);
+        compilerWorkspace.fileChanged(fileSpec);
+    }
+
+    private void organizeImportsInUri(String uri, Map<String,List<TextEdit>> changes)
+    {
+        Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(uri);
+        WorkspaceFolderData folderData = textDocumentPathToFolderData(path);
         if(folderData == null || folderData.project == null)
         {
             return;
         }
         RoyaleProject project = folderData.project;
-        String text = null;
-        boolean isOpen = sourceByPath.containsKey(pathForImport);
-        if (isOpen)
+
+        String text = sourceByPath.get(path);
+        if(text == null)
         {
-            //if the file is open in an editor, we have the string in memory
-            //already, so use that.
-            text = sourceByPath.get(pathForImport);
-        }
-        else
-        {
-            //if the file isn't open in an editor, we need to read it from the
-            //file system instead.
-            text = getFileTextForPath(pathForImport);
-            if(text == null)
-            {
-                return;
-            }
-
-            //for some reason, the full AST is not populated if the file is not
-            //already open in the editor. we use a similar workaround to didOpen
-            //to force the AST to be populated.
-
-            //we'll clear this out later before we return from this function
-            sourceByPath.put(pathForImport, text);
-
-            //notify the workspace that it should read the file from memory
-            //instead of loading from the file system
-            String normalizedPath = FilenameNormalization.normalize(pathForImport.toAbsolutePath().toString());
-            IFileSpecification fileSpec = fileSpecGetter.getFileSpecification(normalizedPath);
-            compilerWorkspace.fileChanged(fileSpec);
+            return;
         }
 
         Set<String> missingNames = null;
         Set<String> importsToAdd = null;
         Set<IImportNode> importsToRemove = null;
-        IASNode ast = getAST(pathForImport, folderData);
+        IASNode ast = getAST(path, folderData);
         if (ast != null)
         {
             missingNames = ASTUtils.findUnresolvedIdentifiersToImport(ast, project);
@@ -7536,169 +7609,194 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 }
             }
         }
-        if(!isOpen)
-        {
-            //if the file wasn't open before, clear out this temporary text
-            sourceByPath.remove(pathForImport);
-        }
         List<TextEdit> edits = ImportTextEditUtils.organizeImports(text, importsToRemove, importsToAdd);
         if(edits == null || edits.size() == 0)
         {
             //no edit required
             return;
         }
-        
-        ApplyWorkspaceEditParams editParams = new ApplyWorkspaceEditParams();
-        WorkspaceEdit workspaceEdit = new WorkspaceEdit();
-        HashMap<String,List<TextEdit>> changes = new HashMap<>();
         changes.put(uri, edits);
-        workspaceEdit.setChanges(changes);
-        editParams.setEdit(workspaceEdit);
-
-        languageClient.applyEdit(editParams);
     }
     
-    private void executeOrganizeImportsInUriCommand(ExecuteCommandParams params)
+    private CompletableFuture<Object> executeAddImportCommand(ExecuteCommandParams params)
     {
-        List<Object> args = params.getArguments();
-        JsonObject uriObject = (JsonObject) args.get(0);
-        String uri = uriObject.get("external").getAsString();
+        return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken ->
+        {
+            cancelToken.checkCanceled();
 
-        Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(uri);
-        if (path == null)
-        {
-            return;
-        }
-        WorkspaceFolderData folderData = textDocumentPathToFolderData(path);
-        if (folderData == null || folderData.project == null)
-        {
-            languageClient.showMessage(new MessageParams(MessageType.Error, "Organize Imports failed. File is not in source path."));
-            return;
-        }
+            //don't start the build until all other builds are done
+            compilerWorkspace.startIdleState();
+            compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
+            cancelToken.checkCanceled();
 
-        organizeImportsInUri(uri);
-    }
-    
-    private void executeAddImportCommand(ExecuteCommandParams params)
-    {
-        List<Object> args = params.getArguments();
-        String qualifiedName = ((JsonPrimitive) args.get(0)).getAsString();
-        String uri = ((JsonPrimitive) args.get(1)).getAsString();
-        int line = ((JsonPrimitive) args.get(2)).getAsInt();
-        int character = ((JsonPrimitive) args.get(3)).getAsInt();
-        if(qualifiedName == null)
-        {
-            return;
-        }
-        Path pathForImport = LanguageServerCompilerUtils.getPathFromLanguageServerURI(uri);
-        if(pathForImport == null)
-        {
-            return;
-        }
-        String text = getFileTextForPath(pathForImport);
-        if(text == null)
-        {
-            return;
-        }
-        WorkspaceFolderData folderData = textDocumentPathToFolderData(pathForImport);
-        if(folderData == null || folderData.project == null)
-        {
-            return;
-        }
-        int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(new StringReader(text), new Position(line, character));
-        ImportRange importRange = null;
-        if(uri.endsWith(MXML_EXTENSION))
-        {
-            MXMLData mxmlData = getMXMLDataForPath(pathForImport, folderData);
-            IMXMLTagData offsetTag = getOffsetMXMLTag(mxmlData, currentOffset);
-            importRange = ImportRange.fromOffsetTag(offsetTag, currentOffset);
-        }
-        else
-        {
-            IASNode offsetNode = getOffsetNode(pathForImport, currentOffset);
-            importRange = ImportRange.fromOffsetNode(offsetNode);
-        }
-        WorkspaceEdit workspaceEdit = CodeActionsUtils.createWorkspaceEditForAddImport(
-            qualifiedName, text, uri, importRange);
-        if(workspaceEdit == null)
-        {
-            //no edit required
-            return;
-        }
-
-        ApplyWorkspaceEditParams editParams = new ApplyWorkspaceEditParams();
-        editParams.setEdit(workspaceEdit);
-
-        languageClient.applyEdit(editParams);
-    }
-    
-    private void executeAddMXMLNamespaceCommand(ExecuteCommandParams params)
-    {
-        List<Object> args = params.getArguments();
-        String nsPrefix = ((JsonPrimitive) args.get(0)).getAsString();
-        String nsUri = ((JsonPrimitive) args.get(1)).getAsString();
-        String uri = ((JsonPrimitive) args.get(2)).getAsString();
-        int startIndex = ((JsonPrimitive) args.get(3)).getAsInt();
-        int endIndex = ((JsonPrimitive) args.get(4)).getAsInt();
-        if(nsPrefix == null || nsUri == null)
-        {
-            return;
-        }
-        Path pathForImport = LanguageServerCompilerUtils.getPathFromLanguageServerURI(uri);
-        if(pathForImport == null)
-        {
-            return;
-        }
-        String text = getFileTextForPath(pathForImport);
-        if(text == null)
-        {
-            return;
-        }
-        WorkspaceEdit workspaceEdit = CodeActionsUtils.createWorkspaceEditForAddMXMLNamespace(nsPrefix, nsUri, text, uri, startIndex, endIndex);
-        if(workspaceEdit == null)
-        {
-            //no edit required
-            return;
-        }
-
-        ApplyWorkspaceEditParams editParams = new ApplyWorkspaceEditParams();
-        editParams.setEdit(workspaceEdit);
-
-        languageClient.applyEdit(editParams);
-    }
-
-    private boolean executeQuickCompileCommand(ExecuteCommandParams params)
-    {
-        List<Object> args = params.getArguments();
-        String uri = ((JsonPrimitive) args.get(0)).getAsString();
-        boolean success = false;
-        try
-        {
-            if (compilerShell == null)
-            {
-                compilerShell = new CompilerShell(languageClient);
-            }
-            String frameworkLib = System.getProperty(PROPERTY_FRAMEWORK_LIB);
-            Path frameworkSDKHome = Paths.get(frameworkLib, "..");
-            Path workspaceRootPath = LanguageServerCompilerUtils.getPathFromLanguageServerURI(uri);
-            ASConfigCOptions options = new ASConfigCOptions(workspaceRootPath.toString(), frameworkSDKHome.toString(), true, null, null, true, compilerShell);
+            //pause code intelligence until we're done
+            compilerWorkspace.startBuilding();
             try
             {
-                new ASConfigC(options);
-                success = true;
+                List<Object> args = params.getArguments();
+                String qualifiedName = ((JsonPrimitive) args.get(0)).getAsString();
+                String uri = ((JsonPrimitive) args.get(1)).getAsString();
+                int line = ((JsonPrimitive) args.get(2)).getAsInt();
+                int character = ((JsonPrimitive) args.get(3)).getAsInt();
+                if(qualifiedName == null)
+                {
+                    return new Object();
+                }
+                Path pathForImport = LanguageServerCompilerUtils.getPathFromLanguageServerURI(uri);
+                if(pathForImport == null)
+                {
+                    return new Object();
+                }
+                String text = getFileTextForPath(pathForImport);
+                if(text == null)
+                {
+                    return new Object();
+                }
+                WorkspaceFolderData folderData = textDocumentPathToFolderData(pathForImport);
+                if(folderData == null || folderData.project == null)
+                {
+                    return new Object();
+                }
+                int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(new StringReader(text), new Position(line, character));
+                ImportRange importRange = null;
+                if(uri.endsWith(MXML_EXTENSION))
+                {
+                    MXMLData mxmlData = getMXMLDataForPath(pathForImport, folderData);
+                    IMXMLTagData offsetTag = getOffsetMXMLTag(mxmlData, currentOffset);
+                    importRange = ImportRange.fromOffsetTag(offsetTag, currentOffset);
+                }
+                else
+                {
+                    IASNode offsetNode = getOffsetNode(pathForImport, currentOffset);
+                    importRange = ImportRange.fromOffsetNode(offsetNode);
+                }
+                WorkspaceEdit workspaceEdit = CodeActionsUtils.createWorkspaceEditForAddImport(
+                    qualifiedName, text, uri, importRange);
+                if(workspaceEdit == null)
+                {
+                    //no edit required
+                    return new Object();
+                }
+
+                ApplyWorkspaceEditParams editParams = new ApplyWorkspaceEditParams();
+                editParams.setEdit(workspaceEdit);
+
+                languageClient.applyEdit(editParams);
+                return new Object();
             }
-            catch(ASConfigCException e)
+            finally
             {
-                languageClient.logCompilerShellOutput("\n" + e.getMessage());
-                success = false;
+                compilerWorkspace.doneBuilding();
             }
-        }
-        catch(Exception e)
+        });
+    }
+    
+    private CompletableFuture<Object> executeAddMXMLNamespaceCommand(ExecuteCommandParams params)
+    {
+        return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken ->
         {
-            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-            e.printStackTrace(new PrintStream(buffer));
-            languageClient.logCompilerShellOutput("Exception in compiler shell: " + buffer.toString());
-        }
-        return success;
+            cancelToken.checkCanceled();
+
+            //don't start the build until all other builds are done
+            compilerWorkspace.startIdleState();
+            compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
+            cancelToken.checkCanceled();
+
+            //pause code intelligence until we're done
+            compilerWorkspace.startBuilding();
+            try
+            {
+                List<Object> args = params.getArguments();
+                String nsPrefix = ((JsonPrimitive) args.get(0)).getAsString();
+                String nsUri = ((JsonPrimitive) args.get(1)).getAsString();
+                String uri = ((JsonPrimitive) args.get(2)).getAsString();
+                int startIndex = ((JsonPrimitive) args.get(3)).getAsInt();
+                int endIndex = ((JsonPrimitive) args.get(4)).getAsInt();
+                if(nsPrefix == null || nsUri == null)
+                {
+                    return new Object();
+                }
+                Path pathForImport = LanguageServerCompilerUtils.getPathFromLanguageServerURI(uri);
+                if(pathForImport == null)
+                {
+                    return new Object();
+                }
+                String text = getFileTextForPath(pathForImport);
+                if(text == null)
+                {
+                    return new Object();
+                }
+                WorkspaceEdit workspaceEdit = CodeActionsUtils.createWorkspaceEditForAddMXMLNamespace(nsPrefix, nsUri, text, uri, startIndex, endIndex);
+                if(workspaceEdit == null)
+                {
+                    //no edit required
+                    return new Object();
+                }
+
+                ApplyWorkspaceEditParams editParams = new ApplyWorkspaceEditParams();
+                editParams.setEdit(workspaceEdit);
+
+                languageClient.applyEdit(editParams);
+                return new Object();
+            }
+            finally
+            {
+                compilerWorkspace.doneBuilding();
+            }
+        });
+    }
+
+    private CompletableFuture<Object> executeQuickCompileCommand(ExecuteCommandParams params)
+    {
+        return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken ->
+        {
+            cancelToken.checkCanceled();
+
+            //don't start the build until all other builds are done
+            compilerWorkspace.startIdleState();
+            compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
+            cancelToken.checkCanceled();
+
+            //pause code intelligence until we're done
+            compilerWorkspace.startBuilding();
+            try
+            {
+                List<Object> args = params.getArguments();
+                String uri = ((JsonPrimitive) args.get(0)).getAsString();
+                boolean success = false;
+                try
+                {
+                    if (compilerShell == null)
+                    {
+                        compilerShell = new CompilerShell(languageClient);
+                    }
+                    String frameworkLib = System.getProperty(PROPERTY_FRAMEWORK_LIB);
+                    Path frameworkSDKHome = Paths.get(frameworkLib, "..");
+                    Path workspaceRootPath = LanguageServerCompilerUtils.getPathFromLanguageServerURI(uri);
+                    ASConfigCOptions options = new ASConfigCOptions(workspaceRootPath.toString(), frameworkSDKHome.toString(), true, null, null, true, compilerShell);
+                    try
+                    {
+                        new ASConfigC(options);
+                        success = true;
+                    }
+                    catch(ASConfigCException e)
+                    {
+                        languageClient.logCompilerShellOutput("\n" + e.getMessage());
+                        success = false;
+                    }
+                }
+                catch(Exception e)
+                {
+                    ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+                    e.printStackTrace(new PrintStream(buffer));
+                    languageClient.logCompilerShellOutput("Exception in compiler shell: " + buffer.toString());
+                }
+                return success;
+            }
+            finally
+            {
+                compilerWorkspace.doneBuilding();
+            }
+        });
     }
 }
