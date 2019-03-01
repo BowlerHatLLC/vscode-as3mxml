@@ -6421,7 +6421,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(folderData.folder.getUri());
                 problemSourcePath = path.toString();
             }
-            if (includedFiles.containsKey(problemSourcePath))
+            IncludeFileData includedFile = includedFiles.get(problemSourcePath);
+            if (includedFile != null && !includedFile.parentPath.equals(problemSourcePath))
             {
                 //skip files that are included in other files
                 continue;
