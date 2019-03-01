@@ -198,7 +198,7 @@
     "problemMatchers": [
       {
         "name": "nextgenas_nomatch",
-        "label": "No Problem Matcher (Default for ActionScript)",
+        "label": "No Problem Matcher (Deprecated: Use empty array instead)",
         "applyTo": "allDocuments",
         "pattern": {
           "regexp": "^$"
