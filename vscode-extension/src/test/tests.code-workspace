@@ -1,0 +1,11 @@
+{
+	"folders": [
+		{
+			"path": "application_workspace"
+		},
+		{
+			"path": "library_workspace"
+		}
+	],
+	"settings": {}
+}

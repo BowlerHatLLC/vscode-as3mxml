@@ -1,7 +1,0 @@
-{
-	//nightly
-	//"as3mxml.sdk.editor": "c:/Users/josht/Development/Flex/sdks/royale-js-nightly"
-
-	//maven local
-	//"as3mxml.sdk.editor": "c:/Users/josht/Development/apache/royale-asjs-maven/distribution/target/apache-royale-0.9.4-SNAPSHOT"
-}
