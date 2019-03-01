@@ -37,7 +37,7 @@ const PLATFORM_MAC = "mac";
 const TARGET_AIR = "air";
 const TARGET_BUNDLE = "bundle";
 const TARGET_NATIVE = "native";
-const MATCHER = "$nextgenas_nomatch";
+const MATCHER = [];
 const TASK_TYPE = "actionscript";
 
 interface ActionScriptTaskDefinition extends vscode.TaskDefinition
