@@ -37,6 +37,8 @@ import org.apache.royale.compiler.mxml.IMXMLDataManager;
 import org.apache.royale.compiler.mxml.IMXMLLanguageConstants;
 import org.apache.royale.compiler.mxml.IMXMLTagAttributeData;
 import org.apache.royale.compiler.mxml.IMXMLTagData;
+import org.apache.royale.compiler.mxml.IMXMLTextData;
+import org.apache.royale.compiler.mxml.IMXMLUnitData;
 import org.apache.royale.compiler.scopes.IASScope;
 import org.apache.royale.compiler.tree.as.IASNode;
 import org.apache.royale.compiler.units.ICompilationUnit;
@@ -44,6 +46,16 @@ import org.apache.royale.compiler.workspaces.IWorkspace;
 
 public class CompilationUnitUtils
 {
+	private static final String FILE_EXTENSION_MXML = ".mxml";
+
+	private static class OffsetCue2 extends OffsetCue
+	{
+		public OffsetCue2(String filename, int absolute, int adjustment)
+		{
+			super(filename, absolute, adjustment);
+		}
+	}
+
 	public static class IncludeFileData
 	{
 		public IncludeFileData(String parentPath)
@@ -71,9 +83,9 @@ public class CompilationUnitUtils
 			return;
 		}
 		String path = unit.getAbsoluteFilename();
-		if(path.endsWith(".mxml"))
+		if(path.endsWith(FILE_EXTENSION_MXML))
 		{
-			//findMXMLIncludes(unit, result);
+			findMXMLIncludes(unit, result);
 		}
 		else
 		{
@@ -126,6 +138,26 @@ public class CompilationUnitUtils
 		IFileSpecification fileSpecification = workspace.getFileSpecification(unit.getAbsoluteFilename());
 		MXMLData mxmlData = (MXMLData) mxmlDataManager.get(fileSpecification);
 
+		OffsetLookup offsetLookup = null;
+		try
+		{
+			IASScope[] scopes = unit.getFileScopeRequest().get().getScopes();
+			if (scopes.length == 0)
+			{
+				return;
+			}
+			IASScope firstScope = scopes[0];
+			if (firstScope instanceof MXMLFileScope)
+			{
+				MXMLFileScope fileScope = (MXMLFileScope) firstScope;
+				offsetLookup = fileScope.getOffsetLookup();
+			}
+		}
+		catch(InterruptedException e)
+		{
+			return;
+		}
+
 		IMXMLTagData rootTag = mxmlData.getRootTag();
 		String parentPath = mxmlData.getPath();
 		IMXMLTagData[] scriptTags = MXMLDataUtils.findMXMLScriptTags(rootTag);
@@ -134,74 +166,85 @@ public class CompilationUnitUtils
 			IMXMLTagAttributeData sourceAttribute = scriptTag.getTagAttributeData(IMXMLLanguageConstants.ATTRIBUTE_SOURCE);
 			if(sourceAttribute == null)
 			{
-				continue;
+				IMXMLUnitData mxmlUnit = scriptTag.getFirstChildUnit();
+				while(mxmlUnit != null)
+				{
+					if (mxmlUnit instanceof IMXMLTextData)
+					{
+						IMXMLTextData mxmlTextData = (IMXMLTextData) mxmlUnit;
+						String text = mxmlTextData.getCompilableText();
+						if (!scriptTag.getMXMLDialect().isWhitespace(text))
+						{
+							int localOffset = mxmlTextData.getParentUnitData().getAbsoluteEnd();
+							int[] absoluteOffsets = offsetLookup.getAbsoluteOffset(parentPath, localOffset);
+							int absoluteOffset = absoluteOffsets[0];
+							
+							if(!includes.containsKey(parentPath))
+							{
+								includes.put(parentPath, new IncludeFileData(parentPath));
+							}
+							IncludeFileData includeFileData = includes.get(parentPath);
+							includeFileData.getOffsetCues().add(new OffsetCue2(parentPath, absoluteOffset, absoluteOffset - localOffset));
+						}
+					}
+					mxmlUnit = mxmlUnit.getNextSiblingUnit();
+				}
 			}
-			Path scriptPath = Paths.get(sourceAttribute.getRawValue());
-			if(!scriptPath.isAbsolute())
+			else
 			{
-				Path mxmlPath = Paths.get(mxmlData.getPath());
-				scriptPath = mxmlPath.getParent().resolve(scriptPath);
-			}
+				Path scriptPath = Paths.get(sourceAttribute.getRawValue());
+				if(!scriptPath.isAbsolute())
+				{
+					Path mxmlPath = Paths.get(mxmlData.getPath());
+					scriptPath = mxmlPath.getParent().resolve(scriptPath);
+				}
 
-			int offset = 0;
-			try
-			{
-				IASScope[] scopes = unit.getFileScopeRequest().get().getScopes();
-				if (scopes.length == 0)
+				int[] absoluteOffsets = offsetLookup.getAbsoluteOffset(scriptPath.toString(), 0);
+				if (absoluteOffsets.length == 0)
 				{
 					continue;
 				}
-				IASScope firstScope = scopes[0];
-				if (firstScope instanceof MXMLFileScope)
+				int absoluteOffset = absoluteOffsets[0];
+
+				if(absoluteOffset == 0)
 				{
-					MXMLFileScope fileScope = (MXMLFileScope) firstScope;
-					OffsetLookup offsetLookup = fileScope.getOffsetLookup();
-					int[] absoluteOffset = offsetLookup.getAbsoluteOffset(scriptPath.toString(), 0);
-					if (absoluteOffset.length == 0)
+					continue;
+				}
+				
+				String scriptFilename = scriptPath.toString();
+
+				int scriptLength = 0;
+				try
+				{
+					IFileSpecification fileSpec = workspace.getFileSpecification(scriptFilename);
+					Reader scriptReader = fileSpec.createReader();
+					while(scriptReader.read() != -1)
 					{
-						continue;
+						scriptLength++;
 					}
-					offset = absoluteOffset[0];
+					scriptReader.close();
 				}
-			}
-			catch(InterruptedException e)
-			{
-				continue;
-			}
-
-			if(offset == 0)
-			{
-				continue;
-			}
-
-			//includes.put(scriptPath.toString(), new IncludeFileData(parentPath, 0, offset));
-
-			int scriptLength = 0;
-			try
-			{
-				IFileSpecification fileSpec = workspace.getFileSpecification(scriptPath.toString());
-				Reader scriptReader = fileSpec.createReader();
-				while(scriptReader.read() != -1)
+				catch(FileNotFoundException e)
 				{
-					scriptLength++;
+					continue;
 				}
-				scriptReader.close();
-			}
-			catch(FileNotFoundException e)
-			{
-				continue;
-			}
-			catch(IOException e)
-			{
-				//just ignore it
-			}
+				catch(IOException e)
+				{
+					//just ignore it
+				}
 
-			if(scriptLength == 0)
-			{
-				continue;
-			}
+				if(scriptLength == 0)
+				{
+					continue;
+				}
 
-			//includes.put(parentPath, new IncludeFileData(parentPath, offset, scriptLength));
+				if(!includes.containsKey(scriptFilename))
+				{
+					includes.put(scriptFilename, new IncludeFileData(parentPath));
+				}
+				IncludeFileData includeFileData = includes.get(scriptFilename);
+				includeFileData.getOffsetCues().add(new OffsetCue2(scriptFilename, absoluteOffset, absoluteOffset));
+			}
 		}
 	}
 }
