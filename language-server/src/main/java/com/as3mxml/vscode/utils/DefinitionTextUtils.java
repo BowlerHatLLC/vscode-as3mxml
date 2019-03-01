@@ -39,6 +39,7 @@ import org.apache.royale.compiler.definitions.ISetterDefinition;
 import org.apache.royale.compiler.definitions.IStyleDefinition;
 import org.apache.royale.compiler.definitions.ITypeDefinition;
 import org.apache.royale.compiler.definitions.IVariableDefinition;
+import org.apache.royale.compiler.definitions.INamespaceDefinition.IInterfaceNamespaceDefinition;
 import org.apache.royale.compiler.definitions.metadata.IMetaTag;
 import org.apache.royale.compiler.definitions.metadata.IMetaTagAttribute;
 import org.apache.royale.compiler.projects.ICompilerProject;
@@ -293,7 +294,6 @@ public class DefinitionTextUtils
         textDocumentBuilder.append("{");
         textDocumentBuilder.append(NEW_LINE);
         indent = increaseIndent(indent);
-        textDocumentBuilder.append(indent);
         insertFunctionDefinitionIntoTextDocument(functionDefinition, textDocumentBuilder, indent, currentProject, result, definitionToFind);
         indent = decreaseIndent(indent);
         textDocumentBuilder.append("}");
@@ -510,10 +510,7 @@ public class DefinitionTextUtils
         else
         {
             INamespaceDefinition ns = functionDefinition.resolveNamespace(currentProject);
-            if (ns != null)
-            {
-                appendNamespace(ns, textDocumentBuilder);
-            }
+            appendNamespace(ns, textDocumentBuilder);
         }
         if (functionDefinition.isStatic())
         {
@@ -528,8 +525,8 @@ public class DefinitionTextUtils
         if(!(functionDefinition.getParent() instanceof IInterfaceDefinition))
         {
             textDocumentBuilder.append(IASKeywordConstants.NATIVE);
+            textDocumentBuilder.append(" ");
         }
-        textDocumentBuilder.append(" ");
         textDocumentBuilder.append(IASKeywordConstants.FUNCTION);
         textDocumentBuilder.append(" ");
         if (functionDefinition instanceof IGetterDefinition)
@@ -993,6 +990,14 @@ public class DefinitionTextUtils
 
     private static void appendNamespace(INamespaceDefinition ns, StringBuilder textDocumentBuilder)
     {
+        if (ns == null)
+        {
+            return;
+        }
+        if(ns instanceof IInterfaceNamespaceDefinition)
+        {
+            return;
+        }
         switch(ns.getURI())
         {
             case NAMESPACE_URI_AS3:
