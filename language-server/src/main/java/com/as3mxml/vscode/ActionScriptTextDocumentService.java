@@ -5971,7 +5971,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         Position start = range.getStart();
         StringReader reader = new StringReader(sourceText);
         int offset = LanguageServerCompilerUtils.getOffsetFromPosition(reader, start);
-        return sourceText.substring(0, offset) + change.getText() + sourceText.substring(offset + change.getRangeLength());
+        StringBuilder builder = new StringBuilder();
+        builder.append(sourceText.substring(0, offset));
+        builder.append(change.getText());
+        builder.append(sourceText.substring(offset + change.getRangeLength()));
+        return builder.toString();
     }
 
     private void addCompilerProblem(ICompilerProblem problem, PublishDiagnosticsParams publish)
