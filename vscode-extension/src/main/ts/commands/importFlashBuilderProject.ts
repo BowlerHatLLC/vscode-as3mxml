@@ -42,7 +42,13 @@ const ERROR_CANNOT_FIND_SDKS = "Failed to parse SDKs in Adobe Flash Builder work
 const ERROR_ASCONFIG_JSON_EXISTS = "Cannot migrate Adobe Flash Builder project because configuration file already exists... ";
 const WARNING_MODULE = "Flex modules are not supported. Skipping... ";
 const WARNING_WORKER = "ActionScript workers are not supported. Skipping... ";
-const WARNING_EXTERNAL_THEME = "Themes from outside SDK are not supported. Skipping..."
+const WARNING_EXTERNAL_THEME = "Themes from outside SDK are not supported. Skipping...";
+const CHANNEL_NAME_IMPORTER = "Flash Builder Importer";
+const PROMPT_CHOOSE_PROJECT = "Choose a project to import";
+const MESSAGE_DETECT_PROJECT = "Import existing Adobe Flash Builder projects?";
+const MESSAGE_DETECT_PROJECT2 = "Import more Adobe Flash Builder projects?";
+const BUTTON_LABEL_IMPORT = "Import";
+const BUTTON_LABEL_NO_IMPORT = "Don't Import";
 
 interface FlashBuilderSDK
 {
@@ -52,57 +58,138 @@ interface FlashBuilderSDK
 	defaultSDK: boolean;
 }
 
+export async function checkForFlashBuilderProjectsToImport()
+{
+	if(!shouldPromptToImport())
+	{
+		return;
+	}
+
+	let workspaceFolders = vscode.workspace.workspaceFolders.filter((folder) =>
+	{
+		return isFlashBuilderProject(folder) && !isVSCodeProject(folder);
+	});
+	if(workspaceFolders.length === 0)
+	{
+		return;
+	}
+	promptToImportWorkspaceFolders(workspaceFolders);
+}
+
+function onDidChangeWorkspaceFolders(event: vscode.WorkspaceFoldersChangeEvent)
+{
+	let added = event.added.filter((folder) =>
+	{
+		return isFlashBuilderProject(folder) && !isVSCodeProject(folder);
+	});
+	if(added.length === 0)
+	{
+		return;
+	}
+	checkForFlashBuilderProjectsToImport();
+}
+vscode.workspace.onDidChangeWorkspaceFolders(onDidChangeWorkspaceFolders);
+
 export function pickFlashBuilderProjectInWorkspace()
 {
-	if(vscode.workspace.workspaceFolders)
+	let workspaceFolders = vscode.workspace.workspaceFolders
+	if(!workspaceFolders)
 	{
-		let workspaceFolders = vscode.workspace.workspaceFolders.filter((folder) =>
-		{
-			let asPropsPath = path.resolve(folder.uri.fsPath, FILE_ACTIONSCRIPT_PROPERTIES);
-			if(!fs.existsSync(asPropsPath) || fs.statSync(asPropsPath).isDirectory())
-			{
-				return false;
-			}
-			return true;
-		});
-		if(workspaceFolders.length === 0)
-		{
-			vscode.window.showErrorMessage(ERROR_NO_PROJECTS);
-			return;
-		}
+		vscode.window.showErrorMessage(ERROR_NO_PROJECTS);
+		return;
+	}
 
+	workspaceFolders = workspaceFolders.filter((folder) =>
+	{
+		return isFlashBuilderProject(folder);
+	});
+	if(workspaceFolders.length === 0)
+	{
+		vscode.window.showErrorMessage(ERROR_NO_PROJECTS);
+		return;
+	}
+
+	workspaceFolders = workspaceFolders.filter((folder) =>
+	{
+		return !isVSCodeProject(folder);
+	});
+	if(workspaceFolders.length === 0)
+	{
+		vscode.window.showErrorMessage(ERROR_PROJECT_HAS_ASCONFIG);
+		return;
+	}
+
+	pickFlashBuilderProjectInWorkspaceFolders(workspaceFolders);
+}
+
+function shouldPromptToImport()
+{
+	let as3mxmlConfig = vscode.workspace.getConfiguration("as3mxml");
+	return as3mxmlConfig.get("projectImport.prompt");
+}
+
+function isFlashBuilderProject(folder: vscode.WorkspaceFolder)
+{
+	let asPropsPath = path.resolve(folder.uri.fsPath, FILE_ACTIONSCRIPT_PROPERTIES);
+	return fs.existsSync(asPropsPath) && !fs.statSync(asPropsPath).isDirectory();
+}
+
+function isVSCodeProject(folder: vscode.WorkspaceFolder)
+{
+	let asconfigPath = path.resolve(folder.uri.fsPath, FILE_ASCONFIG_JSON);
+	return fs.existsSync(asconfigPath) && !fs.statSync(asconfigPath).isDirectory();
+}
+
+async function promptToImportWorkspaceFolders(workspaceFolders: vscode.WorkspaceFolder[])
+{
+	let importedOne = false;
+	while(workspaceFolders.length > 0)
+	{
+		let message = importedOne ? MESSAGE_DETECT_PROJECT2 : MESSAGE_DETECT_PROJECT;
+		let value = await vscode.window.showInformationMessage(
+			message,
+			BUTTON_LABEL_IMPORT, BUTTON_LABEL_NO_IMPORT);
+		if(value == BUTTON_LABEL_NO_IMPORT)
+		{
+			break;
+		}
+		let importedFolder = await pickFlashBuilderProjectInWorkspaceFolders(workspaceFolders);
+		if(!importedFolder)
+		{
+			break;
+		}
 		workspaceFolders = workspaceFolders.filter((folder) =>
 		{
-			let asconfigPath = path.resolve(folder.uri.fsPath, FILE_ASCONFIG_JSON);
-			return !fs.existsSync(asconfigPath);
+			return folder !== importedFolder;
 		});
-		if(workspaceFolders.length === 0)
-		{
-			vscode.window.showErrorMessage(ERROR_PROJECT_HAS_ASCONFIG);
-			return;
-		}
+		importedOne = true;
+	}
+}
 
-		if(workspaceFolders.length === 1)
+async function pickFlashBuilderProjectInWorkspaceFolders(workspaceFolders: vscode.WorkspaceFolder[])
+{
+	if(workspaceFolders.length === 1)
+	{
+		let workspaceFolder = workspaceFolders[0];
+		importFlashBuilderProject(workspaceFolder);
+		return workspaceFolder;
+	}
+	else
+	{
+		let items = workspaceFolders.map((folder) =>
 		{
-			importFlashBuilderProject(workspaceFolders[0]);
-		}
-		else
+			return { label: folder.name, description: folder.uri.fsPath, folder};
+		})
+		let result = await vscode.window.showQuickPick(items, { placeHolder: PROMPT_CHOOSE_PROJECT });
+		if(!result)
 		{
-			let items = workspaceFolders.map((folder) =>
-			{
-				return { label: folder.name, description: folder.uri.fsPath, folder};
-			})
-			vscode.window.showQuickPick(items).then((result) =>
-			{
-				if(!result)
-				{
-					//it's possible for no folder to be chosen when using
-					//showWorkspaceFolderPick()
-					return;
-				}
-				importFlashBuilderProject(result.folder);
-			});
+			//it's possible for no folder to be chosen when using
+			//showWorkspaceFolderPick()
+			return null;
 		}
+		let workspaceFolder = result.folder;
+		importFlashBuilderProject(workspaceFolder);
+		return workspaceFolder;
 	}
 }
 
@@ -176,7 +263,7 @@ function findSDKs(workspaceFolder: vscode.WorkspaceFolder): FlashBuilderSDK[]
 		});
 }
 
-export function importFlashBuilderProject(workspaceFolder: vscode.WorkspaceFolder)
+function importFlashBuilderProject(workspaceFolder: vscode.WorkspaceFolder)
 {
 	getOutputChannel().clear();
 	getOutputChannel().appendLine(MESSAGE_IMPORT_START);
@@ -282,7 +369,7 @@ function getOutputChannel()
 {
 	if(!outputChannel)
 	{
-		outputChannel = vscode.window.createOutputChannel("Flash Builder Importer");
+		outputChannel = vscode.window.createOutputChannel(CHANNEL_NAME_IMPORTER);
 	}
 	return outputChannel;
 }
@@ -554,8 +641,6 @@ function findChildElementByName(children: any[], name: string)
 function migrateCompilerElement(compilerElement: any, appPath: string, isFlexLibrary: boolean, sdks: FlashBuilderSDK[], result: any)
 {
 	let attributes = compilerElement.attributes;
-	vscode.workspace.getConfiguration()
-	vscode.ConfigurationTarget
 	let frameworkSDKConfig = vscode.workspace.getConfiguration("as3mxml");
 	let frameworkSDK = frameworkSDKConfig.inspect("sdk.framework").workspaceValue;
 	if(!frameworkSDK)

@@ -99,7 +99,7 @@
       },
       {
         "command": "as3mxml.importFlashBuilderProject",
-        "title": "Import Adobe Flash Builder Project (Experimental)",
+        "title": "Import Adobe Flash Builder Project",
         "category": "ActionScript"
       }
     ],
@@ -311,6 +311,13 @@
           ],
           "default": true,
           "description": "Specifies whether to check for problems in real-time as you type, or only on save."
+        },
+        "as3mxml.projectImport.prompt": {
+          "type": [
+            "boolean"
+          ],
+          "default": true,
+          "description": "Specifies whether to automatically display a prompt to import a project folder from Adobe Flash Builder when asconfig.json is not present."
         },
         "as3mxml.asconfigc.useBundled": {
           "type": "boolean",
