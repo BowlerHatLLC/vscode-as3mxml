@@ -639,19 +639,23 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                         IDefinition attributeDefinition = project.resolveSpecifier(tagDefinition, attributeData.getShortName());
                         if (attributeDefinition instanceof IEventDefinition)
                         {
-                            IMXMLClassReferenceNode mxmlNode = (IMXMLClassReferenceNode) getOffsetNode(path, position, folderData);
-                            IMXMLEventSpecifierNode eventNode = mxmlNode.getEventSpecifierNode(attributeData.getShortName());
-                            for (IASNode asNode : eventNode.getASNodes())
+                            IASNode mxmlOffsetNode = getOffsetNode(path, position, folderData);
+                            if (mxmlOffsetNode instanceof IMXMLClassReferenceNode)
                             {
-                                IASNode containingNode = ASTUtils.getContainingNodeIncludingStart(asNode, currentOffset);
-                                if (containingNode != null)
+                                IMXMLClassReferenceNode mxmlNode = (IMXMLClassReferenceNode) mxmlOffsetNode;
+                                IMXMLEventSpecifierNode eventNode = mxmlNode.getEventSpecifierNode(attributeData.getShortName());
+                                for (IASNode asNode : eventNode.getASNodes())
                                 {
-                                    offsetNode = containingNode;
+                                    IASNode containingNode = ASTUtils.getContainingNodeIncludingStart(asNode, currentOffset);
+                                    if (containingNode != null)
+                                    {
+                                        offsetNode = containingNode;
+                                    }
                                 }
-                            }
-                            if (offsetNode == null)
-                            {
-                                offsetNode = eventNode;
+                                if (offsetNode == null)
+                                {
+                                    offsetNode = eventNode;
+                                }
                             }
                         }
                     }
@@ -6824,22 +6828,26 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             IDefinition attributeDefinition = project.resolveSpecifier(tagDefinition, attributeData.getShortName());
             if (attributeDefinition instanceof IEventDefinition)
             {
-                IMXMLClassReferenceNode mxmlNode = (IMXMLClassReferenceNode) getOffsetNode(path, position, folderData);
-                IMXMLEventSpecifierNode eventNode = mxmlNode.getEventSpecifierNode(attributeData.getShortName());
-                //the event node might be null if the MXML document isn't in a
-                //fully valid state (unclosed tags, for instance)
-                if (eventNode != null)
+                IASNode offsetNode = getOffsetNode(path, position, folderData);
+                if (offsetNode instanceof IMXMLClassReferenceNode)
                 {
-                    for (IASNode asNode : eventNode.getASNodes())
+                    IMXMLClassReferenceNode mxmlNode = (IMXMLClassReferenceNode) offsetNode;
+                    IMXMLEventSpecifierNode eventNode = mxmlNode.getEventSpecifierNode(attributeData.getShortName());
+                    //the event node might be null if the MXML document isn't in a
+                    //fully valid state (unclosed tags, for instance)
+                    if (eventNode != null)
                     {
-                        IASNode containingNode = ASTUtils.getContainingNodeIncludingStart(asNode, currentOffset);
-                        if (containingNode != null)
+                        for (IASNode asNode : eventNode.getASNodes())
                         {
-                            return containingNode;
+                            IASNode containingNode = ASTUtils.getContainingNodeIncludingStart(asNode, currentOffset);
+                            if (containingNode != null)
+                            {
+                                return containingNode;
+                            }
                         }
                     }
+                    return eventNode;
                 }
-                return eventNode;
             }
             else
             {
