@@ -159,6 +159,10 @@ public class CompilationUnitUtils
 		}
 
 		IMXMLTagData rootTag = mxmlData.getRootTag();
+		if(rootTag == null)
+		{
+			return;
+		}
 		String parentPath = mxmlData.getPath();
 		IMXMLTagData[] scriptTags = MXMLDataUtils.findMXMLScriptTags(rootTag);
 		for(IMXMLTagData scriptTag : scriptTags)
