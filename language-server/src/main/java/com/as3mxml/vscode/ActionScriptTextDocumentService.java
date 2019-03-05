@@ -282,6 +282,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private boolean initialized = false;
     private boolean frameworkSDKIsRoyale = false;
     private WaitForBuildFinishRunner waitForBuildFinishRunner;
+    private Set<URI> notOnSourcePathSet = new HashSet<>();
     
     private boolean realTimeProblems = true;
 
@@ -2196,17 +2197,19 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         else
         {
             RoyaleProject project = folderData.project;
+            URI uri = path.toUri();
             if(project == null)
             {
                 //if the current project isn't properly configured, we want to
                 //display problems only while a file is open
                 clearProblems = true;
             }
-            else if(!SourcePathUtils.isInProjectSourcePath(path, project, folderData.configurator))
+            else if(notOnSourcePathSet.contains(uri))
             {
                 //if the file is outside of the project's source path, we want
                 //to display problems only while it is open
                 clearProblems = true;
+                notOnSourcePathSet.remove(uri);
             }
         }
 
@@ -6408,6 +6411,23 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             publishDiagnosticForFileOutsideSourcePath(path);
             return;
         }
+        
+        URI uri = path.toUri();
+        if(notOnSourcePathSet.contains(uri))
+        {
+            //if the file was not on the project's source path, clear out any
+            //errors that might have existed previously
+            notOnSourcePathSet.remove(uri);
+
+            PublishDiagnosticsParams publish = new PublishDiagnosticsParams();
+            publish.setDiagnostics(new ArrayList<>());
+            publish.setUri(uri.toString());
+            if (languageClient != null)
+            {
+                languageClient.publishDiagnostics(publish);
+            }
+        }
+        
         ProjectOptions projectOptions = folderData.options;
         if (projectOptions == null || !checkFilePathForAllProblems(path, problemQuery, folderData, false))
         {
@@ -6427,6 +6447,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         diagnostic.setSeverity(DiagnosticSeverity.Information);
         diagnostic.setMessage(path.getFileName() + " is not located in the project's source path. Code intelligence will not be available for this file.");
         diagnostics.add(diagnostic);
+
+        notOnSourcePathSet.add(uri);
 
         if (languageClient != null)
         {
