@@ -5886,10 +5886,18 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         if (ast instanceof IFileNode)
         {
-            IFileNode fileNode = (IFileNode) ast;
-            //call this in addition to parseRequiredFunctionBodies() because
-            //functions in included files won't be populated without it
-            fileNode.populateFunctionNodes();
+            try
+            {
+                IFileNode fileNode = (IFileNode) ast;
+                //call this in addition to parseRequiredFunctionBodies() because
+                //functions in included files won't be populated without it
+                fileNode.populateFunctionNodes();
+            }
+            catch(NullPointerException e)
+            {
+                //sometimes, a null pointer exception can be thrown inside
+                //FunctionNode.parseFunctionBody(). seems like a Royale bug.
+            }
         }
         return ast;
     }
