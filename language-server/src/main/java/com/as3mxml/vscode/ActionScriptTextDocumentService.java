@@ -136,7 +136,7 @@ import org.apache.royale.compiler.tree.mxml.IMXMLPropertySpecifierNode;
 import org.apache.royale.compiler.tree.mxml.IMXMLSingleDataBindingNode;
 import org.apache.royale.compiler.tree.mxml.IMXMLSpecifierNode;
 import org.apache.royale.compiler.units.ICompilationUnit;
-import org.apache.royale.compiler.units.IInvisibleCompilationUnit;
+import org.apache.royale.compiler.workspaces.IWorkspace;
 import org.apache.royale.utils.FilenameNormalization;
 
 import com.google.common.collect.Lists;
@@ -361,9 +361,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return;
         }
         workspaceFolders.remove(folder);
-        WorkspaceFolderData data = workspaceFolderToData.get(folder);
+        WorkspaceFolderData folderData = workspaceFolderToData.get(folder);
         workspaceFolderToData.remove(folder);
-        cleanupProject(data);
+        folderData.cleanup();
     }
 
     public ClientCapabilities getClientCapabilities()
@@ -427,7 +427,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     cancelToken.checkCanceled();
                     return Either.forRight(result);
                 }
-                WorkspaceFolderData folderData = textDocumentPathToFolderData(path);
+                WorkspaceFolderData folderData = getWorkspaceFolderDataForSourceFile(path);
                 if(folderData == null || folderData.project == null)
                 {
                     CompletionList result = new CompletionList();
@@ -539,7 +539,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     cancelToken.checkCanceled();
                     return new Hover(Collections.emptyList(), null);
                 }
-                WorkspaceFolderData folderData = textDocumentPathToFolderData(path);
+                WorkspaceFolderData folderData = getWorkspaceFolderDataForSourceFile(path);
                 if(folderData == null || folderData.project == null)
                 {
                     cancelToken.checkCanceled();
@@ -611,7 +611,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     cancelToken.checkCanceled();
                     return new SignatureHelp(Collections.emptyList(), -1, -1);
                 }
-                WorkspaceFolderData folderData = textDocumentPathToFolderData(path);
+                WorkspaceFolderData folderData = getWorkspaceFolderDataForSourceFile(path);
                 if(folderData == null || folderData.project == null)
                 {
                     cancelToken.checkCanceled();
@@ -795,7 +795,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     cancelToken.checkCanceled();
                     return Collections.emptyList();
                 }
-                WorkspaceFolderData folderData = textDocumentPathToFolderData(path);
+                WorkspaceFolderData folderData = getWorkspaceFolderDataForSourceFile(path);
                 if(folderData == null || folderData.project == null)
                 {
                     cancelToken.checkCanceled();
@@ -842,20 +842,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         });
     }
 
-    protected WorkspaceFolderData textDocumentPathToFolderData(Path path)
-    {
-        WorkspaceFolderData folderData = getWorkspaceFolderDataForSourceFile(path);
-        if(folderData == null)
-        {
-            return null;
-        }
-
-        //populate the project
-        getProject(folderData);
-
-        return folderData;
-    }
-
     /**
      * Finds where the type of the definition referenced at the current position
      * in a text document is defined.
@@ -878,7 +864,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     cancelToken.checkCanceled();
                     return Collections.emptyList();
                 }
-                WorkspaceFolderData folderData = textDocumentPathToFolderData(path);
+                WorkspaceFolderData folderData = getWorkspaceFolderDataForSourceFile(path);
                 if(folderData == null || folderData.project == null)
                 {
                     cancelToken.checkCanceled();
@@ -946,7 +932,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     cancelToken.checkCanceled();
                     return Collections.emptyList();
                 }
-                WorkspaceFolderData folderData = textDocumentPathToFolderData(path);
+                WorkspaceFolderData folderData = getWorkspaceFolderDataForSourceFile(path);
                 if(folderData == null || folderData.project == null)
                 {
                     cancelToken.checkCanceled();
@@ -1009,7 +995,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     cancelToken.checkCanceled();
                     return Collections.emptyList();
                 }
-                WorkspaceFolderData folderData = textDocumentPathToFolderData(path);
+                WorkspaceFolderData folderData = getWorkspaceFolderDataForSourceFile(path);
                 if(folderData == null || folderData.project == null)
                 {
                     cancelToken.checkCanceled();
@@ -1186,7 +1172,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken ->
         {
             cancelToken.checkCanceled();
-
+            
             compilerWorkspace.startBuilding();
             cancelToken.checkCanceled();
             try
@@ -1198,7 +1184,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     cancelToken.checkCanceled();
                     return Collections.emptyList();
                 }
-                WorkspaceFolderData folderData = textDocumentPathToFolderData(path);
+                WorkspaceFolderData folderData = getWorkspaceFolderDataForSourceFile(path);
                 if(folderData == null || folderData.project == null)
                 {
                     cancelToken.checkCanceled();
@@ -1206,7 +1192,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 }
                 RoyaleProject project = folderData.project;
 
-                ICompilationUnit unit = getCompilationUnit(path, folderData);
+                ICompilationUnit unit = findCompilationUnit(path, project);
                 if (unit == null)
                 {
                     cancelToken.checkCanceled();
@@ -1286,7 +1272,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     cancelToken.checkCanceled();
                     return Collections.emptyList();
                 }
-                WorkspaceFolderData folderData = textDocumentPathToFolderData(path);
+                WorkspaceFolderData folderData = getWorkspaceFolderDataForSourceFile(path);
                 if (folderData == null || folderData.project == null)
                 {
                     cancelToken.checkCanceled();
@@ -1307,18 +1293,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 findSourceActions(path, codeActions);
                 findCodeActionsForDiagnostics(path, folderData, diagnostics, codeActions);
 
-                ICompilationUnit unit = getCompilationUnit(path, folderData);
+                ICompilationUnit unit = findCompilationUnit(path, project);
                 if (unit != null)
                 {
-                    IASNode ast = null;
-                    try
-                    {
-                        ast = unit.getSyntaxTreeRequest().get().getAST();
-                    }
-                    catch(Exception e)
-                    {
-
-                    }
+                    IASNode ast = getAST(unit);
                     if (ast != null)
                     {
                         String fileText = sourceByPath.get(path);
@@ -1761,7 +1739,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     cancelToken.checkCanceled();
                     return new WorkspaceEdit(new HashMap<>());
                 }
-                WorkspaceFolderData folderData = textDocumentPathToFolderData(path);
+                WorkspaceFolderData folderData = getWorkspaceFolderDataForSourceFile(path);
                 if(folderData == null || folderData.project == null)
                 {
                     cancelToken.checkCanceled();
@@ -1874,16 +1852,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         String text = textDocument.getText();
         sourceByPath.put(path, text);
 
-        WorkspaceFolderData folderData = null;
-        compilerWorkspace.startBuilding();
-        try
-        {
-            folderData = textDocumentPathToFolderData(path);
-        }
-        finally
-        {
-            compilerWorkspace.doneBuilding();
-        }
+        WorkspaceFolderData folderData = getWorkspaceFolderDataForSourceFile(path);
         if (folderData == null)
         {
             //this file isn't in any of the workspace folders
@@ -1891,6 +1860,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return;
         }
 
+        getProject(folderData);
         RoyaleProject project = folderData.project;
         if (project == null)
         {
@@ -1914,114 +1884,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         //we need to check for problems when opening a new file because it
         //may not have been in the workspace before.
         checkFilePathForProblems(path, folderData, true);
-    }
-
-    private List<WorkspaceFolderData> getAllWorkspaceFolderDataForSourceFile(Path path)
-    {
-        List<WorkspaceFolderData> result = new ArrayList<>();
-        for (WorkspaceFolder folder : workspaceFolderToData.keySet())
-        {
-            WorkspaceFolderData folderData = workspaceFolderToData.get(folder);
-            RoyaleProject project = folderData.project;
-            if (project == null)
-            {
-                String folderUri = folder.getUri();
-                Path workspacePath = LanguageServerCompilerUtils.getPathFromLanguageServerURI(folderUri);
-                if (path.startsWith(workspacePath))
-                {
-                    result.add(folderData);
-                }
-            }
-            else if (SourcePathUtils.isInProjectSourcePath(path, project, folderData.configurator))
-            {
-                result.add(folderData);
-            }
-        }
-        return result;
-    }
-
-    private List<WorkspaceFolderData> getAllWorkspaceFolderDataForSWCFile(Path path)
-    {
-        List<WorkspaceFolderData> result = new ArrayList<>();
-        for (WorkspaceFolder folder : workspaceFolderToData.keySet())
-        {
-            WorkspaceFolderData folderData = workspaceFolderToData.get(folder);
-            RoyaleProject project = folderData.project;
-            if (project == null)
-            {
-                String folderUri = folder.getUri();
-                Path workspacePath = LanguageServerCompilerUtils.getPathFromLanguageServerURI(folderUri);
-                if (path.startsWith(workspacePath))
-                {
-                    result.add(folderData);
-                }
-            }
-            else
-            {
-                Configuration configuration = folderData.configurator.getConfiguration();
-                if (SourcePathUtils.isInProjectLibraryPathOrExternalLibraryPath(path, project, configuration))
-                {
-                    result.add(folderData);
-                }
-            }
-        }
-        return result;
-    }
-
-    private WorkspaceFolderData getWorkspaceFolderDataForSourceFile(Path path)
-    {
-        //first try to find the path in an existing project
-        WorkspaceFolderData fallback = null;
-        for (WorkspaceFolderData folderData : workspaceFolderToData.values())
-        {
-            RoyaleProject project = folderData.project;
-            if (project == null)
-            {
-                continue;
-            }
-            String uri = folderData.folder.getUri();
-            Path workspacePath = LanguageServerCompilerUtils.getPathFromLanguageServerURI(uri);
-            if (workspacePath != null && SourcePathUtils.isInProjectSourcePath(path, project, folderData.configurator))
-            {
-                if(path.startsWith(workspacePath))
-                {
-                    //if the source path is inside the workspace folder, it's a
-                    //perfect match
-                    return folderData;
-                }
-                //if path is in the source path, but not inside the workspace
-                //folder, save it as possible result for later. in other words,
-                //we always prefer a workspace that contains the file, so we'll
-                //check the other workspaces before using the fallback.
-                if (fallback == null)
-                {
-                    fallback = folderData;
-                }
-            }
-        }
-        //we found the path in a project's source path, but not inside any the
-        //workspace folders
-        if (fallback != null)
-        {
-            return fallback;
-
-        }
-        //if none of the existing projects worked, try a folder where a project
-        //hasn't been created yet
-        for (WorkspaceFolderData folderData : workspaceFolderToData.values())
-        {
-            String uri = folderData.folder.getUri();
-            Path workspacePath = LanguageServerCompilerUtils.getPathFromLanguageServerURI(uri);
-            if (workspacePath == null)
-            {
-                continue;
-            }
-			if (path.startsWith(workspacePath))
-			{
-                return folderData;
-			}
-        }
-        return null;
     }
 
     /**
@@ -2062,16 +1924,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
         }
 
-        WorkspaceFolderData folderData = null;
-        compilerWorkspace.startBuilding();
-        try
-        {
-            folderData = textDocumentPathToFolderData(path);
-        }
-        finally
-        {
-            compilerWorkspace.doneBuilding();
-        }
+        WorkspaceFolderData folderData = getWorkspaceFolderDataForSourceFile(path);
         if (folderData == null)
         {
             //this file isn't in any of the workspace folders
@@ -2079,6 +1932,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return;
         }
 
+        getProject(folderData);
         RoyaleProject project = folderData.project;
         if (project == null)
         {
@@ -2092,7 +1946,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         compilerWorkspace.startBuilding();
         try
         {
-            unit = getCompilationUnit(path, folderData);
+            unit = findCompilationUnit(path, project);
             if(unit != null)
             {
                 //windows drive letter may not match, even after normalization,
@@ -2177,16 +2031,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
         boolean clearProblems = false;
 
-        WorkspaceFolderData folderData = null;
-        compilerWorkspace.startBuilding();
-        try
-        {
-            folderData = textDocumentPathToFolderData(path);
-        }
-        finally
-        {
-            compilerWorkspace.doneBuilding();
-        }
+        WorkspaceFolderData folderData = getWorkspaceFolderDataForSourceFile(path);
         if (folderData == null)
         {
             //if we can't figure out which workspace the file is in, then clear
@@ -2196,6 +2041,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         else
         {
+            getProject(folderData);
             RoyaleProject project = folderData.project;
             URI uri = path.toUri();
             if(project == null)
@@ -2265,22 +2111,14 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return;
         }
-        WorkspaceFolderData folderData = null;
-        compilerWorkspace.startBuilding();
-        try
-        {
-            folderData = textDocumentPathToFolderData(path);
-        }
-        finally
-        {
-            compilerWorkspace.doneBuilding();
-        }
+        WorkspaceFolderData folderData = getWorkspaceFolderDataForSourceFile(path);
         if (folderData == null)
         {
             //this file isn't in any of the workspace folders
             publishDiagnosticForFileOutsideSourcePath(path);
             return;
         }
+        getProject(folderData);
         RoyaleProject project = folderData.project;
         if (project == null)
         {
@@ -2601,7 +2439,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private void prepareNewProject(WorkspaceFolderData folderData)
     {
-        RoyaleProject project = getProject(folderData);
+        RoyaleProject project = folderData.project;
         if (project == null)
         {
             return;
@@ -2824,26 +2662,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         sourcePathWatcherThread.start();
     }
 
-    private void cleanupProject(WorkspaceFolderData folderData)
-    {
-        cleanupInvisibleUnits(folderData);
-        folderData.cleanup();
-    }
-    
-	private void cleanupInvisibleUnits(WorkspaceFolderData folderData)
-	{
-        //invisible units may exist for new files that haven't been saved, so
-        //they don't exist on the file system. the first compilation unit
-        //created will be invisible too, at least to start out.
-        //if needed, we'll recreate invisible compilation units later.
-        List<IInvisibleCompilationUnit> invisibleUnits = folderData.invisibleUnits;
-        for (IInvisibleCompilationUnit unit : invisibleUnits)
-        {
-            unit.remove();
-        }
-        invisibleUnits.clear();
-	}
-
     private void refreshProjectOptions(WorkspaceFolderData folderData)
     {
         IProjectConfigStrategy currentConfig = folderData.config;
@@ -2853,14 +2671,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             //the options are fully up-to-date
             return;
         }
-        //if the configuration changed, start fresh with a whole new workspace
-        cleanupProject(folderData);
-        projectOptions = folderData.options = currentConfig.getOptions();
-        if (projectOptions == null)
-        {
-            return;
-        }
-        prepareNewProject(folderData);
+        //if the configuration changed, start fresh with a whole new project
+        folderData.cleanup();
+        folderData.options = currentConfig.getOptions();
     }
 
     private CompletionList actionScriptCompletion(IASNode offsetNode, Path path, Position position, int currentOffset, WorkspaceFolderData folderData)
@@ -4127,12 +3940,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 }
             }
         }
-        IASNode ast;
-        try
-        {
-            ast = compilationUnit.getSyntaxTreeRequest().get().getAST();
-        }
-        catch (Exception e)
+        IASNode ast = getAST(compilationUnit);
+        if(ast == null)
         {
             return;
         }
@@ -5761,15 +5570,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     }
                 }
             }
-            IASNode ast = null;
-            try
-            {
-                ast = compilationUnit.getSyntaxTreeRequest().get().getAST();
-            }
-            catch (Exception e)
-            {
-                //safe to ignore
-            }
+            IASNode ast = getAST(compilationUnit);
             if (ast != null)
             {
                 ArrayList<IIdentifierNode> identifiers = new ArrayList<>();
@@ -6018,12 +5819,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return null;
     }
 
-    private ICompilationUnit findCompilationUnit(String absoluteFileName, RoyaleProject project)
-    {
-        Path pathToFind = Paths.get(absoluteFileName);
-        return findCompilationUnit(pathToFind, project);
-    }
-
     private ICompilationUnit findCompilationUnit(Path pathToFind)
     {
         for (WorkspaceFolderData folderData : workspaceFolderToData.values())
@@ -6065,15 +5860,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         return Paths.get(lastFilePath);
     }
 
-    private IASNode getAST(Path path, WorkspaceFolderData folderData)
+    private IASNode getAST(ICompilationUnit unit)
     {
-        ICompilationUnit unit = getCompilationUnit(path, folderData);
-        if (unit == null)
-        {
-            //no need to log this case because it can happen for reasons that
-            //should have been logged already
-            return null;
-        }
         IASNode ast = null;
         try
         {
@@ -6081,113 +5869,14 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         catch (InterruptedException e)
         {
-            System.err.println("Interrupted while getting AST: " + path.toAbsolutePath().toString());
+            System.err.println("Interrupted while getting AST: " + unit.getAbsoluteFilename());
             return null;
         }
         if (ast == null)
         {
             //we couldn't find the root node for this file
-            System.err.println("Could not find AST: " + path.toAbsolutePath().toString());
+            System.err.println("Could not find AST: " + unit.getAbsoluteFilename());
             return null;
-        }
-        return ast;
-    }
-
-    private ICompilationUnit getCompilationUnit(Path path, WorkspaceFolderData folderData)
-    {
-        RoyaleProject project = folderData.project;
-        if (project == null)
-        {
-            return null;
-        }
-        String absolutePath = path.toAbsolutePath().toString();
-        ICompilationUnit foundUnit = null;
-        ProjectOptions projectOptions = folderData.options;
-        //we're going to start with the files passed into the compiler
-        String[] files = projectOptions.files;
-        if (files != null)
-        {
-            for (int i = files.length - 1; i >= 0; i--)
-            {
-                String file = files[i];
-                //a previous file may have created a compilation unit for the
-                //current file, so use that, if available
-                ICompilationUnit existingUnit = findCompilationUnit(file, project);
-                if (existingUnit != null)
-                {
-                    if (file.equals(absolutePath))
-                    {
-                        foundUnit = existingUnit;
-                    }
-                    continue;
-                }
-                if (project.getSourcePath().size() == 0
-                        && i == (files.length - 1))
-                {
-                    //if the main file didn't exist at first, it's possible
-                    //that the project won't have a source path yet. when the
-                    //file is created later, the compilation unit can only be
-                    //created successfully if we set the source path manually
-                    File mainFile = new File(file);
-                    ArrayList<File> sourcePaths = new ArrayList<>();
-                    sourcePaths.add(mainFile.getParentFile());
-                    project.setSourcePath(sourcePaths);
-                }
-                IInvisibleCompilationUnit unit = project.createInvisibleCompilationUnit(file, fileSpecGetter);
-                if (unit == null)
-                {
-                    if (sourceByPath.containsKey(path) || (new File(absolutePath)).exists())
-                    {
-                        //only display an error if the compilation unit should definitely exist
-                        System.err.println("Could not create compilation unit for file: " + file);
-                    }
-                    continue;
-                }
-                folderData.invisibleUnits.add(unit);
-                if (file.equals(absolutePath))
-                {
-                    foundUnit = unit;
-                }
-            }
-        }
-
-        //if we didn't find the unit already, search the complete set of units
-        if (foundUnit == null)
-        {
-            //first, search the existing compilation units for the file because it
-            //might already be created
-            foundUnit = findCompilationUnit(absolutePath, project);
-        }
-
-        //if we still haven't found it, create it manually
-        if (foundUnit == null)
-        {
-            //if all else fails, create the compilation unit manually
-            IInvisibleCompilationUnit unit = project.createInvisibleCompilationUnit(absolutePath, fileSpecGetter);
-            if (unit == null)
-            {
-                if (sourceByPath.containsKey(path) || (new File(absolutePath)).exists())
-                {
-                    //only display an error if the compilation unit should definitely exist
-                    System.err.println("Could not create compilation unit for file (final fallback): " + absolutePath);
-                    new Exception().printStackTrace(System.err);
-                }
-                return null;
-            }
-            folderData.invisibleUnits.add(unit);
-            foundUnit = unit;
-        }
-
-        //for some reason, function nodes may not always be populated, but we
-        //can force them to be populated
-        IASNode ast = null;
-        try
-        {
-            ast = foundUnit.getSyntaxTreeRequest().get().getAST();
-        }
-        catch (InterruptedException e)
-        {
-            System.err.println("Interrupted while getting AST");
         }
         if (ast instanceof FileNode)
         {
@@ -6202,9 +5891,15 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             //functions in included files won't be populated without it
             fileNode.populateFunctionNodes();
         }
-        return foundUnit;
+        return ast;
     }
 
+    /**
+     * Returns the project associated with a workspace folder. If it has already
+     * been created, returns the existing project *unless* the configuration has
+     * changed. When the configuration has changed, destroys the old project and
+     * creates a new one.
+     */
     private RoyaleProject getProject(WorkspaceFolderData folderData)
     {
         if(folderData == null)
@@ -6212,14 +5907,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             System.err.println("Cannot find workspace for project.");
             return null;
         }
-        RoyaleProject project = folderData.project;
-        cleanupInvisibleUnits(folderData);
         refreshProjectOptions(folderData);
+        RoyaleProject project = folderData.project;
         ProjectOptions projectOptions = folderData.options;
         IProjectConfigStrategy config = folderData.config;
         if (projectOptions == null)
         {
-            cleanupProject(folderData);
+            folderData.cleanup();
             return null;
         }
         if (project != null)
@@ -6228,36 +5922,27 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             project.getProblems().clear();
             return project;
         }
-        if (compilerWorkspace.isBuilding())
+        compilerWorkspace.startIdleState();
+        try
         {
-            //somewhere up the call stack, the workspace started building.
-            //if the project doesn't exist yet, we shouldn't try to create it
-            //because configuring the project will try to get an idle state and
-            //cause the thread to hang. we'll need to try again later.
-            return null;
-        }
+            URI rootURI = URI.create(folderData.folder.getUri());
+            Path rootPath = Paths.get(rootURI);
 
-        URI rootURI = URI.create(folderData.folder.getUri());
-        Path rootPath = Paths.get(rootURI);
+            String oldUserDir = System.getProperty("user.dir");
+            System.setProperty("user.dir", rootPath.toString());
 
-        String oldUserDir = System.getProperty("user.dir");
-        System.setProperty("user.dir", rootPath.toString());
+            project = CompilerProjectUtils.createProject(projectOptions, compilerWorkspace);
 
-        project = CompilerProjectUtils.createProject(projectOptions, compilerWorkspace);
+            List<ICompilerProblem> configProblems = new ArrayList<>();
+            RoyaleProjectConfigurator configurator = CompilerProjectUtils.configureProject(project, projectOptions, configProblems);
+            if (configurator == null)
+            {
+                project.delete();
+                project = null;
+            }
 
-        List<ICompilerProblem> configProblems = new ArrayList<>();
-        RoyaleProjectConfigurator configurator = CompilerProjectUtils.configureProject(project, projectOptions, configProblems);
-        if (configurator == null)
-        {
-            project.delete();
-            project = null;
-        }
+            System.setProperty("user.dir", oldUserDir);
 
-        System.setProperty("user.dir", oldUserDir);
-
-        ProblemTracker configProblemTracker = folderData.configProblemTracker;
-        if (configProblems.size() > 0)
-        {
             ICompilerProblemSettings compilerProblemSettings = null;
             if (configurator != null)
             {
@@ -6265,51 +5950,22 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             ProblemQuery problemQuery = new ProblemQuery(compilerProblemSettings);
             problemQuery.addAll(configProblems);
-            if (problemQuery.hasFilteredProblems())
-            {
-                Map<URI, PublishDiagnosticsParams> filesMap = new HashMap<>();
-                for (ICompilerProblem configProblem : problemQuery.getFilteredProblems())
-                {
-                    String problemSourcePath = configProblem.getSourcePath();
-                    if (problemSourcePath == null || problemSourcePath.equals(CommandLineConfigurator.SOURCE_COMMAND_LINE))
-                    {
-                        //since we're processing configuration problems, the best
-                        //default location to send the user is probably to the
-                        //asconfig.json file.
-                        problemSourcePath = config.getDefaultConfigurationProblemPath();
-                    }
-                    URI uri = Paths.get(problemSourcePath).toUri();
-                    configProblemTracker.trackFileWithProblems(uri);
-                    PublishDiagnosticsParams params = null;
-                    if (filesMap.containsKey(uri))
-                    {
-                        params = filesMap.get(uri);
-                    }
-                    else
-                    {
-                        params = new PublishDiagnosticsParams();
-                        params.setUri(uri.toString());
-                        params.setDiagnostics(new ArrayList<>());
-                        filesMap.put(uri, params);
-                    }
-                    addCompilerProblem(configProblem, params);
-                }
-                if (languageClient != null)
-                {
-                    filesMap.values().forEach(languageClient::publishDiagnostics);
-                }
-            }
+            publishDiagnosticsForProblemQuery(problemQuery, folderData.configProblemTracker, folderData, true);
+
+            folderData.project = project;
+            folderData.configurator = configurator;
+            prepareNewProject(folderData);
         }
-        //clear out any old problems because they will no longer be valid
-        configProblemTracker.releaseStale();
-        folderData.project = project;
-        folderData.configurator = configurator;
+        finally
+        {
+            compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
+        }
         return project;
     }
 
     private void checkProjectForProblems(WorkspaceFolderData folderData)
     {
-        refreshProjectOptions(folderData);
+        getProject(folderData);
         ProjectOptions projectOptions = folderData.options;
         if (projectOptions == null || projectOptions.type.equals(ProjectType.LIB))
         {
@@ -6324,7 +5980,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 }
                 checkFilePathForProblems(filePath, problemQuery, folderData, true);
             }
-            publishDiagnosticsForProblemQuery(problemQuery, folderData, true);
+            publishDiagnosticsForProblemQuery(problemQuery, folderData.codeProblemTracker, folderData, true);
         }
         else //app
         {
@@ -6336,52 +5992,53 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
     }
 
-    private void publishDiagnosticsForProblemQuery(ProblemQuery problemQuery, WorkspaceFolderData folderData, boolean releaseStale)
+    private void publishDiagnosticsForProblemQuery(ProblemQuery problemQuery, ProblemTracker problemTracker, WorkspaceFolderData folderData, boolean releaseStale)
     {
-        ProblemTracker codeProblemTracker = folderData.codeProblemTracker;
-
-        Map<String, PublishDiagnosticsParams> sourcePathToParamsMap = new HashMap<>();
-        for(ICompilerProblem problem : problemQuery.getFilteredProblems())
+        Map<URI, PublishDiagnosticsParams> filesMap = new HashMap<>();
+        for (ICompilerProblem problem : problemQuery.getFilteredProblems())
         {
             String problemSourcePath = problem.getSourcePath();
-            if (problemSourcePath == null)
-            {
-                //fall back to the workspace folder path, if the problem doesn't
-                //have a path. that's probably the best that we can do.
-                Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(folderData.folder.getUri());
-                problemSourcePath = path.toString();
-            }
             IncludeFileData includedFile = includedFiles.get(problemSourcePath);
             if (includedFile != null && !includedFile.parentPath.equals(problemSourcePath))
             {
                 //skip files that are included in other files
                 continue;
             }
-            if (!sourcePathToParamsMap.containsKey(problemSourcePath))
+            if (problemSourcePath == null)
             {
-                URI uri = Paths.get(problemSourcePath).toUri();
-                PublishDiagnosticsParams publish = new PublishDiagnosticsParams();
-                publish.setDiagnostics(new ArrayList<>());
-                publish.setUri(uri.toString());
-                sourcePathToParamsMap.put(problemSourcePath, publish);
-
-                codeProblemTracker.trackFileWithProblems(uri);
+                Path folderPath = LanguageServerCompilerUtils.getPathFromLanguageServerURI(folderData.folder.getUri());
+                problemSourcePath = folderPath.toString();
             }
-            PublishDiagnosticsParams publish = sourcePathToParamsMap.get(problemSourcePath);
-            addCompilerProblem(problem, publish);
+            if (CommandLineConfigurator.SOURCE_COMMAND_LINE.equals(problemSourcePath))
+            {
+                //for configuration problems that point to the command line, the
+                //best default location to send the user is probably to the
+                //config file (like asconfig.json in Visual Studio Code)
+                problemSourcePath = folderData.config.getDefaultConfigurationProblemPath();
+            }
+            URI uri = Paths.get(problemSourcePath).toUri();
+            if (!filesMap.containsKey(uri))
+            {
+                PublishDiagnosticsParams params = new PublishDiagnosticsParams();
+                params.setUri(uri.toString());
+                params.setDiagnostics(new ArrayList<>());
+                filesMap.put(uri, params);
+            }
+            PublishDiagnosticsParams params = filesMap.get(uri);
+            problemTracker.trackFileWithProblems(uri);
+            addCompilerProblem(problem, params);
         }
-
         if (releaseStale)
         {
-            codeProblemTracker.releaseStale();
+            problemTracker.releaseStale();
         }
         else
         {
-            codeProblemTracker.makeStale();
+            problemTracker.makeStale();
         }
         if (languageClient != null)
         {
-            sourcePathToParamsMap.values().forEach(languageClient::publishDiagnostics);
+            filesMap.values().forEach(languageClient::publishDiagnostics);
         }
     }
 
@@ -6399,13 +6056,12 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     {
         ProblemQuery problemQuery = workspaceFolderDataToProblemQuery(folderData);
         checkFilePathForProblems(path, problemQuery, folderData, quick);
-        publishDiagnosticsForProblemQuery(problemQuery, folderData, !quick);
+        publishDiagnosticsForProblemQuery(problemQuery, folderData.codeProblemTracker, folderData, !quick);
     }
 
     private void checkFilePathForProblems(Path path, ProblemQuery problemQuery, WorkspaceFolderData folderData, boolean quick)
     {
-        //if we haven't accessed a compilation unit yet, the project may be null
-        RoyaleProject project = getProject(folderData);
+        RoyaleProject project = folderData.project;
         if (project != null && !SourcePathUtils.isInProjectSourcePath(path, project, folderData.configurator))
         {
             publishDiagnosticForFileOutsideSourcePath(path);
@@ -6461,7 +6117,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         compilerWorkspace.startBuilding();
         try
         {
-            ICompilationUnit unitForPath = getCompilationUnit(path, folderData);
+            ICompilationUnit unitForPath = findCompilationUnit(path, folderData.project);
             if (unitForPath == null)
             {
                 //fall back to the syntax check instead
@@ -6580,6 +6236,114 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             InternalCompilerProblem problem = new InternalCompilerProblem(e);
             problemQuery.add(problem);
         }
+    }
+
+    private List<WorkspaceFolderData> getAllWorkspaceFolderDataForSourceFile(Path path)
+    {
+        List<WorkspaceFolderData> result = new ArrayList<>();
+        for (WorkspaceFolder folder : workspaceFolderToData.keySet())
+        {
+            WorkspaceFolderData folderData = workspaceFolderToData.get(folder);
+            RoyaleProject project = folderData.project;
+            if (project == null)
+            {
+                String folderUri = folder.getUri();
+                Path workspacePath = LanguageServerCompilerUtils.getPathFromLanguageServerURI(folderUri);
+                if (path.startsWith(workspacePath))
+                {
+                    result.add(folderData);
+                }
+            }
+            else if (SourcePathUtils.isInProjectSourcePath(path, project, folderData.configurator))
+            {
+                result.add(folderData);
+            }
+        }
+        return result;
+    }
+
+    private List<WorkspaceFolderData> getAllWorkspaceFolderDataForSWCFile(Path path)
+    {
+        List<WorkspaceFolderData> result = new ArrayList<>();
+        for (WorkspaceFolder folder : workspaceFolderToData.keySet())
+        {
+            WorkspaceFolderData folderData = workspaceFolderToData.get(folder);
+            RoyaleProject project = folderData.project;
+            if (project == null)
+            {
+                String folderUri = folder.getUri();
+                Path workspacePath = LanguageServerCompilerUtils.getPathFromLanguageServerURI(folderUri);
+                if (path.startsWith(workspacePath))
+                {
+                    result.add(folderData);
+                }
+            }
+            else
+            {
+                Configuration configuration = folderData.configurator.getConfiguration();
+                if (SourcePathUtils.isInProjectLibraryPathOrExternalLibraryPath(path, project, configuration))
+                {
+                    result.add(folderData);
+                }
+            }
+        }
+        return result;
+    }
+
+    private WorkspaceFolderData getWorkspaceFolderDataForSourceFile(Path path)
+    {
+        //first try to find the path in an existing project
+        WorkspaceFolderData fallback = null;
+        for (WorkspaceFolderData folderData : workspaceFolderToData.values())
+        {
+            RoyaleProject project = folderData.project;
+            if (project == null)
+            {
+                continue;
+            }
+            String uri = folderData.folder.getUri();
+            Path workspacePath = LanguageServerCompilerUtils.getPathFromLanguageServerURI(uri);
+            if (workspacePath != null && SourcePathUtils.isInProjectSourcePath(path, project, folderData.configurator))
+            {
+                if(path.startsWith(workspacePath))
+                {
+                    //if the source path is inside the workspace folder, it's a
+                    //perfect match
+                    return folderData;
+                }
+                //if path is in the source path, but not inside the workspace
+                //folder, save it as possible result for later. in other words,
+                //we always prefer a workspace that contains the file, so we'll
+                //check the other workspaces before using the fallback.
+                if (fallback == null)
+                {
+                    fallback = folderData;
+                }
+            }
+        }
+        //we found the path in a project's source path, but not inside any the
+        //workspace folders
+        if (fallback != null)
+        {
+            return fallback;
+
+        }
+        //if none of the existing projects worked, try a folder where a project
+        //hasn't been created yet
+        for (WorkspaceFolderData folderData : workspaceFolderToData.values())
+        {
+            String uri = folderData.folder.getUri();
+            Path workspacePath = LanguageServerCompilerUtils.getPathFromLanguageServerURI(uri);
+            if (workspacePath == null)
+            {
+                continue;
+            }
+			if (path.startsWith(workspacePath))
+			{
+                return folderData;
+			}
+        }
+        return null;
     }
 
     private String getFileTextForPath(Path path)
@@ -6735,7 +6499,14 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return null;
         }
 
-        IASNode ast = getAST(path, folderData);
+        ICompilationUnit unit = findCompilationUnit(path, project);
+        if (unit == null)
+        {
+            //the path must be in the workspace or source-path
+            return null;
+        }
+
+        IASNode ast = getAST(unit);
         if (ast == null)
         {
             return null;
@@ -7494,14 +7265,20 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return;
         }
-        WorkspaceFolderData folderData = textDocumentPathToFolderData(path);
+        WorkspaceFolderData folderData = getWorkspaceFolderDataForSourceFile(path);
         if(folderData == null || folderData.project == null)
         {
             return;
         }
         RoyaleProject project = folderData.project;
+        
+        ICompilationUnit unit = findCompilationUnit(path, project);
+        if(unit == null)
+        {
+            return;
+        }
 
-        String text = sourceByPath.get(path);
+        String text = getFileTextForPath(path);
         if(text == null)
         {
             return;
@@ -7510,7 +7287,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         Set<String> missingNames = null;
         Set<String> importsToAdd = null;
         Set<IImportNode> importsToRemove = null;
-        IASNode ast = getAST(path, folderData);
+        IASNode ast = getAST(unit);
         if (ast != null)
         {
             missingNames = ASTUtils.findUnresolvedIdentifiersToImport(ast, project);
@@ -7563,13 +7340,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 {
                     return new Object();
                 }
-                String text = getFileTextForPath(pathForImport);
-                if(text == null)
+                WorkspaceFolderData folderData = getWorkspaceFolderDataForSourceFile(pathForImport);
+                if(folderData == null || folderData.project == null)
                 {
                     return new Object();
                 }
-                WorkspaceFolderData folderData = textDocumentPathToFolderData(pathForImport);
-                if(folderData == null || folderData.project == null)
+                String text = getFileTextForPath(pathForImport);
+                if(text == null)
                 {
                     return new Object();
                 }
