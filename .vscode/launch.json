@@ -11,7 +11,7 @@
 			],
 			"stopOnEntry": false,
 			"sourceMaps": true,
-			"outDir": "${workspaceRoot}/distribution/target/vscode-as3mxml/vscode-as3mxml",
+			"outFiles": ["${workspaceRoot}/distribution/target/vscode-as3mxml/vscode-as3mxml/**/*.js"],
 			"internalConsoleOptions": "openOnSessionStart",
 			"preLaunchTask": "build-debug"
 		},
@@ -27,7 +27,7 @@
 			],
 			"stopOnEntry": false,
 			"sourceMaps": true,
-			"outDir": "${workspaceRoot}/vscode-extension/target/test",
+			"outFiles": ["${workspaceRoot}/vscode-extension/target/test/**/*.js"],
 			"internalConsoleOptions": "openOnSessionStart",
 			"preLaunchTask": "build-test"
 		}

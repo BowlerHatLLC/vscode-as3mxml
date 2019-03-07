@@ -32,6 +32,7 @@ limitations under the License.
   <properties>
     <npm.executable>npm</npm.executable>
     <tsc.executable>${project.basedir}/node_modules/.bin/tsc</tsc.executable>
+    <webpack.executable>${project.basedir}/node_modules/.bin/webpack</webpack.executable>
   </properties>
 
   <build>
@@ -78,14 +79,14 @@ limitations under the License.
             </goals>
           </execution>
           <execution>
-            <id>exec-tsc-src</id>
+            <id>exec-webpack-src</id>
             <phase>generate-sources</phase>
             <configuration>
-              <workingDirectory>${project.basedir}/src/main</workingDirectory>
-              <executable>${tsc.executable}</executable>
+              <workingDirectory>${project.basedir}</workingDirectory>
+              <executable>${webpack.executable}</executable>
               <arguments>
-                <argument>-p</argument>
-                <argument>.</argument>
+                <argument>--mode</argument>
+                <argument>production</argument>
               </arguments>
             </configuration>
             <goals>
@@ -124,6 +125,7 @@ limitations under the License.
       <properties>
         <npm.executable>npm.cmd</npm.executable>
         <tsc.executable>${project.basedir}/node_modules/.bin/tsc.cmd</tsc.executable>
+        <webpack.executable>${project.basedir}/node_modules/.bin/webpack.cmd</webpack.executable>
       </properties>
     </profile>
   </profiles>

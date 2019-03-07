@@ -36,19 +36,20 @@
     "vscode": "^1.30.0"
   },
   "devDependencies": {
+    "@rgrove/parse-xml": "^1.1.1",
     "@types/json5": "0.0.30",
     "@types/mocha": "^5.2.5",
     "@types/node": "^8.10.39",
+    "json5": "^2.1.0",
     "mocha": "^5.2.0",
+    "ts-loader": "^5.3.3",
     "typescript": "^3.2.4",
     "vsce": "^1.55.0",
-    "vscode": "^1.1.28"
-  },
-  "dependencies": {
-    "@rgrove/parse-xml": "^1.1.1",
-    "json5": "^2.1.0",
+    "vscode": "^1.1.28",
     "vscode-jsonrpc": "^4.0.0",
-    "vscode-languageclient": "^5.2.1"
+    "vscode-languageclient": "^5.2.1",
+    "webpack": "^4.29.6",
+    "webpack-cli": "^3.2.3"
   },
   "activationEvents": [
     "onLanguage:nextgenas",
