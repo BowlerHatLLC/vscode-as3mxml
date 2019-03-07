@@ -1,3 +1,29 @@
+## v0.18.0
+
+## New Features
+
+* Project: Import projects from Adobe Flash Builder. If you open a folder containing a Flash Builder project, Visual Studio Code will prompt to convert it to *asconfig.json*.
+* Go To Definition: When a definition is in a SWC file, the generated text that is displayed in an editor now includes more details, including metadata and primitive constant values. Additionally, members of classes are now sorted, and the formatting of custom namespaces has been improved.
+* Quick Compile & Debug: All files are saved before compiling, matching the default behavior in Visual Studio Code when running a build task.
+* Build: Added support for `directory`, `load-externs` and `include-file` compiler options to `compilerOptions` field in *asconfig.json*.
+
+## Fixed Issues
+
+* General: Fixed concurrency issues that would require a restart of the language server.
+* General: Improved support for the ActionScript `include` statement and MXML `<fx:Script source="script.as">`.
+* Hover: Fixed issue where hover pop-up for `void` and `Object` types incorrectly displayed `extends` keyword with no superclass.
+* Problems: Fixed null reference exception if a compiler problem had no offset position.
+* Problems: Fixed issue where problems were not updated properly when an open file that wasn't on the `source-path` is added to the `source-path` later.
+
+## Other Changes
+
+* The `$nextgenas_nomatch` problem matcher in *tasks.json* is now considered deprecated. Use an empty array instead:
+
+	```
+	"problemMatchers": []
+	```
+* General: JavaScript code in extension is now bundled with Webpack to speed up start-up time and reduce download size.
+
 ## v0.17.2
 
 ### Fixed Issues
