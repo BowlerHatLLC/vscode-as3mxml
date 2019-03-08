@@ -3,17 +3,20 @@
 ## New Features
 
 * Project: Import projects from Adobe Flash Builder. If you open a folder containing a Flash Builder project, Visual Studio Code will prompt to convert it to *asconfig.json*.
-* Go To Definition: When a definition is in a SWC file, the generated text that is displayed in an editor now includes more details, including metadata and primitive constant values. Additionally, members of classes are now sorted, and the formatting of custom namespaces has been improved.
+* Go To Definition: When a definition is in a SWC file, the generated/decompiled text that is opened in an editor now includes more details, including metadata and some constant values. Additionally, members of classes are now sorted, and custom namespaces are formatted better.
+* Hover: Constants are now shown with their values, if the value is primitive, like a `String`, `Boolean`, or `Number`.
 * Quick Compile & Debug: All files are saved before compiling, matching the default behavior in Visual Studio Code when running a build task.
 * Build: Added support for `directory`, `load-externs` and `include-file` compiler options to `compilerOptions` field in *asconfig.json*.
+* General: Added `as3mxml.problems.realTime` setting. When set to `false`, problems will be reported on save only.
+* Build: The `application` field in *asconfig.json* is now optional. If the SDK contains a template for an Adobe AIR application descriptor, this file will be automatically copied to the output folder and populated with some simple defaults.
 
 ## Fixed Issues
 
-* General: Fixed concurrency issues that would require a restart of the language server.
-* General: Improved support for the ActionScript `include` statement and MXML `<fx:Script source="script.as">`.
-* Hover: Fixed issue where hover pop-up for `void` and `Object` types incorrectly displayed `extends` keyword with no superclass.
+* General: Fixed some concurrency issues that would sometimes require a restart of the language server.
+* General: Fixed some issues related to the ActionScript `include` statement and MXML `<fx:Script source="script.as"/>`.
+* Hover: Fixed issue where hover pop-up for `void` and `Object` types incorrectly displayed the `extends` keyword with no superclass.
 * Problems: Fixed null reference exception if a compiler problem had no offset position.
-* Problems: Fixed issue where problems were not updated properly when an open file that wasn't on the `source-path` is added to the `source-path` later.
+* Problems: Fixed issue where problems were not updated properly when an open file that wasn't originally on the `source-path` gets added to the `source-path` later.
 
 ## Other Changes
 
@@ -22,7 +25,7 @@
 	```
 	"problemMatchers": []
 	```
-* General: JavaScript code in extension is now bundled with Webpack to speed up start-up time and reduce download size.
+* General: JavaScript code in the extension is now bundled/minified with Webpack to speed up start-up time and reduce download size.
 
 ## v0.17.2
 
