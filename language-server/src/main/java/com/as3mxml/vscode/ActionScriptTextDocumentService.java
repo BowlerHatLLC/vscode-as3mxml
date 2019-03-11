@@ -409,9 +409,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             cancelToken.checkCanceled();
 
             compilerWorkspace.startBuilding();
-            cancelToken.checkCanceled();
             try
             {
+                cancelToken.checkCanceled();
+
                 //this shouldn't be necessary, but if we ever forget to do this
                 //somewhere, completion results might be missing items.
                 completionTypes.clear();
@@ -528,9 +529,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             cancelToken.checkCanceled();
 
             compilerWorkspace.startBuilding();
-            cancelToken.checkCanceled();
             try
             {
+                cancelToken.checkCanceled();
                 TextDocumentIdentifier textDocument = params.getTextDocument();
                 Position position = params.getPosition();
                 Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocument.getUri());
@@ -600,9 +601,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             cancelToken.checkCanceled();
 
             compilerWorkspace.startBuilding();
-            cancelToken.checkCanceled();
             try
             {
+                cancelToken.checkCanceled();
                 TextDocumentIdentifier textDocument = params.getTextDocument();
                 Position position = params.getPosition();
                 Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocument.getUri());
@@ -784,9 +785,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             cancelToken.checkCanceled();
 
             compilerWorkspace.startBuilding();
-            cancelToken.checkCanceled();
             try
             {
+                cancelToken.checkCanceled();
                 TextDocumentIdentifier textDocument = params.getTextDocument();
                 Position position = params.getPosition();
                 Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocument.getUri());
@@ -853,9 +854,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             cancelToken.checkCanceled();
 
             compilerWorkspace.startBuilding();
-            cancelToken.checkCanceled();
             try
             {
+                cancelToken.checkCanceled();
                 TextDocumentIdentifier textDocument = params.getTextDocument();
                 Position position = params.getPosition();
                 Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocument.getUri());
@@ -921,9 +922,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             cancelToken.checkCanceled();
 
             compilerWorkspace.startBuilding();
-            cancelToken.checkCanceled();
             try
             {
+                cancelToken.checkCanceled();
                 TextDocumentIdentifier textDocument = params.getTextDocument();
                 Position position = params.getPosition();
                 Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocument.getUri());
@@ -984,9 +985,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             cancelToken.checkCanceled();
 
             compilerWorkspace.startBuilding();
-            cancelToken.checkCanceled();
             try
             {
+                cancelToken.checkCanceled();
                 TextDocumentIdentifier textDocument = params.getTextDocument();
                 Position position = params.getPosition();
                 Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocument.getUri());
@@ -1062,9 +1063,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             cancelToken.checkCanceled();
 
             compilerWorkspace.startBuilding();
-            cancelToken.checkCanceled();
             try
             {
+                cancelToken.checkCanceled();
                 Set<String> qualifiedNames = new HashSet<>();
                 List<SymbolInformation> result = new ArrayList<>();
                 String query = params.getQuery();
@@ -1174,9 +1175,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             cancelToken.checkCanceled();
             
             compilerWorkspace.startBuilding();
-            cancelToken.checkCanceled();
             try
             {
+                cancelToken.checkCanceled();
                 TextDocumentIdentifier textDocument = params.getTextDocument();
                 Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocument.getUri());
                 if (path == null)
@@ -1256,9 +1257,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             cancelToken.checkCanceled();
 
             compilerWorkspace.startBuilding();
-            cancelToken.checkCanceled();
             try
             {
+                cancelToken.checkCanceled();
                 TextDocumentIdentifier textDocument = params.getTextDocument();
                 Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocument.getUri());
                 if (path == null)
@@ -1728,9 +1729,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             cancelToken.checkCanceled();
 
             compilerWorkspace.startBuilding();
-            cancelToken.checkCanceled();
             try
             {
+                cancelToken.checkCanceled();
                 TextDocumentIdentifier textDocument = params.getTextDocument();
                 Position position = params.getPosition();
                 Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocument.getUri());
@@ -7155,10 +7156,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             cancelToken.checkCanceled();
 
             compilerWorkspace.startBuilding();
-            cancelToken.checkCanceled();
             ApplyWorkspaceEditParams editParams = null;
             try
             {
+                cancelToken.checkCanceled();
                 Map<String,List<TextEdit>> changes = new HashMap<>();
                 for(String fileURI : fileURIs)
                 {
@@ -7212,10 +7213,10 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             cancelToken.checkCanceled();
 
             compilerWorkspace.startBuilding();
-            cancelToken.checkCanceled();
             ApplyWorkspaceEditParams editParams = null;
             try
             {
+                cancelToken.checkCanceled();
                 
                 Map<String,List<TextEdit>> changes = new HashMap<>();
                 organizeImportsInUri(uri, changes);
@@ -7339,9 +7340,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             cancelToken.checkCanceled();
 
             compilerWorkspace.startBuilding();
-            cancelToken.checkCanceled();
             try
             {
+                cancelToken.checkCanceled();
                 List<Object> args = params.getArguments();
                 String qualifiedName = ((JsonPrimitive) args.get(0)).getAsString();
                 String uri = ((JsonPrimitive) args.get(1)).getAsString();
@@ -7407,9 +7408,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             cancelToken.checkCanceled();
 
             compilerWorkspace.startBuilding();
-            cancelToken.checkCanceled();
             try
             {
+                cancelToken.checkCanceled();
                 List<Object> args = params.getArguments();
                 String nsPrefix = ((JsonPrimitive) args.get(0)).getAsString();
                 String nsUri = ((JsonPrimitive) args.get(1)).getAsString();
@@ -7474,6 +7475,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 }
                 catch(ASConfigCException e)
                 {
+                    //this is a message intended for the user
                     languageClient.logCompilerShellOutput("\n" + e.getMessage());
                     success = false;
                 }
