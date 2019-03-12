@@ -30,6 +30,13 @@
 			"outFiles": ["${workspaceRoot}/vscode-extension/target/test/**/*.js"],
 			"internalConsoleOptions": "openOnSessionStart",
 			"preLaunchTask": "build-test"
+		},
+		{
+			"type": "java",
+			"name": "Debug Language Server (Attach)",
+			"request": "attach",
+			"hostName": "localhost",
+			"port": 5005
 		}
 	]
 }

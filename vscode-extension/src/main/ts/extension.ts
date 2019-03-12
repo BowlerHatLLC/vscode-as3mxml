@@ -409,6 +409,8 @@ function startClient()
 			{
 				args.unshift("-Droyalelib=" + path.join(frameworkSDKHome, "frameworks"));
 			}
+			//uncomment to allow a debugger to attach to the language server
+			//args.unshift("-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005,quiet=y");
 			let executable: Executable =
 			{
 				command: javaExecutablePath,
@@ -418,7 +420,6 @@ function startClient()
 					cwd: vscode.workspace.workspaceFolders[0].uri.fsPath
 				}
 			};
-			let options: ExecutableOptions;
 			isLanguageClientReady = false;
 			savedLanguageClient = new LanguageClient("nextgenas", "ActionScript & MXML Language Server", executable, clientOptions);
 			savedLanguageClient.onReady().then(() =>
