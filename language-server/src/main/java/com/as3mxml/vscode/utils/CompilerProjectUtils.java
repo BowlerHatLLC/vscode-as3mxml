@@ -20,7 +20,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -41,9 +40,6 @@ import org.apache.royale.compiler.internal.projects.RoyaleJSProject;
 import org.apache.royale.compiler.internal.projects.RoyaleProject;
 import org.apache.royale.compiler.internal.projects.RoyaleProjectConfigurator;
 import org.apache.royale.compiler.internal.workspaces.Workspace;
-import org.apache.royale.compiler.problems.ICompilerProblem;
-import org.apache.royale.compiler.targets.ITarget;
-import org.apache.royale.compiler.targets.ITargetSettings;
 
 public class CompilerProjectUtils
 {
@@ -161,7 +157,7 @@ public class CompilerProjectUtils
         return project;
     }
 
-    public static RoyaleProjectConfigurator configureProject(RoyaleProject project, ProjectOptions currentProjectOptions, Collection<ICompilerProblem> problems)
+    public static RoyaleProjectConfigurator createConfigurator(RoyaleProject project, ProjectOptions projectOptions)
     {
         final Path frameworkLibPath = Paths.get(System.getProperty(PROPERTY_FRAMEWORK_LIB));
         final boolean frameworkSDKIsRoyale = ActionScriptSDKUtils.isRoyaleFramework(frameworkLibPath);
@@ -170,7 +166,7 @@ public class CompilerProjectUtils
         Path sparkPath = frameworkLibPath.resolve("./themes/Spark/spark.css");
         boolean frameworkSDKContainsSparkTheme = sparkPath.toFile().exists();
 
-		List<String> compilerOptions = currentProjectOptions.compilerOptions;
+		List<String> compilerOptions = projectOptions.compilerOptions;
         RoyaleProjectConfigurator configurator = null;
         if (project instanceof RoyaleJSProject || frameworkSDKIsRoyale)
         {
@@ -188,10 +184,10 @@ public class CompilerProjectUtils
         {
             configurator.setToken(TOKEN_FLEXLIB, System.getProperty(PROPERTY_FRAMEWORK_LIB));
         }
-        configurator.setToken(TOKEN_CONFIGNAME, currentProjectOptions.config);
-        String projectType = currentProjectOptions.type;
-        String[] files = currentProjectOptions.files;
-        String additionalOptions = currentProjectOptions.additionalOptions;
+        configurator.setToken(TOKEN_CONFIGNAME, projectOptions.config);
+        String projectType = projectOptions.type;
+        String[] files = projectOptions.files;
+        String additionalOptions = projectOptions.additionalOptions;
         ArrayList<String> combinedOptions = new ArrayList<>();
         if (compilerOptions != null)
         {
@@ -253,24 +249,6 @@ public class CompilerProjectUtils
                 configurator.addConfiguration(appendConfigFile);
             }
         }
-		boolean result = configurator.applyToProject(project);
-		problems.addAll(configurator.getConfigurationProblems());
-        if (!result)
-        {
-            return null;
-        }
-        ITarget.TargetType targetType = ITarget.TargetType.SWF;
-        if (currentProjectOptions.type.equals(ProjectType.LIB))
-        {
-            targetType = ITarget.TargetType.SWC;
-        }
-        ITargetSettings targetSettings = configurator.getTargetSettings(targetType);
-        if (targetSettings == null)
-        {
-            System.err.println("Failed to get compile settings for +configname=" + currentProjectOptions.config + ".");
-            return null;
-        }
-        project.setTargetSettings(targetSettings);
         return configurator;
 	}
 }

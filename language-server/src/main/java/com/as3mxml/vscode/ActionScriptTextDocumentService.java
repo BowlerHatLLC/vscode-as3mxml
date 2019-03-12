@@ -103,6 +103,8 @@ import org.apache.royale.compiler.mxml.IMXMLUnitData;
 import org.apache.royale.compiler.problems.ICompilerProblem;
 import org.apache.royale.compiler.problems.InternalCompilerProblem;
 import org.apache.royale.compiler.scopes.IASScope;
+import org.apache.royale.compiler.targets.ITarget;
+import org.apache.royale.compiler.targets.ITargetSettings;
 import org.apache.royale.compiler.tree.ASTNodeID;
 import org.apache.royale.compiler.tree.as.IASNode;
 import org.apache.royale.compiler.tree.as.IBinaryOperatorNode;
@@ -5927,7 +5929,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         refreshProjectOptions(folderData);
         RoyaleProject project = folderData.project;
         ProjectOptions projectOptions = folderData.options;
-        IProjectConfigStrategy config = folderData.config;
         if (projectOptions == null)
         {
             folderData.cleanup();
@@ -5939,19 +5940,59 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             project.getProblems().clear();
             return project;
         }
+
+        String oldUserDir = System.getProperty("user.dir");
+        List<ICompilerProblem> configProblems = new ArrayList<>();
+
+        RoyaleProjectConfigurator configurator = null;
         compilerWorkspace.startIdleState();
         try
         {
             URI rootURI = URI.create(folderData.folder.getUri());
             Path rootPath = Paths.get(rootURI);
-
-            String oldUserDir = System.getProperty("user.dir");
             System.setProperty("user.dir", rootPath.toString());
-
             project = CompilerProjectUtils.createProject(projectOptions, compilerWorkspace);
+            configurator = CompilerProjectUtils.createConfigurator(project, projectOptions);
+        }
+        finally
+        {
+            compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
+        }
 
-            List<ICompilerProblem> configProblems = new ArrayList<>();
-            RoyaleProjectConfigurator configurator = CompilerProjectUtils.configureProject(project, projectOptions, configProblems);
+        //this is not wrapped in startIdleState() or startBuilding()
+        //because applyToProject() could trigger both, depending on context!
+        if(configurator != null)
+        {
+            boolean result = configurator.applyToProject(project);
+            configProblems.addAll(configurator.getConfigurationProblems());
+            if (!result)
+            {
+                configurator = null;
+            }
+        }
+
+        compilerWorkspace.startIdleState();
+        try
+        {
+            if(configurator != null)
+            {
+                ITarget.TargetType targetType = ITarget.TargetType.SWF;
+                if (projectOptions.type.equals(ProjectType.LIB))
+                {
+                    targetType = ITarget.TargetType.SWC;
+                }
+                ITargetSettings targetSettings = configurator.getTargetSettings(targetType);
+                if (targetSettings == null)
+                {
+                    System.err.println("Failed to get compile settings for +configname=" + projectOptions.config + ".");
+                    configurator = null;
+                }
+                else
+                {
+                    project.setTargetSettings(targetSettings);
+                }
+            }
+
             if (configurator == null)
             {
                 project.delete();
