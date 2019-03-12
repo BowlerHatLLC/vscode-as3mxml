@@ -67,6 +67,7 @@
         <include>org.eclipse.lsp4j*.jar</include>
         <include>org.eclipse.xtend*.jar</include>
         <include>org.eclipse.xtext*.jar</include>
+        <include>commons-io-*.jar</include>
         <include>gson*.jar</include>
         <include>json-schema-validator*.jar</include>
         <include>slf4j*.jar</include>
