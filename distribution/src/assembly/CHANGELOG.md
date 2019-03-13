@@ -12,6 +12,7 @@
 
 ## Fixed Issues
 
+* Build: Fixed issue where clean command resulted in a null reference exception if main file was in the root folder of the workspace.
 * Completion: Fixed missing qualified name in package-level functions that made it difficult to differentiate between functions with the same name.
 * SWF Debugger: Fixed issue where the call stack might link to a file that doesn't exist in the current SDK.
 * General: Fixed some concurrency issues that would sometimes require a restart of the language server.
