@@ -12,6 +12,7 @@
 
 ## Fixed Issues
 
+* Completion: Fixed missing qualified name in package-level functions that made it difficult to differentiate between functions with the same name.
 * General: Fixed some concurrency issues that would sometimes require a restart of the language server.
 * General: Fixed some issues related to the ActionScript `include` statement and MXML `<fx:Script source="script.as"/>`.
 * Hover: Fixed issue where hover pop-up for `void` and `Object` types incorrectly displayed the `extends` keyword with no superclass.

@@ -896,7 +896,7 @@ public class DefinitionTextUtils
     public static String functionDefinitionToSignature(IFunctionDefinition functionDefinition, ICompilerProject currentProject)
     {
         StringBuilder labelBuilder = new StringBuilder();
-        labelBuilder.append(functionDefinition.getBaseName());
+        labelBuilder.append(functionDefinition.getQualifiedName());
         String parametersAndReturnValue = functionDefinitionToParametersAndReturnValue(functionDefinition, currentProject);
         labelBuilder.append(parametersAndReturnValue);
         return labelBuilder.toString();
