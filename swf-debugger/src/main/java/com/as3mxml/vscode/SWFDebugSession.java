@@ -25,6 +25,7 @@ import java.io.StringReader;
 import java.lang.reflect.Type;
 import java.net.ConnectException;
 import java.net.URI;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.ParseException;
@@ -1431,7 +1432,13 @@ public class SWFDebugSession extends DebugSession
             return sourceFilePath;
         }
         Path transformedPath = flexHome.resolve(sourceFilePath.substring(index + 1));
-        return transformedPath.toAbsolutePath().toString();
+        if(Files.exists(transformedPath))
+        {
+			//only transform the path if the transformed file exists
+			//if it doesn't exist, the original path may be valid
+            return transformedPath.toAbsolutePath().toString();
+        }
+        return sourceFilePath;
     }
 
     private Source sourceFileToSource(SourceFile sourceFile)

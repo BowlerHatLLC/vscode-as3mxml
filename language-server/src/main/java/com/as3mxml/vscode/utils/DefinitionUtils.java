@@ -15,6 +15,7 @@ limitations under the License.
 */
 package com.as3mxml.vscode.utils;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
@@ -187,7 +188,7 @@ public class DefinitionUtils
 
     private static String transformDebugFilePath(String sourceFilePath)
     {
-        int index = -1;
+		int index = -1;
         if (System.getProperty("os.name").toLowerCase().startsWith("windows"))
         {
             //the debug file path divides directories with ; instead of slash in
@@ -206,10 +207,16 @@ public class DefinitionUtils
         {
             return sourceFilePath;
         }
-        sourceFilePath = sourceFilePath.substring(index + SDK_FRAMEWORKS_PATH_SIGNATURE.length());
-        Path frameworkPath = Paths.get(System.getProperty(PROPERTY_FRAMEWORK_LIB));
-        Path transformedPath = frameworkPath.resolve(sourceFilePath);
-        return transformedPath.toFile().getAbsolutePath();
+		String newSourceFilePath = sourceFilePath.substring(index + SDK_FRAMEWORKS_PATH_SIGNATURE.length());
+		Path frameworkPath = Paths.get(System.getProperty(PROPERTY_FRAMEWORK_LIB));
+        Path transformedPath = frameworkPath.resolve(newSourceFilePath);
+		if(Files.exists(transformedPath))
+		{
+			//only transform the path if the transformed file exists
+			//if it doesn't exist, the original path may be valid
+			return transformedPath.toFile().getAbsolutePath();
+		}
+		return sourceFilePath;
     }
 	
 	private static boolean interfaceIteratorContainsQualifiedName(Iterator<IInterfaceDefinition> interfaceIterator, String qualifiedName)

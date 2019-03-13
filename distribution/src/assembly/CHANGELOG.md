@@ -13,6 +13,7 @@
 ## Fixed Issues
 
 * Completion: Fixed missing qualified name in package-level functions that made it difficult to differentiate between functions with the same name.
+* SWF Debugger: Fixed issue where the call stack might link to a file that doesn't exist in the current SDK.
 * General: Fixed some concurrency issues that would sometimes require a restart of the language server.
 * General: Fixed some issues related to the ActionScript `include` statement and MXML `<fx:Script source="script.as"/>`.
 * Hover: Fixed issue where hover pop-up for `void` and `Object` types incorrectly displayed the `extends` keyword with no superclass.
