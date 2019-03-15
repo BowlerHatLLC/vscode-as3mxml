@@ -1,6 +1,6 @@
 ## v0.18.0
 
-## New Features
+### New Features
 
 * Project: Import projects from Adobe Flash Builder. If you open a folder containing a Flash Builder project, Visual Studio Code will prompt to convert it to *asconfig.json*.
 * Go To Definition: When a definition is in a SWC file, the generated/decompiled text that is opened in an editor now includes more details, including metadata and some constant values. Additionally, members of classes are now sorted, and custom namespaces are formatted better.
@@ -10,7 +10,7 @@
 * General: Added `as3mxml.problems.realTime` setting. When set to `false`, problems will be reported on save only.
 * Build: The `application` field in *asconfig.json* is now optional. If the SDK contains a template for an Adobe AIR application descriptor, this file will be automatically copied to the output folder and populated with some simple defaults.
 
-## Fixed Issues
+### Fixed Issues
 
 * Build: Fixed issue where clean command resulted in a null reference exception if main file was in the root folder of the workspace.
 * Completion: Fixed missing qualified name in package-level functions that made it difficult to differentiate between functions with the same name.
@@ -21,7 +21,7 @@
 * Problems: Fixed null reference exception if a compiler problem had no offset position.
 * Problems: Fixed issue where problems were not updated properly when an open file that wasn't originally on the `source-path` gets added to the `source-path` later.
 
-## Other Changes
+### Other Changes
 
 * The `$nextgenas_nomatch` problem matcher in *tasks.json* is now considered deprecated. Use an empty array instead:
 
