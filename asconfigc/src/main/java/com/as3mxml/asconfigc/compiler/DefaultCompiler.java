@@ -58,6 +58,7 @@ public class DefaultCompiler implements IASConfigCCompiler
 			compilerOptions.add(0, "-Dflexlib=" + frameworkPath.toString());
 			compilerOptions.add(0, "-Dflexcompiler=" + sdkPath.toString());
 		}
+		compilerOptions.add(0, "-Xmx512m");
 		Path javaExecutablePath = Paths.get(System.getProperty("java.home"), "bin", "java");
 		compilerOptions.add(0, javaExecutablePath.toString());
 
