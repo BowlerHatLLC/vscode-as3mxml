@@ -173,6 +173,12 @@
         "filenames": [
           "asconfig.json"
         ]
+      },
+      {
+        "id": "javascript",
+        "extensions": [
+          ".jsfl"
+        ]
       }
     ],
     "grammars": [
