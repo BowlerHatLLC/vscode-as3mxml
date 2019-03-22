@@ -4,7 +4,7 @@ Provides ActionScript & MXML language support for Visual Studio Code — includi
 
 ## Features
 
-* **Syntax Highlighting** for ActionScript and MXML files.
+* **Syntax Highlighting** for ActionScript, MXML, and JSFL files.
 * **IntelliSense** completion for classes and interfaces, imports, properties, methods, and more.
 * **Signature Help** shows a list of parameters when calling functions.
 * **Errors and Warnings** are updated in real time as you type.
