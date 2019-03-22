@@ -27,6 +27,7 @@
         <include>syntaxes/*</include>
         <include>snippets/*</include>
         <include>bin/*</include>
+        <include>jsfl/*</include>
       </includes>
     </fileSet>
     <fileSet>

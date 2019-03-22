@@ -15,6 +15,7 @@
 				"application": { "$ref": "#/definitions/application" },
 				"compilerOptions": { "$ref": "#/definitions/compilerOptions" },
 				"airOptions": { "$ref": "#/definitions/airOptions" },
+				"animateOptions": { "$ref" : "#/definitions/animateOptions" },
 				"copySourcePathAssets": { "$ref": "#/definitions/copySourcePathAssets" },
 				"config": { "$ref": "#/definitions/config" },
 				"htmlTemplate": { "$ref": "#/definitions/htmlTemplate" },
@@ -205,6 +206,21 @@
 		{
 			"type": "boolean",
 			"description": "Specify whether to embed iOS bitcode or not."
+		},
+		"animateOptions":
+		{
+			"type": "object",
+			"description": "Specify configuration options for Adobe Animate projects.",
+			"additionalProperties": false,
+			"properties": {
+				"file": {
+					"type": "string",
+					"description": "The location of an Adobe Animate .fla file."
+				}
+			},
+			"required": [
+				"file"
+			]
 		},
 		"airOptions":
 		{

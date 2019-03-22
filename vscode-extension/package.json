@@ -286,6 +286,22 @@
             "description": "Indicates if the output folder should be cleaned"
           }
         }
+      },
+      {
+        "type": "animate",
+        "properties": {
+          "debug": {
+            "type": "boolean",
+            "description": "Indicates if the output is a debug or release build"
+          },
+          "asconfig": {
+            "type": "string",
+            "description": "Optional path to asconfig.json or asconfig.*.json file in workspace"
+          }
+        },
+        "required": [
+          "debug"
+        ]
       }
     ],
     "configuration": {
