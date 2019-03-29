@@ -14,9 +14,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 import * as vscode from "vscode";
+import * as child_process from "child_process";
 import * as fs from "fs";
 import * as path from "path";
 import * as json5 from "json5";
+import findAnimate from "../utils/findAnimate";
 
 const QUICK_COMPILE_MESSAGE = "Building ActionScript & MXML project...";
 const CANNOT_LAUNCH_QUICK_COMPILE_FAILED_ERROR = "Quick compile failed with errors. Launch cancelled.";
@@ -81,6 +83,20 @@ async function quickCompileAndDebugWorkspaceFolder(workspaceFolder, debug: boole
 		{
 			return vscode.commands.executeCommand("workbench.action.debug.stop").then(() =>
 			{
+				let animateFile = getAnimateFile(workspaceFolder);
+				if(animateFile)
+				{
+					let animatePath = findAnimate();
+			
+					let extension = vscode.extensions.getExtension("bowlerhatllc.vscode-nextgenas");
+					let fileName = debug ? "debug-movie.jsfl" : "test-movie.jsfl";
+					let jsflPath = path.resolve(extension.extensionPath, "jsfl", fileName);
+			
+					child_process.spawn(animatePath, [animateFile, jsflPath]);
+
+					resolve();
+					return;
+				}
 				return vscode.commands.executeCommand("as3mxml.quickCompile", workspaceFolderUri, debug).then((result) =>
 				{
 					resolve();
@@ -112,4 +128,41 @@ async function quickCompileAndDebugWorkspaceFolder(workspaceFolder, debug: boole
 			});
 		});
 	});
+}
+
+function getAnimateFile(folder: vscode.WorkspaceFolder)
+{
+	let asconfigPath = path.resolve(folder.uri.fsPath, "asconfig.json");
+	if(!fs.existsSync(asconfigPath) || fs.statSync(asconfigPath).isDirectory())
+	{
+		return null;
+	}
+	try
+	{
+		let contents = fs.readFileSync(asconfigPath, "utf8");
+		let result = json5.parse(contents);
+		if ("type" in result && result.type !== "app")
+		{
+			return null;
+		}
+		if(!("animateOptions" in result))
+		{
+			return null;
+		}
+		let animateOptions = result.animateOptions;
+		if(!("file" in animateOptions))
+		{
+			return null;
+		}
+		let flaPath = animateOptions.file;
+		if(path.isAbsolute(flaPath))
+		{
+			return flaPath;
+		}
+		return path.resolve(folder.uri.fsPath, flaPath);
+	}
+	catch(error)
+	{
+		return null;
+	}
 }
