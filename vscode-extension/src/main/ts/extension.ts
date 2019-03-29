@@ -29,7 +29,7 @@ import * as path from "path";
 import * as vscode from "vscode";
 import {LanguageClient, LanguageClientOptions, Executable, ExecutableOptions} from "vscode-languageclient";
 import logCompilerShellOutput from "./commands/logCompilerShellOutput";
-import quickCompileAndDebug from "./commands/quickCompileAndDebug";
+import quickCompileAndLaunch from "./commands/quickCompileAndLaunch";
 import migrateSettings from "./utils/migrateSettings";
 import SWFDebugAdapterDescriptorFactory from "./utils/SWFDebugAdapterDescriptorFactory";
 import saveSessionPassword from "./commands/saveSessionPassword";
@@ -223,7 +223,16 @@ export function activate(context: vscode.ExtensionContext)
 			vscode.window.showErrorMessage(QUICK_COMPILE_LANGUAGE_SERVER_NOT_STARTED_ERROR);
 			return;
 		}
-		quickCompileAndDebug();
+		quickCompileAndLaunch(true);
+	});
+	vscode.commands.registerCommand("as3mxml.quickCompileAndRun", () =>
+	{	
+		if(!savedLanguageClient || !isLanguageClientReady)
+		{
+			vscode.window.showErrorMessage(QUICK_COMPILE_LANGUAGE_SERVER_NOT_STARTED_ERROR);
+			return;
+		}
+		quickCompileAndLaunch(false);
 	});
 	
 	//don't activate these things unless we're in a workspace

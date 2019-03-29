@@ -19,9 +19,9 @@ import * as path from "path";
 import * as json5 from "json5";
 
 const QUICK_COMPILE_MESSAGE = "Building ActionScript & MXML project...";
-const CANNOT_LAUNCH_QUICK_COMPILE_FAILED_ERROR = "Quick compile failed with errors. Debug launch cancelled.";
+const CANNOT_LAUNCH_QUICK_COMPILE_FAILED_ERROR = "Quick compile failed with errors. Launch cancelled.";
 
-export default function quickCompileAndDebug()
+export default function quickCompileAndLaunch(debug: boolean)
 {
 	if(vscode.workspace.workspaceFolders)
 	{
@@ -49,7 +49,7 @@ export default function quickCompileAndDebug()
 		});
 		if(workspaceFolders.length === 1)
 		{
-			quickCompileAndDebugWorkspaceFolder(workspaceFolders[0]);
+			quickCompileAndDebugWorkspaceFolder(workspaceFolders[0], debug);
 		}
 		else
 		{
@@ -57,12 +57,12 @@ export default function quickCompileAndDebug()
 			{
 				return { label: folder.name, description: folder.uri.fsPath, uri: folder.uri } as any;
 			})
-			vscode.window.showQuickPick(items).then(quickCompileAndDebugWorkspaceFolder);
+			vscode.window.showQuickPick(items).then(result => quickCompileAndDebugWorkspaceFolder(result, debug));
 		}
 	}
 }
 
-async function quickCompileAndDebugWorkspaceFolder(workspaceFolder)
+async function quickCompileAndDebugWorkspaceFolder(workspaceFolder, debug: boolean)
 {
 	if(!workspaceFolder)
 	{
@@ -81,13 +81,20 @@ async function quickCompileAndDebugWorkspaceFolder(workspaceFolder)
 		{
 			return vscode.commands.executeCommand("workbench.action.debug.stop").then(() =>
 			{
-				return vscode.commands.executeCommand("as3mxml.quickCompile", workspaceFolderUri).then((result) =>
+				return vscode.commands.executeCommand("as3mxml.quickCompile", workspaceFolderUri, debug).then((result) =>
 				{
 					resolve();
 	
 					if(result === true)
 					{
-						vscode.commands.executeCommand("workbench.action.debug.start");
+						if(debug)
+						{
+							vscode.commands.executeCommand("workbench.action.debug.start");
+						}
+						else
+						{
+							vscode.commands.executeCommand("workbench.action.debug.run");
+						}
 					}
 					else
 					{

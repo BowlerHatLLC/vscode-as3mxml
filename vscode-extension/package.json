@@ -66,6 +66,7 @@
     "onCommand:as3mxml.importFlashBuilderProject",
     "onCommand:as3mxml.quickCompile",
     "onCommand:as3mxml.quickCompileAndDebug",
+    "onCommand:as3mxml.quickCompileAndRun",
     "onCommand:workbench.action.tasks.runTask"
   ],
   "contributes": {
@@ -99,6 +100,11 @@
         "category": "ActionScript"
       },
       {
+        "command": "as3mxml.quickCompileAndRun",
+        "title": "Quick Compile & Run (Experimental)",
+        "category": "ActionScript"
+      },
+      {
         "command": "as3mxml.importFlashBuilderProject",
         "title": "Import Adobe Flash Builder Project",
         "category": "ActionScript"
@@ -108,6 +114,11 @@
       {
         "key": "ctrl+enter",
         "mac": "cmd+enter",
+        "command": "as3mxml.quickCompileAndRun"
+      },
+      {
+        "key": "ctrl+shift+enter",
+        "mac": "cmd+shift+enter",
         "command": "as3mxml.quickCompileAndDebug"
       }
     ],

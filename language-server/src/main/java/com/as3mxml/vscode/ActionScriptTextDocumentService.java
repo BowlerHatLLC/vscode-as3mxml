@@ -7498,6 +7498,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             List<Object> args = params.getArguments();
             String uri = ((JsonPrimitive) args.get(0)).getAsString();
+            boolean debug = ((JsonPrimitive) args.get(1)).getAsBoolean();
             boolean success = false;
             try
             {
@@ -7508,7 +7509,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 String frameworkLib = System.getProperty(PROPERTY_FRAMEWORK_LIB);
                 Path frameworkSDKHome = Paths.get(frameworkLib, "..");
                 Path workspaceRootPath = LanguageServerCompilerUtils.getPathFromLanguageServerURI(uri);
-                ASConfigCOptions options = new ASConfigCOptions(workspaceRootPath.toString(), frameworkSDKHome.toString(), true, null, null, true, compilerShell);
+                ASConfigCOptions options = new ASConfigCOptions(workspaceRootPath.toString(), frameworkSDKHome.toString(), debug, null, null, true, compilerShell);
                 try
                 {
                     new ASConfigC(options);

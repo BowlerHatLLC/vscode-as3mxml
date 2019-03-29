@@ -34,11 +34,11 @@ import com.as3mxml.vscode.utils.ActionScriptSDKUtils;
 
 public class CompilerShell implements IASConfigCCompiler
 {
-    private static final String ERROR_COMPILER_SHELL_NOT_FOUND = "Quick Compile & Debug requires the Adobe AIR SDK & Compiler or Apache Royale. Please choose a different SDK or build using a standard task.";
-    private static final String ERROR_COMPILER_SHELL_START = "Quick Compile & Debug failed. Error starting compiler shell.";
-    private static final String ERROR_COMPILER_SHELL_WRITE = "Quick Compile & Debug failed. Error writing to compiler shell.";
-    private static final String ERROR_COMPILER_SHELL_READ = "Quick Compile & Debug failed. Error reading from compiler shell.";
-    private static final String ERROR_COMPILER_ERRORS_FOUND = "Quick Compile & Debug failed. Errors in compiler output.";
+    private static final String ERROR_COMPILER_SHELL_NOT_FOUND = "Quick Compile requires the Adobe AIR SDK & Compiler or Apache Royale. Please choose a different SDK or build using a standard task.";
+    private static final String ERROR_COMPILER_SHELL_START = "Quick Compile failed. Error starting compiler shell.";
+    private static final String ERROR_COMPILER_SHELL_WRITE = "Quick Compile failed. Error writing to compiler shell.";
+    private static final String ERROR_COMPILER_SHELL_READ = "Quick Compile failed. Error reading from compiler shell.";
+    private static final String ERROR_COMPILER_ERRORS_FOUND = "Quick Compile failed. Errors in compiler output.";
     private static final String COMMAND_COMPILE = "compile";
     private static final String COMMAND_CLEAR = "clear";
     private static final String COMMAND_QUIT = "quit\n";
