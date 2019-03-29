@@ -29,6 +29,7 @@ public class ASConfigCOptions
 	private static final String OPTION_STOREPASS = "storepass";
 	private static final String OPTION_UNPACKAGE_ANES = "unpackage-anes";
 	private static final String OPTION_CLEAN = "clean";
+	private static final String OPTION_ANIMATE = "animate";
 
 	public String project = null;
 	public String sdk = null;
@@ -38,6 +39,7 @@ public class ASConfigCOptions
 	public String storepass = null;
 	public Boolean clean = null;
 	public IASConfigCCompiler compiler = null;
+	public String animate = null;
 
 	public ASConfigCOptions(String project, String sdk, Boolean debug, String air, String storepass, Boolean unpackageANEs, IASConfigCCompiler compiler)
 	{
@@ -81,6 +83,10 @@ public class ASConfigCOptions
 		{
 			String cleanString = line.getOptionValue(OPTION_CLEAN, Boolean.TRUE.toString());
 			clean = cleanString.equals(Boolean.TRUE.toString());
+		}
+		if(line.hasOption(OPTION_ANIMATE))
+		{
+			animate = line.getOptionValue(OPTION_ANIMATE, null);
 		}
 		compiler = new DefaultCompiler();
 	}

@@ -43,6 +43,9 @@ const TARGET_NATIVE = "native";
 const MATCHER = [];
 const TASK_TYPE_ACTIONSCRIPT = "actionscript";
 const TASK_TYPE_ANIMATE = "animate";
+const TASK_SOURCE_ACTIONSCRIPT = "ActionScript";
+const TASK_SOURCE_AIR = "Adobe AIR";
+const TASK_SOURCE_ANIMATE = "Adobe Animate";
 
 interface ActionScriptTaskDefinition extends vscode.TaskDefinition
 {
@@ -147,6 +150,7 @@ export default class ActionScriptTaskProvider implements vscode.TaskProvider
 			//we don't have a valid SDK
 			return;
 		}
+		let command = this.getCommand(workspaceFolder);
 
 		if(isAnimate)
 		{
@@ -164,15 +168,14 @@ export default class ActionScriptTaskProvider implements vscode.TaskProvider
 				{
 					let taskNameSuffix = path.basename(flaPath);
 					result.push(this.getAnimateTask("publish debug - " + taskNameSuffix,
-						jsonURI, workspaceFolder, animatePath, flaPath, true));
+						jsonURI, workspaceFolder, command, animatePath, true));
 					result.push(this.getAnimateTask("publish release - " + taskNameSuffix,
-						jsonURI, workspaceFolder, animatePath, flaPath, false));
+						jsonURI, workspaceFolder, command, animatePath, false));
 				}
 			}
 			return;
 		}
 
-		let command = this.getCommand(workspaceFolder);
 		let taskNameSuffix = this.getTaskNameSuffix(jsonURI, workspaceFolder);
 
 		//compile SWF or Royale JS with asconfigc
@@ -328,7 +331,7 @@ export default class ActionScriptTaskProvider implements vscode.TaskProvider
 		{
 			options.unshift(...command.slice(1));
 		}
-		let source = airPlatform === null ? "ActionScript" : "Adobe AIR";
+		let source = airPlatform === null ? TASK_SOURCE_ACTIONSCRIPT : TASK_SOURCE_AIR;
 		let execution = new vscode.ProcessExecution(command[0], options);
 		let task = new vscode.Task(definition, workspaceFolder, description,
 			source, execution, MATCHER);
@@ -373,25 +376,32 @@ export default class ActionScriptTaskProvider implements vscode.TaskProvider
 		return task;
 	}
 
-	private getAnimateTask(description: string, jsonURI: vscode.Uri, workspaceFolder: vscode.WorkspaceFolder,
-		animatePath: string, flaPath: string, debug: boolean): vscode.Task
+	private getAnimateTask(description: string, jsonURI: vscode.Uri,
+		workspaceFolder: vscode.WorkspaceFolder, command: string[],
+		animatePath: string, debug: boolean): vscode.Task
 	{
-		let extension = vscode.extensions.getExtension("bowlerhatllc.vscode-nextgenas");
-		let jsflPath = path.resolve(extension.extensionPath, "jsfl");
+		let asconfig: string = this.getASConfigValue(jsonURI, workspaceFolder.uri);
+		let definition: AnimateTaskDefinition = { type: TASK_TYPE_ANIMATE, debug, asconfig };
+		let options = ["--animate", animatePath];
 		if(debug)
 		{
-			jsflPath = path.resolve(jsflPath, "publish-debug.jsfl");
+			options.push("--debug=true");
 		}
 		else
 		{
-			jsflPath = path.resolve(jsflPath, "publish-release.jsfl");
+			options.push("--debug=false");
 		}
-		
-		let asconfig: string = this.getASConfigValue(jsonURI, workspaceFolder.uri);
-		let definition: AnimateTaskDefinition = { type: TASK_TYPE_ANIMATE, debug, asconfig: asconfig };
-		let execution = new vscode.ProcessExecution(animatePath, [flaPath, jsflPath]);
+		if(jsonURI)
+		{
+			options.push("--project", jsonURI.fsPath);
+		}
+		if(command.length > 1)
+		{
+			options.unshift(...command.slice(1));
+		}
+		let execution = new vscode.ProcessExecution(command[0], options);
 		let task = new vscode.Task(definition, workspaceFolder, description,
-			"Adobe Animate", execution, MATCHER);
+			TASK_SOURCE_ANIMATE, execution, MATCHER);
 		task.group = vscode.TaskGroup.Build;
 		return task;
 	}

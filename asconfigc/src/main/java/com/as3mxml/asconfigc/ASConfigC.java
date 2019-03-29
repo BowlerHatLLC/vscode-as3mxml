@@ -24,10 +24,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.net.URISyntaxException;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardWatchEventKinds;
+import java.nio.file.WatchEvent;
+import java.nio.file.WatchKey;
+import java.nio.file.WatchService;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -60,6 +66,7 @@ import com.networknt.schema.ValidationMessage;
 import com.as3mxml.asconfigc.air.AIROptions;
 import com.as3mxml.asconfigc.air.AIROptionsParser;
 import com.as3mxml.asconfigc.air.AIRSigningOptions;
+import com.as3mxml.asconfigc.animate.AnimateOptions;
 import com.as3mxml.asconfigc.compiler.CompilerOptions;
 import com.as3mxml.asconfigc.compiler.CompilerOptionsParser;
 import com.as3mxml.asconfigc.compiler.ConfigName;
@@ -85,6 +92,8 @@ public class ASConfigC
 	private static final String FILE_EXTENSION_MXML = ".mxml";
 	private static final String FILE_EXTENSION_ANE = ".ane";
 	private static final String FILE_NAME_UNPACKAGED_ANES = ".as3mxml-unpackaged-anes";
+	private static final String FILE_NAME_ANIMATE_PUBLISH_LOG = "AnimateDocument.log";
+	private static final String FILE_NAME_ANIMATE_ERROR_LOG = "AnimateErrors.log";
 
 	public static void main(String[] args)
 	{
@@ -119,6 +128,10 @@ public class ASConfigC
 		cleanOption.setArgName("true OR false");
 		cleanOption.setOptionalArg(true);
 		options.addOption(cleanOption);
+		Option animateOption = new Option(null, "animate", true, "Specify the path to Adobe Animate.");
+		animateOption.setArgName("FILE");
+		animateOption.setOptionalArg(true);
+		options.addOption(animateOption);
 
 		ASConfigCOptions asconfigcOptions = null;
 		try
@@ -184,15 +197,22 @@ public class ASConfigC
 
 		JsonNode json = loadConfig(configFile);
 		parseConfig(json);
-		validateSDK();
-		cleanProject();
-		compileProject();
-		copySourcePathAssets();
-		copyHTMLTemplate();
-		processAdobeAIRDescriptor();
-		copyAIRFiles();
-		prepareNativeExtensions();
-		packageAIR();
+		if(animateFile != null)
+		{
+			publishAnimateFile();
+		}
+		else
+		{
+			validateSDK();
+			cleanProject();
+			compileProject();
+			copySourcePathAssets();
+			copyHTMLTemplate();
+			processAdobeAIRDescriptor();
+			copyAIRFiles();
+			prepareNativeExtensions();
+			packageAIR();
+		}
 	}
 
 	private ASConfigCOptions options;
@@ -220,6 +240,8 @@ public class ASConfigC
 	private String sdkHome;
 	private String htmlTemplate;
 	private Map<String,String> htmlTemplateOptions;
+	private String animateFile;
+	private WatchService animateWatcher;
 
 	private File findConfigurationFile(String projectPath) throws ASConfigCException
 	{
@@ -433,6 +455,14 @@ public class ASConfigC
 			}
 			readHTMLTemplateOptions(compilerOptionsJson);
 		}
+		if(json.has(TopLevelFields.ANIMATE_OPTIONS))
+		{
+			JsonNode animateOptions = json.get(TopLevelFields.ANIMATE_OPTIONS);
+			if(animateOptions.has(AnimateOptions.FILE))
+			{
+				animateFile = animateOptions.get(AnimateOptions.FILE).asText();
+			}
+		}
 	}
 
 	private void detectConfigRequirements(String configName)
@@ -469,6 +499,157 @@ public class ASConfigC
 			}
 		}
 	}
+
+	private void publishAnimateFile() throws ASConfigCException
+	{
+		String animatePath = options.animate;
+		if(animatePath == null)
+		{
+			throw new ASConfigCException("Adobe Animate not found. Use --animate option.");
+		}
+		if(!Files.exists(Paths.get(animatePath)))
+		{
+			throw new ASConfigCException("Adobe Animate not found at path: " + animatePath);
+		}
+		File jarFile = null;
+		try
+		{
+			jarFile = new File(getClass().getProtectionDomain().getCodeSource().getLocation().toURI());
+		}
+		catch(URISyntaxException e)
+		{
+			StringWriter stackTrace = new StringWriter();
+			e.printStackTrace(new PrintWriter(stackTrace));
+			throw new ASConfigCException("Error: Failed to find publish script.\n" + stackTrace.toString());
+		}
+		String jsflFileName = debugBuild ? "publish-debug.jsfl" : "publish-release.jsfl";
+		String jsflPath = Paths.get(jarFile.getParentFile().getParentFile().getAbsolutePath(), "jsfl", jsflFileName).toString();
+
+		List<String> command = new ArrayList<>();
+		command.add(animatePath);
+		command.add(animateFile);
+		command.add(jsflPath);
+		
+		File cwd = new File(System.getProperty("user.dir"));
+		try
+		{
+			new ProcessBuilder()
+				.command(command)
+				.directory(cwd)
+				.inheritIO()
+				.start();
+		}
+		catch(IOException e)
+		{
+			throw new ASConfigCException("Failed to execute Adobe Animate: " + e.getMessage());
+		}
+
+		Path pathToWatch = null;
+		if (System.getProperty("os.name").toLowerCase().startsWith("windows"))
+		{
+			pathToWatch = Paths.get(System.getenv("LOCALAPPDATA"), "Adobe", "vscode-as3mxml");
+		}
+		if(pathToWatch == null)
+		{
+			throw new ASConfigCException("Failed to locate Adobe Animate logs.");
+		}
+		if(!Files.exists(pathToWatch) && !pathToWatch.toFile().mkdirs())
+		{
+			throw new ASConfigCException("Failed to create folder for Adobe Animate publish: " + pathToWatch);
+		}
+		createAnimatePublishWatcher(pathToWatch);
+	}
+
+    private void createAnimatePublishWatcher(Path pathToWatch) throws ASConfigCException
+    {
+        try
+        {
+            animateWatcher = FileSystems.getDefault().newWatchService();
+        }
+        catch (IOException e)
+        {
+			StringWriter stackTrace = new StringWriter();
+			e.printStackTrace(new PrintWriter(stackTrace));
+			throw new ASConfigCException("Failed to get file system watch service for Adobe Animate publish.\n" + stackTrace.toString());
+        }
+		try
+		{
+			pathToWatch.register(animateWatcher, StandardWatchEventKinds.ENTRY_CREATE);
+		}
+		catch(IOException e)
+		{
+			StringWriter stackTrace = new StringWriter();
+			e.printStackTrace(new PrintWriter(stackTrace));
+			throw new ASConfigCException("Failed to get watch path for Adobe Animate publish: " + pathToWatch + "\n" + stackTrace.toString());
+        }
+		Path errorLogPath = Paths.get(FILE_NAME_ANIMATE_ERROR_LOG);
+		Path publishLogPath = Paths.get(FILE_NAME_ANIMATE_PUBLISH_LOG);
+		boolean hasErrors = false;
+		while(true)
+		{
+			WatchKey watchKey = null;
+			try
+			{
+				//pause the thread while there are no changes pending,
+				//for better performance
+				watchKey = animateWatcher.take();
+			}
+			catch(InterruptedException e)
+			{
+				return;
+			}
+			while (watchKey != null)
+			{
+				for (WatchEvent<?> event : watchKey.pollEvents())
+				{
+					WatchEvent.Kind<?> kind = event.kind();
+					Path childPath = (Path) event.context();
+					if(errorLogPath.equals(childPath) && kind.equals(StandardWatchEventKinds.ENTRY_CREATE))
+					{
+						hasErrors = true;
+					}
+					else if(publishLogPath.equals(childPath) && kind.equals(StandardWatchEventKinds.ENTRY_CREATE))
+					{
+						if(hasErrors)
+						{
+							//switch to full path
+							errorLogPath = pathToWatch.resolve(errorLogPath);
+							String contents = null;
+							try
+							{
+								contents = new String(Files.readAllBytes(errorLogPath));
+								if(contents.startsWith("ï»¿"))
+								{
+									//remove byte order mark
+									contents = contents.substring(3);
+								}
+							}
+							catch(IOException e)
+							{
+								StringWriter stackTrace = new StringWriter();
+								e.printStackTrace(new PrintWriter(stackTrace));
+								throw new ASConfigCException("Failed to read Adobe Animate error log: " + errorLogPath + "\n" + stackTrace.toString());
+							}
+							//print the errors/warnings to the console
+							System.err.println(contents);
+							if(contents.contains("**Error** "))
+							{
+								//compiler errors
+								throw new ASConfigCException(1);
+							}
+						}
+						//publish has completed, so we don't need to watch for
+						//any more changes
+						return;
+					}
+				}
+				watchKey.reset();
+
+				//keep handling new changes until we run out
+				watchKey = animateWatcher.poll();
+			}
+		}
+    }
 	
 	private void readHTMLTemplateOptions(JsonNode compilerOptionsJson) throws ASConfigCException
 	{

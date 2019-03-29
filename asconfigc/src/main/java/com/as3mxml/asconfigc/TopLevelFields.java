@@ -26,4 +26,5 @@ public class TopLevelFields
 	public static final String COPY_SOURCE_PATH_ASSETS = "copySourcePathAssets";
 	public static final String AIR_OPTIONS = "airOptions";
 	public static final String HTML_TEMPLATE = "htmlTemplate";
+	public static final String ANIMATE_OPTIONS = "animateOptions";
 }

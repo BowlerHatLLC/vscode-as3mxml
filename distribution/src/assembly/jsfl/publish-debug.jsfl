@@ -33,9 +33,17 @@ function build()
 
 function postBuild()
 {
-	// log errors for FD
+	// log errors
 	if (fl.compilerErrors)
-		fl.compilerErrors.save(tempPath + "FlashErrors.log");
+	{
+		fl.compilerErrors.save(tempPath + "AnimateErrors.log");		
+	}
+	var doc = fl.getDocumentDOM();
+	if (doc)
+	{
+		// log path to FLA to indicate that the build is done
+		FLfile.write(tempPath + "AnimateDocument.log", doc.path);
+	}
 }
 
 
@@ -43,18 +51,23 @@ function postBuild()
 
 function cleanup()
 {
-	if (FLfile.exists(tempPath + "FlashErrors.log"))
-		FLfile.remove(tempPath + "FlashErrors.log");
-	if (FLfile.exists(tempPath + "FlashPublish.log"))
-		FLfile.remove(tempPath + "FlashPublish.log");
-	if (FLfile.exists(tempPath + "FlashDocument.log"))
-		FLfile.remove(tempPath + "FlashDocument.log");
+	if (FLfile.exists(tempPath + "AnimateErrors.log"))
+	{
+		FLfile.remove(tempPath + "AnimateErrors.log");
+	}
+	if (FLfile.exists(tempPath + "AnimateDocument.log"))
+	{
+		FLfile.remove(tempPath + "AnimateDocument.log");
+	}
 }
 
 function getTempPath()
 {
 	var file = fl.configURI;
-	return file.split("Adobe")[0] + "Adobe/FlashDevelop/";
+	file = file.split("Adobe")[0] + "Adobe/vscode-as3mxml/";
+	//ensure that the folder exists, or any attempt to create files will fail
+	FLfile.createFolder(file);
+	return file;
 }
 
 function setDebug(value)
