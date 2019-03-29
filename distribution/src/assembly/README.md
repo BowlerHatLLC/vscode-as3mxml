@@ -1,24 +1,26 @@
 # ActionScript & MXML language extension for Visual Studio Code
 
-Provides ActionScript & MXML language support for Visual Studio Code — including a debugger for Adobe AIR and Flash Player. Supports projects using a variety of SDKs (including Adobe AIR, Apache Flex, Feathers SDK, and Apache Royale). Runs on Windows, macOS, and Linux. Open source and developed with community support.
+Provides ActionScript & MXML language support for Visual Studio Code — including a debugger for Adobe AIR and Flash Player. Supports projects using a variety of SDKs (including Adobe AIR, Apache Flex, Feathers SDK, and Apache Royale). Runs on Windows, macOS, and Linux. Open source and developed with [community support](https://patreon.com/josht).
 
 ## Features
 
 * **Syntax Highlighting** for ActionScript, MXML, and JSFL files.
 * **IntelliSense** completion for classes and interfaces, imports, properties, methods, and more.
 * **Signature Help** shows a list of parameters when calling functions.
-* **Errors and Warnings** are updated in real time as you type.
+* **Errors and Warnings** are updated in real time as you type (or on save only, if you prefer).
 * **Hover** over a symbol to see more details such as types, namespaces, and more.
-* **Go to Definition** with a `Ctrl+Click` on any usage of a symbol.
+* **Go to Definition** with `Ctrl+Click` on any usage of a symbol to open the file where it is defined.
 * **Find All References** for any symbol in the project.
-* **Rename Symbol** for classes, interfaces, methods, and both local and member variables.
+* **Rename Symbol** for classes, interfaces, methods, and variables.
 * **Organize Imports** sorts imports alphabetically and removes unused imports.
-* **Quick Fixes** to add missing imports, add missing variables or methods, or generate getters/setters.
+* **Quick Fixes** to add missing imports, generate missing variables or methods, or convert variables to getters/setters.
 * **Outline view** lists all symbols in the current file.
 * **Go to Symbol in Workspace** with `Ctrl+T` and type the name of any symbol in the workspace.
-* **Build** a project with `Ctrl+Shift+B` or **Quick Compile & Debug** with `Ctrl+Enter`.
+* **Build Tasks** can compile a project or package an Adobe AIR app with `Ctrl+Shift+B`.
 * **Debug** SWF projects in Adobe AIR and Flash Player.
 * **Debug** Apache Royale (formerly known as FlexJS) projects in web browsers and Node.js.
+* **Adobe Animate** integration includes *Test Movie*, *Debug Movie*, and *Publish*.
+* **Import Projects** from Adobe Flash Builder.
 
 ## Help and Support
 
