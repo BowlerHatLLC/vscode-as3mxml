@@ -116,6 +116,7 @@ export default class SWFDebugConfigurationProvider implements vscode.DebugConfig
 		let appDescriptorPath: string = null;
 		let outputPath: string = null;
 		let mainClassPath: string = null;
+		let animateFilePath: string = null;
 		let libraryPath: string[] = null;
 		let externalLibraryPath: string[] = null;
 		let requireAIR = false;
@@ -167,6 +168,14 @@ export default class SWFDebugConfigurationProvider implements vscode.DebugConfig
 				mainClassPath = files[files.length - 1];
 			}
 		}
+		if("animateOptions" in asconfigJSON)
+		{
+			let animateOptions = asconfigJSON.animateOptions;
+			if("file" in animateOptions)
+			{
+				animateFilePath = animateOptions.file;
+			}
+		}
 		if(program && program.endsWith(FILE_EXTENSION_XML))
 		{
 			requireAIR = true;
@@ -204,6 +213,11 @@ export default class SWFDebugConfigurationProvider implements vscode.DebugConfig
 				//if the output compiler option is specified, then that's what
 				//we'll launch.
 				program = outputPath;
+			}
+			else if (animateFilePath !== null)
+			{
+				let extension = path.extname(animateFilePath);
+				program = animateFilePath.substr(0, animateFilePath.length - extension.length) + FILE_EXTENSION_SWF;
 			}
 			else if(mainClassPath !== null)
 			{
