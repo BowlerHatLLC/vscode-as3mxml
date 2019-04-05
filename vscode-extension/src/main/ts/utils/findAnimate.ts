@@ -2,7 +2,10 @@ import * as fs from "fs";
 import * as path from "path";
 
 const ANIMATE_PATH_WINDOWS_REGEXP = /^c:\\Program Files( \(x86\))?\\Adobe\\Adobe (Animate|Flash) [\w \.]+$/i;
+const ANIMATE_PATH_MACOS_REGEXP = /^\/Applications\/Adobe (Animate|Flash) [\w \.]+$/i;
+const ANIMATE_APP_MACOS_REGEXP = /^Adobe (Animate|Flash) [\w \.]+\.app$/i;
 
+const APPLICATIONS_MACOS = "/Applications";
 const ADOBE_FOLDERS_WINDOWS =
 [
 	"c:\\Program Files\\Adobe",
@@ -40,6 +43,30 @@ export default function findAnimate(): string
 				}
 				return animatePath !== null;
 			});
+			return animatePath !== null;
+		});
+		return animatePath;
+	}
+	else if(process.platform === "darwin") //macOS
+	{
+		let animatePath: string = null;
+		let files = fs.readdirSync(APPLICATIONS_MACOS);
+		files.find((filePath) =>
+		{
+			filePath = path.resolve(APPLICATIONS_MACOS, filePath);
+			if(fs.statSync(filePath).isDirectory() && ANIMATE_PATH_MACOS_REGEXP.test(filePath))
+			{
+				let appFiles = fs.readdirSync(filePath);
+				appFiles.find((fileName) =>
+				{
+					if(ANIMATE_APP_MACOS_REGEXP.test(fileName))
+					{
+						animatePath = path.resolve(filePath, fileName);
+						return true;
+					}
+					return false;
+				});
+			}
 			return animatePath !== null;
 		});
 		return animatePath;

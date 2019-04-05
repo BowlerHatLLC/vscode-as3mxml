@@ -92,7 +92,19 @@ async function quickCompileAndDebugWorkspaceFolder(workspaceFolder, debug: boole
 					let fileName = debug ? "debug-movie.jsfl" : "test-movie.jsfl";
 					let jsflPath = path.resolve(extension.extensionPath, "jsfl", fileName);
 			
-					child_process.spawn(animatePath, [animateFile, jsflPath]);
+					if(process.platform === "win32")
+					{
+						child_process.spawn(animatePath, [animateFile, jsflPath]);
+					}
+					else if(process.platform === "darwin") //macOS
+					{
+						child_process.spawn("open", ["-a", animatePath, animateFile, jsflPath]);
+					}
+					else
+					{
+						reject();
+						return;
+					}
 
 					resolve();
 					return;
