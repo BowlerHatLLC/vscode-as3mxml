@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.lang.reflect.Field;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.FileSystems;
@@ -35,6 +36,7 @@ import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
+import java.nio.file.WatchEvent.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -466,6 +468,11 @@ public class ASConfigC
 			if(animateOptions.has(AnimateOptions.FILE))
 			{
 				animateFile = animateOptions.get(AnimateOptions.FILE).asText();
+				Path animateFilePath = Paths.get(animateFile);
+				if(!animateFilePath.isAbsolute())
+				{
+					animateFile = Paths.get(System.getProperty("user.dir")).resolve(animateFile).toString();
+				}
 			}
 		}
 	}
@@ -581,7 +588,13 @@ public class ASConfigC
 			throw new ASConfigCException("Error: Failed to copy Adobe Animate script.\n" + stackTrace.toString());
 		}
 
+		boolean isMacOS = System.getProperty("os.name").toLowerCase().startsWith("mac os");
 		List<String> command = new ArrayList<>();
+		if (isMacOS)
+		{
+			command.add("open");
+			command.add("-a");
+		}
 		command.add(animatePath);
 		command.add(animateFile);
 		command.add(jsflPath.toString());
@@ -605,9 +618,29 @@ public class ASConfigC
 		{
 			pathToWatch = Paths.get(System.getenv("LOCALAPPDATA"), "Adobe", "vscode-as3mxml");
 		}
+		else if (isMacOS)
+		{
+			pathToWatch = Paths.get(System.getProperty("user.home")).resolve("Library/Application Support/Adobe/vscode-as3mxml");
+		}
 		if(pathToWatch == null)
 		{
 			throw new ASConfigCException("Failed to locate Adobe Animate logs.");
+		}
+		//macOS seems to require these files to be manually deleted to detect
+		//the appropriate create event
+		if(Files.exists(pathToWatch))
+		{
+			try
+			{
+				Files.walk(pathToWatch)
+					.sorted(Comparator.reverseOrder())
+					.map(Path::toFile)
+					.forEach(File::delete);
+			}
+			catch(IOException e)
+			{
+				throw new ASConfigCException("Failed to delete Adobe Animate logs because an I/O exception occurred.");
+			}
 		}
 		if(!Files.exists(pathToWatch) && !pathToWatch.toFile().mkdirs())
 		{
@@ -630,7 +663,20 @@ public class ASConfigC
         }
 		try
 		{
-			pathToWatch.register(animateWatcher, StandardWatchEventKinds.ENTRY_CREATE);
+			try
+			{
+				//file system changes are detected very, very slowly on macOS
+				//without high sensitivity
+				Class<?> c = Class.forName("com.sun.nio.file.SensitivityWatchEventModifier");
+				Field f = c.getField("HIGH");
+				Modifier modifier = (Modifier) f.get(c);
+				pathToWatch.register(animateWatcher, new WatchEvent.Kind[]{StandardWatchEventKinds.ENTRY_CREATE}, modifier);
+			}
+			catch(Exception e)
+			{
+				//fall back to the slow version
+				pathToWatch.register(animateWatcher, StandardWatchEventKinds.ENTRY_CREATE);
+			}
 		}
 		catch(IOException e)
 		{
