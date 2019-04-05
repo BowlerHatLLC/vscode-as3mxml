@@ -60,6 +60,7 @@ interface AnimateTaskDefinition extends vscode.TaskDefinition
 {
 	type: typeof TASK_TYPE_ANIMATE;
 	debug: boolean;
+	publish: boolean;
 	asconfig?: string;
 }
 
@@ -167,10 +168,14 @@ export default class ActionScriptTaskProvider implements vscode.TaskProvider
 				if(fs.existsSync(flaPath))
 				{
 					let taskNameSuffix = path.basename(flaPath);
+					result.push(this.getAnimateTask("compile debug - " + taskNameSuffix,
+						jsonURI, workspaceFolder, command, animatePath, true, false));
+					result.push(this.getAnimateTask("compile release - " + taskNameSuffix,
+						jsonURI, workspaceFolder, command, animatePath, false, false));
 					result.push(this.getAnimateTask("publish debug - " + taskNameSuffix,
-						jsonURI, workspaceFolder, command, animatePath, true));
+						jsonURI, workspaceFolder, command, animatePath, true, true));
 					result.push(this.getAnimateTask("publish release - " + taskNameSuffix,
-						jsonURI, workspaceFolder, command, animatePath, false));
+						jsonURI, workspaceFolder, command, animatePath, false, true));
 				}
 			}
 			return;
@@ -378,10 +383,10 @@ export default class ActionScriptTaskProvider implements vscode.TaskProvider
 
 	private getAnimateTask(description: string, jsonURI: vscode.Uri,
 		workspaceFolder: vscode.WorkspaceFolder, command: string[],
-		animatePath: string, debug: boolean): vscode.Task
+		animatePath: string, debug: boolean, publish: boolean): vscode.Task
 	{
 		let asconfig: string = this.getASConfigValue(jsonURI, workspaceFolder.uri);
-		let definition: AnimateTaskDefinition = { type: TASK_TYPE_ANIMATE, debug, asconfig };
+		let definition: AnimateTaskDefinition = { type: TASK_TYPE_ANIMATE, debug, publish, asconfig };
 		let options = ["--animate", animatePath];
 		if(debug)
 		{
@@ -390,6 +395,14 @@ export default class ActionScriptTaskProvider implements vscode.TaskProvider
 		else
 		{
 			options.push("--debug=false");
+		}
+		if(publish)
+		{
+			options.push("--publish-animate=true");
+		}
+		else
+		{
+			options.push("--publish-animate=false");
 		}
 		if(jsonURI)
 		{

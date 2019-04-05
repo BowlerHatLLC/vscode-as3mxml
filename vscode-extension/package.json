@@ -305,13 +305,18 @@
             "type": "boolean",
             "description": "Indicates if the output is a debug or release build"
           },
+          "publish": {
+            "type": "boolean",
+            "description": "Indicates if the Adobe Animate document should be published or only export the SWF"
+          },
           "asconfig": {
             "type": "string",
             "description": "Optional path to asconfig.json or asconfig.*.json file in workspace"
           }
         },
         "required": [
-          "debug"
+          "debug",
+          "publish"
         ]
       }
     ],
