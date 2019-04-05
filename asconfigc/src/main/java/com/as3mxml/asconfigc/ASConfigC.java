@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
@@ -132,6 +133,10 @@ public class ASConfigC
 		animateOption.setArgName("FILE");
 		animateOption.setOptionalArg(true);
 		options.addOption(animateOption);
+		Option publishOption = new Option(null, "publish-animate", true, "Publish Adobe Animate document, instead of exporting the SWF.");
+		publishOption.setArgName("true OR false");
+		publishOption.setOptionalArg(true);
+		options.addOption(publishOption);
 
 		ASConfigCOptions asconfigcOptions = null;
 		try
@@ -199,7 +204,7 @@ public class ASConfigC
 		parseConfig(json);
 		if(animateFile != null)
 		{
-			publishAnimateFile();
+			compileAnimateFile();
 		}
 		else
 		{
@@ -500,7 +505,7 @@ public class ASConfigC
 		}
 	}
 
-	private void publishAnimateFile() throws ASConfigCException
+	private void compileAnimateFile() throws ASConfigCException
 	{
 		String animatePath = options.animate;
 		if(animatePath == null)
@@ -520,15 +525,66 @@ public class ASConfigC
 		{
 			StringWriter stackTrace = new StringWriter();
 			e.printStackTrace(new PrintWriter(stackTrace));
-			throw new ASConfigCException("Error: Failed to find publish script.\n" + stackTrace.toString());
+			throw new ASConfigCException("Error: Failed to find Adobe Animate script.\n" + stackTrace.toString());
 		}
-		String jsflFileName = debugBuild ? "publish-debug.jsfl" : "publish-release.jsfl";
-		String jsflPath = Paths.get(jarFile.getParentFile().getParentFile().getAbsolutePath(), "jsfl", jsflFileName).toString();
+		boolean publish = options.publishAnimate;
+		String jsflFileName = null;
+		if(publish)
+		{
+			jsflFileName = debugBuild ? "publish-debug.jsfl" : "publish-release.jsfl";
+		}
+		else
+		{
+			jsflFileName = debugBuild ? "compile-debug.jsfl" : "compile-release.jsfl";
+		}
+		Path jsflPath = Paths.get(jarFile.getParentFile().getParentFile().getAbsolutePath(), "jsfl", jsflFileName);
+		try
+		{
+			File tempFile = File.createTempFile("vscode-as3mxml", ".jsfl");
+			tempFile.deleteOnExit();
+			Path tempPath = tempFile.toPath();
+			String contents = new String(Files.readAllBytes(jsflPath));
+			Path resolvedOutputPath = null;
+			if(outputPath == null)
+			{
+				resolvedOutputPath = Paths.get(animateFile);
+				if(!resolvedOutputPath.isAbsolute())
+				{
+					resolvedOutputPath = Paths.get(System.getProperty("user.dir")).resolve(resolvedOutputPath);
+				}
+				String fileName = resolvedOutputPath.getFileName().toString();
+				int extIndex = fileName.lastIndexOf(".");
+				if(extIndex != -1)
+				{
+					fileName = fileName.substring(0, extIndex) + ".swf";
+				}
+				resolvedOutputPath = resolvedOutputPath.getParent().resolve(fileName);
+			}
+			else
+			{
+				resolvedOutputPath = Paths.get(ProjectUtils.findOutputPath(mainFile, outputPath, true));
+			}
+			Path parentPath = resolvedOutputPath.getParent();
+			if(!Files.exists(parentPath) && !parentPath.toFile().mkdirs())
+			{
+				throw new ASConfigCException("Error: Failed to create Adobe Animate output folder: " + parentPath.toString());
+			}
+			URI resolvedUri = resolvedOutputPath.toUri();
+			contents = contents.replace("${OUTPUT_URI}", resolvedUri.toString());
+			Files.write(tempPath, contents.getBytes());
+			jsflPath = tempPath;
+		}
+		catch(IOException e)
+		{
+			StringWriter stackTrace = new StringWriter();
+			e.printStackTrace(new PrintWriter(stackTrace));
+			throw new ASConfigCException("Error: Failed to copy Adobe Animate script.\n" + stackTrace.toString());
+		}
 
 		List<String> command = new ArrayList<>();
 		command.add(animatePath);
 		command.add(animateFile);
-		command.add(jsflPath);
+		command.add(jsflPath.toString());
 		
 		File cwd = new File(System.getProperty("user.dir"));
 		try

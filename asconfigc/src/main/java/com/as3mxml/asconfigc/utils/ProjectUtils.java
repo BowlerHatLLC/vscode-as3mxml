@@ -79,6 +79,59 @@ public class ProjectUtils
 		return outputDirPath.resolve(applicationContentName).toString();
 	}
 
+	public static String findOutputPath(String mainFile, String outputValue, boolean isSWF)
+	{
+		if(outputValue == null)
+		{
+			if(mainFile == null)
+			{
+				return Paths.get(System.getProperty("user.dir")).toString();
+			}
+			Path mainFilePath = Paths.get(mainFile);
+			if(!mainFilePath.isAbsolute())
+			{
+				mainFilePath = Paths.get(System.getProperty("user.dir"), mainFile);
+			}
+			Path mainFileParentPath = mainFilePath.getParent();
+			if(mainFileParentPath == null)
+			{
+				mainFileParentPath = Paths.get(System.getProperty("user.dir"));
+			}
+			if(!isSWF)
+			{
+				//Royale treats these directory structures as a special case
+				String mainFileParentPathAsString = mainFileParentPath.toString();
+				if(mainFileParentPathAsString.endsWith("/src") ||
+					mainFileParentPathAsString.endsWith("\\src"))
+				{
+					mainFileParentPath = mainFileParentPath.resolve("../");
+				}
+				else if(mainFileParentPathAsString.endsWith("/src/main/flex") ||
+					mainFileParentPathAsString.endsWith("\\src\\main\\flex") ||
+					mainFileParentPathAsString.endsWith("/src/main/royale") ||
+					mainFileParentPathAsString.endsWith("\\src\\main\\royale"))
+				{
+					mainFileParentPath = mainFileParentPath.resolve("../../../");
+				}
+				try
+				{
+					return mainFileParentPath.toFile().getCanonicalPath();
+				}
+				catch(IOException e)
+				{
+					return null;
+				}
+			}
+			return mainFileParentPath.resolve(findOutputFileName(mainFile, outputValue)).toString();
+		}
+		Path outputPath = Paths.get(outputValue);
+		if(!outputPath.isAbsolute())
+		{
+			outputPath = Paths.get(System.getProperty("user.dir"), outputValue);
+		}
+		return outputPath.toString();
+	}
+
 	public static String findOutputDirectory(String mainFile, String outputValue, boolean isSWF)
 	{
 		if(outputValue == null)

@@ -30,6 +30,7 @@ public class ASConfigCOptions
 	private static final String OPTION_UNPACKAGE_ANES = "unpackage-anes";
 	private static final String OPTION_CLEAN = "clean";
 	private static final String OPTION_ANIMATE = "animate";
+	private static final String OPTION_PUBLISH_ANIMATE = "publish-animate";
 
 	public String project = null;
 	public String sdk = null;
@@ -40,6 +41,7 @@ public class ASConfigCOptions
 	public Boolean clean = null;
 	public IASConfigCCompiler compiler = null;
 	public String animate = null;
+	public Boolean publishAnimate = null;
 
 	public ASConfigCOptions(String project, String sdk, Boolean debug, String air, String storepass, Boolean unpackageANEs, IASConfigCCompiler compiler)
 	{
@@ -87,6 +89,11 @@ public class ASConfigCOptions
 		if(line.hasOption(OPTION_ANIMATE))
 		{
 			animate = line.getOptionValue(OPTION_ANIMATE, null);
+		}
+		if(line.hasOption(OPTION_PUBLISH_ANIMATE))
+		{
+			String publishString = line.getOptionValue(OPTION_PUBLISH_ANIMATE, Boolean.TRUE.toString());
+			publishAnimate = publishString.equals(Boolean.TRUE.toString());
 		}
 		compiler = new DefaultCompiler();
 	}
