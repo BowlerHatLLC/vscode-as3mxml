@@ -3098,13 +3098,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 {
                     //just ignore it
                 }
-                try
+                finally
                 {
-                    reader.close();
-                }
-                catch(IOException e)
-                {
-                    //just ignore it
+                    try
+                    {
+                        reader.close();
+                    }
+                    catch(IOException e) {}
                 }
             }
         }
@@ -5440,14 +5440,20 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 return;
             }
 
-            Position position = LanguageServerCompilerUtils.getPositionFromOffset(reader, nameOffset);
             try
             {
-                reader.close();
+                Position position = LanguageServerCompilerUtils.getPositionFromOffset(reader, nameOffset);
+                nameLine = position.getLine();
+                nameColumn = position.getCharacter();
             }
-            catch(IOException e) {}
-            nameLine = position.getLine();
-            nameColumn = position.getCharacter();
+            finally
+            {
+                try
+                {
+                    reader.close();
+                }
+                catch(IOException e) {}
+            }
         }
         if (nameLine == -1 || nameColumn == -1)
         {
@@ -5733,8 +5739,21 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         Reader reader = getReaderForPath(path);
         if (reader != null)
         {
-            StreamingASTokenizer tokenizer = StreamingASTokenizer.createForRepairingASTokenizer(reader, path.toString(), null);
-            ASToken[] tokens = tokenizer.getTokens(reader);
+            StreamingASTokenizer tokenizer = null;
+            ASToken[] tokens = null;
+            try
+            {
+                tokenizer = StreamingASTokenizer.createForRepairingASTokenizer(reader, path.toString(), null);
+                tokens = tokenizer.getTokens(reader);
+            }
+            finally
+            {
+                try
+                {
+                    reader.close();
+                }
+                catch(IOException e) {}
+            }
             if (tokenizer.hasTokenizationProblems())
             {
                 problemQuery.addAll(tokenizer.getTokenizationProblems());
@@ -5794,16 +5813,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             syntaxProblem = new SyntaxFallbackProblem(path.toString(), "A fatal error occurred. Error checking has been disabled, except for simple syntax problems.");
         }
         problemQuery.add(syntaxProblem);
-
-        if (reader != null)
-        {
-            try
-            {
-                reader.close();
-            }
-            catch(IOException e) {}
-            reader = null;
-        }
+        reader = null;
     }
 
     private ICompilationUnit findCompilationUnit(Path pathToFind, RoyaleProject project)
@@ -6415,18 +6425,22 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return null;
         }
-        String text = null;
         try
         {
-            text = IOUtils.toString(reader);
+            return IOUtils.toString(reader);
         }
-        catch (IOException e) {}
-        try
+        catch (IOException e)
         {
-            reader.close();
+            return null;
         }
-        catch(IOException e) {}
-        return text;
+        finally
+        {
+            try
+            {
+                reader.close();
+            }
+            catch(IOException e) {}
+        }
     }
 
     private Reader getReaderForPath(Path path)
@@ -6518,13 +6532,20 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private int getOffsetFromPathAndPosition(Path path, Position position)
     {
+        int offset = 0;
         Reader reader = getReaderForPath(path);
-        int offset = LanguageServerCompilerUtils.getOffsetFromPosition(reader, position);
         try
         {
-            reader.close();
+            offset = LanguageServerCompilerUtils.getOffsetFromPosition(reader, position);
         }
-        catch(IOException e) {}
+        finally
+        {
+            try
+            {
+                reader.close();
+            }
+            catch(IOException e) {}
+        }
  
         IncludeFileData includeFileData = includedFiles.get(path.toString());
         if(includeFileData != null)
@@ -7116,14 +7137,20 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 }
                 else
                 {
-                    LanguageServerCompilerUtils.getPositionFromOffset(definitionReader, definition.getNameStart(), start);
-                    end.setLine(start.getLine());
-                    end.setCharacter(start.getCharacter());
                     try
                     {
-                        definitionReader.close();
+                        LanguageServerCompilerUtils.getPositionFromOffset(definitionReader, definition.getNameStart(), start);
+                        end.setLine(start.getLine());
+                        end.setCharacter(start.getCharacter());
                     }
-                    catch(IOException e) {}
+                    finally
+                    {
+                        try
+                        {
+                            definitionReader.close();
+                        }
+                        catch(IOException e) {}
+                    }
                 }
             }
             else

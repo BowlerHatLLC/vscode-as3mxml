@@ -222,11 +222,17 @@ public class CompilationUnitUtils
 				{
 					IFileSpecification fileSpec = workspace.getFileSpecification(scriptFilename);
 					Reader scriptReader = fileSpec.createReader();
-					while(scriptReader.read() != -1)
+					try
 					{
-						scriptLength++;
+						while(scriptReader.read() != -1)
+						{
+							scriptLength++;
+						}
 					}
-					scriptReader.close();
+					finally
+					{
+						scriptReader.close();
+					}
 				}
 				catch(FileNotFoundException e)
 				{
