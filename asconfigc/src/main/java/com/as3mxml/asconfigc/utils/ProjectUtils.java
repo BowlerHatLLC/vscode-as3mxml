@@ -22,8 +22,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.as3mxml.asconfigc.compiler.ProjectType;
 
@@ -295,9 +297,9 @@ public class ProjectUtils
 		return null;
 	}
 
-	public static List<String> findSourcePathAssets(String mainFile, List<String> sourcePaths, String outputDirectory, List<String> excludes, List<String> excludedExtensions) throws IOException
+	public static Set<String> findSourcePathAssets(String mainFile, List<String> sourcePaths, String outputDirectory, List<String> excludes, List<String> excludedExtensions) throws IOException
 	{
-		List<String> result = new ArrayList<>();
+		Set<String> result = new HashSet<>();
 		List<String> sourcePathsCopy = new ArrayList<>();
 		if(sourcePaths != null)
 		{

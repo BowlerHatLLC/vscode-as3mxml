@@ -1035,7 +1035,7 @@ public class ASConfigC
 		{
 			excludes.add(airDescriptorPath);
 		}
-		List<String> assetPaths = null;
+		Set<String> assetPaths = null;
 		try
 		{
 			assetPaths = ProjectUtils.findSourcePathAssets(mainFile, sourcePaths, outputDirectory, excludes, Arrays.asList(FILE_EXTENSION_AS, FILE_EXTENSION_MXML));
@@ -1376,7 +1376,7 @@ public class ASConfigC
 				if(srcFile.isDirectory())
 				{
 					List<String> assetDirList = Arrays.asList(srcFile.getAbsolutePath());
-					List<String> assetPaths = null;
+					Set<String> assetPaths = null;
 					try
 					{
 						assetPaths = ProjectUtils.findSourcePathAssets(null, assetDirList, outputDirectory.getAbsolutePath(), null, null);
