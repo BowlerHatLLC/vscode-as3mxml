@@ -1335,6 +1335,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     public void findCodeActionsForDiagnostics(Path path, WorkspaceFolderData folderData, List<? extends Diagnostic> diagnostics, List<Either<Command, CodeAction>> codeActions)
     {
+        boolean handledUnimplementedMethods = false;
         for (Diagnostic diagnostic : diagnostics)
         {
             //I don't know why this can be null
@@ -1397,6 +1398,16 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     //see if there's anything we can import
                     createCodeActionsForImport(path, diagnostic, folderData, codeActions);
                     createCodeActionForMissingMethod(path, diagnostic, folderData, codeActions);
+                    break;
+                }
+                case "1044": //UnimplementedInterfaceMethodProblem
+                {
+                    //only needs to be handled one time
+                    if(!handledUnimplementedMethods)
+                    {
+                        handledUnimplementedMethods = true;
+                        createCodeActionForUnimplementedMethods(path, diagnostic, folderData, codeActions);
+                    }
                     break;
                 }
             }
@@ -1543,6 +1554,52 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         codeAction.setEdit(edit);
         codeAction.setKind(CodeActionKind.QuickFix);
         codeActions.add(Either.forRight(codeAction));
+    }
+
+    private void createCodeActionForUnimplementedMethods(Path path, Diagnostic diagnostic, WorkspaceFolderData folderData, List<Either<Command, CodeAction>> codeActions)
+    {
+        RoyaleProject project = folderData.project;
+        Position position = diagnostic.getRange().getStart();
+        int currentOffset = getOffsetFromPathAndPosition(path, position);
+        IASNode offsetNode = getOffsetNode(path, currentOffset, folderData);
+        if (offsetNode == null)
+        {
+            return;
+        }
+
+        IClassNode classNode = (IClassNode) offsetNode.getAncestorOfType(IClassNode.class);
+        if (classNode == null)
+        {
+            return;
+        }
+
+        String fileText = getFileTextForPath(path);
+        if(fileText == null)
+        {
+            return;
+        }
+
+        for (IExpressionNode exprNode : classNode.getImplementedInterfaceNodes())
+        {
+            IInterfaceDefinition interfaceDefinition = (IInterfaceDefinition) exprNode.resolve(project);
+            if (interfaceDefinition == null)
+            {
+                continue;
+            }
+            WorkspaceEdit edit = CodeActionsUtils.createWorkspaceEditForImplementInterface(
+                classNode, interfaceDefinition, path.toUri().toString(), fileText, project);
+            if (edit == null)
+            {
+                continue;
+            }
+
+            CodeAction codeAction = new CodeAction();
+            codeAction.setDiagnostics(Collections.singletonList(diagnostic));
+            codeAction.setTitle("Implement interface '" + interfaceDefinition.getBaseName() + "'");
+            codeAction.setEdit(edit);
+            codeAction.setKind(CodeActionKind.QuickFix);
+            codeActions.add(Either.forRight(codeAction));
+        }
     }
 
     private void createCodeActionForMissingMethod(Path path, Diagnostic diagnostic, WorkspaceFolderData folderData, List<Either<Command, CodeAction>> codeActions)

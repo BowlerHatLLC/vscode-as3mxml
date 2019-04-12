@@ -17,6 +17,7 @@ package com.as3mxml.vscode.utils;
 
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -26,8 +27,12 @@ import org.apache.royale.compiler.common.ASModifier;
 import org.apache.royale.compiler.constants.IASKeywordConstants;
 import org.apache.royale.compiler.constants.IASLanguageConstants;
 import org.apache.royale.compiler.definitions.IAccessorDefinition;
+import org.apache.royale.compiler.definitions.IClassDefinition;
 import org.apache.royale.compiler.definitions.IConstantDefinition;
 import org.apache.royale.compiler.definitions.IDefinition;
+import org.apache.royale.compiler.definitions.IFunctionDefinition;
+import org.apache.royale.compiler.definitions.IInterfaceDefinition;
+import org.apache.royale.compiler.definitions.IParameterDefinition;
 import org.apache.royale.compiler.definitions.ITypeDefinition;
 import org.apache.royale.compiler.definitions.IVariableDefinition;
 import org.apache.royale.compiler.definitions.IVariableDefinition.VariableClassification;
@@ -257,6 +262,11 @@ public class CodeActionsUtils
 
     public static TextEdit createTextEditForAddImport(String qualifiedName, AddImportData addImportData)
     {
+        return createTextEditForAddImports(Collections.singletonList(qualifiedName), addImportData);
+    }
+
+    public static TextEdit createTextEditForAddImports(List<String> qualifiedNames, AddImportData addImportData)
+    {
         Position position = addImportData.position;
         String indent = addImportData.indent;
         String newLines = addImportData.newLines;
@@ -273,16 +283,29 @@ public class CodeActionsUtils
             builder.append(">");
             builder.append("\n\t\t");
             builder.append("<![CDATA[");
-            builder.append("\n\t\t\t");
+            builder.append("\n");
         }
-        else
+
+        for(int i = 0; i < qualifiedNames.size(); i++)
         {
-            builder.append(indent);
+            String qualifiedName = qualifiedNames.get(i);
+            if(addImportData.importRange.needsMXMLScript)
+            {
+                builder.append("\t\t\t");
+            }
+            else
+            {
+                builder.append(indent);
+            }
+            builder.append(IASKeywordConstants.IMPORT);
+            builder.append(" ");
+            builder.append(qualifiedName);
+            builder.append(";");
+            if(i < (qualifiedNames.size() - 1))
+            {
+                builder.append("\n");
+            }
         }
-        builder.append(IASKeywordConstants.IMPORT);
-        builder.append(" ");
-        builder.append(qualifiedName);
-        builder.append(";");
         builder.append(newLines);
 
         if(addImportData.importRange.needsMXMLScript)
@@ -313,6 +336,12 @@ public class CodeActionsUtils
     {
         AddImportData addImportData = findAddImportData(fileText, importRange);
         return createTextEditForAddImport(qualifiedName, addImportData);
+    }
+
+    public static TextEdit createTextEditForAddImports(List<String> qualifiedNames, String fileText, ImportRange importRange)
+    {
+        AddImportData addImportData = findAddImportData(fileText, importRange);
+        return createTextEditForAddImports(qualifiedNames, addImportData);
     }
 
     public static WorkspaceEdit createWorkspaceEditForAddMXMLNamespace(String nsPrefix, String nsURI, String fileText, String fileURI, int startIndex, int endIndex)
@@ -485,6 +514,162 @@ public class CodeActionsUtils
         textEdit.setNewText(builder.toString());
         Position editPosition = new Position(line, 0);
         textEdit.setRange(new Range(editPosition, editPosition));
+        return textEdit;
+    }
+
+	public static WorkspaceEdit createWorkspaceEditForImplementInterface(
+        IClassNode classNode, IInterfaceDefinition interfaceDefinition, String uri, String text, ICompilerProject project)
+    {
+        List<TextEdit> textEdits = createTextEditsForImplementInterface(classNode, interfaceDefinition, text, project);
+        if (textEdits == null || textEdits.size() == 0)
+        {
+            return null;
+        }
+
+        WorkspaceEdit workspaceEdit = new WorkspaceEdit();
+        HashMap<String,List<TextEdit>> changes = new HashMap<>();
+        changes.put(uri, textEdits);
+        workspaceEdit.setChanges(changes);
+        return workspaceEdit;
+    }
+
+	private static List<TextEdit> createTextEditsForImplementInterface(
+		IClassNode classNode, IInterfaceDefinition interfaceDefinition, String text, ICompilerProject project)
+    {
+        List<TextEdit> interfaceEdits = new ArrayList<>();
+
+        List<IDefinition> classMembers = new ArrayList<>();
+        IClassDefinition classDefinition = classNode.getDefinition();
+        classDefinition.classIterator(project, true).forEachRemaining(otherClassDef ->
+        {
+            classMembers.addAll(otherClassDef.getContainedScope().getAllLocalDefinitions());
+        });
+
+        List<IDefinition> interfaceMembers = new ArrayList<>();
+        interfaceDefinition.interfaceIterator(project, true).forEachRemaining(otherInterfaceDef ->
+        {
+            interfaceMembers.addAll(otherInterfaceDef.getContainedScope().getAllLocalDefinitions());
+        });
+
+        List<String> collectedImports = new ArrayList<>();
+        for (IDefinition localDef : interfaceMembers)
+        {
+            if (!(localDef instanceof IFunctionDefinition) || localDef.isImplicit())
+            {
+                continue;
+            }
+            IFunctionDefinition functionDefinition = (IFunctionDefinition) localDef;
+            boolean found = false;
+            String localDefName = localDef.getBaseName();
+            for (IDefinition classDef : classMembers)
+            {
+                if (classDef instanceof IFunctionDefinition
+                        && classDef.getBaseName().equals(localDefName))
+                {
+                    found = true;
+                    break;
+                }
+            }
+            if (found)
+            {
+                continue;
+            }
+            TextEdit methodEdit = CodeActionsUtils.createTextEditForImplementMethod(
+                classNode, functionDefinition, text, project);
+            if (methodEdit == null)
+            {
+                continue;
+            }
+            interfaceEdits.add(methodEdit);
+
+            IParameterDefinition[] params = functionDefinition.getParameters();
+            if (params.length > 0)
+            {
+                for (int i = 0; i < params.length; i++)
+                {
+                    IParameterDefinition param = params[i];
+                    ITypeDefinition paramType = param.resolveType(project);
+                    if (paramType != null)
+                    {
+                        String paramTypeName = paramType.getQualifiedName();
+                        if (ASTUtils.needsImport(classNode, paramTypeName))
+                        {
+                            collectedImports.add(paramTypeName);
+                        }
+                    }
+                }
+            }
+            IDefinition returnType = functionDefinition.resolveReturnType(project);
+            String typeName = IASLanguageConstants.Object;
+            if (returnType != null && ASTUtils.needsImport(classNode, typeName))
+            {
+                String returnTypeName = returnType.getQualifiedName();
+                if (ASTUtils.needsImport(classNode, returnTypeName))
+                {
+                    collectedImports.add(returnTypeName);
+                }
+            }
+        }
+        
+        ImportRange importRange = ImportRange.fromOffsetNode(classNode);
+        TextEdit importEdit = CodeActionsUtils.createTextEditForAddImports(collectedImports, text, importRange);
+        if (importEdit != null)
+        {
+            interfaceEdits.add(importEdit);
+        }
+        return interfaceEdits;
+    }
+
+	private static TextEdit createTextEditForImplementMethod(
+		IClassNode classNode, IFunctionDefinition functionDefinition, String text, ICompilerProject project)
+    {
+        int line = 0;
+        String indent = "";
+        IScopedNode scopedNode = classNode.getScopedNode();
+        if (scopedNode == null)
+        {
+            return null;
+        }
+        line = scopedNode.getEndLine();
+
+        if(scopedNode.getChildCount() > 0)
+        {
+            indent = ASTUtils.getIndentBeforeNode(scopedNode.getChild(scopedNode.getChildCount() - 1), text);
+        }
+
+        StringBuilder builder = new StringBuilder();
+        builder.append(NEW_LINE);
+        builder.append(indent);
+        builder.append(IASKeywordConstants.PUBLIC);
+        builder.append(" ");
+        builder.append(IASKeywordConstants.FUNCTION);
+        builder.append(" ");
+        builder.append(DefinitionTextUtils.functionDefinitionToSignature(functionDefinition, project));
+        builder.append(NEW_LINE);
+        builder.append(indent);
+        builder.append("{");
+        builder.append(NEW_LINE);
+        builder.append(indent);
+        builder.append("\t");
+        builder.append(IASKeywordConstants.THROW);
+        builder.append(" ");
+        builder.append(IASKeywordConstants.NEW);
+        builder.append(" ");
+        builder.append(IASLanguageConstants.Error);
+        builder.append("(");
+        builder.append("\"Method not implemented.\"");
+        builder.append(")");
+        builder.append(";");
+        builder.append(NEW_LINE);
+        builder.append(indent);
+        builder.append("}");
+        builder.append(NEW_LINE);
+
+        TextEdit textEdit = new TextEdit();
+        textEdit.setNewText(builder.toString());
+        Position editPosition = new Position(line, 0);
+        textEdit.setRange(new Range(editPosition, editPosition));
+
         return textEdit;
     }
 
