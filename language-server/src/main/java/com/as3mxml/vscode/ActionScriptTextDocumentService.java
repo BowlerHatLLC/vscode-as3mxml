@@ -5965,6 +5965,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         if (projectOptions == null)
         {
             folderData.cleanup();
+            //if there are existing configuration problems, they should no
+            //longer be considered valid
+            publishDiagnosticsForProblemQuery(new ProblemQuery(), folderData.configProblemTracker, folderData, true);
             return null;
         }
         if (project != null)
