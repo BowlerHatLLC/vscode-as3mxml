@@ -31,8 +31,10 @@ import org.apache.royale.compiler.definitions.IClassDefinition;
 import org.apache.royale.compiler.definitions.IConstantDefinition;
 import org.apache.royale.compiler.definitions.IDefinition;
 import org.apache.royale.compiler.definitions.IFunctionDefinition;
+import org.apache.royale.compiler.definitions.IGetterDefinition;
 import org.apache.royale.compiler.definitions.IInterfaceDefinition;
 import org.apache.royale.compiler.definitions.IParameterDefinition;
+import org.apache.royale.compiler.definitions.ISetterDefinition;
 import org.apache.royale.compiler.definitions.ITypeDefinition;
 import org.apache.royale.compiler.definitions.IVariableDefinition;
 import org.apache.royale.compiler.definitions.IVariableDefinition.VariableClassification;
@@ -644,6 +646,16 @@ public class CodeActionsUtils
         builder.append(" ");
         builder.append(IASKeywordConstants.FUNCTION);
         builder.append(" ");
+        if(functionDefinition instanceof IGetterDefinition)
+        {
+            builder.append(IASKeywordConstants.GET);
+            builder.append(" ");
+        }
+        if(functionDefinition instanceof ISetterDefinition)
+        {
+            builder.append(IASKeywordConstants.SET);
+            builder.append(" ");
+        }
         builder.append(DefinitionTextUtils.functionDefinitionToSignature(functionDefinition, project));
         builder.append(NEW_LINE);
         builder.append(indent);
