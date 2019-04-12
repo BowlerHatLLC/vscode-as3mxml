@@ -24,10 +24,12 @@ const FILE_ACTIONSCRIPT_PROPERTIES = ".actionScriptProperties";
 const FILE_FLEX_PROPERTIES = ".flexProperties";
 const FILE_FLEX_LIB_PROPERTIES = ".flexLibProperties";
 const PATH_FLASH_BUILDER_WORKSPACE_SDK_PREFS = "../.metadata/.plugins/org.eclipse.core.runtime/.settings/com.adobe.flexbuilder.project.prefs";
+const PATH_FLASH_BUILDER_WORKSPACE_RESOURCES_PREFS = "../.metadata/.plugins/org.eclipse.core.runtime/.settings/org.eclipse.core.resources.prefs";
 const FILE_EXTENSION_SWF = ".swf";
 const FILE_EXTENSION_SWC = ".swc";
 
 const TOKEN_SDKS_PREF = "com.adobe.flexbuilder.project.flex_sdks=";
+const TOKEN_PATHVARIABLE_PREF = "pathvariable.";
 
 const MESSAGE_IMPORT_START = "🚀 Importing Adobe Flash Builder project...";
 const MESSAGE_IMPORT_COMPLETE = "✅ Import complete.";
@@ -40,6 +42,7 @@ const ERROR_XML_PARSE = "Failed to parse Adobe Flash Builder project. Invalid XM
 const ERROR_PROJECT_PARSE = "Failed to parse Adobe Flash Builder project.";
 const ERROR_CANNOT_FIND_SDKS = "Failed to parse SDKs in Adobe Flash Builder workspace.";
 const ERROR_ASCONFIG_JSON_EXISTS = "Cannot migrate Adobe Flash Builder project because configuration file already exists... ";
+const WARNING_CANNOT_FIND_LINKED_RESOURCES = "Failed to parse linked resources in Adobe Flash Builder workspace. Result may contain path tokens that must be replaced.";
 const WARNING_MODULE = "Flex modules are not supported. Skipping... ";
 const WARNING_WORKER = "ActionScript workers are not supported. Skipping... ";
 const WARNING_EXTERNAL_THEME = "Themes from outside SDK are not supported. Skipping...";
@@ -56,6 +59,12 @@ interface FlashBuilderSDK
 	location: string;
 	flashSDK: boolean;
 	defaultSDK: boolean;
+}
+
+interface EclipseLinkedResource
+{
+	name: string;
+	path: string;
 }
 
 export async function checkForFlashBuilderProjectsToImport()
@@ -193,13 +202,76 @@ async function pickFlashBuilderProjectInWorkspaceFolders(workspaceFolders: vscod
 	}
 }
 
+function findLinkedResources(workspaceFolder: vscode.WorkspaceFolder): EclipseLinkedResource[]
+{
+	let result: EclipseLinkedResource[] = [];
+	let resourcePrefsPath = path.resolve(workspaceFolder.uri.fsPath, PATH_FLASH_BUILDER_WORKSPACE_RESOURCES_PREFS);
+	if(!fs.existsSync(resourcePrefsPath))
+	{
+		return result;
+	}
+	try
+	{
+		let resourcesPrefsText = null;
+		try
+		{
+			resourcesPrefsText = fs.readFileSync(resourcePrefsPath, "utf8");
+		}
+		catch(error)
+		{
+			addWarning(ERROR_FILE_READ + resourcePrefsPath);
+			return result;
+		}
+		let startIndex = resourcesPrefsText.indexOf(TOKEN_PATHVARIABLE_PREF);
+		if(startIndex === -1)
+		{
+			return result;
+		}
+		do
+		{
+			startIndex += TOKEN_PATHVARIABLE_PREF.length;
+			let endIndex = resourcesPrefsText.indexOf("\n", startIndex);
+			if(endIndex === -1)
+			{
+				break;
+			}
+			let pathVar = resourcesPrefsText.substr(startIndex, endIndex - startIndex);
+			let pathVarParts = pathVar.split("=")
+			if(pathVarParts.length != 2)
+			{
+				//we couldn't parse this one for some reason
+				continue;
+			}
+			let pathVarName = pathVarParts[0];
+			let pathVarPath = pathVarParts[1];
+			pathVarPath = pathVarPath.replace(/\\:/g, ":");
+			pathVarPath = pathVarPath.replace(/\r/g, "");
+			if(pathVarName === "DOCUMENTS" && path.isAbsolute(pathVarPath))
+			{
+				//special case: it's better to make this one a relative path
+				//instead of leaving it as absolute
+				pathVarPath = path.relative(workspaceFolder.uri.fsPath, pathVarPath);
+			}
+			result.push({ name: pathVarName, path: pathVarPath });
+			startIndex = endIndex;
+			startIndex = resourcesPrefsText.indexOf(TOKEN_PATHVARIABLE_PREF, startIndex);
+		}
+		while(startIndex !== -1);
+	}
+	catch(error)
+	{
+		return [];
+	}
+	return result;
+}
+
 function findSDKs(workspaceFolder: vscode.WorkspaceFolder): FlashBuilderSDK[]
 {
 	let sdkPrefsPath = path.resolve(workspaceFolder.uri.fsPath, PATH_FLASH_BUILDER_WORKSPACE_SDK_PREFS);
 	if(!fs.existsSync(sdkPrefsPath))
 	{
 		return [];
-	}	
+	}
 
 	let sdksElement = null;
 	try
@@ -327,6 +399,24 @@ function importFlashBuilderProjectInternal(workspaceFolder: vscode.WorkspaceFold
 		return false;
 	}
 
+	let linkedResources = null;
+	try
+	{
+		linkedResources = findLinkedResources(workspaceFolder);;
+	}
+	catch(error)
+	{
+		addWarning(WARNING_CANNOT_FIND_LINKED_RESOURCES);
+		if(error instanceof Error)
+		{
+			getOutputChannel().appendLine(error.stack);
+		}
+		linkedResources = [];
+	}
+	//these are built-in linked resources that cannot be configured by the user
+	linkedResources.push({ name: "PROJECT_FRAMEWORKS", path: "${flexlib}"});
+	linkedResources.push({ name: "SDK_THEMES_DIR", path: "${flexlib}/.."});
+
 	let sdks = null;
 	try
 	{
@@ -344,7 +434,7 @@ function importFlashBuilderProjectInternal(workspaceFolder: vscode.WorkspaceFold
 
 	try
 	{
-		let result = createProjectFiles(folderPath, actionScriptProperties, sdks, isFlexApp, isFlexLibrary);
+		let result = createProjectFiles(folderPath, actionScriptProperties, sdks, linkedResources, isFlexApp, isFlexLibrary);
 		if(!result)
 		{
 			return false;
@@ -427,7 +517,7 @@ function getApplicationNameFromPath(appPath: string)
 	return appPath.substr(0, appPath.length - path.extname(appPath).length);
 }
 
-function createProjectFiles(folderPath: string, actionScriptProperties: any, sdks: FlashBuilderSDK[], isFlexApp: boolean, isFlexLibrary: boolean)
+function createProjectFiles(folderPath: string, actionScriptProperties: any, sdks: FlashBuilderSDK[], linkedResources: EclipseLinkedResource[], isFlexApp: boolean, isFlexLibrary: boolean)
 {
 	let mainAppPath = findMainApplicationPath(actionScriptProperties);
 
@@ -460,7 +550,7 @@ function createProjectFiles(folderPath: string, actionScriptProperties: any, sdk
 		{
 			result.files = [];
 		}
-		migrateActionScriptProperties(application, actionScriptProperties, isFlexApp, isFlexLibrary, sdks, result);
+		migrateActionScriptProperties(application, actionScriptProperties, isFlexApp, isFlexLibrary, sdks, linkedResources, result);
 		if(isFlexLibrary)
 		{
 			let flexLibPropertiesPath = path.resolve(folderPath, FILE_FLEX_LIB_PROPERTIES);
@@ -489,7 +579,7 @@ function createProjectFiles(folderPath: string, actionScriptProperties: any, sdk
 				}
 				return false;
 			}
-			migrateFlexLibProperties(flexLibProperties, folderPath, result);
+			migrateFlexLibProperties(flexLibProperties, folderPath, linkedResources, result);
 		}
 		
 		let resultText = JSON.stringify(result, undefined, "\t");
@@ -505,7 +595,7 @@ function createProjectFiles(folderPath: string, actionScriptProperties: any, sdk
 	});
 }
 
-function migrateFlexLibProperties(flexLibProperties: any, folderPath: string, result: any)
+function migrateFlexLibProperties(flexLibProperties: any, folderPath: string, linkedResources: EclipseLinkedResource[], result: any)
 {
 	let rootChildren = flexLibProperties.children as any[];
 	if(!rootChildren)
@@ -536,7 +626,7 @@ function migrateFlexLibProperties(flexLibProperties: any, folderPath: string, re
 		let includeClassesElement = findChildElementByName(rootChildren, "includeClasses");
 		if(includeClassesElement)
 		{
-			migrateIncludeClassesElement(includeClassesElement, result);
+			migrateIncludeClassesElement(includeClassesElement, linkedResources, result);
 		}
 	}
 
@@ -554,7 +644,8 @@ function migrateFlexLibProperties(flexLibProperties: any, folderPath: string, re
 }
 
 function migrateActionScriptProperties(application: any, actionScriptProperties: any,
-	isFlexApp: boolean, isFlexLibrary: boolean, sdks: FlashBuilderSDK[], result: any)
+	isFlexApp: boolean, isFlexLibrary: boolean, sdks: FlashBuilderSDK[],
+	linkedResources: EclipseLinkedResource[], result: any)
 {
 	let rootChildren = actionScriptProperties.children as any[];
 	if(!rootChildren)
@@ -585,7 +676,7 @@ function migrateActionScriptProperties(application: any, actionScriptProperties:
 	let compilerElement = findChildElementByName(rootChildren, "compiler");
 	if(compilerElement)
 	{
-		migrateCompilerElement(compilerElement, applicationPath, isFlexLibrary, sdks, result);
+		migrateCompilerElement(compilerElement, applicationPath, isFlexLibrary, sdks, linkedResources, result);
 	}
 
 	if(!isFlexLibrary)
@@ -593,7 +684,7 @@ function migrateActionScriptProperties(application: any, actionScriptProperties:
 		let buildTargetsElement = findChildElementByName(rootChildren, "buildTargets");
 		if(buildTargetsElement)
 		{
-			migrateBuildTargetsElement(buildTargetsElement, applicationPath, result);
+			migrateBuildTargetsElement(buildTargetsElement, applicationPath, linkedResources, result);
 		}
 	}
 
@@ -625,7 +716,7 @@ function migrateActionScriptProperties(application: any, actionScriptProperties:
 		let themeElement = findChildElementByName(rootChildren, "theme");
 		if(themeElement)
 		{
-			migrateThemeElement(themeElement, result);
+			migrateThemeElement(themeElement, linkedResources, result);
 		}
 	}
 }
@@ -638,7 +729,7 @@ function findChildElementByName(children: any[], name: string)
 	});
 }
 
-function migrateCompilerElement(compilerElement: any, appPath: string, isFlexLibrary: boolean, sdks: FlashBuilderSDK[], result: any)
+function migrateCompilerElement(compilerElement: any, appPath: string, isFlexLibrary: boolean, sdks: FlashBuilderSDK[], linkedResources: EclipseLinkedResource[], result: any)
 {
 	let attributes = compilerElement.attributes;
 	let frameworkSDKConfig = vscode.workspace.getConfiguration("as3mxml");
@@ -737,16 +828,16 @@ function migrateCompilerElement(compilerElement: any, appPath: string, isFlexLib
 	let compilerSourcePathElement = findChildElementByName(children, "compilerSourcePath");
 	if(compilerSourcePathElement)
 	{
-		migrateCompilerSourcePathElement(compilerSourcePathElement, sourceFolderPath, result);
+		migrateCompilerSourcePathElement(compilerSourcePathElement, sourceFolderPath, linkedResources, result);
 	}
 	let libraryPathElement = findChildElementByName(children, "libraryPath");
 	if(libraryPathElement)
 	{
-		migrateCompilerLibraryPathElement(libraryPathElement, result);
+		migrateCompilerLibraryPathElement(libraryPathElement, linkedResources, result);
 	}
 }
 
-function migrateCompilerSourcePathElement(compilerSourcePathElement: any, sourceFolderPath: string, result: any)
+function migrateCompilerSourcePathElement(compilerSourcePathElement: any, sourceFolderPath: string, linkedResources: EclipseLinkedResource[], result: any)
 {
 	let sourcePaths = [];
 	if(sourceFolderPath)
@@ -763,7 +854,7 @@ function migrateCompilerSourcePathElement(compilerSourcePathElement: any, source
 		let attributes = child.attributes;
 		if("path" in attributes && "kind" in attributes)
 		{
-			let sourcePath = resolveSourceOrLibraryPath(attributes.path as string);
+			let sourcePath = resolvePathWithTokens(attributes.path as string, linkedResources);
 			let kind = attributes.kind as string;
 			if(kind !== "1")
 			{
@@ -779,18 +870,14 @@ function migrateCompilerSourcePathElement(compilerSourcePathElement: any, source
 	}
 }
 
-function resolveSourceOrLibraryPath(sourceOrLibraryPath: string)
+function resolvePathWithTokens(pathWithTokens: string, linkedResources: EclipseLinkedResource[])
 {
-	//relative to the Flash Builder workspace
-	sourceOrLibraryPath = sourceOrLibraryPath.replace("${DOCUMENTS}", "..");
-	//relative to the SDK frameworks folder
-	sourceOrLibraryPath = sourceOrLibraryPath.replace("${PROJECT_FRAMEWORKS}", "${flexlib}");
-	//relative to parent folder
-	if(sourceOrLibraryPath.startsWith("/"))
+	linkedResources.forEach(linkedResource =>
 	{
-		sourceOrLibraryPath = ".." + sourceOrLibraryPath;
-	}
-	return sourceOrLibraryPath;
+		let token = "${" + linkedResource.name + "}";
+		pathWithTokens = pathWithTokens.replace(token, linkedResource.path);
+	});
+	return pathWithTokens;
 }
 
 function findOnSourcePath(thePath: string, folderPath: string, result: any)
@@ -822,7 +909,7 @@ function findOnSourcePath(thePath: string, folderPath: string, result: any)
 	return thePath;
 }
 
-function migrateCompilerLibraryPathElement(libraryPathElement: any, result: any)
+function migrateCompilerLibraryPathElement(libraryPathElement: any, linkedResources: EclipseLinkedResource[], result: any)
 {
 	let libraryPaths = [];
 	let externalLibraryPaths = [];
@@ -846,7 +933,17 @@ function migrateCompilerLibraryPathElement(libraryPathElement: any, result: any)
 			"kind" in libraryPathEntryAttributes &&
 			"linkType" in libraryPathEntryAttributes)
 		{
-			let libraryPath = resolveSourceOrLibraryPath(libraryPathEntryAttributes.path as string);
+			let libraryPath = resolvePathWithTokens(libraryPathEntryAttributes.path as string, linkedResources);
+			//this path may not actually be absolute. in some cases, it should be
+			//resolved relative to parent folder instead.
+			if(libraryPath.startsWith("/"))
+			{
+				//if on windows or if the absolute path does not exist
+				if(process.platform === "win32" || !fs.existsSync(libraryPath))
+				{
+					libraryPath = ".." + libraryPath;
+				}
+			}
 			
 			let kind = libraryPathEntryAttributes.kind as string;
 			if(kind !== "1" && //folder
@@ -894,7 +991,7 @@ function migrateCompilerLibraryPathElement(libraryPathElement: any, result: any)
 	}
 }
 
-function migrateBuildTargetsElement(buildTargetsElement: any, applicationFileName: string, result: any)
+function migrateBuildTargetsElement(buildTargetsElement: any, applicationFileName: string, linkedResources: EclipseLinkedResource[], result: any)
 {
 	let children = buildTargetsElement.children as any[];
 	children.forEach((buildTarget) =>
@@ -938,6 +1035,7 @@ function migrateBuildTargetsElement(buildTargetsElement: any, applicationFileNam
 				let provisioningFile = buildTargetAttributes.provisioningFile;
 				if(provisioningFile)
 				{
+					provisioningFile = resolvePathWithTokens(provisioningFile, linkedResources);
 					platformOptions.signingOptions = platformOptions.signingOptions || {};
 					platformOptions.signingOptions["provisioning-profile"] = provisioningFile;
 				}
@@ -972,6 +1070,7 @@ function migrateBuildTargetsElement(buildTargetsElement: any, applicationFileNam
 				let airCertificatePath = airSettingsAttributes.airCertificatePath;
 				if(airCertificatePath)
 				{
+					airCertificatePath = resolvePathWithTokens(airCertificatePath, linkedResources);
 					platformOptions.signingOptions = platformOptions.signingOptions || {};
 					platformOptions.signingOptions.keystore = airCertificatePath;
 					platformOptions.signingOptions.storetype = "pkcs12";
@@ -994,7 +1093,9 @@ function migrateBuildTargetsElement(buildTargetsElement: any, applicationFileNam
 						let anePathEntryAttributes = anePathEntry.attributes;
 						if("path" in anePathEntryAttributes)
 						{
-							extdir.push(anePathEntryAttributes.path);
+							let extdirPath = anePathEntryAttributes.path;
+							extdirPath = resolvePathWithTokens(extdirPath, linkedResources);
+							extdir.push(extdirPath);
 						}
 					});
 					platformOptions.extdir = extdir;
@@ -1034,7 +1135,7 @@ function migrateWorkersElement(workersElement: any, result: any)
 	});
 }
 
-function migrateThemeElement(themeElement: any, result: any)
+function migrateThemeElement(themeElement: any, linkedResources: EclipseLinkedResource[], result: any)
 {
 	let themeAttributes = themeElement.attributes;
 	if("themeIsSDK" in themeAttributes && themeAttributes.themeIsSDK !== "true")
@@ -1045,12 +1146,12 @@ function migrateThemeElement(themeElement: any, result: any)
 	if("themeLocation" in themeAttributes)
 	{
 		let themeLocation = themeAttributes.themeLocation;
-		themeLocation = themeLocation.replace("${SDK_THEMES_DIR}", "${flexlib}/..");
+		themeLocation = resolvePathWithTokens(themeLocation, linkedResources);
 		result.compilerOptions.theme = themeLocation;
 	}
 }
 
-function migrateIncludeClassesElement(includeClassesElement: any, result: any)
+function migrateIncludeClassesElement(includeClassesElement: any, linkedResources: EclipseLinkedResource[], result: any)
 {
 	let children = includeClassesElement.children as any[];
 	if(!children)
@@ -1064,7 +1165,8 @@ function migrateIncludeClassesElement(includeClassesElement: any, result: any)
 		})
 		.map((child) =>
 		{
-			return child.attributes.path;
+			let includeClassesPath = child.attributes.path;
+			return resolvePathWithTokens(includeClassesPath, linkedResources);
 		});
 	if(newClasses.length > 0)
 	{
