@@ -18,6 +18,7 @@ package com.as3mxml.vscode.utils;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.Reader;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -196,11 +197,23 @@ public class CompilationUnitUtils
 			}
 			else
 			{
+				String scriptSourceValue = sourceAttribute.getRawValue();
+				if(scriptSourceValue.length() == 0)
+				{
+					//no file specified yet... it's empty!
+					continue;
+				}
 				Path scriptPath = Paths.get(sourceAttribute.getRawValue());
 				if(!scriptPath.isAbsolute())
 				{
 					Path mxmlPath = Paths.get(mxmlData.getPath());
 					scriptPath = mxmlPath.getParent().resolve(scriptPath);
+				}
+				if(!Files.exists(scriptPath))
+				{
+					//the file doesn't actually exist, and getAbsoluteOffset()
+					//will throw an exception if we call it
+					continue;
 				}
 
 				int[] absoluteOffsets = offsetLookup.getAbsoluteOffset(scriptPath.toString(), 0);
