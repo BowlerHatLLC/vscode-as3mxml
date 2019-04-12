@@ -269,6 +269,11 @@ public class CodeActionsUtils
 
     public static TextEdit createTextEditForAddImports(List<String> qualifiedNames, AddImportData addImportData)
     {
+        if(qualifiedNames.size() == 0)
+        {
+            return null;
+        }
+
         Position position = addImportData.position;
         String indent = addImportData.indent;
         String newLines = addImportData.newLines;
@@ -613,11 +618,14 @@ public class CodeActionsUtils
             }
         }
         
-        ImportRange importRange = ImportRange.fromOffsetNode(classNode);
-        TextEdit importEdit = CodeActionsUtils.createTextEditForAddImports(collectedImports, text, importRange);
-        if (importEdit != null)
+        if(collectedImports.size() > 0)
         {
-            interfaceEdits.add(importEdit);
+            ImportRange importRange = ImportRange.fromOffsetNode(classNode);
+            TextEdit importEdit = CodeActionsUtils.createTextEditForAddImports(collectedImports, text, importRange);
+            if (importEdit != null)
+            {
+                interfaceEdits.add(importEdit);
+            }
         }
         return interfaceEdits;
     }
