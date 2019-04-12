@@ -1,3 +1,27 @@
+## v0.19.0
+
+### New Features
+
+* Tasks: New tasks to compile and publish with Adobe Animate.
+* Debug: If a *.fla* file is defined in *asconfig.json*, the `Ctrl+Enter` or `Ctrl+Shift+Enter` keyboard shortcuts will launch Adobe Animate and run either **Test Movie** or **Debug Movie**.
+* Code Actions: Added **Implement interface** code action to implement missing methods.
+* Go to Definition: Opens external files referenced by `<fx:Script source="file.as"/>`.
+* Go to Definition: Opens external files referenced by `<fx:Style source="file.css"/>`.
+* Editor: Syntax in *.jsfl* files is now highlighted as JavaScript.
+
+### Fixed Issues
+
+* Problems: Fixed issue where deleting *asconfig.json* would not clear existing configuration errors.
+* Editor: Fixed issue where Java exceptions appeared in the console when the file path for a `<fx:Script source="file.as">` tag could not be found.
+* Project: Fixed issue where importing a Flash Builder project did not resolve tokens for custom linked resources in the Eclipse workspace.
+* Build: Fixed issue where `copySourcePathAssets` could fail when a file is read-only.
+* Build: Fixed issue where `copySourcePathAssets` sometimes copied the same file to the output folder more than once.
+* Build: Fixed compiler failure in large projects by increasing the max heap size for the JVM.
+
+### Other Changes
+
+* Quick Compile & Debug: The `Ctrl+Enter` keyboard shortcut now starts without debugging, and `Ctrl+Shift+Enter` should be used instead to debug. This change is to make the behavior more consistent with the new Adobe Animate integration.
+
 ## v0.18.0
 
 ### New Features
