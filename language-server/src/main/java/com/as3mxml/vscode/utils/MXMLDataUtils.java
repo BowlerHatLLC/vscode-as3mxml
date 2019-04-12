@@ -276,12 +276,12 @@ public class MXMLDataUtils
         return result.resolveType(project);
     }
 
-    public static boolean isMXMLTagValidForCompletion(IMXMLTagData tag)
+    public static boolean isMXMLCodeIntelligenceAvailableForTag(IMXMLTagData tag)
     {
         if (tag.getXMLName().equals(tag.getMXMLDialect().resolveScript()))
         {
-            //inside an <fx:Script> tag
-            return false;
+            //not available inside an <fx:Script> tag that isn't self-closing
+            return tag.isEmptyTag();
         }
         return true;
     }
