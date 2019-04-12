@@ -464,7 +464,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     }
                     //if we're inside an <fx:Script> tag, we want ActionScript completion,
                     //so that's why we call isMXMLTagValidForCompletion()
-                    if (MXMLDataUtils.isMXMLTagValidForCompletion(offsetTag))
+                    if (MXMLDataUtils.isMXMLCodeIntelligenceAvailableForTag(offsetTag))
                     {
                         ICompilationUnit offsetUnit = findCompilationUnit(path);
                         CompletionList result = mxmlCompletion(offsetTag, path, currentOffset, offsetUnit, project);
@@ -570,7 +570,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     }
                     //if we're inside an <fx:Script> tag, we want ActionScript hover,
                     //so that's why we call isMXMLTagValidForCompletion()
-                    if (MXMLDataUtils.isMXMLTagValidForCompletion(offsetTag))
+                    if (MXMLDataUtils.isMXMLCodeIntelligenceAvailableForTag(offsetTag))
                     {
                         Hover result = mxmlHover(offsetTag, currentOffset, project);
                         cancelToken.checkCanceled();
@@ -826,7 +826,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     }
                     //if we're inside an <fx:Script> tag, we want ActionScript lookup,
                     //so that's why we call isMXMLTagValidForCompletion()
-                    if (MXMLDataUtils.isMXMLTagValidForCompletion(offsetTag))
+                    if (MXMLDataUtils.isMXMLCodeIntelligenceAvailableForTag(offsetTag))
                     {
                         List<? extends Location> result = mxmlDefinition(offsetTag, currentOffset, project);
                         cancelToken.checkCanceled();
@@ -895,7 +895,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     }
                     //if we're inside an <fx:Script> tag, we want ActionScript lookup,
                     //so that's why we call isMXMLTagValidForCompletion()
-                    if (MXMLDataUtils.isMXMLTagValidForCompletion(offsetTag))
+                    if (MXMLDataUtils.isMXMLCodeIntelligenceAvailableForTag(offsetTag))
                     {
                         List<? extends Location> result = mxmlTypeDefinition(offsetTag, currentOffset, project);
                         cancelToken.checkCanceled();
@@ -1026,7 +1026,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     }
                     //if we're inside an <fx:Script> tag, we want ActionScript lookup,
                     //so that's why we call isMXMLTagValidForCompletion()
-                    if (MXMLDataUtils.isMXMLTagValidForCompletion(offsetTag))
+                    if (MXMLDataUtils.isMXMLCodeIntelligenceAvailableForTag(offsetTag))
                     {
                         ICompilationUnit offsetUnit = findCompilationUnit(path);
                         List<? extends Location> result = mxmlReferences(offsetTag, currentOffset, offsetUnit, project);
@@ -1770,7 +1770,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     }
                     //if we're inside an <fx:Script> tag, we want ActionScript rename,
                     //so that's why we call isMXMLTagValidForCompletion()
-                    if (MXMLDataUtils.isMXMLTagValidForCompletion(offsetTag))
+                    if (MXMLDataUtils.isMXMLCodeIntelligenceAvailableForTag(offsetTag))
                     {
                         WorkspaceEdit result = mxmlRename(offsetTag, currentOffset, params.getNewName(), project);
                         cancelToken.checkCanceled();
@@ -3641,8 +3641,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         if (definition == null)
         {
             XMLName offsetXMLName = offsetTag.getXMLName();
-            if (offsetXMLName.equals(offsetTag.getMXMLDialect().resolveStyle())
-                    && offsetTag.isOffsetInAttributeList(currentOffset))
+            if ((offsetXMLName.equals(offsetTag.getMXMLDialect().resolveStyle())
+                    || offsetXMLName.equals(offsetTag.getMXMLDialect().resolveScript()))
+                            && offsetTag.isOffsetInAttributeList(currentOffset))
             {
                 IMXMLTagAttributeData attributeData = MXMLDataUtils.getMXMLTagAttributeWithValueAtOffset(offsetTag, currentOffset);
                 if (attributeData != null && attributeData.getName().equals(IMXMLLanguageConstants.ATTRIBUTE_SOURCE))
