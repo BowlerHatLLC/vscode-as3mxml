@@ -3640,6 +3640,28 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         IDefinition definition = MXMLDataUtils.getDefinitionForMXMLNameAtOffset(offsetTag, currentOffset, project);
         if (definition == null)
         {
+            XMLName offsetXMLName = offsetTag.getXMLName();
+            if (offsetXMLName.equals(offsetTag.getMXMLDialect().resolveStyle())
+                    && offsetTag.isOffsetInAttributeList(currentOffset))
+            {
+                IMXMLTagAttributeData attributeData = MXMLDataUtils.getMXMLTagAttributeWithValueAtOffset(offsetTag, currentOffset);
+                if (attributeData != null && attributeData.getName().equals(IMXMLLanguageConstants.ATTRIBUTE_SOURCE))
+                {
+                    Path sourcePath = Paths.get(attributeData.getRawValue());
+                    if(!sourcePath.isAbsolute())
+                    {
+                        sourcePath = Paths.get(offsetTag.getSourcePath()).getParent().resolve(sourcePath);
+                    }
+                    
+                    List<Location> result = new ArrayList<>();
+                    Location location = new Location();
+                    location.setUri(sourcePath.toUri().toString());
+                    location.setRange(new Range(new Position(), new Position()));
+                    result.add(location);
+                    return result;
+                }
+            }
+
             //VSCode may call definition() when there isn't necessarily a
             //definition referenced at the current position.
             return Collections.emptyList();
