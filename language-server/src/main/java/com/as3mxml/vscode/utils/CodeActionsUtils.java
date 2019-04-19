@@ -566,6 +566,8 @@ public class CodeActionsUtils
                 continue;
             }
             IFunctionDefinition functionDefinition = (IFunctionDefinition) localDef;
+            boolean isGetter = functionDefinition instanceof IGetterDefinition;
+            boolean isSetter = functionDefinition instanceof ISetterDefinition;
             boolean found = false;
             String localDefName = localDef.getBaseName();
             for (IDefinition classDef : classMembers)
@@ -573,8 +575,13 @@ public class CodeActionsUtils
                 if (classDef instanceof IFunctionDefinition
                         && classDef.getBaseName().equals(localDefName))
                 {
-                    found = true;
-                    break;
+                    boolean isAlsoGetter = classDef instanceof IGetterDefinition;
+                    boolean isAlsoSetter = classDef instanceof ISetterDefinition;
+                    if(isGetter == isAlsoGetter && isSetter == isAlsoSetter)
+                    {
+                        found = true;
+                        break;
+                    }
                 }
             }
             if (found)
