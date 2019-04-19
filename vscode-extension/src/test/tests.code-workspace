@@ -7,5 +7,7 @@
 			"path": "library_workspace"
 		}
 	],
-	"settings": {}
+	"settings": {
+		//"as3mxml.sdk.editor": "c:/Users/josht/Development/Royale/sdks/royale-js-dev"
+	}
 }
