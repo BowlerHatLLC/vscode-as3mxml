@@ -6319,17 +6319,21 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                             }
                             checkCompilationUnitForAllProblems(unit, problemQuery);
                         }
-                        for (ICompilationUnit unit : project.getCompilationUnits())
+                        if (initialized)
                         {
-                            if (unit == null
-                                    || unit instanceof SWCCompilationUnit
-                                    || unit instanceof ResourceBundleCompilationUnit)
+                            //if not initialized, do this later
+                            for (ICompilationUnit unit : project.getCompilationUnits())
                             {
-                                continue;
+                                if (unit == null
+                                        || unit instanceof SWCCompilationUnit
+                                        || unit instanceof ResourceBundleCompilationUnit)
+                                {
+                                    continue;
+                                }
+                                //just to be safe, find all of the included files
+                                //after we've checked for problems
+                                CompilationUnitUtils.findIncludedFiles(unit, includedFiles);
                             }
-                            //just to be safe, find all of the included files
-                            //after we've checked for problems
-                            CompilationUnitUtils.findIncludedFiles(unit, includedFiles);
                         }
                         continueCheckingForErrors = false;
                     }
