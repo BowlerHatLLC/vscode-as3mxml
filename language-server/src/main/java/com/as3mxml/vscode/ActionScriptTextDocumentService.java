@@ -5292,7 +5292,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             completionTypes.add(qualifiedName);
         }
         CompletionItem item = CompletionItemUtils.createDefinitionItem(definition, project);
-        /*if (definition instanceof IFunctionDefinition
+        if (definition instanceof IFunctionDefinition
                 && !(definition instanceof IAccessorDefinition)
                 && completionSupportsSnippets)
         {
@@ -5305,9 +5305,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             {
                 item.setInsertTextFormat(InsertTextFormat.Snippet);
                 item.setInsertText(definition.getBaseName() + "($0)");
-                //TODO: manually activate signature help
+                Command showParamsCommand = new Command();
+                showParamsCommand.setCommand("editor.action.triggerParameterHints");
+                item.setCommand(showParamsCommand);
             }
-        }*/
+        }
         if (ASTUtils.needsImport(offsetNode, definition.getQualifiedName()))
         {
             TextEdit textEdit = CodeActionsUtils.createTextEditForAddImport(definition, addImportData);
