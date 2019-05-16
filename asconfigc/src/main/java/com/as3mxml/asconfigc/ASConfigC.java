@@ -1260,19 +1260,28 @@ public class ASConfigC
 	}
 
 	private void copyAsset(Path srcPath, Path destPath) throws ASConfigCException
-	{		
+	{
+		copyAsset(srcPath, destPath, true);
+	}
+
+	private void copyAsset(Path srcPath, Path destPath, boolean retry) throws ASConfigCException
+	{
 		try
 		{
-			if(Files.exists(destPath) && !Files.isWritable(destPath))
-			{
-				//replace existing won't work if the file is read-only
-				//try to make the file writable
-				destPath.toFile().setWritable(true);
-			}
 			Files.copy(srcPath, destPath, StandardCopyOption.REPLACE_EXISTING);
 		}
 		catch(IOException e)
 		{
+			//if the destination file is not writable, make it writable and try
+			//again one more time.
+			//do this check AFTER failure because it's slow to check whether
+			//every file exists and is writable
+			if(retry && Files.exists(destPath) && !Files.isWritable(destPath))
+			{
+				destPath.toFile().setWritable(true);
+				copyAsset(srcPath, destPath, false);
+				return;
+			}
 			throw new ASConfigCException("Failed to copy file from source " + srcPath.toString() + " to destination " + destPath.toString());
 		}
 	}
