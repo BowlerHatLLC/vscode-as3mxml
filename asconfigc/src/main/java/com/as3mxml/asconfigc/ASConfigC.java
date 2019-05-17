@@ -44,8 +44,6 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -82,6 +80,7 @@ import com.as3mxml.asconfigc.utils.ApacheRoyaleUtils;
 import com.as3mxml.asconfigc.utils.GenericSDKUtils;
 import com.as3mxml.asconfigc.utils.JsonUtils;
 import com.as3mxml.asconfigc.utils.OptionsFormatter;
+import com.as3mxml.asconfigc.utils.OptionsUtils;
 import com.as3mxml.asconfigc.utils.ProjectUtils;
 
 /**
@@ -192,7 +191,6 @@ public class ASConfigC
 	}
 
 	private static final String ASCONFIG_JSON = "asconfig.json";
-	private static final Pattern ADDITIONAL_OPTIONS_PATTERN = Pattern.compile("\"([^\"]*)\"|(\\S+)");
 
 	public ASConfigC(ASConfigCOptions options) throws ASConfigCException
 	{
@@ -370,21 +368,9 @@ public class ASConfigC
 			String additionalOptions = json.get(TopLevelFields.ADDITIONAL_OPTIONS).asText();
 			if(additionalOptions != null)
 			{
-				//parse the additional options by splitting on whitespace
-				//except when an option is wrapped in quotes
-				Matcher matcher = ADDITIONAL_OPTIONS_PATTERN.matcher(additionalOptions);
-				while(matcher.find())
-				{
-					String quotedOption = matcher.group(1);
-					if(quotedOption != null)
-					{
-						compilerOptions.add(quotedOption);
-					}
-					else //not quoted
-					{
-						compilerOptions.add(matcher.group(2));
-					}
-				}
+				//split the additionalOptions into separate values so that we can
+				//pass them in as String[], as the compiler expects.
+				compilerOptions.addAll(OptionsUtils.parseAdditionalOptions(additionalOptions));
 			}
 		}
 		//if js-output-type was not specified, use the default
