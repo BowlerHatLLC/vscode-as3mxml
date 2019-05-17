@@ -150,7 +150,7 @@ export function activate(context: vscode.ExtensionContext)
 	frameworkSDKHome = getFrameworkSDKPathWithFallbacks();
 	vscode.workspace.onDidChangeConfiguration(onDidChangeConfiguration);
 
-	vscode.languages.setLanguageConfiguration("nextgenas",
+	vscode.languages.setLanguageConfiguration("actionscript",
 	{
 		//this code is MIT licensed from Microsoft's official TypeScript
 		//extension that's built into VSCode
@@ -381,7 +381,7 @@ function startClient()
 			{
 				documentSelector:
 				[
-					{ scheme: "file", language: "nextgenas" },
+					{ scheme: "file", language: "actionscript" },
 					{ scheme: "file", language: "mxml" },
 				],
 				synchronize:
@@ -430,7 +430,7 @@ function startClient()
 				}
 			};
 			isLanguageClientReady = false;
-			savedLanguageClient = new LanguageClient("nextgenas", "ActionScript & MXML Language Server", executable, clientOptions);
+			savedLanguageClient = new LanguageClient("actionscript", "ActionScript & MXML Language Server", executable, clientOptions);
 			savedLanguageClient.onReady().then(() =>
 			{
 				resolve();

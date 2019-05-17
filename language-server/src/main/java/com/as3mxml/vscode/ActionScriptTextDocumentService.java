@@ -259,7 +259,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private static final String MXML_EXTENSION = ".mxml";
     private static final String AS_EXTENSION = ".as";
     private static final String SWC_EXTENSION = ".swc";
-    private static final String MARKED_STRING_LANGUAGE_ACTIONSCRIPT = "nextgenas";
+    private static final String MARKED_STRING_LANGUAGE_ACTIONSCRIPT = "actionscript";
     private static final String MARKED_STRING_LANGUAGE_MXML = "mxml";
     private static final String SDK_LIBRARY_PATH_SIGNATURE_UNIX = "/frameworks/libs/";
     private static final String SDK_LIBRARY_PATH_SIGNATURE_WINDOWS = "\\frameworks\\libs\\";

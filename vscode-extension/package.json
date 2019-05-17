@@ -52,7 +52,7 @@
     "webpack-cli": "^3.3.2"
   },
   "activationEvents": [
-    "onLanguage:nextgenas",
+    "onLanguage:actionscript",
     "onLanguage:mxml",
     "workspaceContains:**/asconfig.json",
     "workspaceContains:**/asconfig.*.json",
@@ -155,7 +155,7 @@
     },
     "languages": [
       {
-        "id": "nextgenas",
+        "id": "actionscript",
         "extensions": [
           ".as"
         ],
@@ -164,7 +164,8 @@
           "AS3",
           "as3",
           "AS",
-          "as"
+          "as",
+          "nextgenas"
         ],
         "configuration": "./actionscript.configuration.json"
       },
@@ -194,7 +195,7 @@
     ],
     "grammars": [
       {
-        "language": "nextgenas",
+        "language": "actionscript",
         "scopeName": "source.actionscript.3",
         "path": "./syntaxes/AS3.tmLanguage"
       },
@@ -203,7 +204,7 @@
         "scopeName": "text.mxml",
         "path": "./syntaxes/MXML.tmLanguage",
         "embeddedLanguages": {
-          "meta.cdata.mxml": "nextgenas"
+          "meta.cdata.mxml": "actionscript"
         }
       }
     ],
@@ -225,7 +226,7 @@
       {
         "name": "royale",
         "label": "Apache Royale",
-        "owner": "nextgenas",
+        "owner": "actionscript",
         "applyTo": "closedDocuments",
         "fileLocation": [
           "absolute"
@@ -241,7 +242,7 @@
       {
         "name": "flex",
         "label": "Classic Flex SDK",
-        "owner": "nextgenas",
+        "owner": "actionscript",
         "applyTo": "closedDocuments",
         "fileLocation": [
           "absolute"
@@ -257,7 +258,7 @@
       {
         "name": "air",
         "label": "Adobe AIR SDK & Compiler",
-        "owner": "nextgenas",
+        "owner": "actionscript",
         "applyTo": "closedDocuments",
         "fileLocation": [
           "absolute"
@@ -398,12 +399,12 @@
     },
     "breakpoints": [
       {
-        "language": "nextgenas"
+        "language": "actionscript"
       }
     ],
     "snippets": [
       {
-        "language": "nextgenas",
+        "language": "actionscript",
         "path": "./snippets/actionscript.json"
       },
       {
@@ -595,7 +596,7 @@
         "label": "Node.js (Apache Royale)",
         "enableBreakpointsFor": {
           "languageIds": [
-            "nextgenas",
+            "actionscript",
             "mxml"
           ]
         },

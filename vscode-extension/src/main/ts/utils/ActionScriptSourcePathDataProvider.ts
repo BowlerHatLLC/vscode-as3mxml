@@ -47,7 +47,7 @@ export class ActionScriptSourcePath extends vscode.TreeItem
 				let extname = path.extname(uri.fsPath);
 				if(extname === FILE_EXTENSION_AS)
 				{
-					contextValue = "nextgenas";
+					contextValue = "actionscript";
 				}
 				else if(extname === FILE_EXTENSION_MXML)
 				{
