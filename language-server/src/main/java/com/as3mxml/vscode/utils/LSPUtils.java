@@ -27,6 +27,10 @@ public class LSPUtils
 {
 	public static boolean rangesIntersect(Range r1, Range r2)
 	{
+		if(r1 == null || r2 == null)
+		{
+			return false;
+		}
 		int resultStartLine = r1.getStart().getLine();
 		int resultStartChar = r1.getStart().getCharacter();
 		int resultEndLine = r1.getEnd().getLine();
