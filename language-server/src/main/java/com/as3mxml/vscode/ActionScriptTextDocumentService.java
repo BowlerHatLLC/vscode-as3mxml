@@ -6059,7 +6059,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         if(configurator != null)
         {
             boolean result = configurator.applyToProject(project);
-            configProblems.addAll(configurator.getConfigurationProblems());
+            Configuration configuration = configurator.getConfiguration();
+            //it's possible for the configuration to be null when parsing
+            //certain values in additionalOptions in asconfig.json
+            if(configuration != null)
+            {
+                configProblems.addAll(configurator.getConfigurationProblems());
+            }
             if (!result)
             {
                 configurator = null;
