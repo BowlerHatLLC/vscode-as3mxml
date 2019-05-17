@@ -111,6 +111,7 @@ public class SWFDebugSession extends DebugSession
 {
     private static final String FILE_EXTENSION_AS = ".as";
     private static final String FILE_EXTENSION_MXML = ".mxml";
+    private static final String FILE_EXTENSION_HX = ".hx";
     private static final String FILE_EXTENSION_EXE = ".exe";
     private static final String FILE_EXTENSION_BAT = ".bat";
     private static final String FILE_EXTENSION_XML = ".xml";
@@ -889,7 +890,9 @@ public class SWFDebugSession extends DebugSession
                     //file system case sensitivity.
                     if (pathAsPath.equals(Paths.get(sourceFile.getFullPath())))
                     {
-                        if (path.endsWith(FILE_EXTENSION_AS) || path.endsWith(FILE_EXTENSION_MXML))
+                        if (path.endsWith(FILE_EXTENSION_AS)
+                                || path.endsWith(FILE_EXTENSION_MXML)
+                                || path.endsWith(FILE_EXTENSION_HX))
                         {
                             foundSourceFile = sourceFile;
                         }
