@@ -21,10 +21,9 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import com.as3mxml.asconfigc.compiler.ProjectType;
+import com.as3mxml.asconfigc.utils.OptionsUtils;
 import com.as3mxml.vscode.project.ProjectOptions;
 import com.as3mxml.vscode.project.VSCodeConfiguration;
 
@@ -52,8 +51,6 @@ public class CompilerProjectUtils
 	private static final String TOKEN_FLEXLIB = "flexlib";
 	
     private static final String PROPERTY_FRAMEWORK_LIB = "royalelib";
-
-	private static final Pattern ADDITIONAL_OPTIONS_PATTERN = Pattern.compile("[^\\s]*'([^'])*?'|[^\\s]*\"([^\"])*?\"|[^\\s]+");
 
 	public static RoyaleProject createProject(ProjectOptions currentProjectOptions, Workspace compilerWorkspace)
 	{
@@ -197,12 +194,7 @@ public class CompilerProjectUtils
         {
             //split the additionalOptions into separate values so that we can
             //pass them in as String[], as the compiler expects.
-            Matcher matcher = ADDITIONAL_OPTIONS_PATTERN.matcher(additionalOptions);
-            while (matcher.find())
-            {
-                String option = matcher.group();
-                combinedOptions.add(option);
-            }
+            combinedOptions.addAll(OptionsUtils.parseAdditionalOptions(additionalOptions));
         }
 
         //Github #245: avoid errors from -inline
