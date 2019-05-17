@@ -149,7 +149,7 @@
         {
           "id": "actionScriptSourcePaths",
           "name": "ActionScript Source Path",
-          "when": "resourceLangId =~ /(nextgenas|mxml)/"
+          "when": "resourceLangId =~ /(actionscript|mxml)/"
         }
       ]
     },
