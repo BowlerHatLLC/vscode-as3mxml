@@ -218,6 +218,7 @@ import org.eclipse.lsp4j.FileEvent;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.InsertTextFormat;
 import org.eclipse.lsp4j.Location;
+import org.eclipse.lsp4j.LocationLink;
 import org.eclipse.lsp4j.MarkedString;
 import org.eclipse.lsp4j.MessageParams;
 import org.eclipse.lsp4j.MessageType;
@@ -780,7 +781,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
      * document is defined.
      */
     @Override
-    public CompletableFuture<List<? extends Location>> definition(TextDocumentPositionParams params)
+    public CompletableFuture<Either<List<? extends Location>, List<? extends LocationLink>>> definition(TextDocumentPositionParams params)
     {
         return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken ->
         {
@@ -796,13 +797,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 if (path == null)
                 {
                     cancelToken.checkCanceled();
-                    return Collections.emptyList();
+                    return Either.forLeft(Collections.emptyList());
                 }
                 WorkspaceFolderData folderData = getWorkspaceFolderDataForSourceFile(path);
                 if(folderData == null || folderData.project == null)
                 {
                     cancelToken.checkCanceled();
-                    return Collections.emptyList();
+                    return Either.forLeft(Collections.emptyList());
                 }
                 RoyaleProject project = folderData.project;
 
@@ -810,7 +811,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 if (currentOffset == -1)
                 {
                     cancelToken.checkCanceled();
-                    return Collections.emptyList();
+                    return Either.forLeft(Collections.emptyList());
                 }
                 MXMLData mxmlData = getMXMLDataForPath(path, folderData);
 
@@ -822,7 +823,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     {
                         List<? extends Location> result = actionScriptDefinition(embeddedNode, project);
                         cancelToken.checkCanceled();
-                        return result;
+                        return Either.forLeft(result);
                     }
                     //if we're inside an <fx:Script> tag, we want ActionScript lookup,
                     //so that's why we call isMXMLTagValidForCompletion()
@@ -830,13 +831,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     {
                         List<? extends Location> result = mxmlDefinition(offsetTag, currentOffset, project);
                         cancelToken.checkCanceled();
-                        return result;
+                        return Either.forLeft(result);
                     }
                 }
                 IASNode offsetNode = getOffsetNode(path, currentOffset, folderData);
                 List<? extends Location> result = actionScriptDefinition(offsetNode, project);
                 cancelToken.checkCanceled();
-                return result;
+                return Either.forLeft(result);
             }
             finally
             {
@@ -849,7 +850,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
      * Finds where the type of the definition referenced at the current position
      * in a text document is defined.
      */
-    public CompletableFuture<List<? extends Location>> typeDefinition(TextDocumentPositionParams params)
+    public CompletableFuture<Either<List<? extends Location>, List<? extends LocationLink>>> typeDefinition(TextDocumentPositionParams params)
     {
         return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken ->
         {
@@ -865,13 +866,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 if (path == null)
                 {
                     cancelToken.checkCanceled();
-                    return Collections.emptyList();
+                    return Either.forLeft(Collections.emptyList());
                 }
                 WorkspaceFolderData folderData = getWorkspaceFolderDataForSourceFile(path);
                 if(folderData == null || folderData.project == null)
                 {
                     cancelToken.checkCanceled();
-                    return Collections.emptyList();
+                    return Either.forLeft(Collections.emptyList());
                 }
                 RoyaleProject project = folderData.project;
 
@@ -879,7 +880,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 if (currentOffset == -1)
                 {
                     cancelToken.checkCanceled();
-                    return Collections.emptyList();
+                    return Either.forLeft(Collections.emptyList());
                 }
                 MXMLData mxmlData = getMXMLDataForPath(path, folderData);
 
@@ -891,7 +892,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     {
                         List<? extends Location> result = actionScriptTypeDefinition(embeddedNode, project);
                         cancelToken.checkCanceled();
-                        return result;
+                        return Either.forLeft(result);
                     }
                     //if we're inside an <fx:Script> tag, we want ActionScript lookup,
                     //so that's why we call isMXMLTagValidForCompletion()
@@ -899,13 +900,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     {
                         List<? extends Location> result = mxmlTypeDefinition(offsetTag, currentOffset, project);
                         cancelToken.checkCanceled();
-                        return result;
+                        return Either.forLeft(result);
                     }
                 }
                 IASNode offsetNode = getOffsetNode(path, currentOffset, folderData);
                 List<? extends Location> result = actionScriptTypeDefinition(offsetNode, project);
                 cancelToken.checkCanceled();
-                return result;
+                return Either.forLeft(result);
             }
             finally
             {
@@ -917,7 +918,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     /**
      * Finds all implemenations of an interface.
      */
-    public CompletableFuture<List<? extends Location>> implementation(TextDocumentPositionParams params)
+    public CompletableFuture<Either<List<? extends Location>, List<? extends LocationLink>>> implementation(TextDocumentPositionParams params)
     {
         return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken ->
         {
@@ -933,13 +934,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 if (path == null)
                 {
                     cancelToken.checkCanceled();
-                    return Collections.emptyList();
+                    return Either.forLeft(Collections.emptyList());
                 }
                 WorkspaceFolderData folderData = getWorkspaceFolderDataForSourceFile(path);
                 if(folderData == null || folderData.project == null)
                 {
                     cancelToken.checkCanceled();
-                    return Collections.emptyList();
+                    return Either.forLeft(Collections.emptyList());
                 }
                 RoyaleProject project = folderData.project;
 
@@ -947,7 +948,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 if (currentOffset == -1)
                 {
                     cancelToken.checkCanceled();
-                    return Collections.emptyList();
+                    return Either.forLeft(Collections.emptyList());
                 }
                 MXMLData mxmlData = getMXMLDataForPath(path, folderData);
 
@@ -959,13 +960,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     {
                         List<? extends Location> result = actionScriptImplementation(embeddedNode, project);
                         cancelToken.checkCanceled();
-                        return result;
+                        return Either.forLeft(result);
                     }
                 }
                 IASNode offsetNode = getOffsetNode(path, currentOffset, folderData);
                 List<? extends Location> result = actionScriptImplementation(offsetNode, project);
                 cancelToken.checkCanceled();
-                return result;
+                return Either.forLeft(result);
             }
             finally
             {
