@@ -204,7 +204,8 @@
         "scopeName": "text.mxml",
         "path": "./syntaxes/MXML.tmLanguage",
         "embeddedLanguages": {
-          "meta.cdata.mxml": "actionscript"
+          "meta.cdata.mxml.script": "actionscript",
+          "entity.name.tag.xml.mxml.style": "css"
         }
       }
     ],

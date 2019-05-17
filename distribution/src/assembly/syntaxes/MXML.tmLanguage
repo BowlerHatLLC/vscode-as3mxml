@@ -37,7 +37,7 @@
 					<key>end</key>
 					<string>(?&lt;=\]\]&gt;)</string>
 					<key>name</key>
-					<string>meta.cdata.mxml</string>
+					<string>meta.cdata.mxml.script</string>
 					<key>patterns</key>
 					<array>
 						<dict>
@@ -54,7 +54,7 @@
 			<key>end</key>
 			<string>&lt;\/(?:fx|mx):Style&gt;</string>
 			<key>name</key>
-			<string>entity.name.tag.xml</string>
+			<string>entity.name.tag.xml.mxml.style</string>
 			<key>patterns</key>
 			<array>
 				<dict>
