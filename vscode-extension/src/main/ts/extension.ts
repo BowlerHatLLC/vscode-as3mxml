@@ -16,7 +16,7 @@ limitations under the License.
 import findJava from "./utils/findJava";
 import validateJava from "./utils/validateJava";
 import validateEditorSDK from "./utils/validateEditorSDK";
-import ActionScriptSourcePathDataProvider from "./utils/ActionScriptSourcePathDataProvider";
+import ActionScriptSourcePathDataProvider, { ActionScriptSourcePath } from "./utils/ActionScriptSourcePathDataProvider";
 import ActionScriptTaskProvider from "./utils/ActionScriptTaskProvider";
 import SWFDebugConfigurationProvider from "./utils/SWFDebugConfigurationProvider";
 import SWCTextDocumentContentProvider from "./utils/SWCTextDocumentContentProvider";
@@ -53,6 +53,7 @@ let editorSDKHome: string;
 let javaExecutablePath: string;
 let frameworkSDKHome: string;
 let sdkStatusBarItem: vscode.StatusBarItem;
+let sourcePathView: vscode.TreeView<ActionScriptSourcePath> = null;
 let sourcePathDataProvider: ActionScriptSourcePathDataProvider = null;
 let actionScriptTaskProvider: ActionScriptTaskProvider = null;
 let debugConfigurationProvider: SWFDebugConfigurationProvider = null;
@@ -246,8 +247,8 @@ export function activate(context: vscode.ExtensionContext)
 
 		let rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
 		sourcePathDataProvider = new ActionScriptSourcePathDataProvider(rootPath);
-		let sourcePathDisposable = vscode.window.registerTreeDataProvider("actionScriptSourcePaths", sourcePathDataProvider);
-		context.subscriptions.push(sourcePathDisposable);
+		sourcePathView = vscode.window.createTreeView("actionScriptSourcePaths", {treeDataProvider: sourcePathDataProvider});
+		context.subscriptions.push(sourcePathView);
 
 		actionScriptTaskProvider = new ActionScriptTaskProvider(context, javaExecutablePath);
 		let taskProviderDisposable = vscode.tasks.registerTaskProvider("actionscript", actionScriptTaskProvider);
