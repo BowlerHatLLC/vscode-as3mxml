@@ -30,7 +30,7 @@ Provides ActionScript & MXML language support for Visual Studio Code — includi
 
 ## Minimum Requirements
 
-* Visual Studio Code 1.30
+* Visual Studio Code 1.34
 * Java 1.8 Runtime
 
 ## asconfig.json
