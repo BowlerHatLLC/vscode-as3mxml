@@ -22,23 +22,30 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.royale.compiler.constants.IASLanguageConstants;
+import org.apache.royale.compiler.constants.IMetaAttributeConstants;
 import org.apache.royale.compiler.definitions.IClassDefinition;
+import org.apache.royale.compiler.definitions.IConstantDefinition;
 import org.apache.royale.compiler.definitions.IDefinition;
 import org.apache.royale.compiler.definitions.IFunctionDefinition;
 import org.apache.royale.compiler.definitions.IGetterDefinition;
 import org.apache.royale.compiler.definitions.ISetterDefinition;
 import org.apache.royale.compiler.definitions.ITypeDefinition;
+import org.apache.royale.compiler.definitions.metadata.IMetaTag;
 import org.apache.royale.compiler.projects.ICompilerProject;
 import org.apache.royale.compiler.tree.ASTNodeID;
 import org.apache.royale.compiler.tree.as.IASNode;
 import org.apache.royale.compiler.tree.as.IBinaryOperatorNode;
 import org.apache.royale.compiler.tree.as.IBlockNode;
 import org.apache.royale.compiler.tree.as.IClassNode;
+import org.apache.royale.compiler.tree.as.IExpressionNode;
 import org.apache.royale.compiler.tree.as.IFunctionCallNode;
 import org.apache.royale.compiler.tree.as.IFunctionNode;
 import org.apache.royale.compiler.tree.as.IIdentifierNode;
 import org.apache.royale.compiler.tree.as.IImportNode;
 import org.apache.royale.compiler.tree.as.IInterfaceNode;
+import org.apache.royale.compiler.tree.as.ILiteralNode;
+import org.apache.royale.compiler.tree.as.IMemberAccessExpressionNode;
 import org.apache.royale.compiler.tree.as.IPackageNode;
 import org.apache.royale.compiler.tree.as.IScopedNode;
 import org.apache.royale.compiler.tree.as.ITransparentContainerNode;
@@ -192,6 +199,118 @@ public class ASTUtils
             }
 		}
 		return result;
+    }
+
+    public static boolean isFunctionCallWithName(IFunctionCallNode functionCallNode, String functionName)
+    {
+        IExpressionNode nameNode = functionCallNode.getNameNode();
+        if (nameNode instanceof IIdentifierNode)
+        {
+            IIdentifierNode nameIdentifierNode = (IIdentifierNode) nameNode;
+            if(nameIdentifierNode.getName().equals(functionName))
+            {
+                return true;
+            }
+        }
+        else if (nameNode instanceof IMemberAccessExpressionNode)
+        {
+            IMemberAccessExpressionNode nameMemberAccess = (IMemberAccessExpressionNode) nameNode;
+            IExpressionNode rightOperandNode = nameMemberAccess.getRightOperandNode();
+            if(rightOperandNode instanceof IIdentifierNode)
+            {
+                IIdentifierNode rightIdentifierNode = (IIdentifierNode) rightOperandNode;
+                if(rightIdentifierNode.getName().equals(functionName))
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public static String findEventClassNameFromAddEventListenerFunctionCall(IFunctionCallNode functionCallNode, ICompilerProject project)
+    {
+        String eventType = null;
+        IExpressionNode[] args = functionCallNode.getArgumentNodes();
+        if(args.length < 1)
+        {
+            return null;
+        }
+        IExpressionNode eventTypeExpression = args[0];
+        if(eventTypeExpression.getNodeID().equals(ASTNodeID.LiteralStringID))
+        {
+            ILiteralNode literalNode = (ILiteralNode) eventTypeExpression;
+            eventType = literalNode.getValue();
+        }
+        else
+        {
+            IDefinition resolvedDefinition = eventTypeExpression.resolve(project);
+            if (resolvedDefinition instanceof IConstantDefinition)
+            {
+                IConstantDefinition constantDefinition = (IConstantDefinition) resolvedDefinition;
+                Object initialValue = constantDefinition.resolveInitialValue(project);
+                if(initialValue instanceof String)
+                {
+                    eventType = (String) initialValue;
+                }
+            }
+        }
+
+        if(eventType == null)
+        {
+            return null;
+        }
+
+        ITypeDefinition typeDefinition = null;
+        IExpressionNode nameNode = functionCallNode.getNameNode();
+        if(nameNode instanceof IIdentifierNode)
+        {
+            typeDefinition = ScopeUtils.getContainingTypeDefinitionForScope(functionCallNode.getContainingScope());
+        }
+        else if(nameNode instanceof IMemberAccessExpressionNode)
+        {
+            IMemberAccessExpressionNode memberAccessExpressionNode = (IMemberAccessExpressionNode) nameNode;
+            IExpressionNode leftExpressionNode = memberAccessExpressionNode.getLeftOperandNode();
+            typeDefinition = leftExpressionNode.resolveType(project);
+        }
+        if(typeDefinition == null)
+        {
+            return null;
+        }
+
+        String eventClassName = findEventClassFromTypeDefinitionMetadata(eventType, typeDefinition, project);
+        if(eventClassName == null)
+        {
+            //lets use Object as the fallback if [Event] metadata is missing
+            //we can't assume a specific class, like flash.events.Event
+            //because Apache Royale or Starling objects might dispatch other
+            //types of events.
+            return IASLanguageConstants.Object;
+        }
+        return eventClassName;
+    }
+
+    public static String findEventClassFromTypeDefinitionMetadata(String eventName, ITypeDefinition typeDefinition, ICompilerProject project)
+    {
+        for(ITypeDefinition currentDefinition : typeDefinition.typeIteratable(project, false))
+        {
+            IMetaTag[] eventMetaTags = currentDefinition.getMetaTagsByName(IMetaAttributeConstants.ATTRIBUTE_EVENT);
+            for(IMetaTag metaTag : eventMetaTags)
+            {
+                String metaEventName = metaTag.getAttributeValue(IMetaAttributeConstants.NAME_EVENT_NAME);
+                if(!eventName.equals(metaEventName))
+                {
+                    continue;
+                }
+                String eventClassName = metaTag.getAttributeValue(IMetaAttributeConstants.NAME_EVENT_TYPE);
+                if(eventClassName != null)
+                {
+                    return eventClassName;
+                }
+                break;
+            }
+        }
+        return null;
     }
     
     public static void findIdentifiersForDefinition(IASNode node, IDefinition definition, ICompilerProject project, List<IIdentifierNode> result)

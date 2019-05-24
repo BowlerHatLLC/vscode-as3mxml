@@ -458,55 +458,11 @@ public class CodeActionsUtils
 	public static TextEdit createTextEditForGenerateFieldVariable(
 		IIdentifierNode identifierNode, String text)
     {
-        String indent = "";
-        int line = identifierNode.getLine();
-        IMXMLScriptNode scriptNode = (IMXMLScriptNode) identifierNode.getAncestorOfType(IMXMLScriptNode.class);
-        if (scriptNode == null)
-        {
-            IMXMLFileNode fileNode = (IMXMLFileNode) identifierNode.getAncestorOfType(IMXMLFileNode.class);
-            if (fileNode != null)
-            {
-                scriptNode = (IMXMLScriptNode) ASTUtils.findDescendantOfType(fileNode, IMXMLScriptNode.class);
-            }
-        }
-        if (scriptNode != null)
-        {
-            IASNode[] nodes = scriptNode.getASNodes();
-            int nodeCount = nodes.length;
-            if (nodeCount == 0)
-            {
-                return null;
-            }
-            IASNode finalNode = nodes[nodeCount - 1];
-            line = finalNode.getEndLine() + 1;
-
-            indent = ASTUtils.getIndentBeforeNode(finalNode, text);
-        }
-        else
-        {
-            IClassNode classNode = (IClassNode) identifierNode.getAncestorOfType(IClassNode.class);
-            if (classNode == null)
-            {
-                return null;
-            }
-            IScopedNode scopedNode = classNode.getScopedNode();
-            if (scopedNode == null)
-            {
-                return null;
-            }
-            line = scopedNode.getEndLine();
-
-            IFunctionNode functionNode = (IFunctionNode) identifierNode.getAncestorOfType(IFunctionNode.class);
-            if (functionNode == null)
-            {
-                return null;
-            }
-            indent = ASTUtils.getIndentBeforeNode(functionNode, text);
-        }
+        LineAndIndent lineAndIndent = findLineAndIndent(identifierNode, text);
 
         StringBuilder builder = new StringBuilder();
         builder.append(NEW_LINE);
-        builder.append(indent);
+        builder.append(lineAndIndent.indent);
         builder.append(IASKeywordConstants.PUBLIC);
         builder.append(" ");
         builder.append(IASKeywordConstants.VAR);
@@ -519,7 +475,7 @@ public class CodeActionsUtils
 
         TextEdit textEdit = new TextEdit();
         textEdit.setNewText(builder.toString());
-        Position editPosition = new Position(line, 0);
+        Position editPosition = new Position(lineAndIndent.line, 0);
         textEdit.setRange(new Range(editPosition, editPosition));
         return textEdit;
     }
@@ -754,55 +710,11 @@ public class CodeActionsUtils
         TextEdit textEdit = new TextEdit();
         edits.add(textEdit);
 
-        String indent = "";
-        int line = functionCallNode.getLine();
-        IMXMLScriptNode scriptNode = (IMXMLScriptNode) functionCallNode.getAncestorOfType(IMXMLScriptNode.class);
-        if (scriptNode == null)
-        {
-            IMXMLFileNode fileNode = (IMXMLFileNode) functionCallNode.getAncestorOfType(IMXMLFileNode.class);
-            if (fileNode != null)
-            {
-                scriptNode = (IMXMLScriptNode) ASTUtils.findDescendantOfType(fileNode, IMXMLScriptNode.class);
-            }
-        }
-        if (scriptNode != null)
-        {
-            IASNode[] nodes = scriptNode.getASNodes();
-            int nodeCount = nodes.length;
-            if (nodeCount == 0)
-            {
-                return null;
-            }
-            IASNode finalNode = nodes[nodeCount - 1];
-            line = finalNode.getEndLine() + 1;
-
-            indent = ASTUtils.getIndentBeforeNode(finalNode, text);
-        }
-        else
-        {
-            IClassNode classNode = (IClassNode) functionCallNode.getAncestorOfType(IClassNode.class);
-            if (classNode == null)
-            {
-                return null;
-            }
-            IScopedNode scopedNode = classNode.getScopedNode();
-            if (scopedNode == null)
-            {
-                return null;
-            }
-            line = scopedNode.getEndLine();
-
-            IFunctionNode functionNode = (IFunctionNode) functionCallNode.getAncestorOfType(IFunctionNode.class);
-            if (functionNode == null)
-            {
-                return null;
-            }
-            indent = ASTUtils.getIndentBeforeNode(functionNode, text);
-        }
+        LineAndIndent lineAndIndent = findLineAndIndent(functionCallNode, text);
 
         StringBuilder builder = new StringBuilder();
         builder.append(NEW_LINE);
-        builder.append(indent);
+        builder.append(lineAndIndent.indent);
         builder.append(IASKeywordConstants.PRIVATE);
         builder.append(" ");
         builder.append(IASKeywordConstants.FUNCTION);
@@ -853,15 +765,15 @@ public class CodeActionsUtils
         builder.append(":");
         builder.append(IASKeywordConstants.VOID);
         builder.append(NEW_LINE);
-        builder.append(indent);
+        builder.append(lineAndIndent.indent);
         builder.append("{");
         builder.append(NEW_LINE);
-        builder.append(indent);
+        builder.append(lineAndIndent.indent);
         builder.append("}");
         builder.append(NEW_LINE);
 
         textEdit.setNewText(builder.toString());
-        Position editPosition = new Position(line, 0);
+        Position editPosition = new Position(lineAndIndent.line, 0);
         textEdit.setRange(new Range(editPosition, editPosition));
 
         return edits;
@@ -1103,5 +1015,143 @@ public class CodeActionsUtils
         textEdit.setRange(new Range(editPosition, editPosition));
 
         return textEdit;
+    }
+
+	public static WorkspaceEdit createWorkspaceEditForGenerateEventListener(
+        IASNode context, String functionName, String eventClassName,
+        String uri, String text, ICompilerProject project)
+    {
+        List<TextEdit> textEdits = createTextEditsForGenerateEventListener(context, functionName, eventClassName, text, project);
+        if (textEdits == null || textEdits.size() == 0)
+        {
+            return null;
+        }
+
+        WorkspaceEdit workspaceEdit = new WorkspaceEdit();
+        HashMap<String,List<TextEdit>> changes = new HashMap<>();
+        changes.put(uri, textEdits);
+        workspaceEdit.setChanges(changes);
+        return workspaceEdit;
+    }
+
+	private static List<TextEdit> createTextEditsForGenerateEventListener(
+        IASNode context, String functionName, String eventClassName,
+        String text, ICompilerProject project)
+    {
+        List<TextEdit> edits = new ArrayList<>();
+        TextEdit textEdit = new TextEdit();
+        edits.add(textEdit);
+
+        LineAndIndent lineAndIndent = findLineAndIndent(context, text);
+
+        StringBuilder builder = new StringBuilder();
+        builder.append(NEW_LINE);
+        builder.append(lineAndIndent.indent);
+        builder.append(IASKeywordConstants.PRIVATE);
+        builder.append(" ");
+        builder.append(IASKeywordConstants.FUNCTION);
+        builder.append(" ");
+        builder.append(functionName);
+        builder.append("(");
+        
+        builder.append("event");
+        builder.append(":");
+
+        ImportRange importRange = ImportRange.fromOffsetNode(context);
+        int index = eventClassName.lastIndexOf(".");
+        if (index == -1)
+        {
+            builder.append(eventClassName);
+        }
+        else
+        {
+            builder.append(eventClassName.substring(index + 1));
+        }
+        if (ASTUtils.needsImport(context, eventClassName))
+        {
+            TextEdit importEdit = CodeActionsUtils.createTextEditForAddImport(eventClassName, text, importRange);
+            if (importEdit != null)
+            {
+                edits.add(importEdit);
+            }
+        }
+        builder.append(")");
+        builder.append(":");
+        builder.append(IASKeywordConstants.VOID);
+        builder.append(NEW_LINE);
+        builder.append(lineAndIndent.indent);
+        builder.append("{");
+        builder.append(NEW_LINE);
+        builder.append(lineAndIndent.indent);
+        builder.append("}");
+        builder.append(NEW_LINE);
+
+        textEdit.setNewText(builder.toString());
+        Position editPosition = new Position(lineAndIndent.line, 0);
+        textEdit.setRange(new Range(editPosition, editPosition));
+
+        return edits;
+    }
+
+    private static class LineAndIndent
+    {
+        public LineAndIndent(int line, String indent)
+        {
+            this.line = line;
+            this.indent = indent;
+        }
+
+        public int line;
+        public String indent;
+    }
+
+    private static LineAndIndent findLineAndIndent(IASNode context, String fileText)
+    {
+        String indent = "";
+        int line = context.getLine();
+        IMXMLScriptNode scriptNode = (IMXMLScriptNode) context.getAncestorOfType(IMXMLScriptNode.class);
+        if (scriptNode == null)
+        {
+            IMXMLFileNode fileNode = (IMXMLFileNode) context.getAncestorOfType(IMXMLFileNode.class);
+            if (fileNode != null)
+            {
+                scriptNode = (IMXMLScriptNode) ASTUtils.findDescendantOfType(fileNode, IMXMLScriptNode.class);
+            }
+        }
+        if (scriptNode != null)
+        {
+            IASNode[] nodes = scriptNode.getASNodes();
+            int nodeCount = nodes.length;
+            if (nodeCount == 0)
+            {
+                return null;
+            }
+            IASNode finalNode = nodes[nodeCount - 1];
+            line = finalNode.getEndLine() + 1;
+
+            indent = ASTUtils.getIndentBeforeNode(finalNode, fileText);
+        }
+        else
+        {
+            IClassNode classNode = (IClassNode) context.getAncestorOfType(IClassNode.class);
+            if (classNode == null)
+            {
+                return null;
+            }
+            IScopedNode scopedNode = classNode.getScopedNode();
+            if (scopedNode == null)
+            {
+                return null;
+            }
+            line = scopedNode.getEndLine();
+
+            IFunctionNode functionNode = (IFunctionNode) context.getAncestorOfType(IFunctionNode.class);
+            if (functionNode == null)
+            {
+                return null;
+            }
+            indent = ASTUtils.getIndentBeforeNode(functionNode, fileText);
+        }
+        return new LineAndIndent(line, indent);
     }
 }

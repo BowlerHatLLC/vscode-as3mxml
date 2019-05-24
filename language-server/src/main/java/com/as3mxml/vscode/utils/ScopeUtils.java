@@ -21,9 +21,12 @@ import java.util.Set;
 import org.apache.royale.compiler.definitions.IClassDefinition;
 import org.apache.royale.compiler.definitions.IInterfaceDefinition;
 import org.apache.royale.compiler.definitions.INamespaceDefinition;
+import org.apache.royale.compiler.definitions.ITypeDefinition;
 import org.apache.royale.compiler.internal.scopes.ASScope;
 import org.apache.royale.compiler.internal.scopes.TypeScope;
 import org.apache.royale.compiler.projects.ICompilerProject;
+import org.apache.royale.compiler.scopes.IASScope;
+import org.apache.royale.compiler.tree.as.IScopedNode;
 
 public class ScopeUtils
 {
@@ -59,6 +62,22 @@ public class ScopeUtils
             }
         }
         return namespaceSet;
+    }
+
+    public static ITypeDefinition getContainingTypeDefinitionForScope(IScopedNode scopedNode)
+    {
+        IScopedNode currentNode = scopedNode;
+        while (currentNode != null)
+        {
+            IASScope currentScope = currentNode.getScope();
+            if (currentScope instanceof TypeScope)
+            {
+                TypeScope typeScope = (TypeScope) currentScope;
+                return (ITypeDefinition) typeScope.getContainingDefinition();
+            }
+            currentNode = currentNode.getContainingScope();
+        }
+        return null;
     }
 
     private static void collectInterfaceNamespaces(IInterfaceDefinition interfaceDefinition, Set<INamespaceDefinition> namespaceSet, ICompilerProject project)

@@ -1353,6 +1353,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     createCodeActionsForImport(path, diagnostic, folderData, codeActions);
                     createCodeActionForMissingLocalVariable(path, diagnostic, folderData, codeActions);
                     createCodeActionForMissingField(path, diagnostic, folderData, codeActions);
+                    createCodeActionForMissingEventListener(path, diagnostic, folderData, codeActions);
                     break;
                 }
                 case "1046": //UnknownTypeProblem
@@ -1386,6 +1387,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 case "1119": //AccessUndefinedMemberProblem
                 {
                     createCodeActionForMissingField(path, diagnostic, folderData, codeActions);
+                    createCodeActionForMissingEventListener(path, diagnostic, folderData, codeActions);
                     break;
                 }
                 case "1178": //InaccessiblePropertyReferenceProblem
@@ -1665,6 +1667,106 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         CodeAction codeAction = new CodeAction();
         codeAction.setDiagnostics(Collections.singletonList(diagnostic));
         codeAction.setTitle("Generate Method");
+        codeAction.setEdit(edit);
+        codeAction.setKind(CodeActionKind.QuickFix);
+        codeActions.add(Either.forRight(codeAction));
+    }
+
+    private void createCodeActionForMissingEventListener(Path path, Diagnostic diagnostic, WorkspaceFolderData folderData, List<Either<Command, CodeAction>> codeActions)
+    {
+        RoyaleProject project = folderData.project;
+        Position position = diagnostic.getRange().getStart();
+        int currentOffset = getOffsetFromPathAndPosition(path, position);
+        IASNode offsetNode = getOffsetNode(path, currentOffset, folderData);
+        if (offsetNode == null)
+        {
+            return;
+        }
+        if (offsetNode instanceof IMXMLInstanceNode)
+        {
+            MXMLData mxmlData = getMXMLDataForPath(path, folderData);
+            if (mxmlData != null)
+            {
+                IMXMLTagData offsetTag = getOffsetMXMLTag(mxmlData, currentOffset);
+                //workaround for bug in Royale compiler
+                Position newPosition = new Position(position.getLine(), position.getCharacter() + 1);
+                int newOffset = getOffsetFromPathAndPosition(path, newPosition);
+                offsetNode = getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, newOffset, folderData);
+            }
+        }
+        if (!(offsetNode instanceof IIdentifierNode))
+        {
+            return;
+        }
+        IASNode parentNode = offsetNode.getParent();
+        if (parentNode instanceof IMemberAccessExpressionNode)
+        {
+            IMemberAccessExpressionNode memberAccessExpressionNode = (IMemberAccessExpressionNode) parentNode;
+            IExpressionNode leftOperandNode = memberAccessExpressionNode.getLeftOperandNode();
+            IExpressionNode rightOperandNode = memberAccessExpressionNode.getRightOperandNode();
+            if (rightOperandNode instanceof IIdentifierNode
+                    && leftOperandNode instanceof ILanguageIdentifierNode)
+            {
+                ILanguageIdentifierNode leftIdentifierNode = (ILanguageIdentifierNode) leftOperandNode;
+                if (leftIdentifierNode.getKind() == ILanguageIdentifierNode.LanguageIdentifierKind.THIS)
+                {
+                    parentNode = parentNode.getParent();
+                }
+            }
+        }
+        if (!(parentNode instanceof IContainerNode))
+        {
+            return;
+        }
+
+        IASNode gpNode = parentNode.getParent();
+        if (!(gpNode instanceof IFunctionCallNode))
+        {
+            return;
+        }
+
+        IFunctionCallNode functionCallNode = (IFunctionCallNode) gpNode;
+        if(!ASTUtils.isFunctionCallWithName(functionCallNode, "addEventListener"))
+        {
+            return;
+        }
+
+        IExpressionNode[] args = functionCallNode.getArgumentNodes();
+        if (args.length < 2 || args[1] != offsetNode)
+        {
+            return;
+        }
+
+        String eventTypeClassName = ASTUtils.findEventClassNameFromAddEventListenerFunctionCall(functionCallNode, project);
+        if (eventTypeClassName == null)
+        {
+            return;
+        }
+
+        IIdentifierNode functionIdentifier = (IIdentifierNode) offsetNode;
+        String functionName = functionIdentifier.getName();
+        if (functionName.length() == 0)
+        {
+            return;
+        }
+
+        String fileText = getFileTextForPath(path);
+        if(fileText == null)
+        {
+            return;
+        }
+
+        WorkspaceEdit edit = CodeActionsUtils.createWorkspaceEditForGenerateEventListener(
+            functionIdentifier, functionName, eventTypeClassName,
+            path.toUri().toString(), fileText, project);
+        if(edit == null)
+        {
+            return;
+        }
+
+        CodeAction codeAction = new CodeAction();
+        codeAction.setDiagnostics(Collections.singletonList(diagnostic));
+        codeAction.setTitle("Generate Event Listener");
         codeAction.setEdit(edit);
         codeAction.setKind(CodeActionKind.QuickFix);
         codeActions.add(Either.forRight(codeAction));
