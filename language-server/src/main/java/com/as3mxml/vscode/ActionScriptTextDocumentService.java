@@ -1732,7 +1732,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
 
         IExpressionNode[] args = functionCallNode.getArgumentNodes();
-        if (args.length < 2 || args[1] != offsetNode)
+        if (args.length < 2 || (args[1] != offsetNode && args[1] != offsetNode.getParent()))
         {
             return;
         }
