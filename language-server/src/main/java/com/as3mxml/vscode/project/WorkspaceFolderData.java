@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.as3mxml.vscode.utils.ProblemTracker;
+import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
 
 import org.apache.royale.compiler.internal.projects.RoyaleProject;
 import org.apache.royale.compiler.internal.projects.RoyaleProjectConfigurator;
@@ -47,6 +48,7 @@ public class WorkspaceFolderData
 	public List<IInvisibleCompilationUnit> invisibleUnits = new ArrayList<>();
     public ProblemTracker codeProblemTracker = new ProblemTracker();
 	public ProblemTracker configProblemTracker = new ProblemTracker();
+    public Map<String,IncludeFileData> includedFiles = new HashMap<>();
 	
 	public void cleanup()
 	{
