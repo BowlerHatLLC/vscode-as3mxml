@@ -187,6 +187,7 @@ suite("ActionScript & MXML extension: Application workspace", () =>
 
 suite("document symbol provider: Application workspace", () =>
 {
+	teardown(revertAndCloseActiveEditor);
 	test("vscode.executeDocumentSymbolProvider not empty", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Main.as"));
@@ -449,6 +450,7 @@ suite("document symbol provider: Application workspace", () =>
 
 suite("workspace symbol provider: Application workspace", () =>
 {
+	teardown(revertAndCloseActiveEditor);
 	test("vscode.executeWorkspaceSymbolProvider includes class", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Main.as"));
@@ -834,6 +836,7 @@ suite("workspace symbol provider: Application workspace", () =>
 
 suite("signature help provider: Application workspace", () =>
 {
+	teardown(revertAndCloseActiveEditor);
 	test("vscode.executeSignatureHelpProvider provides help for local function", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "SignatureHelp.as"));
@@ -1086,6 +1089,7 @@ suite("signature help provider: Application workspace", () =>
 
 suite("definition provider: Application workspace", () =>
 {
+	teardown(revertAndCloseActiveEditor);
 	test("vscode.executeDefinitionProvider finds definition of local variable", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
@@ -2034,6 +2038,7 @@ suite("definition provider: Application workspace", () =>
 
 suite("type definition provider: Application workspace", () =>
 {
+	teardown(revertAndCloseActiveEditor);
 	test("vscode.executeTypeDefinitionProvider finds type definition of local variable", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "TypeDefinitions.as"));
@@ -2126,6 +2131,7 @@ suite("type definition provider: Application workspace", () =>
 
 suite("hover provider: Application workspace", () =>
 {
+	teardown(revertAndCloseActiveEditor);
 	test("vscode.executeHoverProvider displays hover for local variable", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
@@ -3714,6 +3720,7 @@ suite("hover provider: Application workspace", () =>
 
 suite("completion item provider: Application workspace", () =>
 {
+	teardown(revertAndCloseActiveEditor);
 	test("vscode.executeCompletionItemProvider includes local variable", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
@@ -6199,6 +6206,7 @@ suite("completion item provider: Application workspace", () =>
 
 suite("MXML completion item provider: Application workspace", () =>
 {
+	teardown(revertAndCloseActiveEditor);
 	test("vscode.executeCompletionItemProvider includes property as attribute", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "MXMLCompletion.mxml"));
@@ -7737,36 +7745,9 @@ suite("mxml namespaces: Application workspace", () =>
 	});
 });
 
-suite("code action provider: Application workspace", () =>
+suite("code action provider: imports : Application workspace", () =>
 {
-	test("vscode.executeCodeActionProvider finds organize imports", () =>
-	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "OrganizeImports.as"));
-		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
-		{
-			let start = new vscode.Position(2, 45);
-			let end = new vscode.Position(2, 45);
-			let range = new vscode.Range(start, end);
-			return vscode.commands.executeCommand("vscode.executeCodeActionProvider", uri, range)
-				.then((codeActions: vscode.CodeAction[]) =>
-					{
-						let codeAction = codeActions.find((codeAction: vscode.CodeAction) =>
-						{
-							return codeAction.kind.value === vscode.CodeActionKind.SourceOrganizeImports.value;
-						});
-						assert.notEqual(codeAction, null, "Code action not found");
-						assert.strictEqual(codeAction.title, "Organize Imports", "Code action provided incorrect title");
-						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.SourceOrganizeImports.value, "Code action provided incorrect kind");
-						let command = codeAction.command;
-						assert.notEqual(command, null, "Code action command not found");
-						assert.strictEqual(command.command, COMMAND_ORGANIZE_IMPORTS_IN_URI, "Code action provided incorrect command");
-						assert.strictEqual(command.title, "Organize Imports", "Code action provided incorrect command title");
-					}, (err) =>
-					{
-						assert(false, "Failed to execute code actions provider: " + uri);
-					});
-		});
-	});
+	teardown(revertAndCloseActiveEditor);
 	test("vscode.executeCodeActionProvider finds import for base class", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "CodeActionsImports.as"));
@@ -8525,6 +8506,11 @@ suite("code action provider: Application workspace", () =>
 					});
 		});
 	});
+});
+
+suite("code action provider: generate local variable : Application workspace", () =>
+{
+	teardown(revertAndCloseActiveEditor);
 	test("vscode.executeCodeActionProvider can generate local variable without this member access", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "GenerateVariable.as"));
@@ -8599,6 +8585,57 @@ suite("code action provider: Application workspace", () =>
 					});
 		});
 	});
+	test("vscode.executeCodeActionProvider must not generate local variable with this member access", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "GenerateVariable.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			let start = new vscode.Position(7, 10);
+			let end = new vscode.Position(7, 10);
+			let range = new vscode.Range(start, end);
+			return vscode.commands.executeCommand("vscode.executeCodeActionProvider", uri, range)
+				.then((codeActions: vscode.CodeAction[]) =>
+					{
+						let codeAction = codeActions.find((codeAction) =>
+						{
+							return codeAction.title == "Generate Local Variable";
+						});
+						assert.strictEqual(codeAction, undefined, "Code action incorrectly found");
+
+					}, (err) =>
+					{
+						assert(false, "Failed to execute code actions provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeCodeActionProvider must not generate local variable with this member access for file-internal class", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "GenerateVariable.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			let start = new vscode.Position(17, 10);
+			let end = new vscode.Position(17, 10);
+			let range = new vscode.Range(start, end);
+			return vscode.commands.executeCommand("vscode.executeCodeActionProvider", uri, range)
+				.then((codeActions: vscode.CodeAction[]) =>
+					{
+						let codeAction = codeActions.find((codeAction) =>
+						{
+							return codeAction.title == "Generate Local Variable";
+						});
+						assert.strictEqual(codeAction, undefined, "Code action incorrectly found");
+
+					}, (err) =>
+					{
+						assert(false, "Failed to execute code actions provider: " + uri);
+					});
+		});
+	});
+});
+
+suite("code action provider: generate field variable : Application workspace", () =>
+{
+	teardown(revertAndCloseActiveEditor);
 	test("vscode.executeCodeActionProvider can generate field variable without this member access", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "GenerateVariable.as"));
@@ -8666,52 +8703,6 @@ suite("code action provider: Application workspace", () =>
 						assert.strictEqual(range.start.character, 0, "Code action workspace edit provided incorrect start character");
 						assert.strictEqual(range.end.line, 19, "Code action workspace edit provided incorrect end line");
 						assert.strictEqual(range.end.character, 0, "Code action workspace edit provided incorrect end character");
-
-					}, (err) =>
-					{
-						assert(false, "Failed to execute code actions provider: " + uri);
-					});
-		});
-	});
-	test("vscode.executeCodeActionProvider must not generate local variable with this member access", () =>
-	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "GenerateVariable.as"));
-		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
-		{
-			let start = new vscode.Position(7, 10);
-			let end = new vscode.Position(7, 10);
-			let range = new vscode.Range(start, end);
-			return vscode.commands.executeCommand("vscode.executeCodeActionProvider", uri, range)
-				.then((codeActions: vscode.CodeAction[]) =>
-					{
-						let codeAction = codeActions.find((codeAction) =>
-						{
-							return codeAction.title == "Generate Local Variable";
-						});
-						assert.strictEqual(codeAction, undefined, "Code action incorrectly found");
-
-					}, (err) =>
-					{
-						assert(false, "Failed to execute code actions provider: " + uri);
-					});
-		});
-	});
-	test("vscode.executeCodeActionProvider must not generate local variable with this member access for file-internal class", () =>
-	{
-		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "GenerateVariable.as"));
-		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
-		{
-			let start = new vscode.Position(17, 10);
-			let end = new vscode.Position(17, 10);
-			let range = new vscode.Range(start, end);
-			return vscode.commands.executeCommand("vscode.executeCodeActionProvider", uri, range)
-				.then((codeActions: vscode.CodeAction[]) =>
-					{
-						let codeAction = codeActions.find((codeAction) =>
-						{
-							return codeAction.title == "Generate Local Variable";
-						});
-						assert.strictEqual(codeAction, undefined, "Code action incorrectly found");
 
 					}, (err) =>
 					{
@@ -8793,6 +8784,11 @@ suite("code action provider: Application workspace", () =>
 					});
 		});
 	});
+});
+
+suite("code action provider: generate method : Application workspace", () =>
+{
+	teardown(revertAndCloseActiveEditor);
 	test("vscode.executeCodeActionProvider can generate member method without parameters without this member access", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "GenerateMethod.as"));
@@ -9061,6 +9057,11 @@ suite("code action provider: Application workspace", () =>
 					});
 		});
 	});
+});
+
+suite("code action provider: generate getter and setter : Application workspace", () =>
+{
+	teardown(revertAndCloseActiveEditor);
 	test("vscode.executeCodeActionProvider can generate getter without assignment", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "GenerateGetterAndSetter.as"));
@@ -10231,6 +10232,11 @@ suite("code action provider: Application workspace", () =>
 					});
 		});
 	});
+});
+
+suite("code action provider: generate catch : Application workspace", () =>
+{
+	teardown(revertAndCloseActiveEditor);
 	test("vscode.executeCodeActionProvider can generate catch", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "CodeActionsTry.as"));
@@ -10270,9 +10276,456 @@ suite("code action provider: Application workspace", () =>
 	});
 });
 
+suite("code action provider: generate event listener : Application workspace", () =>
+{
+	teardown(revertAndCloseActiveEditor);
+	test("vscode.executeCodeActionProvider finds generate event listener with string literal and no metadata", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "GenerateEventListener.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			let start = new vscode.Position(13, 61);
+			let end = new vscode.Position(13, 61);
+			let range = new vscode.Range(start, end);
+			return vscode.commands.executeCommand("vscode.executeCodeActionProvider", uri, range)
+				.then((codeActions: vscode.CodeAction[]) =>
+					{
+						let codeAction = codeActions.find((codeAction) =>
+						{
+							return codeAction.title == "Generate Event Listener";
+						});
+						assert.notEqual(codeAction, undefined, "Code action not found");
+						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
+						let workspaceEdit = codeAction.edit;
+						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
+						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
+						let textEdits = workspaceEdit.get(uri);
+						assert.strictEqual(textEdits.length, 1);
+						let textEdit = textEdits[0];
+						assert.strictEqual(textEdit.newText, "\n\t\tprivate function literalWithoutMetadataListener(event:Object):void\n\t\t{\n\t\t}\n", "Code action workspace edit provided incorrect new text");
+						let range = textEdit.range;
+						assert.strictEqual(range.start.line, 25, "Code action workspace edit provided incorrect start line");
+						assert.strictEqual(range.start.character, 0, "Code action workspace edit provided incorrect start character");
+						assert.strictEqual(range.end.line, 25, "Code action workspace edit provided incorrect end line");
+						assert.strictEqual(range.end.character, 0, "Code action workspace edit provided incorrect end character");
+
+					}, (err) =>
+					{
+						assert(false, "Failed to execute code actions provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeCodeActionProvider finds generate event listener with string literal and metadata with missing class", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "GenerateEventListener.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			let start = new vscode.Position(14, 81);
+			let end = new vscode.Position(14, 81);
+			let range = new vscode.Range(start, end);
+			return vscode.commands.executeCommand("vscode.executeCodeActionProvider", uri, range)
+				.then((codeActions: vscode.CodeAction[]) =>
+					{
+						let codeAction = codeActions.find((codeAction) =>
+						{
+							return codeAction.title == "Generate Event Listener";
+						});
+						assert.notEqual(codeAction, undefined, "Code action not found");
+						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
+						let workspaceEdit = codeAction.edit;
+						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
+						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
+						let textEdits = workspaceEdit.get(uri);
+						assert.strictEqual(textEdits.length, 1);
+						let textEdit = textEdits[0];
+						assert.strictEqual(textEdit.newText, "\n\t\tprivate function literalWithMetadataButMissingMetadataClassListener(event:Object):void\n\t\t{\n\t\t}\n", "Code action workspace edit provided incorrect new text");
+						let range = textEdit.range;
+						assert.strictEqual(range.start.line, 25, "Code action workspace edit provided incorrect start line");
+						assert.strictEqual(range.start.character, 0, "Code action workspace edit provided incorrect start character");
+						assert.strictEqual(range.end.line, 25, "Code action workspace edit provided incorrect end line");
+						assert.strictEqual(range.end.character, 0, "Code action workspace edit provided incorrect end character");
+
+					}, (err) =>
+					{
+						assert(false, "Failed to execute code actions provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeCodeActionProvider finds generate event listener with string literal and full metadata", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "GenerateEventListener.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			let start = new vscode.Position(15, 66);
+			let end = new vscode.Position(15, 66);
+			let range = new vscode.Range(start, end);
+			return vscode.commands.executeCommand("vscode.executeCodeActionProvider", uri, range)
+				.then((codeActions: vscode.CodeAction[]) =>
+					{
+						let codeAction = codeActions.find((codeAction) =>
+						{
+							return codeAction.title == "Generate Event Listener";
+						});
+						assert.notEqual(codeAction, undefined, "Code action not found");
+						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
+						let workspaceEdit = codeAction.edit;
+						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
+						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
+						let textEdits = workspaceEdit.get(uri);
+						assert.strictEqual(textEdits.length, 1);
+						let textEdit = textEdits[0];
+						assert.strictEqual(textEdit.newText, "\n\t\tprivate function literalWithMetadataAndClassListener(event:GenerateEventEvent):void\n\t\t{\n\t\t}\n", "Code action workspace edit provided incorrect new text");
+						let range = textEdit.range;
+						assert.strictEqual(range.start.line, 25, "Code action workspace edit provided incorrect start line");
+						assert.strictEqual(range.start.character, 0, "Code action workspace edit provided incorrect start character");
+						assert.strictEqual(range.end.line, 25, "Code action workspace edit provided incorrect end line");
+						assert.strictEqual(range.end.character, 0, "Code action workspace edit provided incorrect end character");
+
+					}, (err) =>
+					{
+						assert(false, "Failed to execute code actions provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeCodeActionProvider finds generate event listener with constant and no metadata", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "GenerateEventListener.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			let start = new vscode.Position(16, 81);
+			let end = new vscode.Position(16, 81);
+			let range = new vscode.Range(start, end);
+			return vscode.commands.executeCommand("vscode.executeCodeActionProvider", uri, range)
+				.then((codeActions: vscode.CodeAction[]) =>
+					{
+						let codeAction = codeActions.find((codeAction) =>
+						{
+							return codeAction.title == "Generate Event Listener";
+						});
+						assert.notEqual(codeAction, undefined, "Code action not found");
+						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
+						let workspaceEdit = codeAction.edit;
+						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
+						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
+						let textEdits = workspaceEdit.get(uri);
+						assert.strictEqual(textEdits.length, 1);
+						let textEdit = textEdits[0];
+						assert.strictEqual(textEdit.newText, "\n\t\tprivate function constantWithoutMetadataListener(event:Object):void\n\t\t{\n\t\t}\n", "Code action workspace edit provided incorrect new text");
+						let range = textEdit.range;
+						assert.strictEqual(range.start.line, 25, "Code action workspace edit provided incorrect start line");
+						assert.strictEqual(range.start.character, 0, "Code action workspace edit provided incorrect start character");
+						assert.strictEqual(range.end.line, 25, "Code action workspace edit provided incorrect end line");
+						assert.strictEqual(range.end.character, 0, "Code action workspace edit provided incorrect end character");
+
+					}, (err) =>
+					{
+						assert(false, "Failed to execute code actions provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeCodeActionProvider finds generate event listener with constant and metadata with missing class", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "GenerateEventListener.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			let start = new vscode.Position(17, 105);
+			let end = new vscode.Position(17, 105);
+			let range = new vscode.Range(start, end);
+			return vscode.commands.executeCommand("vscode.executeCodeActionProvider", uri, range)
+				.then((codeActions: vscode.CodeAction[]) =>
+					{
+						let codeAction = codeActions.find((codeAction) =>
+						{
+							return codeAction.title == "Generate Event Listener";
+						});
+						assert.notEqual(codeAction, undefined, "Code action not found");
+						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
+						let workspaceEdit = codeAction.edit;
+						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
+						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
+						let textEdits = workspaceEdit.get(uri);
+						assert.strictEqual(textEdits.length, 1);
+						let textEdit = textEdits[0];
+						assert.strictEqual(textEdit.newText, "\n\t\tprivate function constantWithMetadataButMissingMetadataClassListener(event:Object):void\n\t\t{\n\t\t}\n", "Code action workspace edit provided incorrect new text");
+						let range = textEdit.range;
+						assert.strictEqual(range.start.line, 25, "Code action workspace edit provided incorrect start line");
+						assert.strictEqual(range.start.character, 0, "Code action workspace edit provided incorrect start character");
+						assert.strictEqual(range.end.line, 25, "Code action workspace edit provided incorrect end line");
+						assert.strictEqual(range.end.character, 0, "Code action workspace edit provided incorrect end character");
+
+					}, (err) =>
+					{
+						assert(false, "Failed to execute code actions provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeCodeActionProvider finds generate event listener with constant and full metadata", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "GenerateEventListener.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			let start = new vscode.Position(18, 88);
+			let end = new vscode.Position(18, 88);
+			let range = new vscode.Range(start, end);
+			return vscode.commands.executeCommand("vscode.executeCodeActionProvider", uri, range)
+				.then((codeActions: vscode.CodeAction[]) =>
+					{
+						let codeAction = codeActions.find((codeAction) =>
+						{
+							return codeAction.title == "Generate Event Listener";
+						});
+						assert.notEqual(codeAction, undefined, "Code action not found");
+						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
+						let workspaceEdit = codeAction.edit;
+						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
+						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
+						let textEdits = workspaceEdit.get(uri);
+						assert.strictEqual(textEdits.length, 1);
+						let textEdit = textEdits[0];
+						assert.strictEqual(textEdit.newText, "\n\t\tprivate function constantWithMetadataAndClassListener(event:GenerateEventEvent):void\n\t\t{\n\t\t}\n", "Code action workspace edit provided incorrect new text");
+						let range = textEdit.range;
+						assert.strictEqual(range.start.line, 25, "Code action workspace edit provided incorrect start line");
+						assert.strictEqual(range.start.character, 0, "Code action workspace edit provided incorrect start character");
+						assert.strictEqual(range.end.line, 25, "Code action workspace edit provided incorrect end line");
+						assert.strictEqual(range.end.character, 0, "Code action workspace edit provided incorrect end character");
+
+					}, (err) =>
+					{
+						assert(false, "Failed to execute code actions provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeCodeActionProvider finds generate event listener with explicit this member access on addEventListener", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "GenerateEventListener.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			let start = new vscode.Position(19, 82);
+			let end = new vscode.Position(19, 82);
+			let range = new vscode.Range(start, end);
+			return vscode.commands.executeCommand("vscode.executeCodeActionProvider", uri, range)
+				.then((codeActions: vscode.CodeAction[]) =>
+					{
+						let codeAction = codeActions.find((codeAction) =>
+						{
+							return codeAction.title == "Generate Event Listener";
+						});
+						assert.notEqual(codeAction, undefined, "Code action not found");
+						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
+						let workspaceEdit = codeAction.edit;
+						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
+						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
+						let textEdits = workspaceEdit.get(uri);
+						assert.strictEqual(textEdits.length, 1);
+						let textEdit = textEdits[0];
+						assert.strictEqual(textEdit.newText, "\n\t\tprivate function explicitThisListener(event:GenerateEventEvent):void\n\t\t{\n\t\t}\n", "Code action workspace edit provided incorrect new text");
+						let range = textEdit.range;
+						assert.strictEqual(range.start.line, 25, "Code action workspace edit provided incorrect start line");
+						assert.strictEqual(range.start.character, 0, "Code action workspace edit provided incorrect start character");
+						assert.strictEqual(range.end.line, 25, "Code action workspace edit provided incorrect end line");
+						assert.strictEqual(range.end.character, 0, "Code action workspace edit provided incorrect end character");
+
+					}, (err) =>
+					{
+						assert(false, "Failed to execute code actions provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeCodeActionProvider finds generate event listener with implement this member access on addEventListener", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "GenerateEventListener.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			let start = new vscode.Position(20, 77);
+			let end = new vscode.Position(20, 77);
+			let range = new vscode.Range(start, end);
+			return vscode.commands.executeCommand("vscode.executeCodeActionProvider", uri, range)
+				.then((codeActions: vscode.CodeAction[]) =>
+					{
+						let codeAction = codeActions.find((codeAction) =>
+						{
+							return codeAction.title == "Generate Event Listener";
+						});
+						assert.notEqual(codeAction, undefined, "Code action not found");
+						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
+						let workspaceEdit = codeAction.edit;
+						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
+						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
+						let textEdits = workspaceEdit.get(uri);
+						assert.strictEqual(textEdits.length, 1);
+						let textEdit = textEdits[0];
+						assert.strictEqual(textEdit.newText, "\n\t\tprivate function implicitThisListener(event:GenerateEventEvent):void\n\t\t{\n\t\t}\n", "Code action workspace edit provided incorrect new text");
+						let range = textEdit.range;
+						assert.strictEqual(range.start.line, 25, "Code action workspace edit provided incorrect start line");
+						assert.strictEqual(range.start.character, 0, "Code action workspace edit provided incorrect start character");
+						assert.strictEqual(range.end.line, 25, "Code action workspace edit provided incorrect end line");
+						assert.strictEqual(range.end.character, 0, "Code action workspace edit provided incorrect end character");
+
+					}, (err) =>
+					{
+						assert(false, "Failed to execute code actions provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeCodeActionProvider finds generate event listener with member access before listener name", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "GenerateEventListener.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			let start = new vscode.Position(21, 93);
+			let end = new vscode.Position(21, 93);
+			let range = new vscode.Range(start, end);
+			return vscode.commands.executeCommand("vscode.executeCodeActionProvider", uri, range)
+				.then((codeActions: vscode.CodeAction[]) =>
+					{
+						let codeAction = codeActions.find((codeAction) =>
+						{
+							return codeAction.title == "Generate Event Listener";
+						});
+						assert.notEqual(codeAction, undefined, "Code action not found");
+						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
+						let workspaceEdit = codeAction.edit;
+						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
+						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
+						let textEdits = workspaceEdit.get(uri);
+						assert.strictEqual(textEdits.length, 1);
+						let textEdit = textEdits[0];
+						assert.strictEqual(textEdit.newText, "\n\t\tprivate function listenerWithMemberAccess(event:GenerateEventEvent):void\n\t\t{\n\t\t}\n", "Code action workspace edit provided incorrect new text");
+						let range = textEdit.range;
+						assert.strictEqual(range.start.line, 25, "Code action workspace edit provided incorrect start line");
+						assert.strictEqual(range.start.character, 0, "Code action workspace edit provided incorrect start character");
+						assert.strictEqual(range.end.line, 25, "Code action workspace edit provided incorrect end line");
+						assert.strictEqual(range.end.character, 0, "Code action workspace edit provided incorrect end character");
+
+					}, (err) =>
+					{
+						assert(false, "Failed to execute code actions provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeCodeActionProvider omits generate event listener with non-this member access before listener name", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "GenerateEventListener.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			let start = new vscode.Position(22, 99);
+			let end = new vscode.Position(22, 99);
+			let range = new vscode.Range(start, end);
+			return vscode.commands.executeCommand("vscode.executeCodeActionProvider", uri, range)
+				.then((codeActions: vscode.CodeAction[]) =>
+					{
+						let codeAction = codeActions.find((codeAction) =>
+						{
+							return codeAction.title == "Generate Event Listener";
+						});
+						assert.strictEqual(codeAction, undefined, "Code action must not be found");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute code actions provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeCodeActionProvider omits generate event listener with function that already exists", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "GenerateEventListener.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			let start = new vscode.Position(23, 88);
+			let end = new vscode.Position(23, 88);
+			let range = new vscode.Range(start, end);
+			return vscode.commands.executeCommand("vscode.executeCodeActionProvider", uri, range)
+				.then((codeActions: vscode.CodeAction[]) =>
+					{
+						let codeAction = codeActions.find((codeAction) =>
+						{
+							return codeAction.title == "Generate Event Listener";
+						});
+						assert.strictEqual(codeAction, undefined, "Code action must not be found");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute code actions provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeCodeActionProvider finds generate event listener in file-internal class", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "GenerateEventListener.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			let start = new vscode.Position(36, 87);
+			let end = new vscode.Position(36, 87);
+			let range = new vscode.Range(start, end);
+			return vscode.commands.executeCommand("vscode.executeCodeActionProvider", uri, range)
+				.then((codeActions: vscode.CodeAction[]) =>
+					{
+						let codeAction = codeActions.find((codeAction) =>
+						{
+							return codeAction.title == "Generate Event Listener";
+						});
+						assert.notEqual(codeAction, undefined, "Code action not found");
+						assert.strictEqual(codeAction.command, undefined, "Code action provided incorrect command");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.QuickFix.value, "Code action provided incorrect kind");
+						let workspaceEdit = codeAction.edit;
+						assert.notEqual(workspaceEdit, undefined, "Code action missing workspace edit");
+						assert.ok(workspaceEdit.has(uri), "Code action workspace edit missing URI: " + uri);
+						let textEdits = workspaceEdit.get(uri);
+						assert.strictEqual(textEdits.length, 1);
+						let textEdit = textEdits[0];
+						assert.strictEqual(textEdit.newText, "\n\tprivate function constantWithMetadataAndClassListener(event:GenerateEventEvent):void\n\t{\n\t}\n", "Code action workspace edit provided incorrect new text");
+						let range = textEdit.range;
+						assert.strictEqual(range.start.line, 38, "Code action workspace edit provided incorrect start line");
+						assert.strictEqual(range.start.character, 0, "Code action workspace edit provided incorrect start character");
+						assert.strictEqual(range.end.line, 38, "Code action workspace edit provided incorrect end line");
+						assert.strictEqual(range.end.character, 0, "Code action workspace edit provided incorrect end character");
+
+					}, (err) =>
+					{
+						assert(false, "Failed to execute code actions provider: " + uri);
+					});
+		});
+	});
+});
+
 suite("organize imports: Application workspace", () =>
 {
 	teardown(revertAndCloseActiveEditor);
+	test("vscode.executeCodeActionProvider finds organize imports", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "OrganizeImports.as"));
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			let start = new vscode.Position(2, 45);
+			let end = new vscode.Position(2, 45);
+			let range = new vscode.Range(start, end);
+			return vscode.commands.executeCommand("vscode.executeCodeActionProvider", uri, range)
+				.then((codeActions: vscode.CodeAction[]) =>
+					{
+						let codeAction = codeActions.find((codeAction: vscode.CodeAction) =>
+						{
+							return codeAction.kind.value === vscode.CodeActionKind.SourceOrganizeImports.value;
+						});
+						assert.notEqual(codeAction, null, "Code action not found");
+						assert.strictEqual(codeAction.title, "Organize Imports", "Code action provided incorrect title");
+						assert.strictEqual(codeAction.kind.value, vscode.CodeActionKind.SourceOrganizeImports.value, "Code action provided incorrect kind");
+						let command = codeAction.command;
+						assert.notEqual(command, null, "Code action command not found");
+						assert.strictEqual(command.command, COMMAND_ORGANIZE_IMPORTS_IN_URI, "Code action provided incorrect command");
+						assert.strictEqual(command.title, "Organize Imports", "Code action provided incorrect command title");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute code actions provider: " + uri);
+					});
+		});
+	});
 	test("as3mxml.organizeImportsInUri organizes imports in ActionScript: removes unused imports, adds missing imports, and reorganizes remaining imports in alphabetical order", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "OrganizeImports.as"));
@@ -10366,6 +10819,7 @@ suite("organize imports: Application workspace", () =>
 
 suite("includes: application workspace", () =>
 {
+	teardown(revertAndCloseActiveEditor);
 	test("vscode.executeDefinitionProvider finds definition of method before include statement", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "includes", "Includes.as"));
@@ -10541,6 +10995,7 @@ suite("includes: application workspace", () =>
 
 suite("document symbol provider: Library workspace", () =>
 {
+	teardown(revertAndCloseActiveEditor);
 	test("vscode.executeDocumentSymbolProvider not empty", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[1].uri.fsPath, "src", "com", "example", "LibraryDocumentSymbols.as"));
@@ -10583,6 +11038,7 @@ suite("document symbol provider: Library workspace", () =>
 
 suite("workspace symbol provider: multiple workspaces", () =>
 {
+	teardown(revertAndCloseActiveEditor);
 	test("vscode.executeWorkspaceSymbolProvider includes classes from all workspaces", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Main.as"));
