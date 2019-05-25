@@ -18,6 +18,7 @@ package com.as3mxml.vscode.utils;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.royale.compiler.common.ISourceLocation;
 import org.apache.royale.compiler.common.PrefixMap;
 import org.apache.royale.compiler.common.XMLName;
 import org.apache.royale.compiler.definitions.IClassDefinition;
@@ -366,5 +367,38 @@ public class MXMLDataUtils
             currentUnitData = currentUnitData.getParentUnitData();
         }
         return null;
+    }
+
+    public static void findMXMLUnits(IMXMLTagData tagData, IDefinition definition, RoyaleProject project, List<ISourceLocation> result)
+    {
+        IDefinition tagDefinition = project.resolveXMLNameToDefinition(tagData.getXMLName(), tagData.getMXMLDialect());
+        if (tagDefinition != null && definition == tagDefinition)
+        {
+            result.add(tagData);
+        }
+        if (tagDefinition instanceof IClassDefinition)
+        {
+            IClassDefinition classDefinition = (IClassDefinition) tagDefinition;
+            IMXMLTagAttributeData[] attributes = tagData.getAttributeDatas();
+            for (IMXMLTagAttributeData attributeData : attributes)
+            {
+                IDefinition attributeDefinition = project.resolveSpecifier(classDefinition, attributeData.getShortName());
+                if (attributeDefinition != null && definition == attributeDefinition)
+                {
+                    result.add(attributeData);
+                }
+            }
+        }
+        IMXMLTagData childTag = tagData.getFirstChild(true);
+        while (childTag != null)
+        {
+            if (childTag.isCloseTag())
+            {
+                //only open tags matter
+                continue;
+            }
+            findMXMLUnits(childTag, definition, project, result);
+            childTag = childTag.getNextSibling(true);
+        }
     }
 }

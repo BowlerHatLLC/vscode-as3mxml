@@ -1,0 +1,319 @@
+/*
+Copyright 2016-2019 Bowler Hat LLC
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+	http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+package com.as3mxml.vscode.providers;
+
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
+import com.as3mxml.vscode.project.WorkspaceFolderData;
+import com.as3mxml.vscode.utils.ASTUtils;
+import com.as3mxml.vscode.utils.LanguageServerCompilerUtils;
+import com.as3mxml.vscode.utils.MXMLDataUtils;
+import com.as3mxml.vscode.utils.WorkspaceFolderManager;
+import com.google.common.io.Files;
+
+import org.apache.royale.compiler.common.ISourceLocation;
+import org.apache.royale.compiler.definitions.IClassDefinition;
+import org.apache.royale.compiler.definitions.IDefinition;
+import org.apache.royale.compiler.definitions.IFunctionDefinition;
+import org.apache.royale.compiler.definitions.IPackageDefinition;
+import org.apache.royale.compiler.internal.mxml.MXMLData;
+import org.apache.royale.compiler.internal.projects.RoyaleProject;
+import org.apache.royale.compiler.internal.units.ResourceBundleCompilationUnit;
+import org.apache.royale.compiler.internal.units.SWCCompilationUnit;
+import org.apache.royale.compiler.mxml.IMXMLDataManager;
+import org.apache.royale.compiler.mxml.IMXMLTagData;
+import org.apache.royale.compiler.scopes.IASScope;
+import org.apache.royale.compiler.tree.as.IASNode;
+import org.apache.royale.compiler.tree.as.IDefinitionNode;
+import org.apache.royale.compiler.tree.as.IExpressionNode;
+import org.apache.royale.compiler.tree.as.IIdentifierNode;
+import org.apache.royale.compiler.units.ICompilationUnit;
+import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.RenameFile;
+import org.eclipse.lsp4j.RenameParams;
+import org.eclipse.lsp4j.ResourceOperation;
+import org.eclipse.lsp4j.TextDocumentEdit;
+import org.eclipse.lsp4j.TextDocumentIdentifier;
+import org.eclipse.lsp4j.TextEdit;
+import org.eclipse.lsp4j.VersionedTextDocumentIdentifier;
+import org.eclipse.lsp4j.WorkspaceEdit;
+import org.eclipse.lsp4j.jsonrpc.CancelChecker;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
+
+public class RenameProvider
+{
+    private static final String MXML_EXTENSION = ".mxml";
+    private static final String SWC_EXTENSION = ".swc";
+
+	private WorkspaceFolderManager workspaceFolderManager;
+
+	public RenameProvider(WorkspaceFolderManager workspaceFolderManager)
+	{
+		this.workspaceFolderManager = workspaceFolderManager;
+	}
+
+	public WorkspaceEdit rename(RenameParams params, CancelChecker cancelToken)
+	{
+		cancelToken.checkCanceled();
+		TextDocumentIdentifier textDocument = params.getTextDocument();
+		Position position = params.getPosition();
+		Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocument.getUri());
+		if (path == null)
+		{
+			cancelToken.checkCanceled();
+			return new WorkspaceEdit(new HashMap<>());
+		}
+		WorkspaceFolderData folderData = workspaceFolderManager.getWorkspaceFolderDataForSourceFile(path);
+		if(folderData == null || folderData.project == null)
+		{
+			cancelToken.checkCanceled();
+			return new WorkspaceEdit(new HashMap<>());
+		}
+		RoyaleProject project = folderData.project;
+
+		int currentOffset = workspaceFolderManager.getOffsetFromPathAndPosition(path, position, folderData);
+		if (currentOffset == -1)
+		{
+			cancelToken.checkCanceled();
+			return new WorkspaceEdit(new HashMap<>());
+		}
+
+		MXMLData mxmlData = workspaceFolderManager.getMXMLDataForPath(path, folderData);
+		IMXMLTagData offsetTag = MXMLDataUtils.getOffsetMXMLTag(mxmlData, currentOffset);
+		if (offsetTag != null)
+		{
+			IASNode embeddedNode = workspaceFolderManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, currentOffset, folderData);
+			if (embeddedNode != null)
+			{
+				WorkspaceEdit result = actionScriptRename(embeddedNode, params.getNewName(), project);
+				cancelToken.checkCanceled();
+				return result;
+			}
+			//if we're inside an <fx:Script> tag, we want ActionScript rename,
+			//so that's why we call isMXMLTagValidForCompletion()
+			if (MXMLDataUtils.isMXMLCodeIntelligenceAvailableForTag(offsetTag))
+			{
+				WorkspaceEdit result = mxmlRename(offsetTag, currentOffset, params.getNewName(), project);
+				cancelToken.checkCanceled();
+				return result;
+			}
+		}
+		IASNode offsetNode = workspaceFolderManager.getOffsetNode(path, currentOffset, folderData);
+		WorkspaceEdit result = actionScriptRename(offsetNode, params.getNewName(), project);
+		cancelToken.checkCanceled();
+		return result;
+	}
+
+    private WorkspaceEdit actionScriptRename(IASNode offsetNode, String newName, RoyaleProject project)
+    {
+        if (offsetNode == null)
+        {
+            //we couldn't find a node at the specified location
+            return new WorkspaceEdit(new HashMap<>());
+        }
+
+        IDefinition definition = null;
+
+        if (offsetNode instanceof IDefinitionNode)
+        {
+            IDefinitionNode definitionNode = (IDefinitionNode) offsetNode;
+            IExpressionNode expressionNode = definitionNode.getNameExpressionNode();
+            definition = expressionNode.resolve(project);
+        }
+        else if (offsetNode instanceof IIdentifierNode)
+        {
+            IIdentifierNode identifierNode = (IIdentifierNode) offsetNode;
+            definition = identifierNode.resolve(project);
+        }
+
+        if (definition == null)
+        {
+			//Cannot rename this element
+			return null;
+        }
+
+        WorkspaceEdit result = renameDefinition(definition, newName, project);
+        return result;
+    }
+
+    private WorkspaceEdit mxmlRename(IMXMLTagData offsetTag, int currentOffset, String newName, RoyaleProject project)
+    {
+        IDefinition definition = MXMLDataUtils.getDefinitionForMXMLNameAtOffset(offsetTag, currentOffset, project);
+        if (definition != null)
+        {
+            if (MXMLDataUtils.isInsideTagPrefix(offsetTag, currentOffset))
+            {
+                //ignore the tag's prefix
+                return new WorkspaceEdit(new HashMap<>());
+            }
+            WorkspaceEdit result = renameDefinition(definition, newName, project);
+            return result;
+        }
+
+		//Cannot rename this element
+		return null;
+    }
+
+    private WorkspaceEdit renameDefinition(IDefinition definition, String newName, RoyaleProject project)
+    {
+        if (definition == null)
+        {
+			//Cannot rename this element
+			return null;
+        }
+        WorkspaceEdit result = new WorkspaceEdit();
+        List<Either<TextDocumentEdit, ResourceOperation>> documentChanges = new ArrayList<>();
+        result.setDocumentChanges(documentChanges);
+        if (definition.getContainingFilePath().endsWith(SWC_EXTENSION))
+        {
+			//Cannot rename this element
+			return null;
+        }
+        if (definition instanceof IPackageDefinition)
+        {
+			//Cannot rename this element
+			return null;
+        }
+        Path originalDefinitionFilePath = null;
+        Path newDefinitionFilePath = null;
+        for (ICompilationUnit compilationUnit : project.getCompilationUnits())
+        {
+            if (compilationUnit == null
+                    || compilationUnit instanceof SWCCompilationUnit
+                    || compilationUnit instanceof ResourceBundleCompilationUnit)
+            {
+                continue;
+            }
+            ArrayList<TextEdit> textEdits = new ArrayList<>();
+            if (compilationUnit.getAbsoluteFilename().endsWith(MXML_EXTENSION))
+            {
+                IMXMLDataManager mxmlDataManager = workspaceFolderManager.compilerWorkspace.getMXMLDataManager();
+                MXMLData mxmlData = (MXMLData) mxmlDataManager.get(workspaceFolderManager.fileSpecGetter.getFileSpecification(compilationUnit.getAbsoluteFilename()));
+                IMXMLTagData rootTag = mxmlData.getRootTag();
+                if (rootTag != null)
+                {
+                    ArrayList<ISourceLocation> units = new ArrayList<>();
+                    MXMLDataUtils.findMXMLUnits(mxmlData.getRootTag(), definition, project, units);
+                    for (ISourceLocation otherUnit : units)
+                    {
+                        TextEdit textEdit = new TextEdit();
+                        textEdit.setNewText(newName);
+
+                        Range range = LanguageServerCompilerUtils.getRangeFromSourceLocation(otherUnit);
+                        if (range == null)
+                        {
+                            continue;
+                        }
+                        textEdit.setRange(range);
+
+                        textEdits.add(textEdit);
+                    }
+                }
+            }
+            IASNode ast = ASTUtils.getCompilationUnitAST(compilationUnit);
+            if (ast != null)
+            {
+                ArrayList<IIdentifierNode> identifiers = new ArrayList<>();
+                ASTUtils.findIdentifiersForDefinition(ast, definition, project, identifiers);
+                for (IIdentifierNode identifierNode : identifiers)
+                {
+                    TextEdit textEdit = new TextEdit();
+                    textEdit.setNewText(newName);
+
+                    Range range = LanguageServerCompilerUtils.getRangeFromSourceLocation(identifierNode);
+                    if (range == null)
+                    {
+                        continue;
+                    }
+                    textEdit.setRange(range);
+
+                    textEdits.add(textEdit);
+                }
+            }
+            if (textEdits.size() == 0)
+            {
+                continue;
+            }
+
+            Path textDocumentPath = Paths.get(compilationUnit.getAbsoluteFilename());
+            if (definitionIsMainDefinitionInCompilationUnit(compilationUnit, definition))
+            {
+                originalDefinitionFilePath = textDocumentPath;
+                String newBaseName = newName + "." + Files.getFileExtension(originalDefinitionFilePath.toFile().getName());
+                newDefinitionFilePath = originalDefinitionFilePath.getParent().resolve(newBaseName);
+            }
+            
+            VersionedTextDocumentIdentifier versionedIdentifier =
+                    new VersionedTextDocumentIdentifier(textDocumentPath.toUri().toString(), null);
+            TextDocumentEdit textDocumentEdit = new TextDocumentEdit(versionedIdentifier, textEdits);
+            documentChanges.add(Either.forLeft(textDocumentEdit));
+        }
+        if (newDefinitionFilePath != null)
+        {
+            RenameFile renameFile = new RenameFile();
+            renameFile.setOldUri(originalDefinitionFilePath.toUri().toString());
+            renameFile.setNewUri(newDefinitionFilePath.toUri().toString());
+            documentChanges.add(Either.forRight(renameFile));
+        }
+        return result;
+    }
+
+    private boolean definitionIsMainDefinitionInCompilationUnit(ICompilationUnit unit, IDefinition definition)
+    {
+        IASScope[] scopes;
+        try
+        {
+            scopes = unit.getFileScopeRequest().get().getScopes();
+        }
+        catch (Exception e)
+        {
+            return false;
+        }
+        for (IASScope scope : scopes)
+        {
+            for (IDefinition localDefinition : scope.getAllLocalDefinitions())
+            {
+                if (localDefinition instanceof IPackageDefinition)
+                {
+                    IPackageDefinition packageDefinition = (IPackageDefinition) localDefinition;
+                    IASScope packageScope = packageDefinition.getContainedScope();
+                    boolean mightBeConstructor = definition instanceof IFunctionDefinition;
+                    for (IDefinition localDefinition2 : packageScope.getAllLocalDefinitions())
+                    {
+                        if(localDefinition2 == definition)
+                        {
+                            return true;
+                        }
+                        if(mightBeConstructor && localDefinition2 instanceof IClassDefinition)
+                        {
+                            IClassDefinition classDefinition = (IClassDefinition) localDefinition2;
+                            if (classDefinition.getConstructor() == definition)
+                            {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+}

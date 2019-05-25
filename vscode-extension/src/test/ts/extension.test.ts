@@ -52,6 +52,24 @@ function revertAndCloseActiveEditor()
 	});
 }
 
+function revertAndCloseAllEditors()
+{
+	return vscode.commands.executeCommand("workbench.action.revertAndCloseActiveEditor").then(() =>
+	{
+		if(vscode.window.visibleTextEditors.length > 0)
+		{
+			return revertAndCloseAllEditors();
+		}
+		return new Promise((resolve, reject) =>
+		{
+			setTimeout(() =>
+			{
+				resolve();
+			}, 100);
+		});
+	});
+}
+
 function createRange(startLine: number, startCharacter:number,
 	endLine?: number, endCharacter? : number): vscode.Range
 {
@@ -187,7 +205,7 @@ suite("ActionScript & MXML extension: Application workspace", () =>
 
 suite("document symbol provider: Application workspace", () =>
 {
-	teardown(revertAndCloseActiveEditor);
+	suiteTeardown(revertAndCloseAllEditors);
 	test("vscode.executeDocumentSymbolProvider not empty", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Main.as"));
@@ -450,7 +468,7 @@ suite("document symbol provider: Application workspace", () =>
 
 suite("workspace symbol provider: Application workspace", () =>
 {
-	teardown(revertAndCloseActiveEditor);
+	suiteTeardown(revertAndCloseAllEditors);
 	test("vscode.executeWorkspaceSymbolProvider includes class", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Main.as"));
@@ -836,7 +854,7 @@ suite("workspace symbol provider: Application workspace", () =>
 
 suite("signature help provider: Application workspace", () =>
 {
-	teardown(revertAndCloseActiveEditor);
+	suiteTeardown(revertAndCloseAllEditors);
 	test("vscode.executeSignatureHelpProvider provides help for local function", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "SignatureHelp.as"));
@@ -1089,7 +1107,7 @@ suite("signature help provider: Application workspace", () =>
 
 suite("definition provider: Application workspace", () =>
 {
-	teardown(revertAndCloseActiveEditor);
+	suiteTeardown(revertAndCloseAllEditors);
 	test("vscode.executeDefinitionProvider finds definition of local variable", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
@@ -2038,7 +2056,7 @@ suite("definition provider: Application workspace", () =>
 
 suite("type definition provider: Application workspace", () =>
 {
-	teardown(revertAndCloseActiveEditor);
+	suiteTeardown(revertAndCloseAllEditors);
 	test("vscode.executeTypeDefinitionProvider finds type definition of local variable", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "TypeDefinitions.as"));
@@ -2131,7 +2149,7 @@ suite("type definition provider: Application workspace", () =>
 
 suite("hover provider: Application workspace", () =>
 {
-	teardown(revertAndCloseActiveEditor);
+	suiteTeardown(revertAndCloseAllEditors);
 	test("vscode.executeHoverProvider displays hover for local variable", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Definitions.as"));
@@ -3720,7 +3738,7 @@ suite("hover provider: Application workspace", () =>
 
 suite("completion item provider: Application workspace", () =>
 {
-	teardown(revertAndCloseActiveEditor);
+	suiteTeardown(revertAndCloseAllEditors);
 	test("vscode.executeCompletionItemProvider includes local variable", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Completion.as"));
@@ -6206,7 +6224,7 @@ suite("completion item provider: Application workspace", () =>
 
 suite("MXML completion item provider: Application workspace", () =>
 {
-	teardown(revertAndCloseActiveEditor);
+	suiteTeardown(revertAndCloseAllEditors);
 	test("vscode.executeCompletionItemProvider includes property as attribute", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "MXMLCompletion.mxml"));
@@ -7747,7 +7765,7 @@ suite("mxml namespaces: Application workspace", () =>
 
 suite("code action provider: imports : Application workspace", () =>
 {
-	teardown(revertAndCloseActiveEditor);
+	suiteTeardown(revertAndCloseAllEditors);
 	test("vscode.executeCodeActionProvider finds import for base class", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "CodeActionsImports.as"));
@@ -8510,7 +8528,7 @@ suite("code action provider: imports : Application workspace", () =>
 
 suite("code action provider: generate local variable : Application workspace", () =>
 {
-	teardown(revertAndCloseActiveEditor);
+	suiteTeardown(revertAndCloseAllEditors);
 	test("vscode.executeCodeActionProvider can generate local variable without this member access", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "GenerateVariable.as"));
@@ -8635,7 +8653,7 @@ suite("code action provider: generate local variable : Application workspace", (
 
 suite("code action provider: generate field variable : Application workspace", () =>
 {
-	teardown(revertAndCloseActiveEditor);
+	suiteTeardown(revertAndCloseAllEditors);
 	test("vscode.executeCodeActionProvider can generate field variable without this member access", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "GenerateVariable.as"));
@@ -8788,7 +8806,7 @@ suite("code action provider: generate field variable : Application workspace", (
 
 suite("code action provider: generate method : Application workspace", () =>
 {
-	teardown(revertAndCloseActiveEditor);
+	suiteTeardown(revertAndCloseAllEditors);
 	test("vscode.executeCodeActionProvider can generate member method without parameters without this member access", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "GenerateMethod.as"));
@@ -9061,7 +9079,7 @@ suite("code action provider: generate method : Application workspace", () =>
 
 suite("code action provider: generate getter and setter : Application workspace", () =>
 {
-	teardown(revertAndCloseActiveEditor);
+	suiteTeardown(revertAndCloseAllEditors);
 	test("vscode.executeCodeActionProvider can generate getter without assignment", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "GenerateGetterAndSetter.as"));
@@ -10236,7 +10254,7 @@ suite("code action provider: generate getter and setter : Application workspace"
 
 suite("code action provider: generate catch : Application workspace", () =>
 {
-	teardown(revertAndCloseActiveEditor);
+	suiteTeardown(revertAndCloseAllEditors);
 	test("vscode.executeCodeActionProvider can generate catch", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "CodeActionsTry.as"));
@@ -10278,7 +10296,7 @@ suite("code action provider: generate catch : Application workspace", () =>
 
 suite("code action provider: generate event listener : Application workspace", () =>
 {
-	teardown(revertAndCloseActiveEditor);
+	suiteTeardown(revertAndCloseAllEditors);
 	test("vscode.executeCodeActionProvider finds generate event listener with string literal and no metadata", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "GenerateEventListener.as"));
@@ -10819,7 +10837,7 @@ suite("organize imports: Application workspace", () =>
 
 suite("includes: application workspace", () =>
 {
-	teardown(revertAndCloseActiveEditor);
+	suiteTeardown(revertAndCloseAllEditors);
 	test("vscode.executeDefinitionProvider finds definition of method before include statement", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "includes", "Includes.as"));
@@ -10995,7 +11013,7 @@ suite("includes: application workspace", () =>
 
 suite("document symbol provider: Library workspace", () =>
 {
-	teardown(revertAndCloseActiveEditor);
+	suiteTeardown(revertAndCloseAllEditors);
 	test("vscode.executeDocumentSymbolProvider not empty", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[1].uri.fsPath, "src", "com", "example", "LibraryDocumentSymbols.as"));
@@ -11038,7 +11056,7 @@ suite("document symbol provider: Library workspace", () =>
 
 suite("workspace symbol provider: multiple workspaces", () =>
 {
-	teardown(revertAndCloseActiveEditor);
+	suiteTeardown(revertAndCloseAllEditors);
 	test("vscode.executeWorkspaceSymbolProvider includes classes from all workspaces", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "Main.as"));

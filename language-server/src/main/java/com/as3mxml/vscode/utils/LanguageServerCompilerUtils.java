@@ -38,6 +38,7 @@ import org.apache.royale.compiler.definitions.IPackageDefinition;
 import org.apache.royale.compiler.definitions.IStyleDefinition;
 import org.apache.royale.compiler.definitions.ITypeDefinition;
 import org.apache.royale.compiler.definitions.IVariableDefinition;
+import org.apache.royale.compiler.internal.projects.RoyaleProject;
 import org.apache.royale.compiler.problems.CompilerProblemSeverity;
 import org.apache.royale.compiler.problems.ICompilerProblem;
 import org.eclipse.lsp4j.CompletionItemKind;
@@ -54,6 +55,11 @@ import org.eclipse.lsp4j.SymbolKind;
  */
 public class LanguageServerCompilerUtils
 {
+    private static final String MXML_EXTENSION = ".mxml";
+    private static final String AS_EXTENSION = ".as";
+    private static final String SDK_LIBRARY_PATH_SIGNATURE_UNIX = "/frameworks/libs/";
+    private static final String SDK_LIBRARY_PATH_SIGNATURE_WINDOWS = "\\frameworks\\libs\\";
+
     /**
      * Converts an URI from the language server protocol to a Path.
      */
@@ -429,5 +435,35 @@ public class LanguageServerCompilerUtils
             //skip it
         }
         return diagnostic;
+    }
+
+    public static String getSourcePathFromDefinition(IDefinition definition, RoyaleProject project)
+    {
+        String sourcePath = definition.getSourcePath();
+        if (sourcePath == null)
+        {
+            //I'm not sure why getSourcePath() can sometimes return null, but
+            //getContainingFilePath() seems to work as a fallback -JT
+            sourcePath = definition.getContainingFilePath();
+        }
+        if (sourcePath == null)
+        {
+            return null;
+        }
+        if (!sourcePath.endsWith(AS_EXTENSION)
+                && !sourcePath.endsWith(MXML_EXTENSION)
+                && (sourcePath.contains(SDK_LIBRARY_PATH_SIGNATURE_UNIX)
+                || sourcePath.contains(SDK_LIBRARY_PATH_SIGNATURE_WINDOWS)))
+        {
+            //if it's a framework SWC, we're going to attempt to resolve
+            //the real source file 
+            String debugPath = DefinitionUtils.getDefinitionDebugSourceFilePath(definition, project);
+            if (debugPath != null)
+            {
+                //if we can't find the debug source file, keep the SWC extension
+                sourcePath = debugPath;
+            }
+        }
+        return sourcePath;
     }
 }

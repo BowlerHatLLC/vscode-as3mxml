@@ -32,12 +32,16 @@ import com.as3mxml.vscode.asdoc.VSCodeASDocDelegate;
 import com.as3mxml.vscode.project.IProjectConfigStrategy;
 import com.as3mxml.vscode.project.WorkspaceFolderData;
 import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
+import com.as3mxml.vscode.utils.DefinitionTextUtils.DefinitionAsText;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.royale.compiler.config.Configuration;
 import org.apache.royale.compiler.definitions.IClassDefinition;
 import org.apache.royale.compiler.definitions.IDefinition;
 import org.apache.royale.compiler.definitions.IEventDefinition;
+import org.apache.royale.compiler.definitions.IPackageDefinition;
+import org.apache.royale.compiler.definitions.ITypeDefinition;
+import org.apache.royale.compiler.definitions.metadata.IDeprecationInfo;
 import org.apache.royale.compiler.filespecs.IFileSpecification;
 import org.apache.royale.compiler.internal.mxml.MXMLData;
 import org.apache.royale.compiler.internal.parsing.as.OffsetCue;
@@ -55,12 +59,20 @@ import org.apache.royale.compiler.tree.mxml.IMXMLPropertySpecifierNode;
 import org.apache.royale.compiler.tree.mxml.IMXMLSingleDataBindingNode;
 import org.apache.royale.compiler.units.ICompilationUnit;
 import org.apache.royale.utils.FilenameNormalization;
+import org.eclipse.lsp4j.DocumentSymbol;
+import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.WorkspaceFolder;
 
 public class WorkspaceFolderManager
 {
+    private static final String AS_EXTENSION = ".as";
     private static final String MXML_EXTENSION = ".mxml";
+    private static final String SWC_EXTENSION = ".swc";
+    private static final String SDK_LIBRARY_PATH_SIGNATURE_UNIX = "/frameworks/libs/";
+    private static final String SDK_LIBRARY_PATH_SIGNATURE_WINDOWS = "\\frameworks\\libs\\";
 
     public Workspace compilerWorkspace;
     public Map<Path, String> sourceByPath = new HashMap<>();
@@ -534,5 +546,310 @@ public class WorkspaceFolderManager
         }
         int endComment = code.indexOf("-->", startComment);
         return endComment > currentOffset;
+    }
+
+    public Location getLocationFromDefinition(IDefinition definition, RoyaleProject project)
+    {
+        String sourcePath = LanguageServerCompilerUtils.getSourcePathFromDefinition(definition, project);
+        if (sourcePath == null)
+        {
+            //we can't find where the source code for this symbol is located
+            return null;
+        }
+        Location location = null;
+        if (sourcePath.endsWith(SWC_EXTENSION))
+        {
+            DefinitionAsText definitionText = DefinitionTextUtils.definitionToTextDocument(definition, project);
+            //may be null if definitionToTextDocument() doesn't know how
+            //to parse that type of definition
+            if (definitionText != null)
+            {
+                //if we get here, we couldn't find a framework source file and
+                //the definition path still ends with .swc
+                //we're going to try our best to display "decompiled" content
+                location = definitionText.toLocation();
+            }
+        }
+        if(location == null)
+        {
+            location = new Location();
+            Path definitionPath = Paths.get(sourcePath);
+            location.setUri(definitionPath.toUri().toString());
+            Range range = definitionToRange(definition, project);
+            if (range == null)
+            {
+                return null;
+            }
+            location.setRange(range);
+        }
+        return location;
+    }
+
+    public Range definitionToRange(IDefinition definition, RoyaleProject project)
+    {
+        String sourcePath = LanguageServerCompilerUtils.getSourcePathFromDefinition(definition, project);
+        if (sourcePath == null)
+        {
+            //we can't find where the source code for this symbol is located
+            return null;
+        }
+        Range range = null;
+        if (sourcePath.endsWith(SWC_EXTENSION))
+        {
+            DefinitionAsText definitionText = DefinitionTextUtils.definitionToTextDocument(definition, project);
+            //may be null if definitionToTextDocument() doesn't know how
+            //to parse that type of definition
+            if (definitionText != null)
+            {
+                //if we get here, we couldn't find a framework source file and
+                //the definition path still ends with .swc
+                //we're going to try our best to display "decompiled" content
+                range = definitionText.toRange();
+            }
+        }
+        if (range == null)
+        {
+            Path definitionPath = Paths.get(sourcePath);
+            Position start = new Position();
+            Position end = new Position();
+            //getLine() and getColumn() may include things like metadata, so it
+            //makes more sense to jump to where the definition name starts
+            int line = definition.getNameLine();
+            int column = definition.getNameColumn();
+            if (line < 0 || column < 0)
+            {
+                //this is not ideal, but MXML variable definitions may not have a
+                //node associated with them, so we need to figure this out from the
+                //offset instead of a pre-calculated line and column -JT
+                Reader definitionReader = getReaderForPath(definitionPath);
+                if (definitionReader == null)
+                {
+                    //we might get here if it's from a SWC, but the associated
+                    //source file is missing.
+                    return null;
+                }
+                else
+                {
+                    try
+                    {
+                        LanguageServerCompilerUtils.getPositionFromOffset(definitionReader, definition.getNameStart(), start);
+                        end.setLine(start.getLine());
+                        end.setCharacter(start.getCharacter());
+                    }
+                    finally
+                    {
+                        try
+                        {
+                            definitionReader.close();
+                        }
+                        catch(IOException e) {}
+                    }
+                }
+            }
+            else
+            {
+                start.setLine(line);
+                start.setCharacter(column);
+                end.setLine(line);
+                end.setCharacter(column);
+            }
+            range = new Range();
+            range.setStart(start);
+            range.setEnd(end);
+        }
+        return range;
+    }
+
+    public DocumentSymbol definitionToDocumentSymbol(IDefinition definition, RoyaleProject project)
+    {
+        String definitionBaseName = definition.getBaseName();
+        if (definition instanceof IPackageDefinition)
+        {
+            definitionBaseName = "package " + definitionBaseName;
+        }
+        if (definitionBaseName.length() == 0)
+        {
+            //vscode expects all items to have a name
+            return null;
+        }
+
+        Range range = definitionToRange(definition, project);
+        if (range == null)
+        {
+            //we can't find where the source code for this symbol is located
+            return null;
+        }
+
+        DocumentSymbol symbol = new DocumentSymbol();
+        symbol.setKind(LanguageServerCompilerUtils.getSymbolKindFromDefinition(definition));
+        symbol.setName(definitionBaseName);
+        symbol.setRange(range);
+        symbol.setSelectionRange(range);
+
+        IDeprecationInfo deprecationInfo = definition.getDeprecationInfo();
+        if (deprecationInfo != null)
+        {
+            symbol.setDeprecated(true);
+        }
+
+        return symbol;
+    }
+
+    public SymbolInformation definitionToSymbolInformation(IDefinition definition, RoyaleProject project)
+    {
+        String definitionBaseName = definition.getBaseName();
+        if (definitionBaseName.length() == 0)
+        {
+            //vscode expects all items to have a name
+            return null;
+        }
+
+        Location location = getLocationFromDefinition(definition, project);
+        if (location == null)
+        {
+            //we can't find where the source code for this symbol is located
+            return null;
+        }
+
+        SymbolInformation symbol = new SymbolInformation();
+        symbol.setKind(LanguageServerCompilerUtils.getSymbolKindFromDefinition(definition));
+        if (!definition.getQualifiedName().equals(definitionBaseName))
+        {
+            symbol.setContainerName(definition.getPackageName());
+        }
+        else if (definition instanceof ITypeDefinition)
+        {
+            symbol.setContainerName("No Package");
+        }
+        else
+        {
+            IDefinition parentDefinition = definition.getParent();
+            if (parentDefinition != null)
+            {
+                symbol.setContainerName(parentDefinition.getQualifiedName());
+            }
+        }
+        symbol.setName(definitionBaseName);
+
+        symbol.setLocation(location);
+
+        IDeprecationInfo deprecationInfo = definition.getDeprecationInfo();
+        if (deprecationInfo != null)
+        {
+            symbol.setDeprecated(true);
+        }
+
+        return symbol;
+    }
+
+    public void resolveDefinition(IDefinition definition, WorkspaceFolderData folderData, List<Location> result)
+    {
+        String definitionPath = definition.getSourcePath();
+        String containingSourceFilePath = definition.getContainingSourceFilePath(folderData.project);
+        if(folderData.includedFiles.containsKey(containingSourceFilePath))
+        {
+            definitionPath = containingSourceFilePath;
+        }
+        if (definitionPath == null)
+        {
+            //if the definition is in an MXML file, getSourcePath() may return
+            //null, but getContainingFilePath() will return something
+            definitionPath = definition.getContainingFilePath();
+            if (definitionPath == null)
+            {
+                //if everything is null, there's nothing to do
+                return;
+            }
+            //however, getContainingFilePath() also works for SWCs
+            if (!definitionPath.endsWith(AS_EXTENSION)
+                    && !definitionPath.endsWith(MXML_EXTENSION)
+                    && (definitionPath.contains(SDK_LIBRARY_PATH_SIGNATURE_UNIX)
+                    || definitionPath.contains(SDK_LIBRARY_PATH_SIGNATURE_WINDOWS)))
+            {
+                //if it's a framework SWC, we're going to attempt to resolve
+                //the source file 
+                String debugPath = DefinitionUtils.getDefinitionDebugSourceFilePath(definition, folderData.project);
+                if (debugPath != null)
+                {
+                    definitionPath = debugPath;
+                }
+            }
+            if (definitionPath.endsWith(SWC_EXTENSION))
+            {
+                DefinitionAsText definitionText = DefinitionTextUtils.definitionToTextDocument(definition, folderData.project);
+                //may be null if definitionToTextDocument() doesn't know how
+                //to parse that type of definition
+                if (definitionText != null)
+                {
+                    //if we get here, we couldn't find a framework source file and
+                    //the definition path still ends with .swc
+                    //we're going to try our best to display "decompiled" content
+                    result.add(definitionText.toLocation());
+                }
+                return;
+            }
+            if (!definitionPath.endsWith(AS_EXTENSION)
+                    && !definitionPath.endsWith(MXML_EXTENSION))
+            {
+                //if it's anything else, we don't know how to resolve
+                return;
+            }
+        }
+
+        Path resolvedPath = Paths.get(definitionPath);
+        Location location = new Location();
+        location.setUri(resolvedPath.toUri().toString());
+        int nameLine = definition.getNameLine();
+        int nameColumn = definition.getNameColumn();
+        if (nameLine == -1 || nameColumn == -1)
+        {
+            //getNameLine() and getNameColumn() will both return -1 for a
+            //variable definition created by an MXML tag with an id.
+            //so we need to figure them out from the offset instead.
+            int nameOffset = definition.getNameStart();
+            if (nameOffset == -1)
+            {
+                //we can't find the name, so give up
+                return;
+            }
+
+            Reader reader = getReaderForPath(resolvedPath);
+            if (reader == null)
+            {
+                //we can't get the code at all
+                return;
+            }
+
+            try
+            {
+                Position position = LanguageServerCompilerUtils.getPositionFromOffset(reader, nameOffset);
+                nameLine = position.getLine();
+                nameColumn = position.getCharacter();
+            }
+            finally
+            {
+                try
+                {
+                    reader.close();
+                }
+                catch(IOException e) {}
+            }
+        }
+        if (nameLine == -1 || nameColumn == -1)
+        {
+            //we can't find the name, so give up
+            return;
+        }
+        Position start = new Position();
+        start.setLine(nameLine);
+        start.setCharacter(nameColumn);
+        Position end = new Position();
+        end.setLine(nameLine);
+        end.setCharacter(nameColumn + definition.getNameEnd() - definition.getNameStart());
+        Range range = new Range();
+        range.setStart(start);
+        range.setEnd(end);
+        location.setRange(range);
+        result.add(location);
     }
 }
