@@ -28,7 +28,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.as3mxml.vscode.asdoc.VSCodeASDocDelegate;
 import com.as3mxml.vscode.project.IProjectConfigStrategy;
 import com.as3mxml.vscode.project.WorkspaceFolderData;
 import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
@@ -46,7 +45,6 @@ import org.apache.royale.compiler.filespecs.IFileSpecification;
 import org.apache.royale.compiler.internal.mxml.MXMLData;
 import org.apache.royale.compiler.internal.parsing.as.OffsetCue;
 import org.apache.royale.compiler.internal.projects.RoyaleProject;
-import org.apache.royale.compiler.internal.workspaces.Workspace;
 import org.apache.royale.compiler.mxml.IMXMLDataManager;
 import org.apache.royale.compiler.mxml.IMXMLTagAttributeData;
 import org.apache.royale.compiler.mxml.IMXMLTagData;
@@ -58,6 +56,7 @@ import org.apache.royale.compiler.tree.mxml.IMXMLNode;
 import org.apache.royale.compiler.tree.mxml.IMXMLPropertySpecifierNode;
 import org.apache.royale.compiler.tree.mxml.IMXMLSingleDataBindingNode;
 import org.apache.royale.compiler.units.ICompilationUnit;
+import org.apache.royale.compiler.workspaces.IWorkspace;
 import org.apache.royale.utils.FilenameNormalization;
 import org.eclipse.lsp4j.DocumentSymbol;
 import org.eclipse.lsp4j.Location;
@@ -74,17 +73,19 @@ public class WorkspaceFolderManager
     private static final String SDK_LIBRARY_PATH_SIGNATURE_UNIX = "/frameworks/libs/";
     private static final String SDK_LIBRARY_PATH_SIGNATURE_WINDOWS = "\\frameworks\\libs\\";
 
-    public Workspace compilerWorkspace;
     public Map<Path, String> sourceByPath = new HashMap<>();
-    public LanguageServerFileSpecGetter fileSpecGetter;
+    private LanguageServerFileSpecGetter fileSpecGetter;
     private List<WorkspaceFolder> workspaceFolders = new ArrayList<>();
     private Map<WorkspaceFolder, WorkspaceFolderData> workspaceFolderToData = new HashMap<>();
     
-    public WorkspaceFolderManager()
+    public WorkspaceFolderManager(IWorkspace compilerWorkspace)
     {
-        compilerWorkspace = new Workspace();
-        compilerWorkspace.setASDocDelegate(new VSCodeASDocDelegate());
         fileSpecGetter = new LanguageServerFileSpecGetter(compilerWorkspace, sourceByPath);
+    }
+
+    public IFileSpecification getFileSpecification(String filePath)
+    {
+        return fileSpecGetter.getFileSpecification(filePath);
     }
 
     public List<WorkspaceFolder> getWorkspaceFolders()
@@ -322,9 +323,9 @@ public class WorkspaceFolderManager
             //should have been logged already
             return null;
         }
-        IMXMLDataManager mxmlDataManager = compilerWorkspace.getMXMLDataManager();
+        IMXMLDataManager mxmlDataManager = project.getWorkspace().getMXMLDataManager();
         String normalizedPath = FilenameNormalization.normalize(path.toAbsolutePath().toString());
-        IFileSpecification fileSpecification = fileSpecGetter.getFileSpecification(normalizedPath);
+        IFileSpecification fileSpecification = getFileSpecification(normalizedPath);
         return (MXMLData) mxmlDataManager.get(fileSpecification);
     }
 

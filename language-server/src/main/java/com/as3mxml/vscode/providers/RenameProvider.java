@@ -205,8 +205,8 @@ public class RenameProvider
             ArrayList<TextEdit> textEdits = new ArrayList<>();
             if (compilationUnit.getAbsoluteFilename().endsWith(MXML_EXTENSION))
             {
-                IMXMLDataManager mxmlDataManager = workspaceFolderManager.compilerWorkspace.getMXMLDataManager();
-                MXMLData mxmlData = (MXMLData) mxmlDataManager.get(workspaceFolderManager.fileSpecGetter.getFileSpecification(compilationUnit.getAbsoluteFilename()));
+                IMXMLDataManager mxmlDataManager = project.getWorkspace().getMXMLDataManager();
+                MXMLData mxmlData = (MXMLData) mxmlDataManager.get(workspaceFolderManager.getFileSpecification(compilationUnit.getAbsoluteFilename()));
                 IMXMLTagData rootTag = mxmlData.getRootTag();
                 if (rootTag != null)
                 {

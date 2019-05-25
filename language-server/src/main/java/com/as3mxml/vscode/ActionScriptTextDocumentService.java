@@ -46,6 +46,7 @@ import com.as3mxml.asconfigc.ASConfigC;
 import com.as3mxml.asconfigc.ASConfigCException;
 import com.as3mxml.asconfigc.ASConfigCOptions;
 import com.as3mxml.asconfigc.compiler.ProjectType;
+import com.as3mxml.vscode.asdoc.VSCodeASDocDelegate;
 import com.as3mxml.vscode.commands.ICommandConstants;
 import com.as3mxml.vscode.compiler.CompilerShell;
 import com.as3mxml.vscode.compiler.problems.SyntaxFallbackProblem;
@@ -194,7 +195,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private ActionScriptLanguageClient languageClient;
     private IProjectConfigStrategyFactory projectConfigStrategyFactory;
     private String oldFrameworkSDKPath;
-    private WorkspaceFolderManager workspaceFolderManager = new WorkspaceFolderManager();
+    private Workspace compilerWorkspace;
+    private WorkspaceFolderManager workspaceFolderManager;
     private WatchService sourcePathWatcher;
     private Thread sourcePathWatcherThread;
     private ClientCapabilities clientCapabilities;
@@ -228,6 +230,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     public ActionScriptTextDocumentService()
     {
+        compilerWorkspace = new Workspace();
+        compilerWorkspace.setASDocDelegate(new VSCodeASDocDelegate());
+        workspaceFolderManager = new WorkspaceFolderManager(compilerWorkspace);
         updateFrameworkSDK();
     }
 
@@ -263,8 +268,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         if (path != null)
         {
             String normalizedPath = FilenameNormalization.normalize(path.toAbsolutePath().toString());
-            IFileSpecification fileSpec = workspaceFolderManager.fileSpecGetter.getFileSpecification(normalizedPath);
-            workspaceFolderManager.compilerWorkspace.fileChanged(fileSpec);
+            IFileSpecification fileSpec = workspaceFolderManager.getFileSpecification(normalizedPath);
+            compilerWorkspace.fileChanged(fileSpec);
         }
 
         checkProjectForProblems(folderData);
@@ -313,11 +318,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     @Override
     public CompletableFuture<Either<List<CompletionItem>, CompletionList>> completion(CompletionParams params)
     {
-        return CompletableFutures.computeAsync(workspaceFolderManager.compilerWorkspace.getExecutorService(), cancelToken ->
+        return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken ->
         {
             cancelToken.checkCanceled();
 
-            workspaceFolderManager.compilerWorkspace.startBuilding();
+            compilerWorkspace.startBuilding();
             try
             {
                 CompletionProvider provider = new CompletionProvider(workspaceFolderManager, completionSupportsSnippets, frameworkSDKIsRoyale);
@@ -325,7 +330,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             finally
             {
-                workspaceFolderManager.compilerWorkspace.doneBuilding();
+                compilerWorkspace.doneBuilding();
             }
         });
     }
@@ -347,11 +352,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     @Override
     public CompletableFuture<Hover> hover(TextDocumentPositionParams params)
     {
-        return CompletableFutures.computeAsync(workspaceFolderManager.compilerWorkspace.getExecutorService(), cancelToken ->
+        return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken ->
         {
             cancelToken.checkCanceled();
 
-            workspaceFolderManager.compilerWorkspace.startBuilding();
+            compilerWorkspace.startBuilding();
             try
             {
                 HoverProvider provider = new HoverProvider(workspaceFolderManager);
@@ -359,7 +364,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             finally
             {
-                workspaceFolderManager.compilerWorkspace.doneBuilding();
+                compilerWorkspace.doneBuilding();
             }
         });
     }
@@ -373,11 +378,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     @Override
     public CompletableFuture<SignatureHelp> signatureHelp(TextDocumentPositionParams params)
     {
-        return CompletableFutures.computeAsync(workspaceFolderManager.compilerWorkspace.getExecutorService(), cancelToken ->
+        return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken ->
         {
             cancelToken.checkCanceled();
 
-            workspaceFolderManager.compilerWorkspace.startBuilding();
+            compilerWorkspace.startBuilding();
             try
             {
                 SignatureHelpProvider provider = new SignatureHelpProvider(workspaceFolderManager);
@@ -385,7 +390,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             finally
             {
-                workspaceFolderManager.compilerWorkspace.doneBuilding();
+                compilerWorkspace.doneBuilding();
             }
         });
     }
@@ -397,11 +402,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     @Override
     public CompletableFuture<Either<List<? extends Location>, List<? extends LocationLink>>> definition(TextDocumentPositionParams params)
     {
-        return CompletableFutures.computeAsync(workspaceFolderManager.compilerWorkspace.getExecutorService(), cancelToken ->
+        return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken ->
         {
             cancelToken.checkCanceled();
 
-            workspaceFolderManager.compilerWorkspace.startBuilding();
+            compilerWorkspace.startBuilding();
             try
             {
                 DefinitionProvider provider = new DefinitionProvider(workspaceFolderManager);
@@ -409,7 +414,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             finally
             {
-                workspaceFolderManager.compilerWorkspace.doneBuilding();
+                compilerWorkspace.doneBuilding();
             }
         });
     }
@@ -420,11 +425,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
      */
     public CompletableFuture<Either<List<? extends Location>, List<? extends LocationLink>>> typeDefinition(TextDocumentPositionParams params)
     {
-        return CompletableFutures.computeAsync(workspaceFolderManager.compilerWorkspace.getExecutorService(), cancelToken ->
+        return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken ->
         {
             cancelToken.checkCanceled();
 
-            workspaceFolderManager.compilerWorkspace.startBuilding();
+            compilerWorkspace.startBuilding();
             try
             {
                 TypeDefinitionProvider provider = new TypeDefinitionProvider(workspaceFolderManager);
@@ -432,7 +437,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             finally
             {
-                workspaceFolderManager.compilerWorkspace.doneBuilding();
+                compilerWorkspace.doneBuilding();
             }
         });
     }
@@ -442,11 +447,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
      */
     public CompletableFuture<Either<List<? extends Location>, List<? extends LocationLink>>> implementation(TextDocumentPositionParams params)
     {
-        return CompletableFutures.computeAsync(workspaceFolderManager.compilerWorkspace.getExecutorService(), cancelToken ->
+        return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken ->
         {
             cancelToken.checkCanceled();
 
-            workspaceFolderManager.compilerWorkspace.startBuilding();
+            compilerWorkspace.startBuilding();
             try
             {
                 ImplementationProvider provider = new ImplementationProvider(workspaceFolderManager);
@@ -454,7 +459,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             finally
             {
-                workspaceFolderManager.compilerWorkspace.doneBuilding();
+                compilerWorkspace.doneBuilding();
             }
         });
     }
@@ -467,11 +472,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     @Override
     public CompletableFuture<List<? extends Location>> references(ReferenceParams params)
     {
-        return CompletableFutures.computeAsync(workspaceFolderManager.compilerWorkspace.getExecutorService(), cancelToken ->
+        return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken ->
         {
             cancelToken.checkCanceled();
 
-            workspaceFolderManager.compilerWorkspace.startBuilding();
+            compilerWorkspace.startBuilding();
             try
             {
                 ReferencesProvider provider = new ReferencesProvider(workspaceFolderManager);
@@ -479,7 +484,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             finally
             {
-                workspaceFolderManager.compilerWorkspace.doneBuilding();
+                compilerWorkspace.doneBuilding();
             }
         });
     }
@@ -498,11 +503,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
      */
     public CompletableFuture<List<? extends SymbolInformation>> workspaceSymbol(WorkspaceSymbolParams params)
     {
-        return CompletableFutures.computeAsync(workspaceFolderManager.compilerWorkspace.getExecutorService(), cancelToken ->
+        return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken ->
         {
             cancelToken.checkCanceled();
 
-            workspaceFolderManager.compilerWorkspace.startBuilding();
+            compilerWorkspace.startBuilding();
             try
             {
                 WorkspaceSymbolProvider provider = new WorkspaceSymbolProvider(workspaceFolderManager);
@@ -510,7 +515,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             finally
             {
-                workspaceFolderManager.compilerWorkspace.doneBuilding();
+                compilerWorkspace.doneBuilding();
             }
         });
     }
@@ -522,11 +527,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     @Override
     public CompletableFuture<List<Either<SymbolInformation, DocumentSymbol>>> documentSymbol(DocumentSymbolParams params)
     {
-        return CompletableFutures.computeAsync(workspaceFolderManager.compilerWorkspace.getExecutorService(), cancelToken ->
+        return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken ->
         {
             cancelToken.checkCanceled();
             
-            workspaceFolderManager.compilerWorkspace.startBuilding();
+            compilerWorkspace.startBuilding();
             try
             {
                 boolean hierarchicalDocumentSymbolSupport = clientCapabilities.getTextDocument().getDocumentSymbol().getHierarchicalDocumentSymbolSupport();
@@ -535,7 +540,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             finally
             {
-                workspaceFolderManager.compilerWorkspace.doneBuilding();
+                compilerWorkspace.doneBuilding();
             }
         });
     }
@@ -546,11 +551,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     @Override
     public CompletableFuture<List<Either<Command, CodeAction>>> codeAction(CodeActionParams params)
     {
-        return CompletableFutures.computeAsync(workspaceFolderManager.compilerWorkspace.getExecutorService(), cancelToken ->
+        return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken ->
         {
             cancelToken.checkCanceled();
 
-            workspaceFolderManager.compilerWorkspace.startBuilding();
+            compilerWorkspace.startBuilding();
             try
             {
                 cancelToken.checkCanceled();
@@ -603,7 +608,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             finally
             {
-                workspaceFolderManager.compilerWorkspace.doneBuilding();
+                compilerWorkspace.doneBuilding();
             }
         });
     }
@@ -1177,11 +1182,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     @Override
     public CompletableFuture<WorkspaceEdit> rename(RenameParams params)
     {
-        return CompletableFutures.computeAsync(workspaceFolderManager.compilerWorkspace.getExecutorService(), cancelToken ->
+        return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken ->
         {
             cancelToken.checkCanceled();
 
-            workspaceFolderManager.compilerWorkspace.startBuilding();
+            compilerWorkspace.startBuilding();
             try
             {
                 RenameProvider provider = new RenameProvider(workspaceFolderManager);
@@ -1201,7 +1206,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             finally
             {
-                workspaceFolderManager.compilerWorkspace.doneBuilding();
+                compilerWorkspace.doneBuilding();
             }
         });
     }
@@ -1291,8 +1296,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         //notify the workspace that it should read the file from memory
         //instead of loading from the file system
         String normalizedPath = FilenameNormalization.normalize(path.toAbsolutePath().toString());
-        IFileSpecification fileSpec = workspaceFolderManager.fileSpecGetter.getFileSpecification(normalizedPath);
-        workspaceFolderManager.compilerWorkspace.fileChanged(fileSpec);
+        IFileSpecification fileSpec = workspaceFolderManager.getFileSpecification(normalizedPath);
+        compilerWorkspace.fileChanged(fileSpec);
 
         //if it's an included file, switch to the parent file
         IncludeFileData includeFileData = folderData.includedFiles.get(path.toString());
@@ -1363,7 +1368,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         String normalizedChangedPathAsString = path.toString();
 
         ICompilationUnit unit = null;
-        workspaceFolderManager.compilerWorkspace.startBuilding();
+        compilerWorkspace.startBuilding();
         try
         {
             unit = CompilerProjectUtils.findCompilationUnit(path, project);
@@ -1376,13 +1381,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         finally
         {
-            workspaceFolderManager.compilerWorkspace.doneBuilding();
+            compilerWorkspace.doneBuilding();
         }
 
-        IFileSpecification fileSpec = workspaceFolderManager.fileSpecGetter.getFileSpecification(normalizedChangedPathAsString);
-        workspaceFolderManager.compilerWorkspace.fileChanged(fileSpec);
+        IFileSpecification fileSpec = workspaceFolderManager.getFileSpecification(normalizedChangedPathAsString);
+        compilerWorkspace.fileChanged(fileSpec);
 
-        workspaceFolderManager.compilerWorkspace.startBuilding();
+        compilerWorkspace.startBuilding();
         try
         {
             //if it's an included file, switch to the parent file
@@ -1395,7 +1400,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         finally
         {
-            workspaceFolderManager.compilerWorkspace.doneBuilding();
+            compilerWorkspace.doneBuilding();
         }
 
         if(unit == null)
@@ -1412,7 +1417,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     || !unit.equals(waitForBuildFinishRunner.getCompilationUnit()))
             {
                 waitForBuildFinishRunner = new WaitForBuildFinishRunner(unit, folderData, languageClient, compilerProblemFilter);
-                workspaceFolderManager.compilerWorkspace.getExecutorService().submit(waitForBuildFinishRunner);
+                compilerWorkspace.getExecutorService().submit(waitForBuildFinishRunner);
             }
             else
             {
@@ -1600,7 +1605,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 List<WorkspaceFolderData> allFolderData = workspaceFolderManager.getAllWorkspaceFolderDataForSWCFile(normalizedChangedPath);
                 if (allFolderData.size() > 0)
                 {
-                    workspaceFolderManager.compilerWorkspace.startBuilding();
+                    compilerWorkspace.startBuilding();
                     ICompilationUnit changedUnit = null;
                     try
                     {
@@ -1608,7 +1613,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     }
                     finally
                     {
-                        workspaceFolderManager.compilerWorkspace.doneBuilding();
+                        compilerWorkspace.doneBuilding();
                     }
                     if (changedUnit != null)
                     {
@@ -1618,20 +1623,20 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     }
 
                     boolean swcConfigChanged = false;
-                    IFileSpecification swcFileSpec = workspaceFolderManager.fileSpecGetter.getFileSpecification(normalizedChangedPathAsString);
+                    IFileSpecification swcFileSpec = workspaceFolderManager.getFileSpecification(normalizedChangedPathAsString);
                     if (changeType.equals(FileChangeType.Deleted))
                     {
                         swcConfigChanged = true;
-                        workspaceFolderManager.compilerWorkspace.fileRemoved(swcFileSpec);
+                        compilerWorkspace.fileRemoved(swcFileSpec);
                     }
                     else if (changeType.equals(FileChangeType.Created))
                     {
                         swcConfigChanged = true;
-                        workspaceFolderManager.compilerWorkspace.fileAdded(swcFileSpec);
+                        compilerWorkspace.fileAdded(swcFileSpec);
                     }
                     else if (changeType.equals(FileChangeType.Changed))
                     {
-                        workspaceFolderManager.compilerWorkspace.fileChanged(swcFileSpec);
+                        compilerWorkspace.fileChanged(swcFileSpec);
                     }
                     if(swcConfigChanged)
                     {
@@ -1650,7 +1655,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             else if (normalizedChangedPathAsString.endsWith(AS_EXTENSION) || normalizedChangedPathAsString.endsWith(MXML_EXTENSION))
             {
                 Path normalizedChangedPath = Paths.get(normalizedChangedPathAsString);
-                workspaceFolderManager.compilerWorkspace.startBuilding();
+                compilerWorkspace.startBuilding();
                 ICompilationUnit changedUnit = null;
                 try
                 {
@@ -1658,7 +1663,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 }
                 finally
                 {
-                    workspaceFolderManager.compilerWorkspace.doneBuilding();
+                    compilerWorkspace.doneBuilding();
                 }
 
                 if (changedUnit != null)
@@ -1675,24 +1680,24 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     (changeType.equals(FileChangeType.Changed) && !java.nio.file.Files.exists(changedPath))
                 )
                 {
-                    IFileSpecification fileSpec = workspaceFolderManager.fileSpecGetter.getFileSpecification(normalizedChangedPathAsString);
-                    workspaceFolderManager.compilerWorkspace.fileRemoved(fileSpec);
+                    IFileSpecification fileSpec = workspaceFolderManager.getFileSpecification(normalizedChangedPathAsString);
+                    compilerWorkspace.fileRemoved(fileSpec);
                     //deleting a file may change errors in other existing files,
                     //so we need to do a full check
                     foldersToCheck.addAll(allFolderData);
                 }
                 else if (event.getType().equals(FileChangeType.Created))
                 {
-                    IFileSpecification fileSpec = workspaceFolderManager.fileSpecGetter.getFileSpecification(normalizedChangedPathAsString);
-                    workspaceFolderManager.compilerWorkspace.fileAdded(fileSpec);
+                    IFileSpecification fileSpec = workspaceFolderManager.getFileSpecification(normalizedChangedPathAsString);
+                    compilerWorkspace.fileAdded(fileSpec);
                     //creating a file may change errors in other existing files,
                     //so we need to do a full check
                     foldersToCheck.addAll(allFolderData);
                 }
                 else if (changeType.equals(FileChangeType.Changed))
                 {
-                    IFileSpecification fileSpec = workspaceFolderManager.fileSpecGetter.getFileSpecification(normalizedChangedPathAsString);
-                    workspaceFolderManager.compilerWorkspace.fileChanged(fileSpec);
+                    IFileSpecification fileSpec = workspaceFolderManager.getFileSpecification(normalizedChangedPathAsString);
+                    compilerWorkspace.fileChanged(fileSpec);
                     foldersToCheck.addAll(allFolderData);
                 }
             }
@@ -1708,8 +1713,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                             String normalizedSubPath = FilenameNormalization.normalize(subPath.toString());
                             if (normalizedSubPath.endsWith(AS_EXTENSION) || normalizedSubPath.endsWith(MXML_EXTENSION))
                             {
-                                IFileSpecification fileSpec = workspaceFolderManager.fileSpecGetter.getFileSpecification(normalizedSubPath);
-                                workspaceFolderManager.compilerWorkspace.fileAdded(fileSpec);
+                                IFileSpecification fileSpec = workspaceFolderManager.getFileSpecification(normalizedSubPath);
+                                compilerWorkspace.fileAdded(fileSpec);
                             }
                             return FileVisitResult.CONTINUE;
                         }
@@ -1738,7 +1743,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     {
                         continue;
                     }
-                    workspaceFolderManager.compilerWorkspace.startBuilding();
+                    compilerWorkspace.startBuilding();
                     try
                     {
                         for (ICompilationUnit unit : project.getCompilationUnits())
@@ -1767,13 +1772,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     }
                     finally
                     {
-                        workspaceFolderManager.compilerWorkspace.doneBuilding();
+                        compilerWorkspace.doneBuilding();
                     }
                 }
                 for (String fileToRemove : filesToRemove)
                 {
                     Path pathToRemove = Paths.get(fileToRemove);
-                    workspaceFolderManager.compilerWorkspace.startBuilding();
+                    compilerWorkspace.startBuilding();
                     ICompilationUnit unit = null;
                     try
                     {
@@ -1781,14 +1786,14 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     }
                     finally
                     {
-                        workspaceFolderManager.compilerWorkspace.doneBuilding();
+                        compilerWorkspace.doneBuilding();
                     }
                     if (unit != null)
                     {
                         fileToRemove = unit.getAbsoluteFilename();
                     }
-                    IFileSpecification fileSpec = workspaceFolderManager.fileSpecGetter.getFileSpecification(fileToRemove);
-                    workspaceFolderManager.compilerWorkspace.fileRemoved(fileSpec);
+                    IFileSpecification fileSpec = workspaceFolderManager.getFileSpecification(fileToRemove);
+                    compilerWorkspace.fileRemoved(fileSpec);
                 }
             }
         }
@@ -2271,18 +2276,18 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         List<ICompilerProblem> configProblems = new ArrayList<>();
 
         RoyaleProjectConfigurator configurator = null;
-        workspaceFolderManager.compilerWorkspace.startIdleState();
+        compilerWorkspace.startIdleState();
         try
         {
             URI rootURI = URI.create(folderData.folder.getUri());
             Path rootPath = Paths.get(rootURI);
             System.setProperty("user.dir", rootPath.toString());
-            project = CompilerProjectUtils.createProject(projectOptions, workspaceFolderManager.compilerWorkspace);
+            project = CompilerProjectUtils.createProject(projectOptions, compilerWorkspace);
             configurator = CompilerProjectUtils.createConfigurator(project, projectOptions);
         }
         finally
         {
-            workspaceFolderManager.compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
+            compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
         }
 
         //this is not wrapped in startIdleState() or startBuilding()
@@ -2303,7 +2308,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
         }
 
-        workspaceFolderManager.compilerWorkspace.startIdleState();
+        compilerWorkspace.startIdleState();
         try
         {
             if(configurator != null)
@@ -2348,7 +2353,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         finally
         {
-            workspaceFolderManager.compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
+            compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
         }
         return project;
     }
@@ -2504,7 +2509,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
 
     private boolean checkFilePathForAllProblems(Path path, ProblemQuery problemQuery, WorkspaceFolderData folderData, boolean quick)
     {
-        workspaceFolderManager.compilerWorkspace.startBuilding();
+        compilerWorkspace.startBuilding();
         try
         {
             ICompilationUnit unitForPath = CompilerProjectUtils.findCompilationUnit(path, folderData.project);
@@ -2595,7 +2600,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         }
         finally
         {
-            workspaceFolderManager.compilerWorkspace.doneBuilding();
+            compilerWorkspace.doneBuilding();
         }
     }
 
@@ -2684,11 +2689,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return CompletableFuture.completedFuture(new Object());
         }
 
-        return CompletableFutures.computeAsync(workspaceFolderManager.compilerWorkspace.getExecutorService(), cancelToken ->
+        return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken ->
         {
             cancelToken.checkCanceled();
 
-            workspaceFolderManager.compilerWorkspace.startBuilding();
+            compilerWorkspace.startBuilding();
             ApplyWorkspaceEditParams editParams = null;
             try
             {
@@ -2709,7 +2714,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             finally
             {
-                workspaceFolderManager.compilerWorkspace.doneBuilding();
+                compilerWorkspace.doneBuilding();
             }
             for(Path filePath : filesToClose)
             {
@@ -2741,11 +2746,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             openFileForOrganizeImports(path);
         }
         
-        return CompletableFutures.computeAsync(workspaceFolderManager.compilerWorkspace.getExecutorService(), cancelToken ->
+        return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken ->
         {
             cancelToken.checkCanceled();
 
-            workspaceFolderManager.compilerWorkspace.startBuilding();
+            compilerWorkspace.startBuilding();
             ApplyWorkspaceEditParams editParams = null;
             try
             {
@@ -2764,7 +2769,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             finally
             {
-                workspaceFolderManager.compilerWorkspace.doneBuilding();
+                compilerWorkspace.doneBuilding();
             }
             if(!isOpen)
             {
@@ -2804,8 +2809,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         //notify the workspace that it should read the file from memory
         //instead of loading from the file system
         String normalizedPath = FilenameNormalization.normalize(path.toAbsolutePath().toString());
-        IFileSpecification fileSpec = workspaceFolderManager.fileSpecGetter.getFileSpecification(normalizedPath);
-        workspaceFolderManager.compilerWorkspace.fileChanged(fileSpec);
+        IFileSpecification fileSpec = workspaceFolderManager.getFileSpecification(normalizedPath);
+        compilerWorkspace.fileChanged(fileSpec);
     }
 
     private void organizeImportsInUri(String uri, Map<String,List<TextEdit>> changes)
@@ -2868,11 +2873,11 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     
     private CompletableFuture<Object> executeAddImportCommand(ExecuteCommandParams params)
     {
-        return CompletableFutures.computeAsync(workspaceFolderManager.compilerWorkspace.getExecutorService(), cancelToken ->
+        return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken ->
         {
             cancelToken.checkCanceled();
 
-            workspaceFolderManager.compilerWorkspace.startBuilding();
+            compilerWorkspace.startBuilding();
             try
             {
                 cancelToken.checkCanceled();
@@ -2929,18 +2934,18 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             finally
             {
-                workspaceFolderManager.compilerWorkspace.doneBuilding();
+                compilerWorkspace.doneBuilding();
             }
         });
     }
     
     private CompletableFuture<Object> executeAddMXMLNamespaceCommand(ExecuteCommandParams params)
     {
-        return CompletableFutures.computeAsync(workspaceFolderManager.compilerWorkspace.getExecutorService(), cancelToken ->
+        return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken ->
         {
             cancelToken.checkCanceled();
 
-            workspaceFolderManager.compilerWorkspace.startBuilding();
+            compilerWorkspace.startBuilding();
             try
             {
                 cancelToken.checkCanceled();
@@ -2979,14 +2984,14 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
             finally
             {
-                workspaceFolderManager.compilerWorkspace.doneBuilding();
+                compilerWorkspace.doneBuilding();
             }
         });
     }
 
     private CompletableFuture<Object> executeQuickCompileCommand(ExecuteCommandParams params)
     {
-        return CompletableFutures.computeAsync(workspaceFolderManager.compilerWorkspace.getExecutorService(), cancelToken ->
+        return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken ->
         {
             List<Object> args = params.getArguments();
             String uri = ((JsonPrimitive) args.get(0)).getAsString();

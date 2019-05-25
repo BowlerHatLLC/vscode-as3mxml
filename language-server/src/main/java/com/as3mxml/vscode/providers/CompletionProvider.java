@@ -725,8 +725,8 @@ public class CompletionProvider
                     }
                     if (!isAttribute)
                     {
-                        IFileSpecification fileSpec = workspaceFolderManager.fileSpecGetter.getFileSpecification(offsetUnit.getAbsoluteFilename());
-                        MXMLNamespace fxNS = MXMLNamespaceUtils.getMXMLLanguageNamespace(fileSpec, workspaceFolderManager.compilerWorkspace);
+                        IFileSpecification fileSpec = workspaceFolderManager.getFileSpecification(offsetUnit.getAbsoluteFilename());
+                        MXMLNamespace fxNS = MXMLNamespaceUtils.getMXMLLanguageNamespace(fileSpec, project.getWorkspace());
                         IMXMLData mxmlParent = offsetTag.getParent();
                         if (mxmlParent != null && parentTag.equals(mxmlParent.getRootTag()))
                         {
@@ -820,8 +820,8 @@ public class CompletionProvider
             if (!isAttribute)
             {
                 IMXMLData mxmlParent = offsetTag.getParent();
-                IFileSpecification fileSpec = workspaceFolderManager.fileSpecGetter.getFileSpecification(offsetUnit.getAbsoluteFilename());
-                MXMLNamespace fxNS = MXMLNamespaceUtils.getMXMLLanguageNamespace(fileSpec, workspaceFolderManager.compilerWorkspace);
+                IFileSpecification fileSpec = workspaceFolderManager.getFileSpecification(offsetUnit.getAbsoluteFilename());
+                MXMLNamespace fxNS = MXMLNamespaceUtils.getMXMLLanguageNamespace(fileSpec, project.getWorkspace());
                 if (mxmlParent != null && offsetTag.equals(mxmlParent.getRootTag()))
                 {
                     addRootMXMLLanguageTagsToAutoComplete(offsetTag, fxNS.prefix, true, tagsNeedOpenBracket, result);
@@ -1826,8 +1826,8 @@ public class CompletionProvider
 
     private void addMXMLTypeDefinitionAutoComplete(ITypeDefinition definition, Position xmlnsPosition, ICompilationUnit offsetUnit, IMXMLTagData offsetTag, boolean tagsNeedOpenBracket, RoyaleProject project, CompletionList result)
     {
-        IMXMLDataManager mxmlDataManager = workspaceFolderManager.compilerWorkspace.getMXMLDataManager();
-        MXMLData mxmlData = (MXMLData) mxmlDataManager.get(workspaceFolderManager.fileSpecGetter.getFileSpecification(offsetUnit.getAbsoluteFilename()));
+        IMXMLDataManager mxmlDataManager = project.getWorkspace().getMXMLDataManager();
+        MXMLData mxmlData = (MXMLData) mxmlDataManager.get(workspaceFolderManager.getFileSpecification(offsetUnit.getAbsoluteFilename()));
         MXMLNamespace discoveredNS = MXMLNamespaceUtils.getMXMLNamespaceForTypeDefinition(definition, mxmlData, project);
         addDefinitionAutoCompleteMXML(definition, xmlnsPosition, false, discoveredNS.prefix, discoveredNS.uri, tagsNeedOpenBracket, offsetTag, project, result);
     }
@@ -2155,8 +2155,8 @@ public class CompletionProvider
      */
     private void autoCompleteTypesForMXMLFromExistingTag(CompletionList result, RoyaleProject project, ICompilationUnit offsetUnit, IMXMLTagData offsetTag, String typeFilter, Position xmlnsPosition)
     {
-        IMXMLDataManager mxmlDataManager = workspaceFolderManager.compilerWorkspace.getMXMLDataManager();
-        MXMLData mxmlData = (MXMLData) mxmlDataManager.get(workspaceFolderManager.fileSpecGetter.getFileSpecification(offsetUnit.getAbsoluteFilename()));
+        IMXMLDataManager mxmlDataManager = project.getWorkspace().getMXMLDataManager();
+        MXMLData mxmlData = (MXMLData) mxmlDataManager.get(workspaceFolderManager.getFileSpecification(offsetUnit.getAbsoluteFilename()));
         String tagStartShortNameForComparison = offsetTag.getShortName().toLowerCase();
         String tagPrefix = offsetTag.getPrefix();
         String tagNamespace = null;
