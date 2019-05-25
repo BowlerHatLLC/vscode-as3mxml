@@ -22,11 +22,13 @@ import org.apache.royale.compiler.common.PrefixMap;
 import org.apache.royale.compiler.common.XMLName;
 import org.apache.royale.compiler.definitions.IClassDefinition;
 import org.apache.royale.compiler.definitions.IDefinition;
+import org.apache.royale.compiler.internal.mxml.MXMLData;
 import org.apache.royale.compiler.internal.projects.RoyaleProject;
 import org.apache.royale.compiler.mxml.IMXMLData;
 import org.apache.royale.compiler.mxml.IMXMLLanguageConstants;
 import org.apache.royale.compiler.mxml.IMXMLTagAttributeData;
 import org.apache.royale.compiler.mxml.IMXMLTagData;
+import org.apache.royale.compiler.mxml.IMXMLUnitData;
 
 public class MXMLDataUtils
 {
@@ -344,5 +346,25 @@ public class MXMLDataUtils
             findMXMLScriptTagsInternal(child, result);
             child = child.getNextSibling(true);
         }
+    }
+
+    public static IMXMLTagData getOffsetMXMLTag(MXMLData mxmlData, int currentOffset)
+    {
+        if (mxmlData == null)
+        {
+            return null;
+        }
+        IMXMLUnitData unitData = mxmlData.findContainmentReferenceUnit(currentOffset);
+        IMXMLUnitData currentUnitData = unitData;
+        while (currentUnitData != null)
+        {
+            if (currentUnitData instanceof IMXMLTagData)
+            {
+                IMXMLTagData tagData = (IMXMLTagData) currentUnitData;
+                return tagData;
+            }
+            currentUnitData = currentUnitData.getParentUnitData();
+        }
+        return null;
     }
 }

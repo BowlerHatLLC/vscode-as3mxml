@@ -39,6 +39,7 @@ import org.apache.royale.compiler.internal.projects.RoyaleJSProject;
 import org.apache.royale.compiler.internal.projects.RoyaleProject;
 import org.apache.royale.compiler.internal.projects.RoyaleProjectConfigurator;
 import org.apache.royale.compiler.internal.workspaces.Workspace;
+import org.apache.royale.compiler.units.ICompilationUnit;
 
 public class CompilerProjectUtils
 {
@@ -243,4 +244,28 @@ public class CompilerProjectUtils
         }
         return configurator;
 	}
+
+    public static ICompilationUnit findCompilationUnit(Path pathToFind, RoyaleProject project)
+    {
+        if(project == null)
+        {
+            return null;
+        }
+        for (ICompilationUnit unit : project.getCompilationUnits())
+        {
+            //it's possible for the collection of compilation units to contain
+            //null values, so be sure to check for null values before checking
+            //the file name
+            if (unit == null)
+            {
+                continue;
+            }
+            Path unitPath = Paths.get(unit.getAbsoluteFilename());
+            if(unitPath.equals(pathToFind))
+            {
+                return unit;
+            }
+        }
+        return null;
+    }
 }

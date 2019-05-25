@@ -32,6 +32,7 @@ import org.apache.royale.compiler.definitions.IGetterDefinition;
 import org.apache.royale.compiler.definitions.ISetterDefinition;
 import org.apache.royale.compiler.definitions.ITypeDefinition;
 import org.apache.royale.compiler.definitions.metadata.IMetaTag;
+import org.apache.royale.compiler.internal.tree.as.FileNode;
 import org.apache.royale.compiler.projects.ICompilerProject;
 import org.apache.royale.compiler.tree.ASTNodeID;
 import org.apache.royale.compiler.tree.as.IASNode;
@@ -39,6 +40,7 @@ import org.apache.royale.compiler.tree.as.IBinaryOperatorNode;
 import org.apache.royale.compiler.tree.as.IBlockNode;
 import org.apache.royale.compiler.tree.as.IClassNode;
 import org.apache.royale.compiler.tree.as.IExpressionNode;
+import org.apache.royale.compiler.tree.as.IFileNode;
 import org.apache.royale.compiler.tree.as.IFunctionCallNode;
 import org.apache.royale.compiler.tree.as.IFunctionNode;
 import org.apache.royale.compiler.tree.as.IIdentifierNode;
@@ -47,6 +49,7 @@ import org.apache.royale.compiler.tree.as.IInterfaceNode;
 import org.apache.royale.compiler.tree.as.ILiteralNode;
 import org.apache.royale.compiler.tree.as.IMemberAccessExpressionNode;
 import org.apache.royale.compiler.tree.as.IPackageNode;
+import org.apache.royale.compiler.tree.as.IScopedDefinitionNode;
 import org.apache.royale.compiler.tree.as.IScopedNode;
 import org.apache.royale.compiler.tree.as.ITransparentContainerNode;
 import org.apache.royale.compiler.tree.as.IVariableNode;
@@ -57,6 +60,48 @@ public class ASTUtils
 {
     private static final String DOT_STAR = ".*";
     private static final String UNDERSCORE_UNDERSCORE_AS3_PACKAGE = "__AS3__.";
+
+    public static IASNode getCompilationUnitAST(ICompilationUnit unit)
+    {
+        IASNode ast = null;
+        try
+        {
+            ast = unit.getSyntaxTreeRequest().get().getAST();
+        }
+        catch (InterruptedException e)
+        {
+            System.err.println("Interrupted while getting AST: " + unit.getAbsoluteFilename());
+            return null;
+        }
+        if (ast == null)
+        {
+            //we couldn't find the root node for this file
+            System.err.println("Could not find AST: " + unit.getAbsoluteFilename());
+            return null;
+        }
+        if (ast instanceof FileNode)
+        {
+            FileNode fileNode = (FileNode) ast;
+            //seems to work better than populateFunctionNodes() alone
+            fileNode.parseRequiredFunctionBodies();
+        }
+        if (ast instanceof IFileNode)
+        {
+            try
+            {
+                IFileNode fileNode = (IFileNode) ast;
+                //call this in addition to parseRequiredFunctionBodies() because
+                //functions in included files won't be populated without it
+                fileNode.populateFunctionNodes();
+            }
+            catch(NullPointerException e)
+            {
+                //sometimes, a null pointer exception can be thrown inside
+                //FunctionNode.parseFunctionBody(). seems like a Royale bug.
+            }
+        }
+        return ast;
+    }
 
     public static boolean containsWithStart(IASNode node, int offset)
     {
@@ -625,5 +670,71 @@ public class ASTUtils
             currentNode = currentNode.getParent();
         }
         return containingPackageName;
+    }
+
+    public static int getFunctionCallNodeArgumentIndex(IFunctionCallNode functionCallNode, IASNode offsetNode)
+    {
+        if (offsetNode == functionCallNode.getArgumentsNode()
+                && offsetNode.getChildCount() == 0)
+        {
+            //there are no arguments yet
+            return 0;
+        }
+        int indexToFind = offsetNode.getAbsoluteEnd();
+        IExpressionNode[] argumentNodes = functionCallNode.getArgumentNodes();
+        for (int i = argumentNodes.length - 1; i >= 0; i--)
+        {
+            IExpressionNode argumentNode = argumentNodes[i];
+            if (indexToFind >= argumentNode.getAbsoluteStart())
+            {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    public static IFunctionCallNode getAncestorFunctionCallNode(IASNode offsetNode)
+    {
+        IASNode currentNode = offsetNode;
+        do
+        {
+            if (currentNode instanceof IFunctionCallNode)
+            {
+                return (IFunctionCallNode) currentNode;
+            }
+            if (currentNode instanceof IScopedDefinitionNode)
+            {
+                return null;
+            }
+            currentNode = currentNode.getParent();
+        }
+        while (currentNode != null);
+        return null;
+    }
+
+    public static String memberAccessToPackageName(IMemberAccessExpressionNode memberAccess)
+    {
+        String result = null;
+        IExpressionNode rightOperand = memberAccess.getRightOperandNode();
+        if(!(rightOperand instanceof IIdentifierNode))
+        {
+            return null;
+        }
+        IExpressionNode leftOperand = memberAccess.getLeftOperandNode();
+        if (leftOperand instanceof IMemberAccessExpressionNode)
+        {
+            result = memberAccessToPackageName((IMemberAccessExpressionNode) leftOperand);
+        }
+        else if(leftOperand instanceof IIdentifierNode)
+        {
+            IIdentifierNode identifierNode = (IIdentifierNode) leftOperand;
+            result = identifierNode.getName();
+        }
+        else
+        {
+            return null;
+        }
+        IIdentifierNode identifierNode = (IIdentifierNode) rightOperand;
+        return result + "." + identifierNode.getName();
     }
 }
