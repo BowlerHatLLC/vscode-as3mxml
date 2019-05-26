@@ -24,9 +24,11 @@ import com.as3mxml.vscode.project.WorkspaceFolderData;
 import com.as3mxml.vscode.utils.ASTUtils;
 import com.as3mxml.vscode.utils.DefinitionDocumentationUtils;
 import com.as3mxml.vscode.utils.DefinitionTextUtils;
+import com.as3mxml.vscode.utils.FileTracker;
 import com.as3mxml.vscode.utils.LanguageServerCompilerUtils;
 import com.as3mxml.vscode.utils.MXMLDataUtils;
 import com.as3mxml.vscode.utils.WorkspaceFolderManager;
+import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
 
 import org.apache.royale.compiler.constants.IASKeywordConstants;
 import org.apache.royale.compiler.definitions.IClassDefinition;
@@ -56,10 +58,12 @@ import org.eclipse.lsp4j.jsonrpc.CancelChecker;
 public class SignatureHelpProvider
 {
 	private WorkspaceFolderManager workspaceFolderManager;
+	private FileTracker fileTracker;
 
-	public SignatureHelpProvider(WorkspaceFolderManager workspaceFolderManager)
+	public SignatureHelpProvider(WorkspaceFolderManager workspaceFolderManager, FileTracker fileTracker)
 	{
 		this.workspaceFolderManager = workspaceFolderManager;
+		this.fileTracker = fileTracker;
 	}
 
 	public SignatureHelp signatureHelp(TextDocumentPositionParams params, CancelChecker cancelToken)
@@ -82,7 +86,8 @@ public class SignatureHelpProvider
 		}
 		RoyaleProject project = folderData.project;
 
-		int currentOffset = workspaceFolderManager.getOffsetFromPathAndPosition(path, position, folderData);
+        IncludeFileData includeFileData = folderData.includedFiles.get(path.toString());
+		int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position, includeFileData);
 		if (currentOffset == -1)
 		{
 			cancelToken.checkCanceled();

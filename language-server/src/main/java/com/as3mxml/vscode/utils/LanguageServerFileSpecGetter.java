@@ -17,7 +17,6 @@ package com.as3mxml.vscode.utils;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Map;
 
 import org.apache.royale.compiler.common.IFileSpecificationGetter;
 import org.apache.royale.compiler.constants.IASKeywordConstants;
@@ -39,13 +38,13 @@ public class LanguageServerFileSpecGetter implements IFileSpecificationGetter
     private static final String PACKAGE_WITHOUT_BRACES = "package ";
     private static final String FILE_EXTENSION_AS = ".as";
 
-    public LanguageServerFileSpecGetter(IWorkspace workspace, Map<Path, String> sourceByPath)
+    public LanguageServerFileSpecGetter(IWorkspace workspace, FileTracker fileTracker)
     {
         this.workspace = workspace;
-        this.sourceByPath = sourceByPath;
+        this.fileTracker = fileTracker;
     }
 
-    private Map<Path, String> sourceByPath;
+    private FileTracker fileTracker;
     private IWorkspace workspace;
 
     public IWorkspace getWorkspace()
@@ -61,9 +60,9 @@ public class LanguageServerFileSpecGetter implements IFileSpecificationGetter
     public IFileSpecification getFileSpecification(String filePath)
     {
         Path path = Paths.get(filePath);
-        if (sourceByPath.containsKey(path))
+        if (fileTracker.isOpen(path))
         {
-            String code = sourceByPath.get(path);
+            String code = fileTracker.getText(path);
             if (filePath.endsWith(FILE_EXTENSION_AS))
             {
                 code = fixPackageWithoutBraces(code);

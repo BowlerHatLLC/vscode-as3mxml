@@ -23,9 +23,11 @@ import java.util.List;
 import com.as3mxml.vscode.project.WorkspaceFolderData;
 import com.as3mxml.vscode.utils.DefinitionDocumentationUtils;
 import com.as3mxml.vscode.utils.DefinitionTextUtils;
+import com.as3mxml.vscode.utils.FileTracker;
 import com.as3mxml.vscode.utils.LanguageServerCompilerUtils;
 import com.as3mxml.vscode.utils.MXMLDataUtils;
 import com.as3mxml.vscode.utils.WorkspaceFolderManager;
+import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
 
 import org.apache.royale.compiler.definitions.IClassDefinition;
 import org.apache.royale.compiler.definitions.IDefinition;
@@ -51,10 +53,12 @@ public class HoverProvider
     private static final String MARKED_STRING_LANGUAGE_MXML = "mxml";
 
     private WorkspaceFolderManager workspaceFolderManager;
+    private FileTracker fileTracker;
 
-	public HoverProvider(WorkspaceFolderManager workspaceFolderManager)
+	public HoverProvider(WorkspaceFolderManager workspaceFolderManager, FileTracker fileTracker)
 	{
-		this.workspaceFolderManager = workspaceFolderManager;
+        this.workspaceFolderManager = workspaceFolderManager;
+        this.fileTracker = fileTracker;
 	}
 
 	public Hover hover(TextDocumentPositionParams params, CancelChecker cancelToken)
@@ -75,7 +79,8 @@ public class HoverProvider
 			return new Hover(Collections.emptyList(), null);
 		}
 
-		int currentOffset = workspaceFolderManager.getOffsetFromPathAndPosition(path, position, folderData);
+        IncludeFileData includeFileData = folderData.includedFiles.get(path.toString());
+		int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position, includeFileData);
 		if (currentOffset == -1)
 		{
 			cancelToken.checkCanceled();

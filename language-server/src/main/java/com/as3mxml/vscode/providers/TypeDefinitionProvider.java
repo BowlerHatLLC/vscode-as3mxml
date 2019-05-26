@@ -21,9 +21,11 @@ import java.util.Collections;
 import java.util.List;
 
 import com.as3mxml.vscode.project.WorkspaceFolderData;
+import com.as3mxml.vscode.utils.FileTracker;
 import com.as3mxml.vscode.utils.LanguageServerCompilerUtils;
 import com.as3mxml.vscode.utils.MXMLDataUtils;
 import com.as3mxml.vscode.utils.WorkspaceFolderManager;
+import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
 
 import org.apache.royale.compiler.definitions.IDefinition;
 import org.apache.royale.compiler.internal.mxml.MXMLData;
@@ -41,10 +43,12 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either;
 public class TypeDefinitionProvider
 {
 	private WorkspaceFolderManager workspaceFolderManager;
+	private FileTracker fileTracker;
 
-	public TypeDefinitionProvider(WorkspaceFolderManager workspaceFolderManager)
+	public TypeDefinitionProvider(WorkspaceFolderManager workspaceFolderManager, FileTracker fileTracker)
 	{
 		this.workspaceFolderManager = workspaceFolderManager;
+		this.fileTracker = fileTracker;
 	}
 
 	public Either<List<? extends Location>, List<? extends LocationLink>> typeDefinition(TextDocumentPositionParams params, CancelChecker cancelToken)
@@ -65,7 +69,8 @@ public class TypeDefinitionProvider
 			return Either.forLeft(Collections.emptyList());
 		}
 
-		int currentOffset = workspaceFolderManager.getOffsetFromPathAndPosition(path, position, folderData);
+        IncludeFileData includeFileData = folderData.includedFiles.get(path.toString());
+		int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position, includeFileData);
 		if (currentOffset == -1)
 		{
 			cancelToken.checkCanceled();

@@ -25,11 +25,13 @@ import com.as3mxml.vscode.project.WorkspaceFolderData;
 import com.as3mxml.vscode.utils.ASTUtils;
 import com.as3mxml.vscode.utils.CodeActionsUtils;
 import com.as3mxml.vscode.utils.CompilerProjectUtils;
+import com.as3mxml.vscode.utils.FileTracker;
 import com.as3mxml.vscode.utils.ImportRange;
 import com.as3mxml.vscode.utils.LanguageServerCompilerUtils;
 import com.as3mxml.vscode.utils.MXMLDataUtils;
 import com.as3mxml.vscode.utils.SourcePathUtils;
 import com.as3mxml.vscode.utils.WorkspaceFolderManager;
+import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
 import com.google.common.collect.Lists;
 import com.google.gson.JsonObject;
 
@@ -64,11 +66,13 @@ public class CodeActionProvider
 {
     private static final String MXML_EXTENSION = ".mxml";
 
-	private WorkspaceFolderManager workspaceFolderManager;
+    private WorkspaceFolderManager workspaceFolderManager;
+    private FileTracker fileTracker;
 
-	public CodeActionProvider(WorkspaceFolderManager workspaceFolderManager)
+	public CodeActionProvider(WorkspaceFolderManager workspaceFolderManager, FileTracker fileTracker)
 	{
-		this.workspaceFolderManager = workspaceFolderManager;
+        this.workspaceFolderManager = workspaceFolderManager;
+        this.fileTracker = fileTracker;
 	}
 
 	public List<Either<Command, CodeAction>> codeAction(CodeActionParams params, CancelChecker cancelToken)
@@ -82,7 +86,7 @@ public class CodeActionProvider
 			return Collections.emptyList();
 		}
 		//we don't need to create code actions for non-open files
-		if (!workspaceFolderManager.sourceByPath.containsKey(path))
+		if (!fileTracker.isOpen(path))
 		{
 			cancelToken.checkCanceled();
 			return Collections.emptyList();
@@ -114,7 +118,7 @@ public class CodeActionProvider
 			IASNode ast = ASTUtils.getCompilationUnitAST(unit);
 			if (ast != null)
 			{
-				String fileText = workspaceFolderManager.sourceByPath.get(path);
+				String fileText = fileTracker.getText(path);
 				CodeActionsUtils.findGetSetCodeActions(ast, project, textDocument.getUri(), fileText, params.getRange(), codeActions);
 			}
 		}
@@ -225,7 +229,8 @@ public class CodeActionProvider
     private void createCodeActionForMissingField(Path path, Diagnostic diagnostic, WorkspaceFolderData folderData, List<Either<Command, CodeAction>> codeActions)
     {
         Position position = diagnostic.getRange().getStart();
-        int currentOffset = workspaceFolderManager.getOffsetFromPathAndPosition(path, position, folderData);
+        IncludeFileData includeFileData = folderData.includedFiles.get(path.toString());
+		int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position, includeFileData);
         IASNode offsetNode = workspaceFolderManager.getOffsetNode(path, currentOffset, folderData);
         if (offsetNode instanceof IMXMLInstanceNode)
         {
@@ -235,7 +240,7 @@ public class CodeActionProvider
                 IMXMLTagData offsetTag = MXMLDataUtils.getOffsetMXMLTag(mxmlData, currentOffset);
                 //workaround for bug in Royale compiler
                 Position newPosition = new Position(position.getLine(), position.getCharacter() + 1);
-                int newOffset = workspaceFolderManager.getOffsetFromPathAndPosition(path, newPosition, folderData);
+                int newOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), newPosition, includeFileData);
                 offsetNode = workspaceFolderManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, newOffset, folderData);
             }
         }
@@ -265,7 +270,7 @@ public class CodeActionProvider
         {
             return;
         }
-        String fileText = workspaceFolderManager.getFileTextForPath(path);
+        String fileText = fileTracker.getText(path);
         if(fileText == null)
         {
             return;
@@ -288,7 +293,8 @@ public class CodeActionProvider
     private void createCodeActionForMissingLocalVariable(Path path, Diagnostic diagnostic, WorkspaceFolderData folderData, List<Either<Command, CodeAction>> codeActions)
     {
         Position position = diagnostic.getRange().getStart();
-        int currentOffset = workspaceFolderManager.getOffsetFromPathAndPosition(path, position, folderData);
+        IncludeFileData includeFileData = folderData.includedFiles.get(path.toString());
+		int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position, includeFileData);
         IASNode offsetNode = workspaceFolderManager.getOffsetNode(path, currentOffset, folderData);
         if (offsetNode instanceof IMXMLInstanceNode)
         {
@@ -298,7 +304,7 @@ public class CodeActionProvider
                 IMXMLTagData offsetTag = MXMLDataUtils.getOffsetMXMLTag(mxmlData, currentOffset);
                 //workaround for bug in Royale compiler
                 Position newPosition = new Position(position.getLine(), position.getCharacter() + 1);
-                int newOffset = workspaceFolderManager.getOffsetFromPathAndPosition(path, newPosition, folderData);
+                int newOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), newPosition, includeFileData);
                 offsetNode = workspaceFolderManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, newOffset, folderData);
             }
         }
@@ -311,7 +317,7 @@ public class CodeActionProvider
         {
             return;
         }
-        String fileText = workspaceFolderManager.getFileTextForPath(path);
+        String fileText = fileTracker.getText(path);
         if(fileText == null)
         {
             return;
@@ -336,14 +342,15 @@ public class CodeActionProvider
     {
         RoyaleProject project = folderData.project;
         Position position = diagnostic.getRange().getStart();
-        int currentOffset = workspaceFolderManager.getOffsetFromPathAndPosition(path, position, folderData);
+        IncludeFileData includeFileData = folderData.includedFiles.get(path.toString());
+		int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position, includeFileData);
         IASNode offsetNode = workspaceFolderManager.getOffsetNode(path, currentOffset, folderData);
         if(!(offsetNode instanceof ITryNode))
         {
             return;
         }
         ITryNode tryNode = (ITryNode) offsetNode;
-        String fileText = workspaceFolderManager.getFileTextForPath(path);
+        String fileText = fileTracker.getText(path);
         if(fileText == null)
         {
             return;
@@ -368,7 +375,8 @@ public class CodeActionProvider
     {
         RoyaleProject project = folderData.project;
         Position position = diagnostic.getRange().getStart();
-        int currentOffset = workspaceFolderManager.getOffsetFromPathAndPosition(path, position, folderData);
+        IncludeFileData includeFileData = folderData.includedFiles.get(path.toString());
+		int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position, includeFileData);
         IASNode offsetNode = workspaceFolderManager.getOffsetNode(path, currentOffset, folderData);
         if (offsetNode == null)
         {
@@ -381,7 +389,7 @@ public class CodeActionProvider
             return;
         }
 
-        String fileText = workspaceFolderManager.getFileTextForPath(path);
+        String fileText = fileTracker.getText(path);
         if(fileText == null)
         {
             return;
@@ -414,7 +422,8 @@ public class CodeActionProvider
     {
         RoyaleProject project = folderData.project;
         Position position = diagnostic.getRange().getStart();
-        int currentOffset = workspaceFolderManager.getOffsetFromPathAndPosition(path, position, folderData);
+        IncludeFileData includeFileData = folderData.includedFiles.get(path.toString());
+		int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position, includeFileData);
         IASNode offsetNode = workspaceFolderManager.getOffsetNode(path, currentOffset, folderData);
         if (offsetNode == null)
         {
@@ -428,7 +437,7 @@ public class CodeActionProvider
                 IMXMLTagData offsetTag = MXMLDataUtils.getOffsetMXMLTag(mxmlData, currentOffset);
                 //workaround for bug in Royale compiler
                 Position newPosition = new Position(position.getLine(), position.getCharacter() + 1);
-                int newOffset = workspaceFolderManager.getOffsetFromPathAndPosition(path, newPosition, folderData);
+                int newOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), newPosition, includeFileData);
                 offsetNode = workspaceFolderManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, newOffset, folderData);
             }
         }
@@ -456,7 +465,7 @@ public class CodeActionProvider
         {
             return;
         }
-        String fileText = workspaceFolderManager.getFileTextForPath(path);
+        String fileText = fileTracker.getText(path);
         if(fileText == null)
         {
             return;
@@ -481,7 +490,8 @@ public class CodeActionProvider
     {
         RoyaleProject project = folderData.project;
         Position position = diagnostic.getRange().getStart();
-        int currentOffset = workspaceFolderManager.getOffsetFromPathAndPosition(path, position, folderData);
+        IncludeFileData includeFileData = folderData.includedFiles.get(path.toString());
+		int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position, includeFileData);
         IASNode offsetNode = workspaceFolderManager.getOffsetNode(path, currentOffset, folderData);
         if (offsetNode == null)
         {
@@ -495,7 +505,7 @@ public class CodeActionProvider
                 IMXMLTagData offsetTag = MXMLDataUtils.getOffsetMXMLTag(mxmlData, currentOffset);
                 //workaround for bug in Royale compiler
                 Position newPosition = new Position(position.getLine(), position.getCharacter() + 1);
-                int newOffset = workspaceFolderManager.getOffsetFromPathAndPosition(path, newPosition, folderData);
+                int newOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), newPosition, includeFileData);
                 offsetNode = workspaceFolderManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, newOffset, folderData);
             }
         }
@@ -555,7 +565,7 @@ public class CodeActionProvider
             return;
         }
 
-        String fileText = workspaceFolderManager.getFileTextForPath(path);
+        String fileText = fileTracker.getText(path);
         if(fileText == null)
         {
             return;
@@ -581,7 +591,8 @@ public class CodeActionProvider
     {
         RoyaleProject project = folderData.project;
         Position position = diagnostic.getRange().getStart();
-        int currentOffset = workspaceFolderManager.getOffsetFromPathAndPosition(path, position, folderData);
+        IncludeFileData includeFileData = folderData.includedFiles.get(path.toString());
+		int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position, includeFileData);
         IASNode offsetNode = workspaceFolderManager.getOffsetNode(path, currentOffset, folderData);
         IMXMLTagData offsetTag = null;
         boolean isMXML = path.toUri().toString().endsWith(MXML_EXTENSION);
@@ -597,7 +608,7 @@ public class CodeActionProvider
         {
             //workaround for bug in Royale compiler
             Position newPosition = new Position(position.getLine(), position.getCharacter() + 1);
-            int newOffset = workspaceFolderManager.getOffsetFromPathAndPosition(path, newPosition, folderData);
+            int newOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), newPosition, includeFileData);
             offsetNode = workspaceFolderManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, newOffset, folderData);
         }
         if (offsetNode == null || !(offsetNode instanceof IIdentifierNode))
@@ -614,7 +625,7 @@ public class CodeActionProvider
             importRange = ImportRange.fromOffsetNode(offsetNode);
         }
         String uri = importRange.uri;
-        String fileText = workspaceFolderManager.getFileTextForPath(path);
+        String fileText = fileTracker.getText(path);
         if(fileText == null)
         {
             return;

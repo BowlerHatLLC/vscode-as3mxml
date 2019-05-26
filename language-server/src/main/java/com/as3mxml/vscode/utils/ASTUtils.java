@@ -737,4 +737,50 @@ public class ASTUtils
         IIdentifierNode identifierNode = (IIdentifierNode) rightOperand;
         return result + "." + identifierNode.getName();
     }
+
+    public static boolean isInActionScriptComment(String code, int currentOffset, int minCommentStartIndex)
+    {
+        int startComment = code.lastIndexOf("/*", currentOffset - 1);
+        if (startComment != -1 && startComment >= minCommentStartIndex)
+        {
+            int endComment = code.indexOf("*/", startComment);
+            if (endComment > currentOffset)
+            {
+                return true;
+            }
+        }
+        int startLine = code.lastIndexOf('\n', currentOffset - 1);
+        if (startLine == -1)
+        {
+            //we're on the first line
+            startLine = 0;
+        }
+        //we need to stop searching after the end of the current line
+        int endLine = code.indexOf('\n', currentOffset);
+        do
+        {
+            //we need to check this in a loop because it's possible for
+            //the start of a single line comment to appear inside multiple
+            //MXML attributes on the same line
+            startComment = code.indexOf("//", startLine);
+            if(startComment != -1 && currentOffset > startComment && startComment >= minCommentStartIndex)
+            {
+                return true;
+            }
+            startLine = startComment + 2;
+        }
+        while(startComment != -1 && startLine < endLine);
+        return false;
+    }
+
+    public static boolean isInXMLComment(String code, int currentOffset)
+    {
+        int startComment = code.lastIndexOf("<!--", currentOffset - 1);
+        if (startComment == -1)
+        {
+            return false;
+        }
+        int endComment = code.indexOf("-->", startComment);
+        return endComment > currentOffset;
+    }
 }

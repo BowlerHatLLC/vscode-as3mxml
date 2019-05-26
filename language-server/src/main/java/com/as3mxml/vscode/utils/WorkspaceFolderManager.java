@@ -15,12 +15,8 @@ limitations under the License.
 */
 package com.as3mxml.vscode.utils;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
-import java.io.StringReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -33,7 +29,6 @@ import com.as3mxml.vscode.project.WorkspaceFolderData;
 import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
 import com.as3mxml.vscode.utils.DefinitionTextUtils.DefinitionAsText;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.royale.compiler.config.Configuration;
 import org.apache.royale.compiler.definitions.IClassDefinition;
 import org.apache.royale.compiler.definitions.IDefinition;
@@ -43,7 +38,6 @@ import org.apache.royale.compiler.definitions.ITypeDefinition;
 import org.apache.royale.compiler.definitions.metadata.IDeprecationInfo;
 import org.apache.royale.compiler.filespecs.IFileSpecification;
 import org.apache.royale.compiler.internal.mxml.MXMLData;
-import org.apache.royale.compiler.internal.parsing.as.OffsetCue;
 import org.apache.royale.compiler.internal.projects.RoyaleProject;
 import org.apache.royale.compiler.mxml.IMXMLDataManager;
 import org.apache.royale.compiler.mxml.IMXMLTagAttributeData;
@@ -56,7 +50,6 @@ import org.apache.royale.compiler.tree.mxml.IMXMLNode;
 import org.apache.royale.compiler.tree.mxml.IMXMLPropertySpecifierNode;
 import org.apache.royale.compiler.tree.mxml.IMXMLSingleDataBindingNode;
 import org.apache.royale.compiler.units.ICompilationUnit;
-import org.apache.royale.compiler.workspaces.IWorkspace;
 import org.apache.royale.utils.FilenameNormalization;
 import org.eclipse.lsp4j.DocumentSymbol;
 import org.eclipse.lsp4j.Location;
@@ -73,19 +66,13 @@ public class WorkspaceFolderManager
     private static final String SDK_LIBRARY_PATH_SIGNATURE_UNIX = "/frameworks/libs/";
     private static final String SDK_LIBRARY_PATH_SIGNATURE_WINDOWS = "\\frameworks\\libs\\";
 
-    public Map<Path, String> sourceByPath = new HashMap<>();
-    private LanguageServerFileSpecGetter fileSpecGetter;
     private List<WorkspaceFolder> workspaceFolders = new ArrayList<>();
     private Map<WorkspaceFolder, WorkspaceFolderData> workspaceFolderToData = new HashMap<>();
+    private FileTracker fileTracker;
     
-    public WorkspaceFolderManager(IWorkspace compilerWorkspace)
+    public WorkspaceFolderManager(FileTracker fileTracker)
     {
-        fileSpecGetter = new LanguageServerFileSpecGetter(compilerWorkspace, sourceByPath);
-    }
-
-    public IFileSpecification getFileSpecification(String filePath)
-    {
-        return fileSpecGetter.getFileSpecification(filePath);
+        this.fileTracker = fileTracker;
     }
 
     public List<WorkspaceFolder> getWorkspaceFolders()
@@ -325,7 +312,7 @@ public class WorkspaceFolderManager
         }
         IMXMLDataManager mxmlDataManager = project.getWorkspace().getMXMLDataManager();
         String normalizedPath = FilenameNormalization.normalize(path.toAbsolutePath().toString());
-        IFileSpecification fileSpecification = getFileSpecification(normalizedPath);
+        IFileSpecification fileSpecification = fileTracker.getFileSpecification(normalizedPath);
         return (MXMLData) mxmlDataManager.get(fileSpecification);
     }
 
@@ -345,102 +332,6 @@ public class WorkspaceFolderManager
             }
         }
         return null;
-    }
-
-    public int getOffsetFromPathAndPosition(Path path, Position position, WorkspaceFolderData folderData)
-    {
-        int offset = 0;
-        Reader reader = getReaderForPath(path);
-        try
-        {
-            offset = LanguageServerCompilerUtils.getOffsetFromPosition(reader, position);
-        }
-        finally
-        {
-            try
-            {
-                reader.close();
-            }
-            catch(IOException e) {}
-        }
- 
-        IncludeFileData includeFileData = folderData.includedFiles.get(path.toString());
-        if(includeFileData != null)
-        {
-            int originalOffset = offset;
-            //we're actually going to use the offset from the file that includes
-            //this one
-            for(OffsetCue offsetCue : includeFileData.getOffsetCues())
-            {
-                if(originalOffset >= offsetCue.local)
-                {
-                    offset = originalOffset + offsetCue.adjustment;
-                }
-            }
-        }
-        return offset;
-    }
-
-    public Reader getReaderForPath(Path path)
-    {
-        if(path == null)
-        {
-            return null;
-        }
-        Reader reader = null;
-        if (sourceByPath.containsKey(path))
-        {
-            //if the file is open, use the edited code
-            String code = sourceByPath.get(path);
-            reader = new StringReader(code);
-        }
-        else
-        {
-            File file = new File(path.toAbsolutePath().toString());
-            if (!file.exists())
-            {
-                return null;
-            }
-            //if the file is not open, read it from the file system
-            try
-            {
-                reader = new FileReader(file);
-            }
-            catch (FileNotFoundException e)
-            {
-                //do nothing
-            }
-        }
-        return reader;
-    }
-
-    public String getFileTextForPath(Path path)
-    {
-        if(sourceByPath.containsKey(path))
-        {
-            return sourceByPath.get(path);
-        }
-        Reader reader = getReaderForPath(path);
-        if(reader == null)
-        {
-            return null;
-        }
-        try
-        {
-            return IOUtils.toString(reader);
-        }
-        catch (IOException e)
-        {
-            return null;
-        }
-        finally
-        {
-            try
-            {
-                reader.close();
-            }
-            catch(IOException e) {}
-        }
     }
 
     public List<WorkspaceFolderData> getAllWorkspaceFolderDataForSourceFile(Path path)
@@ -491,62 +382,6 @@ public class WorkspaceFolderManager
             }
         }
         return result;
-    }
-
-    public boolean isInActionScriptComment(Path path, int currentOffset, int minCommentStartIndex)
-    {
-        if (path == null || !sourceByPath.containsKey(path))
-        {
-            return false;
-        }
-        String code = sourceByPath.get(path);
-        int startComment = code.lastIndexOf("/*", currentOffset - 1);
-        if (startComment != -1 && startComment >= minCommentStartIndex)
-        {
-            int endComment = code.indexOf("*/", startComment);
-            if (endComment > currentOffset)
-            {
-                return true;
-            }
-        }
-        int startLine = code.lastIndexOf('\n', currentOffset - 1);
-        if (startLine == -1)
-        {
-            //we're on the first line
-            startLine = 0;
-        }
-        //we need to stop searching after the end of the current line
-        int endLine = code.indexOf('\n', currentOffset);
-        do
-        {
-            //we need to check this in a loop because it's possible for
-            //the start of a single line comment to appear inside multiple
-            //MXML attributes on the same line
-            startComment = code.indexOf("//", startLine);
-            if(startComment != -1 && currentOffset > startComment && startComment >= minCommentStartIndex)
-            {
-                return true;
-            }
-            startLine = startComment + 2;
-        }
-        while(startComment != -1 && startLine < endLine);
-        return false;
-    }
-
-    public boolean isInXMLComment(Path path, int currentOffset)
-    {
-        if (!sourceByPath.containsKey(path))
-        {
-            return false;
-        }
-        String code = sourceByPath.get(path);
-        int startComment = code.lastIndexOf("<!--", currentOffset - 1);
-        if (startComment == -1)
-        {
-            return false;
-        }
-        int endComment = code.indexOf("-->", startComment);
-        return endComment > currentOffset;
     }
 
     public Location getLocationFromDefinition(IDefinition definition, RoyaleProject project)
@@ -622,7 +457,7 @@ public class WorkspaceFolderManager
                 //this is not ideal, but MXML variable definitions may not have a
                 //node associated with them, so we need to figure this out from the
                 //offset instead of a pre-calculated line and column -JT
-                Reader definitionReader = getReaderForPath(definitionPath);
+                Reader definitionReader = fileTracker.getReader(definitionPath);
                 if (definitionReader == null)
                 {
                     //we might get here if it's from a SWC, but the associated
@@ -814,7 +649,7 @@ public class WorkspaceFolderManager
                 return;
             }
 
-            Reader reader = getReaderForPath(resolvedPath);
+            Reader reader = fileTracker.getReader(resolvedPath);
             if (reader == null)
             {
                 //we can't get the code at all

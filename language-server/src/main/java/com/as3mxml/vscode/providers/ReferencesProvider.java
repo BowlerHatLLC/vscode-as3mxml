@@ -24,9 +24,11 @@ import java.util.List;
 import com.as3mxml.vscode.project.WorkspaceFolderData;
 import com.as3mxml.vscode.utils.ASTUtils;
 import com.as3mxml.vscode.utils.CompilerProjectUtils;
+import com.as3mxml.vscode.utils.FileTracker;
 import com.as3mxml.vscode.utils.LanguageServerCompilerUtils;
 import com.as3mxml.vscode.utils.MXMLDataUtils;
 import com.as3mxml.vscode.utils.WorkspaceFolderManager;
+import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
 
 import org.apache.royale.compiler.common.ISourceLocation;
 import org.apache.royale.compiler.definitions.IClassDefinition;
@@ -53,11 +55,13 @@ public class ReferencesProvider
 {
     private static final String MXML_EXTENSION = ".mxml";
 
-	private WorkspaceFolderManager workspaceFolderManager;
+    private WorkspaceFolderManager workspaceFolderManager;
+    private FileTracker fileTracker;
 
-	public ReferencesProvider(WorkspaceFolderManager workspaceFolderManager)
+	public ReferencesProvider(WorkspaceFolderManager workspaceFolderManager, FileTracker fileTracker)
 	{
-		this.workspaceFolderManager = workspaceFolderManager;
+        this.workspaceFolderManager = workspaceFolderManager;
+        this.fileTracker = fileTracker;
 	}
 
 	public List<? extends Location> references(ReferenceParams params, CancelChecker cancelToken)
@@ -79,7 +83,8 @@ public class ReferencesProvider
 		}
 		RoyaleProject project = folderData.project;
 
-		int currentOffset = workspaceFolderManager.getOffsetFromPathAndPosition(path, position, folderData);
+        IncludeFileData includeFileData = folderData.includedFiles.get(path.toString());
+		int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position, includeFileData);
 		if (currentOffset == -1)
 		{
 			cancelToken.checkCanceled();
@@ -228,7 +233,7 @@ public class ReferencesProvider
         if (compilationUnit.getAbsoluteFilename().endsWith(MXML_EXTENSION))
         {
             IMXMLDataManager mxmlDataManager = project.getWorkspace().getMXMLDataManager();
-            MXMLData mxmlData = (MXMLData) mxmlDataManager.get(workspaceFolderManager.getFileSpecification(compilationUnit.getAbsoluteFilename()));
+            MXMLData mxmlData = (MXMLData) mxmlDataManager.get(fileTracker.getFileSpecification(compilationUnit.getAbsoluteFilename()));
             IMXMLTagData rootTag = mxmlData.getRootTag();
             if (rootTag != null)
             {

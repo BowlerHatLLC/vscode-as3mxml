@@ -24,6 +24,7 @@ import java.nio.file.Paths;
 import java.util.Optional;
 
 import com.as3mxml.vscode.compiler.problems.SyntaxFallbackProblem;
+import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
 
 import org.apache.royale.compiler.clients.problems.CompilerProblemCategorizer;
 import org.apache.royale.compiler.common.ISourceLocation;
@@ -38,6 +39,7 @@ import org.apache.royale.compiler.definitions.IPackageDefinition;
 import org.apache.royale.compiler.definitions.IStyleDefinition;
 import org.apache.royale.compiler.definitions.ITypeDefinition;
 import org.apache.royale.compiler.definitions.IVariableDefinition;
+import org.apache.royale.compiler.internal.parsing.as.OffsetCue;
 import org.apache.royale.compiler.internal.projects.RoyaleProject;
 import org.apache.royale.compiler.problems.CompilerProblemSeverity;
 import org.apache.royale.compiler.problems.ICompilerProblem;
@@ -162,6 +164,38 @@ public class LanguageServerCompilerUtils
         range.setEnd(end);
 
         return range;
+    }
+
+    public static int getOffsetFromPosition(Reader reader, Position position, IncludeFileData includeFileData)
+    {
+        int offset = 0;
+        try
+        {
+            offset = getOffsetFromPosition(reader, position);
+        }
+        finally
+        {
+            try
+            {
+                reader.close();
+            }
+            catch(IOException e) {}
+        }
+ 
+        if(includeFileData != null)
+        {
+            int originalOffset = offset;
+            //we're actually going to use the offset from the file that includes
+            //this one
+            for(OffsetCue offsetCue : includeFileData.getOffsetCues())
+            {
+                if(originalOffset >= offsetCue.local)
+                {
+                    offset = originalOffset + offsetCue.adjustment;
+                }
+            }
+        }
+        return offset;
     }
     
     /**

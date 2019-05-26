@@ -40,6 +40,7 @@ import com.as3mxml.vscode.services.ActionScriptLanguageClient;
 import com.as3mxml.vscode.utils.ASTUtils;
 import com.as3mxml.vscode.utils.CodeActionsUtils;
 import com.as3mxml.vscode.utils.CompilerProjectUtils;
+import com.as3mxml.vscode.utils.FileTracker;
 import com.as3mxml.vscode.utils.ImportRange;
 import com.as3mxml.vscode.utils.ImportTextEditUtils;
 import com.as3mxml.vscode.utils.LanguageServerCompilerUtils;
@@ -71,14 +72,17 @@ public class ExecuteCommandProvider
     private static final String AS_EXTENSION = ".as";
     private static final String PROPERTY_FRAMEWORK_LIB = "royalelib";
 
-	private WorkspaceFolderManager workspaceFolderManager;
+    private WorkspaceFolderManager workspaceFolderManager;
+    private FileTracker fileTracker;
 	private Workspace compilerWorkspace;
 	private ActionScriptLanguageClient languageClient;
     private CompilerShell compilerShell;
 
-	public ExecuteCommandProvider(WorkspaceFolderManager workspaceFolderManager, Workspace compilerWorkspace, ActionScriptLanguageClient languageClient)
+    public ExecuteCommandProvider(WorkspaceFolderManager workspaceFolderManager, FileTracker fileTracker,
+        Workspace compilerWorkspace, ActionScriptLanguageClient languageClient)
 	{
-		this.workspaceFolderManager = workspaceFolderManager;
+        this.workspaceFolderManager = workspaceFolderManager;
+        this.fileTracker = fileTracker;
 		this.compilerWorkspace = compilerWorkspace;
 		this.languageClient = languageClient;
 	}
@@ -155,7 +159,7 @@ public class ExecuteCommandProvider
                 }
                 fileURIs.add(file.toURI().toString());
                 Path filePath = file.toPath();
-                if(!workspaceFolderManager.sourceByPath.containsKey(filePath))
+                if(!fileTracker.isOpen(filePath))
                 {
                     filesToClose.add(file.toPath());
                     openFileForOrganizeImports(filePath);
@@ -196,7 +200,7 @@ public class ExecuteCommandProvider
             }
             for(Path filePath : filesToClose)
             {
-                workspaceFolderManager.sourceByPath.remove(filePath);
+                fileTracker.closeFile(filePath);
             }
             if(editParams != null)
             {
@@ -218,7 +222,7 @@ public class ExecuteCommandProvider
             return CompletableFuture.completedFuture(new Object());
         }
 
-        boolean isOpen = workspaceFolderManager.sourceByPath.containsKey(path);
+        boolean isOpen = fileTracker.isOpen(path);
         if(!isOpen)
         {
             openFileForOrganizeImports(path);
@@ -251,7 +255,7 @@ public class ExecuteCommandProvider
             }
             if(!isOpen)
             {
-                workspaceFolderManager.sourceByPath.remove(path);
+                fileTracker.closeFile(path);
             }
             if(editParams != null)
             {
@@ -263,7 +267,7 @@ public class ExecuteCommandProvider
 
     private void openFileForOrganizeImports(Path path)
     {
-        if(workspaceFolderManager.sourceByPath.containsKey(path))
+        if(fileTracker.isOpen(path))
         {
             //already opened
             return;
@@ -271,7 +275,7 @@ public class ExecuteCommandProvider
 
         //if the file isn't open in an editor, we need to read it from the
         //file system instead.
-        String text = workspaceFolderManager.getFileTextForPath(path);
+        String text = fileTracker.getText(path);
         if(text == null)
         {
             return;
@@ -282,12 +286,12 @@ public class ExecuteCommandProvider
         //to force the AST to be populated.
 
         //we'll clear this out later before we return from this function
-        workspaceFolderManager.sourceByPath.put(path, text);
+        fileTracker.openFile(path, text);
 
         //notify the workspace that it should read the file from memory
         //instead of loading from the file system
         String normalizedPath = FilenameNormalization.normalize(path.toAbsolutePath().toString());
-        IFileSpecification fileSpec = workspaceFolderManager.getFileSpecification(normalizedPath);
+        IFileSpecification fileSpec = fileTracker.getFileSpecification(normalizedPath);
         compilerWorkspace.fileChanged(fileSpec);
     }
 
@@ -311,7 +315,7 @@ public class ExecuteCommandProvider
             return;
         }
 
-        String text = workspaceFolderManager.getFileTextForPath(path);
+        String text = fileTracker.getText(path);
         if(text == null)
         {
             return;
@@ -378,7 +382,7 @@ public class ExecuteCommandProvider
                 {
                     return new Object();
                 }
-                String text = workspaceFolderManager.getFileTextForPath(pathForImport);
+                String text = fileTracker.getText(pathForImport);
                 if(text == null)
                 {
                     return new Object();
@@ -442,7 +446,7 @@ public class ExecuteCommandProvider
                 {
                     return new Object();
                 }
-                String text = workspaceFolderManager.getFileTextForPath(pathForImport);
+                String text = fileTracker.getText(pathForImport);
                 if(text == null)
                 {
                     return new Object();

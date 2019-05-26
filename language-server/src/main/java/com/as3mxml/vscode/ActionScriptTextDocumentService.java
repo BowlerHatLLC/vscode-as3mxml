@@ -18,7 +18,6 @@ package com.as3mxml.vscode;
 import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
-import java.io.StringReader;
 import java.net.URI;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
@@ -66,6 +65,7 @@ import com.as3mxml.vscode.utils.CompilationUnitUtils;
 import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
 import com.as3mxml.vscode.utils.CompilerProblemFilter;
 import com.as3mxml.vscode.utils.CompilerProjectUtils;
+import com.as3mxml.vscode.utils.FileTracker;
 import com.as3mxml.vscode.utils.LSPUtils;
 import com.as3mxml.vscode.utils.LanguageServerCompilerUtils;
 import com.as3mxml.vscode.utils.ProblemTracker;
@@ -128,15 +128,12 @@ import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.LocationLink;
 import org.eclipse.lsp4j.MessageParams;
 import org.eclipse.lsp4j.MessageType;
-import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
-import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.ReferenceParams;
 import org.eclipse.lsp4j.RenameParams;
 import org.eclipse.lsp4j.SignatureHelp;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.TextDocumentClientCapabilities;
-import org.eclipse.lsp4j.TextDocumentContentChangeEvent;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.TextDocumentItem;
 import org.eclipse.lsp4j.TextDocumentPositionParams;
@@ -171,6 +168,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private Thread sourcePathWatcherThread;
     private ClientCapabilities clientCapabilities;
     private boolean completionSupportsSnippets = false;
+    private FileTracker fileTracker;
     private CompilerProblemFilter compilerProblemFilter = new CompilerProblemFilter();
     private boolean initialized = false;
     private boolean frameworkSDKIsRoyale = false;
@@ -201,7 +199,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     {
         compilerWorkspace = new Workspace();
         compilerWorkspace.setASDocDelegate(new VSCodeASDocDelegate());
-        workspaceFolderManager = new WorkspaceFolderManager(compilerWorkspace);
+        fileTracker = new FileTracker(compilerWorkspace);
+        workspaceFolderManager = new WorkspaceFolderManager(fileTracker);
         updateFrameworkSDK();
     }
 
@@ -237,7 +236,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         if (path != null)
         {
             String normalizedPath = FilenameNormalization.normalize(path.toAbsolutePath().toString());
-            IFileSpecification fileSpec = workspaceFolderManager.getFileSpecification(normalizedPath);
+            IFileSpecification fileSpec = fileTracker.getFileSpecification(normalizedPath);
             compilerWorkspace.fileChanged(fileSpec);
         }
 
@@ -294,7 +293,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             compilerWorkspace.startBuilding();
             try
             {
-                CompletionProvider provider = new CompletionProvider(workspaceFolderManager, completionSupportsSnippets, frameworkSDKIsRoyale);
+                CompletionProvider provider = new CompletionProvider(workspaceFolderManager,
+                        fileTracker, completionSupportsSnippets, frameworkSDKIsRoyale);
                 return provider.completion(params, cancelToken);
             }
             finally
@@ -328,7 +328,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             compilerWorkspace.startBuilding();
             try
             {
-                HoverProvider provider = new HoverProvider(workspaceFolderManager);
+                HoverProvider provider = new HoverProvider(workspaceFolderManager, fileTracker);
                 return provider.hover(params, cancelToken);
             }
             finally
@@ -354,7 +354,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             compilerWorkspace.startBuilding();
             try
             {
-                SignatureHelpProvider provider = new SignatureHelpProvider(workspaceFolderManager);
+                SignatureHelpProvider provider = new SignatureHelpProvider(workspaceFolderManager, fileTracker);
                 return provider.signatureHelp(params, cancelToken);
             }
             finally
@@ -378,7 +378,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             compilerWorkspace.startBuilding();
             try
             {
-                DefinitionProvider provider = new DefinitionProvider(workspaceFolderManager);
+                DefinitionProvider provider = new DefinitionProvider(workspaceFolderManager, fileTracker);
                 return provider.definition(params, cancelToken);
             }
             finally
@@ -401,7 +401,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             compilerWorkspace.startBuilding();
             try
             {
-                TypeDefinitionProvider provider = new TypeDefinitionProvider(workspaceFolderManager);
+                TypeDefinitionProvider provider = new TypeDefinitionProvider(workspaceFolderManager, fileTracker);
                 return provider.typeDefinition(params, cancelToken);
             }
             finally
@@ -423,7 +423,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             compilerWorkspace.startBuilding();
             try
             {
-                ImplementationProvider provider = new ImplementationProvider(workspaceFolderManager);
+                ImplementationProvider provider = new ImplementationProvider(workspaceFolderManager, fileTracker);
                 return provider.implementation(params, cancelToken);
             }
             finally
@@ -448,7 +448,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             compilerWorkspace.startBuilding();
             try
             {
-                ReferencesProvider provider = new ReferencesProvider(workspaceFolderManager);
+                ReferencesProvider provider = new ReferencesProvider(workspaceFolderManager, fileTracker);
                 return provider.references(params, cancelToken);
             }
             finally
@@ -527,7 +527,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             compilerWorkspace.startBuilding();
             try
             {
-                CodeActionProvider provider = new CodeActionProvider(workspaceFolderManager);
+                CodeActionProvider provider = new CodeActionProvider(workspaceFolderManager, fileTracker);
                 return provider.codeAction(params, cancelToken);
             }
             finally
@@ -595,7 +595,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             compilerWorkspace.startBuilding();
             try
             {
-                RenameProvider provider = new RenameProvider(workspaceFolderManager);
+                RenameProvider provider = new RenameProvider(workspaceFolderManager, fileTracker);
                 WorkspaceEdit result = provider.rename(params, cancelToken);
                 if(result == null)
                 {
@@ -623,7 +623,8 @@ public class ActionScriptTextDocumentService implements TextDocumentService
      */
     public CompletableFuture<Object> executeCommand(ExecuteCommandParams params)
     {
-        ExecuteCommandProvider provider = new ExecuteCommandProvider(workspaceFolderManager, compilerWorkspace, languageClient);
+        ExecuteCommandProvider provider = new ExecuteCommandProvider(workspaceFolderManager,
+                fileTracker, compilerWorkspace, languageClient);
         return provider.executeCommand(params);
     }
 
@@ -655,7 +656,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         //even if it's not in a workspace folder right now, store it just in
         //case we need it later. example: added to source-path compiler option.
         String text = textDocument.getText();
-        workspaceFolderManager.sourceByPath.put(path, text);
+        fileTracker.openFile(path, text);
 
         WorkspaceFolderData folderData = workspaceFolderManager.getWorkspaceFolderDataForSourceFile(path);
         if (folderData == null)
@@ -676,7 +677,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         //notify the workspace that it should read the file from memory
         //instead of loading from the file system
         String normalizedPath = FilenameNormalization.normalize(path.toAbsolutePath().toString());
-        IFileSpecification fileSpec = workspaceFolderManager.getFileSpecification(normalizedPath);
+        IFileSpecification fileSpec = fileTracker.getFileSpecification(normalizedPath);
         compilerWorkspace.fileChanged(fileSpec);
 
         //if it's an included file, switch to the parent file
@@ -711,23 +712,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         {
             return;
         }
-        for (TextDocumentContentChangeEvent change : params.getContentChanges())
-        {
-            if (change.getRange() == null)
-            {
-                workspaceFolderManager.sourceByPath.put(path, change.getText());
-            }
-            else if(workspaceFolderManager.sourceByPath.containsKey(path))
-            {
-                String existingText = workspaceFolderManager.sourceByPath.get(path);
-                String newText = patch(existingText, change);
-                workspaceFolderManager.sourceByPath.put(path, newText);
-            }
-            else
-            {
-                System.err.println("Failed to apply changes to code intelligence from URI: " + textDocumentUri);
-            }
-        }
+        fileTracker.changeFile(path, params.getContentChanges());
 
         WorkspaceFolderData folderData = workspaceFolderManager.getWorkspaceFolderDataForSourceFile(path);
         if (folderData == null)
@@ -764,7 +749,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             compilerWorkspace.doneBuilding();
         }
 
-        IFileSpecification fileSpec = workspaceFolderManager.getFileSpecification(normalizedChangedPathAsString);
+        IFileSpecification fileSpec = fileTracker.getFileSpecification(normalizedChangedPathAsString);
         compilerWorkspace.fileChanged(fileSpec);
 
         compilerWorkspace.startBuilding();
@@ -832,7 +817,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             return;
         }
 
-        workspaceFolderManager.sourceByPath.remove(path);
+        fileTracker.closeFile(path);
 
         boolean clearProblems = false;
 
@@ -1003,7 +988,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     }
 
                     boolean swcConfigChanged = false;
-                    IFileSpecification swcFileSpec = workspaceFolderManager.getFileSpecification(normalizedChangedPathAsString);
+                    IFileSpecification swcFileSpec = fileTracker.getFileSpecification(normalizedChangedPathAsString);
                     if (changeType.equals(FileChangeType.Deleted))
                     {
                         swcConfigChanged = true;
@@ -1060,7 +1045,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     (changeType.equals(FileChangeType.Changed) && !java.nio.file.Files.exists(changedPath))
                 )
                 {
-                    IFileSpecification fileSpec = workspaceFolderManager.getFileSpecification(normalizedChangedPathAsString);
+                    IFileSpecification fileSpec = fileTracker.getFileSpecification(normalizedChangedPathAsString);
                     compilerWorkspace.fileRemoved(fileSpec);
                     //deleting a file may change errors in other existing files,
                     //so we need to do a full check
@@ -1068,7 +1053,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 }
                 else if (event.getType().equals(FileChangeType.Created))
                 {
-                    IFileSpecification fileSpec = workspaceFolderManager.getFileSpecification(normalizedChangedPathAsString);
+                    IFileSpecification fileSpec = fileTracker.getFileSpecification(normalizedChangedPathAsString);
                     compilerWorkspace.fileAdded(fileSpec);
                     //creating a file may change errors in other existing files,
                     //so we need to do a full check
@@ -1076,7 +1061,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 }
                 else if (changeType.equals(FileChangeType.Changed))
                 {
-                    IFileSpecification fileSpec = workspaceFolderManager.getFileSpecification(normalizedChangedPathAsString);
+                    IFileSpecification fileSpec = fileTracker.getFileSpecification(normalizedChangedPathAsString);
                     compilerWorkspace.fileChanged(fileSpec);
                     foldersToCheck.addAll(allFolderData);
                 }
@@ -1093,7 +1078,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                             String normalizedSubPath = FilenameNormalization.normalize(subPath.toString());
                             if (normalizedSubPath.endsWith(AS_EXTENSION) || normalizedSubPath.endsWith(MXML_EXTENSION))
                             {
-                                IFileSpecification fileSpec = workspaceFolderManager.getFileSpecification(normalizedSubPath);
+                                IFileSpecification fileSpec = fileTracker.getFileSpecification(normalizedSubPath);
                                 compilerWorkspace.fileAdded(fileSpec);
                             }
                             return FileVisitResult.CONTINUE;
@@ -1172,7 +1157,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                     {
                         fileToRemove = unit.getAbsoluteFilename();
                     }
-                    IFileSpecification fileSpec = workspaceFolderManager.getFileSpecification(fileToRemove);
+                    IFileSpecification fileSpec = fileTracker.getFileSpecification(fileToRemove);
                     compilerWorkspace.fileRemoved(fileSpec);
                 }
             }
@@ -1497,19 +1482,6 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         folderData.options = currentConfig.getOptions();
     }
 
-    private String patch(String sourceText, TextDocumentContentChangeEvent change)
-    {
-        Range range = change.getRange();
-        Position start = range.getStart();
-        StringReader reader = new StringReader(sourceText);
-        int offset = LanguageServerCompilerUtils.getOffsetFromPosition(reader, start);
-        StringBuilder builder = new StringBuilder();
-        builder.append(sourceText.substring(0, offset));
-        builder.append(change.getText());
-        builder.append(sourceText.substring(offset + change.getRangeLength()));
-        return builder.toString();
-    }
-
     private void addCompilerProblem(ICompilerProblem problem, PublishDiagnosticsParams publish)
     {
         if (!compilerProblemFilter.isAllowed(problem))
@@ -1524,7 +1496,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private void checkFilePathForSyntaxProblems(Path path, WorkspaceFolderData folderData, ProblemQuery problemQuery)
     {
         ASParser parser = null;
-        Reader reader = workspaceFolderManager.getReaderForPath(path);
+        Reader reader = fileTracker.getReader(path);
         if (reader != null)
         {
             StreamingASTokenizer tokenizer = null;
@@ -1745,7 +1717,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
         if (projectOptions == null || projectOptions.type.equals(ProjectType.LIB))
         {
             ProblemQuery problemQuery = workspaceFolderDataToProblemQuery(folderData);
-            for(Path filePath : workspaceFolderManager.sourceByPath.keySet())
+            for(Path filePath : fileTracker.getOpenFiles())
             {
                 WorkspaceFolderData otherFolderData = workspaceFolderManager.getWorkspaceFolderDataForSourceFile(filePath);
                 if (!folderData.equals(otherFolderData))

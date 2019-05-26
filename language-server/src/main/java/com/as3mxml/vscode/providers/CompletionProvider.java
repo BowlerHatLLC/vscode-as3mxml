@@ -34,6 +34,7 @@ import com.as3mxml.vscode.utils.CompilerProjectUtils;
 import com.as3mxml.vscode.utils.CompletionItemUtils;
 import com.as3mxml.vscode.utils.DefinitionTextUtils;
 import com.as3mxml.vscode.utils.DefinitionUtils;
+import com.as3mxml.vscode.utils.FileTracker;
 import com.as3mxml.vscode.utils.ImportRange;
 import com.as3mxml.vscode.utils.LanguageServerCompilerUtils;
 import com.as3mxml.vscode.utils.MXMLDataUtils;
@@ -43,6 +44,7 @@ import com.as3mxml.vscode.utils.ScopeUtils;
 import com.as3mxml.vscode.utils.SourcePathUtils;
 import com.as3mxml.vscode.utils.WorkspaceFolderManager;
 import com.as3mxml.vscode.utils.XmlnsRange;
+import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
 
 import org.apache.royale.compiler.common.ASModifier;
 import org.apache.royale.compiler.common.PrefixMap;
@@ -119,14 +121,17 @@ public class CompletionProvider
     private static final String MXML_EXTENSION = ".mxml";
     private static final String VECTOR_HIDDEN_PREFIX = "Vector$";
 
-	private WorkspaceFolderManager workspaceFolderManager;
+    private WorkspaceFolderManager workspaceFolderManager;
+    private FileTracker fileTracker;
 	private boolean completionSupportsSnippets;
 	private boolean frameworkSDKIsRoyale;
     private List<String> completionTypes = new ArrayList<>();
 
-	public CompletionProvider(WorkspaceFolderManager workspaceFolderManager, boolean completionSupportsSnippets, boolean frameworkSDKIsRoyale)
+    public CompletionProvider(WorkspaceFolderManager workspaceFolderManager, FileTracker fileTracker,
+        boolean completionSupportsSnippets, boolean frameworkSDKIsRoyale)
 	{
-		this.workspaceFolderManager = workspaceFolderManager;
+        this.workspaceFolderManager = workspaceFolderManager;
+        this.fileTracker = fileTracker;
 		this.completionSupportsSnippets = completionSupportsSnippets;
 		this.frameworkSDKIsRoyale = frameworkSDKIsRoyale;
 	}
@@ -163,7 +168,8 @@ public class CompletionProvider
 			}
 			RoyaleProject project = folderData.project;
 
-			int currentOffset = workspaceFolderManager.getOffsetFromPathAndPosition(path, position, folderData);
+            IncludeFileData includeFileData = folderData.includedFiles.get(path.toString());
+			int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position, includeFileData);
 			if (currentOffset == -1)
 			{
 				CompletionList result = new CompletionList();
@@ -246,7 +252,8 @@ public class CompletionProvider
             nodeAtPreviousOffset = parentNode.getContainingNode(currentOffset - 1);
         }
 
-        if (!isActionScriptCompletionAllowedInNode(path, offsetNode, currentOffset))
+        String fileText = fileTracker.getText(path);
+        if (!isActionScriptCompletionAllowedInNode(offsetNode, fileText, currentOffset))
         {
             //if we're inside a node that shouldn't have completion!
             return result;
@@ -267,7 +274,6 @@ public class CompletionProvider
             }
         }
         RoyaleProject project = folderData.project;
-        String fileText = workspaceFolderManager.getFileTextForPath(path);
         AddImportData addImportData = CodeActionsUtils.findAddImportData(fileText, importRange);
 
         //variable types
@@ -627,14 +633,15 @@ public class CompletionProvider
         CompletionList result = new CompletionList();
         result.setIsIncomplete(false);
         result.setItems(new ArrayList<>());
-        if (workspaceFolderManager.isInXMLComment(path, currentOffset))
+        
+        String fileText = fileTracker.getText(path);
+        if (ASTUtils.isInXMLComment(fileText, currentOffset))
         {
             //if we're inside a comment, no completion!
             return result;
         }
 
         ImportRange importRange = ImportRange.fromOffsetTag(offsetTag, currentOffset);
-        String fileText = workspaceFolderManager.getFileTextForPath(path);
         AddImportData addImportData = CodeActionsUtils.findAddImportData(fileText, importRange);
         XmlnsRange xmlnsRange = XmlnsRange.fromOffsetTag(offsetTag, currentOffset);
         Position xmlnsPosition = null;
@@ -725,7 +732,7 @@ public class CompletionProvider
                     }
                     if (!isAttribute)
                     {
-                        IFileSpecification fileSpec = workspaceFolderManager.getFileSpecification(offsetUnit.getAbsoluteFilename());
+                        IFileSpecification fileSpec = fileTracker.getFileSpecification(offsetUnit.getAbsoluteFilename());
                         MXMLNamespace fxNS = MXMLNamespaceUtils.getMXMLLanguageNamespace(fileSpec, project.getWorkspace());
                         IMXMLData mxmlParent = offsetTag.getParent();
                         if (mxmlParent != null && parentTag.equals(mxmlParent.getRootTag()))
@@ -820,7 +827,7 @@ public class CompletionProvider
             if (!isAttribute)
             {
                 IMXMLData mxmlParent = offsetTag.getParent();
-                IFileSpecification fileSpec = workspaceFolderManager.getFileSpecification(offsetUnit.getAbsoluteFilename());
+                IFileSpecification fileSpec = fileTracker.getFileSpecification(offsetUnit.getAbsoluteFilename());
                 MXMLNamespace fxNS = MXMLNamespaceUtils.getMXMLLanguageNamespace(fileSpec, project.getWorkspace());
                 if (mxmlParent != null && offsetTag.equals(mxmlParent.getRootTag()))
                 {
@@ -1827,7 +1834,7 @@ public class CompletionProvider
     private void addMXMLTypeDefinitionAutoComplete(ITypeDefinition definition, Position xmlnsPosition, ICompilationUnit offsetUnit, IMXMLTagData offsetTag, boolean tagsNeedOpenBracket, RoyaleProject project, CompletionList result)
     {
         IMXMLDataManager mxmlDataManager = project.getWorkspace().getMXMLDataManager();
-        MXMLData mxmlData = (MXMLData) mxmlDataManager.get(workspaceFolderManager.getFileSpecification(offsetUnit.getAbsoluteFilename()));
+        MXMLData mxmlData = (MXMLData) mxmlDataManager.get(fileTracker.getFileSpecification(offsetUnit.getAbsoluteFilename()));
         MXMLNamespace discoveredNS = MXMLNamespaceUtils.getMXMLNamespaceForTypeDefinition(definition, mxmlData, project);
         addDefinitionAutoCompleteMXML(definition, xmlnsPosition, false, discoveredNS.prefix, discoveredNS.uri, tagsNeedOpenBracket, offsetTag, project, result);
     }
@@ -2011,7 +2018,7 @@ public class CompletionProvider
         boolean tagsNeedOpenBracket = currentOffset == 0;
         if (currentOffset > 0)
         {
-            Reader reader = workspaceFolderManager.getReaderForPath(path);
+            Reader reader = fileTracker.getReader(path);
             if (reader != null)
             {
                 try
@@ -2156,7 +2163,7 @@ public class CompletionProvider
     private void autoCompleteTypesForMXMLFromExistingTag(CompletionList result, RoyaleProject project, ICompilationUnit offsetUnit, IMXMLTagData offsetTag, String typeFilter, Position xmlnsPosition)
     {
         IMXMLDataManager mxmlDataManager = project.getWorkspace().getMXMLDataManager();
-        MXMLData mxmlData = (MXMLData) mxmlDataManager.get(workspaceFolderManager.getFileSpecification(offsetUnit.getAbsoluteFilename()));
+        MXMLData mxmlData = (MXMLData) mxmlDataManager.get(fileTracker.getFileSpecification(offsetUnit.getAbsoluteFilename()));
         String tagStartShortNameForComparison = offsetTag.getShortName().toLowerCase();
         String tagPrefix = offsetTag.getPrefix();
         String tagNamespace = null;
@@ -2379,7 +2386,7 @@ public class CompletionProvider
         return false;
     }
 
-    private boolean isActionScriptCompletionAllowedInNode(Path path, IASNode offsetNode, int currentOffset)
+    private boolean isActionScriptCompletionAllowedInNode(IASNode offsetNode, String fileText, int currentOffset)
     {
         if (offsetNode != null)
         {
@@ -2400,6 +2407,7 @@ public class CompletionProvider
             //that appear in earlier MXML nodes
             minCommentStartIndex = mxmlNode.getAbsoluteStart();
         }
-        return !workspaceFolderManager.isInActionScriptComment(path, currentOffset, minCommentStartIndex);
+        
+        return !ASTUtils.isInActionScriptComment(fileText, currentOffset, minCommentStartIndex);
     }
 }

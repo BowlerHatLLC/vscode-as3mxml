@@ -56,17 +56,21 @@ function revertAndCloseAllEditors()
 {
 	return vscode.commands.executeCommand("workbench.action.revertAndCloseActiveEditor").then(() =>
 	{
-		if(vscode.window.visibleTextEditors.length > 0)
-		{
-			return revertAndCloseAllEditors();
-		}
 		return new Promise((resolve, reject) =>
 		{
 			setTimeout(() =>
 			{
+				if(vscode.window.activeTextEditor)
+				{
+					resolve(revertAndCloseAllEditors());
+					return;
+				}
 				resolve();
 			}, 100);
 		});
+	}, (reason) =>
+	{
+		console.error("close text editor failed:", reason);
 	});
 }
 
