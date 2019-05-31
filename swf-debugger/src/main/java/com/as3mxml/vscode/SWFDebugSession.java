@@ -1317,7 +1317,7 @@ public class SWFDebugSession extends DebugSession
     public void evaluate(Response response, EvaluateRequest.EvaluateArguments arguments)
     {
         EvaluateResponseBody body = new EvaluateResponseBody();
-        
+        Object evaluateResult = null;
         try
         {
             int frameId = arguments.frameId;
@@ -1325,61 +1325,70 @@ public class SWFDebugSession extends DebugSession
             if (frameId >= 0 && frameId < swfFrames.length)
             {
                 Frame swfFrame = swfFrames[frameId];
-
+                
                 ASTBuilder builder = new ASTBuilder(false);
                 ValueExp result = builder.parse(new StringReader(arguments.expression));
-                Object evaluateResult = result.evaluate(new SWFExpressionContext(swfSession, Isolate.DEFAULT_ID, swfFrame));
-                Value value = null;
-                if(evaluateResult instanceof flash.tools.debugger.Variable)
-                {
-                    flash.tools.debugger.Variable variable = (flash.tools.debugger.Variable) evaluateResult;
-                    value = variable.getValue();
-                }
-                else if(evaluateResult instanceof Value)
-                {
-                    value = (Value) evaluateResult;
-                }
-                if (value instanceof Value)
-                {
-                    long id = value.getId();
-                    if (id != Value.UNKNOWN_ID)
-                    {
-                        body.result = value.getTypeName();
-                        body.variablesReference = value.getId();
-                        body.type = value.getTypeName();
-                    }
-                    else
-                    {
-                        if (value.getType() == VariableType.STRING)
-                        {
-                            body.result = "\"" + value.getValueAsString() + "\"";
-                        }
-                        else
-                        {
-                            body.result = value.getValueAsString();
-                        }
-                        body.type = value.getTypeName();
-                    }
-                }
-                else
-                {
-                    if(evaluateResult instanceof String)
-                    {
-                        body.result = "\"" + evaluateResult + "\"";
-                    }
-                    else
-                    {
-                        body.result = evaluateResult.toString();
-                    }
-                }
+                evaluateResult = result.evaluate(new SWFExpressionContext(swfSession, Isolate.DEFAULT_ID, swfFrame));
             }
         }
-        
         catch (PlayerFaultException e) {}
         catch (NoSuchVariableException e) {}
         catch (IOException e) {}
         catch (ParseException e) {}
         catch (PlayerDebugException e) {}
+        
+        Value value = null;
+        if(evaluateResult == null)
+        {
+            try
+            {
+                value = swfSession.getGlobal(arguments.expression);
+            }
+            catch (PlayerDebugException e) {}
+        }
+        else if(evaluateResult instanceof flash.tools.debugger.Variable)
+        {
+            flash.tools.debugger.Variable variable = (flash.tools.debugger.Variable) evaluateResult;
+            value = variable.getValue();
+        }
+        else if(evaluateResult instanceof Value)
+        {
+            value = (Value) evaluateResult;
+        }
+
+        if(value != null)
+        {
+            long id = value.getId();
+            if (id != Value.UNKNOWN_ID)
+            {
+                body.result = value.getTypeName();
+                body.variablesReference = value.getId();
+                body.type = value.getTypeName();
+            }
+            else
+            {
+                if (value.getType() == VariableType.STRING)
+                {
+                    body.result = "\"" + value.getValueAsString() + "\"";
+                }
+                else
+                {
+                    body.result = value.getValueAsString();
+                }
+                body.type = value.getTypeName();
+            }
+        }
+        else if(evaluateResult != null)
+        {
+            if(evaluateResult instanceof String)
+            {
+                body.result = "\"" + evaluateResult + "\"";
+            }
+            else
+            {
+                body.result = evaluateResult.toString();
+            }
+        }
 
         // not sending the body at all will output "not available" as the value of evaluation.
         if(body.result == null)
