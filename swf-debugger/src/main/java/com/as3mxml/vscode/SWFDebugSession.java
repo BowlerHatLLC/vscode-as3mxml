@@ -92,6 +92,7 @@ import flash.tools.debugger.SourceFile;
 import flash.tools.debugger.SuspendReason;
 import flash.tools.debugger.SwfInfo;
 import flash.tools.debugger.Value;
+import flash.tools.debugger.VariableAttribute;
 import flash.tools.debugger.VariableType;
 import flash.tools.debugger.VersionException;
 import flash.tools.debugger.events.BreakEvent;
@@ -1262,6 +1263,11 @@ public class SWFDebugSession extends DebugSession
             }
             for (flash.tools.debugger.Variable member : members)
             {
+                if(member.isAttributeSet(VariableAttribute.IS_STATIC))
+                {
+                    //we're showing non-static members only
+                    continue;
+                }
                 Value memberValue = member.getValue();
                 Variable variable = new Variable();
                 variable.name = member.getName();
