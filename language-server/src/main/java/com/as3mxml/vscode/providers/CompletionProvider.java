@@ -54,6 +54,7 @@ import org.apache.royale.compiler.constants.IASLanguageConstants;
 import org.apache.royale.compiler.constants.IMXMLCoreConstants;
 import org.apache.royale.compiler.constants.IMetaAttributeConstants;
 import org.apache.royale.compiler.definitions.IAccessorDefinition;
+import org.apache.royale.compiler.definitions.IAppliedVectorDefinition;
 import org.apache.royale.compiler.definitions.IClassDefinition;
 import org.apache.royale.compiler.definitions.IDefinition;
 import org.apache.royale.compiler.definitions.IEventDefinition;
@@ -88,6 +89,7 @@ import org.apache.royale.compiler.tree.as.IASNode;
 import org.apache.royale.compiler.tree.as.IBinaryOperatorNode;
 import org.apache.royale.compiler.tree.as.IClassNode;
 import org.apache.royale.compiler.tree.as.IContainerNode;
+import org.apache.royale.compiler.tree.as.IDynamicAccessNode;
 import org.apache.royale.compiler.tree.as.IExpressionNode;
 import org.apache.royale.compiler.tree.as.IFileNode;
 import org.apache.royale.compiler.tree.as.IFunctionCallNode;
@@ -1248,6 +1250,24 @@ public class CompletionProvider
             addDefinitionsInTypeScopeToAutoCompleteActionScript(typeScope, scope, true, addImportData, project, result);
             return;
         }
+
+        if (leftOperand instanceof IDynamicAccessNode)
+        {
+            IDynamicAccessNode dynamicAccess = (IDynamicAccessNode) leftOperand;
+            IExpressionNode dynamicLeftOperandNode = dynamicAccess.getLeftOperandNode();
+            ITypeDefinition leftType = dynamicLeftOperandNode.resolveType(project);
+            if (leftType instanceof IAppliedVectorDefinition)
+            {
+                IAppliedVectorDefinition vectorDef = (IAppliedVectorDefinition) leftType;
+                ITypeDefinition elementType = vectorDef.resolveElementType(project);
+                if (elementType != null) {
+                    TypeScope typeScope = (TypeScope) elementType.getContainedScope();
+                    addDefinitionsInTypeScopeToAutoCompleteActionScript(typeScope, scope, false, addImportData, project, result);
+                    return;
+                }
+            }
+        }
+
         ITypeDefinition leftType = leftOperand.resolveType(project);
         if (leftType != null)
         {
