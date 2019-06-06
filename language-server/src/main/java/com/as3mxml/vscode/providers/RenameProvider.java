@@ -267,8 +267,11 @@ public class RenameProvider
                 newDefinitionFilePath = originalDefinitionFilePath.getParent().resolve(newBaseName);
             }
             
+            //null is supposed to work for the version, but it doesn't seem to
+            //be serialized properly. Integer.MAX_VALUE seems to work fine, but
+            //it may break in the future...
             VersionedTextDocumentIdentifier versionedIdentifier =
-                    new VersionedTextDocumentIdentifier(textDocumentPath.toUri().toString(), null);
+                    new VersionedTextDocumentIdentifier(textDocumentPath.toUri().toString(), Integer.MAX_VALUE);
             TextDocumentEdit textDocumentEdit = new TextDocumentEdit(versionedIdentifier, textEdits);
             documentChanges.add(Either.forLeft(textDocumentEdit));
         }
