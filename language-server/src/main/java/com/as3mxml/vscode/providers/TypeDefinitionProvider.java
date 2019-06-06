@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.List;
 
 import com.as3mxml.vscode.project.WorkspaceFolderData;
+import com.as3mxml.vscode.utils.DefinitionUtils;
 import com.as3mxml.vscode.utils.FileTracker;
 import com.as3mxml.vscode.utils.LanguageServerCompilerUtils;
 import com.as3mxml.vscode.utils.MXMLDataUtils;
@@ -115,8 +116,8 @@ public class TypeDefinitionProvider
 
         if (offsetNode instanceof IIdentifierNode)
         {
-            IIdentifierNode expressionNode = (IIdentifierNode) offsetNode;
-            definition = expressionNode.resolveType(folderData.project);
+            IIdentifierNode identifierNode = (IIdentifierNode) offsetNode;
+            definition = DefinitionUtils.resolveTypeWithExtras(identifierNode, folderData.project);
         }
 
         if (definition == null)

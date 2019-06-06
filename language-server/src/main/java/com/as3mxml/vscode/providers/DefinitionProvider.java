@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.List;
 
 import com.as3mxml.vscode.project.WorkspaceFolderData;
+import com.as3mxml.vscode.utils.DefinitionUtils;
 import com.as3mxml.vscode.utils.FileTracker;
 import com.as3mxml.vscode.utils.LanguageServerCompilerUtils;
 import com.as3mxml.vscode.utils.MXMLDataUtils;
@@ -125,14 +126,14 @@ public class DefinitionProvider
 
         if (offsetNode instanceof IIdentifierNode)
         {
-            IIdentifierNode expressionNode = (IIdentifierNode) offsetNode;
-            definition = expressionNode.resolve(folderData.project);
+            IIdentifierNode identifierNode = (IIdentifierNode) offsetNode;
+            definition = DefinitionUtils.resolveWithExtras(identifierNode, folderData.project);
 
             if (definition == null)
             {
-                if (expressionNode.getName().equals(IASKeywordConstants.SUPER))
+                if (identifierNode.getName().equals(IASKeywordConstants.SUPER))
                 {
-                    ITypeDefinition typeDefinition = expressionNode.resolveType(folderData.project);
+                    ITypeDefinition typeDefinition = identifierNode.resolveType(folderData.project);
                     if (typeDefinition instanceof IClassDefinition)
                     {
                         IClassDefinition classDefinition = (IClassDefinition) typeDefinition;

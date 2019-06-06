@@ -21,13 +21,14 @@ import java.util.Collections;
 import java.util.List;
 
 import com.as3mxml.vscode.project.WorkspaceFolderData;
+import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
 import com.as3mxml.vscode.utils.DefinitionDocumentationUtils;
 import com.as3mxml.vscode.utils.DefinitionTextUtils;
+import com.as3mxml.vscode.utils.DefinitionUtils;
 import com.as3mxml.vscode.utils.FileTracker;
 import com.as3mxml.vscode.utils.LanguageServerCompilerUtils;
 import com.as3mxml.vscode.utils.MXMLDataUtils;
 import com.as3mxml.vscode.utils.WorkspaceFolderManager;
-import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
 
 import org.apache.royale.compiler.definitions.IClassDefinition;
 import org.apache.royale.compiler.definitions.IDefinition;
@@ -129,7 +130,7 @@ public class HoverProvider
                 && !(offsetNode instanceof INamespaceDecorationNode))
         {
             IIdentifierNode identifierNode = (IIdentifierNode) offsetNode;
-            definition = identifierNode.resolve(project);
+            definition = DefinitionUtils.resolveWithExtras(identifierNode, project);
         }
 
         if (definition == null)

@@ -23,6 +23,7 @@ import java.util.List;
 
 import com.as3mxml.vscode.project.WorkspaceFolderData;
 import com.as3mxml.vscode.utils.ASTUtils;
+import com.as3mxml.vscode.utils.DefinitionUtils;
 import com.as3mxml.vscode.utils.FileTracker;
 import com.as3mxml.vscode.utils.LanguageServerCompilerUtils;
 import com.as3mxml.vscode.utils.MXMLDataUtils;
@@ -146,7 +147,7 @@ public class RenameProvider
         else if (offsetNode instanceof IIdentifierNode)
         {
             IIdentifierNode identifierNode = (IIdentifierNode) offsetNode;
-            definition = identifierNode.resolve(project);
+            definition = DefinitionUtils.resolveWithExtras(identifierNode, project);
         }
 
         if (definition == null)

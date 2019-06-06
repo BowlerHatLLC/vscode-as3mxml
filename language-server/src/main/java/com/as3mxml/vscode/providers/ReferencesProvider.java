@@ -24,6 +24,7 @@ import java.util.List;
 import com.as3mxml.vscode.project.WorkspaceFolderData;
 import com.as3mxml.vscode.utils.ASTUtils;
 import com.as3mxml.vscode.utils.CompilerProjectUtils;
+import com.as3mxml.vscode.utils.DefinitionUtils;
 import com.as3mxml.vscode.utils.FileTracker;
 import com.as3mxml.vscode.utils.LanguageServerCompilerUtils;
 import com.as3mxml.vscode.utils.MXMLDataUtils;
@@ -129,7 +130,7 @@ public class ReferencesProvider
         if (offsetNode instanceof IIdentifierNode)
         {
             IIdentifierNode identifierNode = (IIdentifierNode) offsetNode;
-            IDefinition resolved = identifierNode.resolve(project);
+            IDefinition resolved = DefinitionUtils.resolveWithExtras(identifierNode, project);
             if (resolved == null)
             {
                 return Collections.emptyList();

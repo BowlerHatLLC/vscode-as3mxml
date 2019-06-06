@@ -19,22 +19,32 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
+import java.util.Set;
 
 import org.apache.royale.abc.ABCParser;
 import org.apache.royale.abc.Pool;
 import org.apache.royale.abc.PoolingABCVisitor;
 import org.apache.royale.compiler.constants.IASLanguageConstants;
 import org.apache.royale.compiler.constants.IMetaAttributeConstants;
+import org.apache.royale.compiler.definitions.IAppliedVectorDefinition;
 import org.apache.royale.compiler.definitions.IClassDefinition;
 import org.apache.royale.compiler.definitions.IDefinition;
 import org.apache.royale.compiler.definitions.IGetterDefinition;
 import org.apache.royale.compiler.definitions.IInterfaceDefinition;
+import org.apache.royale.compiler.definitions.INamespaceDefinition;
 import org.apache.royale.compiler.definitions.ISetterDefinition;
 import org.apache.royale.compiler.definitions.ITypeDefinition;
 import org.apache.royale.compiler.definitions.IClassDefinition.IClassIterator;
 import org.apache.royale.compiler.definitions.metadata.IMetaTag;
 import org.apache.royale.compiler.internal.projects.RoyaleProject;
+import org.apache.royale.compiler.internal.scopes.ASScope;
+import org.apache.royale.compiler.internal.scopes.TypeScope;
 import org.apache.royale.compiler.projects.ICompilerProject;
+import org.apache.royale.compiler.tree.as.IASNode;
+import org.apache.royale.compiler.tree.as.IDynamicAccessNode;
+import org.apache.royale.compiler.tree.as.IExpressionNode;
+import org.apache.royale.compiler.tree.as.IIdentifierNode;
+import org.apache.royale.compiler.tree.as.IMemberAccessExpressionNode;
 import org.apache.royale.compiler.units.ICompilationUnit;
 
 public class DefinitionUtils
@@ -184,6 +194,79 @@ public class DefinitionUtils
 			}
 		}
 		return false;
+	}
+
+	public static IDefinition resolveWithExtras(IIdentifierNode identifierNode, RoyaleProject project)
+	{
+		IDefinition definition = identifierNode.resolve(project);
+		if (definition != null)
+		{
+			return definition;
+		}
+		 
+		IASNode parentNode = identifierNode.getParent();
+		if (parentNode instanceof IMemberAccessExpressionNode) {
+			IMemberAccessExpressionNode memberAccess = (IMemberAccessExpressionNode) parentNode;
+			IExpressionNode leftOperand = memberAccess.getLeftOperandNode();
+			if (leftOperand instanceof IDynamicAccessNode)
+			{
+				IDynamicAccessNode dynamicAccess = (IDynamicAccessNode) leftOperand;
+				IExpressionNode dynamicLeftOperandNode = dynamicAccess.getLeftOperandNode();
+				ITypeDefinition leftType = dynamicLeftOperandNode.resolveType(project);
+				if (leftType instanceof IAppliedVectorDefinition)
+				{
+					IAppliedVectorDefinition vectorDef = (IAppliedVectorDefinition) leftType;
+					ITypeDefinition elementType = vectorDef.resolveElementType(project);
+					if (elementType != null) {
+						TypeScope typeScope = (TypeScope) elementType.getContainedScope();
+						ASScope otherScope = (ASScope) identifierNode.getContainingScope().getScope();
+						Set<INamespaceDefinition> namespaceSet = ScopeUtils.getNamespaceSetForScopes(typeScope, otherScope, project);
+						definition = typeScope.getPropertyByNameForMemberAccess(project, identifierNode.getName(), namespaceSet);
+					}
+				}
+			}
+		}
+
+		return definition;
+	}
+
+	public static IDefinition resolveTypeWithExtras(IIdentifierNode identifierNode, RoyaleProject project)
+	{
+		ITypeDefinition definition = identifierNode.resolveType(project);
+		if (definition != null)
+		{
+			return definition;
+		}
+		 
+		IASNode parentNode = identifierNode.getParent();
+		if (parentNode instanceof IMemberAccessExpressionNode) {
+			IMemberAccessExpressionNode memberAccess = (IMemberAccessExpressionNode) parentNode;
+			IExpressionNode leftOperand = memberAccess.getLeftOperandNode();
+			if (leftOperand instanceof IDynamicAccessNode)
+			{
+				IDynamicAccessNode dynamicAccess = (IDynamicAccessNode) leftOperand;
+				IExpressionNode dynamicLeftOperandNode = dynamicAccess.getLeftOperandNode();
+				ITypeDefinition leftType = dynamicLeftOperandNode.resolveType(project);
+				if (leftType instanceof IAppliedVectorDefinition)
+				{
+					IAppliedVectorDefinition vectorDef = (IAppliedVectorDefinition) leftType;
+					ITypeDefinition elementType = vectorDef.resolveElementType(project);
+					if (elementType != null) {
+						TypeScope typeScope = (TypeScope) elementType.getContainedScope();
+						ASScope otherScope = (ASScope) identifierNode.getContainingScope().getScope();
+						Set<INamespaceDefinition> namespaceSet = ScopeUtils.getNamespaceSetForScopes(typeScope, otherScope, project);
+						IDefinition propertyDefinition = typeScope.getPropertyByNameForMemberAccess(project, identifierNode.getName(), namespaceSet);
+						if (propertyDefinition != null)
+						{
+							definition = propertyDefinition.resolveType(project);
+						}
+
+					}
+				}
+			}
+		}
+
+		return definition;
 	}
 
     private static String transformDebugFilePath(String sourceFilePath)
