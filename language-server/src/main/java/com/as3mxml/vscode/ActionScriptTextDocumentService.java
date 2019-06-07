@@ -847,13 +847,13 @@ public class ActionScriptTextDocumentService implements TextDocumentService
                 clearProblems = true;
                 notOnSourcePathSet.remove(uri);
             }
-        }
 
-        //if it's an included file, switch to the parent file
-        IncludeFileData includeFileData = folderData.includedFiles.get(path.toString());
-        if (includeFileData != null)
-        {
-            path = Paths.get(includeFileData.parentPath);
+            //if it's an included file, switch to the parent file
+            IncludeFileData includeFileData = folderData.includedFiles.get(path.toString());
+            if (includeFileData != null)
+            {
+                path = Paths.get(includeFileData.parentPath);
+            }
         }
 
         if (clearProblems)
