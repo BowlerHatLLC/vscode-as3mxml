@@ -29,6 +29,7 @@ public class CompilerOptions
 	public static final String DIRECTORY = "directory";
 	public static final String DUMP_CONFIG = "dump-config";
 	public static final String EXTERNAL_LIBRARY_PATH = "external-library-path";
+	public static final String KEEP_ALL_TYPE_SELECTORS = "keep-all-type-selectors";
 	public static final String KEEP_AS3_METADATA = "keep-as3-metadata";
 	public static final String KEEP_GENERATED_ACTIONSCRIPT = "keep-generated-actionscript";
 	public static final String LIBRARY_PATH = "library-path";
@@ -41,6 +42,7 @@ public class CompilerOptions
 	public static final String OMIT_TRACE_STATEMENTS = "omit-trace-statements";
 	public static final String OUTPUT = "output";
 	public static final String PRELOADER = "preloader";
+	public static final String SHOW_UNUSED_TYPE_SELECTOR_WARNINGS = "show-unused-type-selector-warnings";
 	public static final String SIZE_REPORT = "size-report";
 	public static final String SOURCE_PATH = "source-path";
 	public static final String STATIC_LINK_RUNTIME_SHARED_LIBRARIES = "static-link-runtime-shared-libraries";

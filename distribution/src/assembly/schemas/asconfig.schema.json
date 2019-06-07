@@ -626,6 +626,11 @@
 					"type": "string",
 					"description": "In an Apache Royale project, the path where the generated JavaScript output should be saved."
 				},
+				"keep-all-type-selectors":
+				{
+					"type": "boolean",
+					"description": "Disables the pruning of unused type selectors. The default value is false."
+				},
 				"keep-as3-metadata":
 				{
 					"type": "array",
@@ -761,6 +766,11 @@
 				{
 					"type": "boolean",
 					"description": "In an Apache Royale project, removes circular references for a release build."
+				},
+				"show-unused-type-selector-warnings":
+				{
+					"type": "boolean",
+					"description": "Determines if warnings generated from unused CSS type selectors are displayed. The default value is true."
 				},
 				"size-report":
 				{

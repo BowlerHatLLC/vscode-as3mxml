@@ -191,6 +191,11 @@ public class CompilerOptionsParser
 					OptionsFormatter.setValue(key, options.get(key).asText(), result);
 					break;
 				}
+				case CompilerOptions.KEEP_ALL_TYPE_SELECTORS:
+				{
+					OptionsFormatter.setBoolean(key, options.get(key).asBoolean(), result);
+					break;
+				}
 				case CompilerOptions.KEEP_AS3_METADATA:
 				{
 					List<String> values = JsonUtils.jsonNodeToListOfStrings(options.get(key));
@@ -263,6 +268,11 @@ public class CompilerOptionsParser
 					break;
 				}
 				case CompilerOptions.REMOVE_CIRCULARS:
+				{
+					OptionsFormatter.setBoolean(key, options.get(key).asBoolean(), result);
+					break;
+				}
+				case CompilerOptions.SHOW_UNUSED_TYPE_SELECTOR_WARNINGS:
 				{
 					OptionsFormatter.setBoolean(key, options.get(key).asBoolean(), result);
 					break;

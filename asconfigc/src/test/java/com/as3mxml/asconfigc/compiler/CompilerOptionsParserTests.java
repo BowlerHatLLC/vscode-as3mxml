@@ -708,6 +708,24 @@ class CompilerOptionsParserTests
 	}
 	
 	@Test
+	void testKeepAllTypeSelectors()
+	{
+		boolean value = true;
+		ObjectNode options = JsonNodeFactory.instance.objectNode();
+		options.set(CompilerOptions.KEEP_ALL_TYPE_SELECTORS, JsonNodeFactory.instance.booleanNode(value));
+		ArrayList<String> result = new ArrayList<>();
+		try
+		{
+			parser.parse(options, null, result);
+		}
+		catch(UnknownCompilerOptionException e) {}
+		Assertions.assertEquals(1, result.size(),
+			"CompilerOptionsParser.parse() created incorrect number of options.");
+		Assertions.assertEquals("--" + CompilerOptions.KEEP_ALL_TYPE_SELECTORS + "=" + Boolean.toString(value), result.get(0),
+			"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
+	}
+	
+	@Test
 	void testKeepAS3Metadata()
 	{	
 		String value1 = "Inject";
@@ -1039,6 +1057,24 @@ class CompilerOptionsParserTests
 		Assertions.assertEquals(1, result.size(),
 			"CompilerOptionsParser.parse() created incorrect number of options.");
 		Assertions.assertEquals("--" + CompilerOptions.REMOVE_CIRCULARS + "=" + Boolean.toString(value), result.get(0),
+			"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
+	}
+	
+	@Test
+	void testShowUnusedTypeSelectorWarningss()
+	{
+		boolean value = true;
+		ObjectNode options = JsonNodeFactory.instance.objectNode();
+		options.set(CompilerOptions.SHOW_UNUSED_TYPE_SELECTOR_WARNINGS, JsonNodeFactory.instance.booleanNode(value));
+		ArrayList<String> result = new ArrayList<>();
+		try
+		{
+			parser.parse(options, null, result);
+		}
+		catch(UnknownCompilerOptionException e) {}
+		Assertions.assertEquals(1, result.size(),
+			"CompilerOptionsParser.parse() created incorrect number of options.");
+		Assertions.assertEquals("--" + CompilerOptions.SHOW_UNUSED_TYPE_SELECTOR_WARNINGS + "=" + Boolean.toString(value), result.get(0),
 			"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
 	}
 	
