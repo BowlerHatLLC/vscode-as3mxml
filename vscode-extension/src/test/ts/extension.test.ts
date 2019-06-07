@@ -11468,6 +11468,611 @@ suite("reference provider: Application workspace", () =>
 	});
 });
 
+suite("rename provider: Application workspace", () =>
+{
+	suiteTeardown(revertAndCloseAllEditors);
+	test("vscode.executeDocumentRenameProvider finds edits for local variable from its declaration", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "references", "References.as"));
+		let position = new vscode.Position(38, 10);
+		let newText = "newName";
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDocumentRenameProvider", uri, position, newText)
+				.then((workspaceEdit: vscode.WorkspaceEdit) =>
+					{
+						assert.strictEqual(workspaceEdit.size, 1,
+							"vscode.executeDocumentRenameProvider failed to provide correct number of uris");
+						let textEdits = workspaceEdit.get(uri);
+						assert.strictEqual(textEdits.length, 2,
+							"vscode.executeDocumentRenameProvider failed to provide correct number of text edits");
+						let textEdit1 = textEdits[0];
+						assert.strictEqual(textEdit1.newText, newText, "vscode.executeDocumentRenameProvider provided incorrect new text");
+						assert.strictEqual(textEdit1.range.start.line, 38, "vscode.executeDocumentRenameProvider provided incorrect start line");
+						assert.strictEqual(textEdit1.range.start.character, 7, "vscode.executeDocumentRenameProvider provided incorrect start character");
+						assert.strictEqual(textEdit1.range.end.line, 38, "vscode.executeDocumentRenameProvider provided incorrect end line");
+						assert.strictEqual(textEdit1.range.end.character, 15, "vscode.executeDocumentRenameProvider provided incorrect end character");
+						let textEdit2 = textEdits[1];
+						assert.strictEqual(textEdit2.newText, newText, "vscode.executeDocumentRenameProvider provided incorrect new text");
+						assert.strictEqual(textEdit2.range.start.line, 86, "vscode.executeDocumentRenameProvider provided incorrect start line");
+						assert.strictEqual(textEdit2.range.start.character, 3, "vscode.executeDocumentRenameProvider provided incorrect start character");
+						assert.strictEqual(textEdit2.range.end.line, 86, "vscode.executeDocumentRenameProvider provided incorrect end line");
+						assert.strictEqual(textEdit2.range.end.character, 11, "vscode.executeDocumentRenameProvider provided incorrect end character");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute rename provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeDocumentRenameProvider finds edits for local variable from assignment that is not initialization", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "references", "References.as"));
+		let position = new vscode.Position(86, 5);
+		let newText = "newName";
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDocumentRenameProvider", uri, position, newText)
+				.then((workspaceEdit: vscode.WorkspaceEdit) =>
+					{
+						assert.strictEqual(workspaceEdit.size, 1,
+							"vscode.executeDocumentRenameProvider failed to provide correct number of uris");
+						let textEdits = workspaceEdit.get(uri);
+						assert.strictEqual(textEdits.length, 2,
+							"vscode.executeDocumentRenameProvider failed to provide correct number of text edits");
+						let textEdit1 = textEdits[0];
+						assert.strictEqual(textEdit1.newText, newText, "vscode.executeDocumentRenameProvider provided incorrect new text");
+						assert.strictEqual(textEdit1.range.start.line, 38, "vscode.executeDocumentRenameProvider provided incorrect start line");
+						assert.strictEqual(textEdit1.range.start.character, 7, "vscode.executeDocumentRenameProvider provided incorrect start character");
+						assert.strictEqual(textEdit1.range.end.line, 38, "vscode.executeDocumentRenameProvider provided incorrect end line");
+						assert.strictEqual(textEdit1.range.end.character, 15, "vscode.executeDocumentRenameProvider provided incorrect end character");
+						let textEdit2 = textEdits[1];
+						assert.strictEqual(textEdit2.newText, newText, "vscode.executeDocumentRenameProvider provided incorrect new text");
+						assert.strictEqual(textEdit2.range.start.line, 86, "vscode.executeDocumentRenameProvider provided incorrect start line");
+						assert.strictEqual(textEdit2.range.start.character, 3, "vscode.executeDocumentRenameProvider provided incorrect start character");
+						assert.strictEqual(textEdit2.range.end.line, 86, "vscode.executeDocumentRenameProvider provided incorrect end line");
+						assert.strictEqual(textEdit2.range.end.character, 11, "vscode.executeDocumentRenameProvider provided incorrect end character");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute rename provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeDocumentRenameProvider finds edits to local function from its declaration", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "references", "References.as"));
+		let position = new vscode.Position(39, 15);
+		let newText = "newName";
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDocumentRenameProvider", uri, position, newText)
+				.then((workspaceEdit: vscode.WorkspaceEdit) =>
+					{
+						assert.strictEqual(workspaceEdit.size, 1,
+							"vscode.executeDocumentRenameProvider failed to provide correct number of uris");
+						let textEdits = workspaceEdit.get(uri);
+						assert.strictEqual(textEdits.length, 2,
+							"vscode.executeDocumentRenameProvider failed to provide correct number of text edits");
+						let textEdit1 = textEdits[0];
+						assert.strictEqual(textEdit1.newText, newText, "vscode.executeDocumentRenameProvider provided incorrect new name");
+						assert.strictEqual(textEdit1.range.start.line, 39, "vscode.executeDocumentRenameProvider provided incorrect start line");
+						assert.strictEqual(textEdit1.range.start.character, 12, "vscode.executeDocumentRenameProvider provided incorrect start character");
+						assert.strictEqual(textEdit1.range.end.line, 39, "vscode.executeDocumentRenameProvider provided incorrect end line");
+						assert.strictEqual(textEdit1.range.end.character, 25, "vscode.executeDocumentRenameProvider provided incorrect end character");
+						let textEdit2 = textEdits[1];
+						assert.strictEqual(textEdit2.newText, newText, "vscode.executeDocumentRenameProvider provided incorrect new name");
+						assert.strictEqual(textEdit2.range.start.line, 88, "vscode.executeDocumentRenameProvider provided incorrect start line");
+						assert.strictEqual(textEdit2.range.start.character, 3, "vscode.executeDocumentRenameProvider provided incorrect start character");
+						assert.strictEqual(textEdit2.range.end.line, 88, "vscode.executeDocumentRenameProvider provided incorrect end line");
+						assert.strictEqual(textEdit2.range.end.character, 16, "vscode.executeDocumentRenameProvider provided incorrect end character");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute rename provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeDocumentRenameProvider finds edits to local function from call", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "references", "References.as"));
+		let position = new vscode.Position(88, 5);
+		let newText = "newName";
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDocumentRenameProvider", uri, position, newText)
+				.then((workspaceEdit: vscode.WorkspaceEdit) =>
+					{
+						assert.strictEqual(workspaceEdit.size, 1,
+							"vscode.executeDocumentRenameProvider failed to provide correct number of uris");
+						let textEdits = workspaceEdit.get(uri);
+						assert.strictEqual(textEdits.length, 2,
+							"vscode.executeDocumentRenameProvider failed to provide correct number of text edits");
+						let textEdit1 = textEdits[0];
+						assert.strictEqual(textEdit1.newText, newText, "vscode.executeDocumentRenameProvider provided incorrect new name");
+						assert.strictEqual(textEdit1.range.start.line, 39, "vscode.executeDocumentRenameProvider provided incorrect start line");
+						assert.strictEqual(textEdit1.range.start.character, 12, "vscode.executeDocumentRenameProvider provided incorrect start character");
+						assert.strictEqual(textEdit1.range.end.line, 39, "vscode.executeDocumentRenameProvider provided incorrect end line");
+						assert.strictEqual(textEdit1.range.end.character, 25, "vscode.executeDocumentRenameProvider provided incorrect end character");
+						let textEdit2 = textEdits[1];
+						assert.strictEqual(textEdit2.newText, newText, "vscode.executeDocumentRenameProvider provided incorrect new name");
+						assert.strictEqual(textEdit2.range.start.line, 88, "vscode.executeDocumentRenameProvider provided incorrect start line");
+						assert.strictEqual(textEdit2.range.start.character, 3, "vscode.executeDocumentRenameProvider provided incorrect start character");
+						assert.strictEqual(textEdit2.range.end.line, 88, "vscode.executeDocumentRenameProvider provided incorrect end line");
+						assert.strictEqual(textEdit2.range.end.character, 16, "vscode.executeDocumentRenameProvider provided incorrect end character");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute rename provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeDocumentRenameProvider finds edits for member variable from its declaration", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "references", "References.as"));
+		let position = new vscode.Position(10, 16);
+		let newText = "newName";
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDocumentRenameProvider", uri, position, newText)
+				.then((workspaceEdit: vscode.WorkspaceEdit) =>
+					{
+						assert.strictEqual(workspaceEdit.size, 1,
+							"vscode.executeDocumentRenameProvider failed to provide correct number of uris");
+						let textEdits = workspaceEdit.get(uri);
+						assert.strictEqual(textEdits.length, 3,
+							"vscode.executeDocumentRenameProvider failed to provide correct number of text edits");
+						let textEdit1 = textEdits[0];
+						assert.strictEqual(textEdit1.newText, newText, "vscode.executeDocumentRenameProvider provided incorrect new text");
+						assert.strictEqual(textEdit1.range.start.line, 10, "vscode.executeDocumentRenameProvider provided incorrect start line");
+						assert.strictEqual(textEdit1.range.start.character, 14, "vscode.executeDocumentRenameProvider provided incorrect start character");
+						assert.strictEqual(textEdit1.range.end.line, 10, "vscode.executeDocumentRenameProvider provided incorrect end line");
+						assert.strictEqual(textEdit1.range.end.character, 23, "vscode.executeDocumentRenameProvider provided incorrect end character");
+						let textEdit2 = textEdits[1];
+						assert.strictEqual(textEdit2.newText, newText, "vscode.executeDocumentRenameProvider provided incorrect new text");
+						assert.strictEqual(textEdit2.range.start.line, 50, "vscode.executeDocumentRenameProvider provided incorrect start line");
+						assert.strictEqual(textEdit2.range.start.character, 3, "vscode.executeDocumentRenameProvider provided incorrect start character");
+						assert.strictEqual(textEdit2.range.end.line, 50, "vscode.executeDocumentRenameProvider provided incorrect end line");
+						assert.strictEqual(textEdit2.range.end.character, 12, "vscode.executeDocumentRenameProvider provided incorrect end character");
+						let textEdit3 = textEdits[2];
+						assert.strictEqual(textEdit3.newText, newText, "vscode.executeDocumentRenameProvider provided incorrect new text");
+						assert.strictEqual(textEdit3.range.start.line, 51, "vscode.executeDocumentRenameProvider provided incorrect start line");
+						assert.strictEqual(textEdit3.range.start.character, 8, "vscode.executeDocumentRenameProvider provided incorrect start character");
+						assert.strictEqual(textEdit3.range.end.line, 51, "vscode.executeDocumentRenameProvider provided incorrect end line");
+						assert.strictEqual(textEdit3.range.end.character, 17, "vscode.executeDocumentRenameProvider provided incorrect end character");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute rename provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeDocumentRenameProvider finds edits for member variable from assignment without this member access", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "references", "References.as"));
+		let position = new vscode.Position(50, 5);
+		let newText = "newName";
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDocumentRenameProvider", uri, position, newText)
+				.then((workspaceEdit: vscode.WorkspaceEdit) =>
+					{
+						assert.strictEqual(workspaceEdit.size, 1,
+							"vscode.executeDocumentRenameProvider failed to provide correct number of uris");
+						let textEdits = workspaceEdit.get(uri);
+						assert.strictEqual(textEdits.length, 3,
+							"vscode.executeDocumentRenameProvider failed to provide correct number of text edits");
+						let textEdit1 = textEdits[0];
+						assert.strictEqual(textEdit1.newText, newText, "vscode.executeDocumentRenameProvider provided incorrect new text");
+						assert.strictEqual(textEdit1.range.start.line, 10, "vscode.executeDocumentRenameProvider provided incorrect start line");
+						assert.strictEqual(textEdit1.range.start.character, 14, "vscode.executeDocumentRenameProvider provided incorrect start character");
+						assert.strictEqual(textEdit1.range.end.line, 10, "vscode.executeDocumentRenameProvider provided incorrect end line");
+						assert.strictEqual(textEdit1.range.end.character, 23, "vscode.executeDocumentRenameProvider provided incorrect end character");
+						let textEdit2 = textEdits[1];
+						assert.strictEqual(textEdit2.newText, newText, "vscode.executeDocumentRenameProvider provided incorrect new text");
+						assert.strictEqual(textEdit2.range.start.line, 50, "vscode.executeDocumentRenameProvider provided incorrect start line");
+						assert.strictEqual(textEdit2.range.start.character, 3, "vscode.executeDocumentRenameProvider provided incorrect start character");
+						assert.strictEqual(textEdit2.range.end.line, 50, "vscode.executeDocumentRenameProvider provided incorrect end line");
+						assert.strictEqual(textEdit2.range.end.character, 12, "vscode.executeDocumentRenameProvider provided incorrect end character");
+						let textEdit3 = textEdits[2];
+						assert.strictEqual(textEdit3.newText, newText, "vscode.executeDocumentRenameProvider provided incorrect new text");
+						assert.strictEqual(textEdit3.range.start.line, 51, "vscode.executeDocumentRenameProvider provided incorrect start line");
+						assert.strictEqual(textEdit3.range.start.character, 8, "vscode.executeDocumentRenameProvider provided incorrect start character");
+						assert.strictEqual(textEdit3.range.end.line, 51, "vscode.executeDocumentRenameProvider provided incorrect end line");
+						assert.strictEqual(textEdit3.range.end.character, 17, "vscode.executeDocumentRenameProvider provided incorrect end character");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute rename provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeDocumentRenameProvider finds edits for member variable from assignment with this member access", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "references", "References.as"));
+		let position = new vscode.Position(51, 10);
+		let newText = "newName";
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDocumentRenameProvider", uri, position, newText)
+				.then((workspaceEdit: vscode.WorkspaceEdit) =>
+					{
+						assert.strictEqual(workspaceEdit.size, 1,
+							"vscode.executeDocumentRenameProvider failed to provide correct number of uris");
+						let textEdits = workspaceEdit.get(uri);
+						assert.strictEqual(textEdits.length, 3,
+							"vscode.executeDocumentRenameProvider failed to provide correct number of text edits");
+						let textEdit1 = textEdits[0];
+						assert.strictEqual(textEdit1.newText, newText, "vscode.executeDocumentRenameProvider provided incorrect new text");
+						assert.strictEqual(textEdit1.range.start.line, 10, "vscode.executeDocumentRenameProvider provided incorrect start line");
+						assert.strictEqual(textEdit1.range.start.character, 14, "vscode.executeDocumentRenameProvider provided incorrect start character");
+						assert.strictEqual(textEdit1.range.end.line, 10, "vscode.executeDocumentRenameProvider provided incorrect end line");
+						assert.strictEqual(textEdit1.range.end.character, 23, "vscode.executeDocumentRenameProvider provided incorrect end character");
+						let textEdit2 = textEdits[1];
+						assert.strictEqual(textEdit2.newText, newText, "vscode.executeDocumentRenameProvider provided incorrect new text");
+						assert.strictEqual(textEdit2.range.start.line, 50, "vscode.executeDocumentRenameProvider provided incorrect start line");
+						assert.strictEqual(textEdit2.range.start.character, 3, "vscode.executeDocumentRenameProvider provided incorrect start character");
+						assert.strictEqual(textEdit2.range.end.line, 50, "vscode.executeDocumentRenameProvider provided incorrect end line");
+						assert.strictEqual(textEdit2.range.end.character, 12, "vscode.executeDocumentRenameProvider provided incorrect end character");
+						let textEdit3 = textEdits[2];
+						assert.strictEqual(textEdit3.newText, newText, "vscode.executeDocumentRenameProvider provided incorrect new text");
+						assert.strictEqual(textEdit3.range.start.line, 51, "vscode.executeDocumentRenameProvider provided incorrect start line");
+						assert.strictEqual(textEdit3.range.start.character, 8, "vscode.executeDocumentRenameProvider provided incorrect start character");
+						assert.strictEqual(textEdit3.range.end.line, 51, "vscode.executeDocumentRenameProvider provided incorrect end line");
+						assert.strictEqual(textEdit3.range.end.character, 17, "vscode.executeDocumentRenameProvider provided incorrect end character");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute rename provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeDocumentRenameProvider finds edits for member function from its declaration", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "references", "References.as"));
+		let position = new vscode.Position(12, 22);
+		let newText = "newName";
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDocumentRenameProvider", uri, position, newText)
+				.then((workspaceEdit: vscode.WorkspaceEdit) =>
+					{
+						assert.strictEqual(workspaceEdit.size, 1,
+							"vscode.executeDocumentRenameProvider failed to provide correct number of uris");
+						let textEdits = workspaceEdit.get(uri);
+						assert.strictEqual(textEdits.length, 3,
+							"vscode.executeDocumentRenameProvider failed to provide correct number of text edits");
+						let textEdit1 = textEdits[0];
+						assert.strictEqual(textEdit1.newText, newText, "vscode.executeDocumentRenameProvider provided incorrect new text");
+						assert.strictEqual(textEdit1.range.start.line, 12, "vscode.executeDocumentRenameProvider provided incorrect start line");
+						assert.strictEqual(textEdit1.range.start.character, 19, "vscode.executeDocumentRenameProvider provided incorrect start character");
+						assert.strictEqual(textEdit1.range.end.line, 12, "vscode.executeDocumentRenameProvider provided incorrect end line");
+						assert.strictEqual(textEdit1.range.end.character, 33, "vscode.executeDocumentRenameProvider provided incorrect end character");
+						let textEdit2 = textEdits[1];
+						assert.strictEqual(textEdit2.newText, newText, "vscode.executeDocumentRenameProvider provided incorrect new text");
+						assert.strictEqual(textEdit2.range.start.line, 41, "vscode.executeDocumentRenameProvider provided incorrect start line");
+						assert.strictEqual(textEdit2.range.start.character, 3, "vscode.executeDocumentRenameProvider provided incorrect start character");
+						assert.strictEqual(textEdit2.range.end.line, 41, "vscode.executeDocumentRenameProvider provided incorrect end line");
+						assert.strictEqual(textEdit2.range.end.character, 17, "vscode.executeDocumentRenameProvider provided incorrect end character");
+						let textEdit3 = textEdits[2];
+						assert.strictEqual(textEdit3.newText, newText, "vscode.executeDocumentRenameProvider provided incorrect new text");
+						assert.strictEqual(textEdit3.range.start.line, 42, "vscode.executeDocumentRenameProvider provided incorrect start line");
+						assert.strictEqual(textEdit3.range.start.character, 8, "vscode.executeDocumentRenameProvider provided incorrect start character");
+						assert.strictEqual(textEdit3.range.end.line, 42, "vscode.executeDocumentRenameProvider provided incorrect end line");
+						assert.strictEqual(textEdit3.range.end.character, 22, "vscode.executeDocumentRenameProvider provided incorrect end character");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute rename provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeDocumentRenameProvider finds edits for member function from a call without this member access", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "references", "References.as"));
+		let position = new vscode.Position(41, 5);
+		let newText = "newName";
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDocumentRenameProvider", uri, position, newText)
+				.then((workspaceEdit: vscode.WorkspaceEdit) =>
+					{
+						assert.strictEqual(workspaceEdit.size, 1,
+							"vscode.executeDocumentRenameProvider failed to provide correct number of uris");
+						let textEdits = workspaceEdit.get(uri);
+						assert.strictEqual(textEdits.length, 3,
+							"vscode.executeDocumentRenameProvider failed to provide correct number of text edits");
+						let textEdit1 = textEdits[0];
+						assert.strictEqual(textEdit1.newText, newText, "vscode.executeDocumentRenameProvider provided incorrect new text");
+						assert.strictEqual(textEdit1.range.start.line, 12, "vscode.executeDocumentRenameProvider provided incorrect start line");
+						assert.strictEqual(textEdit1.range.start.character, 19, "vscode.executeDocumentRenameProvider provided incorrect start character");
+						assert.strictEqual(textEdit1.range.end.line, 12, "vscode.executeDocumentRenameProvider provided incorrect end line");
+						assert.strictEqual(textEdit1.range.end.character, 33, "vscode.executeDocumentRenameProvider provided incorrect end character");
+						let textEdit2 = textEdits[1];
+						assert.strictEqual(textEdit2.newText, newText, "vscode.executeDocumentRenameProvider provided incorrect new text");
+						assert.strictEqual(textEdit2.range.start.line, 41, "vscode.executeDocumentRenameProvider provided incorrect start line");
+						assert.strictEqual(textEdit2.range.start.character, 3, "vscode.executeDocumentRenameProvider provided incorrect start character");
+						assert.strictEqual(textEdit2.range.end.line, 41, "vscode.executeDocumentRenameProvider provided incorrect end line");
+						assert.strictEqual(textEdit2.range.end.character, 17, "vscode.executeDocumentRenameProvider provided incorrect end character");
+						let textEdit3 = textEdits[2];
+						assert.strictEqual(textEdit3.newText, newText, "vscode.executeDocumentRenameProvider provided incorrect new text");
+						assert.strictEqual(textEdit3.range.start.line, 42, "vscode.executeDocumentRenameProvider provided incorrect start line");
+						assert.strictEqual(textEdit3.range.start.character, 8, "vscode.executeDocumentRenameProvider provided incorrect start character");
+						assert.strictEqual(textEdit3.range.end.line, 42, "vscode.executeDocumentRenameProvider provided incorrect end line");
+						assert.strictEqual(textEdit3.range.end.character, 22, "vscode.executeDocumentRenameProvider provided incorrect end character");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute rename provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeDocumentRenameProvider finds edits for member function from a call with this member access", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "references", "References.as"));
+		let position = new vscode.Position(42, 10);
+		let newText = "newName";
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDocumentRenameProvider", uri, position, newText)
+				.then((workspaceEdit: vscode.WorkspaceEdit) =>
+					{
+						assert.strictEqual(workspaceEdit.size, 1,
+							"vscode.executeDocumentRenameProvider failed to provide correct number of uris");
+						let textEdits = workspaceEdit.get(uri);
+						assert.strictEqual(textEdits.length, 3,
+							"vscode.executeDocumentRenameProvider failed to provide correct number of text edits");
+						let textEdit1 = textEdits[0];
+						assert.strictEqual(textEdit1.newText, newText, "vscode.executeDocumentRenameProvider provided incorrect new text");
+						assert.strictEqual(textEdit1.range.start.line, 12, "vscode.executeDocumentRenameProvider provided incorrect start line");
+						assert.strictEqual(textEdit1.range.start.character, 19, "vscode.executeDocumentRenameProvider provided incorrect start character");
+						assert.strictEqual(textEdit1.range.end.line, 12, "vscode.executeDocumentRenameProvider provided incorrect end line");
+						assert.strictEqual(textEdit1.range.end.character, 33, "vscode.executeDocumentRenameProvider provided incorrect end character");
+						let textEdit2 = textEdits[1];
+						assert.strictEqual(textEdit2.newText, newText, "vscode.executeDocumentRenameProvider provided incorrect new text");
+						assert.strictEqual(textEdit2.range.start.line, 41, "vscode.executeDocumentRenameProvider provided incorrect start line");
+						assert.strictEqual(textEdit2.range.start.character, 3, "vscode.executeDocumentRenameProvider provided incorrect start character");
+						assert.strictEqual(textEdit2.range.end.line, 41, "vscode.executeDocumentRenameProvider provided incorrect end line");
+						assert.strictEqual(textEdit2.range.end.character, 17, "vscode.executeDocumentRenameProvider provided incorrect end character");
+						let textEdit3 = textEdits[2];
+						assert.strictEqual(textEdit3.newText, newText, "vscode.executeDocumentRenameProvider provided incorrect new text");
+						assert.strictEqual(textEdit3.range.start.line, 42, "vscode.executeDocumentRenameProvider provided incorrect start line");
+						assert.strictEqual(textEdit3.range.start.character, 8, "vscode.executeDocumentRenameProvider provided incorrect start character");
+						assert.strictEqual(textEdit3.range.end.line, 42, "vscode.executeDocumentRenameProvider provided incorrect end line");
+						assert.strictEqual(textEdit3.range.end.character, 22, "vscode.executeDocumentRenameProvider provided incorrect end character");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute rename provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeDocumentRenameProvider finds edits for static variable from its declaration", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "references", "References.as"));
+		let position = new vscode.Position(4, 22);
+		let newText = "newName";
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDocumentRenameProvider", uri, position, newText)
+				.then((workspaceEdit: vscode.WorkspaceEdit) =>
+					{
+						assert.strictEqual(workspaceEdit.size, 1,
+							"vscode.executeDocumentRenameProvider failed to provide correct number of uris");
+						let textEdits = workspaceEdit.get(uri);
+						assert.strictEqual(textEdits.length, 3,
+							"vscode.executeDocumentRenameProvider failed to provide correct number of text edits");
+						let textEdit1 = textEdits[0];
+						assert.strictEqual(textEdit1.newText, newText, "vscode.executeDocumentRenameProvider provided incorrect new text");
+						assert.strictEqual(textEdit1.range.start.line, 4, "vscode.executeDocumentRenameProvider provided incorrect start line");
+						assert.strictEqual(textEdit1.range.start.character, 20, "vscode.executeDocumentRenameProvider provided incorrect start character");
+						assert.strictEqual(textEdit1.range.end.line, 4, "vscode.executeDocumentRenameProvider provided incorrect end line");
+						assert.strictEqual(textEdit1.range.end.character, 29, "vscode.executeDocumentRenameProvider provided incorrect end character");
+						let textEdit2 = textEdits[1];
+						assert.strictEqual(textEdit2.newText, newText, "vscode.executeDocumentRenameProvider provided incorrect new text");
+						assert.strictEqual(textEdit2.range.start.line, 47, "vscode.executeDocumentRenameProvider provided incorrect start line");
+						assert.strictEqual(textEdit2.range.start.character, 3, "vscode.executeDocumentRenameProvider provided incorrect start character");
+						assert.strictEqual(textEdit2.range.end.line, 47, "vscode.executeDocumentRenameProvider provided incorrect end line");
+						assert.strictEqual(textEdit2.range.end.character, 12, "vscode.executeDocumentRenameProvider provided incorrect end character");
+						let textEdit3 = textEdits[2];
+						assert.strictEqual(textEdit3.newText, newText, "vscode.executeDocumentRenameProvider provided incorrect new text");
+						assert.strictEqual(textEdit3.range.start.line, 48, "vscode.executeDocumentRenameProvider provided incorrect start line");
+						assert.strictEqual(textEdit3.range.start.character, 14, "vscode.executeDocumentRenameProvider provided incorrect start character");
+						assert.strictEqual(textEdit3.range.end.line, 48, "vscode.executeDocumentRenameProvider provided incorrect end line");
+						assert.strictEqual(textEdit3.range.end.character, 23, "vscode.executeDocumentRenameProvider provided incorrect end character");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute rename provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeDocumentRenameProvider finds edits for static variable from assignment without type member access", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "references", "References.as"));
+		let position = new vscode.Position(47, 5);
+		let newText = "newName";
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDocumentRenameProvider", uri, position, newText)
+				.then((workspaceEdit: vscode.WorkspaceEdit) =>
+					{
+						assert.strictEqual(workspaceEdit.size, 1,
+							"vscode.executeDocumentRenameProvider failed to provide correct number of uris");
+						let textEdits = workspaceEdit.get(uri);
+						assert.strictEqual(textEdits.length, 3,
+							"vscode.executeDocumentRenameProvider failed to provide correct number of text edits");
+						let textEdit1 = textEdits[0];
+						assert.strictEqual(textEdit1.newText, newText, "vscode.executeDocumentRenameProvider provided incorrect new text");
+						assert.strictEqual(textEdit1.range.start.line, 4, "vscode.executeDocumentRenameProvider provided incorrect start line");
+						assert.strictEqual(textEdit1.range.start.character, 20, "vscode.executeDocumentRenameProvider provided incorrect start character");
+						assert.strictEqual(textEdit1.range.end.line, 4, "vscode.executeDocumentRenameProvider provided incorrect end line");
+						assert.strictEqual(textEdit1.range.end.character, 29, "vscode.executeDocumentRenameProvider provided incorrect end character");
+						let textEdit2 = textEdits[1];
+						assert.strictEqual(textEdit2.newText, newText, "vscode.executeDocumentRenameProvider provided incorrect new text");
+						assert.strictEqual(textEdit2.range.start.line, 47, "vscode.executeDocumentRenameProvider provided incorrect start line");
+						assert.strictEqual(textEdit2.range.start.character, 3, "vscode.executeDocumentRenameProvider provided incorrect start character");
+						assert.strictEqual(textEdit2.range.end.line, 47, "vscode.executeDocumentRenameProvider provided incorrect end line");
+						assert.strictEqual(textEdit2.range.end.character, 12, "vscode.executeDocumentRenameProvider provided incorrect end character");
+						let textEdit3 = textEdits[2];
+						assert.strictEqual(textEdit3.newText, newText, "vscode.executeDocumentRenameProvider provided incorrect new text");
+						assert.strictEqual(textEdit3.range.start.line, 48, "vscode.executeDocumentRenameProvider provided incorrect start line");
+						assert.strictEqual(textEdit3.range.start.character, 14, "vscode.executeDocumentRenameProvider provided incorrect start character");
+						assert.strictEqual(textEdit3.range.end.line, 48, "vscode.executeDocumentRenameProvider provided incorrect end line");
+						assert.strictEqual(textEdit3.range.end.character, 23, "vscode.executeDocumentRenameProvider provided incorrect end character");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute rename provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeDocumentRenameProvider finds edits for static variable from assignment with type member access", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "references", "References.as"));
+		let position = new vscode.Position(48, 16);
+		let newText = "newName";
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDocumentRenameProvider", uri, position, newText)
+				.then((workspaceEdit: vscode.WorkspaceEdit) =>
+					{
+						assert.strictEqual(workspaceEdit.size, 1,
+							"vscode.executeDocumentRenameProvider failed to provide correct number of uris");
+						let textEdits = workspaceEdit.get(uri);
+						assert.strictEqual(textEdits.length, 3,
+							"vscode.executeDocumentRenameProvider failed to provide correct number of text edits");
+						let textEdit1 = textEdits[0];
+						assert.strictEqual(textEdit1.newText, newText, "vscode.executeDocumentRenameProvider provided incorrect new text");
+						assert.strictEqual(textEdit1.range.start.line, 4, "vscode.executeDocumentRenameProvider provided incorrect start line");
+						assert.strictEqual(textEdit1.range.start.character, 20, "vscode.executeDocumentRenameProvider provided incorrect start character");
+						assert.strictEqual(textEdit1.range.end.line, 4, "vscode.executeDocumentRenameProvider provided incorrect end line");
+						assert.strictEqual(textEdit1.range.end.character, 29, "vscode.executeDocumentRenameProvider provided incorrect end character");
+						let textEdit2 = textEdits[1];
+						assert.strictEqual(textEdit2.newText, newText, "vscode.executeDocumentRenameProvider provided incorrect new text");
+						assert.strictEqual(textEdit2.range.start.line, 47, "vscode.executeDocumentRenameProvider provided incorrect start line");
+						assert.strictEqual(textEdit2.range.start.character, 3, "vscode.executeDocumentRenameProvider provided incorrect start character");
+						assert.strictEqual(textEdit2.range.end.line, 47, "vscode.executeDocumentRenameProvider provided incorrect end line");
+						assert.strictEqual(textEdit2.range.end.character, 12, "vscode.executeDocumentRenameProvider provided incorrect end character");
+						let textEdit3 = textEdits[2];
+						assert.strictEqual(textEdit3.newText, newText, "vscode.executeDocumentRenameProvider provided incorrect new text");
+						assert.strictEqual(textEdit3.range.start.line, 48, "vscode.executeDocumentRenameProvider provided incorrect start line");
+						assert.strictEqual(textEdit3.range.start.character, 14, "vscode.executeDocumentRenameProvider provided incorrect start character");
+						assert.strictEqual(textEdit3.range.end.line, 48, "vscode.executeDocumentRenameProvider provided incorrect end line");
+						assert.strictEqual(textEdit3.range.end.character, 23, "vscode.executeDocumentRenameProvider provided incorrect end character");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute rename provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeDocumentRenameProvider finds edits for static function from its declaration", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "references", "References.as"));
+		let position = new vscode.Position(6, 28);
+		let newText = "newName";
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDocumentRenameProvider", uri, position, newText)
+				.then((workspaceEdit: vscode.WorkspaceEdit) =>
+					{
+						assert.strictEqual(workspaceEdit.size, 1,
+							"vscode.executeDocumentRenameProvider failed to provide correct number of uris");
+						let textEdits = workspaceEdit.get(uri);
+						assert.strictEqual(textEdits.length, 3,
+							"vscode.executeDocumentRenameProvider failed to provide correct number of text edits");
+						let textEdit1 = textEdits[0];
+						assert.strictEqual(textEdit1.newText, newText, "vscode.executeDocumentRenameProvider provided incorrect new text");
+						assert.strictEqual(textEdit1.range.start.line, 6, "vscode.executeDocumentRenameProvider provided incorrect start line");
+						assert.strictEqual(textEdit1.range.start.character, 26, "vscode.executeDocumentRenameProvider provided incorrect start character");
+						assert.strictEqual(textEdit1.range.end.line, 6, "vscode.executeDocumentRenameProvider provided incorrect end line");
+						assert.strictEqual(textEdit1.range.end.character, 40, "vscode.executeDocumentRenameProvider provided incorrect end character");
+						let textEdit2 = textEdits[1];
+						assert.strictEqual(textEdit2.newText, newText, "vscode.executeDocumentRenameProvider provided incorrect new text");
+						assert.strictEqual(textEdit2.range.start.line, 44, "vscode.executeDocumentRenameProvider provided incorrect start line");
+						assert.strictEqual(textEdit2.range.start.character, 3, "vscode.executeDocumentRenameProvider provided incorrect start character");
+						assert.strictEqual(textEdit2.range.end.line, 44, "vscode.executeDocumentRenameProvider provided incorrect end line");
+						assert.strictEqual(textEdit2.range.end.character, 17, "vscode.executeDocumentRenameProvider provided incorrect end character");
+						let textEdit3 = textEdits[2];
+						assert.strictEqual(textEdit3.newText, newText, "vscode.executeDocumentRenameProvider provided incorrect new text");
+						assert.strictEqual(textEdit3.range.start.line, 45, "vscode.executeDocumentRenameProvider provided incorrect start line");
+						assert.strictEqual(textEdit3.range.start.character, 14, "vscode.executeDocumentRenameProvider provided incorrect start character");
+						assert.strictEqual(textEdit3.range.end.line, 45, "vscode.executeDocumentRenameProvider provided incorrect end line");
+						assert.strictEqual(textEdit3.range.end.character, 28, "vscode.executeDocumentRenameProvider provided incorrect end character");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute rename provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeDocumentRenameProvider finds edits for static function from call without type member access", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "references", "References.as"));
+		let position = new vscode.Position(44, 5);
+		let newText = "newName";
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDocumentRenameProvider", uri, position, newText)
+				.then((workspaceEdit: vscode.WorkspaceEdit) =>
+					{
+						assert.strictEqual(workspaceEdit.size, 1,
+							"vscode.executeDocumentRenameProvider failed to provide correct number of uris");
+						let textEdits = workspaceEdit.get(uri);
+						assert.strictEqual(textEdits.length, 3,
+							"vscode.executeDocumentRenameProvider failed to provide correct number of text edits");
+						let textEdit1 = textEdits[0];
+						assert.strictEqual(textEdit1.newText, newText, "vscode.executeDocumentRenameProvider provided incorrect new text");
+						assert.strictEqual(textEdit1.range.start.line, 6, "vscode.executeDocumentRenameProvider provided incorrect start line");
+						assert.strictEqual(textEdit1.range.start.character, 26, "vscode.executeDocumentRenameProvider provided incorrect start character");
+						assert.strictEqual(textEdit1.range.end.line, 6, "vscode.executeDocumentRenameProvider provided incorrect end line");
+						assert.strictEqual(textEdit1.range.end.character, 40, "vscode.executeDocumentRenameProvider provided incorrect end character");
+						let textEdit2 = textEdits[1];
+						assert.strictEqual(textEdit2.newText, newText, "vscode.executeDocumentRenameProvider provided incorrect new text");
+						assert.strictEqual(textEdit2.range.start.line, 44, "vscode.executeDocumentRenameProvider provided incorrect start line");
+						assert.strictEqual(textEdit2.range.start.character, 3, "vscode.executeDocumentRenameProvider provided incorrect start character");
+						assert.strictEqual(textEdit2.range.end.line, 44, "vscode.executeDocumentRenameProvider provided incorrect end line");
+						assert.strictEqual(textEdit2.range.end.character, 17, "vscode.executeDocumentRenameProvider provided incorrect end character");
+						let textEdit3 = textEdits[2];
+						assert.strictEqual(textEdit3.newText, newText, "vscode.executeDocumentRenameProvider provided incorrect new text");
+						assert.strictEqual(textEdit3.range.start.line, 45, "vscode.executeDocumentRenameProvider provided incorrect start line");
+						assert.strictEqual(textEdit3.range.start.character, 14, "vscode.executeDocumentRenameProvider provided incorrect start character");
+						assert.strictEqual(textEdit3.range.end.line, 45, "vscode.executeDocumentRenameProvider provided incorrect end line");
+						assert.strictEqual(textEdit3.range.end.character, 28, "vscode.executeDocumentRenameProvider provided incorrect end character");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute rename provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeDocumentRenameProvider finds edits for static function from call with type member access", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "references", "References.as"));
+		let position = new vscode.Position(45, 16);
+		let newText = "newName";
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeDocumentRenameProvider", uri, position, newText)
+				.then((workspaceEdit: vscode.WorkspaceEdit) =>
+					{
+						assert.strictEqual(workspaceEdit.size, 1,
+							"vscode.executeDocumentRenameProvider failed to provide correct number of uris");
+						let textEdits = workspaceEdit.get(uri);
+						assert.strictEqual(textEdits.length, 3,
+							"vscode.executeDocumentRenameProvider failed to provide correct number of text edits");
+						let textEdit1 = textEdits[0];
+						assert.strictEqual(textEdit1.newText, newText, "vscode.executeDocumentRenameProvider provided incorrect new text");
+						assert.strictEqual(textEdit1.range.start.line, 6, "vscode.executeDocumentRenameProvider provided incorrect start line");
+						assert.strictEqual(textEdit1.range.start.character, 26, "vscode.executeDocumentRenameProvider provided incorrect start character");
+						assert.strictEqual(textEdit1.range.end.line, 6, "vscode.executeDocumentRenameProvider provided incorrect end line");
+						assert.strictEqual(textEdit1.range.end.character, 40, "vscode.executeDocumentRenameProvider provided incorrect end character");
+						let textEdit2 = textEdits[1];
+						assert.strictEqual(textEdit2.newText, newText, "vscode.executeDocumentRenameProvider provided incorrect new text");
+						assert.strictEqual(textEdit2.range.start.line, 44, "vscode.executeDocumentRenameProvider provided incorrect start line");
+						assert.strictEqual(textEdit2.range.start.character, 3, "vscode.executeDocumentRenameProvider provided incorrect start character");
+						assert.strictEqual(textEdit2.range.end.line, 44, "vscode.executeDocumentRenameProvider provided incorrect end line");
+						assert.strictEqual(textEdit2.range.end.character, 17, "vscode.executeDocumentRenameProvider provided incorrect end character");
+						let textEdit3 = textEdits[2];
+						assert.strictEqual(textEdit3.newText, newText, "vscode.executeDocumentRenameProvider provided incorrect new text");
+						assert.strictEqual(textEdit3.range.start.line, 45, "vscode.executeDocumentRenameProvider provided incorrect start line");
+						assert.strictEqual(textEdit3.range.start.character, 14, "vscode.executeDocumentRenameProvider provided incorrect start character");
+						assert.strictEqual(textEdit3.range.end.line, 45, "vscode.executeDocumentRenameProvider provided incorrect end line");
+						assert.strictEqual(textEdit3.range.end.character, 28, "vscode.executeDocumentRenameProvider provided incorrect end character");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute rename provider: " + uri);
+					});
+		});
+	});
+});
+
 suite("document symbol provider: Library workspace", () =>
 {
 	suiteTeardown(revertAndCloseAllEditors);
