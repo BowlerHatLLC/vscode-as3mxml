@@ -11015,6 +11015,459 @@ suite("includes: application workspace", () =>
 	});
 });
 
+suite("reference provider: Application workspace", () =>
+{
+	suiteTeardown(revertAndCloseAllEditors);
+	test("vscode.executeReferenceProvider finds references to local variable from its declaration", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "references", "References.as"));
+		let position = new vscode.Position(38, 10);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeReferenceProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 2,
+							"vscode.executeReferenceProvider failed to provide locations: " + uri);
+						let location1 = locations[0];
+						assert.strictEqual(location1.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location1.range.start.line, 38, "vscode.executeReferenceProvider provided incorrect line");
+						assert.strictEqual(location1.range.start.character, 7, "vscode.executeReferenceProvider provided incorrect character");
+						let location2 = locations[1];
+						assert.strictEqual(location2.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location2.range.start.line, 86, "vscode.executeReferenceProvider provided incorrect line");
+						assert.strictEqual(location2.range.start.character, 3, "vscode.executeReferenceProvider provided incorrect character");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute reference provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeReferenceProvider finds references to local variable from assignment that is not initialization", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "references", "References.as"));
+		let position = new vscode.Position(86, 5);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeReferenceProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 2,
+							"vscode.executeReferenceProvider failed to provide locations: " + uri);
+						let location1 = locations[0];
+						assert.strictEqual(location1.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location1.range.start.line, 38, "vscode.executeReferenceProvider provided incorrect line");
+						assert.strictEqual(location1.range.start.character, 7, "vscode.executeReferenceProvider provided incorrect character");
+						let location2 = locations[1];
+						assert.strictEqual(location2.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location2.range.start.line, 86, "vscode.executeReferenceProvider provided incorrect line");
+						assert.strictEqual(location2.range.start.character, 3, "vscode.executeReferenceProvider provided incorrect character");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute reference provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeReferenceProvider finds references to local function from its declaration", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "references", "References.as"));
+		let position = new vscode.Position(39, 15);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeReferenceProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 2,
+							"vscode.executeReferenceProvider failed to provide locations: " + uri);
+						let location1 = locations[0];
+						assert.strictEqual(location1.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location1.range.start.line, 39, "vscode.executeReferenceProvider provided incorrect line");
+						assert.strictEqual(location1.range.start.character, 12, "vscode.executeReferenceProvider provided incorrect character");
+						let location2 = locations[1];
+						assert.strictEqual(location2.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location2.range.start.line, 88, "vscode.executeReferenceProvider provided incorrect line");
+						assert.strictEqual(location2.range.start.character, 3, "vscode.executeReferenceProvider provided incorrect character");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute reference provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeReferenceProvider finds references to local function from a call", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "references", "References.as"));
+		let position = new vscode.Position(88, 5);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeReferenceProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 2,
+							"vscode.executeReferenceProvider failed to provide locations: " + uri);
+						let location1 = locations[0];
+						assert.strictEqual(location1.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location1.range.start.line, 39, "vscode.executeReferenceProvider provided incorrect line");
+						assert.strictEqual(location1.range.start.character, 12, "vscode.executeReferenceProvider provided incorrect character");
+						let location2 = locations[1];
+						assert.strictEqual(location2.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location2.range.start.line, 88, "vscode.executeReferenceProvider provided incorrect line");
+						assert.strictEqual(location2.range.start.character, 3, "vscode.executeReferenceProvider provided incorrect character");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute reference provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeReferenceProvider finds references to member variable from its declaration", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "references", "References.as"));
+		let position = new vscode.Position(10, 16);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeReferenceProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 3,
+							"vscode.executeReferenceProvider failed to provide locations: " + uri);
+						let location1 = locations[0];
+						assert.strictEqual(location1.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location1.range.start.line, 10, "vscode.executeReferenceProvider provided incorrect line");
+						assert.strictEqual(location1.range.start.character, 14, "vscode.executeReferenceProvider provided incorrect character");
+						let location2 = locations[1];
+						assert.strictEqual(location2.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location2.range.start.line, 50, "vscode.executeReferenceProvider provided incorrect line");
+						assert.strictEqual(location2.range.start.character, 3, "vscode.executeReferenceProvider provided incorrect character");
+						let location3 = locations[2];
+						assert.strictEqual(location3.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location3.range.start.line, 51, "vscode.executeReferenceProvider provided incorrect line");
+						assert.strictEqual(location3.range.start.character, 8, "vscode.executeReferenceProvider provided incorrect character");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute reference provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeReferenceProvider finds references to member variable from assignment without this member access", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "references", "References.as"));
+		let position = new vscode.Position(50, 5);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeReferenceProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 3,
+							"vscode.executeReferenceProvider failed to provide locations: " + uri);
+						let location1 = locations[0];
+						assert.strictEqual(location1.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location1.range.start.line, 10, "vscode.executeReferenceProvider provided incorrect line");
+						assert.strictEqual(location1.range.start.character, 14, "vscode.executeReferenceProvider provided incorrect character");
+						let location2 = locations[1];
+						assert.strictEqual(location2.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location2.range.start.line, 50, "vscode.executeReferenceProvider provided incorrect line");
+						assert.strictEqual(location2.range.start.character, 3, "vscode.executeReferenceProvider provided incorrect character");
+						let location3 = locations[2];
+						assert.strictEqual(location3.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location3.range.start.line, 51, "vscode.executeReferenceProvider provided incorrect line");
+						assert.strictEqual(location3.range.start.character, 8, "vscode.executeReferenceProvider provided incorrect character");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute reference provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeReferenceProvider finds references to member variable from assignment with this member access", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "references", "References.as"));
+		let position = new vscode.Position(51, 10);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeReferenceProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 3,
+							"vscode.executeReferenceProvider failed to provide locations: " + uri);
+						let location1 = locations[0];
+						assert.strictEqual(location1.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location1.range.start.line, 10, "vscode.executeReferenceProvider provided incorrect line");
+						assert.strictEqual(location1.range.start.character, 14, "vscode.executeReferenceProvider provided incorrect character");
+						let location2 = locations[1];
+						assert.strictEqual(location2.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location2.range.start.line, 50, "vscode.executeReferenceProvider provided incorrect line");
+						assert.strictEqual(location2.range.start.character, 3, "vscode.executeReferenceProvider provided incorrect character");
+						let location3 = locations[2];
+						assert.strictEqual(location3.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location3.range.start.line, 51, "vscode.executeReferenceProvider provided incorrect line");
+						assert.strictEqual(location3.range.start.character, 8, "vscode.executeReferenceProvider provided incorrect character");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute reference provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeReferenceProvider finds references to member function from its declaration", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "references", "References.as"));
+		let position = new vscode.Position(12, 22);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeReferenceProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 3,
+							"vscode.executeReferenceProvider failed to provide locations: " + uri);
+						let location1 = locations[0];
+						assert.strictEqual(location1.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location1.range.start.line, 12, "vscode.executeReferenceProvider provided incorrect line");
+						assert.strictEqual(location1.range.start.character, 19, "vscode.executeReferenceProvider provided incorrect character");
+						let location2 = locations[1];
+						assert.strictEqual(location2.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location2.range.start.line, 41, "vscode.executeReferenceProvider provided incorrect line");
+						assert.strictEqual(location2.range.start.character, 3, "vscode.executeReferenceProvider provided incorrect character");
+						let location3 = locations[2];
+						assert.strictEqual(location3.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location3.range.start.line, 42, "vscode.executeReferenceProvider provided incorrect line");
+						assert.strictEqual(location3.range.start.character, 8, "vscode.executeReferenceProvider provided incorrect character");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute reference provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeReferenceProvider finds references to member function from call without this member access", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "references", "References.as"));
+		let position = new vscode.Position(41, 5);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeReferenceProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 3,
+							"vscode.executeReferenceProvider failed to provide locations: " + uri);
+						let location1 = locations[0];
+						assert.strictEqual(location1.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location1.range.start.line, 12, "vscode.executeReferenceProvider provided incorrect line");
+						assert.strictEqual(location1.range.start.character, 19, "vscode.executeReferenceProvider provided incorrect character");
+						let location2 = locations[1];
+						assert.strictEqual(location2.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location2.range.start.line, 41, "vscode.executeReferenceProvider provided incorrect line");
+						assert.strictEqual(location2.range.start.character, 3, "vscode.executeReferenceProvider provided incorrect character");
+						let location3 = locations[2];
+						assert.strictEqual(location3.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location3.range.start.line, 42, "vscode.executeReferenceProvider provided incorrect line");
+						assert.strictEqual(location3.range.start.character, 8, "vscode.executeReferenceProvider provided incorrect character");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute reference provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeReferenceProvider finds references to member function from call with this member access", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "references", "References.as"));
+		let position = new vscode.Position(42, 10);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeReferenceProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 3,
+							"vscode.executeReferenceProvider failed to provide locations: " + uri);
+						let location1 = locations[0];
+						assert.strictEqual(location1.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location1.range.start.line, 12, "vscode.executeReferenceProvider provided incorrect line");
+						assert.strictEqual(location1.range.start.character, 19, "vscode.executeReferenceProvider provided incorrect character");
+						let location2 = locations[1];
+						assert.strictEqual(location2.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location2.range.start.line, 41, "vscode.executeReferenceProvider provided incorrect line");
+						assert.strictEqual(location2.range.start.character, 3, "vscode.executeReferenceProvider provided incorrect character");
+						let location3 = locations[2];
+						assert.strictEqual(location3.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location3.range.start.line, 42, "vscode.executeReferenceProvider provided incorrect line");
+						assert.strictEqual(location3.range.start.character, 8, "vscode.executeReferenceProvider provided incorrect character");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute reference provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeReferenceProvider finds references to static variable from its declaration", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "references", "References.as"));
+		let position = new vscode.Position(4, 22);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeReferenceProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 3,
+							"vscode.executeReferenceProvider failed to provide locations: " + uri);
+						let location1 = locations[0];
+						assert.strictEqual(location1.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location1.range.start.line, 4, "vscode.executeReferenceProvider provided incorrect line");
+						assert.strictEqual(location1.range.start.character, 20, "vscode.executeReferenceProvider provided incorrect character");
+						let location2 = locations[1];
+						assert.strictEqual(location2.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location2.range.start.line, 47, "vscode.executeReferenceProvider provided incorrect line");
+						assert.strictEqual(location2.range.start.character, 3, "vscode.executeReferenceProvider provided incorrect character");
+						let location3 = locations[2];
+						assert.strictEqual(location3.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location3.range.start.line, 48, "vscode.executeReferenceProvider provided incorrect line");
+						assert.strictEqual(location3.range.start.character, 14, "vscode.executeReferenceProvider provided incorrect character");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute reference provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeReferenceProvider finds references to static variable from assignment without type member access", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "references", "References.as"));
+		let position = new vscode.Position(47, 5);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeReferenceProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 3,
+							"vscode.executeReferenceProvider failed to provide locations: " + uri);
+						let location1 = locations[0];
+						assert.strictEqual(location1.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location1.range.start.line, 4, "vscode.executeReferenceProvider provided incorrect line");
+						assert.strictEqual(location1.range.start.character, 20, "vscode.executeReferenceProvider provided incorrect character");
+						let location2 = locations[1];
+						assert.strictEqual(location2.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location2.range.start.line, 47, "vscode.executeReferenceProvider provided incorrect line");
+						assert.strictEqual(location2.range.start.character, 3, "vscode.executeReferenceProvider provided incorrect character");
+						let location3 = locations[2];
+						assert.strictEqual(location3.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location3.range.start.line, 48, "vscode.executeReferenceProvider provided incorrect line");
+						assert.strictEqual(location3.range.start.character, 14, "vscode.executeReferenceProvider provided incorrect character");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute reference provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeReferenceProvider finds references to static variable from assignment with type member access", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "references", "References.as"));
+		let position = new vscode.Position(48, 16);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeReferenceProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 3,
+							"vscode.executeReferenceProvider failed to provide locations: " + uri);
+						let location1 = locations[0];
+						assert.strictEqual(location1.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location1.range.start.line, 4, "vscode.executeReferenceProvider provided incorrect line");
+						assert.strictEqual(location1.range.start.character, 20, "vscode.executeReferenceProvider provided incorrect character");
+						let location2 = locations[1];
+						assert.strictEqual(location2.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location2.range.start.line, 47, "vscode.executeReferenceProvider provided incorrect line");
+						assert.strictEqual(location2.range.start.character, 3, "vscode.executeReferenceProvider provided incorrect character");
+						let location3 = locations[2];
+						assert.strictEqual(location3.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location3.range.start.line, 48, "vscode.executeReferenceProvider provided incorrect line");
+						assert.strictEqual(location3.range.start.character, 14, "vscode.executeReferenceProvider provided incorrect character");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute reference provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeReferenceProvider finds references to static function from its declaration", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "references", "References.as"));
+		let position = new vscode.Position(6, 28);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeReferenceProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 3,
+							"vscode.executeReferenceProvider failed to provide locations: " + uri);
+						let location1 = locations[0];
+						assert.strictEqual(location1.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location1.range.start.line, 6, "vscode.executeReferenceProvider provided incorrect line");
+						assert.strictEqual(location1.range.start.character, 26, "vscode.executeReferenceProvider provided incorrect character");
+						let location2 = locations[1];
+						assert.strictEqual(location2.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location2.range.start.line, 44, "vscode.executeReferenceProvider provided incorrect line");
+						assert.strictEqual(location2.range.start.character, 3, "vscode.executeReferenceProvider provided incorrect character");
+						let location3 = locations[2];
+						assert.strictEqual(location3.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location3.range.start.line, 45, "vscode.executeReferenceProvider provided incorrect line");
+						assert.strictEqual(location3.range.start.character, 14, "vscode.executeReferenceProvider provided incorrect character");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute reference provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeReferenceProvider finds references to static function from call without type member access", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "references", "References.as"));
+		let position = new vscode.Position(44, 5);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeReferenceProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 3,
+							"vscode.executeReferenceProvider failed to provide locations: " + uri);
+						let location1 = locations[0];
+						assert.strictEqual(location1.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location1.range.start.line, 6, "vscode.executeReferenceProvider provided incorrect line");
+						assert.strictEqual(location1.range.start.character, 26, "vscode.executeReferenceProvider provided incorrect character");
+						let location2 = locations[1];
+						assert.strictEqual(location2.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location2.range.start.line, 44, "vscode.executeReferenceProvider provided incorrect line");
+						assert.strictEqual(location2.range.start.character, 3, "vscode.executeReferenceProvider provided incorrect character");
+						let location3 = locations[2];
+						assert.strictEqual(location3.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location3.range.start.line, 45, "vscode.executeReferenceProvider provided incorrect line");
+						assert.strictEqual(location3.range.start.character, 14, "vscode.executeReferenceProvider provided incorrect character");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute reference provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeReferenceProvider finds references to static function from call with type member access", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "references", "References.as"));
+		let position = new vscode.Position(45, 16);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeReferenceProvider", uri, position)
+				.then((locations: vscode.Location[]) =>
+					{
+						assert.strictEqual(locations.length, 3,
+							"vscode.executeReferenceProvider failed to provide locations: " + uri);
+						let location1 = locations[0];
+						assert.strictEqual(location1.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location1.range.start.line, 6, "vscode.executeReferenceProvider provided incorrect line");
+						assert.strictEqual(location1.range.start.character, 26, "vscode.executeReferenceProvider provided incorrect character");
+						let location2 = locations[1];
+						assert.strictEqual(location2.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location2.range.start.line, 44, "vscode.executeReferenceProvider provided incorrect line");
+						assert.strictEqual(location2.range.start.character, 3, "vscode.executeReferenceProvider provided incorrect character");
+						let location3 = locations[2];
+						assert.strictEqual(location3.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location3.range.start.line, 45, "vscode.executeReferenceProvider provided incorrect line");
+						assert.strictEqual(location3.range.start.character, 14, "vscode.executeReferenceProvider provided incorrect character");
+					}, (err) =>
+					{
+						assert(false, "Failed to execute reference provider: " + uri);
+					});
+		});
+	});
+});
+
 suite("document symbol provider: Library workspace", () =>
 {
 	suiteTeardown(revertAndCloseAllEditors);
