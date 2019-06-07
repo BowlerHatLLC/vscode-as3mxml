@@ -68,7 +68,6 @@ public class SignatureHelpProvider
 
 	public SignatureHelp signatureHelp(TextDocumentPositionParams params, CancelChecker cancelToken)
 	{
-		
 		cancelToken.checkCanceled();
 		TextDocumentIdentifier textDocument = params.getTextDocument();
 		Position position = params.getPosition();
@@ -99,33 +98,13 @@ public class SignatureHelpProvider
 		IMXMLTagData offsetTag = MXMLDataUtils.getOffsetMXMLTag(mxmlData, currentOffset);
 		if (offsetTag != null)
 		{
-			IMXMLTagAttributeData attributeData = MXMLDataUtils.getMXMLTagAttributeWithValueAtOffset(offsetTag, currentOffset);
-			if (attributeData != null)
+			offsetNode = workspaceFolderManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, currentOffset, folderData);
+			if (offsetNode != null)
 			{
-				//some attributes can have ActionScript completion, such as
-				//events and properties with data binding
-				IClassDefinition tagDefinition = (IClassDefinition) project.resolveXMLNameToDefinition(offsetTag.getXMLName(), offsetTag.getMXMLDialect());
-				IDefinition attributeDefinition = project.resolveSpecifier(tagDefinition, attributeData.getShortName());
-				if (attributeDefinition instanceof IEventDefinition)
+				IASNode containingNode = ASTUtils.getContainingNodeIncludingStart(offsetNode, currentOffset);
+				if (containingNode != null)
 				{
-					IASNode mxmlOffsetNode = workspaceFolderManager.getOffsetNode(path, currentOffset, folderData);
-					if (mxmlOffsetNode instanceof IMXMLClassReferenceNode)
-					{
-						IMXMLClassReferenceNode mxmlNode = (IMXMLClassReferenceNode) mxmlOffsetNode;
-						IMXMLEventSpecifierNode eventNode = mxmlNode.getEventSpecifierNode(attributeData.getShortName());
-						for (IASNode asNode : eventNode.getASNodes())
-						{
-							IASNode containingNode = ASTUtils.getContainingNodeIncludingStart(asNode, currentOffset);
-							if (containingNode != null)
-							{
-								offsetNode = containingNode;
-							}
-						}
-						if (offsetNode == null)
-						{
-							offsetNode = eventNode;
-						}
-					}
+					offsetNode = containingNode;
 				}
 			}
 		}

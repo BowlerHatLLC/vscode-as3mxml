@@ -135,6 +135,22 @@ public class ASTUtils
         for (int i = 0, count = node.getChildCount(); i < count; i++)
         {
             IASNode child = node.getChild(i);
+            if(child.getAbsoluteStart() == -1)
+            {
+                //the Royale compiler has a quirk where a node can have an
+                //unknown offset, but its children have known offsets. this is
+                //where we work around that...
+                for (int j = 0, innerCount = child.getChildCount(); j < innerCount; j++)
+                {
+                    IASNode innerChild = child.getChild(j);
+                    IASNode result = getContainingNodeIncludingStart(innerChild, offset);
+                    if (result != null)
+                    {
+                        return result;
+                    }
+                }
+                continue;
+            }
             IASNode result = getContainingNodeIncludingStart(child, offset);
             if (result != null)
             {
