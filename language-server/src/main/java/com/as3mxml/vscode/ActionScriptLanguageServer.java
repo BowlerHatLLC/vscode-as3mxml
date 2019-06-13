@@ -63,8 +63,7 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
     private static final String PROPERTY_FRAMEWORK_LIB = "royalelib";
     private static final String FRAMEWORKS_RELATIVE_PATH_PARENT = "../frameworks";
 
-    protected ActionScriptWorkspaceService workspaceService;
-    protected ActionScriptTextDocumentService textDocumentService;
+    protected ActionScriptServices actionScriptServices;
     protected IProjectConfigStrategyFactory projectConfigStrategyFactory;
     protected ActionScriptLanguageClient languageClient;
 
@@ -96,13 +95,13 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
     @Override
     public CompletableFuture<InitializeResult> initialize(InitializeParams params)
     {
-        textDocumentService.setClientCapabilities(params.getCapabilities());
-        textDocumentService.setLanguageClient(languageClient);
-        textDocumentService.setProjectConfigStrategyFactory(projectConfigStrategyFactory);
+        actionScriptServices.setClientCapabilities(params.getCapabilities());
+        actionScriptServices.setLanguageClient(languageClient);
+        actionScriptServices.setProjectConfigStrategyFactory(projectConfigStrategyFactory);
         //setting everything above must happen before adding workspace folders
         for(WorkspaceFolder folder : params.getWorkspaceFolders())
         {
-            textDocumentService.addWorkspaceFolder(folder);
+            actionScriptServices.addWorkspaceFolder(folder);
         }
 
         InitializeResult result = new InitializeResult();
@@ -180,7 +179,7 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
         //we can't notify the client about problems until we receive this
         //initialized notification. this is the first time that we'll start
         //checking for errors.
-        textDocumentService.setInitialized();
+        actionScriptServices.setInitialized();
     }
 
     @Override
@@ -201,12 +200,11 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
     @Override
     public WorkspaceService getWorkspaceService()
     {
-        if (workspaceService == null)
+        if (actionScriptServices == null)
         {
-            workspaceService = new ActionScriptWorkspaceService();
-            workspaceService.textDocumentService = textDocumentService;
+            actionScriptServices = new ActionScriptServices();
         }
-        return workspaceService;
+        return actionScriptServices;
     }
 
     /**
@@ -216,23 +214,19 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
     @Override
     public TextDocumentService getTextDocumentService()
     {
-        if (textDocumentService == null)
+        if (actionScriptServices == null)
         {
-            textDocumentService = new ActionScriptTextDocumentService();
-            if (workspaceService != null)
-            {
-                workspaceService.textDocumentService = textDocumentService;
-            }
+            actionScriptServices = new ActionScriptServices();
         }
-        return textDocumentService;
+        return actionScriptServices;
     }
 
     public void connect(ActionScriptLanguageClient client)
     {
         languageClient = client;
-        if (textDocumentService != null)
+        if (actionScriptServices != null)
         {
-            textDocumentService.setLanguageClient(languageClient);
+            actionScriptServices.setLanguageClient(languageClient);
         }
     }
 

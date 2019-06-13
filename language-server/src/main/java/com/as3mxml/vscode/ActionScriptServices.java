@@ -63,6 +63,8 @@ import com.as3mxml.vscode.services.ActionScriptLanguageClient;
 import com.as3mxml.vscode.utils.ActionScriptSDKUtils;
 import com.as3mxml.vscode.utils.CompilationUnitUtils;
 import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.as3mxml.vscode.utils.CompilerProblemFilter;
 import com.as3mxml.vscode.utils.CompilerProjectUtils;
 import com.as3mxml.vscode.utils.FileTracker;
@@ -109,8 +111,10 @@ import org.eclipse.lsp4j.CompletionList;
 import org.eclipse.lsp4j.CompletionParams;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
+import org.eclipse.lsp4j.DidChangeConfigurationParams;
 import org.eclipse.lsp4j.DidChangeTextDocumentParams;
 import org.eclipse.lsp4j.DidChangeWatchedFilesParams;
+import org.eclipse.lsp4j.DidChangeWorkspaceFoldersParams;
 import org.eclipse.lsp4j.DidCloseTextDocumentParams;
 import org.eclipse.lsp4j.DidOpenTextDocumentParams;
 import org.eclipse.lsp4j.DidSaveTextDocumentParams;
@@ -144,7 +148,9 @@ import org.eclipse.lsp4j.WorkspaceFolder;
 import org.eclipse.lsp4j.WorkspaceSymbolParams;
 import org.eclipse.lsp4j.jsonrpc.CompletableFutures;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.eclipse.lsp4j.jsonrpc.services.JsonNotification;
 import org.eclipse.lsp4j.services.TextDocumentService;
+import org.eclipse.lsp4j.services.WorkspaceService;
 
 /**
  * Handles requests from Visual Studio Code that are at the document level,
@@ -152,12 +158,14 @@ import org.eclipse.lsp4j.services.TextDocumentService;
  * references. Calls APIs on the Apache Royale compiler to get data for the
  * responses to return to VSCode.
  */
-public class ActionScriptTextDocumentService implements TextDocumentService
+public class ActionScriptServices implements TextDocumentService, WorkspaceService
 {
     private static final String MXML_EXTENSION = ".mxml";
     private static final String AS_EXTENSION = ".as";
     private static final String SWC_EXTENSION = ".swc";
     private static final String PROPERTY_FRAMEWORK_LIB = "royalelib";
+    private static final String ROYALE_ASJS_RELATIVE_PATH_CHILD = "./royale-asjs";
+    private static final String FRAMEWORKS_RELATIVE_PATH_CHILD = "./frameworks";
 
     private ActionScriptLanguageClient languageClient;
     private IProjectConfigStrategyFactory projectConfigStrategyFactory;
@@ -174,28 +182,9 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     private boolean frameworkSDKIsRoyale = false;
     private WaitForBuildFinishRunner waitForBuildFinishRunner;
     private Set<URI> notOnSourcePathSet = new HashSet<>();
-    
     private boolean realTimeProblems = true;
 
-    public boolean getRealTimeProblems()
-    {
-        return realTimeProblems;
-    }
-
-    public void setRealTimeProblems(boolean value)
-    {
-        if(realTimeProblems == value)
-        {
-            return;
-        }
-        realTimeProblems = value;
-        if(value)
-        {
-            checkForProblemsNow();
-        }
-    }
-
-    public ActionScriptTextDocumentService()
+    public ActionScriptServices()
     {
         compilerWorkspace = new Workspace();
         compilerWorkspace.setASDocDelegate(new VSCodeASDocDelegate());
@@ -470,7 +459,7 @@ public class ActionScriptTextDocumentService implements TextDocumentService
     /**
      * Searches by name for a symbol in the workspace.
      */
-    public CompletableFuture<List<? extends SymbolInformation>> workspaceSymbol(WorkspaceSymbolParams params)
+    public CompletableFuture<List<? extends SymbolInformation>> symbol(WorkspaceSymbolParams params)
     {
         return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken ->
         {
@@ -1170,6 +1159,37 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             }
         }
     }
+
+	@Override
+	public void didChangeConfiguration(DidChangeConfigurationParams params)
+	{
+		if(!(params.getSettings() instanceof JsonObject))
+		{
+			return;
+		}
+		JsonObject settings = (JsonObject) params.getSettings();
+		this.updateSDK(settings);
+		this.updateRealTimeProblems(settings);
+	}
+
+	@Override
+	public void didChangeWorkspaceFolders(DidChangeWorkspaceFoldersParams params)
+	{
+		for(WorkspaceFolder folder : params.getEvent().getRemoved())
+		{
+			removeWorkspaceFolder(folder);
+		}
+		for(WorkspaceFolder folder : params.getEvent().getAdded())
+		{
+			addWorkspaceFolder(folder);
+		}
+	}
+     
+	@JsonNotification("$/setTraceNotification")
+	public void setTraceNotification(Object params)
+	{
+		//this may be ignored. see: eclipse/lsp4j#22
+	}
 
     public void setInitialized()
     {
@@ -1988,4 +2008,100 @@ public class ActionScriptTextDocumentService implements TextDocumentService
             problemQuery.add(problem);
         }
     }
+
+	private void updateSDK(JsonObject settings)
+	{
+		if (!settings.has("as3mxml"))
+		{
+			return;
+		}
+		JsonObject as3mxml = settings.get("as3mxml").getAsJsonObject();
+		if (!as3mxml.has("sdk"))
+		{
+			return;
+		}
+		JsonObject sdk = as3mxml.get("sdk").getAsJsonObject();
+		String frameworkSDK = null;
+		if (sdk.has("framework"))
+		{
+			JsonElement frameworkValue = sdk.get("framework");
+			if (!frameworkValue.isJsonNull())
+			{
+				frameworkSDK = frameworkValue.getAsString();
+			}
+		}
+		if (frameworkSDK == null && sdk.has("editor"))
+		{
+			//for legacy reasons, we fall back to the editor SDK
+			JsonElement editorValue = sdk.get("editor");
+			if (!editorValue.isJsonNull())
+			{
+				frameworkSDK = editorValue.getAsString();
+			}
+		}
+		if (frameworkSDK == null)
+		{
+			//keep using the existing framework for now
+			return;
+		}
+		String frameworkLib = null;
+		Path frameworkLibPath = Paths.get(frameworkSDK).resolve(FRAMEWORKS_RELATIVE_PATH_CHILD).toAbsolutePath().normalize();
+		if (frameworkLibPath.toFile().exists())
+		{
+			//if the frameworks directory exists, use it!
+			frameworkLib = frameworkLibPath.toString();
+		}
+		else 
+		{
+			//if the frameworks directory doesn't exist, we also
+			//need to check for Apache Royale's unique layout
+			//with the royale-asjs directory
+			Path royalePath = Paths.get(frameworkSDK).resolve(ROYALE_ASJS_RELATIVE_PATH_CHILD).resolve(FRAMEWORKS_RELATIVE_PATH_CHILD).toAbsolutePath().normalize();
+			if(royalePath.toFile().exists())
+			{
+				frameworkLib = royalePath.toString();
+			}
+		}
+		if (frameworkLib == null)
+		{
+			//keep using the existing framework for now
+			return;
+		}
+		String oldFrameworkLib = System.getProperty(PROPERTY_FRAMEWORK_LIB);
+		if (oldFrameworkLib.equals(frameworkLib))
+		{
+			//frameworks library has not changed
+			return;
+		}
+		System.setProperty(PROPERTY_FRAMEWORK_LIB, frameworkLib);
+		checkForProblemsNow();
+	}
+
+	private void updateRealTimeProblems(JsonObject settings)
+	{
+		if (!settings.has("as3mxml"))
+		{
+			return;
+		}
+		JsonObject as3mxml = settings.get("as3mxml").getAsJsonObject();
+		if (!as3mxml.has("problems"))
+		{
+			return;
+		}
+		JsonObject problems = as3mxml.get("problems").getAsJsonObject();
+		if (!problems.has("realTime"))
+		{
+			return;
+		}
+		boolean newRealTimeProblems = problems.get("realTime").getAsBoolean();
+        if(realTimeProblems == newRealTimeProblems)
+        {
+            return;
+        }
+        realTimeProblems = newRealTimeProblems;
+        if(newRealTimeProblems)
+        {
+            checkForProblemsNow();
+        }
+	}
 }
