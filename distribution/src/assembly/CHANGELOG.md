@@ -1,3 +1,41 @@
+## v0.20.0
+
+### New Features
+
+* Code Action: Added ability to generate an event listener from an `addEventListener()` call.
+* Completion: When completing a method name, automatically adds parentheses, moves the cursor between them, and activates signature help.
+* SWF Debugger: Supports breakpoints in *.hx* files.
+* SWF Debugger: Classes and other global objects may be added to the **Watch** panel to see static variables and constants.
+
+### Fixed Issues
+
+* Build: Fixed slowdown in v0.19 caused by fixes for `copySourcePathAssets` and read-only files.
+* Build: Fixed issues parsing `additionalOptions` in *asconfig.json* and consolidated parsing code so that it is consistent between builds and code intelligence.
+* Build: Added missing `keep-all-type-selectors` and `show-unused-type-selectors` to `compilerOptions`.
+* Editor: Fixed issue where contents of `<fx:Style>` and `<mx:Style>` were not treated as CSS for some actions, such as toggling comments.
+* General: Fixed issue where code intelligence for items in a `Vector` was not available when accessed by index. For example, the `alpha` property in `vec[0].alpha` is now properly resolved by code intelligence.
+* Rename: Fixed issue where rename symbol failed.
+* Signature Help: Fixed issue where signature help was not available in MXML data binding and events.
+* SWF Debugger: Fixed issue where static variables and constants were displayed on an instance when paused at a breakpoint. To see static variables now, add the class to the **Watch** panel.
+
+### Other Changes
+
+* The minimum supported version of Visual Studio Code is now 1.34.0.
+* eclipse/lsp4j dependency updated to v0.7.1.
+* Refactoring: Major refactor to make the AS3 & MXML language server easier to maintain and more approachable to new contributors. Extracted most features out into their own separate classes.
+* Changed Visual Studio Code's language identifier for ActionScript from `"nextgenas"` to `"actionscript"`. Most people will not be affected by this change, but if your *settings.json* contains a `"[nextgenas]"` section, you will need to change that to `"[actionscript]"` instead.
+
+### Tips & Tricks
+
+* To generate an event listener, call `addEventListener()` with the name of a method that doesn't exist yet:
+
+	```actionscript
+	target.addEventListener(Event.CHANGE, changeHandler);
+	```
+
+	Place the cursor inside the method name, and click the light bulb 💡 icon that appears (or use the `Ctrl+.` keyboard shortcut). Choose *Generate Event Listener* from the drop down.
+* In the SWF debugger, to see the static variables and constants defined on a class, you can add the fully-qualified class name to the **Watch** panel. If the class is in a package, be sure to separate the package and class with the `::` operator. For example, you might add `flash.events::Event` to see all of the static constants defined on this class.
+
 ## v0.19.0
 
 ### New Features
