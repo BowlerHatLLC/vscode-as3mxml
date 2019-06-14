@@ -830,6 +830,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             if (fallbackConfig != null && folderData.equals(workspaceFolderManager.getFallbackFolderData()))
             {
                 fallbackConfig.didClose(path);
+                clearProblems = true;
             }
 
             getProject(folderData);
@@ -1267,7 +1268,6 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         {
             return;
         }
-        System.err.println("Updating framework workspace folder: " + oldFrameworkSDKPath);
         WorkspaceFolder folder = new WorkspaceFolder(Paths.get(oldFrameworkSDKPath).toUri().toString());
         fallbackConfig = new SimpleProjectConfigStrategy(folder);
         WorkspaceFolderData fallbackFolderData = workspaceFolderManager.setFallbackFolderData(folder, fallbackConfig);
@@ -1869,13 +1869,6 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
 
     private void checkFilePathForProblems(Path path, ProblemQuery problemQuery, WorkspaceFolderData folderData, boolean quick)
     {
-        RoyaleProject project = folderData.project;
-        if (project != null && !SourcePathUtils.isInProjectSourcePath(path, project, folderData.configurator))
-        {
-            publishDiagnosticForFileOutsideSourcePath(path);
-            return;
-        }
-        
         URI uri = path.toUri();
         if(notOnSourcePathSet.contains(uri))
         {
