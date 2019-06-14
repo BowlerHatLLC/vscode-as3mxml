@@ -1904,7 +1904,14 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
 
         Diagnostic diagnostic = LSPUtils.createDiagnosticWithoutRange();
         diagnostic.setSeverity(DiagnosticSeverity.Information);
-        diagnostic.setMessage(path.getFileName() + " is not located in the project's source path. Code intelligence will not be available for this file.");
+        if(workspaceFolderManager.getWorkspaceFolders().size() == 0)
+        {
+            diagnostic.setMessage("Open a workspace folder to enable all ActionScript & MXML language features.");
+        }
+        else
+        {
+            diagnostic.setMessage(path.getFileName() + " is not located in the project's source path. Code intelligence will not be available for this file.");
+        }
         diagnostics.add(diagnostic);
 
         notOnSourcePathSet.add(uri);

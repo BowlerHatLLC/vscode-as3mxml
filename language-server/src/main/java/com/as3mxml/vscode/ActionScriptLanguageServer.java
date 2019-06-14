@@ -99,9 +99,13 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
         actionScriptServices.setLanguageClient(languageClient);
         actionScriptServices.setProjectConfigStrategyFactory(projectConfigStrategyFactory);
         //setting everything above must happen before adding workspace folders
-        for(WorkspaceFolder folder : params.getWorkspaceFolders())
+        List<WorkspaceFolder> folders = params.getWorkspaceFolders();
+        if(folders != null)
         {
-            actionScriptServices.addWorkspaceFolder(folder);
+            for(WorkspaceFolder folder : params.getWorkspaceFolders())
+            {
+                actionScriptServices.addWorkspaceFolder(folder);
+            }
         }
 
         InitializeResult result = new InitializeResult();
