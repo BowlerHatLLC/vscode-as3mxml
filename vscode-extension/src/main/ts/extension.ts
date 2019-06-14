@@ -61,30 +61,32 @@ let swfDebugAdapterDescriptorFactory: SWFDebugAdapterDescriptorFactory = null;
 
 function getValidatedEditorSDKConfiguration(javaExecutablePath: string): string
 {
-	let result = <string> vscode.workspace.getConfiguration("as3mxml").get("sdk.editor");
+	let result = vscode.workspace.getConfiguration("as3mxml").get("sdk.editor") as string;
 	//this may return null
 	return validateEditorSDK(savedContext.extensionPath, javaExecutablePath, result);
 }
 
 function onDidChangeConfiguration(event: vscode.ConfigurationChangeEvent)
 {
-	let javaSettingsPath = <string> vscode.workspace.getConfiguration("as3mxml").get("java.path");
+	let javaSettingsPath = vscode.workspace.getConfiguration("as3mxml").get("java.path") as string;
 	let newJavaExecutablePath = findJava(javaSettingsPath, (javaPath) =>
 	{
 		return validateJava(savedContext.extensionPath, javaPath);
 	});
 	let newEditorSDKHome = getValidatedEditorSDKConfiguration(newJavaExecutablePath);
 	let newFrameworkSDKHome = getFrameworkSDKPathWithFallbacks();
+	let explicitFrameworkSetting = vscode.workspace.getConfiguration("as3mxml").get("sdk.framework") as string;
+	let frameworkChanged = frameworkSDKHome != newFrameworkSDKHome;
 	let restarting = false;
 	if(event.affectsConfiguration("as3mxml.java.path") ||
-		event.affectsConfiguration("as3mxml.sdk.editor"))
+		event.affectsConfiguration("as3mxml.sdk.editor") ||
+		(frameworkChanged && !explicitFrameworkSetting))
 	{
 		//we're going to try to kill the language server and then restart
 		//it with the new settings
 		restarting = true;
 		restartServer();
 	}
-	let frameworkChanged = frameworkSDKHome != newFrameworkSDKHome;
 	if(editorSDKHome != newEditorSDKHome ||
 		frameworkChanged)
 	{
@@ -141,7 +143,7 @@ export function activate(context: vscode.ExtensionContext)
 	savedContext = context;
 	migrateSettings();
 	checkForFlashBuilderProjectsToImport();
-	let javaSettingsPath = <string> vscode.workspace.getConfiguration("as3mxml").get("java.path");
+	let javaSettingsPath = vscode.workspace.getConfiguration("as3mxml").get("java.path") as string;
 	javaExecutablePath = findJava(javaSettingsPath, (javaPath) =>
 	{
 		return validateJava(savedContext.extensionPath, javaPath);
@@ -310,13 +312,13 @@ export function deactivate()
 
 function hasInvalidJava(): boolean
 {
-	let javaPath = <string> vscode.workspace.getConfiguration("as3mxml").get("java.path");
+	let javaPath = vscode.workspace.getConfiguration("as3mxml").get("java.path") as string;
 	return !javaExecutablePath && javaPath != null;
 }
 
 function hasInvalidEditorSDK(): boolean
 {
-	let sdkPath = <string> vscode.workspace.getConfiguration("as3mxml").get("sdk.editor");
+	let sdkPath = vscode.workspace.getConfiguration("as3mxml").get("sdk.editor") as string;
 	return !editorSDKHome && sdkPath != null;
 }
 
