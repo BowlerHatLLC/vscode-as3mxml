@@ -176,11 +176,6 @@ function createSearchPathsItem(): SDKQuickPickItem
 
 export default function selectWorkspaceSDK(): void
 {
-	if(vscode.workspace.workspaceFolders === undefined)
-	{
-		vscode.window.showErrorMessage("Cannot change ActionScript SDK because no workspace is currently open.");
-		return;
-	}
 	let allPaths: string[] = [];
 	let items: SDKQuickPickItem[] = [];
 	//for convenience, add an option to open user settings and define custom SDK paths
@@ -272,9 +267,12 @@ export default function selectWorkspaceSDK(): void
 			openSettingsForSearchPaths();
 			return;
 		}
-		//if they chose an SDK, save it to the workspace settings
+		//if they chose an SDK, save it to the settings
 		let newFrameworkPath = value.detail;
-		vscode.workspace.getConfiguration("as3mxml").update("sdk.framework", newFrameworkPath);
+		//if a workspace folder is open, save it to the workspace settings
+		//if no folder is open, save it globally
+		let configurationTarget = vscode.workspace.workspaceFolders !== undefined ? undefined : vscode.ConfigurationTarget.Global;
+		vscode.workspace.getConfiguration("as3mxml").update("sdk.framework", newFrameworkPath, configurationTarget);
 	},
 	() =>
 	{
