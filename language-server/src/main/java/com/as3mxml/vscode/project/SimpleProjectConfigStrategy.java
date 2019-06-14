@@ -1,0 +1,101 @@
+/*
+Copyright 2016-2019 Bowler Hat LLC
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+	http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+package com.as3mxml.vscode.project;
+
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+
+import com.as3mxml.asconfigc.compiler.ProjectType;
+import com.as3mxml.vscode.utils.ActionScriptSDKUtils;
+
+import org.eclipse.lsp4j.WorkspaceFolder;
+
+/**
+ * Configures a simple project inside a workspace folder.
+ */
+public class SimpleProjectConfigStrategy implements IProjectConfigStrategy
+{
+    private static final String PROPERTY_FRAMEWORK_LIB = "royalelib";
+    private static final String CONFIG_ROYALE = "royale";
+    private static final String CONFIG_FLEX = "flex";
+
+    private boolean changed = true;
+    private WorkspaceFolder workspaceFolder;
+
+    public SimpleProjectConfigStrategy(WorkspaceFolder workspaceFolder)
+    {
+        this.workspaceFolder = workspaceFolder;
+    }
+
+    public String getDefaultConfigurationProblemPath()
+    {
+        return null;
+    }
+
+    public WorkspaceFolder getWorkspaceFolder()
+    {
+        return workspaceFolder;
+    }
+
+    public Path getConfigFilePath()
+    {
+        return null;
+    }
+
+    public boolean getChanged()
+    {
+        return changed;
+    }
+
+    public void forceChanged()
+    {
+        changed = true;
+    }
+
+    public ProjectOptions getOptions()
+    {
+        changed = false;
+
+		Path sdkPath = Paths.get(System.getProperty(PROPERTY_FRAMEWORK_LIB));
+        boolean isRoyale = ActionScriptSDKUtils.isRoyaleFramework(sdkPath);
+
+		String config = CONFIG_FLEX;
+        if(isRoyale)
+        {
+            config = CONFIG_ROYALE;
+        }
+
+		ArrayList<String> compilerOptions = new ArrayList<>();
+		compilerOptions.add("--include-sources+=.");
+
+		ArrayList<String> targets = null;
+		if(isRoyale)
+		{
+			targets = new ArrayList<>();
+			targets.add("JSRoyale");
+		}
+
+		ProjectOptions options = new ProjectOptions();
+        options.type = ProjectType.LIB;
+        options.config = config;
+        options.files = null;
+        options.compilerOptions = compilerOptions;
+        options.additionalOptions = null;
+        options.targets = targets;
+        return options;
+    }
+}

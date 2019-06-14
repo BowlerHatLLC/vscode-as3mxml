@@ -46,6 +46,7 @@ import com.as3mxml.vscode.compiler.problems.SyntaxFallbackProblem;
 import com.as3mxml.vscode.project.IProjectConfigStrategy;
 import com.as3mxml.vscode.project.IProjectConfigStrategyFactory;
 import com.as3mxml.vscode.project.ProjectOptions;
+import com.as3mxml.vscode.project.SimpleProjectConfigStrategy;
 import com.as3mxml.vscode.project.WorkspaceFolderData;
 import com.as3mxml.vscode.providers.CodeActionProvider;
 import com.as3mxml.vscode.providers.CompletionProvider;
@@ -63,8 +64,6 @@ import com.as3mxml.vscode.services.ActionScriptLanguageClient;
 import com.as3mxml.vscode.utils.ActionScriptSDKUtils;
 import com.as3mxml.vscode.utils.CompilationUnitUtils;
 import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import com.as3mxml.vscode.utils.CompilerProblemFilter;
 import com.as3mxml.vscode.utils.CompilerProjectUtils;
 import com.as3mxml.vscode.utils.FileTracker;
@@ -74,6 +73,8 @@ import com.as3mxml.vscode.utils.ProblemTracker;
 import com.as3mxml.vscode.utils.SourcePathUtils;
 import com.as3mxml.vscode.utils.WaitForBuildFinishRunner;
 import com.as3mxml.vscode.utils.WorkspaceFolderManager;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
 import org.apache.royale.compiler.clients.problems.ProblemQuery;
 import org.apache.royale.compiler.config.CommandLineConfigurator;
@@ -1229,6 +1230,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         {
             return;
         }
+
         oldFrameworkSDKPath = frameworkSDKPath;
 
         //if the framework SDK doesn't include the Falcon compiler, we can
@@ -1238,6 +1240,19 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         compilerProblemFilter.royaleProblems = compilerPath.toFile().exists();
 
         frameworkSDKIsRoyale = ActionScriptSDKUtils.isRoyaleFramework(frameworkPath);
+
+        updateFrameworkWorkspaceFolder();
+    }
+
+    private void updateFrameworkWorkspaceFolder()
+    {
+        if(oldFrameworkSDKPath == null)
+        {
+            return;
+        }
+        WorkspaceFolder folder = new WorkspaceFolder(Paths.get(oldFrameworkSDKPath).toUri().toString());
+        IProjectConfigStrategy config = new SimpleProjectConfigStrategy(folder);
+        workspaceFolderManager.setFrameworkWorkspaceFolder(folder, config);
     }
 
     private void watchNewSourceOrLibraryPath(Path sourceOrLibraryPath, WorkspaceFolderData folderData)
@@ -1821,6 +1836,23 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
 
     private void checkFilePathForProblems(Path path, WorkspaceFolderData folderData, boolean quick)
     {
+        if(folderData.equals(workspaceFolderManager.getFrameworkWorkspaceFolderData()))
+        {
+            compilerWorkspace.startBuilding();
+            try
+            {
+                ICompilationUnit unitForPath = CompilerProjectUtils.findCompilationUnit(path, folderData.project);
+                if (unitForPath != null)
+                {
+                    CompilationUnitUtils.findIncludedFiles(unitForPath, folderData.includedFiles);
+                }
+            }
+            finally
+            {
+                compilerWorkspace.doneBuilding();
+            }
+            return;
+        }
         ProblemQuery problemQuery = workspaceFolderDataToProblemQuery(folderData);
         checkFilePathForProblems(path, problemQuery, folderData, quick);
         publishDiagnosticsForProblemQuery(problemQuery, folderData.codeProblemTracker, folderData, !quick);
@@ -1828,6 +1860,10 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
 
     private void checkFilePathForProblems(Path path, ProblemQuery problemQuery, WorkspaceFolderData folderData, boolean quick)
     {
+        if(folderData.equals(workspaceFolderManager.getFrameworkWorkspaceFolderData()))
+        {
+            return;
+        }
         RoyaleProject project = folderData.project;
         if (project != null && !SourcePathUtils.isInProjectSourcePath(path, project, folderData.configurator))
         {

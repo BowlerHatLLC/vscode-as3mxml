@@ -69,6 +69,7 @@ public class WorkspaceFolderManager
     private List<WorkspaceFolder> workspaceFolders = new ArrayList<>();
     private Map<WorkspaceFolder, WorkspaceFolderData> workspaceFolderToData = new HashMap<>();
     private FileTracker fileTracker;
+    private WorkspaceFolderData frameworkWorkspaceFolderData;
     
     public WorkspaceFolderManager(FileTracker fileTracker)
     {
@@ -103,6 +104,17 @@ public class WorkspaceFolderManager
         WorkspaceFolderData folderData = workspaceFolderToData.get(folder);
         workspaceFolderToData.remove(folder);
         folderData.cleanup();
+    }
+
+    public WorkspaceFolderData getFrameworkWorkspaceFolderData()
+    {
+        return frameworkWorkspaceFolderData;
+    }
+
+    public void setFrameworkWorkspaceFolder(WorkspaceFolder folder, IProjectConfigStrategy config)
+    {
+        WorkspaceFolderData folderData = new WorkspaceFolderData(folder, config);
+        frameworkWorkspaceFolderData = folderData;
     }
 
     public IASNode getOffsetNode(Path path, int currentOffset, WorkspaceFolderData folderData)
@@ -171,7 +183,6 @@ public class WorkspaceFolderManager
         if (fallback != null)
         {
             return fallback;
-
         }
         //if none of the existing projects worked, try a folder where a project
         //hasn't been created yet
@@ -186,6 +197,15 @@ public class WorkspaceFolderManager
 			if (path.startsWith(workspacePath))
 			{
                 return folderData;
+			}
+        }
+        if(frameworkWorkspaceFolderData != null)
+        {
+            String uri = frameworkWorkspaceFolderData.folder.getUri();
+            Path workspacePath = LanguageServerCompilerUtils.getPathFromLanguageServerURI(uri);
+            if (workspacePath != null && path.startsWith(workspacePath))
+			{
+                return frameworkWorkspaceFolderData;
 			}
         }
         return null;

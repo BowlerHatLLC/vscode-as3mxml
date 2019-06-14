@@ -73,7 +73,7 @@ public class DefinitionProvider
 			cancelToken.checkCanceled();
 			return Either.forLeft(Collections.emptyList());
 		}
-		WorkspaceFolderData folderData = workspaceFolderManager.getWorkspaceFolderDataForSourceFile(path);
+        WorkspaceFolderData folderData = workspaceFolderManager.getWorkspaceFolderDataForSourceFile(path);
 		if(folderData == null || folderData.project == null)
 		{
 			cancelToken.checkCanceled();
