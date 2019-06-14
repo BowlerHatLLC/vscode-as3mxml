@@ -85,6 +85,11 @@ public class SimpleProjectConfigStrategy implements IProjectConfigStrategy
     {
         changed = false;
 
+        if(openPaths.size() == 0)
+        {
+            return null;
+        }
+
 		Path sdkPath = Paths.get(System.getProperty(PROPERTY_FRAMEWORK_LIB));
         boolean isRoyale = ActionScriptSDKUtils.isRoyaleFramework(sdkPath);
 

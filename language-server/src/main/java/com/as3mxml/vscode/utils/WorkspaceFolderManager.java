@@ -111,10 +111,21 @@ public class WorkspaceFolderManager
         return fallbackFolderData;
     }
 
-    public void setFallbackFolderData(WorkspaceFolder folder, IProjectConfigStrategy config)
+    public WorkspaceFolderData setFallbackFolderData(WorkspaceFolder folder, IProjectConfigStrategy config)
     {
+        if(fallbackFolderData != null)
+        {
+            if(fallbackFolderData.folder.equals(folder)
+                    && fallbackFolderData.config.equals(config))
+            {
+                return fallbackFolderData;
+            }
+            fallbackFolderData.cleanup();
+            fallbackFolderData = null;
+        }
         WorkspaceFolderData folderData = new WorkspaceFolderData(folder, config);
         fallbackFolderData = folderData;
+        return fallbackFolderData;
     }
 
     public IASNode getOffsetNode(Path path, int currentOffset, WorkspaceFolderData folderData)

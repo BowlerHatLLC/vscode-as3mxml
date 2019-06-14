@@ -764,12 +764,6 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             compilerWorkspace.doneBuilding();
         }
 
-        if(folderData.equals(workspaceFolderManager.getFallbackFolderData()))
-        {
-            //don't check for errors with the fallback folder data
-            return;
-        }
-
         if(unit == null)
         {
             //this file doesn't have a compilation unit yet, so we'll fall back
@@ -1238,6 +1232,12 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             config.forceChanged();
             checkProjectForProblems(folderData);
         }
+        if(fallbackConfig != null)
+        {
+            fallbackConfig.forceChanged();
+            WorkspaceFolderData folderData = workspaceFolderManager.getFallbackFolderData();
+            checkProjectForProblems(folderData);
+        }
     }
 
     private void updateFrameworkSDK()
@@ -1258,18 +1258,27 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
 
         frameworkSDKIsRoyale = ActionScriptSDKUtils.isRoyaleFramework(frameworkPath);
 
-        updateFrameworkWorkspaceFolder();
+        updateFallbackWorkspaceFolder();
     }
 
-    private void updateFrameworkWorkspaceFolder()
+    private void updateFallbackWorkspaceFolder()
     {
         if(oldFrameworkSDKPath == null)
         {
             return;
         }
+        System.err.println("Updating framework workspace folder: " + oldFrameworkSDKPath);
         WorkspaceFolder folder = new WorkspaceFolder(Paths.get(oldFrameworkSDKPath).toUri().toString());
         fallbackConfig = new SimpleProjectConfigStrategy(folder);
-        workspaceFolderManager.setFallbackFolderData(folder, fallbackConfig);
+        WorkspaceFolderData fallbackFolderData = workspaceFolderManager.setFallbackFolderData(folder, fallbackConfig);
+        for(Path openFilePath : fileTracker.getOpenFiles())
+        {
+            WorkspaceFolderData folderData = workspaceFolderManager.getWorkspaceFolderDataForSourceFile(openFilePath);
+            if(fallbackFolderData.equals(folderData))
+            {
+                fallbackConfig.didOpen(openFilePath);
+            }
+        }
     }
 
     private void watchNewSourceOrLibraryPath(Path sourceOrLibraryPath, WorkspaceFolderData folderData)
@@ -1853,23 +1862,6 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
 
     private void checkFilePathForProblems(Path path, WorkspaceFolderData folderData, boolean quick)
     {
-        if(folderData.equals(workspaceFolderManager.getFallbackFolderData()))
-        {
-            compilerWorkspace.startBuilding();
-            try
-            {
-                ICompilationUnit unitForPath = CompilerProjectUtils.findCompilationUnit(path, folderData.project);
-                if (unitForPath != null)
-                {
-                    CompilationUnitUtils.findIncludedFiles(unitForPath, folderData.includedFiles);
-                }
-            }
-            finally
-            {
-                compilerWorkspace.doneBuilding();
-            }
-            return;
-        }
         ProblemQuery problemQuery = workspaceFolderDataToProblemQuery(folderData);
         checkFilePathForProblems(path, problemQuery, folderData, quick);
         publishDiagnosticsForProblemQuery(problemQuery, folderData.codeProblemTracker, folderData, !quick);
@@ -1877,10 +1869,6 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
 
     private void checkFilePathForProblems(Path path, ProblemQuery problemQuery, WorkspaceFolderData folderData, boolean quick)
     {
-        if(folderData.equals(workspaceFolderManager.getFallbackFolderData()))
-        {
-            return;
-        }
         RoyaleProject project = folderData.project;
         if (project != null && !SourcePathUtils.isInProjectSourcePath(path, project, folderData.configurator))
         {
