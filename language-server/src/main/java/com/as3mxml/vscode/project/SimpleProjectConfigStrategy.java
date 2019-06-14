@@ -18,6 +18,7 @@ package com.as3mxml.vscode.project;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.List;
 
 import com.as3mxml.asconfigc.compiler.ProjectType;
 import com.as3mxml.vscode.utils.ActionScriptSDKUtils;
@@ -66,6 +67,20 @@ public class SimpleProjectConfigStrategy implements IProjectConfigStrategy
         changed = true;
     }
 
+    private List<Path> openPaths = new ArrayList<>();
+
+    public void didOpen(Path path)
+    {
+        changed = true;
+        openPaths.add(path);
+    }
+
+    public void didClose(Path path)
+    {
+        changed = true;
+        openPaths.remove(path);
+    }
+
     public ProjectOptions getOptions()
     {
         changed = false;
@@ -79,8 +94,11 @@ public class SimpleProjectConfigStrategy implements IProjectConfigStrategy
             config = CONFIG_ROYALE;
         }
 
-		ArrayList<String> compilerOptions = new ArrayList<>();
-		compilerOptions.add("--include-sources+=.");
+        ArrayList<String> compilerOptions = new ArrayList<>();
+        for(Path openPath : openPaths)
+        {
+            compilerOptions.add("--include-sources+=" + openPath);
+        }
 
 		ArrayList<String> targets = null;
 		if(isRoyale)

@@ -69,7 +69,7 @@ public class WorkspaceFolderManager
     private List<WorkspaceFolder> workspaceFolders = new ArrayList<>();
     private Map<WorkspaceFolder, WorkspaceFolderData> workspaceFolderToData = new HashMap<>();
     private FileTracker fileTracker;
-    private WorkspaceFolderData frameworkWorkspaceFolderData;
+    private WorkspaceFolderData fallbackFolderData;
     
     public WorkspaceFolderManager(FileTracker fileTracker)
     {
@@ -106,15 +106,15 @@ public class WorkspaceFolderManager
         folderData.cleanup();
     }
 
-    public WorkspaceFolderData getFrameworkWorkspaceFolderData()
+    public WorkspaceFolderData getFallbackFolderData()
     {
-        return frameworkWorkspaceFolderData;
+        return fallbackFolderData;
     }
 
-    public void setFrameworkWorkspaceFolder(WorkspaceFolder folder, IProjectConfigStrategy config)
+    public void setFallbackFolderData(WorkspaceFolder folder, IProjectConfigStrategy config)
     {
         WorkspaceFolderData folderData = new WorkspaceFolderData(folder, config);
-        frameworkWorkspaceFolderData = folderData;
+        fallbackFolderData = folderData;
     }
 
     public IASNode getOffsetNode(Path path, int currentOffset, WorkspaceFolderData folderData)
@@ -199,16 +199,7 @@ public class WorkspaceFolderManager
                 return folderData;
 			}
         }
-        if(frameworkWorkspaceFolderData != null)
-        {
-            String uri = frameworkWorkspaceFolderData.folder.getUri();
-            Path workspacePath = LanguageServerCompilerUtils.getPathFromLanguageServerURI(uri);
-            if (workspacePath != null && path.startsWith(workspacePath))
-			{
-                return frameworkWorkspaceFolderData;
-			}
-        }
-        return null;
+        return fallbackFolderData;
     }
 
     public IASNode getEmbeddedActionScriptNodeInMXMLTag(IMXMLTagData tag, Path path, int currentOffset, WorkspaceFolderData folderData)

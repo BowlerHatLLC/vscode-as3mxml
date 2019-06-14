@@ -184,6 +184,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     private WaitForBuildFinishRunner waitForBuildFinishRunner;
     private Set<URI> notOnSourcePathSet = new HashSet<>();
     private boolean realTimeProblems = true;
+    private SimpleProjectConfigStrategy fallbackConfig;
 
     public ActionScriptServices()
     {
@@ -656,6 +657,11 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             return;
         }
 
+        if (fallbackConfig != null && folderData.equals(workspaceFolderManager.getFallbackFolderData()))
+        {
+            fallbackConfig.didOpen(path);
+        }
+
         getProject(folderData);
         RoyaleProject project = folderData.project;
         if (project == null)
@@ -758,6 +764,12 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             compilerWorkspace.doneBuilding();
         }
 
+        if(folderData.equals(workspaceFolderManager.getFallbackFolderData()))
+        {
+            //don't check for errors with the fallback folder data
+            return;
+        }
+
         if(unit == null)
         {
             //this file doesn't have a compilation unit yet, so we'll fall back
@@ -821,6 +833,11 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         }
         else
         {
+            if (fallbackConfig != null && folderData.equals(workspaceFolderManager.getFallbackFolderData()))
+            {
+                fallbackConfig.didClose(path);
+            }
+
             getProject(folderData);
             RoyaleProject project = folderData.project;
             URI uri = path.toUri();
@@ -1251,8 +1268,8 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             return;
         }
         WorkspaceFolder folder = new WorkspaceFolder(Paths.get(oldFrameworkSDKPath).toUri().toString());
-        IProjectConfigStrategy config = new SimpleProjectConfigStrategy(folder);
-        workspaceFolderManager.setFrameworkWorkspaceFolder(folder, config);
+        fallbackConfig = new SimpleProjectConfigStrategy(folder);
+        workspaceFolderManager.setFallbackFolderData(folder, fallbackConfig);
     }
 
     private void watchNewSourceOrLibraryPath(Path sourceOrLibraryPath, WorkspaceFolderData folderData)
@@ -1836,7 +1853,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
 
     private void checkFilePathForProblems(Path path, WorkspaceFolderData folderData, boolean quick)
     {
-        if(folderData.equals(workspaceFolderManager.getFrameworkWorkspaceFolderData()))
+        if(folderData.equals(workspaceFolderManager.getFallbackFolderData()))
         {
             compilerWorkspace.startBuilding();
             try
@@ -1860,7 +1877,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
 
     private void checkFilePathForProblems(Path path, ProblemQuery problemQuery, WorkspaceFolderData folderData, boolean quick)
     {
-        if(folderData.equals(workspaceFolderManager.getFrameworkWorkspaceFolderData()))
+        if(folderData.equals(workspaceFolderManager.getFallbackFolderData()))
         {
             return;
         }
