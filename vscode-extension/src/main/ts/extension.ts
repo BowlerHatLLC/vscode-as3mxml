@@ -38,7 +38,6 @@ const INVALID_SDK_ERROR = "as3mxml.sdk.editor in settings does not point to a va
 const MISSING_FRAMEWORK_SDK_ERROR = "You must configure an SDK to enable all ActionScript & MXML features.";
 const INVALID_JAVA_ERROR = "as3mxml.java.path in settings does not point to a valid executable. It cannot be a directory, and Java 1.8 or newer is required.";
 const MISSING_JAVA_ERROR = "Could not locate valid Java executable. To configure Java manually, use the as3mxml.java.path setting.";
-const MISSING_WORKSPACE_ROOT_ERROR = "Open a folder and create a file named asconfig.json to enable all ActionScript & MXML language features.";
 const QUICK_COMPILE_LANGUAGE_SERVER_NOT_STARTED_ERROR = "Quick compile failed. Try again after ActionScript & MXML extension is initialized.";
 const INITIALIZING_MESSAGE = "Initializing ActionScript & MXML language server...";
 const RELOAD_WINDOW_MESSAGE = "To apply new settings for ActionScript & MXML, please reload the window.";
@@ -239,42 +238,43 @@ export function activate(context: vscode.ExtensionContext)
 	//don't activate these things unless we're in a workspace
 	if(vscode.workspace.workspaceFolders !== undefined)
 	{
-		sdkStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
-		updateSDKStatusBarItem();
-		sdkStatusBarItem.tooltip = "Select ActionScript SDK";
-		sdkStatusBarItem.command = "as3mxml.selectWorkspaceSDK";
-		sdkStatusBarItem.show();
-
 		let rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
 		sourcePathDataProvider = new ActionScriptSourcePathDataProvider(rootPath);
 		sourcePathView = vscode.window.createTreeView("actionScriptSourcePaths", {treeDataProvider: sourcePathDataProvider});
 		context.subscriptions.push(sourcePathView);
-
-		actionScriptTaskProvider = new ActionScriptTaskProvider(context, javaExecutablePath);
-		let taskProviderDisposable = vscode.tasks.registerTaskProvider("actionscript", actionScriptTaskProvider);
-		context.subscriptions.push(taskProviderDisposable);
-
-		debugConfigurationProvider = new SWFDebugConfigurationProvider();
-		let debugConfigDisposable = vscode.debug.registerDebugConfigurationProvider("swf", debugConfigurationProvider);
-		context.subscriptions.push(debugConfigDisposable);
-
-		swcTextDocumentContentProvider = new SWCTextDocumentContentProvider();
-		let swcContentDisposable = vscode.workspace.registerTextDocumentContentProvider("swc", swcTextDocumentContentProvider);
-		context.subscriptions.push(swcContentDisposable);
-
-		swfDebugAdapterDescriptorFactory = new SWFDebugAdapterDescriptorFactory(() =>
-		{
-			return(
-				{
-					javaPath: javaExecutablePath,
-					frameworkSDKPath: frameworkSDKHome,
-					editorSDKPath: editorSDKHome,
-				}
-			);
-		});
-		let debugAdapterDisposable = vscode.debug.registerDebugAdapterDescriptorFactory("swf", swfDebugAdapterDescriptorFactory);
-		context.subscriptions.push(debugAdapterDisposable);
 	}
+
+	sdkStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
+	updateSDKStatusBarItem();
+	sdkStatusBarItem.tooltip = "Select ActionScript SDK";
+	sdkStatusBarItem.command = "as3mxml.selectWorkspaceSDK";
+	sdkStatusBarItem.show();
+
+	actionScriptTaskProvider = new ActionScriptTaskProvider(context, javaExecutablePath);
+	let taskProviderDisposable = vscode.tasks.registerTaskProvider("actionscript", actionScriptTaskProvider);
+	context.subscriptions.push(taskProviderDisposable);
+
+	debugConfigurationProvider = new SWFDebugConfigurationProvider();
+	let debugConfigDisposable = vscode.debug.registerDebugConfigurationProvider("swf", debugConfigurationProvider);
+	context.subscriptions.push(debugConfigDisposable);
+
+	swcTextDocumentContentProvider = new SWCTextDocumentContentProvider();
+	let swcContentDisposable = vscode.workspace.registerTextDocumentContentProvider("swc", swcTextDocumentContentProvider);
+	context.subscriptions.push(swcContentDisposable);
+
+	swfDebugAdapterDescriptorFactory = new SWFDebugAdapterDescriptorFactory(() =>
+	{
+		return(
+			{
+				javaPath: javaExecutablePath,
+				frameworkSDKPath: frameworkSDKHome,
+				editorSDKPath: editorSDKHome,
+			}
+		);
+	});
+	let debugAdapterDisposable = vscode.debug.registerDebugAdapterDescriptorFactory("swf", swfDebugAdapterDescriptorFactory);
+	context.subscriptions.push(debugAdapterDisposable);
+
 	startClient();
 
 	//this is the public API of the extension that may be accessed from other
@@ -336,20 +336,6 @@ function startClient()
 	if(!savedContext)
 	{
 		//something very bad happened!
-		return;
-	}
-	if(vscode.workspace.workspaceFolders === undefined)
-	{
-		vscode.window.showInformationMessage(MISSING_WORKSPACE_ROOT_ERROR,
-			{ title: "Help", href: "https://github.com/BowlerHatLLC/vscode-as3mxml/wiki" }
-		).then((value) =>
-		{
-			if(value && value.href)
-			{
-				let uri = vscode.Uri.parse(value.href);
-				vscode.commands.executeCommand("vscode.open", uri);
-			}
-		});
 		return;
 	}
 	if(hasInvalidJava())
@@ -419,6 +405,11 @@ function startClient()
 			{
 				args.unshift("-Droyalelib=" + path.join(frameworkSDKHome, "frameworks"));
 			}
+			let primaryWorkspaceFolder: vscode.WorkspaceFolder = null;
+			if(vscode.workspace.workspaceFolders !== undefined)
+			{
+				primaryWorkspaceFolder = vscode.workspace.workspaceFolders[0];
+			}
 			//uncomment to allow a debugger to attach to the language server
 			//args.unshift("-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005,quiet=y");
 			let executable: Executable =
@@ -427,7 +418,7 @@ function startClient()
 				args: args,
 				options:
 				{
-					cwd: vscode.workspace.workspaceFolders[0].uri.fsPath
+					cwd: primaryWorkspaceFolder ? vscode.workspace.workspaceFolders[0].uri.fsPath : undefined
 				}
 			};
 			isLanguageClientReady = false;

@@ -24,11 +24,6 @@ import findSDKsInPathEnvironmentVariable from "./findSDKsInPathEnvironmentVariab
 
 export default function getFrameworkSDKPathWithFallbacks(): string
 {
-	if(vscode.workspace.workspaceFolders === undefined)
-	{
-		//no open workspace means no SDK
-		return null;
-	}
 	let sdkPath: string = null;
 	let frameworkSetting = <string> vscode.workspace.getConfiguration("as3mxml").get("sdk.framework");
 	if(frameworkSetting)

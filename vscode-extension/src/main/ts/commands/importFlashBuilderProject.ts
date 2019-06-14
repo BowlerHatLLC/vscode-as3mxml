@@ -133,6 +133,10 @@ export function pickFlashBuilderProjectInWorkspace()
 
 function shouldPromptToImport()
 {
+	if(vscode.workspace.workspaceFolders === undefined)
+	{
+		return false;
+	}
 	let as3mxmlConfig = vscode.workspace.getConfiguration("as3mxml");
 	return as3mxmlConfig.get("projectImport.prompt");
 }
