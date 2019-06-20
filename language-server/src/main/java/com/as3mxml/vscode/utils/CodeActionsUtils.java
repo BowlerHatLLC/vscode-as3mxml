@@ -459,6 +459,10 @@ public class CodeActionsUtils
 		IIdentifierNode identifierNode, String text)
     {
         LineAndIndent lineAndIndent = findLineAndIndent(identifierNode, text);
+        if(lineAndIndent == null)
+        {
+            return null;
+        }
 
         StringBuilder builder = new StringBuilder();
         builder.append(NEW_LINE);
@@ -706,11 +710,15 @@ public class CodeActionsUtils
             return null;
         }
 
+        LineAndIndent lineAndIndent = findLineAndIndent(functionCallNode, text);
+        if(lineAndIndent == null)
+        {
+            return null;
+        }
+
         List<TextEdit> edits = new ArrayList<>();
         TextEdit textEdit = new TextEdit();
         edits.add(textEdit);
-
-        LineAndIndent lineAndIndent = findLineAndIndent(functionCallNode, text);
 
         StringBuilder builder = new StringBuilder();
         builder.append(NEW_LINE);
@@ -1038,11 +1046,15 @@ public class CodeActionsUtils
         IASNode context, String functionName, String eventClassName,
         String text, ICompilerProject project)
     {
+        LineAndIndent lineAndIndent = findLineAndIndent(context, text);
+        if(lineAndIndent == null)
+        {
+            return null;
+        }
+
         List<TextEdit> edits = new ArrayList<>();
         TextEdit textEdit = new TextEdit();
         edits.add(textEdit);
-
-        LineAndIndent lineAndIndent = findLineAndIndent(context, text);
 
         StringBuilder builder = new StringBuilder();
         builder.append(NEW_LINE);
