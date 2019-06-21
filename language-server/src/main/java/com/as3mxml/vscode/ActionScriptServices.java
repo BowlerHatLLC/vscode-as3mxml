@@ -1788,6 +1788,10 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     private void checkProjectForProblems(WorkspaceFolderData folderData)
     {
         getProject(folderData);
+        if(folderData.project == null)
+        {
+            return;
+        }
         ProjectOptions projectOptions = folderData.options;
         if (projectOptions == null || projectOptions.type.equals(ProjectType.LIB))
         {
