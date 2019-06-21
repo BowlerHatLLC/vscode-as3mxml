@@ -21,6 +21,7 @@ import java.io.Reader;
 import java.net.URI;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
@@ -70,7 +71,6 @@ import com.as3mxml.vscode.utils.FileTracker;
 import com.as3mxml.vscode.utils.LSPUtils;
 import com.as3mxml.vscode.utils.LanguageServerCompilerUtils;
 import com.as3mxml.vscode.utils.ProblemTracker;
-import com.as3mxml.vscode.utils.SourcePathUtils;
 import com.as3mxml.vscode.utils.WaitForBuildFinishRunner;
 import com.as3mxml.vscode.utils.WorkspaceFolderManager;
 import com.google.gson.JsonElement;
@@ -92,6 +92,7 @@ import org.apache.royale.compiler.internal.tree.as.FileNode;
 import org.apache.royale.compiler.internal.units.ResourceBundleCompilationUnit;
 import org.apache.royale.compiler.internal.units.SWCCompilationUnit;
 import org.apache.royale.compiler.internal.workspaces.Workspace;
+import org.apache.royale.compiler.problems.FileNotFoundProblem;
 import org.apache.royale.compiler.problems.ICompilerProblem;
 import org.apache.royale.compiler.problems.InternalCompilerProblem;
 import org.apache.royale.compiler.targets.ITarget;
@@ -1673,9 +1674,22 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         if (projectOptions == null)
         {
             folderData.cleanup();
-            //if there are existing configuration problems, they should no
-            //longer be considered valid
-            publishDiagnosticsForProblemQuery(new ProblemQuery(), folderData.configProblemTracker, folderData, true);
+            
+            Path configFilePath = folderData.config.getConfigFilePath();
+            if(configFilePath != null && !Files.exists(configFilePath))
+            {
+                //the config file is missing, so add a problem about it
+                folderData.codeProblemTracker.trackFileWithProblems(configFilePath.toUri());
+                ProblemQuery problemQuery = new ProblemQuery();
+                problemQuery.add(new FileNotFoundProblem(configFilePath.toString()));
+                publishDiagnosticsForProblemQuery(problemQuery, folderData.configProblemTracker, folderData, true);
+            }
+            else
+            {
+                //if there are existing configuration problems, they should no
+                //longer be considered valid
+                publishDiagnosticsForProblemQuery(new ProblemQuery(), folderData.configProblemTracker, folderData, true);
+            }
             return null;
         }
         if (project != null)
