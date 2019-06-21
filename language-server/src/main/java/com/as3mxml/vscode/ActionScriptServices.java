@@ -1676,12 +1676,15 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             folderData.cleanup();
             
             Path configFilePath = folderData.config.getConfigFilePath();
-            if(configFilePath != null && !Files.exists(configFilePath))
+            if(configFilePath != null
+                    && !Files.exists(configFilePath)
+                    && fileTracker.getOpenFiles().size() > 0)
             {
                 //the config file is missing, so add a problem about it
                 folderData.codeProblemTracker.trackFileWithProblems(configFilePath.toUri());
                 ProblemQuery problemQuery = new ProblemQuery();
-                problemQuery.add(new FileNotFoundProblem(configFilePath.toString()));
+                problemQuery.add(new SyntaxFallbackProblem(configFilePath.toString(),
+                        "ActionScript & MXML code intelligence disabled. Create a file named '" + configFilePath.getFileName() + "' to enable all features."));
                 publishDiagnosticsForProblemQuery(problemQuery, folderData.configProblemTracker, folderData, true);
             }
             else
