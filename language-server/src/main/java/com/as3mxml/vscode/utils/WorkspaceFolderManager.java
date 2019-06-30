@@ -128,36 +128,6 @@ public class WorkspaceFolderManager
         return fallbackFolderData;
     }
 
-    public IASNode getOffsetNode(Path path, int currentOffset, WorkspaceFolderData folderData)
-    {
-        IncludeFileData includeFileData = folderData.includedFiles.get(path.toString());
-        if(includeFileData != null)
-        {
-            path = Paths.get(includeFileData.parentPath);
-        }
-        RoyaleProject project = folderData.project;
-        if (!SourcePathUtils.isInProjectSourcePath(path, project, folderData.configurator))
-        {
-            //the path must be in the workspace or source-path
-            return null;
-        }
-
-        ICompilationUnit unit = CompilerProjectUtils.findCompilationUnit(path, project);
-        if (unit == null)
-        {
-            //the path must be in the workspace or source-path
-            return null;
-        }
-
-        IASNode ast = ASTUtils.getCompilationUnitAST(unit);
-        if (ast == null)
-        {
-            return null;
-        }
-
-        return ASTUtils.getContainingNodeIncludingStart(ast, currentOffset);
-    }
-
     public WorkspaceFolderData getWorkspaceFolderDataForSourceFile(Path path)
     {
         //first try to find the path in an existing project
@@ -199,18 +169,53 @@ public class WorkspaceFolderManager
         //hasn't been created yet
         for (WorkspaceFolderData folderData : workspaceFolderToData.values())
         {
+            RoyaleProject project = folderData.project;
+            if (project != null)
+            {
+                continue;
+            }
             String uri = folderData.folder.getUri();
             Path workspacePath = LanguageServerCompilerUtils.getPathFromLanguageServerURI(uri);
             if (workspacePath == null)
             {
                 continue;
             }
-			if (path.startsWith(workspacePath))
-			{
+            if (path.startsWith(workspacePath))
+            {
                 return folderData;
-			}
+            }
         }
         return fallbackFolderData;
+    }
+
+    public IASNode getOffsetNode(Path path, int currentOffset, WorkspaceFolderData folderData)
+    {
+        IncludeFileData includeFileData = folderData.includedFiles.get(path.toString());
+        if(includeFileData != null)
+        {
+            path = Paths.get(includeFileData.parentPath);
+        }
+        RoyaleProject project = folderData.project;
+        if (!SourcePathUtils.isInProjectSourcePath(path, project, folderData.configurator))
+        {
+            //the path must be in the workspace or source-path
+            return null;
+        }
+
+        ICompilationUnit unit = CompilerProjectUtils.findCompilationUnit(path, project);
+        if (unit == null)
+        {
+            //the path must be in the workspace or source-path
+            return null;
+        }
+
+        IASNode ast = ASTUtils.getCompilationUnitAST(unit);
+        if (ast == null)
+        {
+            return null;
+        }
+
+        return ASTUtils.getContainingNodeIncludingStart(ast, currentOffset);
     }
 
     public IASNode getEmbeddedActionScriptNodeInMXMLTag(IMXMLTagData tag, Path path, int currentOffset, WorkspaceFolderData folderData)
