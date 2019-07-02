@@ -38,7 +38,6 @@ const INVALID_SDK_ERROR = "as3mxml.sdk.editor in settings does not point to a va
 const MISSING_FRAMEWORK_SDK_ERROR = "You must configure an SDK to enable all ActionScript & MXML features.";
 const INVALID_JAVA_ERROR = "as3mxml.java.path in settings does not point to a valid executable. It cannot be a directory, and Java 1.8 or newer is required.";
 const MISSING_JAVA_ERROR = "Could not locate valid Java executable. To configure Java manually, use the as3mxml.java.path setting.";
-const QUICK_COMPILE_LANGUAGE_SERVER_NOT_STARTED_ERROR = "Quick compile failed. Try again after ActionScript & MXML extension is initialized.";
 const INITIALIZING_MESSAGE = "Initializing ActionScript & MXML language server...";
 const RELOAD_WINDOW_MESSAGE = "To apply new settings for ActionScript & MXML, please reload the window.";
 const RELOAD_WINDOW_BUTTON_LABEL = "Reload Window";
@@ -58,6 +57,8 @@ let actionScriptTaskProvider: ActionScriptTaskProvider = null;
 let debugConfigurationProvider: SWFDebugConfigurationProvider = null;
 let swcTextDocumentContentProvider: SWCTextDocumentContentProvider = null;
 let swfDebugAdapterDescriptorFactory: SWFDebugAdapterDescriptorFactory = null;
+let pendingQuickCompileAndDebug = false;
+let pendingQuickCompileAndRun = false;
 
 function getValidatedEditorSDKConfiguration(javaExecutablePath: string): string
 {
@@ -222,7 +223,8 @@ export function activate(context: vscode.ExtensionContext)
 	{	
 		if(!savedLanguageClient || !isLanguageClientReady)
 		{
-			vscode.window.showErrorMessage(QUICK_COMPILE_LANGUAGE_SERVER_NOT_STARTED_ERROR);
+			pendingQuickCompileAndDebug = true;
+			pendingQuickCompileAndRun = false;
 			return;
 		}
 		quickCompileAndLaunch(true);
@@ -231,7 +233,8 @@ export function activate(context: vscode.ExtensionContext)
 	{	
 		if(!savedLanguageClient || !isLanguageClientReady)
 		{
-			vscode.window.showErrorMessage(QUICK_COMPILE_LANGUAGE_SERVER_NOT_STARTED_ERROR);
+			pendingQuickCompileAndRun = true;
+			pendingQuickCompileAndDebug = false;
 			return;
 		}
 		quickCompileAndLaunch(false);
@@ -437,6 +440,16 @@ function startClient()
 				{
 					logCompilerShellOutput(null, false, true);
 				});
+				if(pendingQuickCompileAndDebug)
+				{
+					vscode.commands.executeCommand("as3mxml.quickCompileAndDebug");
+				}
+				else if(pendingQuickCompileAndRun)
+				{
+					vscode.commands.executeCommand("as3mxml.quickCompileAndRun");
+				}
+				pendingQuickCompileAndDebug = false;
+				pendingQuickCompileAndRun = false;
 			}, (reason) =>
 			{
 				resolve();
