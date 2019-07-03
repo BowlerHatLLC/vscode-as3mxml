@@ -43,6 +43,8 @@ const RELOAD_WINDOW_MESSAGE = "To apply new settings for ActionScript & MXML, pl
 const RELOAD_WINDOW_BUTTON_LABEL = "Reload Window";
 const CONFIGURE_SDK_LABEL = "Configure SDK";
 const STARTUP_ERROR = "The ActionScript & MXML extension failed to start.";
+const QUICK_COMPILE_AND_DEBUG_INIT_MESSAGE = "Quick Compile & Debug is waiting for initialization...";
+const QUICK_COMPILE_AND_RUN_INIT_MESSAGE = "Quick Compile & Run is waiting for initialization...";
 const NO_SDK = "$(alert) No SDK";
 let savedContext: vscode.ExtensionContext;
 let savedLanguageClient: LanguageClient;
@@ -225,6 +227,7 @@ export function activate(context: vscode.ExtensionContext)
 		{
 			pendingQuickCompileAndDebug = true;
 			pendingQuickCompileAndRun = false;
+			logCompilerShellOutput(QUICK_COMPILE_AND_DEBUG_INIT_MESSAGE, true, false);
 			return;
 		}
 		quickCompileAndLaunch(true);
@@ -235,6 +238,7 @@ export function activate(context: vscode.ExtensionContext)
 		{
 			pendingQuickCompileAndRun = true;
 			pendingQuickCompileAndDebug = false;
+			logCompilerShellOutput(QUICK_COMPILE_AND_RUN_INIT_MESSAGE, true, false);
 			return;
 		}
 		quickCompileAndLaunch(false);
