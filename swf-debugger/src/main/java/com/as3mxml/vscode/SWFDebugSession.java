@@ -35,12 +35,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonDeserializer;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParseException;
 import com.as3mxml.vscode.debug.DebugSession;
 import com.as3mxml.vscode.debug.events.BreakpointEvent;
 import com.as3mxml.vscode.debug.events.InitializedEvent;
@@ -76,6 +70,12 @@ import com.as3mxml.vscode.debug.responses.Variable;
 import com.as3mxml.vscode.debug.responses.VariablesResponseBody;
 import com.as3mxml.vscode.debug.utils.DeviceInstallUtils;
 import com.as3mxml.vscode.debug.utils.DeviceInstallUtils.DeviceCommandResult;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParseException;
 
 import flash.tools.debugger.AIRLaunchInfo;
 import flash.tools.debugger.CommandLineException;
@@ -688,7 +688,11 @@ public class SWFDebugSession extends DebugSession
                 return;
             }
         }
-        attach(response, swfArgs);
+        boolean success = attach(response, swfArgs);
+        if(!success)
+        {
+            cleanupForwardedPort();
+        }
     }
 
     private void sendOutputEvent(String message)
@@ -774,8 +778,9 @@ public class SWFDebugSession extends DebugSession
         return true;
     }
 
-    private void attach(Response response, SWFAttachRequestArguments args)
+    private boolean attach(Response response, SWFAttachRequestArguments args)
     {
+        boolean success = true;
         ThreadSafeSessionManager manager = ThreadSafeBootstrap.sessionManager();
         swfSession = null;
         swfRunProcess = null;
@@ -793,12 +798,11 @@ public class SWFDebugSession extends DebugSession
         }
         catch (ConnectException e)
         {
-            response.success = false;
-            sendResponse(response);
+            success = false;
         }
         catch (IOException e)
         {
-            response.success = false;
+            success = false;
             ByteArrayOutputStream buffer = new ByteArrayOutputStream();
             e.printStackTrace(new PrintStream(buffer));
             sendOutputEvent("Exception in debugger: " + buffer.toString() + "\n");
@@ -830,24 +834,14 @@ public class SWFDebugSession extends DebugSession
             sessionThread = new java.lang.Thread(new SessionRunner());
             sessionThread.start();
         }
+        response.success = success;
         sendResponse(response);
+        return success;
     }
 
     public void disconnect(Response response, Request.RequestArguments args)
     {
-        if (forwardedPort != -1)
-        {
-            try
-            {
-                Path workspacePath = Paths.get(System.getProperty(WORKSPACE_PROPERTY));
-                DeviceInstallUtils.stopForwardPortCommand(forwardedPortPlatform, forwardedPort, workspacePath, adbPath, idbPath);
-            }
-            finally
-            {
-                forwardedPortPlatform = null;
-                forwardedPort = -1;
-            }
-        }
+        cleanupForwardedPort();
         if (sessionThread != null)
         {
             cancelRunner = true;
@@ -864,6 +858,24 @@ public class SWFDebugSession extends DebugSession
             swfRunProcess = null;
         }
         sendResponse(response);
+    }
+
+    private void cleanupForwardedPort()
+    {
+        if (forwardedPort == -1)
+        {
+            return;
+        }
+        try
+        {
+            Path workspacePath = Paths.get(System.getProperty(WORKSPACE_PROPERTY));
+            DeviceInstallUtils.stopForwardPortCommand(forwardedPortPlatform, forwardedPort, workspacePath, adbPath, idbPath);
+        }
+        finally
+        {
+            forwardedPortPlatform = null;
+            forwardedPort = -1;
+        }
     }
 
     public void setBreakpoints(Response response, SetBreakpointsRequest.SetBreakpointsArguments arguments)
