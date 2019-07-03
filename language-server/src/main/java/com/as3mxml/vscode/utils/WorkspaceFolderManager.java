@@ -172,6 +172,7 @@ public class WorkspaceFolderManager
             RoyaleProject project = folderData.project;
             if (project != null)
             {
+                //if there's already a project, there's nothing to create later
                 continue;
             }
             String uri = folderData.folder.getUri();
@@ -185,6 +186,7 @@ public class WorkspaceFolderManager
                 return folderData;
             }
         }
+        //a project where "everything else" goes
         return fallbackFolderData;
     }
 
