@@ -92,7 +92,6 @@ import org.apache.royale.compiler.internal.tree.as.FileNode;
 import org.apache.royale.compiler.internal.units.ResourceBundleCompilationUnit;
 import org.apache.royale.compiler.internal.units.SWCCompilationUnit;
 import org.apache.royale.compiler.internal.workspaces.Workspace;
-import org.apache.royale.compiler.problems.FileNotFoundProblem;
 import org.apache.royale.compiler.problems.ICompilerProblem;
 import org.apache.royale.compiler.problems.InternalCompilerProblem;
 import org.apache.royale.compiler.targets.ITarget;
