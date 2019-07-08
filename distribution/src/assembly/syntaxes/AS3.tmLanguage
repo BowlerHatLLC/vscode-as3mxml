@@ -505,6 +505,10 @@
 					<key>include</key>
 					<string>#parameters</string>
 				</dict>
+				<dict>
+					<key>include</key>
+					<string>#comments</string>
+				</dict>
 			</array>
 		</dict>
 		<key>parameters</key>
