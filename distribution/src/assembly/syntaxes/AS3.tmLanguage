@@ -514,7 +514,7 @@
 		<key>parameters</key>
 		<dict>
 			<key>begin</key>
-			<string>(\.\.\.)?\s*([A-Za-z0-9_\$]+)(?:\s*(\:)\s*([A-Za-z_\$]+))?(?:\s*(=))?</string>
+			<string>(\.\.\.)?\s*([A-Za-z0-9_\$]+)(?:\s*(\:)\s*([A-Z\$][A-Za-z0-9_\$]+))?(?:\s*(=))?</string>
 			<key>end</key>
 			<string>,|(?=\))</string>
 			<key>beginCaptures</key>
