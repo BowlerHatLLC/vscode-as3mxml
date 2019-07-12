@@ -87,12 +87,13 @@ public class RenameProvider
 			return new WorkspaceEdit(new HashMap<>());
 		}
 		WorkspaceFolderData folderData = workspaceFolderManager.getWorkspaceFolderDataForSourceFile(path);
-		if(folderData == null || folderData.project == null)
+        if(folderData == null || folderData.project == null
+                || folderData.equals(workspaceFolderManager.getFallbackFolderData()))
 		{
 			cancelToken.checkCanceled();
 			return new WorkspaceEdit(new HashMap<>());
 		}
-		RoyaleProject project = folderData.project;
+        RoyaleProject project = folderData.project;
 
         IncludeFileData includeFileData = folderData.includedFiles.get(path.toString());
 		int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position, includeFileData);

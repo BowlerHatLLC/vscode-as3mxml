@@ -77,7 +77,8 @@ public class ReferencesProvider
 			return Collections.emptyList();
 		}
 		WorkspaceFolderData folderData = workspaceFolderManager.getWorkspaceFolderDataForSourceFile(path);
-		if(folderData == null || folderData.project == null)
+		if(folderData == null || folderData.project == null
+                || folderData.equals(workspaceFolderManager.getFallbackFolderData()))
 		{
 			cancelToken.checkCanceled();
 			return Collections.emptyList();
