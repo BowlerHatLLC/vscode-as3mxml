@@ -255,7 +255,7 @@ public class CompletionProvider
         }
 
         String fileText = fileTracker.getText(path);
-        if (!isActionScriptCompletionAllowedInNode(offsetNode, fileText, currentOffset))
+        if (!ASTUtils.isActionScriptCompletionAllowedInNode(offsetNode, fileText, currentOffset))
         {
             //if we're inside a node that shouldn't have completion!
             return result;
@@ -277,6 +277,7 @@ public class CompletionProvider
         }
         RoyaleProject project = folderData.project;
         AddImportData addImportData = CodeActionsUtils.findAddImportData(fileText, importRange);
+        boolean hasOpenParen = fileText.length() > currentOffset && fileText.charAt(currentOffset) == '(';
 
         //variable types
         if (offsetNode instanceof IVariableNode)
@@ -520,7 +521,7 @@ public class CompletionProvider
                         || (line == leftOperand.getEndLine() && column > leftOperand.getEndColumn())
                         || (line == rightOperand.getLine() && column <= rightOperand.getColumn()))
                 {
-                    autoCompleteMemberAccess(memberAccessNode, addImportData, project, result);
+                    autoCompleteMemberAccess(memberAccessNode, hasOpenParen, addImportData, project, result);
                     return result;
                 }
             }
@@ -543,7 +544,7 @@ public class CompletionProvider
             if (offsetNode == memberAccessNode.getRightOperandNode()
                     || isValidLeft)
             {
-                autoCompleteMemberAccess(memberAccessNode, addImportData, project, result);
+                autoCompleteMemberAccess(memberAccessNode, hasOpenParen, addImportData, project, result);
                 return result;
             }
         }
@@ -560,7 +561,7 @@ public class CompletionProvider
                 IIdentifierNode identifierNode = (IIdentifierNode) rightOperandNode;
                 if (identifierNode.getName().equals(""))
                 {
-                    autoCompleteMemberAccess(memberAccessNode, addImportData, project, result);
+                    autoCompleteMemberAccess(memberAccessNode, hasOpenParen, addImportData, project, result);
                     return result;
                 }
             }
@@ -614,12 +615,12 @@ public class CompletionProvider
                 IScopedNode scopedNode = (IScopedNode) currentNodeForScope;
 
                 //include all members and local things that are in scope
-                autoCompleteScope(scopedNode, false, addImportData, project, result);
+                autoCompleteScope(scopedNode, false, hasOpenParen, addImportData, project, result);
 
                 //include all public definitions
                 IASScope scope = scopedNode.getScope();
                 IDefinition definitionToSkip = scope.getDefinition();
-                autoCompleteDefinitionsForActionScript(result, project, scopedNode, false, null, definitionToSkip, false, null, addImportData);
+                autoCompleteDefinitionsForActionScript(result, project, scopedNode, false, null, definitionToSkip, false, null, hasOpenParen, addImportData);
                 autoCompleteKeywords(scopedNode, result);
                 return result;
             }
@@ -1075,16 +1076,16 @@ public class CompletionProvider
                 IScopedNode scopedNode = (IScopedNode) node;
 
                 //include all members and local things that are in scope
-                autoCompleteScope(scopedNode, true, addImportData, project, result);
+                autoCompleteScope(scopedNode, true, false, addImportData, project, result);
                 break;
             }
             node = node.getParent();
         }
         while (node != null);
-        autoCompleteDefinitionsForActionScript(result, project, withNode, true, null, null, false, null, addImportData);
+        autoCompleteDefinitionsForActionScript(result, project, withNode, true, null, null, false, null, false, addImportData);
     }
 
-    private void autoCompleteScope(IScopedNode node, boolean typesOnly, AddImportData addImportData, RoyaleProject project, CompletionList result)
+    private void autoCompleteScope(IScopedNode node, boolean typesOnly, boolean hasOpenParen, AddImportData addImportData, RoyaleProject project, CompletionList result)
     {
         IScopedNode currentNode = node;
         ASScope scope = (ASScope) node.getScope();
@@ -1096,10 +1097,10 @@ public class CompletionProvider
             if (currentScope instanceof TypeScope && !typesOnly)
             {
                 TypeScope typeScope = (TypeScope) currentScope;
-                addDefinitionsInTypeScopeToAutoComplete(typeScope, scope, true, true, false, false, null, false, addImportData, null, null, project, result);
+                addDefinitionsInTypeScopeToAutoComplete(typeScope, scope, true, true, false, false, null, false, hasOpenParen, addImportData, null, null, project, result);
                 if (!staticOnly)
                 {
-                    addDefinitionsInTypeScopeToAutoCompleteActionScript(typeScope, scope, false, addImportData, project, result);
+                    addDefinitionsInTypeScopeToAutoCompleteActionScript(typeScope, scope, false, hasOpenParen, addImportData, project, result);
                 }
             }
             else
@@ -1127,7 +1128,7 @@ public class CompletionProvider
                                 continue;
                             }
                         }
-                        addDefinitionAutoCompleteActionScript(localDefinition, currentNode, addImportData, project, result);
+                        addDefinitionAutoCompleteActionScript(localDefinition, currentNode, hasOpenParen, addImportData, project, result);
                     }
                 }
             }
@@ -1238,7 +1239,7 @@ public class CompletionProvider
         }
     }
 
-    private void autoCompleteMemberAccess(IMemberAccessExpressionNode node, AddImportData addImportData, RoyaleProject project, CompletionList result)
+    private void autoCompleteMemberAccess(IMemberAccessExpressionNode node, boolean hasOpenParen, AddImportData addImportData, RoyaleProject project, CompletionList result)
     {
         ASScope scope = (ASScope) node.getContainingScope().getScope();
         IExpressionNode leftOperand = node.getLeftOperandNode();
@@ -1247,7 +1248,7 @@ public class CompletionProvider
         {
             ITypeDefinition typeDefinition = (ITypeDefinition) leftDefinition;
             TypeScope typeScope = (TypeScope) typeDefinition.getContainedScope();
-            addDefinitionsInTypeScopeToAutoCompleteActionScript(typeScope, scope, true, addImportData, project, result);
+            addDefinitionsInTypeScopeToAutoCompleteActionScript(typeScope, scope, true, hasOpenParen, addImportData, project, result);
             return;
         }
 
@@ -1262,7 +1263,7 @@ public class CompletionProvider
                 ITypeDefinition elementType = vectorDef.resolveElementType(project);
                 if (elementType != null) {
                     TypeScope typeScope = (TypeScope) elementType.getContainedScope();
-                    addDefinitionsInTypeScopeToAutoCompleteActionScript(typeScope, scope, false, addImportData, project, result);
+                    addDefinitionsInTypeScopeToAutoCompleteActionScript(typeScope, scope, false, hasOpenParen, addImportData, project, result);
                     return;
                 }
             }
@@ -1272,7 +1273,7 @@ public class CompletionProvider
         if (leftType != null)
         {
             TypeScope typeScope = (TypeScope) leftType.getContainedScope();
-            addDefinitionsInTypeScopeToAutoCompleteActionScript(typeScope, scope, false, addImportData, project, result);
+            addDefinitionsInTypeScopeToAutoCompleteActionScript(typeScope, scope, false, hasOpenParen, addImportData, project, result);
             return;
         }
 
@@ -1282,7 +1283,7 @@ public class CompletionProvider
             String packageName = ASTUtils.memberAccessToPackageName(memberAccess);
             if (packageName != null)
             {
-                autoCompleteDefinitionsForActionScript(result, project, node, false, packageName, null, false, null, addImportData);
+                autoCompleteDefinitionsForActionScript(result, project, node, false, packageName, null, false, null, hasOpenParen, addImportData);
                 return;
             }
         }
@@ -1587,10 +1588,10 @@ public class CompletionProvider
     }
 
     private void addDefinitionsInTypeScopeToAutoCompleteActionScript(TypeScope typeScope, ASScope otherScope,
-        boolean isStatic, AddImportData addImportData,
+        boolean isStatic, boolean hasOpenParen, AddImportData addImportData,
         RoyaleProject project, CompletionList result)
     {
-        addDefinitionsInTypeScopeToAutoComplete(typeScope, otherScope, isStatic, false, false, false, null, false, addImportData, null, null, project, result);
+        addDefinitionsInTypeScopeToAutoComplete(typeScope, otherScope, isStatic, false, false, false, null, false, hasOpenParen, addImportData, null, null, project, result);
     }
 
     private void addDefinitionsInTypeScopeToAutoCompleteMXML(TypeScope typeScope, ASScope otherScope,
@@ -1598,13 +1599,13 @@ public class CompletionProvider
         AddImportData addImportData, Position xmlnsPosition,
         IMXMLTagData offsetTag, RoyaleProject project, CompletionList result)
     {
-        addDefinitionsInTypeScopeToAutoComplete(typeScope, otherScope, false, false, true, isAttribute, prefix, tagsNeedOpenBracket, addImportData, xmlnsPosition, offsetTag, project, result);
+        addDefinitionsInTypeScopeToAutoComplete(typeScope, otherScope, false, false, true, isAttribute, prefix, tagsNeedOpenBracket, false, addImportData, xmlnsPosition, offsetTag, project, result);
     }
 
     private void addDefinitionsInTypeScopeToAutoComplete(TypeScope typeScope, ASScope otherScope,
         boolean isStatic, boolean includeSuperStatics,
         boolean forMXML, boolean isAttribute, String prefix, boolean tagsNeedOpenBracket,
-        AddImportData addImportData, Position xmlnsPosition,
+        boolean hasOpenParen, AddImportData addImportData, Position xmlnsPosition,
         IMXMLTagData offsetTag, RoyaleProject project, CompletionList result)
     {
         IMetaTag[] excludeMetaTags = typeScope.getDefinition().getMetaTagsByName(IMetaAttributeConstants.ATTRIBUTE_EXCLUDE);
@@ -1692,7 +1693,7 @@ public class CompletionProvider
             }
             else //actionscript
             {
-                addDefinitionAutoCompleteActionScript(localDefinition, null, addImportData, project, result);
+                addDefinitionAutoCompleteActionScript(localDefinition, null, hasOpenParen, addImportData, project, result);
             }
         }
     }
@@ -1859,7 +1860,7 @@ public class CompletionProvider
         addDefinitionAutoCompleteMXML(definition, xmlnsPosition, false, discoveredNS.prefix, discoveredNS.uri, tagsNeedOpenBracket, offsetTag, project, result);
     }
 
-    private void addDefinitionAutoCompleteActionScript(IDefinition definition, IASNode offsetNode, AddImportData addImportData, RoyaleProject project, CompletionList result)
+    private void addDefinitionAutoCompleteActionScript(IDefinition definition, IASNode offsetNode, boolean hasOpenParen, AddImportData addImportData, RoyaleProject project, CompletionList result)
     {
         String definitionBaseName = definition.getBaseName();
         if (definitionBaseName.length() == 0)
@@ -1883,6 +1884,7 @@ public class CompletionProvider
         CompletionItem item = CompletionItemUtils.createDefinitionItem(definition, project);
         if (definition instanceof IFunctionDefinition
                 && !(definition instanceof IAccessorDefinition)
+                && !hasOpenParen
                 && completionSupportsSnippets)
         {
             IFunctionDefinition functionDefinition = (IFunctionDefinition) definition;
@@ -2328,7 +2330,7 @@ public class CompletionProvider
                     }
                     else
                     {
-                        addDefinitionAutoCompleteActionScript(definition, null, addImportData, project, result);
+                        addDefinitionAutoCompleteActionScript(definition, null, false, addImportData, project, result);
                     }
                 }
             }
@@ -2338,7 +2340,7 @@ public class CompletionProvider
     private void autoCompleteDefinitionsForActionScript(CompletionList result,
             RoyaleProject project, IASNode offsetNode,
             boolean typesOnly, String requiredPackageName, IDefinition definitionToSkip,
-            boolean tagsNeedOpenBracket, String typeFilter, AddImportData addImportData)
+            boolean tagsNeedOpenBracket, String typeFilter, boolean hasOpenParen, AddImportData addImportData)
     {
         String skipQualifiedName = null;
         if (definitionToSkip != null)
@@ -2382,7 +2384,7 @@ public class CompletionProvider
                                 continue;
                             }
                         }
-                        addDefinitionAutoCompleteActionScript(definition, offsetNode, addImportData, project, result);
+                        addDefinitionAutoCompleteActionScript(definition, offsetNode, hasOpenParen, addImportData, project, result);
                     }
                 }
             }
@@ -2404,30 +2406,5 @@ public class CompletionProvider
             return completionTypes.contains(qualifiedName);
         }
         return false;
-    }
-
-    private boolean isActionScriptCompletionAllowedInNode(IASNode offsetNode, String fileText, int currentOffset)
-    {
-        if (offsetNode != null)
-        {
-            if (offsetNode.getNodeID().equals(ASTNodeID.LiteralStringID))
-            {
-                return false;
-            }
-            if (offsetNode.getNodeID().equals(ASTNodeID.LiteralRegexID))
-            {
-                return false;
-            }
-        }
-        int minCommentStartIndex = 0;
-        if (offsetNode instanceof IMXMLSpecifierNode)
-        {
-            IMXMLSpecifierNode mxmlNode = (IMXMLSpecifierNode) offsetNode;
-            //start in the current MXML node and ignore the start of comments
-            //that appear in earlier MXML nodes
-            minCommentStartIndex = mxmlNode.getAbsoluteStart();
-        }
-        
-        return !ASTUtils.isInActionScriptComment(fileText, currentOffset, minCommentStartIndex);
     }
 }

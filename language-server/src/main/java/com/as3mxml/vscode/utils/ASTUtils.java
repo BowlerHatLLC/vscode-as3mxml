@@ -54,6 +54,7 @@ import org.apache.royale.compiler.tree.as.IScopedNode;
 import org.apache.royale.compiler.tree.as.ITransparentContainerNode;
 import org.apache.royale.compiler.tree.as.IVariableNode;
 import org.apache.royale.compiler.tree.mxml.IMXMLScriptNode;
+import org.apache.royale.compiler.tree.mxml.IMXMLSpecifierNode;
 import org.apache.royale.compiler.units.ICompilationUnit;
 
 public class ASTUtils
@@ -798,5 +799,30 @@ public class ASTUtils
         }
         int endComment = code.indexOf("-->", startComment);
         return endComment > currentOffset;
+    }
+
+    public static boolean isActionScriptCompletionAllowedInNode(IASNode offsetNode, String fileText, int currentOffset)
+    {
+        if (offsetNode != null)
+        {
+            if (offsetNode.getNodeID().equals(ASTNodeID.LiteralStringID))
+            {
+                return false;
+            }
+            if (offsetNode.getNodeID().equals(ASTNodeID.LiteralRegexID))
+            {
+                return false;
+            }
+        }
+        int minCommentStartIndex = 0;
+        if (offsetNode instanceof IMXMLSpecifierNode)
+        {
+            IMXMLSpecifierNode mxmlNode = (IMXMLSpecifierNode) offsetNode;
+            //start in the current MXML node and ignore the start of comments
+            //that appear in earlier MXML nodes
+            minCommentStartIndex = mxmlNode.getAbsoluteStart();
+        }
+        
+        return !ASTUtils.isInActionScriptComment(fileText, currentOffset, minCommentStartIndex);
     }
 }
