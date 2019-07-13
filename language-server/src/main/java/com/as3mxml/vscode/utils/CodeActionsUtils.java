@@ -70,7 +70,6 @@ public class CodeActionsUtils
     private static final Pattern importPattern = Pattern.compile("(?m)^([ \\t]*)import ([\\w\\.]+)");
     private static final Pattern indentPattern = Pattern.compile("(?m)^([ \\t]*)\\w");
     private static final Pattern packagePattern = Pattern.compile("(?m)^package(?: [\\w\\.]+)*\\s*\\{(?:[ \\t]*[\\r\\n]+)+([ \\t]*)");
-    private static final Pattern scriptPattern = Pattern.compile("(?m)^<\\w+:Script>\\s*<!\\[CDATA\\[");
 	private static final String NEW_LINE = "\n";
 	private static final String INDENT = "\t";
 	private static final String SPACE = " ";

@@ -104,7 +104,6 @@ import org.apache.royale.compiler.tree.as.IScopedNode;
 import org.apache.royale.compiler.tree.as.ITypeNode;
 import org.apache.royale.compiler.tree.as.IVariableNode;
 import org.apache.royale.compiler.tree.mxml.IMXMLClassDefinitionNode;
-import org.apache.royale.compiler.tree.mxml.IMXMLSpecifierNode;
 import org.apache.royale.compiler.units.ICompilationUnit;
 import org.eclipse.lsp4j.Command;
 import org.eclipse.lsp4j.CompletionItem;
