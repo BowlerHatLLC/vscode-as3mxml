@@ -68,7 +68,6 @@ import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
 import com.as3mxml.vscode.utils.CompilerProblemFilter;
 import com.as3mxml.vscode.utils.CompilerProjectUtils;
 import com.as3mxml.vscode.utils.FileTracker;
-import com.as3mxml.vscode.utils.LSPUtils;
 import com.as3mxml.vscode.utils.LanguageServerCompilerUtils;
 import com.as3mxml.vscode.utils.ProblemTracker;
 import com.as3mxml.vscode.utils.WaitForBuildFinishRunner;
@@ -111,7 +110,6 @@ import org.eclipse.lsp4j.CompletionItemCapabilities;
 import org.eclipse.lsp4j.CompletionList;
 import org.eclipse.lsp4j.CompletionParams;
 import org.eclipse.lsp4j.Diagnostic;
-import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.eclipse.lsp4j.DidChangeConfigurationParams;
 import org.eclipse.lsp4j.DidChangeTextDocumentParams;
 import org.eclipse.lsp4j.DidChangeWatchedFilesParams;
@@ -184,6 +182,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     private WaitForBuildFinishRunner waitForBuildFinishRunner;
     private Set<URI> notOnSourcePathSet = new HashSet<>();
     private boolean realTimeProblems = true;
+    private boolean showFileOutsideSourcePath = true;
     private SimpleProjectConfigStrategy fallbackConfig;
 
     public ActionScriptServices()
@@ -652,8 +651,6 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         WorkspaceFolderData folderData = workspaceFolderManager.getWorkspaceFolderDataForSourceFile(path);
         if (folderData == null)
         {
-            //this file isn't in any of the workspace folders
-            publishDiagnosticForFileOutsideSourcePath(path);
             return;
         }
 
@@ -713,8 +710,6 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         WorkspaceFolderData folderData = workspaceFolderManager.getWorkspaceFolderDataForSourceFile(path);
         if (folderData == null)
         {
-            //this file isn't in any of the workspace folders
-            publishDiagnosticForFileOutsideSourcePath(path);
             return;
         }
 
@@ -770,7 +765,8 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             //to simple syntax checking for now
             checkFilePathForProblems(path, folderData, true);
         }
-        else if(realTimeProblems)
+        else if(realTimeProblems
+                && !folderData.equals(workspaceFolderManager.getFallbackFolderData()))
         {
             //try to keep using the existing instance, if possible
             if(waitForBuildFinishRunner == null
@@ -906,8 +902,6 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         WorkspaceFolderData folderData = workspaceFolderManager.getWorkspaceFolderDataForSourceFile(path);
         if (folderData == null)
         {
-            //this file isn't in any of the workspace folders
-            publishDiagnosticForFileOutsideSourcePath(path);
             return;
         }
         getProject(folderData);
@@ -1183,6 +1177,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
 		JsonObject settings = (JsonObject) params.getSettings();
 		this.updateSDK(settings);
 		this.updateRealTimeProblems(settings);
+		this.updateSourcePathWarning(settings);
 	}
 
 	@Override
@@ -1904,39 +1899,46 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                 languageClient.publishDiagnostics(publish);
             }
         }
+
+        if (folderData.equals(workspaceFolderManager.getFallbackFolderData()))
+        {
+            compilerWorkspace.startBuilding();
+            try
+            {
+                ICompilationUnit unitForPath = CompilerProjectUtils.findCompilationUnit(path, folderData.project);
+                if (unitForPath != null)
+                {
+                    CompilationUnitUtils.findIncludedFiles(unitForPath, folderData.includedFiles);
+                }
+            }
+            finally
+            {
+                compilerWorkspace.doneBuilding();
+            }
+            if (showFileOutsideSourcePath)
+            {
+                notOnSourcePathSet.add(uri);
+                if(workspaceFolderManager.getWorkspaceFolders().size() == 0)
+                {
+                    SyntaxFallbackProblem problem = new SyntaxFallbackProblem(path.toString(),
+                            "Some code intelligence features are disabled for this file. Open a workspace folder to enable all ActionScript & MXML features.");
+                    problemQuery.add(problem);
+                }
+                else
+                {
+                    SyntaxFallbackProblem problem = new SyntaxFallbackProblem(path.toString(),
+                            path.getFileName() + " is not located in the workspace's source path. Some code intelligence features are disabled for this file.");
+                    problemQuery.add(problem);
+                }
+            }
+            return;
+        }
         
         ProjectOptions projectOptions = folderData.options;
-        if (projectOptions == null || !checkFilePathForAllProblems(path, problemQuery, folderData, false))
+        if (projectOptions == null || folderData.equals(workspaceFolderManager.getFallbackFolderData())
+                || !checkFilePathForAllProblems(path, problemQuery, folderData, false))
         {
             checkFilePathForSyntaxProblems(path, folderData, problemQuery);
-        }
-    }
-
-    private void publishDiagnosticForFileOutsideSourcePath(Path path)
-    {
-        URI uri = path.toUri();
-        PublishDiagnosticsParams publish = new PublishDiagnosticsParams();
-        ArrayList<Diagnostic> diagnostics = new ArrayList<>();
-        publish.setDiagnostics(diagnostics);
-        publish.setUri(uri.toString());
-
-        Diagnostic diagnostic = LSPUtils.createDiagnosticWithoutRange();
-        diagnostic.setSeverity(DiagnosticSeverity.Information);
-        if(workspaceFolderManager.getWorkspaceFolders().size() == 0)
-        {
-            diagnostic.setMessage("Open a workspace folder to enable all ActionScript & MXML language features.");
-        }
-        else
-        {
-            diagnostic.setMessage(path.getFileName() + " is not located in the project's source path. Code intelligence will not be available for this file.");
-        }
-        diagnostics.add(diagnostic);
-
-        notOnSourcePathSet.add(uri);
-
-        if (languageClient != null)
-        {
-            languageClient.publishDiagnostics(publish);
         }
     }
 
@@ -2164,5 +2166,30 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         {
             checkForProblemsNow();
         }
+	}
+
+	private void updateSourcePathWarning(JsonObject settings)
+	{
+		if (!settings.has("as3mxml"))
+		{
+			return;
+		}
+		JsonObject as3mxml = settings.get("as3mxml").getAsJsonObject();
+		if (!as3mxml.has("problems"))
+		{
+			return;
+		}
+		JsonObject problems = as3mxml.get("problems").getAsJsonObject();
+		if (!problems.has("realTime"))
+		{
+			return;
+		}
+		boolean newShowFileOutsideSourcePath = problems.get("showFileOutsideSourcePath").getAsBoolean();
+        if(showFileOutsideSourcePath == newShowFileOutsideSourcePath)
+        {
+            return;
+        }
+        showFileOutsideSourcePath = newShowFileOutsideSourcePath;
+        checkForProblemsNow();
 	}
 }
