@@ -15,6 +15,7 @@ limitations under the License.
 */
 package com.as3mxml.vscode;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
@@ -48,13 +49,14 @@ public class Main
     public static void main(String[] args)
     {
         String port = System.getProperty(SYSTEM_PROPERTY_PORT);
+        Socket socket = null;
         try
         {
             InputStream inputStream = System.in;
             OutputStream outputStream = System.out;
             if (port != null)
             {
-                Socket socket = new Socket(SOCKET_HOST, Integer.parseInt(port));
+                socket = new Socket(SOCKET_HOST, Integer.parseInt(port));
                 inputStream = socket.getInputStream();
                 outputStream = socket.getOutputStream();
             }
@@ -71,6 +73,20 @@ public class Main
             System.err.println("Visit the following URL to file an issue, and please include this log: https://github.com/BowlerHatLLC/vscode-as3mxml/issues");
             e.printStackTrace(System.err);
             System.exit(SERVER_CONNECT_ERROR);
+        }
+        finally
+        {
+            if(socket != null)
+            {
+                try
+                {
+                    socket.close();
+                }
+                catch(IOException e)
+                {
+                    
+                }
+            }
         }
     }
 
