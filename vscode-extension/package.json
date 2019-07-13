@@ -353,6 +353,13 @@
           "default": true,
           "description": "Specifies whether to check for problems in real-time as you type, or only on save."
         },
+        "as3mxml.problems.showFileOutsideSourcePath": {
+          "type": [
+            "boolean"
+          ],
+          "default": true,
+          "description": "Specifies whether to display a message if a file is outside of the workspace's source path."
+        },
         "as3mxml.projectImport.prompt": {
           "type": [
             "boolean"
