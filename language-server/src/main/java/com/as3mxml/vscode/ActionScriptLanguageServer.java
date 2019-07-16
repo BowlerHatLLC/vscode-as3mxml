@@ -107,6 +107,14 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
                 actionScriptServices.addWorkspaceFolder(folder);
             }
         }
+        else if(params.getRootUri() != null)
+        {
+            //some clients don't support workspace folders, but if they pass in
+            //a root URI, we can treat it like a workspace folder
+            WorkspaceFolder folder = new WorkspaceFolder();
+            folder.setUri(params.getRootUri());
+            actionScriptServices.addWorkspaceFolder(folder);
+        }
 
         InitializeResult result = new InitializeResult();
 
