@@ -2196,7 +2196,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
 			return;
 		}
 		JsonObject problems = as3mxml.get("problems").getAsJsonObject();
-		if (!problems.has("realTime"))
+		if (!problems.has("showFileOutsideSourcePath"))
 		{
 			return;
 		}
