@@ -493,7 +493,15 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             compilerWorkspace.startBuilding();
             try
             {
-                boolean hierarchicalDocumentSymbolSupport = clientCapabilities.getTextDocument().getDocumentSymbol().getHierarchicalDocumentSymbolSupport();
+                boolean hierarchicalDocumentSymbolSupport = false;
+                try
+                {
+                    hierarchicalDocumentSymbolSupport = clientCapabilities.getTextDocument().getDocumentSymbol().getHierarchicalDocumentSymbolSupport();
+                }
+                catch(NullPointerException e)
+                {
+                    //ignore
+                }
                 DocumentSymbolProvider provider = new DocumentSymbolProvider(workspaceFolderManager, hierarchicalDocumentSymbolSupport);
                 return provider.documentSymbol(params, cancelToken);
             }
@@ -1315,7 +1323,15 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         {
             return;
         }
-        boolean dynamicDidChangeWatchedFiles = clientCapabilities.getWorkspace().getDidChangeWatchedFiles().getDynamicRegistration();
+        boolean dynamicDidChangeWatchedFiles = false;
+        try
+        {
+            dynamicDidChangeWatchedFiles = clientCapabilities.getWorkspace().getDidChangeWatchedFiles().getDynamicRegistration();
+        }
+        catch(NullPointerException e)
+        {
+            //ignore
+        }
         for (File sourcePathFile : project.getSourcePath())
         {
             Path sourcePath = sourcePathFile.toPath();
