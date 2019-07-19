@@ -1,3 +1,23 @@
+## v0.21.0
+
+### New Features
+
+* Editor: Enabled partial code intelligence for open files that come from outside of the workspace's source path. This includes SDK framework classes, and *.as* and *.mxml* files that are opened when no workspace folder is open in Visual Studio Code.
+* Settings: Added `as3mxml.problems.showFileOutsideSourcePath` setting to disable the informational message that is displayed when an open *.as* or *.mxml* file is not in the workspace's source path.
+
+### Fixed Issues
+
+* Code Actions: Fixed issue where a null reference exception could be thrown if the line number and indent could not be discovered.
+* Completion: Fixed issue where completing a method incorrectly added `()` when the next character in the file is already `(`.
+* Debugger: Fixed issue where port forwarding for connected devices was not cleaned up if the connection to the debugger times out.
+* Syntax: Fixed issue where comments inside function signature parameters were not colored correctly.
+* Syntax: Fixed issue where parameter types containing numbers were not colored correctly.
+
+### Other Changes
+
+* Build: Activating a "quick compile" command before the language server initializes now queues it up for later, instead of displaying an error message. After initialization, the queued compile command will be re-attempted.
+* Language Server: Consolidated the `TextDocumentService` and `WorkspaceService` implementations into a single `ActionScriptServices` class. Custom language servers that extend the old `ActionScriptTextDocumentService` or `ActionScriptWorkspaceService` will need to extend the new class instead.
+
 ## v0.20.0
 
 ### New Features
