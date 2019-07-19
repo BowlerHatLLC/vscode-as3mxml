@@ -13,13 +13,49 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-let testRunner = require("vscode/lib/testrunner");
+import * as path from "path";
+import * as glob from "glob";
+import * as Mocha from "mocha";
 
-testRunner.configure(
+export function run(): Promise<void>
 {
-	ui: "tdd",
-	useColors: true,
-	timeout: 7500
-});
+	const mocha = new Mocha({ ui: "tdd" });
+	mocha.useColors(true);
+	mocha.timeout(7500);
 
-module.exports = testRunner;
+	const testsRoot = path.resolve(__dirname, "..");
+
+	return new Promise((resolve, reject) =>
+	{
+		glob("**/**.test.js", { cwd: testsRoot }, (error, files) =>
+		{
+			if(error)
+			{
+				return reject(error);
+			}
+
+			// Add files to the test suite
+			files.forEach(file => mocha.addFile(path.resolve(testsRoot, file)));
+
+			try
+			{
+				// Run the mocha test
+				mocha.run(failures =>
+				{
+					if(failures > 0)
+					{
+						reject(new Error(`${failures} tests failed.`));
+					}
+					else
+					{
+						resolve();
+					}
+				});
+			}
+			catch(err)
+			{
+				reject(err);
+			}
+		});
+	});
+}
