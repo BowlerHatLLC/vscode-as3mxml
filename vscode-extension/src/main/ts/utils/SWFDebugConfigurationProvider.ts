@@ -40,6 +40,9 @@ interface SWFDebugConfiguration extends vscode.DebugConfiguration
 	runtimeExecutable?: string;
 	runtimeArgs?: string[];
 	extdir?: string;
+	connect?: boolean;
+	port?: number;
+	platform?: string;
 }
 
 export default class SWFDebugConfigurationProvider implements vscode.DebugConfigurationProvider
@@ -128,8 +131,59 @@ export default class SWFDebugConfigurationProvider implements vscode.DebugConfig
 		}
 		if("application" in asconfigJSON)
 		{
-			appDescriptorPath = asconfigJSON.application;
-			requireAIR = true;
+			if(typeof asconfigJSON.application === "string")
+			{
+				appDescriptorPath = asconfigJSON.application;
+			}
+			else
+			{
+				requireAIR = true;
+				if(debugConfiguration.request === "attach")
+				{
+					if(debugConfiguration.platform && debugConfiguration.platform in asconfigJSON.application)
+					{
+						appDescriptorPath = asconfigJSON.application[debugConfiguration.platform];
+					}
+				}
+				else //launch
+				{
+					switch(debugConfiguration.versionPlatform)
+					{
+						case "AND":
+						{
+							if("android" in asconfigJSON.application)
+							{
+								appDescriptorPath = asconfigJSON.application.android;
+							}
+							break;
+						}
+						case "IOS":
+						{
+							if("ios" in asconfigJSON.application)
+							{
+								appDescriptorPath = asconfigJSON.application.ios;
+							}
+							break;
+						}
+						case "WIN":
+						{
+							if("windows" in asconfigJSON.application)
+							{
+								appDescriptorPath = asconfigJSON.application.windows;
+							}
+							break;
+						}
+						case "MAC":
+						{
+							if("mac" in asconfigJSON.application)
+							{
+								appDescriptorPath = asconfigJSON.application.mac;
+							}
+							break;
+						}
+					}
+				}
+			}
 		}
 		if("profile" in debugConfiguration ||
 			"screensize" in debugConfiguration ||
