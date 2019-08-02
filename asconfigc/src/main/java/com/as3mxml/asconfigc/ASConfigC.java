@@ -41,6 +41,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Enumeration;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -213,7 +214,7 @@ public class ASConfigC
 			compileProject();
 			copySourcePathAssets();
 			copyHTMLTemplate();
-			processAdobeAIRDescriptor();
+			processAdobeAIRDescriptors();
 			copyAIRFiles();
 			prepareNativeExtensions();
 			packageAIR();
@@ -232,7 +233,7 @@ public class ASConfigC
 	private String jsOutputType;
 	private String outputPath;
 	private String mainFile;
-	private String airDescriptorPath;
+	private List<String> airDescriptorPaths;
 	private List<String> sourcePaths;
 	private boolean configRequiresRoyale;
 	private boolean configRequiresRoyaleOrFlexJS;
@@ -382,15 +383,51 @@ public class ASConfigC
 		if(json.has(TopLevelFields.APPLICATION))
 		{
 			configRequiresAIR = true;
-			airDescriptorPath = json.get(TopLevelFields.APPLICATION).asText();
-			File airDescriptor = new File(airDescriptorPath);
-			if(!airDescriptor.isAbsolute())
+			airDescriptorPaths = new ArrayList<String>();
+			JsonNode application = json.get(TopLevelFields.APPLICATION);
+			if(application.isTextual())
 			{
-				airDescriptor = new File(System.getProperty("user.dir"), airDescriptorPath);
+				//if it's a string, just use it as is for all platforms
+				String airDescriptorPath = application.asText();
+				airDescriptorPaths.add(airDescriptorPath);
 			}
-			if(!airDescriptor.exists() || airDescriptor.isDirectory())
+			else if(options.air != null)
 			{
-				throw new ASConfigCException("Adobe AIR application descriptor not found: " + airDescriptor);
+				//if it's an object, and we're packaging an AIR app, we need to
+				//grab the descriptor for the platform we're targeting
+				//we can ignore the rest
+				if(application.has(options.air))
+				{
+					String airDescriptorPath = application.get(options.air).asText();
+					airDescriptorPaths.add(airDescriptorPath);
+				}
+			}
+			else
+			{
+				//if it's an object, and we're compiling and not packaging an
+				//AIR app, we need to use all of the descriptors
+				Iterator<String> fieldNames = application.fieldNames();
+				while(fieldNames.hasNext())
+				{
+					String fieldName = fieldNames.next();
+					String airDescriptorPath = application.get(fieldName).asText();
+					airDescriptorPaths.add(airDescriptorPath);
+				}
+			}
+			if(airDescriptorPaths != null)
+			{
+				for(String airDescriptorPath : airDescriptorPaths)
+				{
+					File airDescriptor = new File(airDescriptorPath);
+					if(!airDescriptor.isAbsolute())
+					{
+						airDescriptor = new File(System.getProperty("user.dir"), airDescriptorPath);
+					}
+					if(!airDescriptor.exists() || airDescriptor.isDirectory())
+					{
+						throw new ASConfigCException("Adobe AIR application descriptor not found: " + airDescriptor);
+					}
+				}
 			}
 		}
 		//parse files before airOptions because the mainFile may be
@@ -817,6 +854,11 @@ public class ASConfigC
 		{
 			return;
 		}
+		String airDescriptorPath = null;
+		if(airDescriptorPaths != null && airDescriptorPaths.size() > 0)
+		{
+			airDescriptorPath = airDescriptorPaths.get(0);
+		}
 		AIROptionsParser parser = new AIROptionsParser();
 		try
 		{
@@ -1010,9 +1052,9 @@ public class ASConfigC
 		}
 		String outputDirectory = ProjectUtils.findOutputDirectory(mainFile, outputPath, !outputIsJS);
 		ArrayList<String> excludes = new ArrayList<>();
-		if(airDescriptorPath != null)
+		if(airDescriptorPaths != null)
 		{
-			excludes.add(airDescriptorPath);
+			excludes.addAll(airDescriptorPaths);
 		}
 		Set<String> assetPaths = null;
 		try
@@ -1443,74 +1485,75 @@ public class ASConfigC
 		}
 	}
 	
-	private void processAdobeAIRDescriptor() throws ASConfigCException
+	private void processAdobeAIRDescriptors() throws ASConfigCException
 	{
 		if (!configRequiresAIR)
 		{
 			return;
 		}
 		boolean populateTemplate = false;
-		Path resolvedDescriptorPath = null;
-		if(airDescriptorPath == null)
+		if(airDescriptorPaths == null || airDescriptorPaths.size() == 0)
 		{
-			resolvedDescriptorPath = Paths.get(sdkHome).resolve("templates/air/descriptor-template.xml");
+			airDescriptorPaths = new ArrayList<String>();
+			String templatePath = Paths.get(sdkHome).resolve("templates/air/descriptor-template.xml").toString();
+			airDescriptorPaths.add(templatePath);
 			populateTemplate = true;
 		}
-		else
+		for(String airDescriptorPath : airDescriptorPaths)
 		{
-			resolvedDescriptorPath = Paths.get(airDescriptorPath);
-		}
-		String outputDirectory = ProjectUtils.findOutputDirectory(mainFile, outputPath, !outputIsJS);
-		String contentValue = ProjectUtils.findApplicationContent(mainFile, outputPath, !outputIsJS);
-		if(contentValue == null)
-		{
-			throw new ASConfigCException("Failed to find content for Adobe AIR application descriptor.");
-		}
-		if(!resolvedDescriptorPath.isAbsolute())
-		{
-			resolvedDescriptorPath = Paths.get(System.getProperty("user.dir")).resolve(resolvedDescriptorPath);
-		}
-		String descriptorContents = null;
-		try
-		{
-			descriptorContents = new String(Files.readAllBytes(resolvedDescriptorPath));
-		}
-		catch(IOException e)
-		{
-			throw new ASConfigCException("Failed to read Adobe AIR application descriptor at path: " + resolvedDescriptorPath);
-		}
-		if(populateTemplate)
-		{
-			String appID = ProjectUtils.generateApplicationID(mainFile, outputPath);
-			if (appID == null)
+			Path resolvedDescriptorPath = Paths.get(airDescriptorPath);
+			String outputDirectory = ProjectUtils.findOutputDirectory(mainFile, outputPath, !outputIsJS);
+			String contentValue = ProjectUtils.findApplicationContent(mainFile, outputPath, !outputIsJS);
+			if(contentValue == null)
 			{
-				throw new ASConfigCException("Failed to generate application ID for Adobe AIR.");
+				throw new ASConfigCException("Failed to find content for Adobe AIR application descriptor.");
 			}
-			descriptorContents = ProjectUtils.populateAdobeAIRDescriptorTemplate(descriptorContents, appID);
-		}
-		descriptorContents = ProjectUtils.populateAdobeAIRDescriptorContent(descriptorContents, contentValue);
-		if(outputIsJS)
-		{
-			String debugDescriptorOutputPath = ProjectUtils.findAIRDescriptorOutputPath(mainFile, airDescriptorPath, outputDirectory, false, true);
-			copyAIRDescriptor(debugDescriptorOutputPath, descriptorContents);
-			if(!debugBuild)
+			if(!resolvedDescriptorPath.isAbsolute())
 			{
-				String releaseDescriptorOutputPath = ProjectUtils.findAIRDescriptorOutputPath(mainFile, airDescriptorPath, outputDirectory, false, false);
-				copyAIRDescriptor(releaseDescriptorOutputPath, descriptorContents);
+				resolvedDescriptorPath = Paths.get(System.getProperty("user.dir")).resolve(resolvedDescriptorPath);
 			}
-			
-		}
-		else //swf
-		{
-			String descriptorOutputPath = ProjectUtils.findAIRDescriptorOutputPath(mainFile, airDescriptorPath, outputPath, true, debugBuild);
-			if(outputPath == null && mainFile != null)
+			String descriptorContents = null;
+			try
 			{
-				if(Paths.get(descriptorOutputPath).toFile().exists())
+				descriptorContents = new String(Files.readAllBytes(resolvedDescriptorPath));
+			}
+			catch(IOException e)
+			{
+				throw new ASConfigCException("Failed to read Adobe AIR application descriptor at path: " + resolvedDescriptorPath);
+			}
+			if(populateTemplate)
+			{
+				String appID = ProjectUtils.generateApplicationID(mainFile, outputPath);
+				if (appID == null)
 				{
-					throw new ASConfigCException("Failed to copy Adobe AIR application descriptor template.");
+					throw new ASConfigCException("Failed to generate application ID for Adobe AIR.");
 				}
+				descriptorContents = ProjectUtils.populateAdobeAIRDescriptorTemplate(descriptorContents, appID);
 			}
-			copyAIRDescriptor(descriptorOutputPath, descriptorContents);
+			descriptorContents = ProjectUtils.populateAdobeAIRDescriptorContent(descriptorContents, contentValue);
+			if(outputIsJS)
+			{
+				String debugDescriptorOutputPath = ProjectUtils.findAIRDescriptorOutputPath(mainFile, airDescriptorPath, outputDirectory, false, true);
+				copyAIRDescriptor(debugDescriptorOutputPath, descriptorContents);
+				if(!debugBuild)
+				{
+					String releaseDescriptorOutputPath = ProjectUtils.findAIRDescriptorOutputPath(mainFile, airDescriptorPath, outputDirectory, false, false);
+					copyAIRDescriptor(releaseDescriptorOutputPath, descriptorContents);
+				}
+				
+			}
+			else //swf
+			{
+				String descriptorOutputPath = ProjectUtils.findAIRDescriptorOutputPath(mainFile, airDescriptorPath, outputPath, true, debugBuild);
+				if(outputPath == null && mainFile != null)
+				{
+					if(Paths.get(descriptorOutputPath).toFile().exists())
+					{
+						throw new ASConfigCException("Failed to copy Adobe AIR application descriptor template.");
+					}
+				}
+				copyAIRDescriptor(descriptorOutputPath, descriptorContents);
+			}
 		}
 	}
 	
