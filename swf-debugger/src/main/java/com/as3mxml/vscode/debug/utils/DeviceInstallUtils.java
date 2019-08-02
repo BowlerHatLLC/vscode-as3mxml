@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -52,7 +53,7 @@ public class DeviceInstallUtils
 		public String message;
 	}
 
-	public static String findApplicationID(Path workspacePath)
+	public static String findApplicationID(Path workspacePath, String platform)
 	{
 		Path asconfigPath = workspacePath.resolve(ASCONFIG_JSON);
 		if(!asconfigPath.toFile().exists())
@@ -73,11 +74,31 @@ public class DeviceInstallUtils
 		{
 			JsonParser parser = new JsonParser();
 			JsonObject asconfigJSON = parser.parse(asconfigJsonContents).getAsJsonObject();
-			if(!asconfigJSON.has("application"))
+			String application = null;
+			if(asconfigJSON.has("application"))
+			{
+				JsonElement applicationJSON = asconfigJSON.get("application");
+				if(applicationJSON.isJsonObject())
+				{
+					JsonObject applicationObject = applicationJSON.getAsJsonObject();
+					//if it's an object, and we're packaging an AIR app, we need to
+					//grab the descriptor for the platform we're targeting
+					//we can ignore the rest
+					if(applicationObject.has(platform))
+					{
+						application = applicationObject.get(platform).getAsString();
+					}
+				}
+				else
+				{
+					//if it's a string, just use it as is for all platforms
+					application = applicationJSON.getAsString();
+				}
+			}
+			if(application == null)
 			{
 				return null;
 			}
-			String application = asconfigJSON.get("application").getAsString();
 			applicationPath = Paths.get(application);
 			if(!applicationPath.isAbsolute())
 			{

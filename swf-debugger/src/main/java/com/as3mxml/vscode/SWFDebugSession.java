@@ -706,7 +706,7 @@ public class SWFDebugSession extends DebugSession
     {
         sendOutputEvent("Preparing to install Adobe AIR application...\n");
         Path workspacePath = Paths.get(System.getProperty(WORKSPACE_PROPERTY));
-        String applicationID = DeviceInstallUtils.findApplicationID(workspacePath);
+        String applicationID = DeviceInstallUtils.findApplicationID(workspacePath, platform);
         if(applicationID == null)
         {
             OutputEvent.OutputBody body = new OutputEvent.OutputBody();
