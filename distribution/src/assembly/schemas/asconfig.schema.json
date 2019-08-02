@@ -369,6 +369,26 @@
 		},
 		"application":
 		{
+			"anyOf":
+			[
+				{ "$ref": "#/definitions/singleApplication" },
+				{
+					"type": "object",
+					"additionalProperties": false,
+					"properties":
+					{
+						"air": { "$ref": "#/definitions/singleApplication" },
+						"ios": { "$ref": "#/definitions/singleApplication" },
+						"ios_simulator": { "$ref": "#/definitions/singleApplication" },
+						"android": { "$ref": "#/definitions/singleApplication" },
+						"windows": { "$ref": "#/definitions/singleApplication" },
+						"mac": { "$ref": "#/definitions/singleApplication" }
+					}
+				}
+			]
+		},
+		"singleApplication":
+		{
 			"type": "string",
 			"description": "Optional path to Adobe AIR application descriptor. The descriptor's <content> element will be populated, and the file will be copied into the output directory."
 		},
