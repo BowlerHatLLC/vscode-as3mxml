@@ -83,9 +83,11 @@ import flash.tools.debugger.DefaultDebuggerCallbacks;
 import flash.tools.debugger.Frame;
 import flash.tools.debugger.InProgressException;
 import flash.tools.debugger.Isolate;
+import flash.tools.debugger.IsolateSession;
 import flash.tools.debugger.Location;
 import flash.tools.debugger.NoResponseException;
 import flash.tools.debugger.NotConnectedException;
+import flash.tools.debugger.NotSuspendedException;
 import flash.tools.debugger.Player;
 import flash.tools.debugger.PlayerDebugException;
 import flash.tools.debugger.SourceFile;
@@ -99,6 +101,7 @@ import flash.tools.debugger.events.BreakEvent;
 import flash.tools.debugger.events.DebugEvent;
 import flash.tools.debugger.events.ExceptionFault;
 import flash.tools.debugger.events.FaultEvent;
+import flash.tools.debugger.events.IsolateCreateEvent;
 import flash.tools.debugger.events.TraceEvent;
 import flash.tools.debugger.expression.ASTBuilder;
 import flash.tools.debugger.expression.NoSuchVariableException;
@@ -206,6 +209,7 @@ public class SWFDebugSession extends DebugSession
     private class SessionRunner implements Runnable
     {
         private boolean initialized = false;
+        private List<Isolate> isolates = new ArrayList<>();
 
         public SessionRunner()
         {
@@ -225,126 +229,30 @@ public class SWFDebugSession extends DebugSession
                     while (swfSession.getEventCount() > 0)
                     {
                         DebugEvent event = swfSession.nextEvent();
-                        if (event instanceof TraceEvent)
+                        if(handleEvent(event))
                         {
-                            TraceEvent traceEvent = (TraceEvent) event;
-                            String output = traceEvent.information;
-                            if (output.length() == 0)
-                            {
-                                //empty string or empty line added with \n
-                                output = "\n";
-                            }
-                            else if (output.charAt(output.length() - 1) != '\n')
-                            {
-                                output += '\n';
-                            }
-                            OutputEvent.OutputBody body = new OutputEvent.OutputBody();
-                            //we can't populate the location for a trace() to the
-                            //console because the result of getFrames() is empty
-                            //when the runtime isn't suspended
-                            body.output = output;
-                            sendEvent(new OutputEvent(body));
-                        }
-                        else if (event instanceof FaultEvent)
-                        {
-                            FaultEvent faultEvent = (FaultEvent) event;
-                            String output = faultEvent.information + "\n" + faultEvent.stackTrace();
-                            if (output.charAt(output.length() - 1) != '\n')
-                            {
-                                output += '\n';
-                            }
-                            OutputEvent.OutputBody body = new OutputEvent.OutputBody();
-                            populateLocationInOutputBody(body);
-                            body.output = output;
-                            body.category = OutputEvent.CATEGORY_STDERR;
-                            sendEvent(new OutputEvent(body));
-                            previousFaultEvent = faultEvent;
-                        }
-                        else if (event instanceof BreakEvent)
-                        {
-                            BreakEvent breakEvent = (BreakEvent) event;
-                            for(LogLocation logLocation : savedLogLocations.values())
-                            {
-                                Location location = logLocation.location;
-                                if(breakEvent.fileId == location.getFile().getId()
-                                        && breakEvent.line == location.getLine())
-                                {
-                                    OutputEvent.OutputBody body = new OutputEvent.OutputBody();
-                                    populateLocationInOutputBody(body);
-                                    body.output = logLocation.logMessage;
-                                    sendEvent(new OutputEvent(body));
-                                    logPoint = true;
-                                    break;
-                                }
-                            }
+                            logPoint = true;
                         }
                     }
                     while (swfSession.isSuspended() && !waitingForResume)
                     {
-                        StoppedEvent.StoppedBody body = null;
-                        switch (swfSession.suspendReason())
-                        {
-                            case SuspendReason.ScriptLoaded:
-                            {
-                                if (initialized)
-                                {
-                                    refreshPendingBreakpoints();
-                                    swfSession.resume();
-                                }
-                                else
-                                {
-                                    //initialize when the first script is loaded
-                                    initialized = true;
-                                    sendEvent(new InitializedEvent());
-                                }
-                                break;
-                            }
-                            case SuspendReason.Breakpoint:
-                            {
-                                if(logPoint)
-                                {
-                                    //if it was a logpoint, then resume
-                                    //immediately because we should not stop
-                                    swfSession.resume();
-                                }
-                                else
-                                {
-                                    body = new StoppedEvent.StoppedBody();
-                                    body.reason = StoppedEvent.REASON_BREAKPOINT;
-                                }
-                                break;
-                            }
-                            case SuspendReason.StopRequest:
-                            {
-                                body = new StoppedEvent.StoppedBody();
-                                body.reason = StoppedEvent.REASON_PAUSE;
-                                break;
-                            }
-                            case SuspendReason.Fault:
-                            {
-                                body = new StoppedEvent.StoppedBody();
-                                body.reason = StoppedEvent.REASON_EXCEPTION;
-                                body.description = "Paused on exception";
-                                if(previousFaultEvent != null)
-                                {
-                                    body.text = previousFaultEvent.information;
-                                }
-                                break;
-                            }
-                            default:
-                            {
-                                body = new StoppedEvent.StoppedBody();
-                                body.reason = StoppedEvent.REASON_UNKNOWN;
-                                sendOutputEvent("Unknown suspend reason: " + swfSession.suspendReason() + "\n");
-                            }
-                        }
-                        if (body != null)
-                        {
-                            waitingForResume = true;
-                            body.threadId = Isolate.DEFAULT_ID;
-                            sendEvent(new StoppedEvent(body));
-                        }
+                        handleSuspended(logPoint);
                         break;
+                    }
+                    for(Isolate isolate : isolates)
+                    {
+                        IsolateSession isolateSession = swfSession.getWorkerSession(isolate.getId());
+                        while (isolateSession.isSuspended())
+                        {
+                            switch(isolateSession.suspendReason())
+                            {
+                                default:
+                                {
+                                    sendOutputEvent("Unknown isolate suspend reason: " + swfSession.suspendReason() + "\n");
+                                    break;
+                                }
+                            }
+                        }
                     }
                 }
                 catch (NotConnectedException e)
@@ -365,6 +273,139 @@ public class SWFDebugSession extends DebugSession
                 catch (InterruptedException ie)
                 {
                 }
+            }
+        }
+
+        private boolean handleEvent(DebugEvent event) throws NotConnectedException, NoResponseException, NotSuspendedException
+        {
+            if (event instanceof TraceEvent)
+            {
+                TraceEvent traceEvent = (TraceEvent) event;
+                String output = traceEvent.information;
+                if (output.length() == 0)
+                {
+                    //empty string or empty line added with \n
+                    output = "\n";
+                }
+                else if (output.charAt(output.length() - 1) != '\n')
+                {
+                    output += '\n';
+                }
+                OutputEvent.OutputBody body = new OutputEvent.OutputBody();
+                //we can't populate the location for a trace() to the
+                //console because the result of getFrames() is empty
+                //when the runtime isn't suspended
+                body.output = output;
+                sendEvent(new OutputEvent(body));
+            }
+            else if (event instanceof FaultEvent)
+            {
+                FaultEvent faultEvent = (FaultEvent) event;
+                String output = faultEvent.information + "\n" + faultEvent.stackTrace();
+                if (output.charAt(output.length() - 1) != '\n')
+                {
+                    output += '\n';
+                }
+                OutputEvent.OutputBody body = new OutputEvent.OutputBody();
+                populateLocationInOutputBody(body);
+                body.output = output;
+                body.category = OutputEvent.CATEGORY_STDERR;
+                sendEvent(new OutputEvent(body));
+                previousFaultEvent = faultEvent;
+            }
+            else if (event instanceof BreakEvent)
+            {
+                BreakEvent breakEvent = (BreakEvent) event;
+                for(LogLocation logLocation : savedLogLocations.values())
+                {
+                    Location location = logLocation.location;
+                    if(breakEvent.fileId == location.getFile().getId()
+                            && breakEvent.line == location.getLine())
+                    {
+                        OutputEvent.OutputBody body = new OutputEvent.OutputBody();
+                        populateLocationInOutputBody(body);
+                        body.output = logLocation.logMessage;
+                        sendEvent(new OutputEvent(body));
+                        return true;
+                    }
+                }
+            }
+            else if (event instanceof IsolateCreateEvent)
+            {
+                //a worker has been created
+                IsolateCreateEvent isolateEvent = (IsolateCreateEvent) event;
+                Isolate isolate = isolateEvent.isolate;
+                isolates.add(isolate);
+                IsolateSession session = swfSession.getWorkerSession(isolate.getId());
+                session.resume();
+            }
+            return false;
+        }
+
+        private void handleSuspended(boolean logPoint) throws NotConnectedException, NoResponseException, NotSuspendedException
+        {
+            StoppedEvent.StoppedBody body = null;
+            switch (swfSession.suspendReason())
+            {
+                case SuspendReason.ScriptLoaded:
+                {
+                    if (initialized)
+                    {
+                        refreshPendingBreakpoints();
+                        swfSession.resume();
+                    }
+                    else
+                    {
+                        //initialize when the first script is loaded
+                        initialized = true;
+                        sendEvent(new InitializedEvent());
+                    }
+                    break;
+                }
+                case SuspendReason.Breakpoint:
+                {
+                    if(logPoint)
+                    {
+                        //if it was a logpoint, then resume
+                        //immediately because we should not stop
+                        swfSession.resume();
+                    }
+                    else
+                    {
+                        body = new StoppedEvent.StoppedBody();
+                        body.reason = StoppedEvent.REASON_BREAKPOINT;
+                    }
+                    break;
+                }
+                case SuspendReason.StopRequest:
+                {
+                    body = new StoppedEvent.StoppedBody();
+                    body.reason = StoppedEvent.REASON_PAUSE;
+                    break;
+                }
+                case SuspendReason.Fault:
+                {
+                    body = new StoppedEvent.StoppedBody();
+                    body.reason = StoppedEvent.REASON_EXCEPTION;
+                    body.description = "Paused on exception";
+                    if(previousFaultEvent != null)
+                    {
+                        body.text = previousFaultEvent.information;
+                    }
+                    break;
+                }
+                default:
+                {
+                    body = new StoppedEvent.StoppedBody();
+                    body.reason = StoppedEvent.REASON_UNKNOWN;
+                    sendOutputEvent("Unknown suspend reason: " + swfSession.suspendReason() + "\n");
+                }
+            }
+            if (body != null)
+            {
+                waitingForResume = true;
+                body.threadId = Isolate.DEFAULT_ID;
+                sendEvent(new StoppedEvent(body));
             }
         }
         
