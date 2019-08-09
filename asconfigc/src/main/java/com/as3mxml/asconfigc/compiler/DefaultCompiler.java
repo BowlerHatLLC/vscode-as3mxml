@@ -41,6 +41,17 @@ public class DefaultCompiler implements IASConfigCCompiler
 
 	public void compile(String projectType, List<String> compilerOptions, Path workspaceRoot, Path sdkPath) throws ASConfigCException
 	{
+		if(verbose)
+		{
+			if(ProjectType.LIB.equals(projectType))
+			{
+				System.out.println("Compiling library...");
+			}
+			else //app
+			{
+				System.out.println("Compiling application...");
+			}
+		}
 		boolean sdkIsRoyale = ApacheRoyaleUtils.isValidSDK(sdkPath) != null;
 		Path jarPath = ProjectUtils.findCompilerJarPath(projectType, sdkPath.toString(), !sdkIsRoyale);
 		if(jarPath == null)
@@ -76,14 +87,6 @@ public class DefaultCompiler implements IASConfigCCompiler
 
 		if(verbose)
 		{
-			if(ProjectType.LIB.equals(projectType))
-			{
-				System.out.println("Compiling library...");
-			}
-			else //app
-			{
-				System.out.println("Compiling application...");
-			}
 			System.out.println(String.join(" ", compilerOptions));
 		}
 		try

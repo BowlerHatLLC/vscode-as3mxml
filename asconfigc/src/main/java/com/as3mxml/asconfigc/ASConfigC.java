@@ -935,10 +935,6 @@ public class ASConfigC
 			throw new ASConfigCException("SDK not found. Set " + envHome + ", add SDK to PATH environment variable, or use --sdk option.");
 		}
 		Path sdkHomePath = Paths.get(sdkHome);
-		if(options.verbose)
-		{
-			System.out.println("SDK: " + sdkHomePath);
-		}
 		Path royalePath = ApacheRoyaleUtils.isValidSDK(sdkHomePath);
 		if(royalePath != null)
 		{
@@ -959,6 +955,10 @@ public class ASConfigC
 			throw new ASConfigCException("Configuration options in asconfig.json require Apache FlexJS. Path to SDK is not valid: " + sdkHome);
 		}
 		outputIsJS = (sdkIsRoyale || sdkIsFlexJS) && !isSWFTargetOnly;
+		if(options.verbose)
+		{
+			System.out.println("SDK: " + sdkHomePath);
+		}
 	}
 
 	private void cleanProject() throws ASConfigCException
@@ -992,10 +992,6 @@ public class ASConfigC
 
 	private void deleteOutputDirectory(Path outputPath) throws ASConfigCException
 	{
-		if(options.verbose)
-		{
-			System.out.println("Deleting: " + outputPath);
-		}
 		Path cwd = Paths.get(System.getProperty("user.dir"));
 		if (cwd.startsWith(outputPath))
 		{
@@ -1037,6 +1033,10 @@ public class ASConfigC
 
 		if(Files.exists(outputPath))
 		{
+			if(options.verbose)
+			{
+				System.out.println("Deleting: " + outputPath);
+			}
 			try
 			{
 				Files.walk(outputPath)
@@ -1587,6 +1587,16 @@ public class ASConfigC
 				System.err.println("Using template fallback: " + templatePath);
 			}
 		}
+		String outputDirectory = ProjectUtils.findOutputDirectory(mainFile, outputPath, !outputIsJS);
+		String contentValue = ProjectUtils.findApplicationContent(mainFile, outputPath, !outputIsJS);
+		if(contentValue == null)
+		{
+			throw new ASConfigCException("Failed to find initial window content for Adobe AIR application.");
+		}
+		if(options.verbose)
+		{
+			System.err.println("Initial window content: " + contentValue);
+		}
 		for(String airDescriptorPath : airDescriptorPaths)
 		{
 			Path resolvedDescriptorPath = Paths.get(airDescriptorPath);
@@ -1597,16 +1607,6 @@ public class ASConfigC
 			if(options.verbose)
 			{
 				System.err.println("Descriptor: " + resolvedDescriptorPath);
-			}
-			String outputDirectory = ProjectUtils.findOutputDirectory(mainFile, outputPath, !outputIsJS);
-			String contentValue = ProjectUtils.findApplicationContent(mainFile, outputPath, !outputIsJS);
-			if(options.verbose)
-			{
-				System.err.println("Initial window content: " + contentValue);
-			}
-			if(contentValue == null)
-			{
-				throw new ASConfigCException("Failed to find content for Adobe AIR application descriptor.");
 			}
 			String descriptorContents = null;
 			try
@@ -1623,6 +1623,10 @@ public class ASConfigC
 				if (appID == null)
 				{
 					throw new ASConfigCException("Failed to generate application ID for Adobe AIR.");
+				}
+				if(options.verbose)
+				{
+					System.err.println("Generated application ID: " + appID);
 				}
 				descriptorContents = ProjectUtils.populateAdobeAIRDescriptorTemplate(descriptorContents, appID);
 			}
@@ -1659,6 +1663,12 @@ public class ASConfigC
 		{
 			return;
 		}
+
+		if(options.verbose)
+		{
+			System.out.println("Packaging Adobe AIR application...");
+		}
+
 		Path jarPath = ProjectUtils.findAdobeAIRPackagerJarPath(sdkHome);
 		if(jarPath == null)
 		{
@@ -1692,7 +1702,6 @@ public class ASConfigC
 		airOptions.add(0, javaExecutablePath.toString());
 		if(options.verbose)
 		{
-			System.out.println("Packaging Adobe AIR application...");
 			System.out.println(String.join(" ", airOptions));
 		}
 		try
