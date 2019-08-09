@@ -332,6 +332,10 @@ export default class ActionScriptTaskProvider implements vscode.TaskProvider
 		{
 			options.push("--unpackage-anes=true");
 		}
+		if(vscode.workspace.getConfiguration("as3mxml").get("asconfigc.verboseOutput"))
+		{
+			options.push("--verbose=true");
+		}
 		if(command.length > 1)
 		{
 			options.unshift(...command.slice(1));

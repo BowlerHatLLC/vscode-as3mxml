@@ -372,6 +372,11 @@
           "default": true,
           "description": "(Advanced) Indicates if the extension will use the bundled version of asconfigc or a different version that is installed on the system path."
         },
+        "as3mxml.asconfigc.verboseOutput": {
+          "type": "boolean",
+          "default": false,
+          "description": "(Advanced) Specifies whether asconfigc will display verbose output during builds."
+        },
         "as3mxml.java.path": {
           "type": [
             "string",
