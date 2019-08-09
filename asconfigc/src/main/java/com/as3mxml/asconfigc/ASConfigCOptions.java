@@ -31,6 +31,7 @@ public class ASConfigCOptions
 	private static final String OPTION_CLEAN = "clean";
 	private static final String OPTION_ANIMATE = "animate";
 	private static final String OPTION_PUBLISH_ANIMATE = "publish-animate";
+	private static final String OPTION_VERBOSE = "verbose";
 
 	public String project = null;
 	public String sdk = null;
@@ -42,6 +43,7 @@ public class ASConfigCOptions
 	public IASConfigCCompiler compiler = null;
 	public String animate = null;
 	public Boolean publishAnimate = null;
+	public boolean verbose = false;
 
 	public ASConfigCOptions(String project, String sdk, Boolean debug, String air, String storepass, Boolean unpackageANEs, IASConfigCCompiler compiler)
 	{
@@ -95,6 +97,11 @@ public class ASConfigCOptions
 			String publishString = line.getOptionValue(OPTION_PUBLISH_ANIMATE, Boolean.TRUE.toString());
 			publishAnimate = publishString.equals(Boolean.TRUE.toString());
 		}
-		compiler = new DefaultCompiler();
+		if(line.hasOption(OPTION_VERBOSE))
+		{
+			String verboseString = line.getOptionValue(OPTION_VERBOSE, Boolean.FALSE.toString());
+			verbose = verboseString.equals(Boolean.TRUE.toString());
+		}
+		compiler = new DefaultCompiler(verbose);
 	}
 }

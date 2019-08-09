@@ -27,6 +27,18 @@ import com.as3mxml.asconfigc.utils.ProjectUtils;
 
 public class DefaultCompiler implements IASConfigCCompiler
 {
+	public DefaultCompiler()
+	{
+		this(false);
+	}
+
+	public DefaultCompiler(boolean verbose)
+	{
+		this.verbose = verbose;
+	}
+
+	private boolean verbose = false;
+
 	public void compile(String projectType, List<String> compilerOptions, Path workspaceRoot, Path sdkPath) throws ASConfigCException
 	{
 		boolean sdkIsRoyale = ApacheRoyaleUtils.isValidSDK(sdkPath) != null;
@@ -62,6 +74,18 @@ public class DefaultCompiler implements IASConfigCCompiler
 		Path javaExecutablePath = Paths.get(System.getProperty("java.home"), "bin", "java");
 		compilerOptions.add(0, javaExecutablePath.toString());
 
+		if(verbose)
+		{
+			if(ProjectType.LIB.equals(projectType))
+			{
+				System.out.println("Compiling library...");
+			}
+			else //app
+			{
+				System.out.println("Compiling application...");
+			}
+			System.out.println(String.join(" ", compilerOptions));
+		}
 		try
 		{
 			File cwd = new File(System.getProperty("user.dir"));
