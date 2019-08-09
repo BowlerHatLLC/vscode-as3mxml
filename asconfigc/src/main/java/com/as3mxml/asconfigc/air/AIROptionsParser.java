@@ -327,7 +327,12 @@ public class AIROptionsParser
 			{
 				String srcFile = file.get(AIROptions.FILES__FILE).asText();
 				String destPath = file.get(AIROptions.FILES__PATH).asText();
-				addFile(new File(srcFile), destPath, result);
+				File fileToAdd = new File(srcFile);
+				if(!fileToAdd.isAbsolute())
+				{
+					fileToAdd = new File(System.getProperty("user.dir"), srcFile);
+				}
+				addFile(fileToAdd, destPath, result);
 			}
 		}
 	}
