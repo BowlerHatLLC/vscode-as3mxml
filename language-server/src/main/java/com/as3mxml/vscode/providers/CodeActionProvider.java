@@ -239,10 +239,13 @@ public class CodeActionProvider
             if (mxmlData != null)
             {
                 IMXMLTagData offsetTag = MXMLDataUtils.getOffsetMXMLTag(mxmlData, currentOffset);
-                //workaround for bug in Royale compiler
-                Position newPosition = new Position(position.getLine(), position.getCharacter() + 1);
-                int newOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), newPosition, includeFileData);
-                offsetNode = workspaceFolderManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, newOffset, folderData);
+                if(offsetTag != null)
+                {
+                    //workaround for bug in Royale compiler
+                    Position newPosition = new Position(position.getLine(), position.getCharacter() + 1);
+                    int newOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), newPosition, includeFileData);
+                    offsetNode = workspaceFolderManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, newOffset, folderData);
+                }
             }
         }
         IIdentifierNode identifierNode = null;
@@ -303,10 +306,13 @@ public class CodeActionProvider
             if (mxmlData != null)
             {
                 IMXMLTagData offsetTag = MXMLDataUtils.getOffsetMXMLTag(mxmlData, currentOffset);
-                //workaround for bug in Royale compiler
-                Position newPosition = new Position(position.getLine(), position.getCharacter() + 1);
-                int newOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), newPosition, includeFileData);
-                offsetNode = workspaceFolderManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, newOffset, folderData);
+                if(offsetTag != null)
+                {
+                    //workaround for bug in Royale compiler
+                    Position newPosition = new Position(position.getLine(), position.getCharacter() + 1);
+                    int newOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), newPosition, includeFileData);
+                    offsetNode = workspaceFolderManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, newOffset, folderData);
+                }
             }
         }
         IIdentifierNode identifierNode = null;
@@ -436,10 +442,13 @@ public class CodeActionProvider
             if (mxmlData != null)
             {
                 IMXMLTagData offsetTag = MXMLDataUtils.getOffsetMXMLTag(mxmlData, currentOffset);
-                //workaround for bug in Royale compiler
-                Position newPosition = new Position(position.getLine(), position.getCharacter() + 1);
-                int newOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), newPosition, includeFileData);
-                offsetNode = workspaceFolderManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, newOffset, folderData);
+                if(offsetTag != null)
+                {
+                    //workaround for bug in Royale compiler
+                    Position newPosition = new Position(position.getLine(), position.getCharacter() + 1);
+                    int newOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), newPosition, includeFileData);
+                    offsetNode = workspaceFolderManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, newOffset, folderData);
+                }
             }
         }
         IASNode parentNode = offsetNode.getParent();
@@ -504,10 +513,13 @@ public class CodeActionProvider
             if (mxmlData != null)
             {
                 IMXMLTagData offsetTag = MXMLDataUtils.getOffsetMXMLTag(mxmlData, currentOffset);
-                //workaround for bug in Royale compiler
-                Position newPosition = new Position(position.getLine(), position.getCharacter() + 1);
-                int newOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), newPosition, includeFileData);
-                offsetNode = workspaceFolderManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, newOffset, folderData);
+                if(offsetTag != null)
+                {
+                    //workaround for bug in Royale compiler
+                    Position newPosition = new Position(position.getLine(), position.getCharacter() + 1);
+                    int newOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), newPosition, includeFileData);
+                    offsetNode = workspaceFolderManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, newOffset, folderData);
+                }
             }
         }
         if (!(offsetNode instanceof IIdentifierNode))
