@@ -208,7 +208,7 @@ public class CompletionProvider
 				CompletionList result = new CompletionList();
 				result.setIsIncomplete(false);
 				result.setItems(new ArrayList<>());
-				autoCompleteDefinitionsForMXML(result, project, offsetUnit, offsetTag, true, tagsNeedOpenBracket, null, null, null);
+				autoCompleteDefinitionsForMXML(result, project, offsetUnit, offsetTag, true, tagsNeedOpenBracket, (char) -1, null, null, null);
 				cancelToken.checkCanceled();
 				return Either.forRight(result);
 			}
@@ -276,7 +276,12 @@ public class CompletionProvider
         }
         RoyaleProject project = folderData.project;
         AddImportData addImportData = CodeActionsUtils.findAddImportData(fileText, importRange);
-        boolean hasOpenParen = fileText.length() > currentOffset && fileText.charAt(currentOffset) == '(';
+
+        char nextChar = (char) -1;
+        if(fileText.length() > currentOffset)
+        {
+            nextChar = fileText.charAt(currentOffset);
+        }
 
         //variable types
         if (offsetNode instanceof IVariableNode)
@@ -520,7 +525,7 @@ public class CompletionProvider
                         || (line == leftOperand.getEndLine() && column > leftOperand.getEndColumn())
                         || (line == rightOperand.getLine() && column <= rightOperand.getColumn()))
                 {
-                    autoCompleteMemberAccess(memberAccessNode, hasOpenParen, addImportData, project, result);
+                    autoCompleteMemberAccess(memberAccessNode, nextChar, addImportData, project, result);
                     return result;
                 }
             }
@@ -543,7 +548,7 @@ public class CompletionProvider
             if (offsetNode == memberAccessNode.getRightOperandNode()
                     || isValidLeft)
             {
-                autoCompleteMemberAccess(memberAccessNode, hasOpenParen, addImportData, project, result);
+                autoCompleteMemberAccess(memberAccessNode, nextChar, addImportData, project, result);
                 return result;
             }
         }
@@ -560,7 +565,7 @@ public class CompletionProvider
                 IIdentifierNode identifierNode = (IIdentifierNode) rightOperandNode;
                 if (identifierNode.getName().equals(""))
                 {
-                    autoCompleteMemberAccess(memberAccessNode, hasOpenParen, addImportData, project, result);
+                    autoCompleteMemberAccess(memberAccessNode, nextChar, addImportData, project, result);
                     return result;
                 }
             }
@@ -614,12 +619,12 @@ public class CompletionProvider
                 IScopedNode scopedNode = (IScopedNode) currentNodeForScope;
 
                 //include all members and local things that are in scope
-                autoCompleteScope(scopedNode, false, hasOpenParen, addImportData, project, result);
+                autoCompleteScope(scopedNode, false, nextChar, addImportData, project, result);
 
                 //include all public definitions
                 IASScope scope = scopedNode.getScope();
                 IDefinition definitionToSkip = scope.getDefinition();
-                autoCompleteDefinitionsForActionScript(result, project, scopedNode, false, null, definitionToSkip, false, null, hasOpenParen, addImportData);
+                autoCompleteDefinitionsForActionScript(result, project, scopedNode, false, null, definitionToSkip, false, null, nextChar, addImportData);
                 autoCompleteKeywords(scopedNode, result);
                 return result;
             }
@@ -653,6 +658,12 @@ public class CompletionProvider
         }
 
         boolean tagsNeedOpenBracket = getTagsNeedOpenBracket(path, currentOffset);
+
+        char nextChar = (char) -1;
+        if(fileText.length() > currentOffset)
+        {
+            nextChar = fileText.charAt(currentOffset);
+        }
 
         IMXMLTagData parentTag = offsetTag.getParentTag();
 
@@ -706,7 +717,7 @@ public class CompletionProvider
         {
             if (!isAttribute)
             {
-                autoCompleteDefinitionsForMXML(result, project, offsetUnit, offsetTag, true, tagsNeedOpenBracket, null, addImportData, xmlnsPosition);
+                autoCompleteDefinitionsForMXML(result, project, offsetUnit, offsetTag, true, tagsNeedOpenBracket, nextChar, null, addImportData, xmlnsPosition);
             }
             return result;
         }
@@ -730,7 +741,7 @@ public class CompletionProvider
                         //only add members if the prefix is the same as the
                         //parent tag. members can't have different prefixes.
                         //also allow members when we don't have a prefix.
-                        addMembersForMXMLTypeToAutoComplete(classDefinition, parentTag, offsetUnit, false, offsetPrefix.length() == 0, false, addImportData, xmlnsPosition, project, result);
+                        addMembersForMXMLTypeToAutoComplete(classDefinition, parentTag, offsetUnit, false, offsetPrefix.length() == 0, false, nextChar, addImportData, xmlnsPosition, project, result);
                     }
                     if (!isAttribute)
                     {
@@ -786,7 +797,7 @@ public class CompletionProvider
                                     typeFilter = DefinitionUtils.getMXMLChildElementTypeForDefinition(propertyDefinition, project);
                                 }
                             }
-                            autoCompleteTypesForMXMLFromExistingTag(result, project, offsetUnit, offsetTag, typeFilter, xmlnsPosition);
+                            autoCompleteTypesForMXMLFromExistingTag(result, project, offsetUnit, offsetTag, nextChar, typeFilter, xmlnsPosition);
                         }
                     }
                 }
@@ -794,18 +805,18 @@ public class CompletionProvider
                 {
                     //the parent is something like a property, so matching the
                     //prefix is not required
-                    autoCompleteTypesForMXMLFromExistingTag(result, project, offsetUnit, offsetTag, null, xmlnsPosition);
+                    autoCompleteTypesForMXMLFromExistingTag(result, project, offsetUnit, offsetTag, nextChar, null, xmlnsPosition);
                 }
                 return result;
             }
             else if (MXMLDataUtils.isDeclarationsTag(parentTag))
             {
-                autoCompleteTypesForMXMLFromExistingTag(result, project, offsetUnit, offsetTag, null, xmlnsPosition);
+                autoCompleteTypesForMXMLFromExistingTag(result, project, offsetUnit, offsetTag, nextChar, null, xmlnsPosition);
                 return result;
             }
             else if (offsetTag.getParent().getRootTag().equals(offsetTag))
             {
-                autoCompleteTypesForMXMLFromExistingTag(result, project, offsetUnit, offsetTag, null, xmlnsPosition);
+                autoCompleteTypesForMXMLFromExistingTag(result, project, offsetUnit, offsetTag, nextChar, null, xmlnsPosition);
             }
             return result;
         }
@@ -824,7 +835,7 @@ public class CompletionProvider
             }
 
             IClassDefinition classDefinition = (IClassDefinition) offsetDefinition;
-            addMembersForMXMLTypeToAutoComplete(classDefinition, offsetTag, offsetUnit, isAttribute, !isAttribute, tagsNeedOpenBracket, addImportData, xmlnsPosition, project, result);
+            addMembersForMXMLTypeToAutoComplete(classDefinition, offsetTag, offsetUnit, isAttribute, !isAttribute, tagsNeedOpenBracket, nextChar, addImportData, xmlnsPosition, project, result);
 
             if (!isAttribute)
             {
@@ -863,7 +874,7 @@ public class CompletionProvider
                         }
                     }
 
-                    autoCompleteDefinitionsForMXML(result, project, offsetUnit, offsetTag, true, tagsNeedOpenBracket, typeFilter, addImportData, xmlnsPosition);
+                    autoCompleteDefinitionsForMXML(result, project, offsetUnit, offsetTag, true, tagsNeedOpenBracket, nextChar, typeFilter, addImportData, xmlnsPosition);
                 }
             }
             return result;
@@ -875,7 +886,7 @@ public class CompletionProvider
             if (!isAttribute)
             {
                 String typeFilter = DefinitionUtils.getMXMLChildElementTypeForDefinition(offsetDefinition, project);
-                autoCompleteDefinitionsForMXML(result, project, offsetUnit, offsetTag, true, tagsNeedOpenBracket, typeFilter, addImportData, xmlnsPosition);
+                autoCompleteDefinitionsForMXML(result, project, offsetUnit, offsetTag, true, tagsNeedOpenBracket, nextChar, typeFilter, addImportData, xmlnsPosition);
             }
             return result;
         }
@@ -1075,16 +1086,16 @@ public class CompletionProvider
                 IScopedNode scopedNode = (IScopedNode) node;
 
                 //include all members and local things that are in scope
-                autoCompleteScope(scopedNode, true, false, addImportData, project, result);
+                autoCompleteScope(scopedNode, true, (char) -1, addImportData, project, result);
                 break;
             }
             node = node.getParent();
         }
         while (node != null);
-        autoCompleteDefinitionsForActionScript(result, project, withNode, true, null, null, false, null, false, addImportData);
+        autoCompleteDefinitionsForActionScript(result, project, withNode, true, null, null, false, null, (char) -1, addImportData);
     }
 
-    private void autoCompleteScope(IScopedNode node, boolean typesOnly, boolean hasOpenParen, AddImportData addImportData, RoyaleProject project, CompletionList result)
+    private void autoCompleteScope(IScopedNode node, boolean typesOnly, char nextChar, AddImportData addImportData, RoyaleProject project, CompletionList result)
     {
         IScopedNode currentNode = node;
         ASScope scope = (ASScope) node.getScope();
@@ -1096,10 +1107,10 @@ public class CompletionProvider
             if (currentScope instanceof TypeScope && !typesOnly)
             {
                 TypeScope typeScope = (TypeScope) currentScope;
-                addDefinitionsInTypeScopeToAutoComplete(typeScope, scope, true, true, false, false, null, false, hasOpenParen, addImportData, null, null, project, result);
+                addDefinitionsInTypeScopeToAutoComplete(typeScope, scope, true, true, false, false, null, false, nextChar, addImportData, null, null, project, result);
                 if (!staticOnly)
                 {
-                    addDefinitionsInTypeScopeToAutoCompleteActionScript(typeScope, scope, false, hasOpenParen, addImportData, project, result);
+                    addDefinitionsInTypeScopeToAutoCompleteActionScript(typeScope, scope, false, nextChar, addImportData, project, result);
                 }
             }
             else
@@ -1127,7 +1138,7 @@ public class CompletionProvider
                                 continue;
                             }
                         }
-                        addDefinitionAutoCompleteActionScript(localDefinition, currentNode, hasOpenParen, addImportData, project, result);
+                        addDefinitionAutoCompleteActionScript(localDefinition, currentNode, nextChar, addImportData, project, result);
                     }
                 }
             }
@@ -1238,7 +1249,7 @@ public class CompletionProvider
         }
     }
 
-    private void autoCompleteMemberAccess(IMemberAccessExpressionNode node, boolean hasOpenParen, AddImportData addImportData, RoyaleProject project, CompletionList result)
+    private void autoCompleteMemberAccess(IMemberAccessExpressionNode node, char nextChar, AddImportData addImportData, RoyaleProject project, CompletionList result)
     {
         ASScope scope = (ASScope) node.getContainingScope().getScope();
         IExpressionNode leftOperand = node.getLeftOperandNode();
@@ -1247,7 +1258,7 @@ public class CompletionProvider
         {
             ITypeDefinition typeDefinition = (ITypeDefinition) leftDefinition;
             TypeScope typeScope = (TypeScope) typeDefinition.getContainedScope();
-            addDefinitionsInTypeScopeToAutoCompleteActionScript(typeScope, scope, true, hasOpenParen, addImportData, project, result);
+            addDefinitionsInTypeScopeToAutoCompleteActionScript(typeScope, scope, true, nextChar, addImportData, project, result);
             return;
         }
 
@@ -1262,7 +1273,7 @@ public class CompletionProvider
                 ITypeDefinition elementType = vectorDef.resolveElementType(project);
                 if (elementType != null) {
                     TypeScope typeScope = (TypeScope) elementType.getContainedScope();
-                    addDefinitionsInTypeScopeToAutoCompleteActionScript(typeScope, scope, false, hasOpenParen, addImportData, project, result);
+                    addDefinitionsInTypeScopeToAutoCompleteActionScript(typeScope, scope, false, nextChar, addImportData, project, result);
                     return;
                 }
             }
@@ -1272,7 +1283,7 @@ public class CompletionProvider
         if (leftType != null)
         {
             TypeScope typeScope = (TypeScope) leftType.getContainedScope();
-            addDefinitionsInTypeScopeToAutoCompleteActionScript(typeScope, scope, false, hasOpenParen, addImportData, project, result);
+            addDefinitionsInTypeScopeToAutoCompleteActionScript(typeScope, scope, false, nextChar, addImportData, project, result);
             return;
         }
 
@@ -1282,7 +1293,7 @@ public class CompletionProvider
             String packageName = ASTUtils.memberAccessToPackageName(memberAccess);
             if (packageName != null)
             {
-                autoCompleteDefinitionsForActionScript(result, project, node, false, packageName, null, false, null, hasOpenParen, addImportData);
+                autoCompleteDefinitionsForActionScript(result, project, node, false, packageName, null, false, null, nextChar, addImportData);
                 return;
             }
         }
@@ -1494,7 +1505,7 @@ public class CompletionProvider
 
     private void addMembersForMXMLTypeToAutoComplete(IClassDefinition definition,
             IMXMLTagData offsetTag, ICompilationUnit offsetUnit, boolean isAttribute, boolean includePrefix, boolean tagsNeedOpenBracket,
-            AddImportData addImportData, Position xmlnsPosition, RoyaleProject project, CompletionList result)
+            char nextChar, AddImportData addImportData, Position xmlnsPosition, RoyaleProject project, CompletionList result)
     {
         IASScope[] scopes;
         try
@@ -1519,23 +1530,24 @@ public class CompletionProvider
             TypeScope typeScope = (TypeScope) definition.getContainedScope();
             ASScope scope = (ASScope) scopes[0];
             addDefinitionsInTypeScopeToAutoCompleteMXML(typeScope, scope, isAttribute, propertyElementPrefix, tagsNeedOpenBracket, addImportData, xmlnsPosition, offsetTag, project, result);
-            addStyleMetadataToAutoCompleteMXML(typeScope, isAttribute, propertyElementPrefix, tagsNeedOpenBracket, project, result);
-            addEventMetadataToAutoCompleteMXML(typeScope, isAttribute, propertyElementPrefix, tagsNeedOpenBracket, project, result);
+            addStyleMetadataToAutoCompleteMXML(typeScope, isAttribute, propertyElementPrefix, tagsNeedOpenBracket, nextChar, project, result);
+            addEventMetadataToAutoCompleteMXML(typeScope, isAttribute, propertyElementPrefix, tagsNeedOpenBracket, nextChar, project, result);
             if(isAttribute)
             {
-                addLanguageAttributesToAutoCompleteMXML(typeScope, scope, project, result);
+                addLanguageAttributesToAutoCompleteMXML(typeScope, scope, nextChar, project, result);
             }
         }
     }
 
-    private void addLanguageAttributesToAutoCompleteMXML(TypeScope typeScope, ASScope otherScope, RoyaleProject project, CompletionList result)
+    private void addLanguageAttributesToAutoCompleteMXML(TypeScope typeScope, ASScope otherScope, char nextChar, RoyaleProject project, CompletionList result)
     {
         List<CompletionItem> items = result.getItems();
 
         CompletionItem includeInItem = new CompletionItem();
         includeInItem.setKind(CompletionItemKind.Keyword);
         includeInItem.setLabel(IMXMLLanguageConstants.ATTRIBUTE_INCLUDE_IN);
-        if (completionSupportsSnippets)
+        if (completionSupportsSnippets
+                && nextChar != '=')
         {
             includeInItem.setInsertTextFormat(InsertTextFormat.Snippet);
             includeInItem.setInsertText(IMXMLLanguageConstants.ATTRIBUTE_INCLUDE_IN + "=\"$0\"");
@@ -1545,7 +1557,8 @@ public class CompletionProvider
         CompletionItem excludeFromItem = new CompletionItem();
         excludeFromItem.setKind(CompletionItemKind.Keyword);
         excludeFromItem.setLabel(IMXMLLanguageConstants.ATTRIBUTE_EXCLUDE_FROM);
-        if (completionSupportsSnippets)
+        if (completionSupportsSnippets
+                && nextChar != '=')
         {
             excludeFromItem.setInsertTextFormat(InsertTextFormat.Snippet);
             excludeFromItem.setInsertText(IMXMLLanguageConstants.ATTRIBUTE_EXCLUDE_FROM + "=\"$0\"");
@@ -1560,7 +1573,8 @@ public class CompletionProvider
             CompletionItem idItem = new CompletionItem();
             idItem.setKind(CompletionItemKind.Keyword);
             idItem.setLabel(IMXMLLanguageConstants.ATTRIBUTE_ID);
-            if (completionSupportsSnippets)
+            if (completionSupportsSnippets
+                    && nextChar != '=')
             {
                 idItem.setInsertTextFormat(InsertTextFormat.Snippet);
                 idItem.setInsertText(IMXMLLanguageConstants.ATTRIBUTE_ID + "=\"$0\"");
@@ -1576,7 +1590,8 @@ public class CompletionProvider
                 CompletionItem localIdItem = new CompletionItem();
                 localIdItem.setKind(CompletionItemKind.Keyword);
                 localIdItem.setLabel(IMXMLLanguageConstants.ATTRIBUTE_LOCAL_ID);
-                if (completionSupportsSnippets)
+                if (completionSupportsSnippets
+                        && nextChar != '=')
                 {
                     localIdItem.setInsertTextFormat(InsertTextFormat.Snippet);
                     localIdItem.setInsertText(IMXMLLanguageConstants.ATTRIBUTE_LOCAL_ID + "=\"$0\"");
@@ -1587,10 +1602,10 @@ public class CompletionProvider
     }
 
     private void addDefinitionsInTypeScopeToAutoCompleteActionScript(TypeScope typeScope, ASScope otherScope,
-        boolean isStatic, boolean hasOpenParen, AddImportData addImportData,
+        boolean isStatic, char nextChar, AddImportData addImportData,
         RoyaleProject project, CompletionList result)
     {
-        addDefinitionsInTypeScopeToAutoComplete(typeScope, otherScope, isStatic, false, false, false, null, false, hasOpenParen, addImportData, null, null, project, result);
+        addDefinitionsInTypeScopeToAutoComplete(typeScope, otherScope, isStatic, false, false, false, null, false, nextChar, addImportData, null, null, project, result);
     }
 
     private void addDefinitionsInTypeScopeToAutoCompleteMXML(TypeScope typeScope, ASScope otherScope,
@@ -1598,13 +1613,13 @@ public class CompletionProvider
         AddImportData addImportData, Position xmlnsPosition,
         IMXMLTagData offsetTag, RoyaleProject project, CompletionList result)
     {
-        addDefinitionsInTypeScopeToAutoComplete(typeScope, otherScope, false, false, true, isAttribute, prefix, tagsNeedOpenBracket, false, addImportData, xmlnsPosition, offsetTag, project, result);
+        addDefinitionsInTypeScopeToAutoComplete(typeScope, otherScope, false, false, true, isAttribute, prefix, tagsNeedOpenBracket, (char) -1, addImportData, xmlnsPosition, offsetTag, project, result);
     }
 
     private void addDefinitionsInTypeScopeToAutoComplete(TypeScope typeScope, ASScope otherScope,
         boolean isStatic, boolean includeSuperStatics,
         boolean forMXML, boolean isAttribute, String prefix, boolean tagsNeedOpenBracket,
-        boolean hasOpenParen, AddImportData addImportData, Position xmlnsPosition,
+        char nextChar, AddImportData addImportData, Position xmlnsPosition,
         IMXMLTagData offsetTag, RoyaleProject project, CompletionList result)
     {
         IMetaTag[] excludeMetaTags = typeScope.getDefinition().getMetaTagsByName(IMetaAttributeConstants.ATTRIBUTE_EXCLUDE);
@@ -1688,16 +1703,16 @@ public class CompletionProvider
             }
             if (forMXML)
             {
-                addDefinitionAutoCompleteMXML(localDefinition, xmlnsPosition, isAttribute, prefix, null, tagsNeedOpenBracket, offsetTag, project, result);
+                addDefinitionAutoCompleteMXML(localDefinition, xmlnsPosition, isAttribute, prefix, null, tagsNeedOpenBracket, nextChar, offsetTag, project, result);
             }
             else //actionscript
             {
-                addDefinitionAutoCompleteActionScript(localDefinition, null, hasOpenParen, addImportData, project, result);
+                addDefinitionAutoCompleteActionScript(localDefinition, null, nextChar, addImportData, project, result);
             }
         }
     }
 
-    private void addEventMetadataToAutoCompleteMXML(TypeScope typeScope, boolean isAttribute, String prefix, boolean tagsNeedOpenBracket, RoyaleProject project, CompletionList result)
+    private void addEventMetadataToAutoCompleteMXML(TypeScope typeScope, boolean isAttribute, String prefix, boolean tagsNeedOpenBracket, char nextChar, RoyaleProject project, CompletionList result)
     {
         ArrayList<String> eventNames = new ArrayList<>();
         IDefinition definition = typeScope.getDefinition();
@@ -1725,7 +1740,9 @@ public class CompletionProvider
                     continue;
                 }
                 CompletionItem item = CompletionItemUtils.createDefinitionItem(eventDefinition, project);
-                if (isAttribute && completionSupportsSnippets)
+                if (isAttribute
+                        && completionSupportsSnippets
+                        && nextChar != '=')
                 {
                     item.setInsertTextFormat(InsertTextFormat.Snippet);
                     item.setInsertText(eventName + "=\"$0\"");
@@ -1765,7 +1782,7 @@ public class CompletionProvider
         }
     }
 
-    private void addStyleMetadataToAutoCompleteMXML(TypeScope typeScope, boolean isAttribute, String prefix, boolean tagsNeedOpenBracket, RoyaleProject project, CompletionList result)
+    private void addStyleMetadataToAutoCompleteMXML(TypeScope typeScope, boolean isAttribute, String prefix, boolean tagsNeedOpenBracket, char nextChar, RoyaleProject project, CompletionList result)
     {
         ArrayList<String> styleNames = new ArrayList<>();
         IDefinition definition = typeScope.getDefinition();
@@ -1811,7 +1828,9 @@ public class CompletionProvider
                     break;
                 }
                 CompletionItem item = CompletionItemUtils.createDefinitionItem(styleDefinition, project);
-                if (isAttribute && completionSupportsSnippets)
+                if (isAttribute
+                        && completionSupportsSnippets
+                        && nextChar != '=')
                 {
                     item.setInsertTextFormat(InsertTextFormat.Snippet);
                     item.setInsertText(styleName + "=\"$0\"");
@@ -1851,15 +1870,15 @@ public class CompletionProvider
         }
     }
 
-    private void addMXMLTypeDefinitionAutoComplete(ITypeDefinition definition, Position xmlnsPosition, ICompilationUnit offsetUnit, IMXMLTagData offsetTag, boolean tagsNeedOpenBracket, RoyaleProject project, CompletionList result)
+    private void addMXMLTypeDefinitionAutoComplete(ITypeDefinition definition, Position xmlnsPosition, ICompilationUnit offsetUnit, IMXMLTagData offsetTag, boolean tagsNeedOpenBracket, char nextChar, RoyaleProject project, CompletionList result)
     {
         IMXMLDataManager mxmlDataManager = project.getWorkspace().getMXMLDataManager();
         MXMLData mxmlData = (MXMLData) mxmlDataManager.get(fileTracker.getFileSpecification(offsetUnit.getAbsoluteFilename()));
         MXMLNamespace discoveredNS = MXMLNamespaceUtils.getMXMLNamespaceForTypeDefinition(definition, mxmlData, project);
-        addDefinitionAutoCompleteMXML(definition, xmlnsPosition, false, discoveredNS.prefix, discoveredNS.uri, tagsNeedOpenBracket, offsetTag, project, result);
+        addDefinitionAutoCompleteMXML(definition, xmlnsPosition, false, discoveredNS.prefix, discoveredNS.uri, tagsNeedOpenBracket, nextChar, offsetTag, project, result);
     }
 
-    private void addDefinitionAutoCompleteActionScript(IDefinition definition, IASNode offsetNode, boolean hasOpenParen, AddImportData addImportData, RoyaleProject project, CompletionList result)
+    private void addDefinitionAutoCompleteActionScript(IDefinition definition, IASNode offsetNode, char nextChar, AddImportData addImportData, RoyaleProject project, CompletionList result)
     {
         String definitionBaseName = definition.getBaseName();
         if (definitionBaseName.length() == 0)
@@ -1883,7 +1902,7 @@ public class CompletionProvider
         CompletionItem item = CompletionItemUtils.createDefinitionItem(definition, project);
         if (definition instanceof IFunctionDefinition
                 && !(definition instanceof IAccessorDefinition)
-                && !hasOpenParen
+                && nextChar != '('
                 && completionSupportsSnippets)
         {
             IFunctionDefinition functionDefinition = (IFunctionDefinition) definition;
@@ -1916,7 +1935,7 @@ public class CompletionProvider
         result.getItems().add(item);
     }
 
-    private void addDefinitionAutoCompleteMXML(IDefinition definition, Position xmlnsPosition, boolean isAttribute, String prefix, String uri, boolean tagsNeedOpenBracket, IMXMLTagData offsetTag, RoyaleProject project, CompletionList result)
+    private void addDefinitionAutoCompleteMXML(IDefinition definition, Position xmlnsPosition, boolean isAttribute, String prefix, String uri, boolean tagsNeedOpenBracket, char nextChar, IMXMLTagData offsetTag, RoyaleProject project, CompletionList result)
     {
         if (definition.getBaseName().startsWith(VECTOR_HIDDEN_PREFIX))
         {
@@ -1938,7 +1957,9 @@ public class CompletionProvider
             return;
         }
         CompletionItem item = CompletionItemUtils.createDefinitionItem(definition, project);
-        if (isAttribute && completionSupportsSnippets)
+        if (isAttribute
+                && completionSupportsSnippets
+                && nextChar != '=')
         {
             item.setInsertTextFormat(InsertTextFormat.Snippet);
             item.setInsertText(definitionBaseName + "=\"$0\"");
@@ -2181,7 +2202,7 @@ public class CompletionProvider
      * Using an existing tag, that may already have a prefix or short name,
      * populate the completion list.
      */
-    private void autoCompleteTypesForMXMLFromExistingTag(CompletionList result, RoyaleProject project, ICompilationUnit offsetUnit, IMXMLTagData offsetTag, String typeFilter, Position xmlnsPosition)
+    private void autoCompleteTypesForMXMLFromExistingTag(CompletionList result, RoyaleProject project, ICompilationUnit offsetUnit, IMXMLTagData offsetTag, char nextChar, String typeFilter, Position xmlnsPosition)
     {
         IMXMLDataManager mxmlDataManager = project.getWorkspace().getMXMLDataManager();
         MXMLData mxmlData = (MXMLData) mxmlDataManager.get(fileTracker.getFileSpecification(offsetUnit.getAbsoluteFilename()));
@@ -2263,7 +2284,7 @@ public class CompletionProvider
                                 {
                                     if (tagPrefix.equals(otherPrefix))
                                     {
-                                        addDefinitionAutoCompleteMXML(typeDefinition, xmlnsPosition, false, null, null, false, offsetTag, project, result);
+                                        addDefinitionAutoCompleteMXML(typeDefinition, xmlnsPosition, false, null, null, false, nextChar, offsetTag, project, result);
                                     }
                                 }
                             }
@@ -2271,21 +2292,21 @@ public class CompletionProvider
                         if (tagNamespacePackage != null
                                 && tagNamespacePackage.equals(typeDefinition.getPackageName()))
                         {
-                            addDefinitionAutoCompleteMXML(typeDefinition, xmlnsPosition, false, null, null, false, offsetTag, project, result);
+                            addDefinitionAutoCompleteMXML(typeDefinition, xmlnsPosition, false, null, null, false, nextChar, offsetTag, project, result);
                         }
                     }
                     else
                     {
                         //no prefix yet, so complete the definition with a prefix
                         MXMLNamespace ns = MXMLNamespaceUtils.getMXMLNamespaceForTypeDefinition(typeDefinition, mxmlData, project);
-                        addDefinitionAutoCompleteMXML(typeDefinition, xmlnsPosition, false, ns.prefix, ns.uri, false, offsetTag, project, result);
+                        addDefinitionAutoCompleteMXML(typeDefinition, xmlnsPosition, false, ns.prefix, ns.uri, false, nextChar, offsetTag, project, result);
                     }
                 }
             }
         }
     }
 
-    private void autoCompleteDefinitionsForMXML(CompletionList result, RoyaleProject project, ICompilationUnit offsetUnit, IMXMLTagData offsetTag, boolean typesOnly, boolean tagsNeedOpenBracket, String typeFilter, AddImportData addImportData, Position xmlnsPosition)
+    private void autoCompleteDefinitionsForMXML(CompletionList result, RoyaleProject project, ICompilationUnit offsetUnit, IMXMLTagData offsetTag, boolean typesOnly, boolean tagsNeedOpenBracket, char nextChar, String typeFilter, AddImportData addImportData, Position xmlnsPosition)
     {
         for (ICompilationUnit unit : project.getCompilationUnits())
         {
@@ -2325,11 +2346,11 @@ public class CompletionProvider
                             continue;
                         }
 
-                        addMXMLTypeDefinitionAutoComplete(typeDefinition, xmlnsPosition, offsetUnit, offsetTag, tagsNeedOpenBracket, project, result);
+                        addMXMLTypeDefinitionAutoComplete(typeDefinition, xmlnsPosition, offsetUnit, offsetTag, tagsNeedOpenBracket, nextChar, project, result);
                     }
                     else
                     {
-                        addDefinitionAutoCompleteActionScript(definition, null, false, addImportData, project, result);
+                        addDefinitionAutoCompleteActionScript(definition, null, (char) -1, addImportData, project, result);
                     }
                 }
             }
@@ -2339,7 +2360,7 @@ public class CompletionProvider
     private void autoCompleteDefinitionsForActionScript(CompletionList result,
             RoyaleProject project, IASNode offsetNode,
             boolean typesOnly, String requiredPackageName, IDefinition definitionToSkip,
-            boolean tagsNeedOpenBracket, String typeFilter, boolean hasOpenParen, AddImportData addImportData)
+            boolean tagsNeedOpenBracket, String typeFilter, char nextChar, AddImportData addImportData)
     {
         String skipQualifiedName = null;
         if (definitionToSkip != null)
@@ -2383,7 +2404,7 @@ public class CompletionProvider
                                 continue;
                             }
                         }
-                        addDefinitionAutoCompleteActionScript(definition, offsetNode, hasOpenParen, addImportData, project, result);
+                        addDefinitionAutoCompleteActionScript(definition, offsetNode, nextChar, addImportData, project, result);
                     }
                 }
             }
