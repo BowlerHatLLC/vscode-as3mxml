@@ -133,16 +133,19 @@ export default class ActionScriptTaskProvider implements vscode.TaskProvider
 			{
 				isAIRDesktop = this.isAIRDesktop(asconfigJson);
 			}
-			isSharedOverride = this.isSharedOverride(asconfigJson);
-			isRootTargetShared = this.isRootTargetShared(asconfigJson);
-			isRootTargetBundle = this.isRootTargetBundle(asconfigJson);
-			isRootTargetNativeInstaller = this.isRootTargetNativeInstaller(asconfigJson);
-			isWindowsOverrideShared = this.isWindowsOverrideShared(asconfigJson);
-			isMacOverrideShared = this.isMacOverrideShared(asconfigJson);
-			isWindowsOverrideBundle = this.isWindowsOverrideBundle(asconfigJson);
-			isMacOverrideBundle = this.isMacOverrideBundle(asconfigJson);
-			isWindowsOverrideNativeInstaller = this.isWindowsOverrideNativeInstaller(asconfigJson);
-			isMacOverrideNativeInstaller = this.isMacOverrideNativeInstaller(asconfigJson);
+			if(isAIRDesktop)
+			{
+				isSharedOverride = this.isSharedOverride(asconfigJson);
+				isRootTargetShared = this.isRootTargetShared(asconfigJson);
+				isRootTargetBundle = this.isRootTargetBundle(asconfigJson);
+				isRootTargetNativeInstaller = this.isRootTargetNativeInstaller(asconfigJson);
+				isWindowsOverrideShared = this.isWindowsOverrideShared(asconfigJson);
+				isMacOverrideShared = this.isMacOverrideShared(asconfigJson);
+				isWindowsOverrideBundle = this.isWindowsOverrideBundle(asconfigJson);
+				isMacOverrideBundle = this.isMacOverrideBundle(asconfigJson);
+				isWindowsOverrideNativeInstaller = this.isWindowsOverrideNativeInstaller(asconfigJson);
+				isMacOverrideNativeInstaller = this.isMacOverrideNativeInstaller(asconfigJson);
+			}
 		}
 
 		let frameworkSDK = getFrameworkSDKPathWithFallbacks();
@@ -727,7 +730,8 @@ export default class ActionScriptTaskProvider implements vscode.TaskProvider
 	{
 		if(!(FIELD_AIR_OPTIONS in asconfigJson))
 		{
-			return false;
+			//if no airOptions are specified at all, consider it shared runtime
+			return this.isAIRDesktop(asconfigJson);
 		}
 		let airOptions = asconfigJson[FIELD_AIR_OPTIONS];
 		if(!(FIELD_TARGET in airOptions))
