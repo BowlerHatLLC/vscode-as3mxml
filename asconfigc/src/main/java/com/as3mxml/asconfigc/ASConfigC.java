@@ -1633,6 +1633,9 @@ public class ASConfigC
 					System.err.println("Generated application ID: " + appID);
 				}
 				descriptorContents = ProjectUtils.populateAdobeAIRDescriptorTemplate(descriptorContents, appID);
+
+				//clear this so that the name is based on the project name
+				airDescriptorPath = null;
 			}
 			descriptorContents = ProjectUtils.populateAdobeAIRDescriptorContent(descriptorContents, contentValue);
 			if(outputIsJS)
