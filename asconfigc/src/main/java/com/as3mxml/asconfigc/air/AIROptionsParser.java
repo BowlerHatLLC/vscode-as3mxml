@@ -18,6 +18,7 @@ package com.as3mxml.asconfigc.air;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -316,24 +317,70 @@ public class AIROptionsParser
 
 	private void parseFiles(JsonNode files, List<String> result)
 	{
+		List<File> selfFolders = new ArrayList<>();
+		List<File> rootFolders = new ArrayList<>();
 		for(int i = 0, size = files.size(); i < size; i++)
 		{
-			JsonNode file = files.get(i);
-			if(file.isTextual())
+			JsonNode fileNode = files.get(i);
+			String srcFile = null;
+			String destPath = null;
+			if(fileNode.isTextual())
 			{
-				result.add(file.asText());
+				srcFile = fileNode.asText();
 			}
 			else
 			{
-				String srcFile = file.get(AIROptions.FILES__FILE).asText();
-				String destPath = file.get(AIROptions.FILES__PATH).asText();
-				File fileToAdd = new File(srcFile);
-				if(!fileToAdd.isAbsolute())
-				{
-					fileToAdd = new File(System.getProperty("user.dir"), srcFile);
-				}
-				addFile(fileToAdd, destPath, result);
+				srcFile = fileNode.get(AIROptions.FILES__FILE).asText();
+				destPath = fileNode.get(AIROptions.FILES__PATH).asText();
 			}
+			File fileToAdd = new File(srcFile);
+			if(!fileToAdd.isAbsolute())
+			{
+				fileToAdd = new File(System.getProperty("user.dir"), srcFile);
+			}
+
+			if(fileToAdd.isDirectory())
+			{
+				if(destPath == null)
+				{
+					//add these folders after everything else because we'll use
+					//the -C option
+					selfFolders.add(fileToAdd);
+					continue;
+				}
+				else if(destPath.equals(fileToAdd.getName()))
+				{
+					//add these folders after everything else because we'll use
+					//the -C option
+					selfFolders.add(fileToAdd);
+					continue;
+				}
+				else if(destPath.equals("."))
+				{
+					//add these folders after everything else because we'll use
+					//the -C option
+					rootFolders.add(fileToAdd);
+					continue;
+				}
+			}
+
+			if(destPath == null)
+			{
+				destPath = fileToAdd.getName();
+			}
+			addFile(fileToAdd, destPath, result);
+		}
+		for(File folder : selfFolders)
+		{
+			result.add("-C");
+			result.add(folder.getParent());
+			result.add(folder.getName());
+		}
+		for(File folder : rootFolders)
+		{
+			result.add("-C");
+			result.add(folder.getPath());
+			result.add(".");
 		}
 	}
 
