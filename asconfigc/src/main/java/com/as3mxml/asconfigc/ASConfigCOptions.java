@@ -15,6 +15,10 @@ limitations under the License.
 */
 package com.as3mxml.asconfigc;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import com.as3mxml.asconfigc.compiler.DefaultCompiler;
 import com.as3mxml.asconfigc.compiler.IASConfigCCompiler;
 
@@ -32,6 +36,7 @@ public class ASConfigCOptions
 	private static final String OPTION_ANIMATE = "animate";
 	private static final String OPTION_PUBLISH_ANIMATE = "publish-animate";
 	private static final String OPTION_VERBOSE = "verbose";
+	private static final String OPTION_JVMARGS = "jvmargs";
 
 	public String project = null;
 	public String sdk = null;
@@ -44,6 +49,7 @@ public class ASConfigCOptions
 	public String animate = null;
 	public Boolean publishAnimate = null;
 	public boolean verbose = false;
+	public List<String> jvmargs = null;
 
 	public ASConfigCOptions(String project, String sdk, Boolean debug, String air, String storepass, Boolean unpackageANEs, IASConfigCCompiler compiler)
 	{
@@ -102,6 +108,19 @@ public class ASConfigCOptions
 			String verboseString = line.getOptionValue(OPTION_VERBOSE, Boolean.FALSE.toString());
 			verbose = verboseString.equals(Boolean.TRUE.toString());
 		}
-		compiler = new DefaultCompiler(verbose);
+		if(line.hasOption(OPTION_JVMARGS))
+		{
+			String argsString = line.getOptionValue(OPTION_JVMARGS, null);
+			if(argsString != null)
+			{
+				if(argsString.startsWith("\"") && argsString.endsWith("\""))
+				{
+					argsString = argsString.substring(1, argsString.length() - 1);
+				}
+				String[] argsArray = argsString.split(" ");
+				jvmargs = Arrays.stream(argsArray).collect(Collectors.toList());
+			}
+		}
+		compiler = new DefaultCompiler(verbose, jvmargs);
 	}
 }

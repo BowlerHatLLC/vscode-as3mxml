@@ -15,12 +15,9 @@ limitations under the License.
 */
 package com.as3mxml.vscode.providers;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.PrintStream;
 import java.io.StringReader;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -30,11 +27,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
-import com.as3mxml.asconfigc.ASConfigC;
-import com.as3mxml.asconfigc.ASConfigCException;
-import com.as3mxml.asconfigc.ASConfigCOptions;
 import com.as3mxml.vscode.commands.ICommandConstants;
-import com.as3mxml.vscode.compiler.CompilerShell;
 import com.as3mxml.vscode.project.WorkspaceFolderData;
 import com.as3mxml.vscode.services.ActionScriptLanguageClient;
 import com.as3mxml.vscode.utils.ASTUtils;
@@ -70,13 +63,11 @@ public class ExecuteCommandProvider
 {
     private static final String MXML_EXTENSION = ".mxml";
     private static final String AS_EXTENSION = ".as";
-    private static final String PROPERTY_FRAMEWORK_LIB = "royalelib";
 
     private WorkspaceFolderManager workspaceFolderManager;
     private FileTracker fileTracker;
 	private Workspace compilerWorkspace;
 	private ActionScriptLanguageClient languageClient;
-    private CompilerShell compilerShell;
 
     public ExecuteCommandProvider(WorkspaceFolderManager workspaceFolderManager, FileTracker fileTracker,
         Workspace compilerWorkspace, ActionScriptLanguageClient languageClient)
@@ -91,10 +82,6 @@ public class ExecuteCommandProvider
 	{
         switch(params.getCommand())
         {
-            case ICommandConstants.QUICK_COMPILE:
-            {
-                return executeQuickCompileCommand(params);
-            }
             case ICommandConstants.ADD_IMPORT:
             {
                 return executeAddImportCommand(params);
@@ -468,46 +455,6 @@ public class ExecuteCommandProvider
             {
                 compilerWorkspace.doneBuilding();
             }
-        });
-    }
-
-    private CompletableFuture<Object> executeQuickCompileCommand(ExecuteCommandParams params)
-    {
-        return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken ->
-        {
-            List<Object> args = params.getArguments();
-            String uri = ((JsonPrimitive) args.get(0)).getAsString();
-            boolean debug = ((JsonPrimitive) args.get(1)).getAsBoolean();
-            boolean success = false;
-            try
-            {
-                if (compilerShell == null)
-                {
-                    compilerShell = new CompilerShell(languageClient);
-                }
-                String frameworkLib = System.getProperty(PROPERTY_FRAMEWORK_LIB);
-                Path frameworkSDKHome = Paths.get(frameworkLib, "..");
-                Path workspaceRootPath = LanguageServerCompilerUtils.getPathFromLanguageServerURI(uri);
-                ASConfigCOptions options = new ASConfigCOptions(workspaceRootPath.toString(), frameworkSDKHome.toString(), debug, null, null, true, compilerShell);
-                try
-                {
-                    new ASConfigC(options);
-                    success = true;
-                }
-                catch(ASConfigCException e)
-                {
-                    //this is a message intended for the user
-                    languageClient.logCompilerShellOutput("\n" + e.getMessage());
-                    success = false;
-                }
-            }
-            catch(Exception e)
-            {
-                ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-                e.printStackTrace(new PrintStream(buffer));
-                languageClient.logCompilerShellOutput("Exception in compiler shell: " + buffer.toString());
-            }
-            return success;
         });
     }
 }

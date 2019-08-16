@@ -336,6 +336,11 @@ export default class ActionScriptTaskProvider implements vscode.TaskProvider
 		{
 			options.push("--verbose=true");
 		}
+		let jvmargs = vscode.workspace.getConfiguration("as3mxml").get("asconfigc.jvmargs");
+		if(typeof jvmargs === "string")
+		{
+			options.push(`--jvmargs="${jvmargs}"`);
+		}
 		if(command.length > 1)
 		{
 			options.unshift(...command.slice(1));

@@ -29,15 +29,17 @@ public class DefaultCompiler implements IASConfigCCompiler
 {
 	public DefaultCompiler()
 	{
-		this(false);
+		this(false, null);
 	}
 
-	public DefaultCompiler(boolean verbose)
+	public DefaultCompiler(boolean verbose, List<String> jvmargs)
 	{
 		this.verbose = verbose;
+		this.jvmargs = jvmargs;
 	}
 
 	private boolean verbose = false;
+	private List<String> jvmargs = null;
 
 	public void compile(String projectType, List<String> compilerOptions, Path workspaceRoot, Path sdkPath) throws ASConfigCException
 	{
@@ -81,7 +83,10 @@ public class DefaultCompiler implements IASConfigCCompiler
 			compilerOptions.add(0, "-Dflexlib=" + frameworkPath.toString());
 			compilerOptions.add(0, "-Dflexcompiler=" + sdkPath.toString());
 		}
-		compilerOptions.add(0, "-Xmx512m");
+		if(jvmargs != null)
+		{
+			compilerOptions.addAll(0, jvmargs);
+		}
 		Path javaExecutablePath = Paths.get(System.getProperty("java.home"), "bin", "java");
 		compilerOptions.add(0, javaExecutablePath.toString());
 

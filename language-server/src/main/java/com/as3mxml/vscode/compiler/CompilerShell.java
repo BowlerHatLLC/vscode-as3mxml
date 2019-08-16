@@ -64,10 +64,12 @@ public class CompilerShell implements IASConfigCCompiler
     private Path ascshPath;
     private boolean isRoyale = false;
     private boolean isAIR = false;
+    private List<String> jvmargs = null;
 
-	public CompilerShell(ActionScriptLanguageClient languageClient) throws URISyntaxException
+	public CompilerShell(ActionScriptLanguageClient languageClient, List<String> jvmargs) throws URISyntaxException
 	{
-		this.languageClient = languageClient;
+        this.languageClient = languageClient;
+        this.jvmargs = jvmargs;
         URI uri = getClass().getProtectionDomain().getCodeSource().getLocation().toURI();
         Path binPath = Paths.get(uri).getParent().normalize();
         rcshPath = binPath.resolve(FILE_NAME_RCSH);
@@ -125,6 +127,22 @@ public class CompilerShell implements IASConfigCCompiler
         }
         startProcess(sdkPath, workspaceRoot);
         executeCommandAndWaitForPrompt(command, true);
+    }
+
+    public void dispose()
+    {
+        if(process == null)
+        {
+            return;
+        }
+        try
+        {
+            quit();
+        }
+        catch(ASConfigCException e)
+        {
+
+        }
     }
 
     private void quit() throws ASConfigCException
@@ -206,6 +224,10 @@ public class CompilerShell implements IASConfigCCompiler
         Path javaExecutablePath = Paths.get(System.getProperty("java.home"), "bin", "java");
         ArrayList<String> options = new ArrayList<>();
         options.add(javaExecutablePath.toString());
+        if(jvmargs != null)
+        {
+            options.addAll(jvmargs);
+        }
         if(isRoyale)
         {
 			//Royale requires this so that it doesn't changing the encoding of

@@ -143,6 +143,10 @@ public class ASConfigC
 		verboseOption.setArgName("true OR false");
 		verboseOption.setOptionalArg(true);
 		options.addOption(verboseOption);
+		Option jvmargsOption = new Option(null, "jvmargs", true, "(Advanced) Pass custom arguments to the Java virtual machine.");
+		jvmargsOption.setArgName("ARGS");
+		jvmargsOption.setOptionalArg(true);
+		options.addOption(jvmargsOption);
 
 		ASConfigCOptions asconfigcOptions = null;
 		try

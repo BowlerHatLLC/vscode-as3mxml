@@ -377,6 +377,11 @@
           "default": false,
           "description": "(Advanced) Specifies whether asconfigc will display verbose output during builds."
         },
+        "as3mxml.asconfigc.jvmargs": {
+          "type": "string",
+          "default": null,
+          "description": "(Advanced) Specifies extra arguments that asconfigc will pass to the Java virtual machine when running Java programs. Example: \"-Xmx1024m -noverify\" sets the maximum heap size to 1024 MB and bypasses Java class verification."
+        },
         "as3mxml.java.path": {
           "type": [
             "string",

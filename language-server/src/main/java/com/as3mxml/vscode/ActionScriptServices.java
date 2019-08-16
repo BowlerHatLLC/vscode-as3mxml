@@ -15,8 +15,10 @@ limitations under the License.
 */
 package com.as3mxml.vscode;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.io.Reader;
 import java.net.URI;
 import java.nio.file.FileSystems;
@@ -31,6 +33,7 @@ import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.ConcurrentModificationException;
@@ -40,9 +43,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
+import com.as3mxml.asconfigc.ASConfigC;
+import com.as3mxml.asconfigc.ASConfigCException;
+import com.as3mxml.asconfigc.ASConfigCOptions;
 import com.as3mxml.asconfigc.compiler.ProjectType;
 import com.as3mxml.vscode.asdoc.VSCodeASDocDelegate;
+import com.as3mxml.vscode.commands.ICommandConstants;
+import com.as3mxml.vscode.compiler.CompilerShell;
 import com.as3mxml.vscode.compiler.problems.SyntaxFallbackProblem;
 import com.as3mxml.vscode.project.IProjectConfigStrategy;
 import com.as3mxml.vscode.project.IProjectConfigStrategyFactory;
@@ -74,6 +83,7 @@ import com.as3mxml.vscode.utils.WaitForBuildFinishRunner;
 import com.as3mxml.vscode.utils.WorkspaceFolderManager;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 
 import org.apache.royale.compiler.clients.problems.ProblemQuery;
 import org.apache.royale.compiler.config.CommandLineConfigurator;
@@ -184,6 +194,8 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     private boolean realTimeProblems = true;
     private boolean showFileOutsideSourcePath = true;
     private SimpleProjectConfigStrategy fallbackConfig;
+    private CompilerShell compilerShell;
+    private String jvmargs;
 
     public ActionScriptServices()
     {
@@ -266,6 +278,15 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     public void setLanguageClient(ActionScriptLanguageClient value)
     {
         languageClient = value;
+    }
+
+    public void shutdown()
+    {
+        if(compilerShell != null)
+        {
+            compilerShell.dispose();
+            compilerShell = null;
+        }
     }
 
     /**
@@ -621,6 +642,10 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
      */
     public CompletableFuture<Object> executeCommand(ExecuteCommandParams params)
     {
+        if(params.getCommand().equals(ICommandConstants.QUICK_COMPILE))
+        {
+            return executeQuickCompileCommand(params);
+        }
         ExecuteCommandProvider provider = new ExecuteCommandProvider(workspaceFolderManager,
                 fileTracker, compilerWorkspace, languageClient);
         return provider.executeCommand(params);
@@ -1185,7 +1210,8 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
 		JsonObject settings = (JsonObject) params.getSettings();
 		this.updateSDK(settings);
 		this.updateRealTimeProblems(settings);
-		this.updateSourcePathWarning(settings);
+        this.updateSourcePathWarning(settings);
+        this.updateJVMArgs(settings);
 	}
 
 	@Override
@@ -2208,4 +2234,88 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         showFileOutsideSourcePath = newShowFileOutsideSourcePath;
         checkForProblemsNow();
 	}
+
+	private void updateJVMArgs(JsonObject settings)
+	{
+		if (!settings.has("as3mxml"))
+		{
+			return;
+		}
+		JsonObject as3mxml = settings.get("as3mxml").getAsJsonObject();
+		if (!as3mxml.has("asconfigc"))
+		{
+			return;
+		}
+		JsonObject asconfigc = as3mxml.get("asconfigc").getAsJsonObject();
+		if (!asconfigc.has("jvmargs"))
+		{
+			return;
+        }
+        JsonElement jvmargsElement = asconfigc.get("jvmargs");
+		String newJVMArgs = null;
+        if(!jvmargsElement.isJsonNull())
+        {
+            newJVMArgs = asconfigc.get("jvmargs").getAsString();
+        }
+        if(jvmargs == null && newJVMArgs == null)
+        {
+            return;
+        }
+        if(jvmargs != null && jvmargs.equals(newJVMArgs))
+        {
+            return;
+        }
+        jvmargs = newJVMArgs;
+        if(compilerShell != null)
+        {
+            compilerShell.dispose();
+            compilerShell = null;
+        }
+	}
+
+    private CompletableFuture<Object> executeQuickCompileCommand(ExecuteCommandParams params)
+    {
+        return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken ->
+        {
+            List<Object> args = params.getArguments();
+            String uri = ((JsonPrimitive) args.get(0)).getAsString();
+            boolean debug = ((JsonPrimitive) args.get(1)).getAsBoolean();
+            boolean success = false;
+            try
+            {
+                if (compilerShell == null)
+                {
+                    List<String> argsList = null;
+                    if(jvmargs != null)
+                    {
+                        String[] argsArray = jvmargs.split(" ");
+                        argsList = Arrays.stream(argsArray).collect(Collectors.toList());
+                    }
+                    compilerShell = new CompilerShell(languageClient, argsList);
+                }
+                String frameworkLib = System.getProperty(PROPERTY_FRAMEWORK_LIB);
+                Path frameworkSDKHome = Paths.get(frameworkLib, "..");
+                Path workspaceRootPath = LanguageServerCompilerUtils.getPathFromLanguageServerURI(uri);
+                ASConfigCOptions options = new ASConfigCOptions(workspaceRootPath.toString(), frameworkSDKHome.toString(), debug, null, null, true, compilerShell);
+                try
+                {
+                    new ASConfigC(options);
+                    success = true;
+                }
+                catch(ASConfigCException e)
+                {
+                    //this is a message intended for the user
+                    languageClient.logCompilerShellOutput("\n" + e.getMessage());
+                    success = false;
+                }
+            }
+            catch(Exception e)
+            {
+                ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+                e.printStackTrace(new PrintStream(buffer));
+                languageClient.logCompilerShellOutput("Exception in compiler shell: " + buffer.toString());
+            }
+            return success;
+        });
+    }
 }
