@@ -161,9 +161,7 @@ class AIROptionsParserTests
 		String path2 = "images";
 		String file3 = "file3 with spaces.jpg";
 		String path3 = "path/with spaces/";
-		String formattedFile1 = Paths.get(System.getProperty("user.dir"), file1).toString();
-		String formattedFile2 = Paths.get(System.getProperty("user.dir"), file2).toString();
-		String formattedFile3 = Paths.get(System.getProperty("user.dir"), file3).toString();
+		String formattedFile1 = Paths.get(file1).toString();
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		ArrayNode files = JsonNodeFactory.instance.arrayNode();
 		ObjectNode f1 = JsonNodeFactory.instance.objectNode();
@@ -187,11 +185,11 @@ class AIROptionsParserTests
 		Assertions.assertEquals(optionIndex1 + 2, result.indexOf(path1));
 		int optionIndex2 = optionIndex1 + 1 + result.subList(optionIndex1 + 1, result.size()).indexOf("-e");
 		Assertions.assertEquals(optionIndex1 + 3, optionIndex2);
-		Assertions.assertEquals(optionIndex2 + 1, result.indexOf(formattedFile2));
+		Assertions.assertEquals(optionIndex2 + 1, result.indexOf(file2));
 		Assertions.assertEquals(optionIndex2 + 2, result.indexOf(path2));
 		int optionIndex3 = optionIndex2 + 1 + result.subList(optionIndex2 + 1, result.size()).indexOf("-e");
 		Assertions.assertEquals(optionIndex2 + 3, optionIndex3);
-		Assertions.assertEquals(optionIndex3 + 1, result.indexOf(formattedFile3));
+		Assertions.assertEquals(optionIndex3 + 1, result.indexOf(file3));
 		Assertions.assertEquals(optionIndex3 + 2, result.indexOf(path3));
 	}
 

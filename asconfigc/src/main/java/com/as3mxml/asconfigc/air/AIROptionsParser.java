@@ -334,12 +334,15 @@ public class AIROptionsParser
 				destPath = fileNode.get(AIROptions.FILES__PATH).asText();
 			}
 			File fileToAdd = new File(srcFile);
-			if(!fileToAdd.isAbsolute())
+			File absoluteFileToAdd = fileToAdd;
+			if(!absoluteFileToAdd.isAbsolute())
 			{
-				fileToAdd = new File(System.getProperty("user.dir"), srcFile);
+				absoluteFileToAdd = new File(System.getProperty("user.dir"), srcFile);
 			}
 
-			if(fileToAdd.isDirectory())
+			//for some reason, isDirectory() may not work properly when we check
+			//a file with a relative path
+			if(absoluteFileToAdd.isDirectory())
 			{
 				if(destPath == null)
 				{
@@ -370,23 +373,35 @@ public class AIROptionsParser
 			}
 			addFile(fileToAdd, destPath, result);
 		}
-		for(File folder : selfFolders)
-		{
-			result.add("-C");
-			result.add(folder.getParent());
-			result.add(folder.getName());
-		}
 		for(File folder : rootFolders)
 		{
 			result.add("-C");
 			result.add(folder.getPath());
 			result.add(".");
 		}
+		for(File folder : selfFolders)
+		{
+			String parentPath = folder.getParent();
+			if(parentPath == null)
+			{
+				parentPath = ".";
+			}
+			result.add("-C");
+			result.add(parentPath);
+			result.add(folder.getName());
+		}
 	}
 
 	private void addFile(File srcFile, String destPath, List<String> result)
 	{
-		if(srcFile.isDirectory())
+		File absoluteSrcFile = srcFile;
+		if(!absoluteSrcFile.isAbsolute())
+		{
+			absoluteSrcFile = new File(System.getProperty("user.dir"), srcFile.getPath());
+		}
+		//for some reason, isDirectory() may not work properly when we check
+		//a file with a relative path
+		if(absoluteSrcFile.isDirectory())
 		{
 			//Adobe's documentation for adt says that the -e option can
 			//accept a directory, but it only seems to work with files, so
