@@ -815,9 +815,17 @@ public class ASTUtils
             }
         }
         int minCommentStartIndex = 0;
+        IMXMLSpecifierNode mxmlNode = null;
         if (offsetNode instanceof IMXMLSpecifierNode)
         {
-            IMXMLSpecifierNode mxmlNode = (IMXMLSpecifierNode) offsetNode;
+            mxmlNode = (IMXMLSpecifierNode) offsetNode;
+        }
+        if (mxmlNode == null)
+        {
+            mxmlNode = (IMXMLSpecifierNode) offsetNode.getAncestorOfType(IMXMLSpecifierNode.class);
+        }
+        if (mxmlNode != null)
+        {
             //start in the current MXML node and ignore the start of comments
             //that appear in earlier MXML nodes
             minCommentStartIndex = mxmlNode.getAbsoluteStart();
