@@ -137,18 +137,6 @@ public class AIROptionsParser
 				}
 			}
 		}
-		if(overridesOptionForPlatform(options, AIROptions.SAMPLER, platform))
-		{
-			setValueWithoutAssignment(AIROptions.SAMPLER, options.get(platform).get(AIROptions.SAMPLER).asText(), result);
-		}
-		if(overridesOptionForPlatform(options, AIROptions.HIDE_ANE_LIB_SYMBOLS, platform))
-		{
-			setValueWithoutAssignment(AIROptions.HIDE_ANE_LIB_SYMBOLS, options.get(platform).get(AIROptions.HIDE_ANE_LIB_SYMBOLS).asText(), result);
-		}
-		if(overridesOptionForPlatform(options, AIROptions.EMBED_BITCODE, platform))
-		{
-			setValueWithoutAssignment(AIROptions.EMBED_BITCODE, options.get(platform).get(AIROptions.EMBED_BITCODE).asText(), result);
-		}
 
 		//DEBUGGER_CONNECTION_OPTIONS begin
 		if(debug && (platform.equals(AIRPlatform.ANDROID) || platform.equals(AIRPlatform.IOS) || platform.equals(AIRPlatform.IOS_SIMULATOR)))
@@ -156,6 +144,19 @@ public class AIROptionsParser
 			parseDebugOptions(options, platform, result);
 		}
 		//DEBUGGER_CONNECTION_OPTIONS end
+		
+		if(overridesOptionForPlatform(options, AIROptions.SAMPLER, platform))
+		{
+			result.add("-" + AIROptions.SAMPLER);
+		}
+		if(overridesOptionForPlatform(options, AIROptions.HIDE_ANE_LIB_SYMBOLS, platform))
+		{
+			setBooleanValueWithoutAssignment(AIROptions.HIDE_ANE_LIB_SYMBOLS, options.get(platform).get(AIROptions.HIDE_ANE_LIB_SYMBOLS).asBoolean(), result);
+		}
+		if(overridesOptionForPlatform(options, AIROptions.EMBED_BITCODE, platform))
+		{
+			setBooleanValueWithoutAssignment(AIROptions.EMBED_BITCODE, options.get(platform).get(AIROptions.EMBED_BITCODE).asBoolean(), result);
+		}
 
 		if(overridesOptionForPlatform(options, AIROptions.AIR_DOWNLOAD_URL, platform))
 		{
@@ -304,6 +305,12 @@ public class AIROptionsParser
 	{
 		result.add("-" + optionName);
 		result.add(value.toString());
+	}
+	
+	private void setBooleanValueWithoutAssignment(String optionName, boolean value, List<String> result)
+	{
+		result.add("-" + optionName);
+		result.add(value ? "yes" : "no");
 	}
 	
 	private void parseExtdir(JsonNode extdir, List<String> result)
