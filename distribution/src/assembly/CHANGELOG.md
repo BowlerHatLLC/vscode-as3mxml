@@ -1,3 +1,58 @@
+## v0.22.0
+
+### New Features
+
+* Build: The `application` field in *asconfig.json* can now (optionally) accept an object that references multiple platforms so that each platform may use a different file.
+
+	Example:
+
+	``` json
+	{
+		"application": {
+			"ios": "src/ExampleIOS-app.xml",
+			"android": "src/ExampleAndroid-app.xml"
+		}
+	}
+	```
+
+	You may continue to specify a single Adobe AIR application descriptor for all platforms — just like in previous versions:
+
+	``` json
+	{
+		"application": "src/Example-app.xml"
+	}
+	```
+
+* Settings: Added `as3mxml.asconfigc.jvmargs` setting to pass additional arguments to the Java Virtual Machine when running the compiler.
+
+	Example:
+
+	``` json
+	{
+		"as3mxml.asconfigc.jvmargs": "-Xms512m -Xmx1024m"
+	}
+	```
+
+	This setting may be used to increase performance and fix out of memory errors when compiling, [similar to Adobe Flash Builder](https://helpx.adobe.com/flash-builder/kb/sluggish-performance-out-memory-errors.html).
+
+* Settings: Added `as3mxml.asconfigc.verboseOutput` setting to display more detailed output when running a build task. Verbose output includes the full set of options passed to any tools that are run during the build (including the compiler and the Adobe AIR packager).
+
+### Fixed Issues
+
+* Build: Fixed issue where `-sampler`, `-embedBitcode` and `-hideAneLibSymbols` were incorrectly formatted when packaging an Adobe AIR application for iOS.
+* Build: Simplified the ADT command when packaging folders into an Adobe AIR application.
+* Build: Fixed issue where folders to be packaged in an Adobe AIR app could not be found when building an asconfig.json file that is not in the workspace root (such as when the file is in a sub-folder).
+* Build: Fixed issue where the name of the generated Adobe AIR application descriptor was wrong when using a template from the SDK.
+* Debug: Fixed issue where SWF workers were not allowed to start in the debugger.
+* Tasks: Fixed issue where Adobe AIR packaging tasks were missing if the `airOptions` section were missing in *asconfig.json*, but other fields could be used to detect the Adobe AIR requirement.
+* Code Actions: Fixed null reference exception when MXML cannot be parsed.
+* Completion: Fixed issue where `//` in a URL namespace was incorrectly detected as a comment when appearing before an MXML attribute.
+* Completion: Fixed issue where completing an MXML attribute does not automatically add `=""` if the next character is already `=`.
+
+### Other Changes
+
+* Documentation: Added a page that explains [how to enable ActionScript and MXML code intelligence in Sublime Text](https://github.com/BowlerHatLLC/vscode-as3mxml/wiki/How-to-use-the-ActionScript-and-MXML-language-server-with-Sublime-Text) by using the language server from this Visual Studio Code extension.
+
 ## v0.21.0
 
 ### New Features
