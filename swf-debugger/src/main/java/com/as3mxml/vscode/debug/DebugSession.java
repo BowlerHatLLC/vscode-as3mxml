@@ -107,28 +107,6 @@ public abstract class DebugSession extends ProtocolServer
             {
                 case "initialize":
                 {
-                    /*if (args.linesStartAt1 != null)
-                    {
-                        _clientLinesStartAt1 = (boolean) args.linesStartAt1;
-                    }
-                    String pathFormat = (String) args.pathFormat;
-                    if (pathFormat != null)
-                    {
-                        switch (pathFormat)
-                        {
-                            case "uri":
-                                _clientPathsAreURI = true;
-                                break;
-                            case "path":
-                                _clientPathsAreURI = false;
-                                break;
-                            default:
-                                Request.RequestArguments errorArgs = new HashMap<>();
-                                errorArgs.put("_format", pathFormat);
-                                sendErrorResponse(response, 1015, "initialize: bad value '{_format}' for pathFormat", errorArgs);
-                            return;
-                        }
-                    }*/
                     initialize(response, (InitializeRequest.InitializeRequestArguments) arguments);
                     break;
                 }
