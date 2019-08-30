@@ -32,10 +32,9 @@ import org.apache.royale.compiler.definitions.ITypeDefinition;
 import org.apache.royale.compiler.definitions.IVariableDefinition;
 import org.apache.royale.compiler.internal.projects.RoyaleProject;
 import org.apache.royale.compiler.internal.scopes.ASProjectScope.DefinitionPromise;
-import org.apache.royale.compiler.internal.units.ResourceBundleCompilationUnit;
-import org.apache.royale.compiler.internal.units.SWCCompilationUnit;
 import org.apache.royale.compiler.scopes.IASScope;
 import org.apache.royale.compiler.units.ICompilationUnit;
+import org.apache.royale.compiler.units.ICompilationUnit.UnitType;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.WorkspaceFolder;
 import org.eclipse.lsp4j.WorkspaceSymbolParams;
@@ -82,11 +81,12 @@ public class WorkspaceSymbolProvider
 			}
 			for (ICompilationUnit unit : project.getCompilationUnits())
 			{
-				if (unit == null || unit instanceof ResourceBundleCompilationUnit)
+				if (unit == null)
 				{
 					continue;
 				}
-				if (unit instanceof SWCCompilationUnit)
+				UnitType unitType = unit.getCompilationUnitType();
+				if (UnitType.SWC_UNIT.equals(unitType))
 				{
 					List<IDefinition> definitions = unit.getDefinitionPromises();
 					for (IDefinition definition : definitions)
@@ -123,7 +123,7 @@ public class WorkspaceSymbolProvider
 						}
 					}
 				}
-				else
+				else if (UnitType.AS_UNIT.equals(unitType) || UnitType.MXML_UNIT.equals(unitType))
 				{
 					IASScope[] scopes;
 					try

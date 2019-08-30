@@ -34,12 +34,11 @@ import org.apache.royale.compiler.definitions.IDefinition;
 import org.apache.royale.compiler.definitions.IInterfaceDefinition;
 import org.apache.royale.compiler.internal.mxml.MXMLData;
 import org.apache.royale.compiler.internal.projects.RoyaleProject;
-import org.apache.royale.compiler.internal.units.ResourceBundleCompilationUnit;
-import org.apache.royale.compiler.internal.units.SWCCompilationUnit;
 import org.apache.royale.compiler.mxml.IMXMLTagData;
 import org.apache.royale.compiler.tree.as.IASNode;
 import org.apache.royale.compiler.tree.as.IIdentifierNode;
 import org.apache.royale.compiler.units.ICompilationUnit;
+import org.apache.royale.compiler.units.ICompilationUnit.UnitType;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.LocationLink;
 import org.eclipse.lsp4j.Position;
@@ -134,9 +133,12 @@ public class ImplementationProvider
         List<Location> result = new ArrayList<>();
         for (ICompilationUnit unit : project.getCompilationUnits())
         {
-            if (unit == null
-                    || unit instanceof SWCCompilationUnit
-                    || unit instanceof ResourceBundleCompilationUnit)
+            if (unit == null)
+            {
+                continue;
+            }
+            UnitType unitType = unit.getCompilationUnitType();
+            if (!UnitType.AS_UNIT.equals(unitType) && !UnitType.MXML_UNIT.equals(unitType))
             {
                 continue;
             }

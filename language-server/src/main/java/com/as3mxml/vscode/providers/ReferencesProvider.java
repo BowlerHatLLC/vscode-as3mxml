@@ -36,8 +36,6 @@ import org.apache.royale.compiler.definitions.IClassDefinition;
 import org.apache.royale.compiler.definitions.IDefinition;
 import org.apache.royale.compiler.internal.mxml.MXMLData;
 import org.apache.royale.compiler.internal.projects.RoyaleProject;
-import org.apache.royale.compiler.internal.units.ResourceBundleCompilationUnit;
-import org.apache.royale.compiler.internal.units.SWCCompilationUnit;
 import org.apache.royale.compiler.mxml.IMXMLDataManager;
 import org.apache.royale.compiler.mxml.IMXMLLanguageConstants;
 import org.apache.royale.compiler.mxml.IMXMLTagAttributeData;
@@ -46,6 +44,7 @@ import org.apache.royale.compiler.scopes.IASScope;
 import org.apache.royale.compiler.tree.as.IASNode;
 import org.apache.royale.compiler.tree.as.IIdentifierNode;
 import org.apache.royale.compiler.units.ICompilationUnit;
+import org.apache.royale.compiler.units.ICompilationUnit.UnitType;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.ReferenceParams;
@@ -218,15 +217,19 @@ public class ReferencesProvider
 
     private void referencesForDefinition(IDefinition definition, RoyaleProject project, List<Location> result)
     {
-        for (ICompilationUnit compilationUnit : project.getCompilationUnits())
+        for (ICompilationUnit unit : project.getCompilationUnits())
         {
-            if (compilationUnit == null
-                    || compilationUnit instanceof SWCCompilationUnit
-                    || compilationUnit instanceof ResourceBundleCompilationUnit)
+            if (unit == null)
             {
                 continue;
             }
-            referencesForDefinitionInCompilationUnit(definition, compilationUnit, project, result);
+            UnitType unitType = unit.getCompilationUnitType();
+            if (!UnitType.AS_UNIT.equals(unitType) && !UnitType.MXML_UNIT.equals(unitType))
+            {
+                //compiled compilation units won't have problems
+                continue;
+            }
+            referencesForDefinitionInCompilationUnit(definition, unit, project, result);
         }
     }
     

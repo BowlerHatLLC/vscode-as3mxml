@@ -98,14 +98,13 @@ import org.apache.royale.compiler.internal.projects.CompilerProject;
 import org.apache.royale.compiler.internal.projects.RoyaleProject;
 import org.apache.royale.compiler.internal.projects.RoyaleProjectConfigurator;
 import org.apache.royale.compiler.internal.tree.as.FileNode;
-import org.apache.royale.compiler.internal.units.ResourceBundleCompilationUnit;
-import org.apache.royale.compiler.internal.units.SWCCompilationUnit;
 import org.apache.royale.compiler.internal.workspaces.Workspace;
 import org.apache.royale.compiler.problems.ICompilerProblem;
 import org.apache.royale.compiler.problems.InternalCompilerProblem;
 import org.apache.royale.compiler.targets.ITarget;
 import org.apache.royale.compiler.targets.ITargetSettings;
 import org.apache.royale.compiler.units.ICompilationUnit;
+import org.apache.royale.compiler.units.ICompilationUnit.UnitType;
 import org.apache.royale.compiler.workspaces.IWorkspace;
 import org.apache.royale.utils.FilenameNormalization;
 import org.eclipse.lsp4j.ClientCapabilities;
@@ -1142,11 +1141,19 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                     {
                         for (ICompilationUnit unit : project.getCompilationUnits())
                         {
+                            if (unit == null)
+                            {
+                                continue;
+                            }
+                            UnitType unitType = unit.getCompilationUnitType();
+                            if(!UnitType.AS_UNIT.equals(unitType)
+                                    && !UnitType.MXML_UNIT.equals(unitType)
+                                    && !UnitType.SWC_UNIT.equals(unitType))
+                            {
+                                continue;
+                            }
                             String unitFileName = unit.getAbsoluteFilename();
-                            if (unitFileName.startsWith(deletedFilePath)
-                                    && (unitFileName.endsWith(AS_EXTENSION)
-                                            || unitFileName.endsWith(MXML_EXTENSION)
-                                            || unitFileName.endsWith(SWC_EXTENSION)))
+                            if (unitFileName.startsWith(deletedFilePath))
                             {
                                 //if we call fileRemoved() here, it will change the
                                 //compilationUnits collection and throw an exception
@@ -1157,7 +1164,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                                 //so we need to do a full check
                                 foldersToCheck.add(folderData);
 
-                                if (unitFileName.endsWith(SWC_EXTENSION))
+                                if (UnitType.SWC_UNIT.equals(unitType))
                                 {
                                     folderData.config.forceChanged();
                                 }
@@ -2031,9 +2038,12 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                     {
                         for (ICompilationUnit unit : project.getCompilationUnits())
                         {
-                            if (unit == null
-                                    || unit instanceof SWCCompilationUnit
-                                    || unit instanceof ResourceBundleCompilationUnit)
+                            if (unit == null)
+                            {
+                                continue;
+                            }
+                            UnitType unitType = unit.getCompilationUnitType();
+                            if (!UnitType.AS_UNIT.equals(unitType) && !UnitType.MXML_UNIT.equals(unitType))
                             {
                                 //compiled compilation units won't have problems
                                 continue;
@@ -2045,10 +2055,14 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                             //if not initialized, do this later
                             for (ICompilationUnit unit : project.getCompilationUnits())
                             {
-                                if (unit == null
-                                        || unit instanceof SWCCompilationUnit
-                                        || unit instanceof ResourceBundleCompilationUnit)
+                                if (unit == null)
                                 {
+                                    continue;
+                                }
+                                UnitType unitType = unit.getCompilationUnitType();
+                                if (!UnitType.AS_UNIT.equals(unitType) && !UnitType.MXML_UNIT.equals(unitType))
+                                {
+                                    //compiled compilation units won't have problems
                                     continue;
                                 }
                                 //just to be safe, find all of the included files

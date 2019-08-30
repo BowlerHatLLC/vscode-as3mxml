@@ -32,8 +32,6 @@ import org.apache.royale.compiler.internal.parsing.as.OffsetCue;
 import org.apache.royale.compiler.internal.parsing.as.OffsetLookup;
 import org.apache.royale.compiler.internal.scopes.MXMLFileScope;
 import org.apache.royale.compiler.internal.tree.as.FileNode;
-import org.apache.royale.compiler.internal.units.ResourceBundleCompilationUnit;
-import org.apache.royale.compiler.internal.units.SWCCompilationUnit;
 import org.apache.royale.compiler.mxml.IMXMLDataManager;
 import org.apache.royale.compiler.mxml.IMXMLLanguageConstants;
 import org.apache.royale.compiler.mxml.IMXMLTagAttributeData;
@@ -43,6 +41,7 @@ import org.apache.royale.compiler.mxml.IMXMLUnitData;
 import org.apache.royale.compiler.scopes.IASScope;
 import org.apache.royale.compiler.tree.as.IASNode;
 import org.apache.royale.compiler.units.ICompilationUnit;
+import org.apache.royale.compiler.units.ICompilationUnit.UnitType;
 import org.apache.royale.compiler.workspaces.IWorkspace;
 
 public class CompilationUnitUtils
@@ -76,9 +75,12 @@ public class CompilationUnitUtils
 
 	public static void findIncludedFiles(ICompilationUnit unit, Map<String,IncludeFileData> result)
 	{
-		if (unit == null
-				|| unit instanceof SWCCompilationUnit
-				|| unit instanceof ResourceBundleCompilationUnit)
+		if(unit == null)
+		{
+			return;
+		}
+		UnitType unitType = unit.getCompilationUnitType();
+		if(!UnitType.AS_UNIT.equals(unitType) && !UnitType.MXML_UNIT.equals(unitType))
 		{
 			//compiled compilation units won't have problems
 			return;

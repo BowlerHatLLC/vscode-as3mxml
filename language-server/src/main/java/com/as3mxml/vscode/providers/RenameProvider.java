@@ -38,8 +38,6 @@ import org.apache.royale.compiler.definitions.IFunctionDefinition;
 import org.apache.royale.compiler.definitions.IPackageDefinition;
 import org.apache.royale.compiler.internal.mxml.MXMLData;
 import org.apache.royale.compiler.internal.projects.RoyaleProject;
-import org.apache.royale.compiler.internal.units.ResourceBundleCompilationUnit;
-import org.apache.royale.compiler.internal.units.SWCCompilationUnit;
 import org.apache.royale.compiler.mxml.IMXMLDataManager;
 import org.apache.royale.compiler.mxml.IMXMLTagData;
 import org.apache.royale.compiler.scopes.IASScope;
@@ -48,6 +46,7 @@ import org.apache.royale.compiler.tree.as.IDefinitionNode;
 import org.apache.royale.compiler.tree.as.IExpressionNode;
 import org.apache.royale.compiler.tree.as.IIdentifierNode;
 import org.apache.royale.compiler.units.ICompilationUnit;
+import org.apache.royale.compiler.units.ICompilationUnit.UnitType;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.RenameFile;
@@ -201,19 +200,23 @@ public class RenameProvider
         }
         Path originalDefinitionFilePath = null;
         Path newDefinitionFilePath = null;
-        for (ICompilationUnit compilationUnit : project.getCompilationUnits())
+        for (ICompilationUnit unit : project.getCompilationUnits())
         {
-            if (compilationUnit == null
-                    || compilationUnit instanceof SWCCompilationUnit
-                    || compilationUnit instanceof ResourceBundleCompilationUnit)
+            if (unit == null)
             {
                 continue;
             }
+            UnitType unitType = unit.getCompilationUnitType();
+            if (!UnitType.AS_UNIT.equals(unitType) && !UnitType.MXML_UNIT.equals(unitType))
+            {
+                //compiled compilation units won't have problems
+                continue;
+            }
             ArrayList<TextEdit> textEdits = new ArrayList<>();
-            if (compilationUnit.getAbsoluteFilename().endsWith(MXML_EXTENSION))
+            if (unit.getAbsoluteFilename().endsWith(MXML_EXTENSION))
             {
                 IMXMLDataManager mxmlDataManager = project.getWorkspace().getMXMLDataManager();
-                MXMLData mxmlData = (MXMLData) mxmlDataManager.get(fileTracker.getFileSpecification(compilationUnit.getAbsoluteFilename()));
+                MXMLData mxmlData = (MXMLData) mxmlDataManager.get(fileTracker.getFileSpecification(unit.getAbsoluteFilename()));
                 IMXMLTagData rootTag = mxmlData.getRootTag();
                 if (rootTag != null)
                 {
@@ -235,7 +238,7 @@ public class RenameProvider
                     }
                 }
             }
-            IASNode ast = ASTUtils.getCompilationUnitAST(compilationUnit);
+            IASNode ast = ASTUtils.getCompilationUnitAST(unit);
             if (ast != null)
             {
                 ArrayList<IIdentifierNode> identifiers = new ArrayList<>();
@@ -260,8 +263,8 @@ public class RenameProvider
                 continue;
             }
 
-            Path textDocumentPath = Paths.get(compilationUnit.getAbsoluteFilename());
-            if (definitionIsMainDefinitionInCompilationUnit(compilationUnit, definition))
+            Path textDocumentPath = Paths.get(unit.getAbsoluteFilename());
+            if (definitionIsMainDefinitionInCompilationUnit(unit, definition))
             {
                 originalDefinitionFilePath = textDocumentPath;
                 String newBaseName = newName + "." + Files.getFileExtension(originalDefinitionFilePath.toFile().getName());
