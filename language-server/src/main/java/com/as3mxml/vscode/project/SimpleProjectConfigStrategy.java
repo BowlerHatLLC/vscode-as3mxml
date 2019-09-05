@@ -105,6 +105,10 @@ public class SimpleProjectConfigStrategy implements IProjectConfigStrategy
             compilerOptions.add("--include-sources+=" + openPath);
         }
 
+        //the output compiler option needs to be defined or there will be a
+        //null pointer exception
+        compilerOptions.add("--output=fake.swc");
+
 		ArrayList<String> targets = null;
 		if(isRoyale)
 		{
