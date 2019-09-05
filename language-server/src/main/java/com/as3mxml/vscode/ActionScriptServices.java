@@ -94,13 +94,14 @@ import org.apache.royale.compiler.internal.parsing.as.ASParser;
 import org.apache.royale.compiler.internal.parsing.as.ASToken;
 import org.apache.royale.compiler.internal.parsing.as.RepairingTokenBuffer;
 import org.apache.royale.compiler.internal.parsing.as.StreamingASTokenizer;
-import org.apache.royale.compiler.internal.projects.CompilerProject;
 import org.apache.royale.compiler.internal.projects.RoyaleProject;
 import org.apache.royale.compiler.internal.projects.RoyaleProjectConfigurator;
+import org.apache.royale.compiler.internal.targets.Target;
 import org.apache.royale.compiler.internal.tree.as.FileNode;
 import org.apache.royale.compiler.internal.workspaces.Workspace;
 import org.apache.royale.compiler.problems.ICompilerProblem;
 import org.apache.royale.compiler.problems.InternalCompilerProblem;
+import org.apache.royale.compiler.projects.ICompilerProject;
 import org.apache.royale.compiler.targets.ITarget;
 import org.apache.royale.compiler.targets.ITargetSettings;
 import org.apache.royale.compiler.units.ICompilationUnit;
@@ -174,6 +175,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     private static final String PROPERTY_FRAMEWORK_LIB = "royalelib";
     private static final String ROYALE_ASJS_RELATIVE_PATH_CHILD = "./royale-asjs";
     private static final String FRAMEWORKS_RELATIVE_PATH_CHILD = "./frameworks";
+    private static final String SOURCE_DEFAULTS = "defaults";
 
     private ActionScriptLanguageClient languageClient;
     private IProjectConfigStrategyFactory projectConfigStrategyFactory;
@@ -667,6 +669,8 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         if (!textDocumentUri.endsWith(AS_EXTENSION)
                 && !textDocumentUri.endsWith(MXML_EXTENSION))
         {
+            //code intelligence is available only in .as and .mxml files
+            //so we ignore other file extensions
             return;
         }
         Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocumentUri);
@@ -676,7 +680,8 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         }
 
         //even if it's not in a workspace folder right now, store it just in
-        //case we need it later. example: added to source-path compiler option.
+        //case we need it later.
+        //example: if we modify to source-path compiler option
         String text = textDocument.getText();
         fileTracker.openFile(path, text);
 
@@ -712,9 +717,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             path = Paths.get(includeFileData.parentPath);
         }
 
-        //we need to check for problems when opening a new file because it
-        //may not have been in the workspace before.
-        checkFilePathForProblems(path, folderData, true);
+        checkProjectForProblems(folderData);
     }
 
     /**
@@ -730,6 +733,8 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         if (!textDocumentUri.endsWith(AS_EXTENSION)
                 && !textDocumentUri.endsWith(MXML_EXTENSION))
         {
+            //code intelligence is available only in .as and .mxml files
+            //so we ignore other file extensions
             return;
         }
         Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocumentUri);
@@ -793,9 +798,10 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
 
         if(unit == null)
         {
-            //this file doesn't have a compilation unit yet, so we'll fall back
-            //to simple syntax checking for now
-            checkFilePathForProblems(path, folderData, true);
+            //we don't have a compilation unit for this yet, but if we check the
+            //entire project, it should be created (or we'll fall back to simple
+            //syntax checking)
+            checkProjectForProblems(folderData);
         }
         else if(realTimeProblems
                 && !folderData.equals(workspaceFolderManager.getFallbackFolderData()))
@@ -833,6 +839,8 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         if (!textDocumentUri.endsWith(AS_EXTENSION)
                 && !textDocumentUri.endsWith(MXML_EXTENSION))
         {
+            //code intelligence is available only in .as and .mxml files
+            //so we ignore other file extensions
             return;
         }
         Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocumentUri);
@@ -901,9 +909,10 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             return;
         }
 
-        //the contents of the file may have been reverted without saving
-        //changes, so check for errors with the file system version
-        checkFilePathForProblems(path, folderData, true);
+        //the contents of the file may have been modified, and then reverted
+        //without saving changes, so re-check for errors with the file system
+        //version of the file
+        checkProjectForProblems(folderData);
     }
 
     /**
@@ -914,8 +923,8 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     {
         if(realTimeProblems)
         {
-            //as long as we're checking on change, we shouldn't need to do anything
-            //on save
+            //as long as we're checking on change, we shouldn't need to do
+            //anything on save because we should already have the correct state
             return;
         }
 
@@ -924,6 +933,8 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         if (!textDocumentUri.endsWith(AS_EXTENSION)
                 && !textDocumentUri.endsWith(MXML_EXTENSION))
         {
+            //code intelligence is available only in .as and .mxml files
+            //so we ignore other file extensions
             return;
         }
         Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocumentUri);
@@ -951,7 +962,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             path = Paths.get(includeFileData.parentPath);
         }
         
-        checkFilePathForProblems(path, folderData, true);
+        checkProjectForProblems(folderData);
     }
 
     public void didChangeWatchedFiles(DidChangeWatchedFilesParams params)
@@ -1834,38 +1845,52 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     private void checkProjectForProblems(WorkspaceFolderData folderData)
     {
         getProject(folderData);
-        if(folderData.project == null)
+        RoyaleProject project = folderData.project;
+        ProjectOptions options = folderData.options;
+        if(project == null || options == null)
         {
+            //since we don't have a project, we don't have compilation units
+            //any existing problems should be considered stale and won't be
+            //updated until the configuration problems are fixed.
+            folderData.codeProblemTracker.releaseStale();
             return;
         }
-        ProjectOptions projectOptions = folderData.options;
-        if (projectOptions == null || projectOptions.type.equals(ProjectType.LIB))
+
+        ProblemQuery problemQuery = workspaceFolderDataToProblemQuery(folderData);
+        compilerWorkspace.startBuilding();
+        try
         {
-            ProblemQuery problemQuery = workspaceFolderDataToProblemQuery(folderData);
-            for(Path filePath : fileTracker.getOpenFiles())
+            //start by making sure that all of the project's compilation units
+            //have been created. we'll check them for errors in a later step
+            populateCompilationUnits(project);
+                    
+            //don't check compilation units for problems if the project itself
+            //has problems. the user should fix those first.
+            Collection<ICompilerProblem> fatalProblems = project.getFatalProblems();
+            problemQuery.addAll(fatalProblems);
+            
+            //if we found some fatal problems at the project level, don't bother
+            //checking anything else for problems
+            if (fatalProblems == null || fatalProblems.size() == 0)
             {
-                WorkspaceFolderData otherFolderData = workspaceFolderManager.getWorkspaceFolderDataForSourceFile(filePath);
-                if (!folderData.equals(otherFolderData))
-                {
-                    //don't check files from other projects!
-                    continue;
-                }
-                checkFilePathForProblems(filePath, problemQuery, folderData, true);
+                //these are non-fatal project problems, and we should be able
+                //to show compilation unit problems too
+                problemQuery.addAll(project.getProblems());
+
+                checkReachableCompilationUnitsForErrors(problemQuery, folderData);
             }
-            publishDiagnosticsForProblemQuery(problemQuery, folderData.codeProblemTracker, folderData, true);
         }
-        else //app
+        finally
         {
-            Path path = getMainCompilationUnitPath(folderData);
-            if (path != null)
-            {
-                checkFilePathForProblems(path, folderData, false);
-            }
+            compilerWorkspace.doneBuilding();
         }
+        publishDiagnosticsForProblemQuery(problemQuery, folderData.codeProblemTracker, folderData, true);
     }
 
     private void publishDiagnosticsForProblemQuery(ProblemQuery problemQuery, ProblemTracker problemTracker, WorkspaceFolderData folderData, boolean releaseStale)
     {
+        Path folderPath = LanguageServerCompilerUtils.getPathFromLanguageServerURI(folderData.folder.getUri());
+        String defaultsPathString = folderPath.resolve(SOURCE_DEFAULTS).toString();
         Map<URI, PublishDiagnosticsParams> filesMap = new HashMap<>();
         for (ICompilerProblem problem : problemQuery.getFilteredProblems())
         {
@@ -1876,17 +1901,18 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                 //skip files that are included in other files
                 continue;
             }
+            if (CommandLineConfigurator.SOURCE_COMMAND_LINE.equals(problemSourcePath)
+                    || defaultsPathString.equals(problemSourcePath))
+            {
+                //for configuration problems that point to defaults or the
+                //command line, the best default location to send the user is
+                //probably to the config file (like asconfig.json in Visual
+                //Studio Code)
+                problemSourcePath = folderData.config.getDefaultConfigurationProblemPath();
+            }
             if (problemSourcePath == null)
             {
-                Path folderPath = LanguageServerCompilerUtils.getPathFromLanguageServerURI(folderData.folder.getUri());
                 problemSourcePath = folderPath.toString();
-            }
-            if (CommandLineConfigurator.SOURCE_COMMAND_LINE.equals(problemSourcePath))
-            {
-                //for configuration problems that point to the command line, the
-                //best default location to send the user is probably to the
-                //config file (like asconfig.json in Visual Studio Code)
-                problemSourcePath = folderData.config.getDefaultConfigurationProblemPath();
             }
             URI uri = Paths.get(problemSourcePath).toUri();
             if (!filesMap.containsKey(uri))
@@ -1924,180 +1950,216 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         return new ProblemQuery(compilerProblemSettings);
     }
 
-    private void checkFilePathForProblems(Path path, WorkspaceFolderData folderData, boolean quick)
+    private void populateCompilationUnits(ICompilerProject project)
     {
-        ProblemQuery problemQuery = workspaceFolderDataToProblemQuery(folderData);
-        checkFilePathForProblems(path, problemQuery, folderData, quick);
-        publishDiagnosticsForProblemQuery(problemQuery, folderData.codeProblemTracker, folderData, !quick);
-    }
-
-    private void checkFilePathForProblems(Path path, ProblemQuery problemQuery, WorkspaceFolderData folderData, boolean quick)
-    {
-        URI uri = path.toUri();
-        if(notOnSourcePathSet.contains(uri))
+        List<ICompilerProblem> problems = new ArrayList<>();
+        boolean continueCheckingForErrors = true;
+        while (continueCheckingForErrors)
         {
-            //if the file was not on the project's source path, clear out any
-            //errors that might have existed previously
-            notOnSourcePathSet.remove(uri);
-
-            PublishDiagnosticsParams publish = new PublishDiagnosticsParams();
-            publish.setDiagnostics(new ArrayList<>());
-            publish.setUri(uri.toString());
-            if (languageClient != null)
-            {
-                languageClient.publishDiagnostics(publish);
-            }
-        }
-
-        if (folderData.equals(workspaceFolderManager.getFallbackFolderData()))
-        {
-            compilerWorkspace.startBuilding();
             try
             {
-                ICompilationUnit unitForPath = CompilerProjectUtils.findCompilationUnit(path, folderData.project);
-                if (unitForPath != null)
+                //at this point, we want to build all compilation units,
+                //including the ones that aren't considered reachable yet.
+                //we'll filter out the unreachable units later
+                for (ICompilationUnit unit : project.getCompilationUnits())
                 {
-                    CompilationUnitUtils.findIncludedFiles(unitForPath, folderData.includedFiles);
+                    if (unit == null)
+                    {
+                        continue;
+                    }
+                    UnitType unitType = unit.getCompilationUnitType();
+                    if (!UnitType.AS_UNIT.equals(unitType) && !UnitType.MXML_UNIT.equals(unitType))
+                    {
+                        //compiled compilation units won't have problems
+                        continue;
+                    }
+                    //reuse the existing list so that we don't allocate a list
+                    //for every compilation unit
+                    problems.clear();
+
+                    checkCompilationUnitForAllProblems(unit, problems);
+                    problems.clear();
                 }
+                continueCheckingForErrors = false;
             }
-            finally
+            catch (ConcurrentModificationException e)
             {
-                compilerWorkspace.doneBuilding();
+                //when we finished building one of the compilation
+                //units, more were added to the collection, so we need
+                //to start over because we can't iterate over a modified
+                //collection.
             }
-            if (showFileOutsideSourcePath)
-            {
-                notOnSourcePathSet.add(uri);
-                if(workspaceFolderManager.getWorkspaceFolders().size() == 0)
-                {
-                    SyntaxFallbackProblem problem = new SyntaxFallbackProblem(path.toString(),
-                            "Some code intelligence features are disabled for this file. Open a workspace folder to enable all ActionScript & MXML features.");
-                    problemQuery.add(problem);
-                }
-                else
-                {
-                    SyntaxFallbackProblem problem = new SyntaxFallbackProblem(path.toString(),
-                            path.getFileName() + " is not located in the workspace's source path. Some code intelligence features are disabled for this file.");
-                    problemQuery.add(problem);
-                }
-            }
+        }
+    }
+
+    private void checkReachableCompilationUnitsForErrors(ProblemQuery problemQuery, WorkspaceFolderData folderData)
+    {
+        if (!initialized)
+        {
+            //do this later because we can't publish diagnostics yet
             return;
         }
-        
-        ProjectOptions projectOptions = folderData.options;
-        if (projectOptions == null || folderData.equals(workspaceFolderManager.getFallbackFolderData())
-                || !checkFilePathForAllProblems(path, problemQuery, folderData, false))
-        {
-            checkFilePathForSyntaxProblems(path, folderData, problemQuery);
-        }
-    }
 
-    private boolean checkFilePathForAllProblems(Path path, ProblemQuery problemQuery, WorkspaceFolderData folderData, boolean quick)
-    {
-        compilerWorkspace.startBuilding();
+        RoyaleProject project = folderData.project;
+
+        Set<ICompilationUnit> roots = new HashSet<>();
+        Target target = null;
         try
         {
-            ICompilationUnit unitForPath = CompilerProjectUtils.findCompilationUnit(path, folderData.project);
-            if (unitForPath == null)
+            if(folderData.options.type.equals(ProjectType.LIB))
             {
-                //fall back to the syntax check instead
-                return false;
+                target = (Target) project.createSWCTarget(project.getTargetSettings(), null);
             }
-            if (waitForBuildFinishRunner != null
-                && unitForPath.equals(waitForBuildFinishRunner.getCompilationUnit())
-                && waitForBuildFinishRunner.isRunning())
+            else //app
             {
-                //take precedence over the real time problem checker
-                waitForBuildFinishRunner.setCancelled();
+                target = (Target) project.createSWFTarget(project.getTargetSettings(), null);
             }
-            CompilerProject project = (CompilerProject) unitForPath.getProject();
-            Collection<ICompilerProblem> fatalProblems = project.getFatalProblems();
-            if (fatalProblems == null || fatalProblems.size() == 0)
+            roots.addAll(target.getRootedCompilationUnits().getUnits());
+        }
+        catch(Exception e)
+        {
+            System.err.println("Exception during createSWCTarget() or createSWFTarget(): " + e);
+            e.printStackTrace(System.err);
+            
+            InternalCompilerProblem problem = new InternalCompilerProblem(e);
+            problemQuery.add(problem);
+            return;
+        }
+
+        //some additional files may be open in an editor, and we'll
+        //want to check those for errors too, even if they aren't
+        //referenced by one of the roots
+        for(Path openFilePath : fileTracker.getOpenFiles())
+        {
+            WorkspaceFolderData openFileFolderData = workspaceFolderManager.getWorkspaceFolderDataForSourceFile(openFilePath);
+            if (!folderData.equals(openFileFolderData))
             {
-                fatalProblems = project.getProblems();
+                //not in this workspace folder
+                continue;
             }
-            problemQuery.addAll(fatalProblems);
-            if (fatalProblems != null && fatalProblems.size() > 0)
+            ICompilationUnit openUnit = CompilerProjectUtils.findCompilationUnit(openFilePath, project);
+            if (openUnit == null)
             {
-                //since we found some problems, we'll skip the syntax check fallback
-                return true;
+                //if there is not unit for this open file, check for
+                //simple syntax problems instead
+                checkFilePathForSyntaxProblems(openFilePath, folderData, problemQuery);
+                continue;
             }
+            roots.add(openUnit);
+        }
+
+        //start fresh when checking all compilation units
+        folderData.includedFiles.clear();
+
+        List<ICompilerProblem> problems = new ArrayList<>();
+        boolean continueCheckingForErrors = true;
+        while (continueCheckingForErrors)
+        {
+            //clear it out to avoid duplicates from checking the same file
+            //multiple times
+            problemQuery.clear();
             try
             {
-                if (quick)
+                for (ICompilationUnit unit : project.getReachableCompilationUnitsInSWFOrder(roots))
                 {
-                    checkCompilationUnitForAllProblems(unitForPath, problemQuery);
-                    CompilationUnitUtils.findIncludedFiles(unitForPath, folderData.includedFiles);
-                    return true;
-                }
-                //start fresh when checking all compilation units
-                folderData.includedFiles.clear();
-                boolean continueCheckingForErrors = true;
-                while (continueCheckingForErrors)
-                {
-                    try
+                    if (unit == null)
                     {
-                        for (ICompilationUnit unit : project.getCompilationUnits())
-                        {
-                            if (unit == null)
-                            {
-                                continue;
-                            }
-                            UnitType unitType = unit.getCompilationUnitType();
-                            if (!UnitType.AS_UNIT.equals(unitType) && !UnitType.MXML_UNIT.equals(unitType))
-                            {
-                                //compiled compilation units won't have problems
-                                continue;
-                            }
-                            checkCompilationUnitForAllProblems(unit, problemQuery);
-                        }
-                        if (initialized)
-                        {
-                            //if not initialized, do this later
-                            for (ICompilationUnit unit : project.getCompilationUnits())
-                            {
-                                if (unit == null)
-                                {
-                                    continue;
-                                }
-                                UnitType unitType = unit.getCompilationUnitType();
-                                if (!UnitType.AS_UNIT.equals(unitType) && !UnitType.MXML_UNIT.equals(unitType))
-                                {
-                                    //compiled compilation units won't have problems
-                                    continue;
-                                }
-                                //just to be safe, find all of the included files
-                                //after we've checked for problems
-                                CompilationUnitUtils.findIncludedFiles(unit, folderData.includedFiles);
-                            }
-                        }
-                        continueCheckingForErrors = false;
+                        continue;
                     }
-                    catch (ConcurrentModificationException e)
+                    
+                    UnitType unitType = unit.getCompilationUnitType();
+                    if (!UnitType.AS_UNIT.equals(unitType) && !UnitType.MXML_UNIT.equals(unitType))
                     {
-                        //when we finished building one of the compilation
-                        //units, more were added to the collection, so we need
-                        //to start over because we can't iterate over a modified
-                        //collection.
+                        //compiled compilation units won't have problems
+                        continue;
                     }
+                    
+                    if (waitForBuildFinishRunner != null
+                        && unit.equals(waitForBuildFinishRunner.getCompilationUnit())
+                        && waitForBuildFinishRunner.isRunning())
+                    {
+                        //take precedence over the real time problem checker
+                        waitForBuildFinishRunner.setCancelled();
+                    }
+
+                    Path unitPath = Paths.get(unit.getAbsoluteFilename());
+                    URI unitUri = unitPath.toUri();
+                    if(notOnSourcePathSet.contains(unitUri))
+                    {
+                        //if the file was not on the project's source path, clear out any
+                        //errors that might have existed previously
+                        notOnSourcePathSet.remove(unitUri);
+            
+                        PublishDiagnosticsParams publish = new PublishDiagnosticsParams();
+                        publish.setDiagnostics(new ArrayList<>());
+                        publish.setUri(unitUri.toString());
+                        if (languageClient != null)
+                        {
+                            languageClient.publishDiagnostics(publish);
+                        }
+                    }
+
+                    //we don't check for errors in the fallback project
+                    if (folderData.equals(workspaceFolderManager.getFallbackFolderData()))
+                    {
+                        //normally, we look for included files after checking
+                        //for errors, but since we're not checking for errors
+                        //do it here instead
+                        CompilationUnitUtils.findIncludedFiles(unit, folderData.includedFiles);
+                        
+                        //there's a configuration setting that determines if we
+                        //warn the user that a file is outside of the project's
+                        //source path
+                        if (showFileOutsideSourcePath)
+                        {
+                            notOnSourcePathSet.add(unitUri);
+                            if(workspaceFolderManager.getWorkspaceFolders().size() == 0)
+                            {
+                                SyntaxFallbackProblem problem = new SyntaxFallbackProblem(unitPath.toString(),
+                                        "Some code intelligence features are disabled for this file. Open a workspace folder to enable all ActionScript & MXML features.");
+                                problemQuery.add(problem);
+                            }
+                            else
+                            {
+                                SyntaxFallbackProblem problem = new SyntaxFallbackProblem(unitPath.toString(),
+                                        unitPath.getFileName() + " is not located in the workspace's source path. Some code intelligence features are disabled for this file.");
+                                problemQuery.add(problem);
+                            }
+                        }
+                        continue;
+                    }
+
+                    //reuse the existing list so that we don't allocate a list
+                    //for every compilation unit
+                    problems.clear();
+
+                    //we should have already built, so this will be fast
+                    //if we hadn't built, we would not have all of the roots
+                    checkCompilationUnitForAllProblems(unit, problems);
+                    problemQuery.addAll(problems);
+                    //clear for the next compilation unit
+                    problems.clear();
+
+                    //just to be safe, find all of the included files
+                    //after we've checked for problems
+                    CompilationUnitUtils.findIncludedFiles(unit, folderData.includedFiles);
                 }
+                continueCheckingForErrors = false;
             }
-            catch (Exception e)
+            catch (ConcurrentModificationException e)
             {
-                System.err.println("Exception during build: " + e);
-                e.printStackTrace(System.err);
-                return false;
+                //when we finished building one of the compilation
+                //units, more were added to the collection, so we need
+                //to start over because we can't iterate over a modified
+                //collection.
+
+                //this shouldn't happen at this point, but just in case
             }
-            return true;
-        }
-        finally
-        {
-            compilerWorkspace.doneBuilding();
         }
     }
 
-    private void checkCompilationUnitForAllProblems(ICompilationUnit unit, ProblemQuery problemQuery)
+    private void checkCompilationUnitForAllProblems(ICompilationUnit unit, List<ICompilerProblem> problems)
     {
-        ArrayList<ICompilerProblem> problems = new ArrayList<>();
         try
         {
             if(initialized)
@@ -2105,7 +2167,6 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                 //if we pass in null, it's desigfned to ignore certain errors that
                 //don't matter for IDE code intelligence.
                 unit.waitForBuildFinish(problems, null);
-                problemQuery.addAll(problems);
             }
             else
             {
@@ -2124,7 +2185,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             e.printStackTrace(System.err);
 
             InternalCompilerProblem problem = new InternalCompilerProblem(e);
-            problemQuery.add(problem);
+            problems.add(problem);
         }
     }
 
