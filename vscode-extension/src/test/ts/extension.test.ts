@@ -25,30 +25,21 @@ const COMMAND_ORGANIZE_IMPORTS_IN_URI = "as3mxml.organizeImportsInUri";
 function openAndEditDocument(uri: vscode.Uri, callback: (editor: vscode.TextEditor) => PromiseLike<void>): PromiseLike<void>
 {
 	return vscode.workspace.openTextDocument(uri)
-		.then((document: vscode.TextDocument) =>
-			{
-				return vscode.window.showTextDocument(document)
-					.then(callback, (err) =>
-					{
-						assert(false, "Failed to show text document: " + uri);
-					});
-			}, (err) =>
-			{
-				assert(false, "Failed to open text document: " + uri);
-			});
+		.then(
+			(document: vscode.TextDocument) => new Promise(resolve => setTimeout(resolve, 100, document)),
+			(err) => assert(false, "Failed to open text document: " + uri + "\n" + err)
+		)
+		.then((document: vscode.TextDocument) => vscode.window.showTextDocument(document),
+			(err) => assert(false, "Failed to show text document: " + uri + "\n" + err)
+		)
+		.then(callback);
 }
 
-function revertAndCloseActiveEditor()
+function revertAndCloseActiveEditor(): PromiseLike<void>
 {
 	return vscode.commands.executeCommand("workbench.action.revertAndCloseActiveEditor").then(() =>
 	{
-		return new Promise((resolve, reject) =>
-		{
-			setTimeout(() =>
-			{
-				resolve();
-			}, 100);
-		});
+		return new Promise(resolve => setTimeout(resolve, 100));
 	});
 }
 
