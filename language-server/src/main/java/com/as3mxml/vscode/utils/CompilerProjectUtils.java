@@ -39,6 +39,7 @@ import org.apache.royale.compiler.internal.projects.RoyaleJSProject;
 import org.apache.royale.compiler.internal.projects.RoyaleProject;
 import org.apache.royale.compiler.internal.projects.RoyaleProjectConfigurator;
 import org.apache.royale.compiler.internal.workspaces.Workspace;
+import org.apache.royale.compiler.projects.ICompilerProject;
 import org.apache.royale.compiler.units.ICompilationUnit;
 
 public class CompilerProjectUtils
@@ -245,7 +246,7 @@ public class CompilerProjectUtils
         return configurator;
 	}
 
-    public static ICompilationUnit findCompilationUnit(Path pathToFind, RoyaleProject project)
+    public static ICompilationUnit findCompilationUnit(Path pathToFind, ICompilerProject project)
     {
         if(project == null)
         {
