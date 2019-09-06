@@ -1260,29 +1260,31 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         initialized = true;
         //this is the first time that we can notify the client about any
         //diagnostics
-        for (WorkspaceFolder folder : workspaceFolderManager.getWorkspaceFolders())
-        {
-            WorkspaceFolderData folderData = workspaceFolderManager.getWorkspaceFolderData(folder);
-            checkProjectForProblems(folderData);
-        }
+        checkForProblemsNow(false);
     }
 
     /**
      * Called if something in the configuration has changed.
      */
-    public void checkForProblemsNow()
+    public void checkForProblemsNow(boolean forceChange)
     {
         updateFrameworkSDK();
         for (WorkspaceFolder folder : workspaceFolderManager.getWorkspaceFolders())
         {
             WorkspaceFolderData folderData = workspaceFolderManager.getWorkspaceFolderData(folder);
-            IProjectConfigStrategy config = folderData.config;
-            config.forceChanged();
+            if (forceChange)
+            {
+                IProjectConfigStrategy config = folderData.config;
+                config.forceChanged();
+            }
             checkProjectForProblems(folderData);
         }
         if(fallbackConfig != null)
         {
-            fallbackConfig.forceChanged();
+            if (forceChange)
+            {
+                fallbackConfig.forceChanged();
+            }
             WorkspaceFolderData folderData = workspaceFolderManager.getFallbackFolderData();
             checkProjectForProblems(folderData);
         }
@@ -2254,7 +2256,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
 			return;
 		}
 		System.setProperty(PROPERTY_FRAMEWORK_LIB, frameworkLib);
-		checkForProblemsNow();
+		checkForProblemsNow(true);
 	}
 
 	private void updateRealTimeProblems(JsonObject settings)
@@ -2281,7 +2283,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         realTimeProblems = newRealTimeProblems;
         if(newRealTimeProblems)
         {
-            checkForProblemsNow();
+            checkForProblemsNow(true);
         }
 	}
 
@@ -2307,7 +2309,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             return;
         }
         showFileOutsideSourcePath = newShowFileOutsideSourcePath;
-        checkForProblemsNow();
+        checkForProblemsNow(true);
 	}
 
 	private void updateJVMArgs(JsonObject settings)
