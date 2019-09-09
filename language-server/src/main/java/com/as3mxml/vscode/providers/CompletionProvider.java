@@ -1152,6 +1152,12 @@ public class CompletionProvider
         boolean isGetter = node.isGetter();
         boolean isSetter = node.isSetter();
         IClassNode classNode = (IClassNode) node.getAncestorOfType(IClassNode.class);
+        if (classNode == null)
+        {
+            //this can happen in MXML files
+            return;
+        }
+
         IClassDefinition classDefinition = classNode.getDefinition();
 
         ArrayList<IDefinition> propertyDefinitions = new ArrayList<>();
