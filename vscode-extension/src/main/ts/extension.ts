@@ -403,7 +403,6 @@ function startClient()
 							{
 								let driveLetter = matches[1].toUpperCase();
 								valueAsString = `file:///${driveLetter}:/` + valueAsString.substr(matches[0].length);
-								console.info(valueAsString);
 							}
 							return valueAsString;
 						}
