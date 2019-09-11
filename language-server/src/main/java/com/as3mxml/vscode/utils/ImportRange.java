@@ -87,7 +87,12 @@ public class ImportRange
         {
             return range;
         }
-        range.uri = Paths.get(offsetNode.getSourcePath()).toUri().toString();
+        String sourcePath = offsetNode.getSourcePath();
+        if (sourcePath == null)
+        {
+            return range;
+        }
+        range.uri = Paths.get(sourcePath).toUri().toString();
 
         IPackageNode packageNode = (IPackageNode) offsetNode.getAncestorOfType(IPackageNode.class);
         if (packageNode != null)
