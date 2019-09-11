@@ -23,6 +23,7 @@ import java.util.Collections;
 import com.as3mxml.vscode.project.WorkspaceFolderData;
 
 import org.apache.royale.compiler.clients.problems.ProblemQuery;
+import org.apache.royale.compiler.filespecs.IFileSpecification;
 import org.apache.royale.compiler.problems.ICompilerProblem;
 import org.apache.royale.compiler.problems.InternalCompilerProblem2;
 import org.apache.royale.compiler.units.ICompilationUnit;
@@ -31,6 +32,7 @@ import org.apache.royale.compiler.units.requests.IFileScopeRequestResult;
 import org.apache.royale.compiler.units.requests.IOutgoingDependenciesRequestResult;
 import org.apache.royale.compiler.units.requests.IRequest;
 import org.apache.royale.compiler.units.requests.ISyntaxTreeRequestResult;
+import org.apache.royale.compiler.workspaces.IWorkspace;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
@@ -38,9 +40,10 @@ import org.eclipse.lsp4j.services.LanguageClient;
 
 public class WaitForBuildFinishRunner implements Runnable
 {
-	public WaitForBuildFinishRunner(ICompilationUnit unit, WorkspaceFolderData folderData, LanguageClient languageClient, CompilerProblemFilter filter)
+	public WaitForBuildFinishRunner(ICompilationUnit unit, IFileSpecification fileSpec, WorkspaceFolderData folderData, LanguageClient languageClient, CompilerProblemFilter filter)
 	{
 		this.compilationUnit = unit;
+		this.fileSpec = fileSpec;
 		this.folderData = folderData;
 		this.languageClient = languageClient;
 		this.compilerProblemFilter = filter;
@@ -49,6 +52,7 @@ public class WaitForBuildFinishRunner implements Runnable
 	public CompilerProblemFilter compilerProblemFilter;
 	public LanguageClient languageClient;
 	private WorkspaceFolderData folderData;
+	private IFileSpecification fileSpec;
 
 	private ICompilationUnit compilationUnit;
 
@@ -76,9 +80,10 @@ public class WaitForBuildFinishRunner implements Runnable
 		return changed;
 	}
 
-	public void setChanged()
+	public void setChanged(IFileSpecification fileSpec)
 	{
 		changed = true;
+		this.fileSpec = fileSpec;
 	}
 
 	private boolean cancelled = false;
@@ -91,6 +96,12 @@ public class WaitForBuildFinishRunner implements Runnable
 	public void setCancelled()
 	{
 		cancelled = true;
+		if(changed)
+		{
+			changed = false;	
+			IWorkspace workspace = folderData.project.getWorkspace();
+			workspace.fileChanged(fileSpec);
+		}
 	}
 
 	public void run()
@@ -138,6 +149,8 @@ public class WaitForBuildFinishRunner implements Runnable
 					break;
 				}
 				changed = false;
+				IWorkspace workspace = folderData.project.getWorkspace();
+				workspace.fileChanged(fileSpec);
 			}
 			try
 			{

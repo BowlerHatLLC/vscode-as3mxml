@@ -758,28 +758,22 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             return;
         }
 
-        String normalizedChangedPathAsString = path.toString();
+        String normalizedChangedPathAsString = FilenameNormalization.normalize(path.toAbsolutePath().toString());
+        IFileSpecification fileSpec = fileTracker.getFileSpecification(normalizedChangedPathAsString);
+
+        //if we're checking a compilation unit for problems in real time, and
+        //the path of this new change is the same, we'll re-check for problems
+        //when its done
+        //this is the fastest way to check for problems while the user is typing
+        if(waitForBuildFinishRunner != null
+                && waitForBuildFinishRunner.isRunning()
+                && waitForBuildFinishRunner.getCompilationUnit().getAbsoluteFilename().equals(normalizedChangedPathAsString))
+        {
+            waitForBuildFinishRunner.setChanged(fileSpec);
+            return;
+        }
 
         ICompilationUnit unit = null;
-        compilerWorkspace.startBuilding();
-        try
-        {
-            unit = CompilerProjectUtils.findCompilationUnit(path, project);
-            if(unit != null)
-            {
-                //windows drive letter may not match, even after normalization,
-                //so it's better to use the unit's path, if available.
-                normalizedChangedPathAsString = unit.getAbsoluteFilename();
-            }
-        }
-        finally
-        {
-            compilerWorkspace.doneBuilding();
-        }
-
-        IFileSpecification fileSpec = fileTracker.getFileSpecification(normalizedChangedPathAsString);
-        compilerWorkspace.fileChanged(fileSpec);
-
         compilerWorkspace.startBuilding();
         try
         {
@@ -788,13 +782,17 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             if (includeFileData != null)
             {
                 path = Paths.get(includeFileData.parentPath);
-                unit = CompilerProjectUtils.findCompilationUnit(path, project);
             }
+
+            //we need the compilation unit at this point
+            unit = CompilerProjectUtils.findCompilationUnit(path, project);
         }
         finally
         {
             compilerWorkspace.doneBuilding();
         }
+
+        compilerWorkspace.fileChanged(fileSpec);
 
         if(unit == null)
         {
@@ -806,17 +804,17 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         else if(realTimeProblems
                 && !folderData.equals(workspaceFolderManager.getFallbackFolderData()))
         {
-            //try to keep using the existing instance, if possible
             if(waitForBuildFinishRunner == null
                     || !waitForBuildFinishRunner.isRunning()
                     || !unit.equals(waitForBuildFinishRunner.getCompilationUnit()))
             {
-                waitForBuildFinishRunner = new WaitForBuildFinishRunner(unit, folderData, languageClient, compilerProblemFilter);
+                waitForBuildFinishRunner = new WaitForBuildFinishRunner(unit, fileSpec, folderData, languageClient, compilerProblemFilter);
                 compilerWorkspace.getExecutorService().submit(waitForBuildFinishRunner);
             }
             else
             {
-                waitForBuildFinishRunner.setChanged();
+                //try to keep using the existing instance, if possible
+                waitForBuildFinishRunner.setChanged(fileSpec);
             }
         }
         else if(waitForBuildFinishRunner != null)
@@ -1002,30 +1000,12 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
 
             //then, check if source or library files have changed
             FileChangeType changeType = event.getType();
-            String normalizedChangedPathAsString = FilenameNormalization.normalize(changedPath.toString());
+            String normalizedChangedPathAsString = FilenameNormalization.normalize(changedPath.toAbsolutePath().toString());
             if (normalizedChangedPathAsString.endsWith(SWC_EXTENSION))
             {
-                Path normalizedChangedPath = Paths.get(normalizedChangedPathAsString);
-                List<WorkspaceFolderData> allFolderData = workspaceFolderManager.getAllWorkspaceFolderDataForSWCFile(normalizedChangedPath);
+                List<WorkspaceFolderData> allFolderData = workspaceFolderManager.getAllWorkspaceFolderDataForSWCFile(changedPath);
                 if (allFolderData.size() > 0)
                 {
-                    compilerWorkspace.startBuilding();
-                    ICompilationUnit changedUnit = null;
-                    try
-                    {
-                        changedUnit = workspaceFolderManager.findCompilationUnit(normalizedChangedPath);
-                    }
-                    finally
-                    {
-                        compilerWorkspace.doneBuilding();
-                    }
-                    if (changedUnit != null)
-                    {
-                        //windows drive letter may not match, even after normalization,
-                        //so it's better to use the unit's path, if available.
-                        normalizedChangedPathAsString = changedUnit.getAbsoluteFilename();
-                    }
-
                     boolean swcConfigChanged = false;
                     IFileSpecification swcFileSpec = fileTracker.getFileSpecification(normalizedChangedPathAsString);
                     if (changeType.equals(FileChangeType.Deleted))
@@ -1058,24 +1038,6 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             }
             else if (normalizedChangedPathAsString.endsWith(AS_EXTENSION) || normalizedChangedPathAsString.endsWith(MXML_EXTENSION))
             {
-                Path normalizedChangedPath = Paths.get(normalizedChangedPathAsString);
-                compilerWorkspace.startBuilding();
-                ICompilationUnit changedUnit = null;
-                try
-                {
-                    changedUnit = workspaceFolderManager.findCompilationUnit(normalizedChangedPath);
-                }
-                finally
-                {
-                    compilerWorkspace.doneBuilding();
-                }
-
-                if (changedUnit != null)
-                {
-                    //windows drive letter may not match, even after normalization,
-                    //so it's better to use the unit's path, if available.
-                    normalizedChangedPathAsString = changedUnit.getAbsoluteFilename();
-                }
                 List<WorkspaceFolderData> allFolderData = workspaceFolderManager.getAllWorkspaceFolderDataForSourceFile(changedPath);
                 if (changeType.equals(FileChangeType.Deleted) ||
 
@@ -1114,7 +1076,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                         @Override
                         public FileVisitResult visitFile(Path subPath, BasicFileAttributes attrs)
                         {
-                            String normalizedSubPath = FilenameNormalization.normalize(subPath.toString());
+                            String normalizedSubPath = FilenameNormalization.normalize(subPath.toAbsolutePath().toString());
                             if (normalizedSubPath.endsWith(AS_EXTENSION) || normalizedSubPath.endsWith(MXML_EXTENSION))
                             {
                                 IFileSpecification fileSpec = fileTracker.getFileSpecification(normalizedSubPath);
@@ -1190,20 +1152,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                 for (String fileToRemove : filesToRemove)
                 {
                     Path pathToRemove = Paths.get(fileToRemove);
-                    compilerWorkspace.startBuilding();
-                    ICompilationUnit unit = null;
-                    try
-                    {
-                        unit = workspaceFolderManager.findCompilationUnit(pathToRemove);
-                    }
-                    finally
-                    {
-                        compilerWorkspace.doneBuilding();
-                    }
-                    if (unit != null)
-                    {
-                        fileToRemove = unit.getAbsoluteFilename();
-                    }
+                    fileToRemove = FilenameNormalization.normalize(pathToRemove.toAbsolutePath().toString());
                     IFileSpecification fileSpec = fileTracker.getFileSpecification(fileToRemove);
                     compilerWorkspace.fileRemoved(fileSpec);
                 }
