@@ -383,6 +383,37 @@ function startClient()
 				synchronize:
 				{
 					configurationSection: "as3mxml",
+				},
+				uriConverters:
+				{
+					code2Protocol: (value: vscode.Uri) =>
+					{
+						if (/^win32/.test(process.platform))
+						{
+							//there are a couple of inconsistencies on Windows
+							//between VSCode and Java
+							//1. The : character after the drive letter is
+							//   encoded as %3A in VSCode, but : in Java.
+							//2. The driver letter is lowercase in VSCode, but
+							//   is uppercase in Java when watching for file
+							//   system changes.
+							let valueAsString = value.toString().replace("%3A", ":");
+							let matches = /^file:\/\/\/([a-z]):\//.exec(valueAsString);
+							if(matches !== null)
+							{
+								let driveLetter = matches[1].toUpperCase();
+								valueAsString = `file:///${driveLetter}:/` + valueAsString.substr(matches[0].length);
+								console.info(valueAsString);
+							}
+							return valueAsString;
+						}
+						else
+						{
+							return value.toString();
+						}
+					},
+					//this is just the default behavior, but we need to define both
+					protocol2Code: value => vscode.Uri.parse(value)
 				}
 			};
 			let cpDelimiter = getJavaClassPathDelimiter();
