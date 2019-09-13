@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-	http://www.apache.org/licenses/LICENSE-2.0
+    http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -70,9 +70,9 @@ public class CodeActionsUtils
     private static final Pattern importPattern = Pattern.compile("(?m)^([ \\t]*)import ([\\w\\.]+)");
     private static final Pattern indentPattern = Pattern.compile("(?m)^([ \\t]*)\\w");
     private static final Pattern packagePattern = Pattern.compile("(?m)^package(?: [\\w\\.]+)*\\s*\\{(?:[ \\t]*[\\r\\n]+)+([ \\t]*)");
-	private static final String NEW_LINE = "\n";
-	private static final String INDENT = "\t";
-	private static final String SPACE = " ";
+    private static final String NEW_LINE = "\n";
+    private static final String INDENT = "\t";
+    private static final String SPACE = " ";
 
     public static void findGetSetCodeActions(IASNode node, ICompilerProject project, String uri, String fileText, Range range, List<Either<Command, CodeAction>> codeActions)
     {
@@ -207,7 +207,7 @@ public class CodeActionsUtils
         Position position = null;
         if(importIndex != -1) //found existing imports
         {
-			position = LanguageServerCompilerUtils.getPositionFromOffset(new StringReader(fileText), importIndex);
+            position = LanguageServerCompilerUtils.getPositionFromOffset(new StringReader(fileText), importIndex);
             position.setLine(position.getLine() + 1);
             position.setCharacter(0);
         }
@@ -373,8 +373,8 @@ public class CodeActionsUtils
 
         TextEdit edit = new TextEdit();
         edit.setNewText(textToInsert);
-		edit.setRange(new Range(position, position));
-		return edit;
+        edit.setRange(new Range(position, position));
+        return edit;
     }
     
     public static TextEdit createTextEditForAddMXMLNamespace(String nsPrefix, String nsURI, String text, int startIndex, int endIndex)
@@ -383,7 +383,7 @@ public class CodeActionsUtils
         return createTextEditForAddMXMLNamespace(nsPrefix, nsURI, position);
     }
 
-	public static WorkspaceEdit createWorkspaceEditForGenerateLocalVariable(
+    public static WorkspaceEdit createWorkspaceEditForGenerateLocalVariable(
         IIdentifierNode identifierNode, String uri, String text)
     {
         TextEdit textEdit = createTextEditForGenerateLocalVariable(identifierNode, text);
@@ -401,7 +401,7 @@ public class CodeActionsUtils
         return workspaceEdit;
     }
 
-	public static TextEdit createTextEditForGenerateLocalVariable(
+    public static TextEdit createTextEditForGenerateLocalVariable(
         IIdentifierNode identifierNode, String text)
     {
         IFunctionNode functionNode = (IFunctionNode) identifierNode.getAncestorOfType(IFunctionNode.class);
@@ -423,20 +423,20 @@ public class CodeActionsUtils
         builder.append(indent);
         builder.append(IASKeywordConstants.VAR);
         builder.append(" ");
-		builder.append(identifierNode.getName());
-		builder.append(":");
-		builder.append(IASLanguageConstants.Object);
-		builder.append(";");
-		builder.append(NEW_LINE);
+        builder.append(identifierNode.getName());
+        builder.append(":");
+        builder.append(IASLanguageConstants.Object);
+        builder.append(";");
+        builder.append(NEW_LINE);
 
         TextEdit textEdit = new TextEdit();
         textEdit.setNewText(builder.toString());
         Position editPosition = new Position(scopedNode.getLine() + 1, 0);
         textEdit.setRange(new Range(editPosition, editPosition));
         return textEdit;
-	}
+    }
 
-	public static WorkspaceEdit createWorkspaceEditForGenerateFieldVariable(
+    public static WorkspaceEdit createWorkspaceEditForGenerateFieldVariable(
         IIdentifierNode identifierNode, String uri, String text)
     {
         TextEdit textEdit = createTextEditForGenerateFieldVariable(identifierNode, text);
@@ -454,8 +454,8 @@ public class CodeActionsUtils
         return workspaceEdit;
     }
 
-	public static TextEdit createTextEditForGenerateFieldVariable(
-		IIdentifierNode identifierNode, String text)
+    public static TextEdit createTextEditForGenerateFieldVariable(
+        IIdentifierNode identifierNode, String text)
     {
         LineAndIndent lineAndIndent = findLineAndIndent(identifierNode, text);
         if(lineAndIndent == null)
@@ -483,7 +483,7 @@ public class CodeActionsUtils
         return textEdit;
     }
 
-	public static WorkspaceEdit createWorkspaceEditForImplementInterface(
+    public static WorkspaceEdit createWorkspaceEditForImplementInterface(
         IClassNode classNode, IInterfaceDefinition interfaceDefinition, String uri, String text, ICompilerProject project)
     {
         List<TextEdit> textEdits = createTextEditsForImplementInterface(classNode, interfaceDefinition, text, project);
@@ -499,8 +499,8 @@ public class CodeActionsUtils
         return workspaceEdit;
     }
 
-	private static List<TextEdit> createTextEditsForImplementInterface(
-		IClassNode classNode, IInterfaceDefinition interfaceDefinition, String text, ICompilerProject project)
+    private static List<TextEdit> createTextEditsForImplementInterface(
+        IClassNode classNode, IInterfaceDefinition interfaceDefinition, String text, ICompilerProject project)
     {
         List<TextEdit> interfaceEdits = new ArrayList<>();
 
@@ -596,8 +596,8 @@ public class CodeActionsUtils
         return interfaceEdits;
     }
 
-	private static TextEdit createTextEditForImplementMethod(
-		IClassNode classNode, IFunctionDefinition functionDefinition, String text, ICompilerProject project)
+    private static TextEdit createTextEditForImplementMethod(
+        IClassNode classNode, IFunctionDefinition functionDefinition, String text, ICompilerProject project)
     {
         int line = 0;
         String indent = "";
@@ -659,7 +659,7 @@ public class CodeActionsUtils
         return textEdit;
     }
 
-	public static WorkspaceEdit createWorkspaceEditForGenerateMethod(
+    public static WorkspaceEdit createWorkspaceEditForGenerateMethod(
         IFunctionCallNode functionCallNode, String uri, String text, ICompilerProject project)
     {
         List<TextEdit> textEdits = createTextEditsForGenerateMethod(functionCallNode, text, project);
@@ -675,8 +675,8 @@ public class CodeActionsUtils
         return workspaceEdit;
     }
 
-	private static List<TextEdit> createTextEditsForGenerateMethod(
-		IFunctionCallNode functionCallNode, String text, ICompilerProject project)
+    private static List<TextEdit> createTextEditsForGenerateMethod(
+        IFunctionCallNode functionCallNode, String text, ICompilerProject project)
     {
         if(functionCallNode.isNewExpression())
         {
@@ -786,7 +786,7 @@ public class CodeActionsUtils
         return edits;
     }
 
-	public static WorkspaceEdit createWorkspaceEditForGenerateGetterAndSetter(
+    public static WorkspaceEdit createWorkspaceEditForGenerateGetterAndSetter(
         IVariableNode variableNode, String uri, String text, boolean generateGetter, boolean generateSetter)
     {
         TextEdit textEdit = createTextEditForGenerateGetterAndSetter(variableNode, text, generateGetter, generateSetter);
@@ -804,8 +804,8 @@ public class CodeActionsUtils
         return workspaceEdit;
     }
 
-	public static TextEdit createTextEditForGenerateGetterAndSetter(
-		IVariableNode variableNode, String text, boolean generateGetter, boolean generateSetter)
+    public static TextEdit createTextEditForGenerateGetterAndSetter(
+        IVariableNode variableNode, String text, boolean generateGetter, boolean generateSetter)
     {
         String name = variableNode.getName();
         String namespace = variableNode.getNamespace();
@@ -857,18 +857,18 @@ public class CodeActionsUtils
         builder.append(";");
         if (generateGetter)
         {
-			builder.append(NEW_LINE);
-			builder.append(NEW_LINE);
-			builder.append(indent);
-			builder.append(namespace);
-			builder.append(SPACE);
+            builder.append(NEW_LINE);
+            builder.append(NEW_LINE);
+            builder.append(indent);
+            builder.append(namespace);
+            builder.append(SPACE);
             if(isStatic)
             {
                 builder.append(IASKeywordConstants.STATIC);
                 builder.append(" ");
             }
             builder.append(IASKeywordConstants.FUNCTION);
-			builder.append(" ");
+            builder.append(" ");
             builder.append(IASKeywordConstants.GET);
             builder.append(" ");
             builder.append(name);
@@ -878,33 +878,33 @@ public class CodeActionsUtils
                 builder.append(":" + type);
             }
             builder.append(NEW_LINE);
-			builder.append(indent);
-			builder.append("{");
-			builder.append(NEW_LINE);
-			builder.append(indent);
-			builder.append(INDENT); //extra indent
+            builder.append(indent);
+            builder.append("{");
+            builder.append(NEW_LINE);
+            builder.append(indent);
+            builder.append(INDENT); //extra indent
             builder.append(IASKeywordConstants.RETURN);
             builder.append(" _");
             builder.append(name);
             builder.append(";");
-			builder.append(NEW_LINE);
-			builder.append(indent);
+            builder.append(NEW_LINE);
+            builder.append(indent);
             builder.append("}");
         }
         if (generateSetter)
         {
-			builder.append(NEW_LINE);
-			builder.append(NEW_LINE);
-			builder.append(indent);
-			builder.append(namespace);
-			builder.append(SPACE);
+            builder.append(NEW_LINE);
+            builder.append(NEW_LINE);
+            builder.append(indent);
+            builder.append(namespace);
+            builder.append(SPACE);
             if(isStatic)
             {
                 builder.append(IASKeywordConstants.STATIC);
                 builder.append(" ");
             }
             builder.append(IASKeywordConstants.FUNCTION);
-			builder.append(" ");
+            builder.append(" ");
             builder.append(IASKeywordConstants.SET);
             builder.append(" ");
             builder.append(name);
@@ -913,17 +913,17 @@ public class CodeActionsUtils
             {
                 builder.append(":" + type);
             }
-			builder.append("):");
+            builder.append("):");
             builder.append(IASKeywordConstants.VOID);
-			builder.append(NEW_LINE);
-			builder.append(indent);
-			builder.append("{");
-			builder.append(NEW_LINE);
-			builder.append(indent);
-			builder.append(INDENT); //extra indent
-			builder.append("_" + name + " = value;");
-			builder.append(NEW_LINE);
-			builder.append(indent);
+            builder.append(NEW_LINE);
+            builder.append(indent);
+            builder.append("{");
+            builder.append(NEW_LINE);
+            builder.append(indent);
+            builder.append(INDENT); //extra indent
+            builder.append("_" + name + " = value;");
+            builder.append(NEW_LINE);
+            builder.append(indent);
             builder.append("}");
         }
 
@@ -940,18 +940,18 @@ public class CodeActionsUtils
         Position endPosition = new Position(endLine, endChar);
 
         //we may need to adjust the end position to include the semi-colon
-		int offset = LanguageServerCompilerUtils.getOffsetFromPosition(new StringReader(text), endPosition);
-		if (offset < text.length() && text.charAt(offset) == ';')
-		{
-			endPosition.setCharacter(endChar + 1);
-		}
+        int offset = LanguageServerCompilerUtils.getOffsetFromPosition(new StringReader(text), endPosition);
+        if (offset < text.length() && text.charAt(offset) == ';')
+        {
+            endPosition.setCharacter(endChar + 1);
+        }
 
         edit.setRange(new Range(startPosition, endPosition));
         
         return edit;
     }
 
-	public static WorkspaceEdit createWorkspaceEditForGenerateCatch(
+    public static WorkspaceEdit createWorkspaceEditForGenerateCatch(
         ITryNode tryNode, String uri, String text, ICompilerProject project)
     {
         TextEdit textEdit = createTextEditForGenerateCatch(tryNode, text, project);
@@ -969,8 +969,8 @@ public class CodeActionsUtils
         return workspaceEdit;
     }
 
-	private static TextEdit createTextEditForGenerateCatch(
-		ITryNode tryNode, String text, ICompilerProject project)
+    private static TextEdit createTextEditForGenerateCatch(
+        ITryNode tryNode, String text, ICompilerProject project)
     {
         IASNode statementContentsNode = tryNode.getStatementContentsNode();
         if (statementContentsNode == null
@@ -1024,7 +1024,7 @@ public class CodeActionsUtils
         return textEdit;
     }
 
-	public static WorkspaceEdit createWorkspaceEditForGenerateEventListener(
+    public static WorkspaceEdit createWorkspaceEditForGenerateEventListener(
         IASNode context, String functionName, String eventClassName,
         String uri, String text, ICompilerProject project)
     {
@@ -1041,7 +1041,54 @@ public class CodeActionsUtils
         return workspaceEdit;
     }
 
-	private static List<TextEdit> createTextEditsForGenerateEventListener(
+    public static WorkspaceEdit createWorkspaceEditForRemoveUnusedImport(String fileText, String uri, Range range)
+    {
+        TextEdit textEdit = createTextEditForRemoveUnusedImport(fileText, range);
+        if (textEdit == null)
+        {
+            return null;
+        }
+
+        WorkspaceEdit workspaceEdit = new WorkspaceEdit();
+        HashMap<String,List<TextEdit>> changes = new HashMap<>();
+        List<TextEdit> edits = new ArrayList<>();
+        edits.add(textEdit);
+        changes.put(uri, edits);
+        workspaceEdit.setChanges(changes);
+        return workspaceEdit;
+    }
+
+    public static TextEdit createTextEditForRemoveUnusedImport(String text, Range range)
+    {
+        int startLine = range.getStart().getLine();
+        int endLine = range.getEnd().getLine();
+        int endChar = range.getEnd().getCharacter();
+
+        Position startPosition = new Position(startLine, 0);
+        Position endPosition = new Position(endLine, endChar);
+
+        Range resultRange = new Range(startPosition, endPosition);
+
+        //we may need to adjust the end position to include the semi-colon and new line
+        int offset = LanguageServerCompilerUtils.getOffsetFromPosition(new StringReader(text), endPosition);
+        if (offset < text.length() && text.charAt(offset) == ';')
+        {
+            endPosition.setCharacter(endPosition.getCharacter() + 1);
+            offset++;
+        }
+        if (offset < text.length() && (text.charAt(offset) == '\r' || text.charAt(offset) == '\n'))
+        {
+            endPosition.setLine(endPosition.getLine() + 1);
+            endPosition.setCharacter(0);
+        }
+        
+        TextEdit textEdit = new TextEdit();
+        textEdit.setNewText("");
+        textEdit.setRange(resultRange);
+        return textEdit;
+    }
+
+    private static List<TextEdit> createTextEditsForGenerateEventListener(
         IASNode context, String functionName, String eventClassName,
         String text, ICompilerProject project)
     {

@@ -15,6 +15,7 @@ limitations under the License.
 */
 package com.as3mxml.vscode.providers;
 
+import java.io.StringReader;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -57,6 +58,7 @@ import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Command;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.WorkspaceEdit;
 import org.eclipse.lsp4j.jsonrpc.CancelChecker;
@@ -222,6 +224,10 @@ public class CodeActionProvider
                         createCodeActionForUnimplementedMethods(path, diagnostic, folderData, codeActions);
                     }
                     break;
+                }
+                case "as3mxml-unused-import":
+                {
+                    createCodeActionsForUnusedImport(path, diagnostic, folderData, codeActions);
                 }
             }
         }
@@ -662,5 +668,32 @@ public class CodeActionProvider
             codeAction.setDiagnostics(Collections.singletonList(diagnostic));
             codeActions.add(Either.forRight(codeAction));
         }
+    }
+
+    private void createCodeActionsForUnusedImport(Path path, Diagnostic diagnostic, WorkspaceFolderData folderData, List<Either<Command, CodeAction>> codeActions)
+    {
+        String fileText = fileTracker.getText(path);
+        if(fileText == null)
+        {
+            return;
+        }
+
+        Range range = diagnostic.getRange();
+        WorkspaceEdit edit = CodeActionsUtils.createWorkspaceEditForRemoveUnusedImport(fileText, path.toUri().toString(), diagnostic.getRange());
+        if (edit == null)
+        {
+            return;
+        }
+
+        int startOffset = LanguageServerCompilerUtils.getOffsetFromPosition(new StringReader(fileText), range.getStart());
+        int endOffset = LanguageServerCompilerUtils.getOffsetFromPosition(new StringReader(fileText), range.getEnd());
+
+        String importText = fileText.substring(startOffset, endOffset);
+        CodeAction codeAction = new CodeAction();
+        codeAction.setTitle("Remove " + importText);
+        codeAction.setEdit(edit);
+        codeAction.setKind(CodeActionKind.QuickFix);
+        codeAction.setDiagnostics(Collections.singletonList(diagnostic));
+        codeActions.add(Either.forRight(codeAction));
     }
 }
