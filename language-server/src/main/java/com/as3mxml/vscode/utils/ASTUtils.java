@@ -22,6 +22,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.as3mxml.vscode.compiler.problems.UnusedImportProblem;
+
 import org.apache.royale.compiler.constants.IASLanguageConstants;
 import org.apache.royale.compiler.constants.IMetaAttributeConstants;
 import org.apache.royale.compiler.definitions.IClassDefinition;
@@ -33,6 +35,7 @@ import org.apache.royale.compiler.definitions.ISetterDefinition;
 import org.apache.royale.compiler.definitions.ITypeDefinition;
 import org.apache.royale.compiler.definitions.metadata.IMetaTag;
 import org.apache.royale.compiler.internal.tree.as.FileNode;
+import org.apache.royale.compiler.problems.ICompilerProblem;
 import org.apache.royale.compiler.projects.ICompilerProject;
 import org.apache.royale.compiler.tree.ASTNodeID;
 import org.apache.royale.compiler.tree.as.IASNode;
@@ -219,7 +222,16 @@ public class ASTUtils
         HashSet<IImportNode> importsToRemove = new HashSet<>();
         findImportNodesToRemove(node, project, new HashSet<>(), importsToRemove);
         return importsToRemove;
-	}
+    }
+    
+    public static void findUnusedImportProblems(IASNode ast, ICompilerProject project, List<ICompilerProblem> problems)
+    {
+        Set<IImportNode> importsToRemove = findImportNodesToRemove(ast, project);
+        for(IImportNode importNode : importsToRemove)
+        {
+            problems.add(new UnusedImportProblem(importNode));
+        }
+    }
 	
 	public static List<IDefinition> findTypesThatMatchName(String nameToFind, Collection<ICompilationUnit> compilationUnits)
 	{
@@ -568,6 +580,11 @@ public class ASTUtils
                     referencedDefinitions.add(definition.getQualifiedName());
                 }
             }
+            if (child.isTerminal())
+            {
+                //terminal nodes don't have children, so don't bother checking
+                continue;
+            }
             findImportNodesToRemove(child, project, referencedDefinitions, importsToRemove);
         }
         if (node instanceof IMXMLScriptNode)
@@ -617,7 +634,7 @@ public class ASTUtils
         for (String reference : referencedDefinitions)
         {
             if(reference.startsWith(importPackage)
-                && !reference.substring(importPackage.length() + 1).contains("."))
+                && reference.indexOf('.', importPackage.length() + 1) == -1)
             {
                 //an entire package is imported, so check if any
                 //references are in that package

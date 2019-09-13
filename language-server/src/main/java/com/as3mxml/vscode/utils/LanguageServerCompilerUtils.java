@@ -24,6 +24,7 @@ import java.nio.file.Paths;
 import java.util.Optional;
 
 import com.as3mxml.vscode.compiler.problems.SyntaxFallbackProblem;
+import com.as3mxml.vscode.compiler.problems.UnusedImportProblem;
 import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
 
 import org.apache.royale.compiler.clients.problems.CompilerProblemCategorizer;
@@ -89,6 +90,10 @@ public class LanguageServerCompilerUtils
         if (problem instanceof SyntaxFallbackProblem)
         {
             return DiagnosticSeverity.Information;
+        }
+        if (problem instanceof UnusedImportProblem)
+        {
+            return DiagnosticSeverity.Hint;
         }
 
         CompilerProblemCategorizer categorizer = new CompilerProblemCategorizer(null);
@@ -460,13 +465,27 @@ public class LanguageServerCompilerUtils
 
         try
         {
-            Field field = problem.getClass().getDeclaredField("errorCode");
-            int errorCode = (int) field.get(problem);
-            diagnostic.setCode(Integer.toString(errorCode));
+            Field field = problem.getClass().getDeclaredField("DIAGNOSTIC_CODE");
+            String diagnosticCode = (String) field.get(problem);
+            diagnostic.setCode(diagnosticCode);
         }
         catch (Exception e)
         {
             //skip it
+        }
+
+        if(diagnostic.getCode() == null)
+        {
+            try
+            {
+                Field field = problem.getClass().getDeclaredField("errorCode");
+                int errorCode = (int) field.get(problem);
+                diagnostic.setCode(Integer.toString(errorCode));
+            }
+            catch (Exception e)
+            {
+                //skip it
+            }
         }
         return diagnostic;
     }

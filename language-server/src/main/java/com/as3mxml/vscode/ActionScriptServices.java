@@ -71,6 +71,7 @@ import com.as3mxml.vscode.providers.SignatureHelpProvider;
 import com.as3mxml.vscode.providers.TypeDefinitionProvider;
 import com.as3mxml.vscode.providers.WorkspaceSymbolProvider;
 import com.as3mxml.vscode.services.ActionScriptLanguageClient;
+import com.as3mxml.vscode.utils.ASTUtils;
 import com.as3mxml.vscode.utils.ActionScriptSDKUtils;
 import com.as3mxml.vscode.utils.CompilationUnitUtils;
 import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
@@ -104,6 +105,7 @@ import org.apache.royale.compiler.problems.InternalCompilerProblem;
 import org.apache.royale.compiler.projects.ICompilerProject;
 import org.apache.royale.compiler.targets.ITarget;
 import org.apache.royale.compiler.targets.ITargetSettings;
+import org.apache.royale.compiler.tree.as.IASNode;
 import org.apache.royale.compiler.units.ICompilationUnit;
 import org.apache.royale.compiler.units.ICompilationUnit.UnitType;
 import org.apache.royale.compiler.workspaces.IWorkspace;
@@ -2115,9 +2117,17 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         {
             if(initialized)
             {
-                //if we pass in null, it's desigfned to ignore certain errors that
-                //don't matter for IDE code intelligence.
+                //if we pass in null, it's designed to ignore certain errors
+                //that don't matter for IDE code intelligence.
                 unit.waitForBuildFinish(problems, null);
+
+                //note: we check for unused imports only for full builds because
+                //it's a little too expensive to do it for real-time problems
+                IASNode ast = ASTUtils.getCompilationUnitAST(unit);
+                if(ast != null)
+                {
+                    ASTUtils.findUnusedImportProblems(ast, unit.getProject(), problems);
+                }
             }
             else
             {
