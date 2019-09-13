@@ -416,13 +416,27 @@ function startClient()
 				},
 				middleware:
 				{
+					//TODO: move tags to language server when lsp4j supports it
 					handleDiagnostics: (uri, diagnostics, next) =>
 					{
 						diagnostics.forEach((diagnostic) =>
 						{
-							if (diagnostic.code === "as3mxml-unused-import")
+							switch(diagnostic.code)
 							{
-								diagnostic.tags = [vscode.DiagnosticTag.Unnecessary];
+								case "as3mxml-unused-import":
+								{
+									diagnostic.tags = [vscode.DiagnosticTag.Unnecessary];
+									break;
+								}
+								case "3602":
+								case "3604":
+								case "3606":
+								case "3608":
+								case "3610":
+								{
+									diagnostic.tags = [vscode.DiagnosticTag.Deprecated];
+									break;
+								}
 							}
 						});
 						next(uri, diagnostics);
