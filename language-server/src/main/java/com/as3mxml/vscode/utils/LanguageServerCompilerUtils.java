@@ -463,17 +463,6 @@ public class LanguageServerCompilerUtils
 
         diagnostic.setMessage(problem.toString());
 
-        try
-        {
-            Field field = problem.getClass().getDeclaredField("DIAGNOSTIC_CODE");
-            String diagnosticCode = (String) field.get(problem);
-            diagnostic.setCode(diagnosticCode);
-        }
-        catch (Exception e)
-        {
-            //skip it
-        }
-
         if(diagnostic.getCode() == null)
         {
             try
@@ -487,6 +476,35 @@ public class LanguageServerCompilerUtils
                 //skip it
             }
         }
+
+        if(diagnostic.getCode() == null)
+        {
+            try
+            {
+                Field field = problem.getClass().getDeclaredField("warningCode");
+                int errorCode = (int) field.get(problem);
+                diagnostic.setCode(Integer.toString(errorCode));
+            }
+            catch (Exception e)
+            {
+                //skip it
+            }
+        }
+
+        if(diagnostic.getCode() == null)
+        {
+            try
+            {
+                Field field = problem.getClass().getDeclaredField("DIAGNOSTIC_CODE");
+                String diagnosticCode = (String) field.get(problem);
+                diagnostic.setCode(diagnosticCode);
+            }
+            catch (Exception e)
+            {
+                //skip it
+            }
+        }
+        
         return diagnostic;
     }
 
