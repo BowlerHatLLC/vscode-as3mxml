@@ -413,6 +413,20 @@ function startClient()
 					},
 					//this is just the default behavior, but we need to define both
 					protocol2Code: value => vscode.Uri.parse(value)
+				},
+				middleware:
+				{
+					handleDiagnostics: (uri, diagnostics, next) =>
+					{
+						diagnostics.forEach((diagnostic) =>
+						{
+							if (diagnostic.code === "as3mxml-unused-import")
+							{
+								diagnostic.tags = [vscode.DiagnosticTag.Unnecessary];
+							}
+						});
+						next(uri, diagnostics);
+					}
 				}
 			};
 			let cpDelimiter = getJavaClassPathDelimiter();
