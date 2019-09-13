@@ -23,6 +23,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 
+import com.as3mxml.vscode.compiler.problems.DisabledConfigConditionBlockProblem;
 import com.as3mxml.vscode.compiler.problems.SyntaxFallbackProblem;
 import com.as3mxml.vscode.compiler.problems.UnusedImportProblem;
 import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
@@ -91,7 +92,7 @@ public class LanguageServerCompilerUtils
         {
             return DiagnosticSeverity.Information;
         }
-        if (problem instanceof UnusedImportProblem)
+        if (problem instanceof UnusedImportProblem || problem instanceof DisabledConfigConditionBlockProblem)
         {
             return DiagnosticSeverity.Hint;
         }

@@ -22,6 +22,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.as3mxml.vscode.compiler.problems.DisabledConfigConditionBlockProblem;
 import com.as3mxml.vscode.compiler.problems.UnusedImportProblem;
 
 import org.apache.royale.compiler.constants.IASLanguageConstants;
@@ -34,6 +35,7 @@ import org.apache.royale.compiler.definitions.IGetterDefinition;
 import org.apache.royale.compiler.definitions.ISetterDefinition;
 import org.apache.royale.compiler.definitions.ITypeDefinition;
 import org.apache.royale.compiler.definitions.metadata.IMetaTag;
+import org.apache.royale.compiler.internal.tree.as.ConfigConditionBlockNode;
 import org.apache.royale.compiler.internal.tree.as.FileNode;
 import org.apache.royale.compiler.problems.ICompilerProblem;
 import org.apache.royale.compiler.projects.ICompilerProject;
@@ -112,7 +114,7 @@ public class ASTUtils
         return offset >= node.getAbsoluteStart() && offset <= node.getAbsoluteEnd();
     }
 
-    public static IASNode findDescendantOfType(IASNode node, Class<? extends IASNode> classToFind)
+    public static IASNode findFirstDescendantOfType(IASNode node, Class<? extends IASNode> classToFind)
     {
         for (int i = 0; i < node.getChildCount(); i++)
         {
@@ -121,13 +123,34 @@ public class ASTUtils
             {
                 return child;
             }
-            IASNode result = findDescendantOfType(child, classToFind);
+            if (child.isTerminal())
+            {
+                continue;
+            }
+            IASNode result = findFirstDescendantOfType(child, classToFind);
             if(result != null)
             {
                 return result;
             }
         }
         return null;
+    }
+
+    public static void findAllDescendantsOfType(IASNode node, Class<? extends IASNode> classToFind, List<IASNode> result)
+    {
+        for (int i = 0; i < node.getChildCount(); i++)
+        {
+            IASNode child = node.getChild(i);
+            if (classToFind.isInstance(child))
+            {
+                result.add(child);
+            }
+            if (child.isTerminal())
+            {
+                continue;
+            }
+            findAllDescendantsOfType(child, classToFind, result);
+        }
     }
 
     public static IASNode getContainingNodeIncludingStart(IASNode node, int offset)
@@ -230,6 +253,16 @@ public class ASTUtils
         for(IImportNode importNode : importsToRemove)
         {
             problems.add(new UnusedImportProblem(importNode));
+        }
+    }
+    
+    public static void findDisabledConfigConditionBlockProblems(IASNode ast, List<ICompilerProblem> problems)
+    {
+        List<ConfigConditionBlockNode> blocks = new ArrayList<>();
+        findDisabledConfigConditionBlocks(ast, blocks);
+        for(ConfigConditionBlockNode block : blocks)
+        {
+            problems.add(new DisabledConfigConditionBlockProblem(block));
         }
     }
 	
@@ -849,5 +882,27 @@ public class ASTUtils
         }
         
         return !ASTUtils.isInActionScriptComment(fileText, currentOffset, minCommentStartIndex);
+    }
+	
+    private static void findDisabledConfigConditionBlocks(IASNode node, List<ConfigConditionBlockNode> result)
+    {
+        for(int i = 0, count = node.getChildCount(); i < count; i++)
+        {
+            IASNode child = node.getChild(i);
+            if(child instanceof ConfigConditionBlockNode)
+            {
+                ConfigConditionBlockNode configBlock = (ConfigConditionBlockNode) child;
+                if(configBlock.getChildCount() == 0)
+                {
+                    result.add(configBlock);
+                    continue;
+                }
+            }
+            if(child.isTerminal())
+            {
+                continue;
+            }
+            findDisabledConfigConditionBlocks(child, result);
+        }
     }
 }

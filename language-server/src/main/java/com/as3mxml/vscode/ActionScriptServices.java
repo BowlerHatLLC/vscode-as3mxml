@@ -2127,6 +2127,8 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                 if(ast != null)
                 {
                     ASTUtils.findUnusedImportProblems(ast, unit.getProject(), problems);
+                    //TODO: enable after royale-compiler provides the correct range
+                    //ASTUtils.findDisabledConfigConditionBlockProblems(ast, problems);
                 }
             }
             else

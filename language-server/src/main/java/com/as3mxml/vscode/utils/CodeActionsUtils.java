@@ -1173,7 +1173,7 @@ public class CodeActionsUtils
             IMXMLFileNode fileNode = (IMXMLFileNode) context.getAncestorOfType(IMXMLFileNode.class);
             if (fileNode != null)
             {
-                scriptNode = (IMXMLScriptNode) ASTUtils.findDescendantOfType(fileNode, IMXMLScriptNode.class);
+                scriptNode = (IMXMLScriptNode) ASTUtils.findFirstDescendantOfType(fileNode, IMXMLScriptNode.class);
             }
         }
         if (scriptNode != null)
