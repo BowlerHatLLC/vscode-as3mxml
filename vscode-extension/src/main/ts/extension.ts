@@ -424,6 +424,7 @@ function startClient()
 							switch(diagnostic.code)
 							{
 								case "as3mxml-unused-import":
+								case "as3mxml-disabled-config-condition-block":
 								{
 									diagnostic.tags = [vscode.DiagnosticTag.Unnecessary];
 									break;
