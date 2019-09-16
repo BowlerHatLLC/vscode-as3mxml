@@ -58,7 +58,6 @@ import org.apache.royale.compiler.tree.as.IScopedDefinitionNode;
 import org.apache.royale.compiler.tree.as.IScopedNode;
 import org.apache.royale.compiler.tree.as.ITransparentContainerNode;
 import org.apache.royale.compiler.tree.as.IVariableNode;
-import org.apache.royale.compiler.tree.mxml.IMXMLScriptNode;
 import org.apache.royale.compiler.tree.mxml.IMXMLSpecifierNode;
 import org.apache.royale.compiler.units.ICompilationUnit;
 
@@ -589,8 +588,17 @@ public class ASTUtils
             if (child instanceof IImportNode)
             {
                 IImportNode importNode = (IImportNode) child;
-                
-                if(!requiredImports.contains(importNode.getImportName()))
+                String importName = importNode.getImportName();
+                if (importName.endsWith(DOT_STAR))
+                {
+                    String importPackage = importName.substring(0, importName.length() - 2);
+                    if (containsReferenceForImportPackage(importPackage, requiredImports))
+                    {
+                        //this class is referenced by a wildcard import
+                        continue;
+                    }
+                }
+                if(!requiredImports.contains(importName))
                 {
                     importsToRemove.add(importNode);
                 }
@@ -619,37 +627,6 @@ public class ASTUtils
             }
         }
         return false;
-    }
-
-    private static void findReferencedDefinitionsOutsideMXMLScript(IASNode node, ICompilerProject project, Set<String> referencedDefinitions)
-    {
-        for (int i = 0, count = node.getChildCount(); i < count; i++)
-        {
-            IASNode child = node.getChild(i);
-            if (child instanceof IMXMLScriptNode)
-            {
-                //skip the script node and children because they are handled in
-                //findImportNodesToRemove()
-                continue;
-            }
-            if (child instanceof IImportNode)
-            {
-                //import nodes can't be references
-                continue;
-            }
-            if (child instanceof IIdentifierNode)
-            {
-                IIdentifierNode identifierNode = (IIdentifierNode) child;
-                IDefinition definition = identifierNode.resolve(project);
-                if (definition != null
-                        && definition.getPackageName().length() > 0
-                        && definition.getQualifiedName().startsWith(definition.getPackageName()))
-                {
-                    referencedDefinitions.add(definition.getQualifiedName());
-                }
-            }
-            findReferencedDefinitionsOutsideMXMLScript(child, project, referencedDefinitions);
-        }
     }
 
     public static String getIndentBeforeNode(IASNode node, String fileText)
