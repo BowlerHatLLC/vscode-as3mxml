@@ -1819,16 +1819,21 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             //don't check compilation units for problems if the project itself
             //has problems. the user should fix those first.
             Collection<ICompilerProblem> fatalProblems = project.getFatalProblems();
-            problemQuery.addAll(fatalProblems);
             
             //if we found some fatal problems at the project level, don't bother
             //checking anything else for problems
             if (fatalProblems == null || fatalProblems.size() == 0)
             {
-                //these are non-fatal project problems, and we should be able
-                //to show compilation unit problems too
-                problemQuery.addAll(project.getProblems());
+                fatalProblems = project.getProblems();
+            }
+            
+            if(fatalProblems != null)
+            {
+                problemQuery.addAll(fatalProblems);
+            }
 
+            if(fatalProblems == null || fatalProblems.size() == 0)
+            {
                 checkReachableCompilationUnitsForErrors(problemQuery, folderData);
             }
         }
