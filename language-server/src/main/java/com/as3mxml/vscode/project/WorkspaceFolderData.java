@@ -22,10 +22,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.as3mxml.vscode.utils.ProblemTracker;
 import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
+import com.as3mxml.vscode.utils.ProblemTracker;
 
-import org.apache.royale.compiler.internal.projects.RoyaleProject;
 import org.apache.royale.compiler.internal.projects.RoyaleProjectConfigurator;
 import org.apache.royale.compiler.units.IInvisibleCompilationUnit;
 import org.eclipse.lsp4j.WorkspaceFolder;
@@ -41,7 +40,7 @@ public class WorkspaceFolderData
 	public WorkspaceFolder folder;
 	public IProjectConfigStrategy config;
 	public ProjectOptions options;
-	public RoyaleProject project;
+	public ILspProject project;
 	//needed for ProblemQuery filtering
 	public RoyaleProjectConfigurator configurator;
 	public Map<WatchKey, Path> sourceOrLibraryPathWatchKeys = new HashMap<>();

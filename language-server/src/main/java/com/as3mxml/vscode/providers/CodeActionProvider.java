@@ -22,9 +22,11 @@ import java.util.Collections;
 import java.util.List;
 
 import com.as3mxml.vscode.commands.ICommandConstants;
+import com.as3mxml.vscode.project.ILspProject;
 import com.as3mxml.vscode.project.WorkspaceFolderData;
 import com.as3mxml.vscode.utils.ASTUtils;
 import com.as3mxml.vscode.utils.CodeActionsUtils;
+import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
 import com.as3mxml.vscode.utils.CompilerProjectUtils;
 import com.as3mxml.vscode.utils.FileTracker;
 import com.as3mxml.vscode.utils.ImportRange;
@@ -32,14 +34,12 @@ import com.as3mxml.vscode.utils.LanguageServerCompilerUtils;
 import com.as3mxml.vscode.utils.MXMLDataUtils;
 import com.as3mxml.vscode.utils.SourcePathUtils;
 import com.as3mxml.vscode.utils.WorkspaceFolderManager;
-import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
 import com.google.common.collect.Lists;
 import com.google.gson.JsonObject;
 
 import org.apache.royale.compiler.definitions.IDefinition;
 import org.apache.royale.compiler.definitions.IInterfaceDefinition;
 import org.apache.royale.compiler.internal.mxml.MXMLData;
-import org.apache.royale.compiler.internal.projects.RoyaleProject;
 import org.apache.royale.compiler.mxml.IMXMLTagData;
 import org.apache.royale.compiler.tree.as.IASNode;
 import org.apache.royale.compiler.tree.as.IClassNode;
@@ -101,7 +101,7 @@ public class CodeActionProvider
 			//the path must be in the workspace or source-path
 			return Collections.emptyList();
 		}
-		RoyaleProject project = folderData.project;
+		ILspProject project = folderData.project;
 
 		if (project == null || !SourcePathUtils.isInProjectSourcePath(path, project, folderData.configurator))
 		{
@@ -353,7 +353,7 @@ public class CodeActionProvider
 
     private void createCodeActionForMissingCatchOrFinally(Path path, Diagnostic diagnostic, WorkspaceFolderData folderData, List<Either<Command, CodeAction>> codeActions)
     {
-        RoyaleProject project = folderData.project;
+        ILspProject project = folderData.project;
         Position position = diagnostic.getRange().getStart();
         IncludeFileData includeFileData = folderData.includedFiles.get(path.toString());
 		int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position, includeFileData);
@@ -386,7 +386,7 @@ public class CodeActionProvider
 
     private void createCodeActionForUnimplementedMethods(Path path, Diagnostic diagnostic, WorkspaceFolderData folderData, List<Either<Command, CodeAction>> codeActions)
     {
-        RoyaleProject project = folderData.project;
+        ILspProject project = folderData.project;
         Position position = diagnostic.getRange().getStart();
         IncludeFileData includeFileData = folderData.includedFiles.get(path.toString());
 		int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position, includeFileData);
@@ -433,7 +433,7 @@ public class CodeActionProvider
 
     private void createCodeActionForMissingMethod(Path path, Diagnostic diagnostic, WorkspaceFolderData folderData, List<Either<Command, CodeAction>> codeActions)
     {
-        RoyaleProject project = folderData.project;
+        ILspProject project = folderData.project;
         Position position = diagnostic.getRange().getStart();
         IncludeFileData includeFileData = folderData.includedFiles.get(path.toString());
 		int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position, includeFileData);
@@ -504,7 +504,7 @@ public class CodeActionProvider
 
     private void createCodeActionForMissingEventListener(Path path, Diagnostic diagnostic, WorkspaceFolderData folderData, List<Either<Command, CodeAction>> codeActions)
     {
-        RoyaleProject project = folderData.project;
+        ILspProject project = folderData.project;
         Position position = diagnostic.getRange().getStart();
         IncludeFileData includeFileData = folderData.includedFiles.get(path.toString());
 		int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position, includeFileData);
@@ -608,7 +608,7 @@ public class CodeActionProvider
 
     private void createCodeActionsForImport(Path path, Diagnostic diagnostic, WorkspaceFolderData folderData, List<Either<Command, CodeAction>> codeActions)
     {
-        RoyaleProject project = folderData.project;
+        ILspProject project = folderData.project;
         Position position = diagnostic.getRange().getStart();
         IncludeFileData includeFileData = folderData.includedFiles.get(path.toString());
 		int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position, includeFileData);

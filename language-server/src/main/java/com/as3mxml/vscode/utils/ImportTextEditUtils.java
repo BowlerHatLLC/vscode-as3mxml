@@ -34,7 +34,7 @@ public class ImportTextEditUtils
     private static final Pattern organizeImportPattern = Pattern.compile("(?m)^([ \\t]*)import ((\\w+\\.)+\\w+(\\.\\*)?);?");
     private static final Pattern packagePattern = Pattern.compile("(?m)^package(?: [\\w\\.]+)*\\s*\\{(?:[ \\t]*[\\r\\n]+)+([ \\t]*)");
 
-    protected static int organizeImportsFromStartIndex(String text, int startIndex, Set<IImportNode> importsToRemove, Set<String> importsToAdd, List<TextEdit> edits)
+    protected static int organizeImportsFromStartIndex(String text, int startIndex, List<IImportNode> importsToRemove, Set<String> importsToAdd, List<TextEdit> edits)
     {
         Matcher importMatcher = organizeImportPattern.matcher(text);
         if(startIndex != -1)
@@ -163,7 +163,7 @@ public class ImportTextEditUtils
         return organizeImports(text, null, null);
     }
 
-    public static List<TextEdit> organizeImports(String text, Set<IImportNode> importsToRemove, Set<String> importsToAdd)
+    public static List<TextEdit> organizeImports(String text, List<IImportNode> importsToRemove, Set<String> importsToAdd)
     {
         List<TextEdit> edits = new ArrayList<>();
         int index = 0;

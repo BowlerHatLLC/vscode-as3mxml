@@ -19,7 +19,9 @@ import java.net.URI;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Set;
 
+import com.as3mxml.vscode.project.ILspProject;
 import com.as3mxml.vscode.project.WorkspaceFolderData;
 
 import org.apache.royale.compiler.clients.problems.ProblemQuery;
@@ -180,6 +182,10 @@ public class WaitForBuildFinishRunner implements Runnable
 					problems.add(prob);
 				}
 			}
+			
+			ILspProject project = folderData.project;
+			Set<String> requiredImports = project.getQNamesOfDependencies(compilationUnit);
+			ASTUtils.findUnusedImportProblems(syntaxTreeRequest.get().getAST(), requiredImports, problems);
         }
         catch (Exception e)
         {

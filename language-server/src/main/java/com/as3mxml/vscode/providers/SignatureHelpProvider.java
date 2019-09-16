@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import com.as3mxml.vscode.project.ILspProject;
 import com.as3mxml.vscode.project.WorkspaceFolderData;
 import com.as3mxml.vscode.utils.ASTUtils;
 import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
@@ -37,7 +38,6 @@ import org.apache.royale.compiler.definitions.IFunctionDefinition;
 import org.apache.royale.compiler.definitions.IParameterDefinition;
 import org.apache.royale.compiler.definitions.ITypeDefinition;
 import org.apache.royale.compiler.internal.mxml.MXMLData;
-import org.apache.royale.compiler.internal.projects.RoyaleProject;
 import org.apache.royale.compiler.mxml.IMXMLTagData;
 import org.apache.royale.compiler.tree.as.IASNode;
 import org.apache.royale.compiler.tree.as.IExpressionNode;
@@ -79,7 +79,7 @@ public class SignatureHelpProvider
 			cancelToken.checkCanceled();
 			return new SignatureHelp(Collections.emptyList(), -1, -1);
 		}
-		RoyaleProject project = folderData.project;
+		ILspProject project = folderData.project;
 
         IncludeFileData includeFileData = folderData.includedFiles.get(path.toString());
 		int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position, includeFileData);

@@ -21,21 +21,21 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import com.as3mxml.vscode.project.ILspProject;
 import com.as3mxml.vscode.project.WorkspaceFolderData;
 import com.as3mxml.vscode.utils.ASTUtils;
+import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
 import com.as3mxml.vscode.utils.CompilerProjectUtils;
 import com.as3mxml.vscode.utils.DefinitionUtils;
 import com.as3mxml.vscode.utils.FileTracker;
 import com.as3mxml.vscode.utils.LanguageServerCompilerUtils;
 import com.as3mxml.vscode.utils.MXMLDataUtils;
 import com.as3mxml.vscode.utils.WorkspaceFolderManager;
-import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
 
 import org.apache.royale.compiler.common.ISourceLocation;
 import org.apache.royale.compiler.definitions.IClassDefinition;
 import org.apache.royale.compiler.definitions.IDefinition;
 import org.apache.royale.compiler.internal.mxml.MXMLData;
-import org.apache.royale.compiler.internal.projects.RoyaleProject;
 import org.apache.royale.compiler.mxml.IMXMLDataManager;
 import org.apache.royale.compiler.mxml.IMXMLLanguageConstants;
 import org.apache.royale.compiler.mxml.IMXMLTagAttributeData;
@@ -82,7 +82,7 @@ public class ReferencesProvider
 			cancelToken.checkCanceled();
 			return Collections.emptyList();
 		}
-		RoyaleProject project = folderData.project;
+		ILspProject project = folderData.project;
 
         IncludeFileData includeFileData = folderData.includedFiles.get(path.toString());
 		int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position, includeFileData);
@@ -119,7 +119,7 @@ public class ReferencesProvider
 		return result;
 	}
 
-    private List<? extends Location> actionScriptReferences(IASNode offsetNode, RoyaleProject project)
+    private List<? extends Location> actionScriptReferences(IASNode offsetNode, ILspProject project)
     {
         if (offsetNode == null)
         {
@@ -145,7 +145,7 @@ public class ReferencesProvider
         return Collections.emptyList();
     }
 
-    private List<? extends Location> mxmlReferences(IMXMLTagData offsetTag, int currentOffset, ICompilationUnit offsetUnit, RoyaleProject project)
+    private List<? extends Location> mxmlReferences(IMXMLTagData offsetTag, int currentOffset, ICompilationUnit offsetUnit, ILspProject project)
     {
         IDefinition definition = MXMLDataUtils.getDefinitionForMXMLNameAtOffset(offsetTag, currentOffset, project);
         if (definition != null)
@@ -215,7 +215,7 @@ public class ReferencesProvider
         return result;
     }
 
-    private void referencesForDefinition(IDefinition definition, RoyaleProject project, List<Location> result)
+    private void referencesForDefinition(IDefinition definition, ILspProject project, List<Location> result)
     {
         for (ICompilationUnit unit : project.getCompilationUnits())
         {
@@ -233,7 +233,7 @@ public class ReferencesProvider
         }
     }
     
-    private void referencesForDefinitionInCompilationUnit(IDefinition definition, ICompilationUnit compilationUnit, RoyaleProject project, List<Location> result)
+    private void referencesForDefinitionInCompilationUnit(IDefinition definition, ICompilationUnit compilationUnit, ILspProject project, List<Location> result)
     {
         if (compilationUnit.getAbsoluteFilename().endsWith(MXML_EXTENSION))
         {

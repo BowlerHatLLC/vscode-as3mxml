@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import com.as3mxml.vscode.project.ILspProject;
 import com.as3mxml.vscode.project.WorkspaceFolderData;
 import com.as3mxml.vscode.utils.CompilerProjectUtils;
 import com.as3mxml.vscode.utils.LanguageServerCompilerUtils;
@@ -31,7 +32,6 @@ import org.apache.royale.compiler.definitions.IFunctionDefinition;
 import org.apache.royale.compiler.definitions.IPackageDefinition;
 import org.apache.royale.compiler.definitions.ITypeDefinition;
 import org.apache.royale.compiler.definitions.IVariableDefinition;
-import org.apache.royale.compiler.internal.projects.RoyaleProject;
 import org.apache.royale.compiler.scopes.IASScope;
 import org.apache.royale.compiler.units.ICompilationUnit;
 import org.eclipse.lsp4j.DocumentSymbol;
@@ -68,7 +68,7 @@ public class DocumentSymbolProvider
 			cancelToken.checkCanceled();
 			return Collections.emptyList();
 		}
-		RoyaleProject project = folderData.project;
+		ILspProject project = folderData.project;
 
 		ICompilationUnit unit = CompilerProjectUtils.findCompilationUnit(path, project);
 		if (unit == null)
@@ -117,7 +117,7 @@ public class DocumentSymbolProvider
 		return result;
 	}
 
-    private void scopeToSymbolInformation(IASScope scope, RoyaleProject project, List<SymbolInformation> result)
+    private void scopeToSymbolInformation(IASScope scope, ILspProject project, List<SymbolInformation> result)
     {
         Collection<IDefinition> definitions = scope.getAllLocalDefinitions();
         for (IDefinition definition : definitions)
@@ -156,7 +156,7 @@ public class DocumentSymbolProvider
         }
     }
 
-    private void scopeToDocumentSymbols(IASScope scope, RoyaleProject project, List<DocumentSymbol> result)
+    private void scopeToDocumentSymbols(IASScope scope, ILspProject project, List<DocumentSymbol> result)
     {
         Collection<IDefinition> definitions = scope.getAllLocalDefinitions();
         for (IDefinition definition : definitions)

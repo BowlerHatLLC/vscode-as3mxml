@@ -21,6 +21,8 @@ import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.Set;
 
+import com.as3mxml.vscode.project.ILspProject;
+
 import org.apache.royale.abc.ABCParser;
 import org.apache.royale.abc.Pool;
 import org.apache.royale.abc.PoolingABCVisitor;
@@ -28,15 +30,16 @@ import org.apache.royale.compiler.constants.IASLanguageConstants;
 import org.apache.royale.compiler.constants.IMetaAttributeConstants;
 import org.apache.royale.compiler.definitions.IAppliedVectorDefinition;
 import org.apache.royale.compiler.definitions.IClassDefinition;
+import org.apache.royale.compiler.definitions.IClassDefinition.IClassIterator;
 import org.apache.royale.compiler.definitions.IDefinition;
 import org.apache.royale.compiler.definitions.IGetterDefinition;
 import org.apache.royale.compiler.definitions.IInterfaceDefinition;
 import org.apache.royale.compiler.definitions.INamespaceDefinition;
 import org.apache.royale.compiler.definitions.ISetterDefinition;
 import org.apache.royale.compiler.definitions.ITypeDefinition;
-import org.apache.royale.compiler.definitions.IClassDefinition.IClassIterator;
 import org.apache.royale.compiler.definitions.metadata.IMetaTag;
-import org.apache.royale.compiler.internal.projects.RoyaleProject;
+import org.apache.royale.compiler.internal.projects.CompilerProject;
+import org.apache.royale.compiler.internal.scopes.ASProjectScope;
 import org.apache.royale.compiler.internal.scopes.ASScope;
 import org.apache.royale.compiler.internal.scopes.TypeScope;
 import org.apache.royale.compiler.projects.ICompilerProject;
@@ -119,9 +122,10 @@ public class DefinitionUtils
 		return null;
 	}
 
-	public static String getDefinitionDebugSourceFilePath(IDefinition definition, RoyaleProject project)
+	public static String getDefinitionDebugSourceFilePath(IDefinition definition, ICompilerProject project)
 	{
-		ICompilationUnit unit = project.getScope().getCompilationUnitForDefinition(definition);
+		ASProjectScope projectScope = (ASProjectScope) project.getScope();
+		ICompilationUnit unit = projectScope.getCompilationUnitForDefinition(definition);
 		if (unit == null)
 		{
 			return null;
@@ -196,7 +200,7 @@ public class DefinitionUtils
 		return false;
 	}
 
-	public static IDefinition resolveWithExtras(IIdentifierNode identifierNode, RoyaleProject project)
+	public static IDefinition resolveWithExtras(IIdentifierNode identifierNode, ILspProject project)
 	{
 		IDefinition definition = identifierNode.resolve(project);
 		if (definition != null)
@@ -221,7 +225,7 @@ public class DefinitionUtils
 						TypeScope typeScope = (TypeScope) elementType.getContainedScope();
 						ASScope otherScope = (ASScope) identifierNode.getContainingScope().getScope();
 						Set<INamespaceDefinition> namespaceSet = ScopeUtils.getNamespaceSetForScopes(typeScope, otherScope, project);
-						definition = typeScope.getPropertyByNameForMemberAccess(project, identifierNode.getName(), namespaceSet);
+						definition = typeScope.getPropertyByNameForMemberAccess((CompilerProject) project, identifierNode.getName(), namespaceSet);
 					}
 				}
 			}
@@ -230,7 +234,7 @@ public class DefinitionUtils
 		return definition;
 	}
 
-	public static IDefinition resolveTypeWithExtras(IIdentifierNode identifierNode, RoyaleProject project)
+	public static IDefinition resolveTypeWithExtras(IIdentifierNode identifierNode, ILspProject project)
 	{
 		ITypeDefinition definition = identifierNode.resolveType(project);
 		if (definition != null)
@@ -255,7 +259,7 @@ public class DefinitionUtils
 						TypeScope typeScope = (TypeScope) elementType.getContainedScope();
 						ASScope otherScope = (ASScope) identifierNode.getContainingScope().getScope();
 						Set<INamespaceDefinition> namespaceSet = ScopeUtils.getNamespaceSetForScopes(typeScope, otherScope, project);
-						IDefinition propertyDefinition = typeScope.getPropertyByNameForMemberAccess(project, identifierNode.getName(), namespaceSet);
+						IDefinition propertyDefinition = typeScope.getPropertyByNameForMemberAccess((CompilerProject) project, identifierNode.getName(), namespaceSet);
 						if (propertyDefinition != null)
 						{
 							definition = propertyDefinition.resolveType(project);

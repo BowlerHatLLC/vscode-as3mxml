@@ -22,6 +22,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.as3mxml.vscode.project.ILspProject;
 import com.as3mxml.vscode.project.WorkspaceFolderData;
 import com.as3mxml.vscode.utils.WorkspaceFolderManager;
 
@@ -30,7 +31,6 @@ import org.apache.royale.compiler.definitions.IFunctionDefinition;
 import org.apache.royale.compiler.definitions.IPackageDefinition;
 import org.apache.royale.compiler.definitions.ITypeDefinition;
 import org.apache.royale.compiler.definitions.IVariableDefinition;
-import org.apache.royale.compiler.internal.projects.RoyaleProject;
 import org.apache.royale.compiler.internal.scopes.ASProjectScope.DefinitionPromise;
 import org.apache.royale.compiler.scopes.IASScope;
 import org.apache.royale.compiler.units.ICompilationUnit;
@@ -74,7 +74,7 @@ public class WorkspaceSymbolProvider
 		for (WorkspaceFolder folder : workspaceFolderManager.getWorkspaceFolders())
 		{
 			WorkspaceFolderData folderData = workspaceFolderManager.getWorkspaceFolderData(folder);
-			RoyaleProject project = folderData.project;
+			ILspProject project = folderData.project;
 			if (project == null)
 			{
 				continue;
@@ -145,7 +145,7 @@ public class WorkspaceSymbolProvider
 		return result;
 	}
 
-    private void querySymbolsInScope(List<String> queries, IASScope scope, Set<String> foundTypes, RoyaleProject project, Collection<SymbolInformation> result)
+    private void querySymbolsInScope(List<String> queries, IASScope scope, Set<String> foundTypes, ILspProject project, Collection<SymbolInformation> result)
     {
         Collection<IDefinition> definitions = scope.getAllLocalDefinitions();
         for (IDefinition definition : definitions)

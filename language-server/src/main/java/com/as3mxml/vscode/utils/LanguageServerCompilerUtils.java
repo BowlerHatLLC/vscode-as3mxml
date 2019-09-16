@@ -42,9 +42,9 @@ import org.apache.royale.compiler.definitions.IStyleDefinition;
 import org.apache.royale.compiler.definitions.ITypeDefinition;
 import org.apache.royale.compiler.definitions.IVariableDefinition;
 import org.apache.royale.compiler.internal.parsing.as.OffsetCue;
-import org.apache.royale.compiler.internal.projects.RoyaleProject;
 import org.apache.royale.compiler.problems.CompilerProblemSeverity;
 import org.apache.royale.compiler.problems.ICompilerProblem;
+import org.apache.royale.compiler.projects.ICompilerProject;
 import org.eclipse.lsp4j.CompletionItemKind;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
@@ -509,7 +509,7 @@ public class LanguageServerCompilerUtils
         return diagnostic;
     }
 
-    public static String getSourcePathFromDefinition(IDefinition definition, RoyaleProject project)
+    public static String getSourcePathFromDefinition(IDefinition definition, ICompilerProject project)
     {
         String sourcePath = definition.getSourcePath();
         if (sourcePath == null)

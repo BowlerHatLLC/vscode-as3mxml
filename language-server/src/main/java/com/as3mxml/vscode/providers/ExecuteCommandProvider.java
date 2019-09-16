@@ -28,6 +28,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 import com.as3mxml.vscode.commands.ICommandConstants;
+import com.as3mxml.vscode.project.ILspProject;
 import com.as3mxml.vscode.project.WorkspaceFolderData;
 import com.as3mxml.vscode.services.ActionScriptLanguageClient;
 import com.as3mxml.vscode.utils.ASTUtils;
@@ -45,7 +46,6 @@ import com.google.gson.JsonPrimitive;
 import org.apache.royale.compiler.definitions.IDefinition;
 import org.apache.royale.compiler.filespecs.IFileSpecification;
 import org.apache.royale.compiler.internal.mxml.MXMLData;
-import org.apache.royale.compiler.internal.projects.RoyaleProject;
 import org.apache.royale.compiler.internal.workspaces.Workspace;
 import org.apache.royale.compiler.mxml.IMXMLTagData;
 import org.apache.royale.compiler.tree.as.IASNode;
@@ -294,7 +294,7 @@ public class ExecuteCommandProvider
         {
             return;
         }
-        RoyaleProject project = folderData.project;
+        ILspProject project = folderData.project;
         
         ICompilationUnit unit = CompilerProjectUtils.findCompilationUnit(path, project);
         if(unit == null)
@@ -310,12 +310,13 @@ public class ExecuteCommandProvider
 
         Set<String> missingNames = null;
         Set<String> importsToAdd = null;
-        Set<IImportNode> importsToRemove = null;
+        List<IImportNode> importsToRemove = null;
         IASNode ast = ASTUtils.getCompilationUnitAST(unit);
         if (ast != null)
         {
             missingNames = ASTUtils.findUnresolvedIdentifiersToImport(ast, project);
-            importsToRemove = ASTUtils.findImportNodesToRemove(ast, project);
+			Set<String> requiredImports = project.getQNamesOfDependencies(unit);
+            importsToRemove = ASTUtils.findImportNodesToRemove(ast, requiredImports);
         }
         if (missingNames != null)
         {

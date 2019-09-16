@@ -18,13 +18,14 @@ package com.as3mxml.vscode.utils;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.as3mxml.vscode.project.ILspProject;
+
 import org.apache.royale.compiler.common.ISourceLocation;
 import org.apache.royale.compiler.common.PrefixMap;
 import org.apache.royale.compiler.common.XMLName;
 import org.apache.royale.compiler.definitions.IClassDefinition;
 import org.apache.royale.compiler.definitions.IDefinition;
 import org.apache.royale.compiler.internal.mxml.MXMLData;
-import org.apache.royale.compiler.internal.projects.RoyaleProject;
 import org.apache.royale.compiler.mxml.IMXMLData;
 import org.apache.royale.compiler.mxml.IMXMLLanguageConstants;
 import org.apache.royale.compiler.mxml.IMXMLTagAttributeData;
@@ -177,7 +178,7 @@ public class MXMLDataUtils
         return xmlName;
     }
 
-    public static IDefinition getDefinitionForMXMLTag(IMXMLTagData tag, RoyaleProject project)
+    public static IDefinition getDefinitionForMXMLTag(IMXMLTagData tag, ILspProject project)
     {
         if (tag == null)
         {
@@ -215,7 +216,7 @@ public class MXMLDataUtils
         return project.resolveSpecifier(classDefinition, tag.getShortName());
     }
 
-    public static IDefinition getTypeDefinitionForMXMLTag(IMXMLTagData tag, RoyaleProject project)
+    public static IDefinition getTypeDefinitionForMXMLTag(IMXMLTagData tag, ILspProject project)
     {
         IDefinition result = getDefinitionForMXMLTag(tag, project);
         if(result == null)
@@ -225,7 +226,7 @@ public class MXMLDataUtils
         return result.resolveType(project);
     }
 
-    public static IDefinition getDefinitionForMXMLTagAttribute(IMXMLTagData tag, int offset, boolean includeValue, RoyaleProject project)
+    public static IDefinition getDefinitionForMXMLTagAttribute(IMXMLTagData tag, int offset, boolean includeValue, ILspProject project)
     {
         IMXMLTagAttributeData attributeData = null;
         if (includeValue)
@@ -250,7 +251,7 @@ public class MXMLDataUtils
         return null;
     }
 
-    public static IDefinition getTypeDefinitionForMXMLTagAttribute(IMXMLTagData tag, int offset, boolean includeValue, RoyaleProject project)
+    public static IDefinition getTypeDefinitionForMXMLTagAttribute(IMXMLTagData tag, int offset, boolean includeValue, ILspProject project)
     {
         IDefinition result = getDefinitionForMXMLTagAttribute(tag, offset, includeValue, project);
         if(result == null)
@@ -260,7 +261,7 @@ public class MXMLDataUtils
         return result.resolveType(project);
     }
 
-    public static IDefinition getDefinitionForMXMLNameAtOffset(IMXMLTagData tag, int offset, RoyaleProject project)
+    public static IDefinition getDefinitionForMXMLNameAtOffset(IMXMLTagData tag, int offset, ILspProject project)
     {
         if (tag.isOffsetInAttributeList(offset))
         {
@@ -269,7 +270,7 @@ public class MXMLDataUtils
         return getDefinitionForMXMLTag(tag, project);
     }
 
-    public static IDefinition getTypeDefinitionForMXMLNameAtOffset(IMXMLTagData tag, int offset, RoyaleProject project)
+    public static IDefinition getTypeDefinitionForMXMLNameAtOffset(IMXMLTagData tag, int offset, ILspProject project)
     {
         IDefinition result = getDefinitionForMXMLNameAtOffset(tag, offset, project);
         if(result == null)
@@ -369,7 +370,7 @@ public class MXMLDataUtils
         return null;
     }
 
-    public static void findMXMLUnits(IMXMLTagData tagData, IDefinition definition, RoyaleProject project, List<ISourceLocation> result)
+    public static void findMXMLUnits(IMXMLTagData tagData, IDefinition definition, ILspProject project, List<ISourceLocation> result)
     {
         IDefinition tagDefinition = project.resolveXMLNameToDefinition(tagData.getXMLName(), tagData.getMXMLDialect());
         if (tagDefinition != null && definition == tagDefinition)

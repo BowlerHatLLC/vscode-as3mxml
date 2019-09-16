@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.as3mxml.vscode.project.ILspProject;
 import com.as3mxml.vscode.project.IProjectConfigStrategy;
 import com.as3mxml.vscode.project.WorkspaceFolderData;
 import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
@@ -38,7 +39,6 @@ import org.apache.royale.compiler.definitions.ITypeDefinition;
 import org.apache.royale.compiler.definitions.metadata.IDeprecationInfo;
 import org.apache.royale.compiler.filespecs.IFileSpecification;
 import org.apache.royale.compiler.internal.mxml.MXMLData;
-import org.apache.royale.compiler.internal.projects.RoyaleProject;
 import org.apache.royale.compiler.mxml.IMXMLDataManager;
 import org.apache.royale.compiler.mxml.IMXMLTagAttributeData;
 import org.apache.royale.compiler.mxml.IMXMLTagData;
@@ -134,7 +134,7 @@ public class WorkspaceFolderManager
         WorkspaceFolderData fallback = null;
         for (WorkspaceFolderData folderData : workspaceFolderToData.values())
         {
-            RoyaleProject project = folderData.project;
+            ILspProject project = folderData.project;
             if (project == null)
             {
                 continue;
@@ -169,7 +169,7 @@ public class WorkspaceFolderManager
         //hasn't been created yet
         for (WorkspaceFolderData folderData : workspaceFolderToData.values())
         {
-            RoyaleProject project = folderData.project;
+            ILspProject project = folderData.project;
             if (project != null)
             {
                 //if there's already a project, there's nothing to create later
@@ -197,7 +197,7 @@ public class WorkspaceFolderManager
         {
             path = Paths.get(includeFileData.parentPath);
         }
-        RoyaleProject project = folderData.project;
+        ILspProject project = folderData.project;
         if (!SourcePathUtils.isInProjectSourcePath(path, project, folderData.configurator))
         {
             //the path must be in the workspace or source-path
@@ -222,7 +222,7 @@ public class WorkspaceFolderManager
 
     public IASNode getEmbeddedActionScriptNodeInMXMLTag(IMXMLTagData tag, Path path, int currentOffset, WorkspaceFolderData folderData)
     {
-        RoyaleProject project = folderData.project;
+        ILspProject project = folderData.project;
         IMXMLTagAttributeData attributeData = MXMLDataUtils.getMXMLTagAttributeWithValueAtOffset(tag, currentOffset);
         if (attributeData != null)
         {
@@ -323,7 +323,7 @@ public class WorkspaceFolderManager
             // don't try to parse ActionScript files as MXML
             return null;
         }
-        RoyaleProject project = folderData.project;
+        ILspProject project = folderData.project;
         if (!SourcePathUtils.isInProjectSourcePath(path, project, folderData.configurator))
         {
             //the path must be in the workspace or source-path
@@ -349,7 +349,7 @@ public class WorkspaceFolderManager
     {
         for (WorkspaceFolderData folderData : workspaceFolderToData.values())
         {
-            RoyaleProject project = folderData.project;
+            ILspProject project = folderData.project;
             if (project == null)
             {
                 continue;
@@ -368,7 +368,7 @@ public class WorkspaceFolderManager
         List<WorkspaceFolderData> result = new ArrayList<>();
         for (WorkspaceFolderData folderData : workspaceFolderToData.values())
         {
-            RoyaleProject project = folderData.project;
+            ILspProject project = folderData.project;
             if (project == null)
             {
                 String folderUri = folderData.folder.getUri();
@@ -391,7 +391,7 @@ public class WorkspaceFolderManager
         List<WorkspaceFolderData> result = new ArrayList<>();
         for (WorkspaceFolderData folderData : workspaceFolderToData.values())
         {
-            RoyaleProject project = folderData.project;
+            ILspProject project = folderData.project;
             if (project == null)
             {
                 String folderUri = folderData.folder.getUri();
@@ -413,7 +413,7 @@ public class WorkspaceFolderManager
         return result;
     }
 
-    public Location getLocationFromDefinition(IDefinition definition, RoyaleProject project)
+    public Location getLocationFromDefinition(IDefinition definition, ILspProject project)
     {
         String sourcePath = LanguageServerCompilerUtils.getSourcePathFromDefinition(definition, project);
         if (sourcePath == null)
@@ -450,7 +450,7 @@ public class WorkspaceFolderManager
         return location;
     }
 
-    public Range definitionToRange(IDefinition definition, RoyaleProject project)
+    public Range definitionToRange(IDefinition definition, ILspProject project)
     {
         String sourcePath = LanguageServerCompilerUtils.getSourcePathFromDefinition(definition, project);
         if (sourcePath == null)
@@ -525,7 +525,7 @@ public class WorkspaceFolderManager
         return range;
     }
 
-    public DocumentSymbol definitionToDocumentSymbol(IDefinition definition, RoyaleProject project)
+    public DocumentSymbol definitionToDocumentSymbol(IDefinition definition, ILspProject project)
     {
         String definitionBaseName = definition.getBaseName();
         if (definition instanceof IPackageDefinition)
@@ -560,7 +560,7 @@ public class WorkspaceFolderManager
         return symbol;
     }
 
-    public SymbolInformation definitionToSymbolInformation(IDefinition definition, RoyaleProject project)
+    public SymbolInformation definitionToSymbolInformation(IDefinition definition, ILspProject project)
     {
         String definitionBaseName = definition.getBaseName();
         if (definitionBaseName.length() == 0)

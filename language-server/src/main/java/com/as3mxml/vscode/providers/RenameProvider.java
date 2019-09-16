@@ -21,14 +21,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import com.as3mxml.vscode.project.ILspProject;
 import com.as3mxml.vscode.project.WorkspaceFolderData;
 import com.as3mxml.vscode.utils.ASTUtils;
+import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
 import com.as3mxml.vscode.utils.DefinitionUtils;
 import com.as3mxml.vscode.utils.FileTracker;
 import com.as3mxml.vscode.utils.LanguageServerCompilerUtils;
 import com.as3mxml.vscode.utils.MXMLDataUtils;
 import com.as3mxml.vscode.utils.WorkspaceFolderManager;
-import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
 import com.google.common.io.Files;
 
 import org.apache.royale.compiler.common.ISourceLocation;
@@ -37,7 +38,6 @@ import org.apache.royale.compiler.definitions.IDefinition;
 import org.apache.royale.compiler.definitions.IFunctionDefinition;
 import org.apache.royale.compiler.definitions.IPackageDefinition;
 import org.apache.royale.compiler.internal.mxml.MXMLData;
-import org.apache.royale.compiler.internal.projects.RoyaleProject;
 import org.apache.royale.compiler.mxml.IMXMLDataManager;
 import org.apache.royale.compiler.mxml.IMXMLTagData;
 import org.apache.royale.compiler.scopes.IASScope;
@@ -92,7 +92,7 @@ public class RenameProvider
 			cancelToken.checkCanceled();
 			return new WorkspaceEdit(new HashMap<>());
 		}
-        RoyaleProject project = folderData.project;
+        ILspProject project = folderData.project;
 
         IncludeFileData includeFileData = folderData.includedFiles.get(path.toString());
 		int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position, includeFileData);
@@ -128,7 +128,7 @@ public class RenameProvider
 		return result;
 	}
 
-    private WorkspaceEdit actionScriptRename(IASNode offsetNode, String newName, RoyaleProject project)
+    private WorkspaceEdit actionScriptRename(IASNode offsetNode, String newName, ILspProject project)
     {
         if (offsetNode == null)
         {
@@ -160,7 +160,7 @@ public class RenameProvider
         return result;
     }
 
-    private WorkspaceEdit mxmlRename(IMXMLTagData offsetTag, int currentOffset, String newName, RoyaleProject project)
+    private WorkspaceEdit mxmlRename(IMXMLTagData offsetTag, int currentOffset, String newName, ILspProject project)
     {
         IDefinition definition = MXMLDataUtils.getDefinitionForMXMLNameAtOffset(offsetTag, currentOffset, project);
         if (definition != null)
@@ -178,7 +178,7 @@ public class RenameProvider
 		return null;
     }
 
-    private WorkspaceEdit renameDefinition(IDefinition definition, String newName, RoyaleProject project)
+    private WorkspaceEdit renameDefinition(IDefinition definition, String newName, ILspProject project)
     {
         if (definition == null)
         {

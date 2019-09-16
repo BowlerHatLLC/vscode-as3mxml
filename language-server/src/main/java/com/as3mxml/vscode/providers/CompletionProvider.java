@@ -26,10 +26,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import com.as3mxml.vscode.project.ILspProject;
 import com.as3mxml.vscode.project.WorkspaceFolderData;
 import com.as3mxml.vscode.utils.ASTUtils;
 import com.as3mxml.vscode.utils.AddImportData;
 import com.as3mxml.vscode.utils.CodeActionsUtils;
+import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
 import com.as3mxml.vscode.utils.CompilerProjectUtils;
 import com.as3mxml.vscode.utils.CompletionItemUtils;
 import com.as3mxml.vscode.utils.DefinitionTextUtils;
@@ -44,7 +46,6 @@ import com.as3mxml.vscode.utils.ScopeUtils;
 import com.as3mxml.vscode.utils.SourcePathUtils;
 import com.as3mxml.vscode.utils.WorkspaceFolderManager;
 import com.as3mxml.vscode.utils.XmlnsRange;
-import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
 
 import org.apache.royale.compiler.common.ASModifier;
 import org.apache.royale.compiler.common.PrefixMap;
@@ -73,10 +74,10 @@ import org.apache.royale.compiler.definitions.metadata.IMetaTagAttribute;
 import org.apache.royale.compiler.filespecs.IFileSpecification;
 import org.apache.royale.compiler.internal.mxml.MXMLData;
 import org.apache.royale.compiler.internal.mxml.MXMLTagData;
-import org.apache.royale.compiler.internal.projects.RoyaleProject;
+import org.apache.royale.compiler.internal.projects.CompilerProject;
+import org.apache.royale.compiler.internal.scopes.ASProjectScope.DefinitionPromise;
 import org.apache.royale.compiler.internal.scopes.ASScope;
 import org.apache.royale.compiler.internal.scopes.TypeScope;
-import org.apache.royale.compiler.internal.scopes.ASProjectScope.DefinitionPromise;
 import org.apache.royale.compiler.internal.tree.as.FullNameNode;
 import org.apache.royale.compiler.mxml.IMXMLData;
 import org.apache.royale.compiler.mxml.IMXMLDataManager;
@@ -167,7 +168,7 @@ public class CompletionProvider
 				cancelToken.checkCanceled();
 				return Either.forRight(result);
 			}
-			RoyaleProject project = folderData.project;
+			ILspProject project = folderData.project;
 
             IncludeFileData includeFileData = folderData.includedFiles.get(path.toString());
 			int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position, includeFileData);
@@ -274,7 +275,7 @@ public class CompletionProvider
                 importRange = ImportRange.fromOffsetTag(offsetTag, currentOffset);
             }
         }
-        RoyaleProject project = folderData.project;
+        ILspProject project = folderData.project;
         AddImportData addImportData = CodeActionsUtils.findAddImportData(fileText, importRange);
 
         char nextChar = (char) -1;
@@ -635,7 +636,7 @@ public class CompletionProvider
         return result;
     }
 
-    private CompletionList mxmlCompletion(IMXMLTagData offsetTag, Path path, int currentOffset, ICompilationUnit offsetUnit, RoyaleProject project)
+    private CompletionList mxmlCompletion(IMXMLTagData offsetTag, Path path, int currentOffset, ICompilationUnit offsetUnit, ILspProject project)
     {
         CompletionList result = new CompletionList();
         result.setIsIncomplete(false);
@@ -790,7 +791,7 @@ public class CompletionProvider
                             {
                                 TypeScope typeScope = (TypeScope) classDefinition.getContainedScope();
                                 Set<INamespaceDefinition> namespaceSet = ScopeUtils.getNamespaceSetForScopes(typeScope, typeScope, project);
-                                List<IDefinition> propertiesByName = typeScope.getPropertiesByNameForMemberAccess(project, defaultPropertyName, namespaceSet);
+                                List<IDefinition> propertiesByName = typeScope.getPropertiesByNameForMemberAccess((CompilerProject) project, defaultPropertyName, namespaceSet);
                                 if (propertiesByName.size() > 0)
                                 {
                                     IDefinition propertyDefinition = propertiesByName.get(0);
@@ -866,7 +867,7 @@ public class CompletionProvider
                     {
                         TypeScope typeScope = (TypeScope) classDefinition.getContainedScope();
                         Set<INamespaceDefinition> namespaceSet = ScopeUtils.getNamespaceSetForScopes(typeScope, typeScope, project);
-                        List<IDefinition> propertiesByName = typeScope.getPropertiesByNameForMemberAccess(project, defaultPropertyName, namespaceSet);
+                        List<IDefinition> propertiesByName = typeScope.getPropertiesByNameForMemberAccess((CompilerProject) project, defaultPropertyName, namespaceSet);
                         if (propertiesByName.size() > 0)
                         {
                             IDefinition propertyDefinition = propertiesByName.get(0);
@@ -1073,7 +1074,7 @@ public class CompletionProvider
         result.getItems().add(item);
     }
 
-    private void autoCompleteTypes(IASNode withNode, AddImportData addImportData, RoyaleProject project, CompletionList result)
+    private void autoCompleteTypes(IASNode withNode, AddImportData addImportData, ILspProject project, CompletionList result)
     {
         //start by getting the types in scope
         IASNode node = withNode;
@@ -1095,7 +1096,7 @@ public class CompletionProvider
         autoCompleteDefinitionsForActionScript(result, project, withNode, true, null, null, false, null, (char) -1, addImportData);
     }
 
-    private void autoCompleteScope(IScopedNode node, boolean typesOnly, char nextChar, AddImportData addImportData, RoyaleProject project, CompletionList result)
+    private void autoCompleteScope(IScopedNode node, boolean typesOnly, char nextChar, AddImportData addImportData, ILspProject project, CompletionList result)
     {
         IScopedNode currentNode = node;
         ASScope scope = (ASScope) node.getScope();
@@ -1146,7 +1147,7 @@ public class CompletionProvider
         }
     }
 
-    private void autoCompleteFunctionOverrides(IFunctionNode node, RoyaleProject project, CompletionList result)
+    private void autoCompleteFunctionOverrides(IFunctionNode node, ILspProject project, CompletionList result)
     {
         String namespace = node.getNamespace();
         boolean isGetter = node.isGetter();
@@ -1172,7 +1173,7 @@ public class CompletionProvider
             }
             typeScope = (TypeScope) classDefinition.getContainedScope();
             INamespaceDefinition protectedNamespace = classDefinition.getProtectedNamespaceReference();
-            typeScope.getAllLocalProperties(project, propertyDefinitions, namespaceSet, protectedNamespace);
+            typeScope.getAllLocalProperties((CompilerProject) project, propertyDefinitions, namespaceSet, protectedNamespace);
         }
         while (classDefinition instanceof IClassDefinition);
 
@@ -1255,7 +1256,7 @@ public class CompletionProvider
         }
     }
 
-    private void autoCompleteMemberAccess(IMemberAccessExpressionNode node, char nextChar, AddImportData addImportData, RoyaleProject project, CompletionList result)
+    private void autoCompleteMemberAccess(IMemberAccessExpressionNode node, char nextChar, AddImportData addImportData, ILspProject project, CompletionList result)
     {
         ASScope scope = (ASScope) node.getContainingScope().getScope();
         IExpressionNode leftOperand = node.getLeftOperandNode();
@@ -1305,7 +1306,7 @@ public class CompletionProvider
         }
     }
 
-    private void autoCompletePackageBlock(IFileSpecification fileSpec, RoyaleProject project, CompletionList result)
+    private void autoCompletePackageBlock(IFileSpecification fileSpec, ILspProject project, CompletionList result)
     {
         //we'll guess the package name based on path of the parent directory
         File unitFile = new File(fileSpec.getPath());
@@ -1315,7 +1316,7 @@ public class CompletionProvider
         result.getItems().add(packageItem);
     }
 
-    private void autoCompletePackageName(String partialPackageName, IFileSpecification fileSpec, RoyaleProject project, CompletionList result)
+    private void autoCompletePackageName(String partialPackageName, IFileSpecification fileSpec, ILspProject project, CompletionList result)
     {
         File unitFile = new File(fileSpec.getPath());
         unitFile = unitFile.getParentFile();
@@ -1342,7 +1343,7 @@ public class CompletionProvider
         result.getItems().add(item);
     }
 
-    private void autoCompleteImport(String importName, RoyaleProject project, CompletionList result)
+    private void autoCompleteImport(String importName, ILspProject project, CompletionList result)
     {
         List<CompletionItem> items = result.getItems();
         for (ICompilationUnit unit : project.getCompilationUnits())
@@ -1511,7 +1512,7 @@ public class CompletionProvider
 
     private void addMembersForMXMLTypeToAutoComplete(IClassDefinition definition,
             IMXMLTagData offsetTag, ICompilationUnit offsetUnit, boolean isAttribute, boolean includePrefix, boolean tagsNeedOpenBracket,
-            char nextChar, AddImportData addImportData, Position xmlnsPosition, RoyaleProject project, CompletionList result)
+            char nextChar, AddImportData addImportData, Position xmlnsPosition, ILspProject project, CompletionList result)
     {
         IASScope[] scopes;
         try
@@ -1545,7 +1546,7 @@ public class CompletionProvider
         }
     }
 
-    private void addLanguageAttributesToAutoCompleteMXML(TypeScope typeScope, ASScope otherScope, char nextChar, RoyaleProject project, CompletionList result)
+    private void addLanguageAttributesToAutoCompleteMXML(TypeScope typeScope, ASScope otherScope, char nextChar, ILspProject project, CompletionList result)
     {
         List<CompletionItem> items = result.getItems();
 
@@ -1573,7 +1574,7 @@ public class CompletionProvider
 
         Set<INamespaceDefinition> namespaceSet = ScopeUtils.getNamespaceSetForScopes(typeScope, otherScope, project);
 
-        IDefinition idPropertyDefinition = typeScope.getPropertyByNameForMemberAccess(project, IMXMLLanguageConstants.ATTRIBUTE_ID, namespaceSet);
+        IDefinition idPropertyDefinition = typeScope.getPropertyByNameForMemberAccess((CompilerProject) project, IMXMLLanguageConstants.ATTRIBUTE_ID, namespaceSet);
         if (idPropertyDefinition == null)
         {
             CompletionItem idItem = new CompletionItem();
@@ -1590,7 +1591,7 @@ public class CompletionProvider
 
         if (frameworkSDKIsRoyale)
         {
-            IDefinition localIdPropertyDefinition = typeScope.getPropertyByNameForMemberAccess(project, IMXMLLanguageConstants.ATTRIBUTE_LOCAL_ID, namespaceSet);
+            IDefinition localIdPropertyDefinition = typeScope.getPropertyByNameForMemberAccess((CompilerProject) project, IMXMLLanguageConstants.ATTRIBUTE_LOCAL_ID, namespaceSet);
             if (localIdPropertyDefinition == null)
             {
                 CompletionItem localIdItem = new CompletionItem();
@@ -1609,7 +1610,7 @@ public class CompletionProvider
 
     private void addDefinitionsInTypeScopeToAutoCompleteActionScript(TypeScope typeScope, ASScope otherScope,
         boolean isStatic, char nextChar, AddImportData addImportData,
-        RoyaleProject project, CompletionList result)
+        ILspProject project, CompletionList result)
     {
         addDefinitionsInTypeScopeToAutoComplete(typeScope, otherScope, isStatic, false, false, false, null, false, nextChar, addImportData, null, null, project, result);
     }
@@ -1617,7 +1618,7 @@ public class CompletionProvider
     private void addDefinitionsInTypeScopeToAutoCompleteMXML(TypeScope typeScope, ASScope otherScope,
         boolean isAttribute, String prefix, boolean tagsNeedOpenBracket,
         AddImportData addImportData, Position xmlnsPosition,
-        IMXMLTagData offsetTag, RoyaleProject project, CompletionList result)
+        IMXMLTagData offsetTag, ILspProject project, CompletionList result)
     {
         addDefinitionsInTypeScopeToAutoComplete(typeScope, otherScope, false, false, true, isAttribute, prefix, tagsNeedOpenBracket, (char) -1, addImportData, xmlnsPosition, offsetTag, project, result);
     }
@@ -1626,13 +1627,13 @@ public class CompletionProvider
         boolean isStatic, boolean includeSuperStatics,
         boolean forMXML, boolean isAttribute, String prefix, boolean tagsNeedOpenBracket,
         char nextChar, AddImportData addImportData, Position xmlnsPosition,
-        IMXMLTagData offsetTag, RoyaleProject project, CompletionList result)
+        IMXMLTagData offsetTag, ILspProject project, CompletionList result)
     {
         IMetaTag[] excludeMetaTags = typeScope.getDefinition().getMetaTagsByName(IMetaAttributeConstants.ATTRIBUTE_EXCLUDE);
         ArrayList<IDefinition> memberAccessDefinitions = new ArrayList<>();
         Set<INamespaceDefinition> namespaceSet = ScopeUtils.getNamespaceSetForScopes(typeScope, otherScope, project);
         
-        typeScope.getAllPropertiesForMemberAccess(project, memberAccessDefinitions, namespaceSet);
+        typeScope.getAllPropertiesForMemberAccess((CompilerProject) project, memberAccessDefinitions, namespaceSet);
         for (IDefinition localDefinition : memberAccessDefinitions)
         {
             if (localDefinition.isOverride())
@@ -1718,7 +1719,7 @@ public class CompletionProvider
         }
     }
 
-    private void addEventMetadataToAutoCompleteMXML(TypeScope typeScope, boolean isAttribute, String prefix, boolean tagsNeedOpenBracket, char nextChar, RoyaleProject project, CompletionList result)
+    private void addEventMetadataToAutoCompleteMXML(TypeScope typeScope, boolean isAttribute, String prefix, boolean tagsNeedOpenBracket, char nextChar, ILspProject project, CompletionList result)
     {
         ArrayList<String> eventNames = new ArrayList<>();
         IDefinition definition = typeScope.getDefinition();
@@ -1788,7 +1789,7 @@ public class CompletionProvider
         }
     }
 
-    private void addStyleMetadataToAutoCompleteMXML(TypeScope typeScope, boolean isAttribute, String prefix, boolean tagsNeedOpenBracket, char nextChar, RoyaleProject project, CompletionList result)
+    private void addStyleMetadataToAutoCompleteMXML(TypeScope typeScope, boolean isAttribute, String prefix, boolean tagsNeedOpenBracket, char nextChar, ILspProject project, CompletionList result)
     {
         ArrayList<String> styleNames = new ArrayList<>();
         IDefinition definition = typeScope.getDefinition();
@@ -1876,7 +1877,7 @@ public class CompletionProvider
         }
     }
 
-    private void addMXMLTypeDefinitionAutoComplete(ITypeDefinition definition, Position xmlnsPosition, ICompilationUnit offsetUnit, IMXMLTagData offsetTag, boolean tagsNeedOpenBracket, char nextChar, RoyaleProject project, CompletionList result)
+    private void addMXMLTypeDefinitionAutoComplete(ITypeDefinition definition, Position xmlnsPosition, ICompilationUnit offsetUnit, IMXMLTagData offsetTag, boolean tagsNeedOpenBracket, char nextChar, ILspProject project, CompletionList result)
     {
         IMXMLDataManager mxmlDataManager = project.getWorkspace().getMXMLDataManager();
         MXMLData mxmlData = (MXMLData) mxmlDataManager.get(fileTracker.getFileSpecification(offsetUnit.getAbsoluteFilename()));
@@ -1884,7 +1885,7 @@ public class CompletionProvider
         addDefinitionAutoCompleteMXML(definition, xmlnsPosition, false, discoveredNS.prefix, discoveredNS.uri, tagsNeedOpenBracket, nextChar, offsetTag, project, result);
     }
 
-    private void addDefinitionAutoCompleteActionScript(IDefinition definition, IASNode offsetNode, char nextChar, AddImportData addImportData, RoyaleProject project, CompletionList result)
+    private void addDefinitionAutoCompleteActionScript(IDefinition definition, IASNode offsetNode, char nextChar, AddImportData addImportData, ILspProject project, CompletionList result)
     {
         String definitionBaseName = definition.getBaseName();
         if (definitionBaseName.length() == 0)
@@ -1941,7 +1942,7 @@ public class CompletionProvider
         result.getItems().add(item);
     }
 
-    private void addDefinitionAutoCompleteMXML(IDefinition definition, Position xmlnsPosition, boolean isAttribute, String prefix, String uri, boolean tagsNeedOpenBracket, char nextChar, IMXMLTagData offsetTag, RoyaleProject project, CompletionList result)
+    private void addDefinitionAutoCompleteMXML(IDefinition definition, Position xmlnsPosition, boolean isAttribute, String prefix, String uri, boolean tagsNeedOpenBracket, char nextChar, IMXMLTagData offsetTag, ILspProject project, CompletionList result)
     {
         if (definition.getBaseName().startsWith(VECTOR_HIDDEN_PREFIX))
         {
@@ -2135,7 +2136,7 @@ public class CompletionProvider
         return result;
     }
 
-    private CompletionList mxmlAttributeCompletion(IMXMLTagData offsetTag, int currentOffset, RoyaleProject project, CompletionList result)
+    private CompletionList mxmlAttributeCompletion(IMXMLTagData offsetTag, int currentOffset, ILspProject project, CompletionList result)
     {
         List<CompletionItem> items = result.getItems();
         IDefinition attributeDefinition = MXMLDataUtils.getDefinitionForMXMLTagAttribute(offsetTag, currentOffset, true, project);
@@ -2208,7 +2209,7 @@ public class CompletionProvider
      * Using an existing tag, that may already have a prefix or short name,
      * populate the completion list.
      */
-    private void autoCompleteTypesForMXMLFromExistingTag(CompletionList result, RoyaleProject project, ICompilationUnit offsetUnit, IMXMLTagData offsetTag, char nextChar, String typeFilter, Position xmlnsPosition)
+    private void autoCompleteTypesForMXMLFromExistingTag(CompletionList result, ILspProject project, ICompilationUnit offsetUnit, IMXMLTagData offsetTag, char nextChar, String typeFilter, Position xmlnsPosition)
     {
         IMXMLDataManager mxmlDataManager = project.getWorkspace().getMXMLDataManager();
         MXMLData mxmlData = (MXMLData) mxmlDataManager.get(fileTracker.getFileSpecification(offsetUnit.getAbsoluteFilename()));
@@ -2312,7 +2313,7 @@ public class CompletionProvider
         }
     }
 
-    private void autoCompleteDefinitionsForMXML(CompletionList result, RoyaleProject project, ICompilationUnit offsetUnit, IMXMLTagData offsetTag, boolean typesOnly, boolean tagsNeedOpenBracket, char nextChar, String typeFilter, AddImportData addImportData, Position xmlnsPosition)
+    private void autoCompleteDefinitionsForMXML(CompletionList result, ILspProject project, ICompilationUnit offsetUnit, IMXMLTagData offsetTag, boolean typesOnly, boolean tagsNeedOpenBracket, char nextChar, String typeFilter, AddImportData addImportData, Position xmlnsPosition)
     {
         for (ICompilationUnit unit : project.getCompilationUnits())
         {
@@ -2364,7 +2365,7 @@ public class CompletionProvider
     }
 
     private void autoCompleteDefinitionsForActionScript(CompletionList result,
-            RoyaleProject project, IASNode offsetNode,
+            ILspProject project, IASNode offsetNode,
             boolean typesOnly, String requiredPackageName, IDefinition definitionToSkip,
             boolean tagsNeedOpenBracket, String typeFilter, char nextChar, AddImportData addImportData)
     {

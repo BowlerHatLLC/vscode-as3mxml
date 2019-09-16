@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import com.as3mxml.vscode.project.ILspProject;
 import com.as3mxml.vscode.project.WorkspaceFolderData;
 import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
 import com.as3mxml.vscode.utils.DefinitionDocumentationUtils;
@@ -34,7 +35,6 @@ import org.apache.royale.compiler.definitions.IClassDefinition;
 import org.apache.royale.compiler.definitions.IDefinition;
 import org.apache.royale.compiler.definitions.IFunctionDefinition;
 import org.apache.royale.compiler.internal.mxml.MXMLData;
-import org.apache.royale.compiler.internal.projects.RoyaleProject;
 import org.apache.royale.compiler.mxml.IMXMLTagData;
 import org.apache.royale.compiler.tree.as.IASNode;
 import org.apache.royale.compiler.tree.as.IFunctionCallNode;
@@ -114,7 +114,7 @@ public class HoverProvider
 		return result;
 	}
 
-    private Hover actionScriptHover(IASNode offsetNode, RoyaleProject project)
+    private Hover actionScriptHover(IASNode offsetNode, ILspProject project)
     {
         IDefinition definition = null;
         if (offsetNode == null)
@@ -170,7 +170,7 @@ public class HoverProvider
         return result;
     }
 
-    private Hover mxmlHover(IMXMLTagData offsetTag, int currentOffset, RoyaleProject project)
+    private Hover mxmlHover(IMXMLTagData offsetTag, int currentOffset, ILspProject project)
     {
         IDefinition definition = MXMLDataUtils.getDefinitionForMXMLNameAtOffset(offsetTag, currentOffset, project);
         if (definition == null)

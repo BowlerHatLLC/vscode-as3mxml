@@ -24,6 +24,9 @@ import java.util.List;
 
 import com.as3mxml.asconfigc.compiler.ProjectType;
 import com.as3mxml.asconfigc.utils.OptionsUtils;
+import com.as3mxml.vscode.project.ILspProject;
+import com.as3mxml.vscode.project.LspJSProject;
+import com.as3mxml.vscode.project.LspProject;
 import com.as3mxml.vscode.project.ProjectOptions;
 import com.as3mxml.vscode.project.VSCodeConfiguration;
 
@@ -36,7 +39,6 @@ import org.apache.royale.compiler.internal.driver.js.node.NodeBackend;
 import org.apache.royale.compiler.internal.driver.js.node.NodeModuleBackend;
 import org.apache.royale.compiler.internal.driver.js.royale.RoyaleBackend;
 import org.apache.royale.compiler.internal.projects.RoyaleJSProject;
-import org.apache.royale.compiler.internal.projects.RoyaleProject;
 import org.apache.royale.compiler.internal.projects.RoyaleProjectConfigurator;
 import org.apache.royale.compiler.internal.workspaces.Workspace;
 import org.apache.royale.compiler.projects.ICompilerProject;
@@ -54,7 +56,7 @@ public class CompilerProjectUtils
 	
     private static final String PROPERTY_FRAMEWORK_LIB = "royalelib";
 
-	public static RoyaleProject createProject(ProjectOptions currentProjectOptions, Workspace compilerWorkspace)
+	public static ILspProject createProject(ProjectOptions currentProjectOptions, Workspace compilerWorkspace)
 	{
         Path frameworkLibPath = Paths.get(System.getProperty(PROPERTY_FRAMEWORK_LIB));
         boolean frameworkSDKIsRoyale = ActionScriptSDKUtils.isRoyaleFramework(frameworkLibPath);
@@ -62,7 +64,7 @@ public class CompilerProjectUtils
         Path asjscPath = frameworkLibPath.resolve("../js/bin/asjsc");
         boolean frameworkSDKIsFlexJS = !frameworkSDKIsRoyale && asjscPath.toFile().exists();
 
-		RoyaleProject project = null;
+		ILspProject project = null;
 
         //we're going to try to determine what kind of project we need
         //(either Royale or everything else). if it's a Royale project, we
@@ -141,7 +143,7 @@ public class CompilerProjectUtils
         //if we created a backend, it's a Royale project (RoyaleJSProject)
         if (backend != null)
         {
-            project = new RoyaleJSProject(compilerWorkspace, backend);
+            project = new LspJSProject(compilerWorkspace, backend);
         }
         //if we haven't created the project yet, then it's not Royale and
         //the project should be one that doesn't require a backend.
@@ -150,13 +152,13 @@ public class CompilerProjectUtils
             //yes, this is called RoyaleProject, but a *real* Royale project
             //is RoyaleJSProject...
             //RoyaleProject is for projects targeting the SWF format.
-            project = new RoyaleProject(compilerWorkspace);
+            project = new LspProject(compilerWorkspace);
         }
         project.setProblems(new ArrayList<>());
         return project;
     }
 
-    public static RoyaleProjectConfigurator createConfigurator(RoyaleProject project, ProjectOptions projectOptions)
+    public static RoyaleProjectConfigurator createConfigurator(ILspProject project, ProjectOptions projectOptions)
     {
         final Path frameworkLibPath = Paths.get(System.getProperty(PROPERTY_FRAMEWORK_LIB));
         final boolean frameworkSDKIsRoyale = ActionScriptSDKUtils.isRoyaleFramework(frameworkLibPath);

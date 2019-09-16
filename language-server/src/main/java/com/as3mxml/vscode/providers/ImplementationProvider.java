@@ -21,19 +21,19 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import com.as3mxml.vscode.project.ILspProject;
 import com.as3mxml.vscode.project.WorkspaceFolderData;
+import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
 import com.as3mxml.vscode.utils.DefinitionUtils;
 import com.as3mxml.vscode.utils.FileTracker;
 import com.as3mxml.vscode.utils.LanguageServerCompilerUtils;
 import com.as3mxml.vscode.utils.MXMLDataUtils;
 import com.as3mxml.vscode.utils.WorkspaceFolderManager;
-import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
 
 import org.apache.royale.compiler.definitions.IClassDefinition;
 import org.apache.royale.compiler.definitions.IDefinition;
 import org.apache.royale.compiler.definitions.IInterfaceDefinition;
 import org.apache.royale.compiler.internal.mxml.MXMLData;
-import org.apache.royale.compiler.internal.projects.RoyaleProject;
 import org.apache.royale.compiler.mxml.IMXMLTagData;
 import org.apache.royale.compiler.tree.as.IASNode;
 import org.apache.royale.compiler.tree.as.IIdentifierNode;
@@ -75,7 +75,7 @@ public class ImplementationProvider
 			cancelToken.checkCanceled();
 			return Either.forLeft(Collections.emptyList());
 		}
-		RoyaleProject project = folderData.project;
+		ILspProject project = folderData.project;
 
         IncludeFileData includeFileData = folderData.includedFiles.get(path.toString());
 		int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position, includeFileData);
@@ -103,7 +103,7 @@ public class ImplementationProvider
 		return Either.forLeft(result);
 	}
 
-    private List<? extends Location> actionScriptImplementation(IASNode offsetNode, RoyaleProject project)
+    private List<? extends Location> actionScriptImplementation(IASNode offsetNode, ILspProject project)
     {
         if (offsetNode == null)
         {

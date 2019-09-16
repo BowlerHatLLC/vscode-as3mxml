@@ -53,6 +53,7 @@ import com.as3mxml.vscode.asdoc.VSCodeASDocDelegate;
 import com.as3mxml.vscode.commands.ICommandConstants;
 import com.as3mxml.vscode.compiler.CompilerShell;
 import com.as3mxml.vscode.compiler.problems.SyntaxFallbackProblem;
+import com.as3mxml.vscode.project.ILspProject;
 import com.as3mxml.vscode.project.IProjectConfigStrategy;
 import com.as3mxml.vscode.project.IProjectConfigStrategyFactory;
 import com.as3mxml.vscode.project.ProjectOptions;
@@ -95,14 +96,12 @@ import org.apache.royale.compiler.internal.parsing.as.ASParser;
 import org.apache.royale.compiler.internal.parsing.as.ASToken;
 import org.apache.royale.compiler.internal.parsing.as.RepairingTokenBuffer;
 import org.apache.royale.compiler.internal.parsing.as.StreamingASTokenizer;
-import org.apache.royale.compiler.internal.projects.RoyaleProject;
 import org.apache.royale.compiler.internal.projects.RoyaleProjectConfigurator;
 import org.apache.royale.compiler.internal.targets.Target;
 import org.apache.royale.compiler.internal.tree.as.FileNode;
 import org.apache.royale.compiler.internal.workspaces.Workspace;
 import org.apache.royale.compiler.problems.ICompilerProblem;
 import org.apache.royale.compiler.problems.InternalCompilerProblem;
-import org.apache.royale.compiler.projects.ICompilerProject;
 import org.apache.royale.compiler.targets.ITarget;
 import org.apache.royale.compiler.targets.ITargetSettings;
 import org.apache.royale.compiler.tree.as.IASNode;
@@ -699,7 +698,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         }
 
         getProject(folderData);
-        RoyaleProject project = folderData.project;
+        ILspProject project = folderData.project;
         if (project == null)
         {
             //something went wrong while creating the project
@@ -753,7 +752,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         }
 
         getProject(folderData);
-        RoyaleProject project = folderData.project;
+        ILspProject project = folderData.project;
         if (project == null)
         {
             //something went wrong while creating the project
@@ -870,7 +869,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             }
 
             getProject(folderData);
-            RoyaleProject project = folderData.project;
+            ILspProject project = folderData.project;
             URI uri = path.toUri();
             if(project == null)
             {
@@ -948,7 +947,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             return;
         }
         getProject(folderData);
-        RoyaleProject project = folderData.project;
+        ILspProject project = folderData.project;
         if (project == null)
         {
             //something went wrong while creating the project
@@ -1106,7 +1105,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                 for (WorkspaceFolder folder : workspaceFolderManager.getWorkspaceFolders())
                 {
                     WorkspaceFolderData folderData = workspaceFolderManager.getWorkspaceFolderData(folder);
-                    RoyaleProject project = folderData.project;
+                    ILspProject project = folderData.project;
                     if (project == null)
                     {
                         continue;
@@ -1305,7 +1304,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
 
     private void prepareNewProject(WorkspaceFolderData folderData)
     {
-        RoyaleProject project = folderData.project;
+        ILspProject project = folderData.project;
         if (project == null)
         {
             return;
@@ -1668,7 +1667,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
      * changed. When the configuration has changed, destroys the old project and
      * creates a new one.
      */
-    private RoyaleProject getProject(WorkspaceFolderData folderData)
+    private ILspProject getProject(WorkspaceFolderData folderData)
     {
         if(folderData == null)
         {
@@ -1676,7 +1675,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             return null;
         }
         refreshProjectOptions(folderData);
-        RoyaleProject project = folderData.project;
+        ILspProject project = folderData.project;
         ProjectOptions projectOptions = folderData.options;
         if (projectOptions == null)
         {
@@ -1798,7 +1797,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     private void checkProjectForProblems(WorkspaceFolderData folderData)
     {
         getProject(folderData);
-        RoyaleProject project = folderData.project;
+        ILspProject project = folderData.project;
         ProjectOptions options = folderData.options;
         if(project == null || options == null)
         {
@@ -1903,7 +1902,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         return new ProblemQuery(compilerProblemSettings);
     }
 
-    private void populateCompilationUnits(ICompilerProject project)
+    private void populateCompilationUnits(ILspProject project)
     {
         List<ICompilerProblem> problems = new ArrayList<>();
         boolean continueCheckingForErrors = true;
@@ -1930,7 +1929,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                     //for every compilation unit
                     problems.clear();
 
-                    checkCompilationUnitForAllProblems(unit, problems);
+                    checkCompilationUnitForAllProblems(unit, project, problems);
                     problems.clear();
                 }
                 continueCheckingForErrors = false;
@@ -1953,7 +1952,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             return;
         }
 
-        RoyaleProject project = folderData.project;
+        ILspProject project = folderData.project;
 
         Set<ICompilationUnit> roots = new HashSet<>();
         Target target = null;
@@ -2088,7 +2087,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
 
                     //we should have already built, so this will be fast
                     //if we hadn't built, we would not have all of the roots
-                    checkCompilationUnitForAllProblems(unit, problems);
+                    checkCompilationUnitForAllProblems(unit, project, problems);
                     problemQuery.addAll(problems);
                     //clear for the next compilation unit
                     problems.clear();
@@ -2111,7 +2110,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         }
     }
 
-    private void checkCompilationUnitForAllProblems(ICompilationUnit unit, List<ICompilerProblem> problems)
+    private void checkCompilationUnitForAllProblems(ICompilationUnit unit, ILspProject project, List<ICompilerProblem> problems)
     {
         try
         {
@@ -2126,7 +2125,8 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                 IASNode ast = ASTUtils.getCompilationUnitAST(unit);
                 if(ast != null)
                 {
-                    ASTUtils.findUnusedImportProblems(ast, unit.getProject(), problems);
+                    Set<String> requiredImports = project.getQNamesOfDependencies(unit);
+                    ASTUtils.findUnusedImportProblems(ast, requiredImports, problems);
                     //TODO: enable after royale-compiler provides the correct range
                     //ASTUtils.findDisabledConfigConditionBlockProblems(ast, problems);
                 }

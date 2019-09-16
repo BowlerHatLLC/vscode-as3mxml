@@ -240,16 +240,16 @@ public class ASTUtils
         return importsToAdd;
 	}
 	
-    public static Set<IImportNode> findImportNodesToRemove(IASNode node, ICompilerProject project)
+    public static List<IImportNode> findImportNodesToRemove(IASNode node, Set<String> requiredImports)
     {
-        HashSet<IImportNode> importsToRemove = new HashSet<>();
-        findImportNodesToRemove(node, project, new HashSet<>(), importsToRemove);
+        List<IImportNode> importsToRemove = new ArrayList<>();
+        findImportNodesToRemove(node, requiredImports, importsToRemove);
         return importsToRemove;
     }
     
-    public static void findUnusedImportProblems(IASNode ast, ICompilerProject project, List<ICompilerProblem> problems)
+    public static void findUnusedImportProblems(IASNode ast, Set<String> requiredImports, List<ICompilerProblem> problems)
     {
-        Set<IImportNode> importsToRemove = findImportNodesToRemove(ast, project);
+        List<IImportNode> importsToRemove = findImportNodesToRemove(ast, requiredImports);
         for(IImportNode importNode : importsToRemove)
         {
             problems.add(new UnusedImportProblem(importNode));
@@ -581,84 +581,28 @@ public class ASTUtils
         }
 	}
     
-    protected static void findImportNodesToRemove(IASNode node, ICompilerProject project, Set<String> referencedDefinitions, Set<IImportNode> importsToRemove)
+    protected static void findImportNodesToRemove(IASNode node, Set<String> requiredImports, List<IImportNode> importsToRemove)
     {
-        Set<String> mxmlScriptReferencedDefinitions = null;
-        Set<IImportNode> childImports = null;
-        if (node instanceof IScopedNode || node instanceof IMXMLScriptNode)
-        {
-            childImports = new HashSet<>();
-        }
         for (int i = 0, count = node.getChildCount(); i < count; i++)
         {
             IASNode child = node.getChild(i);
             if (child instanceof IImportNode)
             {
-                if (childImports != null)
+                IImportNode importNode = (IImportNode) child;
+                
+                if(!requiredImports.contains(importNode.getImportName()))
                 {
-                    IImportNode importNode = (IImportNode) child;
-                    childImports.add(importNode);
+                    importsToRemove.add(importNode);
                 }
                 //import nodes can't be references
                 continue;
-            }
-            if (child instanceof IIdentifierNode)
-            {
-                IIdentifierNode identifierNode = (IIdentifierNode) child;
-                IDefinition definition = identifierNode.resolve(project);
-                if (definition != null
-                        && definition.getPackageName().length() > 0
-                        && definition.getQualifiedName().startsWith(definition.getPackageName()))
-                {
-                    referencedDefinitions.add(definition.getQualifiedName());
-                }
             }
             if (child.isTerminal())
             {
                 //terminal nodes don't have children, so don't bother checking
                 continue;
             }
-            findImportNodesToRemove(child, project, referencedDefinitions, importsToRemove);
-        }
-        if (node instanceof IMXMLScriptNode)
-        {
-            IMXMLScriptNode scriptNode = (IMXMLScriptNode) node;
-            mxmlScriptReferencedDefinitions = new HashSet<>();
-            findReferencedDefinitionsOutsideMXMLScript(scriptNode.getParent(), project, mxmlScriptReferencedDefinitions);
-        }
-        final Set<String> mxmlRefs = mxmlScriptReferencedDefinitions;
-        if (childImports != null)
-        {
-            childImports.removeIf(importNode ->
-            {
-                if (importNode.getAbsoluteStart() == -1)
-                {
-                    return true;
-                }
-                String importName = importNode.getImportName();
-                if (importName.endsWith(DOT_STAR))
-                {
-                    String importPackage = importName.substring(0, importName.length() - 2);
-                    if (mxmlRefs != null)
-                    {
-                        if (containsReferenceForImportPackage(importPackage, mxmlRefs))
-                        {
-                            return true;
-                        }
-                    }
-                    if (containsReferenceForImportPackage(importPackage, referencedDefinitions))
-                    {
-                        return true;
-                    }
-                    return false;
-                }
-                if(mxmlRefs != null && mxmlRefs.contains(importName))
-                {
-                    return true;
-                }
-                return referencedDefinitions.contains(importName);
-            });
-            importsToRemove.addAll(childImports);
+            findImportNodesToRemove(child, requiredImports, importsToRemove);
         }
     }
 
