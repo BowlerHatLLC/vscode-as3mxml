@@ -125,7 +125,7 @@ function findSymbolInformation(symbols: vscode.SymbolInformation[], symbolToFind
 		{
 			return false;
 		}
-		if(symbol.location.uri.path !== symbolToFind.location.uri.path)
+		if(symbol.location.uri.toString() !== symbolToFind.location.uri.toString())
 		{
 			return false;
 		}
@@ -1115,7 +1115,7 @@ suite("definition provider: Application workspace", () =>
 						assert.strictEqual(locations.length, 1,
 							"vscode.executeDefinitionProvider failed to provide location of local variable definition: " + uri);
 						let location = locations[0];
-						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for local variable definition");
+						assert.strictEqual(location.uri.toString(), uri.toString(), "vscode.executeDefinitionProvider provided incorrect uri for local variable definition");
 						assert.strictEqual(location.range.start.line, 42, "vscode.executeDefinitionProvider provided incorrect line for local variable definition");
 						assert.strictEqual(location.range.start.character, 7, "vscode.executeDefinitionProvider provided incorrect character for local variable definition");
 					}, (err) =>
@@ -1136,7 +1136,7 @@ suite("definition provider: Application workspace", () =>
 						assert.strictEqual(locations.length, 1,
 							"vscode.executeDefinitionProvider failed to provide location of local function definition: " + uri);
 						let location = locations[0];
-						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for local function definition");
+						assert.strictEqual(location.uri.toString(), uri.toString(), "vscode.executeDefinitionProvider provided incorrect uri for local function definition");
 						assert.strictEqual(location.range.start.line, 43, "vscode.executeDefinitionProvider provided incorrect line for local function definition");
 						assert.strictEqual(location.range.start.character, 12, "vscode.executeDefinitionProvider provided incorrect character for local function definition");
 					}, (err) =>
@@ -1157,7 +1157,7 @@ suite("definition provider: Application workspace", () =>
 						assert.strictEqual(locations.length, 1,
 							"vscode.executeDefinitionProvider failed to provide location of member variable definition: " + uri);
 						let location = locations[0];
-						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for member variable definition");
+						assert.strictEqual(location.uri.toString(), uri.toString(), "vscode.executeDefinitionProvider provided incorrect uri for member variable definition");
 						assert.strictEqual(location.range.start.line, 14, "vscode.executeDefinitionProvider provided incorrect line for member variable definition");
 						assert.strictEqual(location.range.start.character, 14, "vscode.executeDefinitionProvider provided incorrect character for member variable definition");
 					}, (err) =>
@@ -1178,7 +1178,7 @@ suite("definition provider: Application workspace", () =>
 						assert.strictEqual(locations.length, 1,
 							"vscode.executeDefinitionProvider failed to provide location of member variable definition with member access operator on this: " + uri);
 						let location = locations[0];
-						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for member variable definition with member access operator on this");
+						assert.strictEqual(location.uri.toString(), uri.toString(), "vscode.executeDefinitionProvider provided incorrect uri for member variable definition with member access operator on this");
 						assert.strictEqual(location.range.start.line, 14, "vscode.executeDefinitionProvider provided incorrect line for member variable definition with member access operator on this");
 						assert.strictEqual(location.range.start.character, 14, "vscode.executeDefinitionProvider provided incorrect character for member variable definition with member access operator on this");
 					}, (err) =>
@@ -1199,7 +1199,7 @@ suite("definition provider: Application workspace", () =>
 						assert.strictEqual(locations.length, 1,
 							"vscode.executeDefinitionProvider failed to provide location of member function definition: " + uri);
 						let location = locations[0];
-						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for member function definition");
+						assert.strictEqual(location.uri.toString(), uri.toString(), "vscode.executeDefinitionProvider provided incorrect uri for member function definition");
 						assert.strictEqual(location.range.start.line, 16, "vscode.executeDefinitionProvider provided incorrect line for member function definition");
 						assert.strictEqual(location.range.start.character, 19, "vscode.executeDefinitionProvider provided incorrect character for member function definition");
 					}, (err) =>
@@ -1220,7 +1220,7 @@ suite("definition provider: Application workspace", () =>
 						assert.strictEqual(locations.length, 1,
 							"vscode.executeDefinitionProvider failed to provide location of member function definition with member access operator on this: " + uri);
 						let location = locations[0];
-						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for member function definition with member access operator on this");
+						assert.strictEqual(location.uri.toString(), uri.toString(), "vscode.executeDefinitionProvider provided incorrect uri for member function definition with member access operator on this");
 						assert.strictEqual(location.range.start.line, 16, "vscode.executeDefinitionProvider provided incorrect line for member function definition with member access operator on this");
 						assert.strictEqual(location.range.start.character, 19, "vscode.executeDefinitionProvider provided incorrect character for member function definition with member access operator on this");
 					}, (err) =>
@@ -1241,7 +1241,7 @@ suite("definition provider: Application workspace", () =>
 						assert.strictEqual(locations.length, 1,
 							"vscode.executeDefinitionProvider failed to provide location of member property definition: " + uri);
 						let location = locations[0];
-						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for member property definition");
+						assert.strictEqual(location.uri.toString(), uri.toString(), "vscode.executeDefinitionProvider provided incorrect uri for member property definition");
 						assert.strictEqual(location.range.start.line, 20, "vscode.executeDefinitionProvider provided incorrect line for member property definition");
 						assert.strictEqual(location.range.start.character, 22, "vscode.executeDefinitionProvider provided incorrect character for member property definition");
 					}, (err) =>
@@ -1262,7 +1262,7 @@ suite("definition provider: Application workspace", () =>
 						assert.strictEqual(locations.length, 1,
 							"vscode.executeDefinitionProvider failed to provide location of member property definition with member access operator on this: " + uri);
 						let location = locations[0];
-						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for member property definition with member access operator on this");
+						assert.strictEqual(location.uri.toString(), uri.toString(), "vscode.executeDefinitionProvider provided incorrect uri for member property definition with member access operator on this");
 						assert.strictEqual(location.range.start.line, 20, "vscode.executeDefinitionProvider provided incorrect line for member property definition with member access operator on this");
 						assert.strictEqual(location.range.start.character, 22, "vscode.executeDefinitionProvider provided incorrect character for member property definition with member access operator on this");
 					}, (err) =>
@@ -1283,7 +1283,7 @@ suite("definition provider: Application workspace", () =>
 						assert.strictEqual(locations.length, 1,
 							"vscode.executeDefinitionProvider failed to provide location of static variable definition: " + uri);
 						let location = locations[0];
-						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for static variable definition");
+						assert.strictEqual(location.uri.toString(), uri.toString(), "vscode.executeDefinitionProvider provided incorrect uri for static variable definition");
 						assert.strictEqual(location.range.start.line, 8, "vscode.executeDefinitionProvider provided incorrect line for static variable definition");
 						assert.strictEqual(location.range.start.character, 20, "vscode.executeDefinitionProvider provided incorrect character for static variable definition");
 					}, (err) =>
@@ -1304,7 +1304,7 @@ suite("definition provider: Application workspace", () =>
 						assert.strictEqual(locations.length, 1,
 							"vscode.executeDefinitionProvider failed to provide location of static variable definition with member access operator on class: " + uri);
 						let location = locations[0];
-						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for static variable definition with member access operator on class");
+						assert.strictEqual(location.uri.toString(), uri.toString(), "vscode.executeDefinitionProvider provided incorrect uri for static variable definition with member access operator on class");
 						assert.strictEqual(location.range.start.line, 8, "vscode.executeDefinitionProvider provided incorrect line for static variable definition with member access operator on class");
 						assert.strictEqual(location.range.start.character, 20, "vscode.executeDefinitionProvider provided incorrect character for static variable definition with member access operator on class");
 					}, (err) =>
@@ -1325,7 +1325,7 @@ suite("definition provider: Application workspace", () =>
 						assert.strictEqual(locations.length, 1,
 							"vscode.executeDefinitionProvider failed to provide location of static function definition: " + uri);
 						let location = locations[0];
-						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for static function definition");
+						assert.strictEqual(location.uri.toString(), uri.toString(), "vscode.executeDefinitionProvider provided incorrect uri for static function definition");
 						assert.strictEqual(location.range.start.line, 10, "vscode.executeDefinitionProvider provided incorrect line for static function definition");
 						assert.strictEqual(location.range.start.character, 26, "vscode.executeDefinitionProvider provided incorrect character for static function definition");
 					}, (err) =>
@@ -1346,7 +1346,7 @@ suite("definition provider: Application workspace", () =>
 						assert.strictEqual(locations.length, 1,
 							"vscode.executeDefinitionProvider failed to provide location of static function definition with member access operator on class: " + uri);
 						let location = locations[0];
-						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for static function definition with member access operator on class");
+						assert.strictEqual(location.uri.toString(), uri.toString(), "vscode.executeDefinitionProvider provided incorrect uri for static function definition with member access operator on class");
 						assert.strictEqual(location.range.start.line, 10, "vscode.executeDefinitionProvider provided incorrect line for static function definition with member access operator on class");
 						assert.strictEqual(location.range.start.character, 26, "vscode.executeDefinitionProvider provided incorrect character for static function definition with member access operator on class");
 					}, (err) =>
@@ -1367,7 +1367,7 @@ suite("definition provider: Application workspace", () =>
 						assert.strictEqual(locations.length, 1,
 							"vscode.executeDefinitionProvider failed to provide location of static property definition: " + uri);
 						let location = locations[0];
-						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for static property definition");
+						assert.strictEqual(location.uri.toString(), uri.toString(), "vscode.executeDefinitionProvider provided incorrect uri for static property definition");
 						assert.strictEqual(location.range.start.line, 29, "vscode.executeDefinitionProvider provided incorrect line for static property definition");
 						assert.strictEqual(location.range.start.character, 29, "vscode.executeDefinitionProvider provided incorrect character for static property definition");
 					}, (err) =>
@@ -1388,7 +1388,7 @@ suite("definition provider: Application workspace", () =>
 						assert.strictEqual(locations.length, 1,
 							"vscode.executeDefinitionProvider failed to provide location of static property definition with member access operator on class: " + uri);
 						let location = locations[0];
-						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for static property definition with member access operator on class");
+						assert.strictEqual(location.uri.toString(), uri.toString(), "vscode.executeDefinitionProvider provided incorrect uri for static property definition with member access operator on class");
 						assert.strictEqual(location.range.start.line, 29, "vscode.executeDefinitionProvider provided incorrect line for static property definition with member access operator on class");
 						assert.strictEqual(location.range.start.character, 29, "vscode.executeDefinitionProvider provided incorrect character for static property definition with member access operator on class");
 					}, (err) =>
@@ -1410,7 +1410,7 @@ suite("definition provider: Application workspace", () =>
 						assert.strictEqual(locations.length, 1,
 							"vscode.executeDefinitionProvider failed to provide location of package function definition: " + uri);
 						let location = locations[0];
-						assert.strictEqual(location.uri.path, definitionURI.path, "vscode.executeDefinitionProvider provided incorrect uri for package function definition");
+						assert.strictEqual(location.uri.toString(), definitionURI.toString(), "vscode.executeDefinitionProvider provided incorrect uri for package function definition");
 						assert.strictEqual(location.range.start.line, 2, "vscode.executeDefinitionProvider provided incorrect line for package function definition");
 						assert.strictEqual(location.range.start.character, 17, "vscode.executeDefinitionProvider provided incorrect character for package function definition");
 					}, (err) =>
@@ -1432,7 +1432,7 @@ suite("definition provider: Application workspace", () =>
 						assert.strictEqual(locations.length, 1,
 							"vscode.executeDefinitionProvider failed to provide location of fully-qualified package function definition: " + uri);
 						let location = locations[0];
-						assert.strictEqual(location.uri.path, definitionURI.path, "vscode.executeDefinitionProvider provided incorrect uri for fully-qualified package function definition");
+						assert.strictEqual(location.uri.toString(), definitionURI.toString(), "vscode.executeDefinitionProvider provided incorrect uri for fully-qualified package function definition");
 						assert.strictEqual(location.range.start.line, 2, "vscode.executeDefinitionProvider provided incorrect line for fully-qualified package function definition");
 						assert.strictEqual(location.range.start.character, 17, "vscode.executeDefinitionProvider provided incorrect character for fully-qualified package function definition");
 					}, (err) =>
@@ -1454,7 +1454,7 @@ suite("definition provider: Application workspace", () =>
 						assert.strictEqual(locations.length, 1,
 							"vscode.executeDefinitionProvider failed to provide location of package variable definition: " + uri);
 						let location = locations[0];
-						assert.strictEqual(location.uri.path, definitionURI.path, "vscode.executeDefinitionProvider provided incorrect uri for package variable definition");
+						assert.strictEqual(location.uri.toString(), definitionURI.toString(), "vscode.executeDefinitionProvider provided incorrect uri for package variable definition");
 						assert.strictEqual(location.range.start.line, 2, "vscode.executeDefinitionProvider provided incorrect line for package variable definition");
 						assert.strictEqual(location.range.start.character, 12, "vscode.executeDefinitionProvider provided incorrect character for package variable definition");
 					}, (err) =>
@@ -1476,7 +1476,7 @@ suite("definition provider: Application workspace", () =>
 						assert.strictEqual(locations.length, 1,
 							"vscode.executeDefinitionProvider failed to provide location of fully-qualified package variable definition: " + uri);
 						let location = locations[0];
-						assert.strictEqual(location.uri.path, definitionURI.path, "vscode.executeDefinitionProvider provided incorrect uri for fully-qualified package variable definition");
+						assert.strictEqual(location.uri.toString(), definitionURI.toString(), "vscode.executeDefinitionProvider provided incorrect uri for fully-qualified package variable definition");
 						assert.strictEqual(location.range.start.line, 2, "vscode.executeDefinitionProvider provided incorrect line for fully-qualified package variable definition");
 						assert.strictEqual(location.range.start.character, 12, "vscode.executeDefinitionProvider provided incorrect character for fully-qualified package variable definition");
 					}, (err) =>
@@ -1498,7 +1498,7 @@ suite("definition provider: Application workspace", () =>
 						assert.strictEqual(locations.length, 1,
 							"vscode.executeDefinitionProvider failed to provide location of super static variable definition: " + uri);
 						let location = locations[0];
-						assert.strictEqual(location.uri.path, definitionURI.path, "vscode.executeDefinitionProvider provided incorrect uri for super static variable definition");
+						assert.strictEqual(location.uri.toString(), definitionURI.toString(), "vscode.executeDefinitionProvider provided incorrect uri for super static variable definition");
 						assert.strictEqual(location.range.start.line, 4, "vscode.executeDefinitionProvider provided incorrect line for super static variable definition");
 						assert.strictEqual(location.range.start.character, 20, "vscode.executeDefinitionProvider provided incorrect character for super static variable definition");
 					}, (err) =>
@@ -1520,7 +1520,7 @@ suite("definition provider: Application workspace", () =>
 						assert.strictEqual(locations.length, 1,
 							"vscode.executeDefinitionProvider failed to provide location of super static variable definition with member access operator on superclass: " + uri);
 						let location = locations[0];
-						assert.strictEqual(location.uri.path, definitionURI.path, "vscode.executeDefinitionProvider provided incorrect uri for super static variable definition with member access operator on superclass");
+						assert.strictEqual(location.uri.toString(), definitionURI.toString(), "vscode.executeDefinitionProvider provided incorrect uri for super static variable definition with member access operator on superclass");
 						assert.strictEqual(location.range.start.line, 4, "vscode.executeDefinitionProvider provided incorrect line for super static variable definition with member access operator on superclass");
 						assert.strictEqual(location.range.start.character, 20, "vscode.executeDefinitionProvider provided incorrect character for super static variable definition with member access operator on superclass");
 					}, (err) =>
@@ -1542,7 +1542,7 @@ suite("definition provider: Application workspace", () =>
 						assert.strictEqual(locations.length, 1,
 							"vscode.executeDefinitionProvider failed to provide location of super static property definition: " + uri);
 						let location = locations[0];
-						assert.strictEqual(location.uri.path, definitionURI.path, "vscode.executeDefinitionProvider provided incorrect uri for super static property definition");
+						assert.strictEqual(location.uri.toString(), definitionURI.toString(), "vscode.executeDefinitionProvider provided incorrect uri for super static property definition");
 						assert.strictEqual(location.range.start.line, 6, "vscode.executeDefinitionProvider provided incorrect line for super static property definition");
 						assert.strictEqual(location.range.start.character, 29, "vscode.executeDefinitionProvider provided incorrect character for super static property definition");
 					}, (err) =>
@@ -1564,7 +1564,7 @@ suite("definition provider: Application workspace", () =>
 						assert.strictEqual(locations.length, 1,
 							"vscode.executeDefinitionProvider failed to provide location of super static property definition with member access operator on superclass: " + uri);
 						let location = locations[0];
-						assert.strictEqual(location.uri.path, definitionURI.path, "vscode.executeDefinitionProvider provided incorrect uri for super static property definition with member access operator on superclass");
+						assert.strictEqual(location.uri.toString(), definitionURI.toString(), "vscode.executeDefinitionProvider provided incorrect uri for super static property definition with member access operator on superclass");
 						assert.strictEqual(location.range.start.line, 6, "vscode.executeDefinitionProvider provided incorrect line for super static property definition with member access operator on superclass");
 						assert.strictEqual(location.range.start.character, 29, "vscode.executeDefinitionProvider provided incorrect character for super static property definition with member access operator on superclass");
 					}, (err) =>
@@ -1586,7 +1586,7 @@ suite("definition provider: Application workspace", () =>
 						assert.strictEqual(locations.length, 1,
 							"vscode.executeDefinitionProvider failed to provide location of super static function definition: " + uri);
 						let location = locations[0];
-						assert.strictEqual(location.uri.path, definitionURI.path, "vscode.executeDefinitionProvider provided incorrect uri for super static function definition");
+						assert.strictEqual(location.uri.toString(), definitionURI.toString(), "vscode.executeDefinitionProvider provided incorrect uri for super static function definition");
 						assert.strictEqual(location.range.start.line, 15, "vscode.executeDefinitionProvider provided incorrect line for super static function definition");
 						assert.strictEqual(location.range.start.character, 28, "vscode.executeDefinitionProvider provided incorrect character for super static function definition");
 					}, (err) =>
@@ -1608,7 +1608,7 @@ suite("definition provider: Application workspace", () =>
 						assert.strictEqual(locations.length, 1,
 							"vscode.executeDefinitionProvider failed to provide location of super static function definition with member access operator on superclass: " + uri);
 						let location = locations[0];
-						assert.strictEqual(location.uri.path, definitionURI.path, "vscode.executeDefinitionProvider provided incorrect uri for super static function definition with member access operator on superclass");
+						assert.strictEqual(location.uri.toString(), definitionURI.toString(), "vscode.executeDefinitionProvider provided incorrect uri for super static function definition with member access operator on superclass");
 						assert.strictEqual(location.range.start.line, 15, "vscode.executeDefinitionProvider provided incorrect line for super static function definition with member access operator on superclass");
 						assert.strictEqual(location.range.start.character, 28, "vscode.executeDefinitionProvider provided incorrect character for super static function definition with member access operator on superclass");
 					}, (err) =>
@@ -1630,7 +1630,7 @@ suite("definition provider: Application workspace", () =>
 						assert.strictEqual(locations.length, 1,
 							"vscode.executeDefinitionProvider failed to provide location of super member function definition: " + uri);
 						let location = locations[0];
-						assert.strictEqual(location.uri.path, definitionURI.path, "vscode.executeDefinitionProvider provided incorrect uri for super member function definition");
+						assert.strictEqual(location.uri.toString(), definitionURI.toString(), "vscode.executeDefinitionProvider provided incorrect uri for super member function definition");
 						assert.strictEqual(location.range.start.line, 30, "vscode.executeDefinitionProvider provided incorrect line for super member function definition");
 						assert.strictEqual(location.range.start.character, 21, "vscode.executeDefinitionProvider provided incorrect character for super member function definition");
 					}, (err) =>
@@ -1652,7 +1652,7 @@ suite("definition provider: Application workspace", () =>
 						assert.strictEqual(locations.length, 1,
 							"vscode.executeDefinitionProvider failed to provide location of super member function definition with member access operator on this: " + uri);
 						let location = locations[0];
-						assert.strictEqual(location.uri.path, definitionURI.path, "vscode.executeDefinitionProvider provided incorrect uri for super member function definition with member access operator on this");
+						assert.strictEqual(location.uri.toString(), definitionURI.toString(), "vscode.executeDefinitionProvider provided incorrect uri for super member function definition with member access operator on this");
 						assert.strictEqual(location.range.start.line, 30, "vscode.executeDefinitionProvider provided incorrect line for super member function definition with member access operator on this");
 						assert.strictEqual(location.range.start.character, 21, "vscode.executeDefinitionProvider provided incorrect character for super member function definition with member access operator on this");
 					}, (err) =>
@@ -1674,7 +1674,7 @@ suite("definition provider: Application workspace", () =>
 						assert.strictEqual(locations.length, 1,
 							"vscode.executeDefinitionProvider failed to provide location of super member function definition with member access operator on super: " + uri);
 						let location = locations[0];
-						assert.strictEqual(location.uri.path, definitionURI.path, "vscode.executeDefinitionProvider provided incorrect uri for super member function definition with member access operator on super");
+						assert.strictEqual(location.uri.toString(), definitionURI.toString(), "vscode.executeDefinitionProvider provided incorrect uri for super member function definition with member access operator on super");
 						assert.strictEqual(location.range.start.line, 30, "vscode.executeDefinitionProvider provided incorrect line for super member function definition with member access operator on super");
 						assert.strictEqual(location.range.start.character, 21, "vscode.executeDefinitionProvider provided incorrect character for super member function definition with member access operator on super");
 					}, (err) =>
@@ -1696,7 +1696,7 @@ suite("definition provider: Application workspace", () =>
 						assert.strictEqual(locations.length, 1,
 							"vscode.executeDefinitionProvider failed to provide location of super member variable definition: " + uri);
 						let location = locations[0];
-						assert.strictEqual(location.uri.path, definitionURI.path, "vscode.executeDefinitionProvider provided incorrect uri for super member variable definition");
+						assert.strictEqual(location.uri.toString(), definitionURI.toString(), "vscode.executeDefinitionProvider provided incorrect uri for super member variable definition");
 						assert.strictEqual(location.range.start.line, 19, "vscode.executeDefinitionProvider provided incorrect line for super member variable definition");
 						assert.strictEqual(location.range.start.character, 13, "vscode.executeDefinitionProvider provided incorrect character for super member variable definition");
 					}, (err) =>
@@ -1718,7 +1718,7 @@ suite("definition provider: Application workspace", () =>
 						assert.strictEqual(locations.length, 1,
 							"vscode.executeDefinitionProvider failed to provide location of super member variable definition with member access operator on this: " + uri);
 						let location = locations[0];
-						assert.strictEqual(location.uri.path, definitionURI.path, "vscode.executeDefinitionProvider provided incorrect uri for super member variable definition with member access operator on this");
+						assert.strictEqual(location.uri.toString(), definitionURI.toString(), "vscode.executeDefinitionProvider provided incorrect uri for super member variable definition with member access operator on this");
 						assert.strictEqual(location.range.start.line, 19, "vscode.executeDefinitionProvider provided incorrect line for super member variable definition with member access operator on this");
 						assert.strictEqual(location.range.start.character, 13, "vscode.executeDefinitionProvider provided incorrect character for super member variable definition with member access operator on this");
 					}, (err) =>
@@ -1740,7 +1740,7 @@ suite("definition provider: Application workspace", () =>
 						assert.strictEqual(locations.length, 1,
 							"vscode.executeDefinitionProvider failed to provide location of super member variable definition with member access operator on super: " + uri);
 						let location = locations[0];
-						assert.strictEqual(location.uri.path, definitionURI.path, "vscode.executeDefinitionProvider provided incorrect uri for super member variable definition with member access operator on super");
+						assert.strictEqual(location.uri.toString(), definitionURI.toString(), "vscode.executeDefinitionProvider provided incorrect uri for super member variable definition with member access operator on super");
 						assert.strictEqual(location.range.start.line, 19, "vscode.executeDefinitionProvider provided incorrect line for super member variable definition with member access operator on super");
 						assert.strictEqual(location.range.start.character, 13, "vscode.executeDefinitionProvider provided incorrect character for super member variable definition with member access operator on super");
 					}, (err) =>
@@ -1762,7 +1762,7 @@ suite("definition provider: Application workspace", () =>
 						assert.strictEqual(locations.length, 1,
 							"vscode.executeDefinitionProvider failed to provide location of super member property definition: " + uri);
 						let location = locations[0];
-						assert.strictEqual(location.uri.path, definitionURI.path, "vscode.executeDefinitionProvider provided incorrect uri for super member property definition");
+						assert.strictEqual(location.uri.toString(), definitionURI.toString(), "vscode.executeDefinitionProvider provided incorrect uri for super member property definition");
 						assert.strictEqual(location.range.start.line, 21, "vscode.executeDefinitionProvider provided incorrect line for super member property definition");
 						assert.strictEqual(location.range.start.character, 22, "vscode.executeDefinitionProvider provided incorrect character for super member property definition");
 					}, (err) =>
@@ -1784,7 +1784,7 @@ suite("definition provider: Application workspace", () =>
 						assert.strictEqual(locations.length, 1,
 							"vscode.executeDefinitionProvider failed to provide location of super member property definition with member access operator on this: " + uri);
 						let location = locations[0];
-						assert.strictEqual(location.uri.path, definitionURI.path, "vscode.executeDefinitionProvider provided incorrect uri for super member property definition with member access operator on this");
+						assert.strictEqual(location.uri.toString(), definitionURI.toString(), "vscode.executeDefinitionProvider provided incorrect uri for super member property definition with member access operator on this");
 						assert.strictEqual(location.range.start.line, 21, "vscode.executeDefinitionProvider provided incorrect line for super member property definition with member access operator on this");
 						assert.strictEqual(location.range.start.character, 22, "vscode.executeDefinitionProvider provided incorrect character for super member property definition with member access operator on this");
 					}, (err) =>
@@ -1806,7 +1806,7 @@ suite("definition provider: Application workspace", () =>
 						assert.strictEqual(locations.length, 1,
 							"vscode.executeDefinitionProvider failed to provide location of super member property definition with member access operator on super: " + uri);
 						let location = locations[0];
-						assert.strictEqual(location.uri.path, definitionURI.path, "vscode.executeDefinitionProvider provided incorrect uri for super member property definition with member access operator on super");
+						assert.strictEqual(location.uri.toString(), definitionURI.toString(), "vscode.executeDefinitionProvider provided incorrect uri for super member property definition with member access operator on super");
 						assert.strictEqual(location.range.start.line, 21, "vscode.executeDefinitionProvider provided incorrect line for super member property definition with member access operator on super");
 						assert.strictEqual(location.range.start.character, 22, "vscode.executeDefinitionProvider provided incorrect character for super member property definition with member access operator on super");
 					}, (err) =>
@@ -1828,7 +1828,7 @@ suite("definition provider: Application workspace", () =>
 						assert.strictEqual(locations.length, 1,
 							"vscode.executeDefinitionProvider failed to provide location of super member property definition with member access operator on super: " + uri);
 						let location = locations[0];
-						assert.strictEqual(location.uri.path, definitionURI.path, "vscode.executeDefinitionProvider provided incorrect uri for super member property definition with member access operator on super");
+						assert.strictEqual(location.uri.toString(), definitionURI.toString(), "vscode.executeDefinitionProvider provided incorrect uri for super member property definition with member access operator on super");
 						assert.strictEqual(location.range.start.line, 34, "vscode.executeDefinitionProvider provided incorrect line for super member property definition with member access operator on super");
 						assert.strictEqual(location.range.start.character, 18, "vscode.executeDefinitionProvider provided incorrect character for super member property definition with member access operator on super");
 					}, (err) =>
@@ -1849,7 +1849,7 @@ suite("definition provider: Application workspace", () =>
 						assert.strictEqual(locations.length, 1,
 							"vscode.executeDefinitionProvider failed to provide location of file-internal variable definition: " + uri);
 						let location = locations[0];
-						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for file-internal variable definition");
+						assert.strictEqual(location.uri.toString(), uri.toString(), "vscode.executeDefinitionProvider provided incorrect uri for file-internal variable definition");
 						assert.strictEqual(location.range.start.line, 113, "vscode.executeDefinitionProvider provided incorrect line for file-internal variable definition");
 						assert.strictEqual(location.range.start.character, 4, "vscode.executeDefinitionProvider provided incorrect character for file-internal variable definition");
 					}, (err) =>
@@ -1870,7 +1870,7 @@ suite("definition provider: Application workspace", () =>
 						assert.strictEqual(locations.length, 1,
 							"vscode.executeDefinitionProvider failed to provide location of file-internal function definition: " + uri);
 						let location = locations[0];
-						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for file-internal function definition");
+						assert.strictEqual(location.uri.toString(), uri.toString(), "vscode.executeDefinitionProvider provided incorrect uri for file-internal function definition");
 						assert.strictEqual(location.range.start.line, 112, "vscode.executeDefinitionProvider provided incorrect line for file-internal function definition");
 						assert.strictEqual(location.range.start.character, 9, "vscode.executeDefinitionProvider provided incorrect character for file-internal function definition");
 					}, (err) =>
@@ -1891,7 +1891,7 @@ suite("definition provider: Application workspace", () =>
 						assert.strictEqual(locations.length, 1,
 							"vscode.executeDefinitionProvider failed to provide location of file-internal class definition: " + uri);
 						let location = locations[0];
-						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for file-internal class definition");
+						assert.strictEqual(location.uri.toString(), uri.toString(), "vscode.executeDefinitionProvider provided incorrect uri for file-internal class definition");
 						assert.strictEqual(location.range.start.line, 115, "vscode.executeDefinitionProvider provided incorrect line for file-internal class definition");
 						assert.strictEqual(location.range.start.character, 6, "vscode.executeDefinitionProvider provided incorrect character for file-internal class definition");
 					}, (err) =>
@@ -1912,7 +1912,7 @@ suite("definition provider: Application workspace", () =>
 						assert.strictEqual(locations.length, 1,
 							"vscode.executeDefinitionProvider failed to provide location of file-internal class definition: " + uri);
 						let location = locations[0];
-						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for file-internal class definition");
+						assert.strictEqual(location.uri.toString(), uri.toString(), "vscode.executeDefinitionProvider provided incorrect uri for file-internal class definition");
 						assert.strictEqual(location.range.start.line, 147, "vscode.executeDefinitionProvider provided incorrect line for file-internal class definition");
 						assert.strictEqual(location.range.start.character, 17, "vscode.executeDefinitionProvider provided incorrect character for file-internal class definition");
 					}, (err) =>
@@ -1933,7 +1933,7 @@ suite("definition provider: Application workspace", () =>
 						assert.strictEqual(locations.length, 1,
 							"vscode.executeDefinitionProvider failed to provide location of file-internal member function definition: " + uri);
 						let location = locations[0];
-						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for file-internal member function definition");
+						assert.strictEqual(location.uri.toString(), uri.toString(), "vscode.executeDefinitionProvider provided incorrect uri for file-internal member function definition");
 						assert.strictEqual(location.range.start.line, 143, "vscode.executeDefinitionProvider provided incorrect line for file-internal member function definition");
 						assert.strictEqual(location.range.start.character, 17, "vscode.executeDefinitionProvider provided incorrect character for file-internal member function definition");
 					}, (err) =>
@@ -1954,7 +1954,7 @@ suite("definition provider: Application workspace", () =>
 						assert.strictEqual(locations.length, 1,
 							"vscode.executeDefinitionProvider failed to provide location of file-internal member variable definition: " + uri);
 						let location = locations[0];
-						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for file-internal member variable definition");
+						assert.strictEqual(location.uri.toString(), uri.toString(), "vscode.executeDefinitionProvider provided incorrect uri for file-internal member variable definition");
 						assert.strictEqual(location.range.start.line, 132, "vscode.executeDefinitionProvider provided incorrect line for file-internal member variable definition");
 						assert.strictEqual(location.range.start.character, 12, "vscode.executeDefinitionProvider provided incorrect character for file-internal member variable definition");
 					}, (err) =>
@@ -1975,7 +1975,7 @@ suite("definition provider: Application workspace", () =>
 						assert.strictEqual(locations.length, 1,
 							"vscode.executeDefinitionProvider failed to provide location of file-internal member property definition: " + uri);
 						let location = locations[0];
-						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for file-internal member property definition");
+						assert.strictEqual(location.uri.toString(), uri.toString(), "vscode.executeDefinitionProvider provided incorrect uri for file-internal member property definition");
 						assert.strictEqual(location.range.start.line, 134, "vscode.executeDefinitionProvider provided incorrect line for file-internal member property definition");
 						assert.strictEqual(location.range.start.character, 21, "vscode.executeDefinitionProvider provided incorrect character for file-internal member property definition");
 					}, (err) =>
@@ -1996,7 +1996,7 @@ suite("definition provider: Application workspace", () =>
 						assert.strictEqual(locations.length, 1,
 							"vscode.executeDefinitionProvider failed to provide location of file-internal static property definition: " + uri);
 						let location = locations[0];
-						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for file-internal static property definition");
+						assert.strictEqual(location.uri.toString(), uri.toString(), "vscode.executeDefinitionProvider provided incorrect uri for file-internal static property definition");
 						assert.strictEqual(location.range.start.line, 119, "vscode.executeDefinitionProvider provided incorrect line for file-internal static property definition");
 						assert.strictEqual(location.range.start.character, 28, "vscode.executeDefinitionProvider provided incorrect character for file-internal static property definition");
 					}, (err) =>
@@ -2017,7 +2017,7 @@ suite("definition provider: Application workspace", () =>
 						assert.strictEqual(locations.length, 1,
 							"vscode.executeDefinitionProvider failed to provide location of file-internal static variable definition: " + uri);
 						let location = locations[0];
-						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for file-internal static variable definition");
+						assert.strictEqual(location.uri.toString(), uri.toString(), "vscode.executeDefinitionProvider provided incorrect uri for file-internal static variable definition");
 						assert.strictEqual(location.range.start.line, 117, "vscode.executeDefinitionProvider provided incorrect line for file-internal static variable definition");
 						assert.strictEqual(location.range.start.character, 19, "vscode.executeDefinitionProvider provided incorrect character for file-internal static variable definition");
 					}, (err) =>
@@ -2038,7 +2038,7 @@ suite("definition provider: Application workspace", () =>
 						assert.strictEqual(locations.length, 1,
 							"vscode.executeDefinitionProvider failed to provide location of file-internal static function definition: " + uri);
 						let location = locations[0];
-						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for file-internal static function definition");
+						assert.strictEqual(location.uri.toString(), uri.toString(), "vscode.executeDefinitionProvider provided incorrect uri for file-internal static function definition");
 						assert.strictEqual(location.range.start.line, 128, "vscode.executeDefinitionProvider provided incorrect line for file-internal static function definition");
 						assert.strictEqual(location.range.start.character, 24, "vscode.executeDefinitionProvider provided incorrect character for file-internal static function definition");
 					}, (err) =>
@@ -2065,7 +2065,7 @@ suite("type definition provider: Application workspace", () =>
 						assert.strictEqual(locations.length, 1,
 							"vscode.executeTypeDefinitionProvider failed to provide location of local variable definition: " + uri);
 						let location = locations[0];
-						assert.strictEqual(location.uri.path, expected.path, "vscode.executeTypeDefinitionProvider provided incorrect uri for local variable definition");
+						assert.strictEqual(location.uri.toString(), expected.toString(), "vscode.executeTypeDefinitionProvider provided incorrect uri for local variable definition");
 						assert.strictEqual(location.range.start.line, 2, "vscode.executeTypeDefinitionProvider provided incorrect line for local variable definition");
 						assert.strictEqual(location.range.start.character, 14, "vscode.executeTypeDefinitionProvider provided incorrect character for local variable definition");
 					}, (err) =>
@@ -2087,7 +2087,7 @@ suite("type definition provider: Application workspace", () =>
 						assert.strictEqual(locations.length, 1,
 							"vscode.executeTypeDefinitionProvider failed to provide location of member variable definition: " + uri);
 						let location = locations[0];
-						assert.strictEqual(location.uri.path, expected.path, "vscode.executeTypeDefinitionProvider provided incorrect uri for member variable definition");
+						assert.strictEqual(location.uri.toString(), expected.toString(), "vscode.executeTypeDefinitionProvider provided incorrect uri for member variable definition");
 						assert.strictEqual(location.range.start.line, 2, "vscode.executeTypeDefinitionProvider provided incorrect line for member variable definition");
 						assert.strictEqual(location.range.start.character, 14, "vscode.executeTypeDefinitionProvider provided incorrect character for member variable definition");
 					}, (err) =>
@@ -2109,7 +2109,7 @@ suite("type definition provider: Application workspace", () =>
 						assert.strictEqual(locations.length, 1,
 							"vscode.executeTypeDefinitionProvider failed to provide location of static variable definition: " + uri);
 						let location = locations[0];
-						assert.strictEqual(location.uri.path, expected.path, "vscode.executeTypeDefinitionProvider provided incorrect uri for static variable definition");
+						assert.strictEqual(location.uri.toString(), expected.toString(), "vscode.executeTypeDefinitionProvider provided incorrect uri for static variable definition");
 						assert.strictEqual(location.range.start.line, 2, "vscode.executeTypeDefinitionProvider provided incorrect line for static variable definition");
 						assert.strictEqual(location.range.start.character, 14, "vscode.executeTypeDefinitionProvider provided incorrect character for static variable definition");
 					}, (err) =>
@@ -2131,7 +2131,7 @@ suite("type definition provider: Application workspace", () =>
 						assert.strictEqual(locations.length, 1,
 							"vscode.executeTypeDefinitionProvider failed to provide location of parameter: " + uri);
 						let location = locations[0];
-						assert.strictEqual(location.uri.path, expected.path, "vscode.executeTypeDefinitionProvider provided incorrect uri for parameter definition");
+						assert.strictEqual(location.uri.toString(), expected.toString(), "vscode.executeTypeDefinitionProvider provided incorrect uri for parameter definition");
 						assert.strictEqual(location.range.start.line, 2, "vscode.executeTypeDefinitionProvider provided incorrect line for parameter definition");
 						assert.strictEqual(location.range.start.character, 14, "vscode.executeTypeDefinitionProvider provided incorrect character for parameter definition");
 					}, (err) =>
@@ -10845,7 +10845,7 @@ suite("includes: application workspace", () =>
 						assert.strictEqual(locations.length, 1,
 							"vscode.executeDefinitionProvider failed to provide location of local variable definition: " + uri);
 						let location = locations[0];
-						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for definition");
+						assert.strictEqual(location.uri.toString(), uri.toString(), "vscode.executeDefinitionProvider provided incorrect uri for definition");
 						assert.strictEqual(location.range.start.line, 4, "vscode.executeDefinitionProvider provided incorrect line for definition");
 						assert.strictEqual(location.range.start.character, 18, "vscode.executeDefinitionProvider provided incorrect character for definition");
 					}, (err) =>
@@ -10866,7 +10866,7 @@ suite("includes: application workspace", () =>
 						assert.strictEqual(locations.length, 1,
 							"vscode.executeDefinitionProvider failed to provide location of local variable definition: " + uri);
 						let location = locations[0];
-						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for definition");
+						assert.strictEqual(location.uri.toString(), uri.toString(), "vscode.executeDefinitionProvider provided incorrect uri for definition");
 						assert.strictEqual(location.range.start.line, 8, "vscode.executeDefinitionProvider provided incorrect line for definition");
 						assert.strictEqual(location.range.start.character, 18, "vscode.executeDefinitionProvider provided incorrect character for definition");
 					}, (err) =>
@@ -10887,7 +10887,7 @@ suite("includes: application workspace", () =>
 						assert.strictEqual(locations.length, 1,
 							"vscode.executeDefinitionProvider failed to provide location of local variable definition: " + uri);
 						let location = locations[0];
-						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for definition");
+						assert.strictEqual(location.uri.toString(), uri.toString(), "vscode.executeDefinitionProvider provided incorrect uri for definition");
 						assert.strictEqual(location.range.start.line, 12, "vscode.executeDefinitionProvider provided incorrect line for definition");
 						assert.strictEqual(location.range.start.character, 18, "vscode.executeDefinitionProvider provided incorrect character for definition");
 					}, (err) =>
@@ -10908,7 +10908,7 @@ suite("includes: application workspace", () =>
 						assert.strictEqual(locations.length, 1,
 							"vscode.executeDefinitionProvider failed to provide location of local variable definition: " + uri);
 						let location = locations[0];
-						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for definition");
+						assert.strictEqual(location.uri.toString(), uri.toString(), "vscode.executeDefinitionProvider provided incorrect uri for definition");
 						assert.strictEqual(location.range.start.line, 0, "vscode.executeDefinitionProvider provided incorrect line for definition");
 						assert.strictEqual(location.range.start.character, 16, "vscode.executeDefinitionProvider provided incorrect character for definition");
 					}, (err) =>
@@ -10929,7 +10929,7 @@ suite("includes: application workspace", () =>
 						assert.strictEqual(locations.length, 1,
 							"vscode.executeDefinitionProvider failed to provide location of local variable definition: " + uri);
 						let location = locations[0];
-						assert.strictEqual(location.uri.path, uri.path, "vscode.executeDefinitionProvider provided incorrect uri for definition");
+						assert.strictEqual(location.uri.toString(), uri.toString(), "vscode.executeDefinitionProvider provided incorrect uri for definition");
 						assert.strictEqual(location.range.start.line, 1, "vscode.executeDefinitionProvider provided incorrect line for definition");
 						assert.strictEqual(location.range.start.character, 16, "vscode.executeDefinitionProvider provided incorrect character for definition");
 					}, (err) =>
@@ -10951,7 +10951,7 @@ suite("includes: application workspace", () =>
 							"vscode.executeDefinitionProvider failed to provide location of local variable definition: " + uri);
 						let location = locations[0];
 						let expectedURI = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "includes", "scripts", "include1.as"));
-						assert.strictEqual(location.uri.path, expectedURI.path, "vscode.executeDefinitionProvider provided incorrect uri for definition");
+						assert.strictEqual(location.uri.toString(), expectedURI.toString(), "vscode.executeDefinitionProvider provided incorrect uri for definition");
 						assert.strictEqual(location.range.start.line, 0, "vscode.executeDefinitionProvider provided incorrect line for definition");
 						assert.strictEqual(location.range.start.character, 16, "vscode.executeDefinitionProvider provided incorrect character for definition");
 					}, (err) =>
@@ -10973,7 +10973,7 @@ suite("includes: application workspace", () =>
 							"vscode.executeDefinitionProvider failed to provide location of local variable definition: " + uri);
 						let location = locations[0];
 						let expectedURI = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "includes", "Includes.as"))
-						assert.strictEqual(location.uri.path, expectedURI.path, "vscode.executeDefinitionProvider provided incorrect uri for definition");
+						assert.strictEqual(location.uri.toString(), expectedURI.toString(), "vscode.executeDefinitionProvider provided incorrect uri for definition");
 						assert.strictEqual(location.range.start.line, 12, "vscode.executeDefinitionProvider provided incorrect line for definition");
 						assert.strictEqual(location.range.start.character, 18, "vscode.executeDefinitionProvider provided incorrect character for definition");
 					}, (err) =>
@@ -10995,7 +10995,7 @@ suite("includes: application workspace", () =>
 							"vscode.executeDefinitionProvider failed to provide location of local variable definition: " + uri);
 						let location = locations[0];
 						let expectedURI = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "com", "example", "includes", "scripts", "include1.as"));
-						assert.strictEqual(location.uri.path, expectedURI.path, "vscode.executeDefinitionProvider provided incorrect uri for definition");
+						assert.strictEqual(location.uri.toString(), expectedURI.toString(), "vscode.executeDefinitionProvider provided incorrect uri for definition");
 						assert.strictEqual(location.range.start.line, 0, "vscode.executeDefinitionProvider provided incorrect line for definition");
 						assert.strictEqual(location.range.start.character, 16, "vscode.executeDefinitionProvider provided incorrect character for definition");
 					}, (err) =>
@@ -11021,11 +11021,11 @@ suite("reference provider: Application workspace", () =>
 						assert.strictEqual(locations.length, 2,
 							"vscode.executeReferenceProvider failed to provide locations: " + uri);
 						let location1 = locations[0];
-						assert.strictEqual(location1.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location1.uri.toString(), uri.toString(), "vscode.executeReferenceProvider provided incorrect uri");
 						assert.strictEqual(location1.range.start.line, 38, "vscode.executeReferenceProvider provided incorrect line");
 						assert.strictEqual(location1.range.start.character, 7, "vscode.executeReferenceProvider provided incorrect character");
 						let location2 = locations[1];
-						assert.strictEqual(location2.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location2.uri.toString(), uri.toString(), "vscode.executeReferenceProvider provided incorrect uri");
 						assert.strictEqual(location2.range.start.line, 86, "vscode.executeReferenceProvider provided incorrect line");
 						assert.strictEqual(location2.range.start.character, 3, "vscode.executeReferenceProvider provided incorrect character");
 					}, (err) =>
@@ -11046,11 +11046,11 @@ suite("reference provider: Application workspace", () =>
 						assert.strictEqual(locations.length, 2,
 							"vscode.executeReferenceProvider failed to provide locations: " + uri);
 						let location1 = locations[0];
-						assert.strictEqual(location1.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location1.uri.toString(), uri.toString(), "vscode.executeReferenceProvider provided incorrect uri");
 						assert.strictEqual(location1.range.start.line, 38, "vscode.executeReferenceProvider provided incorrect line");
 						assert.strictEqual(location1.range.start.character, 7, "vscode.executeReferenceProvider provided incorrect character");
 						let location2 = locations[1];
-						assert.strictEqual(location2.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location2.uri.toString(), uri.toString(), "vscode.executeReferenceProvider provided incorrect uri");
 						assert.strictEqual(location2.range.start.line, 86, "vscode.executeReferenceProvider provided incorrect line");
 						assert.strictEqual(location2.range.start.character, 3, "vscode.executeReferenceProvider provided incorrect character");
 					}, (err) =>
@@ -11071,11 +11071,11 @@ suite("reference provider: Application workspace", () =>
 						assert.strictEqual(locations.length, 2,
 							"vscode.executeReferenceProvider failed to provide locations: " + uri);
 						let location1 = locations[0];
-						assert.strictEqual(location1.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location1.uri.toString(), uri.toString(), "vscode.executeReferenceProvider provided incorrect uri");
 						assert.strictEqual(location1.range.start.line, 39, "vscode.executeReferenceProvider provided incorrect line");
 						assert.strictEqual(location1.range.start.character, 12, "vscode.executeReferenceProvider provided incorrect character");
 						let location2 = locations[1];
-						assert.strictEqual(location2.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location2.uri.toString(), uri.toString(), "vscode.executeReferenceProvider provided incorrect uri");
 						assert.strictEqual(location2.range.start.line, 88, "vscode.executeReferenceProvider provided incorrect line");
 						assert.strictEqual(location2.range.start.character, 3, "vscode.executeReferenceProvider provided incorrect character");
 					}, (err) =>
@@ -11096,11 +11096,11 @@ suite("reference provider: Application workspace", () =>
 						assert.strictEqual(locations.length, 2,
 							"vscode.executeReferenceProvider failed to provide locations: " + uri);
 						let location1 = locations[0];
-						assert.strictEqual(location1.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location1.uri.toString(), uri.toString(), "vscode.executeReferenceProvider provided incorrect uri");
 						assert.strictEqual(location1.range.start.line, 39, "vscode.executeReferenceProvider provided incorrect line");
 						assert.strictEqual(location1.range.start.character, 12, "vscode.executeReferenceProvider provided incorrect character");
 						let location2 = locations[1];
-						assert.strictEqual(location2.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location2.uri.toString(), uri.toString(), "vscode.executeReferenceProvider provided incorrect uri");
 						assert.strictEqual(location2.range.start.line, 88, "vscode.executeReferenceProvider provided incorrect line");
 						assert.strictEqual(location2.range.start.character, 3, "vscode.executeReferenceProvider provided incorrect character");
 					}, (err) =>
@@ -11121,15 +11121,15 @@ suite("reference provider: Application workspace", () =>
 						assert.strictEqual(locations.length, 3,
 							"vscode.executeReferenceProvider failed to provide locations: " + uri);
 						let location1 = locations[0];
-						assert.strictEqual(location1.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location1.uri.toString(), uri.toString(), "vscode.executeReferenceProvider provided incorrect uri");
 						assert.strictEqual(location1.range.start.line, 10, "vscode.executeReferenceProvider provided incorrect line");
 						assert.strictEqual(location1.range.start.character, 14, "vscode.executeReferenceProvider provided incorrect character");
 						let location2 = locations[1];
-						assert.strictEqual(location2.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location2.uri.toString(), uri.toString(), "vscode.executeReferenceProvider provided incorrect uri");
 						assert.strictEqual(location2.range.start.line, 50, "vscode.executeReferenceProvider provided incorrect line");
 						assert.strictEqual(location2.range.start.character, 3, "vscode.executeReferenceProvider provided incorrect character");
 						let location3 = locations[2];
-						assert.strictEqual(location3.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location3.uri.toString(), uri.toString(), "vscode.executeReferenceProvider provided incorrect uri");
 						assert.strictEqual(location3.range.start.line, 51, "vscode.executeReferenceProvider provided incorrect line");
 						assert.strictEqual(location3.range.start.character, 8, "vscode.executeReferenceProvider provided incorrect character");
 					}, (err) =>
@@ -11150,15 +11150,15 @@ suite("reference provider: Application workspace", () =>
 						assert.strictEqual(locations.length, 3,
 							"vscode.executeReferenceProvider failed to provide locations: " + uri);
 						let location1 = locations[0];
-						assert.strictEqual(location1.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location1.uri.toString(), uri.toString(), "vscode.executeReferenceProvider provided incorrect uri");
 						assert.strictEqual(location1.range.start.line, 10, "vscode.executeReferenceProvider provided incorrect line");
 						assert.strictEqual(location1.range.start.character, 14, "vscode.executeReferenceProvider provided incorrect character");
 						let location2 = locations[1];
-						assert.strictEqual(location2.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location2.uri.toString(), uri.toString(), "vscode.executeReferenceProvider provided incorrect uri");
 						assert.strictEqual(location2.range.start.line, 50, "vscode.executeReferenceProvider provided incorrect line");
 						assert.strictEqual(location2.range.start.character, 3, "vscode.executeReferenceProvider provided incorrect character");
 						let location3 = locations[2];
-						assert.strictEqual(location3.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location3.uri.toString(), uri.toString(), "vscode.executeReferenceProvider provided incorrect uri");
 						assert.strictEqual(location3.range.start.line, 51, "vscode.executeReferenceProvider provided incorrect line");
 						assert.strictEqual(location3.range.start.character, 8, "vscode.executeReferenceProvider provided incorrect character");
 					}, (err) =>
@@ -11179,15 +11179,15 @@ suite("reference provider: Application workspace", () =>
 						assert.strictEqual(locations.length, 3,
 							"vscode.executeReferenceProvider failed to provide locations: " + uri);
 						let location1 = locations[0];
-						assert.strictEqual(location1.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location1.uri.toString(), uri.toString(), "vscode.executeReferenceProvider provided incorrect uri");
 						assert.strictEqual(location1.range.start.line, 10, "vscode.executeReferenceProvider provided incorrect line");
 						assert.strictEqual(location1.range.start.character, 14, "vscode.executeReferenceProvider provided incorrect character");
 						let location2 = locations[1];
-						assert.strictEqual(location2.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location2.uri.toString(), uri.toString(), "vscode.executeReferenceProvider provided incorrect uri");
 						assert.strictEqual(location2.range.start.line, 50, "vscode.executeReferenceProvider provided incorrect line");
 						assert.strictEqual(location2.range.start.character, 3, "vscode.executeReferenceProvider provided incorrect character");
 						let location3 = locations[2];
-						assert.strictEqual(location3.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location3.uri.toString(), uri.toString(), "vscode.executeReferenceProvider provided incorrect uri");
 						assert.strictEqual(location3.range.start.line, 51, "vscode.executeReferenceProvider provided incorrect line");
 						assert.strictEqual(location3.range.start.character, 8, "vscode.executeReferenceProvider provided incorrect character");
 					}, (err) =>
@@ -11208,15 +11208,15 @@ suite("reference provider: Application workspace", () =>
 						assert.strictEqual(locations.length, 3,
 							"vscode.executeReferenceProvider failed to provide locations: " + uri);
 						let location1 = locations[0];
-						assert.strictEqual(location1.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location1.uri.toString(), uri.toString(), "vscode.executeReferenceProvider provided incorrect uri");
 						assert.strictEqual(location1.range.start.line, 12, "vscode.executeReferenceProvider provided incorrect line");
 						assert.strictEqual(location1.range.start.character, 19, "vscode.executeReferenceProvider provided incorrect character");
 						let location2 = locations[1];
-						assert.strictEqual(location2.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location2.uri.toString(), uri.toString(), "vscode.executeReferenceProvider provided incorrect uri");
 						assert.strictEqual(location2.range.start.line, 41, "vscode.executeReferenceProvider provided incorrect line");
 						assert.strictEqual(location2.range.start.character, 3, "vscode.executeReferenceProvider provided incorrect character");
 						let location3 = locations[2];
-						assert.strictEqual(location3.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location3.uri.toString(), uri.toString(), "vscode.executeReferenceProvider provided incorrect uri");
 						assert.strictEqual(location3.range.start.line, 42, "vscode.executeReferenceProvider provided incorrect line");
 						assert.strictEqual(location3.range.start.character, 8, "vscode.executeReferenceProvider provided incorrect character");
 					}, (err) =>
@@ -11237,15 +11237,15 @@ suite("reference provider: Application workspace", () =>
 						assert.strictEqual(locations.length, 3,
 							"vscode.executeReferenceProvider failed to provide locations: " + uri);
 						let location1 = locations[0];
-						assert.strictEqual(location1.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location1.uri.toString(), uri.toString(), "vscode.executeReferenceProvider provided incorrect uri");
 						assert.strictEqual(location1.range.start.line, 12, "vscode.executeReferenceProvider provided incorrect line");
 						assert.strictEqual(location1.range.start.character, 19, "vscode.executeReferenceProvider provided incorrect character");
 						let location2 = locations[1];
-						assert.strictEqual(location2.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location2.uri.toString(), uri.toString(), "vscode.executeReferenceProvider provided incorrect uri");
 						assert.strictEqual(location2.range.start.line, 41, "vscode.executeReferenceProvider provided incorrect line");
 						assert.strictEqual(location2.range.start.character, 3, "vscode.executeReferenceProvider provided incorrect character");
 						let location3 = locations[2];
-						assert.strictEqual(location3.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location3.uri.toString(), uri.toString(), "vscode.executeReferenceProvider provided incorrect uri");
 						assert.strictEqual(location3.range.start.line, 42, "vscode.executeReferenceProvider provided incorrect line");
 						assert.strictEqual(location3.range.start.character, 8, "vscode.executeReferenceProvider provided incorrect character");
 					}, (err) =>
@@ -11266,15 +11266,15 @@ suite("reference provider: Application workspace", () =>
 						assert.strictEqual(locations.length, 3,
 							"vscode.executeReferenceProvider failed to provide locations: " + uri);
 						let location1 = locations[0];
-						assert.strictEqual(location1.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location1.uri.toString(), uri.toString(), "vscode.executeReferenceProvider provided incorrect uri");
 						assert.strictEqual(location1.range.start.line, 12, "vscode.executeReferenceProvider provided incorrect line");
 						assert.strictEqual(location1.range.start.character, 19, "vscode.executeReferenceProvider provided incorrect character");
 						let location2 = locations[1];
-						assert.strictEqual(location2.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location2.uri.toString(), uri.toString(), "vscode.executeReferenceProvider provided incorrect uri");
 						assert.strictEqual(location2.range.start.line, 41, "vscode.executeReferenceProvider provided incorrect line");
 						assert.strictEqual(location2.range.start.character, 3, "vscode.executeReferenceProvider provided incorrect character");
 						let location3 = locations[2];
-						assert.strictEqual(location3.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location3.uri.toString(), uri.toString(), "vscode.executeReferenceProvider provided incorrect uri");
 						assert.strictEqual(location3.range.start.line, 42, "vscode.executeReferenceProvider provided incorrect line");
 						assert.strictEqual(location3.range.start.character, 8, "vscode.executeReferenceProvider provided incorrect character");
 					}, (err) =>
@@ -11295,15 +11295,15 @@ suite("reference provider: Application workspace", () =>
 						assert.strictEqual(locations.length, 3,
 							"vscode.executeReferenceProvider failed to provide locations: " + uri);
 						let location1 = locations[0];
-						assert.strictEqual(location1.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location1.uri.toString(), uri.toString(), "vscode.executeReferenceProvider provided incorrect uri");
 						assert.strictEqual(location1.range.start.line, 4, "vscode.executeReferenceProvider provided incorrect line");
 						assert.strictEqual(location1.range.start.character, 20, "vscode.executeReferenceProvider provided incorrect character");
 						let location2 = locations[1];
-						assert.strictEqual(location2.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location2.uri.toString(), uri.toString(), "vscode.executeReferenceProvider provided incorrect uri");
 						assert.strictEqual(location2.range.start.line, 47, "vscode.executeReferenceProvider provided incorrect line");
 						assert.strictEqual(location2.range.start.character, 3, "vscode.executeReferenceProvider provided incorrect character");
 						let location3 = locations[2];
-						assert.strictEqual(location3.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location3.uri.toString(), uri.toString(), "vscode.executeReferenceProvider provided incorrect uri");
 						assert.strictEqual(location3.range.start.line, 48, "vscode.executeReferenceProvider provided incorrect line");
 						assert.strictEqual(location3.range.start.character, 14, "vscode.executeReferenceProvider provided incorrect character");
 					}, (err) =>
@@ -11324,15 +11324,15 @@ suite("reference provider: Application workspace", () =>
 						assert.strictEqual(locations.length, 3,
 							"vscode.executeReferenceProvider failed to provide locations: " + uri);
 						let location1 = locations[0];
-						assert.strictEqual(location1.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location1.uri.toString(), uri.toString(), "vscode.executeReferenceProvider provided incorrect uri");
 						assert.strictEqual(location1.range.start.line, 4, "vscode.executeReferenceProvider provided incorrect line");
 						assert.strictEqual(location1.range.start.character, 20, "vscode.executeReferenceProvider provided incorrect character");
 						let location2 = locations[1];
-						assert.strictEqual(location2.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location2.uri.toString(), uri.toString(), "vscode.executeReferenceProvider provided incorrect uri");
 						assert.strictEqual(location2.range.start.line, 47, "vscode.executeReferenceProvider provided incorrect line");
 						assert.strictEqual(location2.range.start.character, 3, "vscode.executeReferenceProvider provided incorrect character");
 						let location3 = locations[2];
-						assert.strictEqual(location3.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location3.uri.toString(), uri.toString(), "vscode.executeReferenceProvider provided incorrect uri");
 						assert.strictEqual(location3.range.start.line, 48, "vscode.executeReferenceProvider provided incorrect line");
 						assert.strictEqual(location3.range.start.character, 14, "vscode.executeReferenceProvider provided incorrect character");
 					}, (err) =>
@@ -11353,15 +11353,15 @@ suite("reference provider: Application workspace", () =>
 						assert.strictEqual(locations.length, 3,
 							"vscode.executeReferenceProvider failed to provide locations: " + uri);
 						let location1 = locations[0];
-						assert.strictEqual(location1.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location1.uri.toString(), uri.toString(), "vscode.executeReferenceProvider provided incorrect uri");
 						assert.strictEqual(location1.range.start.line, 4, "vscode.executeReferenceProvider provided incorrect line");
 						assert.strictEqual(location1.range.start.character, 20, "vscode.executeReferenceProvider provided incorrect character");
 						let location2 = locations[1];
-						assert.strictEqual(location2.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location2.uri.toString(), uri.toString(), "vscode.executeReferenceProvider provided incorrect uri");
 						assert.strictEqual(location2.range.start.line, 47, "vscode.executeReferenceProvider provided incorrect line");
 						assert.strictEqual(location2.range.start.character, 3, "vscode.executeReferenceProvider provided incorrect character");
 						let location3 = locations[2];
-						assert.strictEqual(location3.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location3.uri.toString(), uri.toString(), "vscode.executeReferenceProvider provided incorrect uri");
 						assert.strictEqual(location3.range.start.line, 48, "vscode.executeReferenceProvider provided incorrect line");
 						assert.strictEqual(location3.range.start.character, 14, "vscode.executeReferenceProvider provided incorrect character");
 					}, (err) =>
@@ -11382,15 +11382,15 @@ suite("reference provider: Application workspace", () =>
 						assert.strictEqual(locations.length, 3,
 							"vscode.executeReferenceProvider failed to provide locations: " + uri);
 						let location1 = locations[0];
-						assert.strictEqual(location1.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location1.uri.toString(), uri.toString(), "vscode.executeReferenceProvider provided incorrect uri");
 						assert.strictEqual(location1.range.start.line, 6, "vscode.executeReferenceProvider provided incorrect line");
 						assert.strictEqual(location1.range.start.character, 26, "vscode.executeReferenceProvider provided incorrect character");
 						let location2 = locations[1];
-						assert.strictEqual(location2.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location2.uri.toString(), uri.toString(), "vscode.executeReferenceProvider provided incorrect uri");
 						assert.strictEqual(location2.range.start.line, 44, "vscode.executeReferenceProvider provided incorrect line");
 						assert.strictEqual(location2.range.start.character, 3, "vscode.executeReferenceProvider provided incorrect character");
 						let location3 = locations[2];
-						assert.strictEqual(location3.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location3.uri.toString(), uri.toString(), "vscode.executeReferenceProvider provided incorrect uri");
 						assert.strictEqual(location3.range.start.line, 45, "vscode.executeReferenceProvider provided incorrect line");
 						assert.strictEqual(location3.range.start.character, 14, "vscode.executeReferenceProvider provided incorrect character");
 					}, (err) =>
@@ -11411,15 +11411,15 @@ suite("reference provider: Application workspace", () =>
 						assert.strictEqual(locations.length, 3,
 							"vscode.executeReferenceProvider failed to provide locations: " + uri);
 						let location1 = locations[0];
-						assert.strictEqual(location1.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location1.uri.toString(), uri.toString(), "vscode.executeReferenceProvider provided incorrect uri");
 						assert.strictEqual(location1.range.start.line, 6, "vscode.executeReferenceProvider provided incorrect line");
 						assert.strictEqual(location1.range.start.character, 26, "vscode.executeReferenceProvider provided incorrect character");
 						let location2 = locations[1];
-						assert.strictEqual(location2.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location2.uri.toString(), uri.toString(), "vscode.executeReferenceProvider provided incorrect uri");
 						assert.strictEqual(location2.range.start.line, 44, "vscode.executeReferenceProvider provided incorrect line");
 						assert.strictEqual(location2.range.start.character, 3, "vscode.executeReferenceProvider provided incorrect character");
 						let location3 = locations[2];
-						assert.strictEqual(location3.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location3.uri.toString(), uri.toString(), "vscode.executeReferenceProvider provided incorrect uri");
 						assert.strictEqual(location3.range.start.line, 45, "vscode.executeReferenceProvider provided incorrect line");
 						assert.strictEqual(location3.range.start.character, 14, "vscode.executeReferenceProvider provided incorrect character");
 					}, (err) =>
@@ -11440,15 +11440,15 @@ suite("reference provider: Application workspace", () =>
 						assert.strictEqual(locations.length, 3,
 							"vscode.executeReferenceProvider failed to provide locations: " + uri);
 						let location1 = locations[0];
-						assert.strictEqual(location1.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location1.uri.toString(), uri.toString(), "vscode.executeReferenceProvider provided incorrect uri");
 						assert.strictEqual(location1.range.start.line, 6, "vscode.executeReferenceProvider provided incorrect line");
 						assert.strictEqual(location1.range.start.character, 26, "vscode.executeReferenceProvider provided incorrect character");
 						let location2 = locations[1];
-						assert.strictEqual(location2.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location2.uri.toString(), uri.toString(), "vscode.executeReferenceProvider provided incorrect uri");
 						assert.strictEqual(location2.range.start.line, 44, "vscode.executeReferenceProvider provided incorrect line");
 						assert.strictEqual(location2.range.start.character, 3, "vscode.executeReferenceProvider provided incorrect character");
 						let location3 = locations[2];
-						assert.strictEqual(location3.uri.path, uri.path, "vscode.executeReferenceProvider provided incorrect uri");
+						assert.strictEqual(location3.uri.toString(), uri.toString(), "vscode.executeReferenceProvider provided incorrect uri");
 						assert.strictEqual(location3.range.start.line, 45, "vscode.executeReferenceProvider provided incorrect line");
 						assert.strictEqual(location3.range.start.character, 14, "vscode.executeReferenceProvider provided incorrect character");
 					}, (err) =>

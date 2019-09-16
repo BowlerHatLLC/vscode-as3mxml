@@ -33,6 +33,7 @@ import quickCompileAndLaunch from "./commands/quickCompileAndLaunch";
 import migrateSettings from "./utils/migrateSettings";
 import SWFDebugAdapterDescriptorFactory from "./utils/SWFDebugAdapterDescriptorFactory";
 import saveSessionPassword from "./commands/saveSessionPassword";
+import normalizeUri from "./utils/normalizeUri";
 
 const INVALID_SDK_ERROR = "as3mxml.sdk.editor in settings does not point to a valid SDK. Requires Apache Royale 0.9.6 or newer.";
 const MISSING_FRAMEWORK_SDK_ERROR = "You must configure an SDK to enable all ActionScript & MXML features.";
@@ -388,28 +389,7 @@ function startClient()
 				{
 					code2Protocol: (value: vscode.Uri) =>
 					{
-						if (/^win32/.test(process.platform))
-						{
-							//there are a couple of inconsistencies on Windows
-							//between VSCode and Java
-							//1. The : character after the drive letter is
-							//   encoded as %3A in VSCode, but : in Java.
-							//2. The driver letter is lowercase in VSCode, but
-							//   is uppercase in Java when watching for file
-							//   system changes.
-							let valueAsString = value.toString().replace("%3A", ":");
-							let matches = /^file:\/\/\/([a-z]):\//.exec(valueAsString);
-							if(matches !== null)
-							{
-								let driveLetter = matches[1].toUpperCase();
-								valueAsString = `file:///${driveLetter}:/` + valueAsString.substr(matches[0].length);
-							}
-							return valueAsString;
-						}
-						else
-						{
-							return value.toString();
-						}
+						return normalizeUri(value);
 					},
 					//this is just the default behavior, but we need to define both
 					protocol2Code: value => vscode.Uri.parse(value)
