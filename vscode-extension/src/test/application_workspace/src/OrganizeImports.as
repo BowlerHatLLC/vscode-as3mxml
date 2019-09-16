@@ -3,6 +3,7 @@ package
 	import com.example.organizeImports.ImportToKeepInterface;
 	import com.example.organizeImports.ImportToRemove;
 	import com.example.organizeImports.ImportToKeepClass;
+	import com.example.organizeImports.wildcards.*;
 
 	public class OrganizeImports
 	{
@@ -17,9 +18,10 @@ package
 
 			}
 			var y:* = x as ImportToAddFromAsOperator;
-			function():ImportToAddFromReturnType {return null;}
+			function test():ImportToAddFromReturnType {return null;}
 			y = ImportToAddFromCast(x);
 			x = new ImportToAddFromNew();
+			ImportFromWildcard;
 		}
 	}
 }

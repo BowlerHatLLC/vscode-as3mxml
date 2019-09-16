@@ -10754,11 +10754,11 @@ suite("organize imports: Application workspace", () =>
 							setTimeout(() =>
 							{
 								let start = new vscode.Position(2, 0);
-								let end = new vscode.Position(11, 0);
+								let end = new vscode.Position(12, 0);
 								let range = new vscode.Range(start, end);
 								let generatedText = editor.document.getText(range);
 								assert.strictEqual(generatedText,
-									"\timport com.example.organizeImports.ImportToAdd;\n\timport com.example.organizeImports.ImportToAddFromAsOperator;\n\timport com.example.organizeImports.ImportToAddFromCast;\n\timport com.example.organizeImports.ImportToAddFromIsOperator;\n\timport com.example.organizeImports.ImportToAddFromNew;\n\timport com.example.organizeImports.ImportToAddFromReturnType;\n\timport com.example.organizeImports.ImportToKeepClass;\n\timport com.example.organizeImports.ImportToKeepInterface;\n\n",
+									"\timport com.example.organizeImports.ImportToAdd;\n\timport com.example.organizeImports.ImportToAddFromAsOperator;\n\timport com.example.organizeImports.ImportToAddFromCast;\n\timport com.example.organizeImports.ImportToAddFromIsOperator;\n\timport com.example.organizeImports.ImportToAddFromNew;\n\timport com.example.organizeImports.ImportToAddFromReturnType;\n\timport com.example.organizeImports.ImportToKeepClass;\n\timport com.example.organizeImports.ImportToKeepInterface;\n\timport com.example.organizeImports.wildcards.*;\n\n",
 									"as3mxml.organizeImportsInUri failed to organize imports");
 								resolve();
 							}, 1000);
@@ -10784,11 +10784,11 @@ suite("organize imports: Application workspace", () =>
 							setTimeout(() =>
 							{
 								let start = new vscode.Position(5, 0);
-								let end = new vscode.Position(14, 0);
+								let end = new vscode.Position(15, 0);
 								let range = new vscode.Range(start, end);
 								let generatedText = editor.document.getText(range);
 								assert.strictEqual(generatedText,
-									"\t\t\timport com.example.organizeImports.ImportToAdd;\n\t\t\timport com.example.organizeImports.ImportToAddFromAsOperator;\n\t\t\timport com.example.organizeImports.ImportToAddFromCast;\n\t\t\timport com.example.organizeImports.ImportToAddFromIsOperator;\n\t\t\timport com.example.organizeImports.ImportToAddFromNew;\n\t\t\timport com.example.organizeImports.ImportToAddFromReturnType;\n\t\t\timport com.example.organizeImports.ImportToKeepClass;\n\t\t\timport com.example.organizeImports.ImportToKeepInterface;\n\n",
+									"\t\t\timport com.example.organizeImports.ImportToAdd;\n\t\t\timport com.example.organizeImports.ImportToAddFromAsOperator;\n\t\t\timport com.example.organizeImports.ImportToAddFromCast;\n\t\t\timport com.example.organizeImports.ImportToAddFromIsOperator;\n\t\t\timport com.example.organizeImports.ImportToAddFromNew;\n\t\t\timport com.example.organizeImports.ImportToAddFromReturnType;\n\t\t\timport com.example.organizeImports.ImportToKeepClass;\n\t\t\timport com.example.organizeImports.ImportToKeepInterface;\n\t\t\timport com.example.organizeImports.wildcards.*;\n\n",
 									"as3mxml.organizeImportsInUri failed to organize imports");
 								resolve();
 							}, 1000);
