@@ -97,13 +97,29 @@ public class WaitForBuildFinishRunner implements Runnable
 
 	public void setCancelled()
 	{
+		if(cancelled)
+		{
+			//already canceled. no need to do it again.
+			return;
+		}
 		cancelled = true;
 		if(changed)
 		{
+			//make sure that the workspace has the latest changes because they
+			//may have been queued up
 			changed = false;	
 			IWorkspace workspace = folderData.project.getWorkspace();
 			workspace.fileChanged(fileSpec);
 		}
+		try
+		{
+			//force the compilation unit to finish building
+			(syntaxTreeRequest = compilationUnit.getSyntaxTreeRequest()).get();
+			(fileScopeRequest = compilationUnit.getFileScopeRequest()).get();
+			(outgoingDepsRequest = compilationUnit.getOutgoingDependenciesRequest()).get();
+			(abcBytesRequest = compilationUnit.getABCBytesRequest()).get();
+		}
+		catch(InterruptedException e) {}
 	}
 
 	public void run()

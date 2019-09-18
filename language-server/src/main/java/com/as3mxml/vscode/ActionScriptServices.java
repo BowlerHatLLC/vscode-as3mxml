@@ -303,6 +303,13 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         {
             cancelToken.checkCanceled();
 
+            //make sure that the latest changes have been passed to
+            //workspace.fileChanged() before proceeding
+            if(waitForBuildFinishRunner != null)
+            {
+                waitForBuildFinishRunner.setCancelled();
+            }
+
             compilerWorkspace.startBuilding();
             try
             {
@@ -338,6 +345,13 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         {
             cancelToken.checkCanceled();
 
+            //make sure that the latest changes have been passed to
+            //workspace.fileChanged() before proceeding
+            if(waitForBuildFinishRunner != null)
+            {
+                waitForBuildFinishRunner.setCancelled();
+            }
+
             compilerWorkspace.startBuilding();
             try
             {
@@ -364,6 +378,13 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         {
             cancelToken.checkCanceled();
 
+            //make sure that the latest changes have been passed to
+            //workspace.fileChanged() before proceeding
+            if(waitForBuildFinishRunner != null)
+            {
+                waitForBuildFinishRunner.setCancelled();
+            }
+
             compilerWorkspace.startBuilding();
             try
             {
@@ -388,6 +409,13 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         {
             cancelToken.checkCanceled();
 
+            //make sure that the latest changes have been passed to
+            //workspace.fileChanged() before proceeding
+            if(waitForBuildFinishRunner != null)
+            {
+                waitForBuildFinishRunner.setCancelled();
+            }
+
             compilerWorkspace.startBuilding();
             try
             {
@@ -411,6 +439,13 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         {
             cancelToken.checkCanceled();
 
+            //make sure that the latest changes have been passed to
+            //workspace.fileChanged() before proceeding
+            if(waitForBuildFinishRunner != null)
+            {
+                waitForBuildFinishRunner.setCancelled();
+            }
+
             compilerWorkspace.startBuilding();
             try
             {
@@ -432,6 +467,13 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken ->
         {
             cancelToken.checkCanceled();
+
+            //make sure that the latest changes have been passed to
+            //workspace.fileChanged() before proceeding
+            if(waitForBuildFinishRunner != null)
+            {
+                waitForBuildFinishRunner.setCancelled();
+            }
 
             compilerWorkspace.startBuilding();
             try
@@ -457,6 +499,13 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken ->
         {
             cancelToken.checkCanceled();
+
+            //make sure that the latest changes have been passed to
+            //workspace.fileChanged() before proceeding
+            if(waitForBuildFinishRunner != null)
+            {
+                waitForBuildFinishRunner.setCancelled();
+            }
 
             compilerWorkspace.startBuilding();
             try
@@ -489,6 +538,13 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         {
             cancelToken.checkCanceled();
 
+            //make sure that the latest changes have been passed to
+            //workspace.fileChanged() before proceeding
+            if(waitForBuildFinishRunner != null)
+            {
+                waitForBuildFinishRunner.setCancelled();
+            }
+
             compilerWorkspace.startBuilding();
             try
             {
@@ -512,6 +568,13 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken ->
         {
             cancelToken.checkCanceled();
+
+            //make sure that the latest changes have been passed to
+            //workspace.fileChanged() before proceeding
+            if(waitForBuildFinishRunner != null)
+            {
+                waitForBuildFinishRunner.setCancelled();
+            }
             
             compilerWorkspace.startBuilding();
             try
@@ -544,6 +607,13 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken ->
         {
             cancelToken.checkCanceled();
+
+            //make sure that the latest changes have been passed to
+            //workspace.fileChanged() before proceeding
+            if(waitForBuildFinishRunner != null)
+            {
+                waitForBuildFinishRunner.setCancelled();
+            }
 
             compilerWorkspace.startBuilding();
             try
@@ -612,6 +682,13 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken ->
         {
             cancelToken.checkCanceled();
+
+            //make sure that the latest changes have been passed to
+            //workspace.fileChanged() before proceeding
+            if(waitForBuildFinishRunner != null)
+            {
+                waitForBuildFinishRunner.setCancelled();
+            }
 
             compilerWorkspace.startBuilding();
             try
