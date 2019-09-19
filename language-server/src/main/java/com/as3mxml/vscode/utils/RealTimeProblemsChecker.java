@@ -75,10 +75,10 @@ public class RealTimeProblemsChecker implements Runnable
 	{
 		if(this.compilationUnit != null && this.compilationUnit != compilationUnit)
 		{
+			updateNow();
 			pendingFolderData = folderData;
 			pendingCompilationUnit = compilationUnit;
 			pendingFileSpec = fileSpec;
-			updateNow();
 			return;
 		}
 		this.folderData = folderData;
@@ -105,24 +105,33 @@ public class RealTimeProblemsChecker implements Runnable
 
 	public synchronized void updateNow()
 	{
+		applyPending();
+		if(compilationUnit == null)
+		{
+			return;
+		}
+		if(syntaxTreeRequest == null)
+		{
+			syntaxTreeRequest = compilationUnit.getSyntaxTreeRequest();
+		}
+		if(fileScopeRequest == null)
+		{
+			fileScopeRequest = compilationUnit.getFileScopeRequest();
+		}
+		if(outgoingDepsRequest == null)
+		{
+			outgoingDepsRequest = compilationUnit.getOutgoingDependenciesRequest();
+		}
+		if(abcBytesRequest == null)
+		{
+			abcBytesRequest = compilationUnit.getABCBytesRequest();
+		}
 		try
 		{
-			if(syntaxTreeRequest != null)
-			{
-				syntaxTreeRequest.get();
-			}
-			if(fileScopeRequest != null)
-			{
-				fileScopeRequest.get();
-			}
-			if(outgoingDepsRequest != null)
-			{
-				outgoingDepsRequest.get();
-			}
-			if(abcBytesRequest != null)
-			{
-				abcBytesRequest.get();
-			}
+			syntaxTreeRequest.get();
+			fileScopeRequest.get();
+			outgoingDepsRequest.get();
+			abcBytesRequest.get();
 		}
 		catch(InterruptedException e) {}
 	}
@@ -201,23 +210,39 @@ public class RealTimeProblemsChecker implements Runnable
 			abcBytesRequest = null;
 			if(pendingCompilationUnit != null)
 			{
-				if(pendingCompilationUnit == compilationUnit)
-				{
-					IWorkspace workspace = folderData.project.getWorkspace();
-					workspace.fileChanged(pendingFileSpec);
-				}
-				compilationUnit = pendingCompilationUnit;
-				fileSpec = pendingFileSpec;
-				folderData = pendingFolderData;
-				pendingCompilationUnit = null;
-				pendingFileSpec = null;
-				pendingFolderData = null;
+				applyPending();
 			}
 			else
 			{
 				clear();
 			}
 		}
+	}
+
+	private synchronized void applyPending()
+	{
+		if(pendingCompilationUnit == null)
+		{
+			return;
+		}
+
+		if(pendingCompilationUnit == compilationUnit)
+		{
+			IWorkspace workspace = folderData.project.getWorkspace();
+			workspace.fileChanged(pendingFileSpec);
+		}
+
+		compilationUnit = pendingCompilationUnit;
+		fileSpec = pendingFileSpec;
+		folderData = pendingFolderData;
+		pendingCompilationUnit = null;
+		pendingFileSpec = null;
+		pendingFolderData = null;
+
+		syntaxTreeRequest = null;
+		fileScopeRequest = null;
+		outgoingDepsRequest = null;
+		abcBytesRequest = null;
 	}
 
 	private synchronized void publishDiagnostics()
