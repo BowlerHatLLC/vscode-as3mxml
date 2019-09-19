@@ -43,6 +43,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 import com.as3mxml.asconfigc.ASConfigC;
@@ -81,7 +82,7 @@ import com.as3mxml.vscode.utils.CompilerProjectUtils;
 import com.as3mxml.vscode.utils.FileTracker;
 import com.as3mxml.vscode.utils.LanguageServerCompilerUtils;
 import com.as3mxml.vscode.utils.ProblemTracker;
-import com.as3mxml.vscode.utils.WaitForBuildFinishRunner;
+import com.as3mxml.vscode.utils.RealTimeProblemsChecker;
 import com.as3mxml.vscode.utils.WorkspaceFolderManager;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -191,7 +192,8 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     private CompilerProblemFilter compilerProblemFilter = new CompilerProblemFilter();
     private boolean initialized = false;
     private boolean frameworkSDKIsRoyale = false;
-    private WaitForBuildFinishRunner waitForBuildFinishRunner;
+    private RealTimeProblemsChecker realTimeProblemsChecker;
+    private Future<?> realTimeProblemsFuture;
     private Set<URI> notOnSourcePathSet = new HashSet<>();
     private boolean realTimeProblems = true;
     private boolean showFileOutsideSourcePath = true;
@@ -289,6 +291,13 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             compilerShell.dispose();
             compilerShell = null;
         }
+        if(realTimeProblemsFuture != null)
+        {
+            realTimeProblemsChecker.clear();
+            realTimeProblemsChecker = null;
+            realTimeProblemsFuture.cancel(true);
+            realTimeProblemsFuture = null;
+        }
     }
 
     /**
@@ -305,9 +314,9 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
 
             //make sure that the latest changes have been passed to
             //workspace.fileChanged() before proceeding
-            if(waitForBuildFinishRunner != null)
+            if(realTimeProblemsChecker != null)
             {
-                waitForBuildFinishRunner.setCancelled();
+                realTimeProblemsChecker.updateNow();
             }
 
             compilerWorkspace.startBuilding();
@@ -347,9 +356,9 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
 
             //make sure that the latest changes have been passed to
             //workspace.fileChanged() before proceeding
-            if(waitForBuildFinishRunner != null)
+            if(realTimeProblemsChecker != null)
             {
-                waitForBuildFinishRunner.setCancelled();
+                realTimeProblemsChecker.updateNow();
             }
 
             compilerWorkspace.startBuilding();
@@ -380,9 +389,9 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
 
             //make sure that the latest changes have been passed to
             //workspace.fileChanged() before proceeding
-            if(waitForBuildFinishRunner != null)
+            if(realTimeProblemsChecker != null)
             {
-                waitForBuildFinishRunner.setCancelled();
+                realTimeProblemsChecker.updateNow();
             }
 
             compilerWorkspace.startBuilding();
@@ -411,9 +420,9 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
 
             //make sure that the latest changes have been passed to
             //workspace.fileChanged() before proceeding
-            if(waitForBuildFinishRunner != null)
+            if(realTimeProblemsChecker != null)
             {
-                waitForBuildFinishRunner.setCancelled();
+                realTimeProblemsChecker.updateNow();
             }
 
             compilerWorkspace.startBuilding();
@@ -441,9 +450,9 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
 
             //make sure that the latest changes have been passed to
             //workspace.fileChanged() before proceeding
-            if(waitForBuildFinishRunner != null)
+            if(realTimeProblemsChecker != null)
             {
-                waitForBuildFinishRunner.setCancelled();
+                realTimeProblemsChecker.updateNow();
             }
 
             compilerWorkspace.startBuilding();
@@ -470,9 +479,9 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
 
             //make sure that the latest changes have been passed to
             //workspace.fileChanged() before proceeding
-            if(waitForBuildFinishRunner != null)
+            if(realTimeProblemsChecker != null)
             {
-                waitForBuildFinishRunner.setCancelled();
+                realTimeProblemsChecker.updateNow();
             }
 
             compilerWorkspace.startBuilding();
@@ -502,9 +511,9 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
 
             //make sure that the latest changes have been passed to
             //workspace.fileChanged() before proceeding
-            if(waitForBuildFinishRunner != null)
+            if(realTimeProblemsChecker != null)
             {
-                waitForBuildFinishRunner.setCancelled();
+                realTimeProblemsChecker.updateNow();
             }
 
             compilerWorkspace.startBuilding();
@@ -540,9 +549,9 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
 
             //make sure that the latest changes have been passed to
             //workspace.fileChanged() before proceeding
-            if(waitForBuildFinishRunner != null)
+            if(realTimeProblemsChecker != null)
             {
-                waitForBuildFinishRunner.setCancelled();
+                realTimeProblemsChecker.updateNow();
             }
 
             compilerWorkspace.startBuilding();
@@ -571,9 +580,9 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
 
             //make sure that the latest changes have been passed to
             //workspace.fileChanged() before proceeding
-            if(waitForBuildFinishRunner != null)
+            if(realTimeProblemsChecker != null)
             {
-                waitForBuildFinishRunner.setCancelled();
+                realTimeProblemsChecker.updateNow();
             }
             
             compilerWorkspace.startBuilding();
@@ -610,9 +619,9 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
 
             //make sure that the latest changes have been passed to
             //workspace.fileChanged() before proceeding
-            if(waitForBuildFinishRunner != null)
+            if(realTimeProblemsChecker != null)
             {
-                waitForBuildFinishRunner.setCancelled();
+                realTimeProblemsChecker.updateNow();
             }
 
             compilerWorkspace.startBuilding();
@@ -685,9 +694,9 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
 
             //make sure that the latest changes have been passed to
             //workspace.fileChanged() before proceeding
-            if(waitForBuildFinishRunner != null)
+            if(realTimeProblemsChecker != null)
             {
-                waitForBuildFinishRunner.setCancelled();
+                realTimeProblemsChecker.updateNow();
             }
 
             compilerWorkspace.startBuilding();
@@ -843,12 +852,18 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         //the path of this new change is the same, we'll re-check for problems
         //when its done
         //this is the fastest way to check for problems while the user is typing
-        if(waitForBuildFinishRunner != null
-                && waitForBuildFinishRunner.isRunning()
-                && waitForBuildFinishRunner.getCompilationUnit().getAbsoluteFilename().equals(normalizedChangedPathAsString))
+        
+        if(realTimeProblems && realTimeProblemsChecker != null)
         {
-            waitForBuildFinishRunner.setChanged(fileSpec);
-            return;
+            synchronized(realTimeProblemsChecker)
+            {
+                IFileSpecification otherFileSpec = realTimeProblemsChecker.getFileSpecification();
+                if(otherFileSpec != null && otherFileSpec.getPath().equals(normalizedChangedPathAsString))
+                {
+                    realTimeProblemsChecker.setFileSpecification(fileSpec);
+                    return;
+                }
+            }
         }
 
         ICompilationUnit unit = null;
@@ -879,26 +894,28 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             //syntax checking)
             checkProjectForProblems(folderData);
         }
-        else if(realTimeProblems
-                && !folderData.equals(workspaceFolderManager.getFallbackFolderData()))
+        else if(realTimeProblems)
         {
-            if(waitForBuildFinishRunner == null
-                    || !waitForBuildFinishRunner.isRunning()
-                    || !unit.equals(waitForBuildFinishRunner.getCompilationUnit()))
+            if(realTimeProblemsChecker == null)
             {
-                waitForBuildFinishRunner = new WaitForBuildFinishRunner(unit, fileSpec, folderData, languageClient, compilerProblemFilter);
-                compilerWorkspace.getExecutorService().submit(waitForBuildFinishRunner);
+                realTimeProblemsChecker = new RealTimeProblemsChecker(languageClient, compilerProblemFilter);
+                realTimeProblemsFuture = compilerWorkspace.getExecutorService().submit(realTimeProblemsChecker);
+            }
+            if(folderData.equals(workspaceFolderManager.getFallbackFolderData()))
+            {
+                realTimeProblemsChecker.clear();
             }
             else
             {
-                //try to keep using the existing instance, if possible
-                waitForBuildFinishRunner.setChanged(fileSpec);
+                realTimeProblemsChecker.setCompilationUnit(unit, fileSpec, folderData);
             }
         }
-        else if(waitForBuildFinishRunner != null)
+        else
         {
-            waitForBuildFinishRunner.setCancelled();
-            waitForBuildFinishRunner = null;
+            realTimeProblemsChecker.clear();
+            realTimeProblemsChecker = null;
+            realTimeProblemsFuture.cancel(true);
+            realTimeProblemsFuture = null;
         }
     }
 
@@ -1285,6 +1302,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             return;
         }
         initialized = true;
+
         //this is the first time that we can notify the client about any
         //diagnostics
         checkForProblemsNow(false);
@@ -1873,6 +1891,13 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
 
     private void checkProjectForProblems(WorkspaceFolderData folderData)
     {
+        //make sure that the latest changes have been passed to
+        //workspace.fileChanged() before proceeding
+        if(realTimeProblemsChecker != null)
+        {
+            realTimeProblemsChecker.updateNow();
+        }
+
         getProject(folderData);
         ILspProject project = folderData.project;
         ProjectOptions options = folderData.options;
@@ -2106,14 +2131,6 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                     {
                         //compiled compilation units won't have problems
                         continue;
-                    }
-                    
-                    if (waitForBuildFinishRunner != null
-                        && unit.equals(waitForBuildFinishRunner.getCompilationUnit())
-                        && waitForBuildFinishRunner.isRunning())
-                    {
-                        //take precedence over the real time problem checker
-                        waitForBuildFinishRunner.setCancelled();
                     }
 
                     Path unitPath = Paths.get(unit.getAbsoluteFilename());

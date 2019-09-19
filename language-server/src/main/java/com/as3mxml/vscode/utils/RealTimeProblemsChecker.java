@@ -40,27 +40,91 @@ import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.services.LanguageClient;
 
-public class WaitForBuildFinishRunner implements Runnable
+public class RealTimeProblemsChecker implements Runnable
 {
-	public WaitForBuildFinishRunner(ICompilationUnit unit, IFileSpecification fileSpec, WorkspaceFolderData folderData, LanguageClient languageClient, CompilerProblemFilter filter)
+	public RealTimeProblemsChecker(LanguageClient languageClient, CompilerProblemFilter filter)
 	{
-		this.compilationUnit = unit;
-		this.fileSpec = fileSpec;
-		this.folderData = folderData;
 		this.languageClient = languageClient;
 		this.compilerProblemFilter = filter;
 	}
 
 	public CompilerProblemFilter compilerProblemFilter;
 	public LanguageClient languageClient;
+
+	private WorkspaceFolderData pendingFolderData;
+	private IFileSpecification pendingFileSpec;
+	private ICompilationUnit pendingCompilationUnit;
+
 	private WorkspaceFolderData folderData;
 	private IFileSpecification fileSpec;
-
 	private ICompilationUnit compilationUnit;
-
-	public ICompilationUnit getCompilationUnit()
+	
+	public synchronized IFileSpecification getFileSpecification()
 	{
-		return compilationUnit;
+		return fileSpec;
+	}
+
+	public synchronized void setFileSpecification(IFileSpecification newFileSpec)
+	{
+		pendingFolderData = folderData;
+		pendingCompilationUnit = compilationUnit;
+		pendingFileSpec = newFileSpec;
+	}
+
+	public synchronized void setCompilationUnit(ICompilationUnit compilationUnit, IFileSpecification fileSpec, WorkspaceFolderData folderData)
+	{
+		if(this.compilationUnit != null && this.compilationUnit != compilationUnit)
+		{
+			pendingFolderData = folderData;
+			pendingCompilationUnit = compilationUnit;
+			pendingFileSpec = fileSpec;
+			updateNow();
+			return;
+		}
+		this.folderData = folderData;
+		this.compilationUnit = compilationUnit;
+		this.fileSpec = fileSpec;
+		pendingFolderData = null;
+		pendingCompilationUnit = null;
+		pendingFileSpec = null;
+		syntaxTreeRequest = compilationUnit.getSyntaxTreeRequest();
+		fileScopeRequest = compilationUnit.getFileScopeRequest();
+		outgoingDepsRequest = compilationUnit.getOutgoingDependenciesRequest();
+		abcBytesRequest = compilationUnit.getABCBytesRequest();
+	}
+
+	public synchronized void clear()
+	{
+		folderData = null;
+		compilationUnit = null;
+		fileSpec = null;
+		pendingFolderData = null;
+		pendingCompilationUnit = null;
+		pendingFileSpec = null;
+	}
+
+	public synchronized void updateNow()
+	{
+		try
+		{
+			if(syntaxTreeRequest != null)
+			{
+				syntaxTreeRequest.get();
+			}
+			if(fileScopeRequest != null)
+			{
+				fileScopeRequest.get();
+			}
+			if(outgoingDepsRequest != null)
+			{
+				outgoingDepsRequest.get();
+			}
+			if(abcBytesRequest != null)
+			{
+				abcBytesRequest.get();
+			}
+		}
+		catch(InterruptedException e) {}
 	}
 
 	private IRequest<ISyntaxTreeRequestResult, ICompilationUnit> syntaxTreeRequest;
@@ -68,121 +132,100 @@ public class WaitForBuildFinishRunner implements Runnable
 	private IRequest<IOutgoingDependenciesRequestResult, ICompilationUnit> outgoingDepsRequest;
 	private IRequest<IABCBytesRequestResult, ICompilationUnit> abcBytesRequest;
 
-	private boolean running = false;
-
-	public boolean isRunning()
+	private synchronized long getWaitTime()
 	{
-		return running;
-	}
-
-	private boolean changed = false;
-
-	public boolean getChanged()
-	{
-		return changed;
-	}
-
-	public void setChanged(IFileSpecification fileSpec)
-	{
-		changed = true;
-		this.fileSpec = fileSpec;
-	}
-
-	private boolean cancelled = false;
-
-	public boolean getCancelled()
-	{
-		return cancelled;
-	}
-
-	public void setCancelled()
-	{
-		if(cancelled)
+		if(compilationUnit != null)
 		{
-			//already canceled. no need to do it again.
-			return;
+			return 100;
 		}
-		cancelled = true;
-		if(changed)
-		{
-			//make sure that the workspace has the latest changes because they
-			//may have been queued up
-			changed = false;	
-			IWorkspace workspace = folderData.project.getWorkspace();
-			workspace.fileChanged(fileSpec);
-		}
-		try
-		{
-			//force the compilation unit to finish building
-			(syntaxTreeRequest = compilationUnit.getSyntaxTreeRequest()).get();
-			(fileScopeRequest = compilationUnit.getFileScopeRequest()).get();
-			(outgoingDepsRequest = compilationUnit.getOutgoingDependenciesRequest()).get();
-			(abcBytesRequest = compilationUnit.getABCBytesRequest()).get();
-		}
-		catch(InterruptedException e) {}
+		return 500;
 	}
 
 	public void run()
 	{
-		running = true;
 		while (true)
 		{
-			if (cancelled)
+			if(Thread.currentThread().isInterrupted())
 			{
 				break;
 			}
-			if (compilationUnit.getProject() == null)
-			{
-				//this compilation unit is no longer valid
-				break;
-			}
-			if (syntaxTreeRequest == null)
-			{
-				syntaxTreeRequest = compilationUnit.getSyntaxTreeRequest();
-			}
-			if (fileScopeRequest == null)
-			{
-				fileScopeRequest = compilationUnit.getFileScopeRequest();
-			}
-			if (outgoingDepsRequest == null)
-			{
-				outgoingDepsRequest = compilationUnit.getOutgoingDependenciesRequest();
-			}
-			if (abcBytesRequest == null)
-			{
-				abcBytesRequest = compilationUnit.getABCBytesRequest();
-			}
-			if(syntaxTreeRequest.isDone()
-					&& fileScopeRequest.isDone()
-					&& outgoingDepsRequest.isDone()
-					&& abcBytesRequest.isDone())
-			{
-				publishDiagnostics();
-				syntaxTreeRequest = null;
-				fileScopeRequest = null;
-				outgoingDepsRequest = null;
-				abcBytesRequest = null;
-				if(!changed)
-				{
-					break;
-				}
-				changed = false;
-				IWorkspace workspace = folderData.project.getWorkspace();
-				workspace.fileChanged(fileSpec);
-			}
+			checkForProblems();
+			long waitTime = getWaitTime();
 			try
 			{
 				//wait a short time between checks
 				//it's okay if problems are updated a little slowly
-				Thread.sleep(100);
+				Thread.sleep(waitTime);
 			}
 			catch(InterruptedException e) {}
 		}
-		running = false;
 	}
 
-	private void publishDiagnostics()
+	private synchronized void checkForProblems()
 	{
+		if (compilationUnit == null)
+		{
+			return;
+		}
+		if (compilationUnit.getProject() == null)
+		{
+			//this compilation unit is no longer valid
+			clear();
+			return;
+		}
+		if (syntaxTreeRequest == null)
+		{
+			syntaxTreeRequest = compilationUnit.getSyntaxTreeRequest();
+		}
+		if (fileScopeRequest == null)
+		{
+			fileScopeRequest = compilationUnit.getFileScopeRequest();
+		}
+		if (outgoingDepsRequest == null)
+		{
+			outgoingDepsRequest = compilationUnit.getOutgoingDependenciesRequest();
+		}
+		if (abcBytesRequest == null)
+		{
+			abcBytesRequest = compilationUnit.getABCBytesRequest();
+		}
+		if(syntaxTreeRequest.isDone()
+				&& fileScopeRequest.isDone()
+				&& outgoingDepsRequest.isDone()
+				&& abcBytesRequest.isDone())
+		{
+			publishDiagnostics();
+			syntaxTreeRequest = null;
+			fileScopeRequest = null;
+			outgoingDepsRequest = null;
+			abcBytesRequest = null;
+			if(pendingCompilationUnit != null)
+			{
+				if(pendingCompilationUnit == compilationUnit)
+				{
+					IWorkspace workspace = folderData.project.getWorkspace();
+					workspace.fileChanged(pendingFileSpec);
+				}
+				compilationUnit = pendingCompilationUnit;
+				fileSpec = pendingFileSpec;
+				folderData = pendingFolderData;
+				pendingCompilationUnit = null;
+				pendingFileSpec = null;
+				pendingFolderData = null;
+			}
+			else
+			{
+				clear();
+			}
+		}
+	}
+
+	private synchronized void publishDiagnostics()
+	{
+		if(compilationUnit == null)
+		{
+			return;
+		}
 		ArrayList<Diagnostic> diagnostics = new ArrayList<>();
 		ArrayList<ICompilerProblem> problems = new ArrayList<>();
         try
@@ -230,10 +273,6 @@ public class WaitForBuildFinishRunner implements Runnable
         PublishDiagnosticsParams publish = new PublishDiagnosticsParams();
         publish.setDiagnostics(diagnostics);
 		publish.setUri(uri.toString());
-		if (cancelled)
-		{
-			return;
-		}
 		languageClient.publishDiagnostics(publish);
 	}
 }
