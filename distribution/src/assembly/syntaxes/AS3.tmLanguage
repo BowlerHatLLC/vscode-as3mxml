@@ -260,7 +260,8 @@
 		<key>class_declaration</key>
 		<dict>
 			<key>begin</key>
-			<string>(?x) \b(class)\b \s+ ([A-Za-z0-9_\$]+|\*)</string>
+			<!-- dots are displayed in hover tooltips -->
+			<string>(?x) \b(class)\b \s+ ([\.\w]+|\*)</string>
 			<key>beginCaptures</key>
 			<dict>
 				<key>1</key>
@@ -753,7 +754,8 @@
 		<key>interface_declaration</key>
 		<dict>
 			<key>begin</key>
-			<string>(?x) \b(interface)\b \s+ ([A-Za-z0-9_\$]+)</string>
+			<!-- dots are displayed in hover tooltips -->
+			<string>(?x) \b(interface)\b \s+ ([\.\w]+)</string>
 			<key>beginCaptures</key>
 			<dict>
 				<key>1</key>
