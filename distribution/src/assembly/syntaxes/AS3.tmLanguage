@@ -260,7 +260,7 @@
 		<key>class_declaration</key>
 		<dict>
 			<key>begin</key>
-			<string>(?x) \b(class)\b \s+ ([\.\w]+)</string>
+			<string>(?x) \b(class)\b \s+ ([A-Za-z0-9_\$]+|\*)</string>
 			<key>beginCaptures</key>
 			<dict>
 				<key>1</key>
@@ -514,7 +514,7 @@
 		<key>parameters</key>
 		<dict>
 			<key>begin</key>
-			<string>(\.\.\.)?\s*([A-Za-z\_\$][A-Za-z0-9_\$]*)(?:\s*(\:)\s*(?:(?:([A-Za-z\$][A-Za-z0-9_\$]+(?:\.[A-Za-z\$][A-Za-z0-9_\$]+)*)(?:\.&lt;([A-Za-z\$][A-Za-z0-9_\$]+(?:\.[A-Za-z\$][A-Za-z0-9_\$]+)*)&gt;)?)|\*))?(?:\s*(=))?</string>
+			<string>(\.\.\.)?\s*([A-Za-z\_\$][A-Za-z0-9_\$]*)(?:\s*(\:)\s*(?:(?:([A-Za-z\$][A-Za-z0-9_\$]+(?:\.[A-Za-z\$][A-Za-z0-9_\$]+)*)(?:\.&lt;([A-Za-z\$][A-Za-z0-9_\$]+(?:\.[A-Za-z\$][A-Za-z0-9_\$]+)*)&gt;)?)|(\*)))?(?:\s*(=))?</string>
 			<key>end</key>
 			<string>,|(?=\))</string>
 			<key>beginCaptures</key>
@@ -545,6 +545,11 @@
 					<string>support.type.actionscript.3</string>
 				</dict>
 				<key>6</key>
+				<dict>
+					<key>name</key>
+					<string>support.type.actionscript.3</string>
+				</dict>
+				<key>7</key>
 				<dict>
 					<key>name</key>
 					<string>keyword.operator.actionscript.3</string>
@@ -748,7 +753,7 @@
 		<key>interface_declaration</key>
 		<dict>
 			<key>begin</key>
-			<string>(?x) \b(interface)\b \s+ ([\.\w]+)</string>
+			<string>(?x) \b(interface)\b \s+ ([A-Za-z0-9_\$]+)</string>
 			<key>beginCaptures</key>
 			<dict>
 				<key>1</key>
@@ -1245,9 +1250,14 @@
 					<key>name</key>
 					<string>support.type.actionscript.3</string>
 				</dict>
+				<key>4</key>
+				<dict>
+					<key>name</key>
+					<string>support.type.actionscript.3</string>
+				</dict>
 			</dict>
 			<key>match</key>
-			<string>(\:)\s*(?:([A-Za-z\$][A-Za-z0-9_\$]+(?:\.[A-Za-z\$][A-Za-z0-9_\$]+)*)(?:\.&lt;([A-Za-z\$][A-Za-z0-9_\$]+(?:\.[A-Za-z\$][A-Za-z0-9_\$]+)*)&gt;)?|\*)</string>
+			<string>(\:)\s*(?:([A-Za-z\$][A-Za-z0-9_\$]+(?:\.[A-Za-z\$][A-Za-z0-9_\$]+)*)(?:\.&lt;([A-Za-z\$][A-Za-z0-9_\$]+(?:\.[A-Za-z\$][A-Za-z0-9_\$]+)*)&gt;)?)|(\*)</string>
 		</dict>
 		<key>strings</key>
 		<dict>
