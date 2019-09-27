@@ -1364,52 +1364,37 @@ public class CompletionProvider
             }
             for (IDefinition definition : definitions)
             {
-                if (definition instanceof ITypeDefinition)
+                String qualifiedName = definition.getQualifiedName();
+                if (qualifiedName.equals(definition.getBaseName()))
                 {
-                    String qualifiedName = definition.getQualifiedName();
-                    if (qualifiedName.equals(definition.getBaseName()))
+                    //this definition is top-level. no import required.
+                    continue;
+                }
+                if (qualifiedName.startsWith(importName))
+                {
+                    int index = importName.lastIndexOf(".");
+                    if (index != -1)
                     {
-                        //this definition is top-level. no import required.
-                        continue;
+                        qualifiedName = qualifiedName.substring(index + 1);
                     }
-                    if (qualifiedName.startsWith(importName))
+                    index = qualifiedName.indexOf(".");
+                    if (index > 0)
                     {
-                        int index = importName.lastIndexOf(".");
-                        if (index != -1)
-                        {
-                            qualifiedName = qualifiedName.substring(index + 1);
-                        }
-                        index = qualifiedName.indexOf(".");
-                        if (index > 0)
-                        {
-                            qualifiedName = qualifiedName.substring(0, index);
-                        }
-                        CompletionItem item = new CompletionItem();
-                        item.setLabel(qualifiedName);
-                        if (definition.getBaseName().equals(qualifiedName))
-                        {
-                            ITypeDefinition typeDefinition = (ITypeDefinition) definition;
-                            if (typeDefinition instanceof IInterfaceDefinition)
-                            {
-                                item.setKind(CompletionItemKind.Interface);
-                            }
-                            else if (typeDefinition instanceof IClassDefinition)
-                            {
-                                item.setKind(CompletionItemKind.Class);
-                            }
-                            else
-                            {
-                                item.setKind(CompletionItemKind.Text);
-                            }
-                        }
-                        else
-                        {
-                            item.setKind(CompletionItemKind.Text);
-                        }
-                        if (!items.contains(item))
-                        {
-                            items.add(item);
-                        }
+                        qualifiedName = qualifiedName.substring(0, index);
+                    }
+                    CompletionItem item = new CompletionItem();
+                    item.setLabel(qualifiedName);
+                    if (definition.getBaseName().equals(qualifiedName))
+                    {
+                        item.setKind(LanguageServerCompilerUtils.getCompletionItemKindFromDefinition(definition));
+                    }
+                    else
+                    {
+                        item.setKind(CompletionItemKind.Text);
+                    }
+                    if (!items.contains(item))
+                    {
+                        items.add(item);
                     }
                 }
             }
