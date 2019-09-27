@@ -101,6 +101,7 @@ import org.apache.royale.compiler.internal.projects.RoyaleProjectConfigurator;
 import org.apache.royale.compiler.internal.targets.Target;
 import org.apache.royale.compiler.internal.tree.as.FileNode;
 import org.apache.royale.compiler.internal.workspaces.Workspace;
+import org.apache.royale.compiler.problems.FileNotFoundProblem;
 import org.apache.royale.compiler.problems.ICompilerProblem;
 import org.apache.royale.compiler.problems.InternalCompilerProblem;
 import org.apache.royale.compiler.targets.ITarget;
@@ -1713,11 +1714,11 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         }
 
         ProjectOptions projectOptions = folderData.options;
-        SyntaxFallbackProblem syntaxProblem = null;
+        ICompilerProblem syntaxProblem = null;
         if (reader == null)
         {
             //the file does not exist
-            syntaxProblem = new SyntaxFallbackProblem(path.toString(), "File not found: " + path.toAbsolutePath().toString() + ". Error checking has been disabled.");
+            syntaxProblem = new FileNotFoundProblem(path.toString());
         }
         else if (parser == null && projectOptions == null)
         {
@@ -1969,9 +1970,10 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                 continue;
             }
             boolean isConfigFile = false;
-            if (CommandLineConfigurator.SOURCE_COMMAND_LINE.equals(problemSourcePath)
-                    || defaultsPathString.equals(problemSourcePath)
-                    || (problemSourcePath.endsWith(SOURCE_CONFIG) && configPath.equals(Paths.get(problemSourcePath))))
+            if (problemSourcePath != null &&
+                    (CommandLineConfigurator.SOURCE_COMMAND_LINE.equals(problemSourcePath)
+                        || defaultsPathString.equals(problemSourcePath)
+                        || (problemSourcePath.endsWith(SOURCE_CONFIG) && configPath.equals(Paths.get(problemSourcePath)))))
             {
                 //for configuration problems that point to defaults, config.as,
                 //or the command line, the best default location to send the
@@ -2086,7 +2088,17 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                 {
                     String normalizedFile = FilenameNormalization.normalize(file);
                     Collection<ICompilationUnit> units = project.getCompilationUnits(normalizedFile);
-                    roots.addAll(units);
+                    if(units.size() == 0)
+                    {
+                        //we couldn't find a compilation unit for this file, but
+                        //we should provide some kind of fallback because it's
+                        //one of our root files
+                        checkFilePathForSyntaxProblems(Paths.get(normalizedFile), folderData, problemQuery);
+                    }
+                    else
+                    {
+                        roots.addAll(units);
+                    }
                 }
             }
         }
@@ -2114,8 +2126,8 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             ICompilationUnit openUnit = CompilerProjectUtils.findCompilationUnit(openFilePath, project);
             if (openUnit == null)
             {
-                //if there is not unit for this open file, check for
-                //simple syntax problems instead
+                //if there is no unit for this open file, check for simple
+                //syntax problems instead
                 checkFilePathForSyntaxProblems(openFilePath, folderData, problemQuery);
                 continue;
             }
@@ -2125,13 +2137,16 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         //start fresh when checking all compilation units
         folderData.includedFiles.clear();
 
+        //create a separate problem query for the reachabel compilation units
+        //because they might get cleared as new compilation units are discovered
+        ProblemQuery unitsProblemQuery = workspaceFolderDataToProblemQuery(folderData);
         List<ICompilerProblem> problems = new ArrayList<>();
         boolean continueCheckingForErrors = true;
         while (continueCheckingForErrors)
         {
             //clear it out to avoid duplicates from checking the same file
             //multiple times
-            problemQuery.clear();
+            unitsProblemQuery.clear();
             try
             {
                 for (ICompilationUnit unit : project.getReachableCompilationUnitsInSWFOrder(roots))
@@ -2183,13 +2198,13 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                             {
                                 SyntaxFallbackProblem problem = new SyntaxFallbackProblem(unitPath.toString(),
                                         "Some code intelligence features are disabled for this file. Open a workspace folder to enable all ActionScript & MXML features.");
-                                problemQuery.add(problem);
+                                unitsProblemQuery.add(problem);
                             }
                             else
                             {
                                 SyntaxFallbackProblem problem = new SyntaxFallbackProblem(unitPath.toString(),
                                         unitPath.getFileName() + " is not located in the workspace's source path. Some code intelligence features are disabled for this file.");
-                                problemQuery.add(problem);
+                                unitsProblemQuery.add(problem);
                             }
                         }
                         continue;
@@ -2202,7 +2217,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                     //we should have already built, so this will be fast
                     //if we hadn't built, we would not have all of the roots
                     checkCompilationUnitForAllProblems(unit, project, problems);
-                    problemQuery.addAll(problems);
+                    unitsProblemQuery.addAll(problems);
                     //clear for the next compilation unit
                     problems.clear();
 
@@ -2222,6 +2237,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                 //this shouldn't happen at this point, but just in case
             }
         }
+        problemQuery.addAll(unitsProblemQuery.getProblems());
     }
 
     private void checkCompilationUnitForAllProblems(ICompilationUnit unit, ILspProject project, List<ICompilerProblem> problems)
