@@ -34,6 +34,7 @@ import migrateSettings from "./utils/migrateSettings";
 import SWFDebugAdapterDescriptorFactory from "./utils/SWFDebugAdapterDescriptorFactory";
 import saveSessionPassword from "./commands/saveSessionPassword";
 import normalizeUri from "./utils/normalizeUri";
+import findQuickCompileWorkspaceFolders from "./commands/findQuickCompileWorkspaceFolders";
 
 const INVALID_SDK_ERROR = "as3mxml.sdk.editor in settings does not point to a valid SDK. Requires Apache Royale 0.9.6 or newer.";
 const MISSING_FRAMEWORK_SDK_ERROR = "You must configure an SDK to enable all ActionScript & MXML features.";
@@ -223,7 +224,13 @@ export function activate(context: vscode.ExtensionContext)
 	vscode.commands.registerCommand("as3mxml.saveSessionPassword", saveSessionPassword);
 	vscode.commands.registerCommand("as3mxml.importFlashBuilderProject", pickFlashBuilderProjectInWorkspace);
 	vscode.commands.registerCommand("as3mxml.quickCompileAndDebug", () =>
-	{	
+	{
+		let workspaceFolders = findQuickCompileWorkspaceFolders();
+		if(workspaceFolders.length === 0)
+		{
+			//no workspace folders with asconfig.json files
+			return;
+		}
 		if(!savedLanguageClient || !isLanguageClientReady)
 		{
 			pendingQuickCompileAndDebug = true;
@@ -235,6 +242,12 @@ export function activate(context: vscode.ExtensionContext)
 	});
 	vscode.commands.registerCommand("as3mxml.quickCompileAndRun", () =>
 	{	
+		let workspaceFolders = findQuickCompileWorkspaceFolders();
+		if(workspaceFolders.length === 0)
+		{
+			//no workspace folders with asconfig.json files
+			return;
+		}
 		if(!savedLanguageClient || !isLanguageClientReady)
 		{
 			pendingQuickCompileAndRun = true;

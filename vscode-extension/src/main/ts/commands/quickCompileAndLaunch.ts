@@ -19,48 +19,29 @@ import * as fs from "fs";
 import * as path from "path";
 import * as json5 from "json5";
 import findAnimate from "../utils/findAnimate";
+import findQuickCompileWorkspaceFolders from "./findQuickCompileWorkspaceFolders";
 
 const QUICK_COMPILE_MESSAGE = "Building ActionScript & MXML project...";
 const CANNOT_LAUNCH_QUICK_COMPILE_FAILED_ERROR = "Quick compile failed with errors. Launch cancelled.";
 
 export default function quickCompileAndLaunch(debug: boolean)
 {
-	if(vscode.workspace.workspaceFolders)
+	let workspaceFolders = findQuickCompileWorkspaceFolders();
+	if(workspaceFolders.length === 0)
 	{
-		let workspaceFolders = vscode.workspace.workspaceFolders.filter((folder) =>
+		return;
+	}
+	else if(workspaceFolders.length === 1)
+	{
+		quickCompileAndDebugWorkspaceFolder(workspaceFolders[0], debug);
+	}
+	else
+	{
+		let items = workspaceFolders.map((folder): vscode.QuickPickItem =>
 		{
-			let asconfigPath = path.resolve(folder.uri.fsPath, "asconfig.json");
-			if(!fs.existsSync(asconfigPath) || fs.statSync(asconfigPath).isDirectory())
-			{
-				return false;
-			}
-			try
-			{
-				let contents = fs.readFileSync(asconfigPath, "utf8");
-				let result = json5.parse(contents);
-				if ("type" in result && result.type !== "app")
-				{
-					return false;
-				}
-			}
-			catch(error)
-			{
-				return false;
-			}
-			return true;
-		});
-		if(workspaceFolders.length === 1)
-		{
-			quickCompileAndDebugWorkspaceFolder(workspaceFolders[0], debug);
-		}
-		else
-		{
-			let items = workspaceFolders.map((folder): vscode.QuickPickItem =>
-			{
-				return { label: folder.name, description: folder.uri.fsPath, uri: folder.uri } as any;
-			})
-			vscode.window.showQuickPick(items).then(result => quickCompileAndDebugWorkspaceFolder(result, debug));
-		}
+			return { label: folder.name, description: folder.uri.fsPath, uri: folder.uri } as any;
+		})
+		vscode.window.showQuickPick(items).then(result => quickCompileAndDebugWorkspaceFolder(result, debug));
 	}
 }
 
