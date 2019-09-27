@@ -66,27 +66,6 @@
 		],
 		"description": "Interface Definition"
 	},
-	"Return false": {
-		"prefix": "ret0",
-		"body": [
-			"return false;$0"
-		],
-		"description": "Return false"
-	},
-	"Return true": {
-		"prefix": "ret1",
-		"body": [
-			"return true;$0"
-		],
-		"description": "Return true"
-	},
-	"Return statement": {
-		"prefix": "ret",
-		"body": [
-			"return $1;$0"
-		],
-		"description": "Return statement"
-	},
 	"Define a full property": {
 		"prefix": "prop",
 		"body": [
