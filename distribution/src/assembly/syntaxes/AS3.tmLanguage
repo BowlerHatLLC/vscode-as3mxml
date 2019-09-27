@@ -514,7 +514,7 @@
 		<key>parameters</key>
 		<dict>
 			<key>begin</key>
-			<string>(\.\.\.)?\s*([A-Za-z0-9_\$]+)(?:\s*(\:)\s*([A-Z\$][A-Za-z0-9_\$]+))?(?:\s*(=))?</string>
+			<string>(\.\.\.)?\s*([A-Za-z\_\$][A-Za-z0-9_\$]*)(?:\s*(\:)\s*(?:(?:([A-Za-z\$][A-Za-z0-9_\$]+(?:\.[A-Za-z\$][A-Za-z0-9_\$]+)*)(?:\.&lt;([A-Za-z\$][A-Za-z0-9_\$]+(?:\.[A-Za-z\$][A-Za-z0-9_\$]+)*)&gt;)?)|\*))?(?:\s*(=))?</string>
 			<key>end</key>
 			<string>,|(?=\))</string>
 			<key>beginCaptures</key>
@@ -537,9 +537,14 @@
 				<key>4</key>
 				<dict>
 					<key>name</key>
-					<string>support.class.actionscript.3</string>
+					<string>support.type.actionscript.3</string>
 				</dict>
 				<key>5</key>
+				<dict>
+					<key>name</key>
+					<string>support.type.actionscript.3</string>
+				</dict>
+				<key>6</key>
 				<dict>
 					<key>name</key>
 					<string>keyword.operator.actionscript.3</string>
@@ -1230,19 +1235,19 @@
 					<key>name</key>
 					<string>keyword.operator.actionscript.3</string>
 				</dict>
-				<key>3</key>
+				<key>2</key>
 				<dict>
 					<key>name</key>
 					<string>support.type.actionscript.3</string>
 				</dict>
-				<key>5</key>
+				<key>3</key>
 				<dict>
 					<key>name</key>
 					<string>support.type.actionscript.3</string>
 				</dict>
 			</dict>
 			<key>match</key>
-			<string>(\:)\s*(([\.\w]+)(\.&lt;([\.\w]+)&gt;)?|\*)</string>
+			<string>(\:)\s*(?:([A-Za-z\$][A-Za-z0-9_\$]+(?:\.[A-Za-z\$][A-Za-z0-9_\$]+)*)(?:\.&lt;([A-Za-z\$][A-Za-z0-9_\$]+(?:\.[A-Za-z\$][A-Za-z0-9_\$]+)*)&gt;)?|\*)</string>
 		</dict>
 		<key>strings</key>
 		<dict>
