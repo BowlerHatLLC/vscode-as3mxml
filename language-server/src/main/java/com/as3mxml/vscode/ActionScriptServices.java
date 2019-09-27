@@ -2062,18 +2062,22 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         ILspProject project = folderData.project;
 
         Set<ICompilationUnit> roots = new HashSet<>();
-        Target target = null;
         try
         {
             if(folderData.options.type.equals(ProjectType.LIB))
             {
-                target = (Target) project.createSWCTarget(project.getTargetSettings(), null);
+                Target target = (Target) project.createSWCTarget(project.getTargetSettings(), null);
+                roots.addAll(target.getRootedCompilationUnits().getUnits());
             }
             else //app
             {
-                target = (Target) project.createSWFTarget(project.getTargetSettings(), null);
+                for(String file : folderData.options.files)
+                {
+                    String normalizedFile = FilenameNormalization.normalize(file);
+                    Collection<ICompilationUnit> units = project.getCompilationUnits(normalizedFile);
+                    roots.addAll(units);
+                }
             }
-            roots.addAll(target.getRootedCompilationUnits().getUnits());
         }
         catch(Exception e)
         {
