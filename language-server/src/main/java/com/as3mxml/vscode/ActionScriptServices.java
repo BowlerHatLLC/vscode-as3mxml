@@ -143,7 +143,9 @@ import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.LocationLink;
 import org.eclipse.lsp4j.MessageParams;
 import org.eclipse.lsp4j.MessageType;
+import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
+import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.ReferenceParams;
 import org.eclipse.lsp4j.RenameParams;
 import org.eclipse.lsp4j.SignatureHelp;
@@ -178,6 +180,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     private static final String ROYALE_ASJS_RELATIVE_PATH_CHILD = "./royale-asjs";
     private static final String FRAMEWORKS_RELATIVE_PATH_CHILD = "./frameworks";
     private static final String SOURCE_DEFAULTS = "defaults";
+    private static final String SOURCE_CONFIG = "config.as";
 
     private ActionScriptLanguageClient languageClient;
     private IProjectConfigStrategyFactory projectConfigStrategyFactory;
@@ -1645,13 +1648,18 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         folderData.options = currentConfig.getOptions();
     }
 
-    private void addCompilerProblem(ICompilerProblem problem, PublishDiagnosticsParams publish)
+    private void addCompilerProblem(ICompilerProblem problem, PublishDiagnosticsParams publish, boolean isConfigFile)
     {
         if (!compilerProblemFilter.isAllowed(problem))
         {
             return;
         }
         Diagnostic diagnostic = LanguageServerCompilerUtils.getDiagnosticFromCompilerProblem(problem);
+        if(isConfigFile)
+        {
+            //clear the range because it isn't relevant
+            diagnostic.setRange(new Range(new Position(0, 0), new Position(0, 0)));
+        }
         List<Diagnostic> diagnostics = publish.getDiagnostics();
         diagnostics.add(diagnostic);
     }
@@ -1921,20 +1929,18 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             //don't check compilation units for problems if the project itself
             //has problems. the user should fix those first.
             Collection<ICompilerProblem> fatalProblems = project.getFatalProblems();
-            
-            //if we found some fatal problems at the project level, don't bother
-            //checking anything else for problems
-            if (fatalProblems == null || fatalProblems.size() == 0)
-            {
-                fatalProblems = project.getProblems();
-            }
-            
             if(fatalProblems != null)
             {
                 problemQuery.addAll(fatalProblems);
             }
+            
+            problemQuery.addAll(project.getProblems());
+            
+            Collection<ICompilerProblem> collectedProblems = new ArrayList<>();
+            project.collectProblems(collectedProblems);
+            problemQuery.addAll(collectedProblems);
 
-            if(fatalProblems == null || fatalProblems.size() == 0)
+            if(!problemQuery.hasErrors())
             {
                 checkReachableCompilationUnitsForErrors(problemQuery, folderData);
             }
@@ -1950,6 +1956,8 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     {
         Path folderPath = LanguageServerCompilerUtils.getPathFromLanguageServerURI(folderData.folder.getUri());
         String defaultsPathString = folderPath.resolve(SOURCE_DEFAULTS).toString();
+        //the drive letter may not match up, so just do a lowercase check
+        Path configPath = folderPath.resolve(SOURCE_CONFIG);
         Map<URI, PublishDiagnosticsParams> filesMap = new HashMap<>();
         for (ICompilerProblem problem : problemQuery.getFilteredProblems())
         {
@@ -1960,14 +1968,17 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                 //skip files that are included in other files
                 continue;
             }
+            boolean isConfigFile = false;
             if (CommandLineConfigurator.SOURCE_COMMAND_LINE.equals(problemSourcePath)
-                    || defaultsPathString.equals(problemSourcePath))
+                    || defaultsPathString.equals(problemSourcePath)
+                    || (problemSourcePath.endsWith(SOURCE_CONFIG) && configPath.equals(Paths.get(problemSourcePath))))
             {
-                //for configuration problems that point to defaults or the
-                //command line, the best default location to send the user is
-                //probably to the config file (like asconfig.json in Visual
-                //Studio Code)
+                //for configuration problems that point to defaults, config.as,
+                //or the command line, the best default location to send the
+                //user is probably to the project's config file (like
+                //asconfig.json in Visual Studio Code)
                 problemSourcePath = folderData.config.getDefaultConfigurationProblemPath();
+                isConfigFile = true;
             }
             if (problemSourcePath == null)
             {
@@ -1983,7 +1994,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             }
             PublishDiagnosticsParams params = filesMap.get(uri);
             problemTracker.trackFileWithProblems(uri);
-            addCompilerProblem(problem, params);
+            addCompilerProblem(problem, params, isConfigFile);
         }
         if (releaseStale)
         {

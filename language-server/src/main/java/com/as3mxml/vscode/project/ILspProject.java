@@ -33,4 +33,5 @@ public interface ILspProject extends IRoyaleProject
 	public ITargetSettings getTargetSettings();
 	public void setTargetSettings(ITargetSettings value);
 	public String getContainerInterface();
+	public void collectProblems(Collection<ICompilerProblem> problems);
 }
