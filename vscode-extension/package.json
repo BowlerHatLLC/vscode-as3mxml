@@ -184,6 +184,9 @@
         "id": "jsonc",
         "filenames": [
           "asconfig.json"
+        ],
+        "filenamePatterns": [
+          "asconfig.*.json"
         ]
       },
       {
@@ -212,6 +215,10 @@
     "jsonValidation": [
       {
         "fileMatch": "asconfig.json",
+        "url": "./schemas/asconfig.schema.json"
+      },
+      {
+        "fileMatch": "asconfig.*.json",
         "url": "./schemas/asconfig.schema.json"
       }
     ],
