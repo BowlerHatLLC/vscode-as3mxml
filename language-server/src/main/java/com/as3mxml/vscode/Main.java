@@ -18,6 +18,7 @@ package com.as3mxml.vscode;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.net.Socket;
 
 import com.as3mxml.vscode.project.ASConfigProjectConfigStrategy;
@@ -62,8 +63,21 @@ public class Main
             }
             ASConfigProjectConfigStrategyFactory configFactory = new ASConfigProjectConfigStrategyFactory();
             ActionScriptLanguageServer server = new ActionScriptLanguageServer(configFactory);
-            Launcher<ActionScriptLanguageClient> launcher = Launcher.createLauncher(
-                server, ActionScriptLanguageClient.class, inputStream, outputStream);
+            
+            //to enable LSP inspector output on System.err, change to true
+            boolean lspInspectorTrace = false;
+            Launcher<ActionScriptLanguageClient> launcher = null;
+            if(lspInspectorTrace)
+            {
+                launcher = Launcher.createLauncher(
+                    server, ActionScriptLanguageClient.class, inputStream, outputStream, true, new PrintWriter(System.err));
+            }
+            else
+            {
+                launcher = Launcher.createLauncher(
+                    server, ActionScriptLanguageClient.class, inputStream, outputStream);
+            }
+
             server.connect(launcher.getRemoteProxy());
             launcher.startListening();
         }
