@@ -1107,32 +1107,14 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                 List<WorkspaceFolderData> allFolderData = workspaceFolderManager.getAllWorkspaceFolderDataForSWCFile(changedPath);
                 if (allFolderData.size() > 0)
                 {
-                    boolean swcConfigChanged = false;
-                    IFileSpecification swcFileSpec = fileTracker.getFileSpecification(normalizedChangedPathAsString);
-                    if (changeType.equals(FileChangeType.Deleted))
+                    //for some reason, simply calling fileAdded(),
+                    //fileRemoved(), or fileChanged() doesn't work properly for
+                    //SWC files.
+                    //changing the project configuration will force the
+                    //change to be detected, so let's do that manually.
+                    for (WorkspaceFolderData folderData : allFolderData)
                     {
-                        swcConfigChanged = true;
-                        compilerWorkspace.fileRemoved(swcFileSpec);
-                    }
-                    else if (changeType.equals(FileChangeType.Created))
-                    {
-                        swcConfigChanged = true;
-                        compilerWorkspace.fileAdded(swcFileSpec);
-                    }
-                    else if (changeType.equals(FileChangeType.Changed))
-                    {
-                        compilerWorkspace.fileChanged(swcFileSpec);
-                    }
-                    if(swcConfigChanged)
-                    {
-                        //for some reason, simply calling fileAdded() or
-                        //fileRemoved() is not enough for SWC files.
-                        //changing the project configuration will force the
-                        //change to be detected, so let's do that manually.
-                        for (WorkspaceFolderData folderData : allFolderData)
-                        {
-                            folderData.config.forceChanged();
-                        }
+                        folderData.config.forceChanged();
                     }
                     foldersToCheck.addAll(allFolderData);
                 }
@@ -2150,107 +2132,88 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         //start fresh when checking all compilation units
         folderData.includedFiles.clear();
 
-        //create a separate problem query for the reachabel compilation units
-        //because they might get cleared as new compilation units are discovered
-        ProblemQuery unitsProblemQuery = workspaceFolderDataToProblemQuery(folderData);
         List<ICompilerProblem> problems = new ArrayList<>();
-        boolean continueCheckingForErrors = true;
-        while (continueCheckingForErrors)
+        List<ICompilationUnit> reachableUnits = new ArrayList<>();
+        //there shouldn't be any concurrent modification exceptions when looping
+        //over the reachable units, but to be safe, copy all of the compilation
+        //units to a new collection
+        reachableUnits.addAll(project.getReachableCompilationUnitsInSWFOrder(roots));
+        for (ICompilationUnit unit : reachableUnits)
         {
-            //clear it out to avoid duplicates from checking the same file
-            //multiple times
-            unitsProblemQuery.clear();
-            try
+            if (unit == null)
             {
-                for (ICompilationUnit unit : project.getReachableCompilationUnitsInSWFOrder(roots))
-                {
-                    if (unit == null)
-                    {
-                        continue;
-                    }
-                    
-                    UnitType unitType = unit.getCompilationUnitType();
-                    if (!UnitType.AS_UNIT.equals(unitType) && !UnitType.MXML_UNIT.equals(unitType))
-                    {
-                        //compiled compilation units won't have problems
-                        continue;
-                    }
-
-                    Path unitPath = Paths.get(unit.getAbsoluteFilename());
-                    URI unitUri = unitPath.toUri();
-                    if(notOnSourcePathSet.contains(unitUri))
-                    {
-                        //if the file was not on the project's source path, clear out any
-                        //errors that might have existed previously
-                        notOnSourcePathSet.remove(unitUri);
+                continue;
+            }
             
-                        PublishDiagnosticsParams publish = new PublishDiagnosticsParams();
-                        publish.setDiagnostics(new ArrayList<>());
-                        publish.setUri(unitUri.toString());
-                        if (languageClient != null)
-                        {
-                            languageClient.publishDiagnostics(publish);
-                        }
-                    }
-
-                    //we don't check for errors in the fallback project
-                    if (folderData.equals(workspaceFolderManager.getFallbackFolderData()))
-                    {
-                        //normally, we look for included files after checking
-                        //for errors, but since we're not checking for errors
-                        //do it here instead
-                        CompilationUnitUtils.findIncludedFiles(unit, folderData.includedFiles);
-                        
-                        //there's a configuration setting that determines if we
-                        //warn the user that a file is outside of the project's
-                        //source path
-                        if (showFileOutsideSourcePath)
-                        {
-                            notOnSourcePathSet.add(unitUri);
-                            if(workspaceFolderManager.getWorkspaceFolders().size() == 0)
-                            {
-                                SyntaxFallbackProblem problem = new SyntaxFallbackProblem(unitPath.toString(),
-                                        "Some code intelligence features are disabled for this file. Open a workspace folder to enable all ActionScript & MXML features.");
-                                unitsProblemQuery.add(problem);
-                            }
-                            else
-                            {
-                                SyntaxFallbackProblem problem = new SyntaxFallbackProblem(unitPath.toString(),
-                                        unitPath.getFileName() + " is not located in the workspace's source path. Some code intelligence features are disabled for this file.");
-                                unitsProblemQuery.add(problem);
-                            }
-                        }
-                        continue;
-                    }
-
-                    //reuse the existing list so that we don't allocate a list
-                    //for every compilation unit
-                    problems.clear();
-
-                    //we should have already built, so this will be fast
-                    //if we hadn't built, we would not have all of the roots
-                    checkCompilationUnitForAllProblems(unit, project, problems);
-                    unitsProblemQuery.addAll(problems);
-                    //clear for the next compilation unit
-                    problems.clear();
-
-                    //just to be safe, find all of the included files
-                    //after we've checked for problems
-                    CompilationUnitUtils.findIncludedFiles(unit, folderData.includedFiles);
-                }
-                continueCheckingForErrors = false;
-            }
-            catch (ConcurrentModificationException e)
+            UnitType unitType = unit.getCompilationUnitType();
+            if (!UnitType.AS_UNIT.equals(unitType) && !UnitType.MXML_UNIT.equals(unitType))
             {
-                //when we finished building one of the compilation
-                //units, more were added to the collection, so we need
-                //to start over because we can't iterate over a modified
-                //collection.
-
-                //this shouldn't happen at this point, but just in case
+                //compiled compilation units won't have problems
+                continue;
             }
+
+            Path unitPath = Paths.get(unit.getAbsoluteFilename());
+            URI unitUri = unitPath.toUri();
+            if(notOnSourcePathSet.contains(unitUri))
+            {
+                //if the file was not on the project's source path, clear out any
+                //errors that might have existed previously
+                notOnSourcePathSet.remove(unitUri);
+    
+                PublishDiagnosticsParams publish = new PublishDiagnosticsParams();
+                publish.setDiagnostics(new ArrayList<>());
+                publish.setUri(unitUri.toString());
+                if (languageClient != null)
+                {
+                    languageClient.publishDiagnostics(publish);
+                }
+            }
+
+            //we don't check for errors in the fallback project
+            if (folderData.equals(workspaceFolderManager.getFallbackFolderData()))
+            {
+                //normally, we look for included files after checking
+                //for errors, but since we're not checking for errors
+                //do it here instead
+                CompilationUnitUtils.findIncludedFiles(unit, folderData.includedFiles);
+                
+                //there's a configuration setting that determines if we
+                //warn the user that a file is outside of the project's
+                //source path
+                if (showFileOutsideSourcePath)
+                {
+                    notOnSourcePathSet.add(unitUri);
+                    if(workspaceFolderManager.getWorkspaceFolders().size() == 0)
+                    {
+                        SyntaxFallbackProblem problem = new SyntaxFallbackProblem(unitPath.toString(),
+                                "Some code intelligence features are disabled for this file. Open a workspace folder to enable all ActionScript & MXML features.");
+                        problemQuery.add(problem);
+                    }
+                    else
+                    {
+                        SyntaxFallbackProblem problem = new SyntaxFallbackProblem(unitPath.toString(),
+                                unitPath.getFileName() + " is not located in the workspace's source path. Some code intelligence features are disabled for this file.");
+                        problemQuery.add(problem);
+                    }
+                }
+                continue;
+            }
+
+            //reuse the existing list so that we don't allocate a list
+            //for every compilation unit
+            problems.clear();
+
+            //we should have already built, so this will be fast
+            //if we hadn't built, we would not have all of the roots
+            checkCompilationUnitForAllProblems(unit, project, problems);
+            problemQuery.addAll(problems);
+            //clear for the next compilation unit
+            problems.clear();
+
+            //just to be safe, find all of the included files
+            //after we've checked for problems
+            CompilationUnitUtils.findIncludedFiles(unit, folderData.includedFiles);
         }
-        problemQuery.addAll(unitsProblemQuery.getProblems());
     }
 
     private void checkCompilationUnitForAllProblems(ICompilationUnit unit, ILspProject project, List<ICompilerProblem> problems)
