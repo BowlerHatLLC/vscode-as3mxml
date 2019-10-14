@@ -6,7 +6,7 @@
 
 - Problems: Fixed issue where an error containing a Java stack trace was sometimes displayed after a _.swc_ file was changed on the file system.
 - Problems: Fixed issue where an error containing a Java stack trace was displayed when the `output` compiler option was missing in a library project.
-- Problems: Fixed issue where no rrors were displayed if certain required compiler options were missing.
+- Problems: Fixed issue where no errors were displayed if certain required compiler options were missing.
 
 ## v0.23.0
 
