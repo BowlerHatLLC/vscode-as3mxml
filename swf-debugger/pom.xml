@@ -21,7 +21,7 @@ limitations under the License.
 	<parent>
 		<artifactId>vscode-as3mxml</artifactId>
 		<groupId>com.as3mxml.vscode</groupId>
-    	<version>0.23.1</version>
+    	<version>0.23.2</version>
 	</parent>
 
 	<groupId>com.as3mxml.vscode</groupId>
@@ -72,7 +72,7 @@ limitations under the License.
 		<dependency>
 			<groupId>org.apache.royale.compiler</groupId>
 			<artifactId>debugger</artifactId>
-			<version>0.9.6-SNAPSHOT</version>
+			<version>0.9.6</version>
 			<scope>provided</scope>
 		</dependency>
 	</dependencies>

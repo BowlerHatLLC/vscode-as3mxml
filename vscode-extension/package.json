@@ -2,7 +2,7 @@
   "name": "vscode-nextgenas",
   "displayName": "ActionScript & MXML",
   "description": "Language support for ActionScript and MXML",
-  "version": "0.23.1",
+  "version": "0.23.2",
   "publisher": "bowlerhatllc",
   "homepage": "https://as3mxml.com/",
   "repository": {

@@ -1,5 +1,11 @@
 # ActionScript & MXML for Visual Studio Code Changelog
 
+### v0.23.2
+
+### Fixed Issues
+
+- Dependencies: Fixed issue that language server was built with nightly version of the Apache Royale compiler instead of v0.9.6. The nightly version had a bug that caused code intelligence to freeze.
+
 ### v0.23.1
 
 ### Fixed Issues
