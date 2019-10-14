@@ -1861,7 +1861,9 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                 ITargetSettings targetSettings = configurator.getTargetSettings(targetType);
                 if (targetSettings == null)
                 {
-                    System.err.println("Failed to get compile settings for +configname=" + projectOptions.config + ".");
+                    // calling getTargetSettings() can add more configuration
+                    // problems that didn't exist above
+                    configProblems.addAll(configurator.getConfigurationProblems());
                     configurator = null;
                 }
                 else
