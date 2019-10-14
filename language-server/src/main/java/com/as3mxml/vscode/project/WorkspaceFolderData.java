@@ -17,16 +17,13 @@ package com.as3mxml.vscode.project;
 
 import java.nio.file.Path;
 import java.nio.file.WatchKey;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
 import com.as3mxml.vscode.utils.ProblemTracker;
 
 import org.apache.royale.compiler.internal.projects.RoyaleProjectConfigurator;
-import org.apache.royale.compiler.units.IInvisibleCompilationUnit;
 import org.eclipse.lsp4j.WorkspaceFolder;
 
 public class WorkspaceFolderData
@@ -44,7 +41,6 @@ public class WorkspaceFolderData
 	//needed for ProblemQuery filtering
 	public RoyaleProjectConfigurator configurator;
 	public Map<WatchKey, Path> sourceOrLibraryPathWatchKeys = new HashMap<>();
-	public List<IInvisibleCompilationUnit> invisibleUnits = new ArrayList<>();
     public ProblemTracker codeProblemTracker = new ProblemTracker();
 	public ProblemTracker configProblemTracker = new ProblemTracker();
     public Map<String,IncludeFileData> includedFiles = new HashMap<>();
