@@ -92,6 +92,7 @@ import org.apache.royale.compiler.clients.problems.ProblemQuery;
 import org.apache.royale.compiler.config.CommandLineConfigurator;
 import org.apache.royale.compiler.config.Configuration;
 import org.apache.royale.compiler.config.ICompilerProblemSettings;
+import org.apache.royale.compiler.config.ICompilerSettingsConstants;
 import org.apache.royale.compiler.filespecs.IFileSpecification;
 import org.apache.royale.compiler.internal.parsing.as.ASParser;
 import org.apache.royale.compiler.internal.parsing.as.ASToken;
@@ -104,6 +105,7 @@ import org.apache.royale.compiler.internal.workspaces.Workspace;
 import org.apache.royale.compiler.problems.FileNotFoundProblem;
 import org.apache.royale.compiler.problems.ICompilerProblem;
 import org.apache.royale.compiler.problems.InternalCompilerProblem;
+import org.apache.royale.compiler.problems.MissingRequirementConfigurationProblem;
 import org.apache.royale.compiler.targets.ITarget;
 import org.apache.royale.compiler.targets.ITargetSettings;
 import org.apache.royale.compiler.tree.as.IASNode;
@@ -1840,6 +1842,15 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             //certain values in additionalOptions in asconfig.json
             if(configuration != null)
             {
+                if(projectOptions.type.equals(ProjectType.LIB))
+                {
+                    String output = configuration.getOutput();
+                    if(output == null || output.length() == 0)
+                    {
+                        configProblems.add(new MissingRequirementConfigurationProblem(ICompilerSettingsConstants.OUTPUT_VAR));
+                        result = false;
+                    }
+                }
                 configProblems.addAll(configurator.getConfigurationProblems());
             }
             if (!result)
