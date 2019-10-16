@@ -163,7 +163,7 @@ public class DeviceInstallUtils
 			options.add(adbPath.toString());
 			options.add("forward");
 			options.add("--remove");
-			options.add(Integer.toString(port));
+			options.add("tcp:" + Integer.toString(port));
 		}
 		File cwd = workspacePath.toFile();
 		try
