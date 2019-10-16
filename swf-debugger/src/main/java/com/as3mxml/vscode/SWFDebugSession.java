@@ -720,10 +720,10 @@ public class SWFDebugSession extends DebugSession
         SWFAttachRequestArguments swfArgs = (SWFAttachRequestArguments) args;
         forwardedPortPlatform = null;
         forwardedPort = -1;
+        if(swfArgs.platform != null)
         {
             Path workspacePath = Paths.get(System.getProperty(WORKSPACE_PROPERTY));
             if(swfArgs.bundle != null)
-            if(swfArgs.platform != null)
             {
                 sendOutputEvent("Preparing to install Adobe AIR application...\n");
             }
