@@ -720,15 +720,41 @@ public class SWFDebugSession extends DebugSession
         SWFAttachRequestArguments swfArgs = (SWFAttachRequestArguments) args;
         forwardedPortPlatform = null;
         forwardedPort = -1;
-        if(swfArgs.platform != null)
         {
-            if(!installOnDevice(swfArgs.platform, swfArgs.connect, swfArgs.port))
+            Path workspacePath = Paths.get(System.getProperty(WORKSPACE_PROPERTY));
+            if(swfArgs.bundle != null)
+            if(swfArgs.platform != null)
+            {
+                sendOutputEvent("Preparing to install Adobe AIR application...\n");
+            }
+            if(swfArgs.applicationID != null
+                    && swfArgs.bundle != null //don't uninstall unless also installing
+                    && !uninstallApp(workspacePath, swfArgs.platform, swfArgs.applicationID))
+            {
+                response.success = false;
+                sendResponse(response);
+                return;
+            }
+            if(swfArgs.bundle != null && !installApp(workspacePath, swfArgs.platform, Paths.get(swfArgs.bundle)))
+            {
+                response.success = false;
+                sendResponse(response);
+                return;
+            }
+            if(swfArgs.connect && !forwardPort(workspacePath, swfArgs.platform, swfArgs.port))
+            {
+                response.success = false;
+                sendResponse(response);
+                return;
+            }
+            if(!launchApp(workspacePath, adtPath, swfArgs.platform, swfArgs.applicationID))
             {
                 response.success = false;
                 sendResponse(response);
                 return;
             }
         }
+        
         boolean success = attach(response, swfArgs);
         if(!success)
         {
@@ -743,28 +769,8 @@ public class SWFDebugSession extends DebugSession
         sendEvent(new OutputEvent(body));
     }
 
-    private boolean installOnDevice(String platform, boolean connect, int port)
+    private boolean uninstallApp(Path workspacePath, String platform, String applicationID)
     {
-        sendOutputEvent("Preparing to install Adobe AIR application...\n");
-        Path workspacePath = Paths.get(System.getProperty(WORKSPACE_PROPERTY));
-        String applicationID = DeviceInstallUtils.findApplicationID(workspacePath, platform);
-        if(applicationID == null)
-        {
-            OutputEvent.OutputBody body = new OutputEvent.OutputBody();
-            body.category = "stderr";
-            body.output = "Failed to debug SWF. Error reading application <id> in application descriptor for platform \"" + platform + "\".\n";
-            sendEvent(new OutputEvent(body));
-            return false;
-        }
-        Path outputPath = DeviceInstallUtils.findOutputPath(platform, workspacePath);
-        if(outputPath == null)
-        {
-            OutputEvent.OutputBody body = new OutputEvent.OutputBody();
-            body.category = "stderr";
-            body.output = "Failed to debug SWF. Error reading output path in asconfig.json for platform \"" + platform + "\".\n";
-            sendEvent(new OutputEvent(body));
-            return false;
-        }
         DeviceCommandResult uninstallResult = DeviceInstallUtils.runUninstallCommand(platform, applicationID, workspacePath, adtPath);
         if(uninstallResult.error)
         {
@@ -774,8 +780,13 @@ public class SWFDebugSession extends DebugSession
             sendEvent(new OutputEvent(body));
             return false;
         }
+        return true;
+    }
+
+    private boolean installApp(Path workspacePath, String platform, Path bundlePath)
+    {
         sendOutputEvent("Installing Adobe AIR application...\n");
-        DeviceCommandResult installResult = DeviceInstallUtils.runInstallCommand(platform, outputPath, workspacePath, adtPath);
+        DeviceCommandResult installResult = DeviceInstallUtils.runInstallCommand(platform, bundlePath, workspacePath, adtPath);
         if(installResult.error)
         {
             OutputEvent.OutputBody body = new OutputEvent.OutputBody();
@@ -784,25 +795,38 @@ public class SWFDebugSession extends DebugSession
             sendEvent(new OutputEvent(body));
             return false;
         }
-        if(connect)
+        return true;
+    }
+
+    private boolean forwardPort(Path workspacePath, String platform, int port)
+    {
+        sendOutputEvent("Forwarding port " + port + " over USB...\n");
+        DeviceCommandResult forwardPortResult = DeviceInstallUtils.forwardPortCommand(platform, port, workspacePath, adbPath, idbPath);
+        if(forwardPortResult.error)
         {
-            sendOutputEvent("Forwarding port " + port + " over USB...\n");
-            DeviceCommandResult forwardPortResult = DeviceInstallUtils.forwardPortCommand(platform, port, workspacePath, adbPath, idbPath);
-            if(forwardPortResult.error)
-            {
-                OutputEvent.OutputBody body = new OutputEvent.OutputBody();
-                body.category = "stderr";
-                body.output = forwardPortResult.message + "\n";
-                sendEvent(new OutputEvent(body));
-                return false;
-            }
-            forwardedPort = port;
-            forwardedPortPlatform = platform;
+            OutputEvent.OutputBody body = new OutputEvent.OutputBody();
+            body.category = "stderr";
+            body.output = forwardPortResult.message + "\n";
+            sendEvent(new OutputEvent(body));
+            return false;
         }
+        forwardedPort = port;
+        forwardedPortPlatform = platform;
+        return true;
+    }
+
+    private boolean launchApp(Path workspacePath, Path adtPath, String platform, String applicationID)
+    {
         if(platform.equals(PLATFORM_IOS))
         {
             //ADT can't launch an iOS application automatically
             sendOutputEvent("\033[0;95mDebugger ready to attach. You must launch your application manually on the iOS device.\u001B[0m\n");
+            return true;
+        }
+        if(applicationID == null)
+        {
+            //ADT can't launch an Android application automatically with an ID
+            sendOutputEvent("\033[0;95mDebugger ready to attach. You must launch your application manually on the Android device.\u001B[0m\n");
             return true;
         }
         sendOutputEvent("Launching Adobe AIR application on device...\n");

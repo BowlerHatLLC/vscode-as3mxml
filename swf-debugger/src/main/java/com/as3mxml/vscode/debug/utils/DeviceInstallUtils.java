@@ -20,22 +20,11 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.ProcessBuilder.Redirect;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 
 public class DeviceInstallUtils
 {
-	private static final String ASCONFIG_JSON = "asconfig.json";
-	private static final Pattern idPattern = Pattern.compile("<id>([\\w+\\.]+)<\\/id>");
-
 	public static class DeviceCommandResult
 	{
 		public DeviceCommandResult(boolean error)
@@ -51,132 +40,6 @@ public class DeviceInstallUtils
 
 		public boolean error;
 		public String message;
-	}
-
-	public static String findApplicationID(Path workspacePath, String platform)
-	{
-		Path asconfigPath = workspacePath.resolve(ASCONFIG_JSON);
-		if(!asconfigPath.toFile().exists())
-		{
-			return null;
-		}
-		String asconfigJsonContents = null;
-		try
-		{
-			asconfigJsonContents = new String(Files.readAllBytes(asconfigPath));
-		}
-		catch(IOException e)
-		{
-			return null;
-		}
-		Path applicationPath = null;
-		try
-		{
-			JsonParser parser = new JsonParser();
-			JsonObject asconfigJSON = parser.parse(asconfigJsonContents).getAsJsonObject();
-			String application = null;
-			if(asconfigJSON.has("application"))
-			{
-				JsonElement applicationJSON = asconfigJSON.get("application");
-				if(applicationJSON.isJsonObject())
-				{
-					JsonObject applicationObject = applicationJSON.getAsJsonObject();
-					//if it's an object, and we're packaging an AIR app, we need to
-					//grab the descriptor for the platform we're targeting
-					//we can ignore the rest
-					if(applicationObject.has(platform))
-					{
-						application = applicationObject.get(platform).getAsString();
-					}
-				}
-				else
-				{
-					//if it's a string, just use it as is for all platforms
-					application = applicationJSON.getAsString();
-				}
-			}
-			if(application == null)
-			{
-				return null;
-			}
-			applicationPath = Paths.get(application);
-			if(!applicationPath.isAbsolute())
-			{
-				applicationPath = workspacePath.resolve(application);
-			}
-		}
-		catch(Exception e)
-		{
-			return null;
-		}
-		if(applicationPath == null)
-		{
-			return null;
-		}
-		String appDescriptorContents = null;
-		try
-		{
-			appDescriptorContents = new String(Files.readAllBytes(applicationPath));
-		}
-		catch(IOException e)
-		{
-			return null;
-		}
-
-		Matcher matcher = idPattern.matcher(appDescriptorContents);
-		if(!matcher.find(1))
-		{
-			return null;
-		}
-		return matcher.group(1);
-	}
-
-	public static Path findOutputPath(String platform, Path workspacePath)
-	{
-		Path asconfigPath = workspacePath.resolve(ASCONFIG_JSON);
-		if(!asconfigPath.toFile().exists())
-		{
-			return null;
-		}
-		String contents = null;
-		try
-		{
-			contents = new String(Files.readAllBytes(asconfigPath));
-		}
-		catch(IOException e)
-		{
-			return null;
-		}
-		String output = null;
-		try
-		{
-			JsonParser parser = new JsonParser();
-			JsonObject asconfigJSON = parser.parse(contents).getAsJsonObject();
-			if(!asconfigJSON.has("airOptions"))
-			{
-				return null;
-			}
-			JsonObject airOptions = asconfigJSON.get("airOptions").getAsJsonObject();
-			if(!airOptions.has(platform))
-			{
-				return null;
-			}
-			JsonObject platformJSON = airOptions.get(platform).getAsJsonObject();
-			if(!platformJSON.has("output"))
-			{
-				return null;
-			}
-			output = platformJSON.get("output").getAsString();
-		}
-		catch(Exception e)
-		{
-			return null;
-		}
-		if(output == null)
-		{
-			return null;
-		}
-		return Paths.get(output);
 	}
 
     public static DeviceCommandResult runUninstallCommand(String platform, String appID, Path workspacePath, Path adtPath)
@@ -201,16 +64,16 @@ public class DeviceInstallUtils
 		}
 		catch(InterruptedException e)
 		{
-			return new DeviceCommandResult(true, "Device uninstall failed for platform \"" + platform + "\" with error: " + e.toString());
+			return new DeviceCommandResult(true, "Device uninstall failed for platform \"" + platform + "\" and application ID \"" + appID + "\" with error: " + e.toString());
 		}
 		catch(IOException e)
 		{
-			return new DeviceCommandResult(true, "Device uninstall failed for platform \"" + platform + "\" with error: " + e.toString());
+			return new DeviceCommandResult(true, "Device uninstall failed for platform \"" + platform + "\" and application ID \"" + appID + "\" with error: " + e.toString());
 		}
 		//14 imeans that the app isn't installed on the device, and that's fine
 		if(status != 0 && status != 14)
 		{
-			return new DeviceCommandResult(true, "Device uninstall failed for platform \"" + platform + "\" with status code " + status + ".");
+			return new DeviceCommandResult(true, "Device uninstall failed for platform \"" + platform + "\" and application ID \"" + appID + "\" with status code " + status + ".");
 		}
 		return new DeviceCommandResult(false);
     }
@@ -237,15 +100,15 @@ public class DeviceInstallUtils
 		}
 		catch(InterruptedException e)
 		{
-			return new DeviceCommandResult(true, "Installing app on device failed for platform \"" + platform + "\" with error: " + e.toString());
+			return new DeviceCommandResult(true, "Installing app on device failed for platform \"" + platform + "\" and path \"" + packagePath.toString() + "\" with error: " + e.toString());
 		}
 		catch(IOException e)
 		{
-			return new DeviceCommandResult(true, "Installing app on device failed for platform \"" + platform + "\" with error: " + e.toString());
+			return new DeviceCommandResult(true, "Installing app on device failed for platform \"" + platform + "\" and path \"" + packagePath.toString() + "\" with error: " + e.toString());
 		}
 		if(status != 0)
 		{
-			return new DeviceCommandResult(true, "Installing app on device failed for platform \"" + platform + "\" with status code: " + status + ".");
+			return new DeviceCommandResult(true, "Installing app on device failed for platform \"" + platform + "\" and path \"" + packagePath.toString() + "\" with status code: " + status + ".");
 		}
 		return new DeviceCommandResult(false);
     }
@@ -273,15 +136,15 @@ public class DeviceInstallUtils
 		}
 		catch(InterruptedException e)
 		{
-			return new DeviceCommandResult(true, "Launching app on device failed for platform \"" + platform + "\" with error: " + e.toString());
+			return new DeviceCommandResult(true, "Launching app on device failed for platform \"" + platform + "\" and application ID \"" + appID + "\" with error: " + e.toString());
 		}
 		catch(IOException e)
 		{
-			return new DeviceCommandResult(true, "Launching app on device failed for platform \"" + platform + "\" with error: " + e.toString());
+			return new DeviceCommandResult(true, "Launching app on device failed for platform \"" + platform + "\" and application ID \"" + appID + "\" with error: " + e.toString());
 		}
 		if(status != 0)
 		{
-			return new DeviceCommandResult(true, "Launching app on device failed for platform \"" + platform + "\" with status code: " + status + ".");
+			return new DeviceCommandResult(true, "Launching app on device failed for platform \"" + platform + "\" and application ID \"" + appID + "\" with status code: " + status + ".");
 		}
 		return new DeviceCommandResult(false);
     }
