@@ -43,6 +43,8 @@ interface SWFDebugConfiguration extends vscode.DebugConfiguration
 	connect?: boolean;
 	port?: number;
 	platform?: string;
+	bundle?: string;
+	applicationID?: string;
 }
 
 export default class SWFDebugConfigurationProvider implements vscode.DebugConfigurationProvider
@@ -88,17 +90,102 @@ export default class SWFDebugConfigurationProvider implements vscode.DebugConfig
 		}
 		if(!debugConfiguration.request)
 		{
-			//attach is an advanced option, so it should be configured in
-			//launch.json
+			//attach is an advanced option, so it should be configured manually
+			//by the user in launch.json
 			debugConfiguration.request = "launch";
 		}
 		if(debugConfiguration.request === "attach")
 		{
 			//nothing else to resolve
-			return debugConfiguration;
+			return this.resolveAttachDebugConfiguration(workspaceFolder, asconfigPath, debugConfiguration);
 		}
-		let result = this.resolveLaunchDebugConfiguration(workspaceFolder, asconfigPath, debugConfiguration);
-		return Promise.resolve(result);
+		return this.resolveLaunchDebugConfiguration(workspaceFolder, asconfigPath, debugConfiguration);
+	}
+
+	private resolveAttachDebugConfiguration(workspaceFolder: vscode.WorkspaceFolder, asconfigPath: string, debugConfiguration: SWFDebugConfiguration): SWFDebugConfiguration
+	{
+		let asconfigJSON: any = null;
+		try
+		{
+			let asconfigFile = fs.readFileSync(asconfigPath, "utf8");
+			asconfigJSON = json5.parse(asconfigFile);
+		}
+		catch(error)
+		{
+			//something went terribly wrong!
+			vscode.window.showErrorMessage("Failed to debug SWF. Error reading asconfig.json");
+			return null;
+		}
+		let applicationID = debugConfiguration.applicationID;
+		let bundle = debugConfiguration.bundle;
+
+		let platform = debugConfiguration.platform;
+		if(platform)
+		{
+			if(!applicationID)
+			{
+				let appDescriptorPath: string = null;
+				if("application" in asconfigJSON)
+				{
+					if(typeof asconfigJSON.application === "string")
+					{
+						appDescriptorPath = asconfigJSON.application;
+					}
+					else if(debugConfiguration.platform && debugConfiguration.platform in asconfigJSON.application)
+					{
+						appDescriptorPath = asconfigJSON.application[debugConfiguration.platform];
+					}
+				}
+				if(appDescriptorPath)
+				{
+					appDescriptorPath = path.resolve(workspaceFolder.uri.fsPath, appDescriptorPath);
+					try
+					{
+						let appDescriptorContent = fs.readFileSync(appDescriptorPath, "utf8");
+						applicationID = findApplicationID(appDescriptorContent);
+					}
+					catch(e)
+					{
+						//something went terribly wrong!
+						vscode.window.showErrorMessage("Failed to debug SWF. Error reading " + path.basename(appDescriptorPath));
+						return undefined;
+					}
+				}
+			}
+			if(!bundle)
+			{
+				if("airOptions" in asconfigJSON)
+				{
+					let airOptions = asconfigJSON.airOptions;
+					if(platform in airOptions)
+					{
+						let platformOptions = airOptions[platform];
+						if("output" in platformOptions)
+						{
+							bundle = platformOptions.output;
+						}
+					}
+					if(!bundle && "output" in airOptions)
+					{
+						bundle = airOptions.output;
+					}
+				}
+			}
+
+			if(!applicationID)
+			{
+				vscode.window.showErrorMessage(`Failed to debug SWF. Error reading application <id> in application descriptor for platform "${platform}".`);
+				return undefined;
+			}
+			if(!bundle)
+			{
+				vscode.window.showErrorMessage(`Failed to debug SWF. Error reading output path in asconfig.json for platform "${platform}".`);
+				return undefined;
+			}
+			debugConfiguration.applicationID = applicationID;
+			debugConfiguration.bundle = bundle;
+		}
+		return debugConfiguration;
 	}
 
 	private resolveLaunchDebugConfiguration(workspaceFolder: vscode.WorkspaceFolder, asconfigPath: string, debugConfiguration: SWFDebugConfiguration): SWFDebugConfiguration
@@ -131,56 +218,46 @@ export default class SWFDebugConfigurationProvider implements vscode.DebugConfig
 		}
 		if("application" in asconfigJSON)
 		{
+			requireAIR = true;
 			if(typeof asconfigJSON.application === "string")
 			{
 				appDescriptorPath = asconfigJSON.application;
 			}
 			else
 			{
-				requireAIR = true;
-				if(debugConfiguration.request === "attach")
+				switch(debugConfiguration.versionPlatform)
 				{
-					if(debugConfiguration.platform && debugConfiguration.platform in asconfigJSON.application)
+					case "AND":
 					{
-						appDescriptorPath = asconfigJSON.application[debugConfiguration.platform];
+						if("android" in asconfigJSON.application)
+						{
+							appDescriptorPath = asconfigJSON.application.android;
+						}
+						break;
 					}
-				}
-				else //launch
-				{
-					switch(debugConfiguration.versionPlatform)
+					case "IOS":
 					{
-						case "AND":
+						if("ios" in asconfigJSON.application)
 						{
-							if("android" in asconfigJSON.application)
-							{
-								appDescriptorPath = asconfigJSON.application.android;
-							}
-							break;
+							appDescriptorPath = asconfigJSON.application.ios;
 						}
-						case "IOS":
+						break;
+					}
+					case "WIN":
+					{
+						if("windows" in asconfigJSON.application)
 						{
-							if("ios" in asconfigJSON.application)
-							{
-								appDescriptorPath = asconfigJSON.application.ios;
-							}
-							break;
+							appDescriptorPath = asconfigJSON.application.windows;
 						}
-						case "WIN":
+						break;
+					}
+					case "MAC":
+					{
+						if("mac" in asconfigJSON.application)
 						{
-							if("windows" in asconfigJSON.application)
-							{
-								appDescriptorPath = asconfigJSON.application.windows;
-							}
-							break;
+							appDescriptorPath = asconfigJSON.application.mac;
 						}
-						case "MAC":
-						{
-							if("mac" in asconfigJSON.application)
-							{
-								appDescriptorPath = asconfigJSON.application.mac;
-							}
-							break;
-						}
+						break;
 					}
 				}
 			}
@@ -384,4 +461,14 @@ function generateApplicationDescriptorProgram(outputPath: string, mainClassPath:
 
 	let extension = path.extname(mainClassPath);
 	return mainClassPath.substr(0, mainClassPath.length - extension.length) + SUFFIX_AIR_APP;
+}
+
+function findApplicationID(appDescriptorContent: string):string
+{
+	let result = appDescriptorContent.match(/<id>([\w+\.]+)<\/id>/);
+	if(result)
+	{
+		return result[1];
+	}
+	return null;
 }

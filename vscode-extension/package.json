@@ -444,17 +444,6 @@
         "configurationAttributes": {
           "attach": {
             "properties": {
-              "connect": {
-                "type": "boolean",
-                "description": "Indicates if the debugger should connect to the runtime instead of listening. May be used for USB debugging on mobile.",
-                "default": false
-              },
-              "port": {
-                "type": "number",
-                "description": "If the \"connect\" attribute is true, the debugger will connect on the specified port.",
-                "multipleOf": 1,
-                "default": 7936
-              },
               "platform": {
                 "type": "string",
                 "description": "Installs the Adobe AIR application on the specified platform and launches it before attaching to the debugger.",
@@ -462,6 +451,27 @@
                   "ios",
                   "android"
                 ]
+              },
+              "connect": {
+                "type": "boolean",
+                "description": "Indicates if the debugger should connect to the runtime instead of listening. May be used for USB debugging on mobile.",
+                "default": false
+              },
+              "port": {
+                "type": "number",
+                "description": "(Advanced) If the \"connect\" attribute is true, the debugger will connect on the specified port.",
+                "multipleOf": 1,
+                "default": 7936
+              },
+              "applicationID": {
+                "type": "string",
+                "description": "(Advanced) Override the Adobe AIR application ID used to uninstall and launch on an mobile device. Must also specify the appropriate \"platform\" value.",
+                "default": null
+              },
+              "bundle": {
+                "type": "string",
+                "description": "(Advanced) Override the path to .apk or .ipa file to install on a mobile device. Must also specify the appropriate \"platform\" value.",
+                "default": null
               }
             }
           },
