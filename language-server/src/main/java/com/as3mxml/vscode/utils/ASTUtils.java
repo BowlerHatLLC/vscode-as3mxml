@@ -802,6 +802,10 @@ public class ASTUtils
             minCommentStartIndex = mxmlNode.getAbsoluteStart();
         }
         
+        if(offsetNode.isTerminal())
+        {
+            return true;
+        }
         return !ASTUtils.isInActionScriptComment(fileText, currentOffset, minCommentStartIndex);
     }
 	
