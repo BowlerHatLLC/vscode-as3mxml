@@ -726,17 +726,49 @@ public class ASTUtils
         return result + "." + identifierNode.getName();
     }
 
-    public static boolean isInActionScriptComment(String code, int currentOffset, int minCommentStartIndex)
+    private static boolean isInActionScriptComment(IASNode offsetNode, String code, int currentOffset, int minCommentStartIndex)
     {
-        int startComment = code.lastIndexOf("/*", currentOffset - 1);
-        if (startComment != -1 && startComment >= minCommentStartIndex)
+        if (offsetNode != null && offsetNode.isTerminal())
         {
-            int endComment = code.indexOf("*/", startComment);
-            if (endComment > currentOffset)
+            return false;
+        }
+        int startComment = code.lastIndexOf("/*", currentOffset - 1);
+        if(startComment < minCommentStartIndex)
+        {
+            startComment = -1;
+        }
+        if (startComment != -1)
+        {
+            if(startComment > offsetNode.getAbsoluteStart())
             {
-                return true;
+                IASNode commentNode = getContainingNodeIncludingStart(offsetNode, startComment + 1);
+                if(offsetNode.equals(commentNode) && !isInSingleLineComment(code, startComment, minCommentStartIndex))
+                {
+                    int endComment = code.indexOf("*/", startComment);
+                    if(endComment == -1)
+                    {
+                        endComment = code.length();
+                    }
+                    if(endComment < offsetNode.getAbsoluteEnd())
+                    {
+                        commentNode = getContainingNodeIncludingStart(offsetNode, endComment + 1);
+                        if(offsetNode.equals(commentNode) && !isInSingleLineComment(code, endComment, minCommentStartIndex))
+                        {
+                            //start and end are both the same node as the offset
+                            //node, and neither is inside single line comments,
+                            //so we're probably inside a multiline comment
+                            return true;
+                        }
+                    }
+                }
             }
         }
+        return isInSingleLineComment(code, currentOffset, minCommentStartIndex);
+    }
+
+    private static boolean isInSingleLineComment(String code, int currentOffset, int minCommentStartIndex)
+    {
+        int startComment = -1;
         int startLine = code.lastIndexOf('\n', currentOffset - 1);
         if (startLine == -1)
         {
@@ -802,11 +834,7 @@ public class ASTUtils
             minCommentStartIndex = mxmlNode.getAbsoluteStart();
         }
         
-        if(offsetNode.isTerminal())
-        {
-            return true;
-        }
-        return !ASTUtils.isInActionScriptComment(fileText, currentOffset, minCommentStartIndex);
+        return !ASTUtils.isInActionScriptComment(offsetNode, fileText, currentOffset, minCommentStartIndex);
     }
 	
     private static void findDisabledConfigConditionBlocks(IASNode node, List<ConfigConditionBlockNode> result)
@@ -829,5 +857,22 @@ public class ASTUtils
             }
             findDisabledConfigConditionBlocks(child, result);
         }
+    }
+
+    public static boolean nodeContainsNode(IASNode parent, IASNode child)
+    {
+        if(parent == null)
+        {
+            return false;
+        }
+        while(child != null)
+        {
+            child = child.getParent();
+            if(parent.equals(child))
+            {
+                return true;
+            }
+        }
+        return false;
     }
 }
