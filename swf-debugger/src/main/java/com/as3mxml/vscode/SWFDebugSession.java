@@ -595,13 +595,15 @@ public class SWFDebugSession extends DebugSession
                     //notice that we use the value of launcher if it isn't null, but
                     //we don't actually use the value of player. player's purpose is
                     //more about verifying that a runtime can be auto-detected.
+                    swfSession = (ThreadSafeSession) manager.launch(program, airLaunchInfo, !swfArgs.noDebug, null, null);
+                    //there's a launch() overload that accepts the launcher as
+                    //a final parameter in some versions of the debugger, but
+                    //not all of them (in particular, the Flex SDK doesn't have
+                    //this overload). For maximum compatibility, we should pass
+                    //the launcher to the session manually.
                     if(launcher != null)
                     {
-                        swfSession = (ThreadSafeSession) manager.launch(program, airLaunchInfo, !swfArgs.noDebug, null, null, launcher);
-                    }
-                    else
-                    {
-                        swfSession = (ThreadSafeSession) manager.launch(program, airLaunchInfo, !swfArgs.noDebug, null, null);
+                        swfSession.setLauncher(launcher);
                     }
                 }
             }
