@@ -342,20 +342,12 @@ export default class SWFDebugConfigurationProvider implements vscode.DebugConfig
 				let extension = path.extname(mainClassPath);
 				program = mainClassPath.substr(0, mainClassPath.length - extension.length) + FILE_EXTENSION_SWF;
 			}
-			else
-			{
-				//we tried our best to guess the program to launch, but there's
-				//simply not enough information in asconfig.json.
-				//we'll provide a suggestion to use the output compiler option.
-				vscode.window.showErrorMessage("Failed to debug SWF. Missing \"output\" compiler option in asconfig.json.");
-				return null;
-			}
 		}
 		if(!program)
 		{
 			///this shouldn't happen, but in case there's a bug,
 			//this will catch any missing programs
-			vscode.window.showErrorMessage("Failed to debug SWF. Program not found.");
+			vscode.window.showErrorMessage("Failed to debug SWF. Program not found for debug configuration.");
 			return null;
 		}
 		if(requireAIR && !debugConfiguration.extdir)
