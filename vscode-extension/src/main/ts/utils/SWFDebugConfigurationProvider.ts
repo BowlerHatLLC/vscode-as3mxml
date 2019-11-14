@@ -69,19 +69,25 @@ export default class SWFDebugConfigurationProvider implements vscode.DebugConfig
 
 	async resolveDebugConfiguration?(workspaceFolder: vscode.WorkspaceFolder | undefined, debugConfiguration: SWFDebugConfiguration, token?: vscode.CancellationToken): Promise<SWFDebugConfiguration>
 	{
-		if(workspaceFolder === undefined)
+		let asconfigJSON: any = null;
+		if(workspaceFolder !== undefined)
 		{
-			vscode.window.showErrorMessage("Failed to debug SWF. A workspace must be open.");
-			return null;
-		}
-
-		//see if we can find the SWF file
-		let workspaceFolderPath = workspaceFolder.uri.fsPath;
-		let asconfigPath = path.resolve(workspaceFolderPath, "asconfig.json");
-		if(!fs.existsSync(asconfigPath))
-		{
-			vscode.window.showErrorMessage("Failed to debug SWF. Workspace does not contain asconfig.json.");
-			return null;
+			let workspaceFolderPath = workspaceFolder.uri.fsPath;
+			let asconfigPath = path.resolve(workspaceFolderPath, "asconfig.json");
+			if(fs.existsSync(asconfigPath))
+			{
+				try
+				{
+					let asconfigFile = fs.readFileSync(asconfigPath, "utf8");
+					asconfigJSON = json5.parse(asconfigFile);
+				}
+				catch(error)
+				{
+					//something went terribly wrong!
+					vscode.window.showErrorMessage("Failed to debug SWF. Error reading asconfig.json");
+					return null;
+				}
+			}
 		}
 
 		if(!debugConfiguration.type)
@@ -97,25 +103,13 @@ export default class SWFDebugConfigurationProvider implements vscode.DebugConfig
 		if(debugConfiguration.request === "attach")
 		{
 			//nothing else to resolve
-			return this.resolveAttachDebugConfiguration(workspaceFolder, asconfigPath, debugConfiguration);
+			return this.resolveAttachDebugConfiguration(workspaceFolder, asconfigJSON, debugConfiguration);
 		}
-		return this.resolveLaunchDebugConfiguration(workspaceFolder, asconfigPath, debugConfiguration);
+		return this.resolveLaunchDebugConfiguration(workspaceFolder, asconfigJSON, debugConfiguration);
 	}
 
-	private resolveAttachDebugConfiguration(workspaceFolder: vscode.WorkspaceFolder, asconfigPath: string, debugConfiguration: SWFDebugConfiguration): SWFDebugConfiguration
+	private resolveAttachDebugConfiguration(workspaceFolder: vscode.WorkspaceFolder, asconfigJSON: any, debugConfiguration: SWFDebugConfiguration): SWFDebugConfiguration
 	{
-		let asconfigJSON: any = null;
-		try
-		{
-			let asconfigFile = fs.readFileSync(asconfigPath, "utf8");
-			asconfigJSON = json5.parse(asconfigFile);
-		}
-		catch(error)
-		{
-			//something went terribly wrong!
-			vscode.window.showErrorMessage("Failed to debug SWF. Error reading asconfig.json");
-			return null;
-		}
 		let applicationID = debugConfiguration.applicationID;
 		let bundle = debugConfiguration.bundle;
 
@@ -125,7 +119,7 @@ export default class SWFDebugConfigurationProvider implements vscode.DebugConfig
 			if(!applicationID)
 			{
 				let appDescriptorPath: string = null;
-				if("application" in asconfigJSON)
+				if(asconfigJSON && "application" in asconfigJSON)
 				{
 					if(typeof asconfigJSON.application === "string")
 					{
@@ -154,7 +148,7 @@ export default class SWFDebugConfigurationProvider implements vscode.DebugConfig
 			}
 			if(!bundle)
 			{
-				if("airOptions" in asconfigJSON)
+				if(asconfigJSON && "airOptions" in asconfigJSON)
 				{
 					let airOptions = asconfigJSON.airOptions;
 					if(platform in airOptions)
@@ -188,21 +182,9 @@ export default class SWFDebugConfigurationProvider implements vscode.DebugConfig
 		return debugConfiguration;
 	}
 
-	private resolveLaunchDebugConfiguration(workspaceFolder: vscode.WorkspaceFolder, asconfigPath: string, debugConfiguration: SWFDebugConfiguration): SWFDebugConfiguration
+	private resolveLaunchDebugConfiguration(workspaceFolder: vscode.WorkspaceFolder, asconfigJSON: any, debugConfiguration: SWFDebugConfiguration): SWFDebugConfiguration
 	{
-		let program: string = debugConfiguration.program;
-		let asconfigJSON: any = null;
-		try
-		{
-			let asconfigFile = fs.readFileSync(asconfigPath, "utf8");
-			asconfigJSON = json5.parse(asconfigFile);
-		}
-		catch(error)
-		{
-			//something went terribly wrong!
-			vscode.window.showErrorMessage("Failed to debug SWF. Error reading asconfig.json");
-			return null;
-		}
+		let program = debugConfiguration.program;
 		let appDescriptorPath: string = null;
 		let outputPath: string = null;
 		let mainClassPath: string = null;
@@ -211,12 +193,12 @@ export default class SWFDebugConfigurationProvider implements vscode.DebugConfig
 		let externalLibraryPath: string[] = null;
 		let requireAIR = false;
 		let isMobile = false;
-		if("config" in asconfigJSON)
+		if(asconfigJSON && "config" in asconfigJSON)
 		{
 			isMobile = asconfigJSON.config === CONFIG_AIRMOBILE;
 			requireAIR = isMobile || asconfigJSON.config === CONFIG_AIR;
 		}
-		if("application" in asconfigJSON)
+		if(asconfigJSON && "application" in asconfigJSON)
 		{
 			requireAIR = true;
 			if(typeof asconfigJSON.application === "string")
@@ -225,37 +207,38 @@ export default class SWFDebugConfigurationProvider implements vscode.DebugConfig
 			}
 			else
 			{
+				let application = asconfigJSON.application;
 				switch(debugConfiguration.versionPlatform)
 				{
 					case "AND":
 					{
-						if("android" in asconfigJSON.application)
+						if("android" in application)
 						{
-							appDescriptorPath = asconfigJSON.application.android;
+							appDescriptorPath = application.android;
 						}
 						break;
 					}
 					case "IOS":
 					{
-						if("ios" in asconfigJSON.application)
+						if("ios" in application)
 						{
-							appDescriptorPath = asconfigJSON.application.ios;
+							appDescriptorPath = application.ios;
 						}
 						break;
 					}
 					case "WIN":
 					{
-						if("windows" in asconfigJSON.application)
+						if("windows" in application)
 						{
-							appDescriptorPath = asconfigJSON.application.windows;
+							appDescriptorPath = application.windows;
 						}
 						break;
 					}
 					case "MAC":
 					{
-						if("mac" in asconfigJSON.application)
+						if("mac" in application)
 						{
-							appDescriptorPath = asconfigJSON.application.mac;
+							appDescriptorPath = application.mac;
 						}
 						break;
 					}
@@ -273,7 +256,7 @@ export default class SWFDebugConfigurationProvider implements vscode.DebugConfig
 			//configuration, then AIR is required!
 			requireAIR = true;
 		}
-		if("compilerOptions" in asconfigJSON)
+		if(asconfigJSON && "compilerOptions" in asconfigJSON)
 		{
 			let compilerOptions = asconfigJSON.compilerOptions;
 			if("output" in compilerOptions)
@@ -289,7 +272,7 @@ export default class SWFDebugConfigurationProvider implements vscode.DebugConfig
 				externalLibraryPath = asconfigJSON.compilerOptions["external-library-path"];
 			}
 		}
-		if("files" in asconfigJSON)
+		if(asconfigJSON && "files" in asconfigJSON)
 		{
 			let files = asconfigJSON.files;
 			if(Array.isArray(files) && files.length > 0)
@@ -299,7 +282,7 @@ export default class SWFDebugConfigurationProvider implements vscode.DebugConfig
 				mainClassPath = files[files.length - 1];
 			}
 		}
-		if("animateOptions" in asconfigJSON)
+		if(asconfigJSON && "animateOptions" in asconfigJSON)
 		{
 			let animateOptions = asconfigJSON.animateOptions;
 			if("file" in animateOptions)
