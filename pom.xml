@@ -30,7 +30,6 @@ limitations under the License.
     <module>rcsh</module>
     <module>asconfigc</module>
     <module>language-server</module>
-    <module>swf-debugger</module>
     <module>vscode-extension</module>
     <module>distribution</module>
   </modules>

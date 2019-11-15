@@ -18,7 +18,6 @@ import validateJava from "./utils/validateJava";
 import validateEditorSDK from "./utils/validateEditorSDK";
 import ActionScriptSourcePathDataProvider, { ActionScriptSourcePath } from "./utils/ActionScriptSourcePathDataProvider";
 import ActionScriptTaskProvider from "./utils/ActionScriptTaskProvider";
-import SWFDebugConfigurationProvider from "./utils/SWFDebugConfigurationProvider";
 import SWCTextDocumentContentProvider from "./utils/SWCTextDocumentContentProvider";
 import getJavaClassPathDelimiter from "./utils/getJavaClassPathDelimiter";
 import findSDKShortName from "./utils/findSDKShortName";
@@ -31,7 +30,6 @@ import {LanguageClient, LanguageClientOptions, Executable, ExecutableOptions} fr
 import logCompilerShellOutput from "./commands/logCompilerShellOutput";
 import quickCompileAndLaunch from "./commands/quickCompileAndLaunch";
 import migrateSettings from "./utils/migrateSettings";
-import SWFDebugAdapterDescriptorFactory from "./utils/SWFDebugAdapterDescriptorFactory";
 import saveSessionPassword from "./commands/saveSessionPassword";
 import normalizeUri from "./utils/normalizeUri";
 import findQuickCompileWorkspaceFolders from "./commands/findQuickCompileWorkspaceFolders";
@@ -58,9 +56,7 @@ let sdkStatusBarItem: vscode.StatusBarItem;
 let sourcePathView: vscode.TreeView<ActionScriptSourcePath> = null;
 let sourcePathDataProvider: ActionScriptSourcePathDataProvider = null;
 let actionScriptTaskProvider: ActionScriptTaskProvider = null;
-let debugConfigurationProvider: SWFDebugConfigurationProvider = null;
 let swcTextDocumentContentProvider: SWCTextDocumentContentProvider = null;
-let swfDebugAdapterDescriptorFactory: SWFDebugAdapterDescriptorFactory = null;
 let pendingQuickCompileAndDebug = false;
 let pendingQuickCompileAndRun = false;
 
@@ -277,26 +273,9 @@ export function activate(context: vscode.ExtensionContext)
 	let taskProviderDisposable = vscode.tasks.registerTaskProvider("actionscript", actionScriptTaskProvider);
 	context.subscriptions.push(taskProviderDisposable);
 
-	debugConfigurationProvider = new SWFDebugConfigurationProvider();
-	let debugConfigDisposable = vscode.debug.registerDebugConfigurationProvider("swf", debugConfigurationProvider);
-	context.subscriptions.push(debugConfigDisposable);
-
 	swcTextDocumentContentProvider = new SWCTextDocumentContentProvider();
 	let swcContentDisposable = vscode.workspace.registerTextDocumentContentProvider("swc", swcTextDocumentContentProvider);
 	context.subscriptions.push(swcContentDisposable);
-
-	swfDebugAdapterDescriptorFactory = new SWFDebugAdapterDescriptorFactory(() =>
-	{
-		return(
-			{
-				javaPath: javaExecutablePath,
-				frameworkSDKPath: frameworkSDKHome,
-				editorSDKPath: editorSDKHome,
-			}
-		);
-	});
-	let debugAdapterDisposable = vscode.debug.registerDebugAdapterDescriptorFactory("swf", swfDebugAdapterDescriptorFactory);
-	context.subscriptions.push(debugAdapterDisposable);
 
 	startClient();
 

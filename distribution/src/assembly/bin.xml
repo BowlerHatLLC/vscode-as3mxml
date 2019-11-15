@@ -89,21 +89,6 @@
       </includes>
     </fileSet>
     <fileSet>
-      <directory>../swf-debugger/target</directory>
-      <outputDirectory>bin</outputDirectory>
-      <includes>
-        <include>swf-debugger.jar</include>
-      </includes>
-    </fileSet>
-    <fileSet>
-      <directory>../swf-debugger/target</directory>
-      <outputDirectory>bundled-compiler</outputDirectory>
-      <includes>
-        <include>debugger-*.jar</include>
-        <include>swfutils-*.jar</include>
-      </includes>
-    </fileSet>
-    <fileSet>
       <directory>../vscode-extension</directory>
       <outputDirectory>.</outputDirectory>
       <includes>

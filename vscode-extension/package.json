@@ -15,8 +15,7 @@
   "license": "Apache-2.0",
   "private": true,
   "categories": [
-    "Programming Languages",
-    "Debuggers"
+    "Programming Languages"
   ],
   "keywords": [
     "Flash",
@@ -34,6 +33,9 @@
   "engines": {
     "vscode": "^1.37.0"
   },
+  "extensionDependencies:": [
+    "bowlerhatllc.vscode-swf-debug"
+  ],
   "devDependencies": {
     "@rgrove/parse-xml": "^2.0.1",
     "@types/json5": "0.0.30",
@@ -422,11 +424,6 @@
         }
       }
     },
-    "breakpoints": [
-      {
-        "language": "actionscript"
-      }
-    ],
     "snippets": [
       {
         "language": "actionscript",
@@ -438,194 +435,6 @@
       }
     ],
     "debuggers": [
-      {
-        "type": "swf",
-        "label": "SWF",
-        "configurationAttributes": {
-          "attach": {
-            "properties": {
-              "platform": {
-                "type": "string",
-                "description": "Installs the Adobe AIR application on the specified platform and launches it before attaching to the debugger.",
-                "enum": [
-                  "ios",
-                  "android"
-                ]
-              },
-              "connect": {
-                "type": "boolean",
-                "description": "Indicates if the debugger should connect to the runtime instead of listening. May be used for USB debugging on mobile.",
-                "default": false
-              },
-              "port": {
-                "type": "number",
-                "description": "(Advanced) If the \"connect\" attribute is true, the debugger will connect on the specified port.",
-                "multipleOf": 1,
-                "default": 7936
-              },
-              "applicationID": {
-                "type": "string",
-                "description": "(Advanced) Override the Adobe AIR application ID used to uninstall and launch on an mobile device. Must also specify the appropriate \"platform\" value.",
-                "default": null
-              },
-              "bundle": {
-                "type": "string",
-                "description": "(Advanced) Override the path to .apk or .ipa file to install on a mobile device. Must also specify the appropriate \"platform\" value.",
-                "default": null
-              }
-            }
-          },
-          "launch": {
-            "properties": {
-              "program": {
-                "type": [
-                  "string",
-                  "null"
-                ],
-                "description": "Absolute path to a SWF or AIR application descriptor XML. If omitted, will attempt to detect program automatically."
-              },
-              "profile": {
-                "type": [
-                  "string",
-                  "null"
-                ],
-                "description": "The device profile to use in AIR Debug Launcher.",
-                "pattern": "^(desktop|extendedDesktop|mobileDevice)$",
-                "default": null
-              },
-              "args": {
-                "type": "array",
-                "description": "Optional arguments to pass to the AIR application.",
-                "items": {
-                  "type": "string"
-                },
-                "default": []
-              },
-              "screensize": {
-                "type": [
-                  "string",
-                  "null"
-                ],
-                "description": "Defines the screen dimensions when running with the mobileDevice profile in AIR Debug Launcher",
-                "pattern": "^((\\d+x\\d+:\\d+x\\d+)|iPhone|iPhoneRetina|iPhone5Retina|iPhone6|iPhone6Plus|iPod|iPodRetina|iPod5Retina|iPad|iPadRetina|Droid|NexusOne|SamsungGalaxyS|SamsungGalaxyTab|QVGA|WQVGA|FWQVGA|HVGA|WVGA|FWVGA|1080|720|480)$",
-                "default": null
-              },
-              "screenDPI": {
-                "type": "number",
-                "description": "Overrides the value returned by Capabilities.screenDPI in the AIR Debug Launcher.",
-                "multipleOf": 1
-              },
-              "versionPlatform": {
-                "type": [
-                  "string",
-                  "null"
-                ],
-                "description": "Overrides the three characters returned by Capabilities.os in the AIR Debug Launcher.",
-                "pattern": "^[A-Z]{3}$",
-                "default": null
-              },
-              "runtimeExecutable": {
-                "type": [
-                  "string",
-                  "null"
-                ],
-                "description": "Path to runtime executable, such as the standalone version of Adobe Flash Player, a web browser, or AIR Debug Launcher.",
-                "default": null
-              },
-              "runtimeArgs": {
-                "type": "array",
-                "description": "Optional arguments to pass to the runtime executable.",
-                "items": {
-                  "type": "string"
-                },
-                "default": []
-              },
-              "extdir": {
-                "type": [
-                  "string",
-                  "null"
-                ],
-                "description": "Path to directory containing unpackaged AIR native extensions for debugging. Relative paths are based on workspace root.",
-                "default": null
-              }
-            }
-          }
-        },
-        "configurationSnippets": [
-          {
-            "label": "SWF: Launch Standalone SWF",
-            "description": "Launch SWF in standalone Adobe Flash Player executable",
-            "body": {
-              "type": "swf",
-              "request": "launch",
-              "name": "${1:Launch SWF}"
-            }
-          },
-          {
-            "label": "SWF: Launch SWF embedded in HTML",
-            "description": "Launch SWF embedded in HTML in a web browser",
-            "body": {
-              "type": "swf",
-              "request": "launch",
-              "name": "${2:Launch SWF}",
-              "program": "^\"\\${workspaceRoot}/${1:index.html}\""
-            }
-          },
-          {
-            "label": "SWF: Launch Adobe AIR desktop",
-            "description": "Launch Adobe AIR desktop application using AIR Debug Launcher",
-            "body": {
-              "type": "swf",
-              "request": "launch",
-              "name": "${1:Launch AIR desktop}"
-            }
-          },
-          {
-            "label": "SWF: Launch Adobe AIR mobile simulator",
-            "description": "Launch Adobe AIR mobile application using AIR Debug Launcher",
-            "body": {
-              "type": "swf",
-              "request": "launch",
-              "name": "${4:Launch AIR mobile}",
-              "profile": "mobileDevice",
-              "screensize": "${1|iPhoneRetina,iPhone,iPhone5Retina,iPhone6,iPhone6Plus,iPad,iPadRetina,Droid,NexusOne,SamsungGalaxyS,SamsungGalaxyTab,480,720,1080,WVGA,WQVGA,QVGA,HVGA,FWVGA,FWQVGA|}",
-              "screenDPI": "^${2:326}",
-              "versionPlatform": "${3|IOS,AND|}"
-            }
-          },
-          {
-            "label": "SWF: Attach SWF",
-            "description": "Attach to Adobe AIR or Flash Player that was launched externally",
-            "body": {
-              "type": "swf",
-              "request": "attach",
-              "name": "${4:Attach SWF}"
-            }
-          },
-          {
-            "label": "SWF: Install & Attach Adobe AIR (iOS)",
-            "description": "Install and attach to Adobe AIR on iOS device",
-            "body": {
-              "type": "swf",
-              "request": "attach",
-              "name": "${4:Install & Attach Adobe AIR (iOS)}",
-              "connect": true,
-              "platform": "ios"
-            }
-          },
-          {
-            "label": "SWF: Install & Attach Adobe AIR (Android)",
-            "description": "Install and attach to Adobe AIR on Android device",
-            "body": {
-              "type": "swf",
-              "request": "attach",
-              "name": "${4:Install & Attach Adobe AIR (Android)}",
-              "connect": true,
-              "platform": "android"
-            }
-          }
-        ]
-      },
       {
         "type": "node-royale",
         "label": "Node.js (Apache Royale)",
