@@ -28,6 +28,7 @@ import org.apache.royale.compiler.clients.problems.ProblemQuery;
 import org.apache.royale.compiler.filespecs.IFileSpecification;
 import org.apache.royale.compiler.problems.ICompilerProblem;
 import org.apache.royale.compiler.problems.InternalCompilerProblem2;
+import org.apache.royale.compiler.tree.as.IASNode;
 import org.apache.royale.compiler.units.ICompilationUnit;
 import org.apache.royale.compiler.units.requests.IABCBytesRequestResult;
 import org.apache.royale.compiler.units.requests.IFileScopeRequestResult;
@@ -269,7 +270,10 @@ public class RealTimeProblemsChecker implements Runnable
 			
 			ILspProject project = folderData.project;
 			Set<String> requiredImports = project.getQNamesOfDependencies(compilationUnit);
-			ASTUtils.findUnusedImportProblems(syntaxTreeRequest.get().getAST(), requiredImports, problems);
+			IASNode ast = syntaxTreeRequest.get().getAST();
+			ASTUtils.findUnusedImportProblems(ast, requiredImports, problems);
+			//TODO: enable after royale-compiler provides the correct range
+			//ASTUtils.findDisabledConfigConditionBlockProblems(ast, problems);
         }
         catch (Exception e)
         {
