@@ -32,7 +32,7 @@ Extension created and maintained by [Josh Tynjala](https://patreon.com/josht). B
 
 ## Minimum Requirements
 
-- Visual Studio Code 1.34
+- Visual Studio Code 1.37
 - Java 1.8 Runtime
 
 ## asconfig.json
