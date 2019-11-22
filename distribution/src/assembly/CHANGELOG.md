@@ -1,12 +1,26 @@
 # ActionScript & MXML for Visual Studio Code Changelog
 
-### v0.23.2
+## v0.24.0
+
+### New Features
+
+- Build: Added `x86_64` as a value for the Adobe AIR `arch` option for Android to support Harman's latest SDK.
+
+### Fixed Issues
+
+- Completion: Fixed issue where completion could sometimes be incorrectly disabled because the current code offset was incorrectly detected as being inside a multi-line comment.
+
+### Other Changes
+
+- Debugging: Moved SWF debugger into separate extension, [vscode-swf-debug](https://marketplace.visualstudio.com/items?itemName=bowlerhatllc.vscode-swf-debug), and made that a dependency of this extension.
+
+## v0.23.2
 
 ### Fixed Issues
 
 - Dependencies: Fixed issue that language server was built with nightly version of the Apache Royale compiler instead of v0.9.6. The nightly version had a bug that caused code intelligence to freeze.
 
-### v0.23.1
+## v0.23.1
 
 ### Fixed Issues
 
@@ -18,7 +32,7 @@
 
 ### New Features
 
-- Build: Added `armv8` as a value for the Adobe AIR `arch` option to support Harman's new SDK.
+- Build: Added `armv8` as a value for the Adobe AIR `arch` option for Android to support Harman's latest SDK.
 - Editor: Improved performance of real-time problem checking, reducing sluggishness in certain files.
 - Editor: Fades out unused imports, and new code actions may be used to remove them.
 - Editor: Strikes out references to deprecated APIs.
