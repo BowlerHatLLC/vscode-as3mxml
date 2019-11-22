@@ -1,6 +1,6 @@
 # ActionScript & MXML extension for Visual Studio Code
 
-This README file is intended for contributors to the extension. If you simply want to install the latest stable version of the extension, please visit the [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=bowlerhatllc.vscode-nextgenas). For help using the extension, visit the [wiki](https://github.com/BowlerHatLLC/vscode-as3mxml/wiki) for detailed instructions.
+This README file is intended for contributors to the extension. If you simply want to install the latest stable version of the extension, please visit the [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=bowlerhatllc.vscode-nextgenas). For help using the extension, visit the [vscode-as3mxml wiki](https://github.com/BowlerHatLLC/vscode-as3mxml/wiki) for detailed instructions.
 
 ## Modules
 
@@ -10,7 +10,7 @@ This project is divided into several modules.
 
 1. **swf-debugger** provides SWF debugging for Visual Studio Code and other editors that support the [Debug Adapter Protocol](https://microsoft.github.io/debug-adapter-protocol/). This module is written in Java.
 
-1. **asconfigc** creates an executable JAR file that can parse the [*asconfig.json*](https://github.com/BowlerHatLLC/vscode-as3mxml/wiki/asconfig.json) file format and execute the compiler with the specified options. This module is written in Java.
+1. **asconfigc** creates an executable JAR file that can parse the [_asconfig.json_](https://github.com/BowlerHatLLC/vscode-as3mxml/wiki/asconfig.json) file format and execute the compiler with the specified options. This module is written in Java.
 
 1. **check-java-version** creates an executable JAR file that will verify that the current version of Java meets the minimum requirements for the language server.
 
@@ -28,7 +28,7 @@ Requires [Apache Maven](https://maven.apache.org/) and [Node.js](https://nodejs.
 mvn clean package -s settings-template.xml
 ```
 
-The extension will be generated in *distribution/target/vscode-as3mxml/vscode-as3mxml*. This directory may be run inside Visual Studio Code's extension host. Additionally, a *.vsix* file will be generated that may be manually installed in Visual Studio Code.
+The extension will be generated in _distribution/target/vscode-as3mxml/vscode-as3mxml_. This directory may be run inside Visual Studio Code's extension host. Additionally, a _.vsix_ file will be generated that may be manually installed in Visual Studio Code.
 
 ## Running tests
 
@@ -41,7 +41,7 @@ Tests are run in the Visual Studio Code extension host.
 
 Results will appear in the **Output** view.
 
-Note: If the extension cannot find Apache Royale on your system automatically, you may need to configure the `as3mxml.sdk.framework` or `as3mxml.sdk.editor` setting in *vscode-extension/src/test/application_workspace/.vscode/settings.json*.
+Note: If the extension cannot find Apache Royale on your system automatically, you may need to configure the `as3mxml.sdk.framework` or `as3mxml.sdk.editor` setting in _vscode-extension/src/test/application_workspace/.vscode/settings.json_.
 
 ## Support this project
 
@@ -51,6 +51,5 @@ The [ActionScript & MXML extension for Visual Studio Code](https://marketplace.v
 
 Special thanks to the following sponsors for their generous support:
 
-* [Moonshine IDE](http://moonshine-ide.com/)
-
-* [Dedoose](https://www.dedoose.com/)
+- [Moonshine IDE](http://moonshine-ide.com/)
+- [Dedoose](https://www.dedoose.com/)
