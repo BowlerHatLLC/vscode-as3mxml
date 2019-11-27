@@ -33,7 +33,7 @@
   "engines": {
     "vscode": "^1.37.0"
   },
-  "extensionDependencies:": [
+  "extensionDependencies": [
     "bowlerhatllc.vscode-swf-debug"
   ],
   "devDependencies": {
