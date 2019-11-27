@@ -1,5 +1,11 @@
 # ActionScript & MXML for Visual Studio Code Changelog
 
+## v0.24.1
+
+### Fixed Issues
+
+- Dependencies: Fixed dependency on vscode-swf-debug extension that had a typo.
+
 ## v0.24.0
 
 ### New Features

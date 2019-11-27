@@ -7,7 +7,7 @@
   <parent>
     <groupId>com.as3mxml.vscode</groupId>
     <artifactId>vscode-as3mxml</artifactId>
-    <version>0.24.0</version>
+    <version>0.24.1</version>
   </parent>
 
   <groupId>com.as3mxml.vscode</groupId>
