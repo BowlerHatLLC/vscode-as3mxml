@@ -145,6 +145,7 @@ public class AIROptionsParser
 		}
 		//DEBUGGER_CONNECTION_OPTIONS end
 		
+		//iOS options begin
 		if(overridesOptionForPlatform(options, AIROptions.SAMPLER, platform))
 		{
 			result.add("-" + AIROptions.SAMPLER);
@@ -157,11 +158,18 @@ public class AIROptionsParser
 		{
 			setBooleanValueWithoutAssignment(AIROptions.EMBED_BITCODE, options.get(platform).get(AIROptions.EMBED_BITCODE).asBoolean(), result);
 		}
+		//iOS options end
 
+		//Android options begin
 		if(overridesOptionForPlatform(options, AIROptions.AIR_DOWNLOAD_URL, platform))
 		{
 			setValueWithoutAssignment(AIROptions.AIR_DOWNLOAD_URL, options.get(platform).get(AIROptions.AIR_DOWNLOAD_URL).asText(), result);
 		}
+		if(overridesOptionForPlatform(options, AIROptions.ARCH, platform))
+		{
+			setValueWithoutAssignment(AIROptions.ARCH, options.get(platform).get(AIROptions.ARCH).asText(), result);
+		}
+		//Android options end
 
 		//NATIVE_SIGNING_OPTIONS begin
 		//these are *mobile* signing options only
@@ -215,10 +223,6 @@ public class AIROptionsParser
 		if(overridesOptionForPlatform(options, AIROptions.PLATFORMSDK, platform))
 		{
 			setPathValueWithoutAssignment(AIROptions.PLATFORMSDK, options.get(platform).get(AIROptions.PLATFORMSDK).asText(), result);
-		}
-		if(overridesOptionForPlatform(options, AIROptions.ARCH, platform))
-		{
-			setValueWithoutAssignment(AIROptions.ARCH, options.get(platform).get(AIROptions.ARCH).asText(), result);
 		}
 
 		//FILE_OPTIONS begin
