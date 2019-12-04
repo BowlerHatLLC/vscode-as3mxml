@@ -664,10 +664,6 @@ export default class ActionScriptTaskProvider implements vscode.TaskProvider
 	
 	private isSharedOverride(asconfigJson: any): boolean
 	{
-		if(process.platform !== "win32")
-		{
-			return false;
-		}
 		if(!(FIELD_AIR_OPTIONS in asconfigJson))
 		{
 			return false;
