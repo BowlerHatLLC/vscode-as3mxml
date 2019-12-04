@@ -59,8 +59,8 @@ import org.eclipse.lsp4j.SymbolKind;
  */
 public class LanguageServerCompilerUtils
 {
-    private static final String MXML_EXTENSION = ".mxml";
-    private static final String AS_EXTENSION = ".as";
+    private static final String FILE_EXTENSION_MXML = ".mxml";
+    private static final String FILE_EXTENSION_AS = ".as";
     private static final String SDK_LIBRARY_PATH_SIGNATURE_UNIX = "/frameworks/libs/";
     private static final String SDK_LIBRARY_PATH_SIGNATURE_WINDOWS = "\\frameworks\\libs\\";
 
@@ -522,8 +522,8 @@ public class LanguageServerCompilerUtils
         {
             return null;
         }
-        if (!sourcePath.endsWith(AS_EXTENSION)
-                && !sourcePath.endsWith(MXML_EXTENSION)
+        if (!sourcePath.endsWith(FILE_EXTENSION_AS)
+                && !sourcePath.endsWith(FILE_EXTENSION_MXML)
                 && (sourcePath.contains(SDK_LIBRARY_PATH_SIGNATURE_UNIX)
                 || sourcePath.contains(SDK_LIBRARY_PATH_SIGNATURE_WINDOWS)))
         {

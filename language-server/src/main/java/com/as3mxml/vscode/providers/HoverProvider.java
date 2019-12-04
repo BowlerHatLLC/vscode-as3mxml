@@ -52,6 +52,7 @@ public class HoverProvider
 {
     private static final String MARKED_STRING_LANGUAGE_ACTIONSCRIPT = "actionscript";
     private static final String MARKED_STRING_LANGUAGE_MXML = "mxml";
+    private static final String FILE_EXTENSION_MXML = ".mxml";
 
     private WorkspaceFolderManager workspaceFolderManager;
     private FileTracker fileTracker;
@@ -87,27 +88,30 @@ public class HoverProvider
 			cancelToken.checkCanceled();
 			return new Hover(Collections.emptyList(), null);
 		}
-		MXMLData mxmlData = workspaceFolderManager.getMXMLDataForPath(path, folderData);
-
-		IMXMLTagData offsetTag = MXMLDataUtils.getOffsetMXMLTag(mxmlData, currentOffset);
-		if (offsetTag != null)
-		{
-			IASNode embeddedNode = workspaceFolderManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, currentOffset, folderData);
-			if (embeddedNode != null)
-			{
-				Hover result = actionScriptHover(embeddedNode, folderData.project);
-				cancelToken.checkCanceled();
-				return result;
-			}
-			//if we're inside an <fx:Script> tag, we want ActionScript hover,
-			//so that's why we call isMXMLTagValidForCompletion()
-			if (MXMLDataUtils.isMXMLCodeIntelligenceAvailableForTag(offsetTag))
-			{
-				Hover result = mxmlHover(offsetTag, currentOffset, folderData.project);
-				cancelToken.checkCanceled();
-				return result;
-			}
-		}
+        boolean isMXML = textDocument.getUri().endsWith(FILE_EXTENSION_MXML);
+        if (isMXML)
+        {
+            MXMLData mxmlData = workspaceFolderManager.getMXMLDataForPath(path, folderData);
+            IMXMLTagData offsetTag = MXMLDataUtils.getOffsetMXMLTag(mxmlData, currentOffset);
+            if (offsetTag != null)
+            {
+                IASNode embeddedNode = workspaceFolderManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, currentOffset, folderData);
+                if (embeddedNode != null)
+                {
+                    Hover result = actionScriptHover(embeddedNode, folderData.project);
+                    cancelToken.checkCanceled();
+                    return result;
+                }
+                //if we're inside an <fx:Script> tag, we want ActionScript hover,
+                //so that's why we call isMXMLTagValidForCompletion()
+                if (MXMLDataUtils.isMXMLCodeIntelligenceAvailableForTag(offsetTag))
+                {
+                    Hover result = mxmlHover(offsetTag, currentOffset, folderData.project);
+                    cancelToken.checkCanceled();
+                    return result;
+                }
+            }
+        }
 		IASNode offsetNode = workspaceFolderManager.getOffsetNode(path, currentOffset, folderData);
 		Hover result = actionScriptHover(offsetNode, folderData.project);
 		cancelToken.checkCanceled();

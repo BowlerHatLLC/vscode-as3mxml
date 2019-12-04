@@ -120,7 +120,7 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either;
 
 public class CompletionProvider
 {
-    private static final String MXML_EXTENSION = ".mxml";
+    private static final String FILE_EXTENSION_MXML = ".mxml";
     private static final String VECTOR_HIDDEN_PREFIX = "Vector$";
 
     private WorkspaceFolderManager workspaceFolderManager;
@@ -179,53 +179,56 @@ public class CompletionProvider
 				result.setItems(new ArrayList<>());
 				cancelToken.checkCanceled();
 				return Either.forRight(result);
-			}
-			MXMLData mxmlData = workspaceFolderManager.getMXMLDataForPath(path, folderData);
-
-			IMXMLTagData offsetTag = MXMLDataUtils.getOffsetMXMLTag(mxmlData, currentOffset);
-			if (offsetTag != null)
-			{
-				IASNode embeddedNode = workspaceFolderManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, currentOffset, folderData);
-				if (embeddedNode != null)
-				{
-					CompletionList result = actionScriptCompletion(embeddedNode, path, position, currentOffset, folderData);
-					cancelToken.checkCanceled();
-					return Either.forRight(result);
-				}
-				//if we're inside an <fx:Script> tag, we want ActionScript completion,
-				//so that's why we call isMXMLTagValidForCompletion()
-				if (MXMLDataUtils.isMXMLCodeIntelligenceAvailableForTag(offsetTag))
-				{
-					ICompilationUnit offsetUnit = CompilerProjectUtils.findCompilationUnit(path, project);
-					CompletionList result = mxmlCompletion(offsetTag, path, currentOffset, offsetUnit, project);
-					cancelToken.checkCanceled();
-					return Either.forRight(result);
-				}
-			}
-			else if(mxmlData != null && mxmlData.getRootTag() == null)
-			{
-				ICompilationUnit offsetUnit = CompilerProjectUtils.findCompilationUnit(path, project);
-				boolean tagsNeedOpenBracket = getTagsNeedOpenBracket(path, currentOffset);
-				CompletionList result = new CompletionList();
-				result.setIsIncomplete(false);
-				result.setItems(new ArrayList<>());
-				autoCompleteDefinitionsForMXML(result, project, offsetUnit, offsetTag, true, tagsNeedOpenBracket, (char) -1, null, null, null);
-				cancelToken.checkCanceled();
-				return Either.forRight(result);
-			}
-			if (offsetTag == null && params.getTextDocument().getUri().endsWith(MXML_EXTENSION))
-			{
-				//it's possible for the offset tag to be null in an MXML file, but
-				//we don't want to trigger ActionScript completion.
-				//for some reason, the offset tag will be null if completion is
-				//triggered at the asterisk:
-				//<fx:Declarations>*
-				CompletionList result = new CompletionList();
-				result.setIsIncomplete(false);
-				result.setItems(new ArrayList<>());
-				cancelToken.checkCanceled();
-				return Either.forRight(result);
-			}
+            }
+            boolean isMXML = textDocument.getUri().endsWith(FILE_EXTENSION_MXML);
+            if (isMXML)
+            {
+                MXMLData mxmlData = workspaceFolderManager.getMXMLDataForPath(path, folderData);
+                IMXMLTagData offsetTag = MXMLDataUtils.getOffsetMXMLTag(mxmlData, currentOffset);
+                if (offsetTag != null)
+                {
+                    IASNode embeddedNode = workspaceFolderManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, currentOffset, folderData);
+                    if (embeddedNode != null)
+                    {
+                        CompletionList result = actionScriptCompletion(embeddedNode, path, position, currentOffset, folderData);
+                        cancelToken.checkCanceled();
+                        return Either.forRight(result);
+                    }
+                    //if we're inside an <fx:Script> tag, we want ActionScript completion,
+                    //so that's why we call isMXMLTagValidForCompletion()
+                    if (MXMLDataUtils.isMXMLCodeIntelligenceAvailableForTag(offsetTag))
+                    {
+                        ICompilationUnit offsetUnit = CompilerProjectUtils.findCompilationUnit(path, project);
+                        CompletionList result = mxmlCompletion(offsetTag, path, currentOffset, offsetUnit, project);
+                        cancelToken.checkCanceled();
+                        return Either.forRight(result);
+                    }
+                }
+                else if(mxmlData != null && mxmlData.getRootTag() == null)
+                {
+                    ICompilationUnit offsetUnit = CompilerProjectUtils.findCompilationUnit(path, project);
+                    boolean tagsNeedOpenBracket = getTagsNeedOpenBracket(path, currentOffset);
+                    CompletionList result = new CompletionList();
+                    result.setIsIncomplete(false);
+                    result.setItems(new ArrayList<>());
+                    autoCompleteDefinitionsForMXML(result, project, offsetUnit, offsetTag, true, tagsNeedOpenBracket, (char) -1, null, null, null);
+                    cancelToken.checkCanceled();
+                    return Either.forRight(result);
+                }
+                if (offsetTag == null)
+                {
+                    //it's possible for the offset tag to be null in an MXML file, but
+                    //we don't want to trigger ActionScript completion.
+                    //for some reason, the offset tag will be null if completion is
+                    //triggered at the asterisk:
+                    //<fx:Declarations>*
+                    CompletionList result = new CompletionList();
+                    result.setIsIncomplete(false);
+                    result.setItems(new ArrayList<>());
+                    cancelToken.checkCanceled();
+                    return Either.forRight(result);
+                }
+            }
 			IASNode offsetNode = workspaceFolderManager.getOffsetNode(path, currentOffset, folderData);
 			CompletionList result = actionScriptCompletion(offsetNode, path, position, currentOffset, folderData);
 			cancelToken.checkCanceled();
@@ -260,7 +263,7 @@ public class CompletionProvider
             //if we're inside a node that shouldn't have completion!
             return result;
         }
-        boolean isMXML = path.toString().endsWith(MXML_EXTENSION);
+        boolean isMXML = path.toString().endsWith(FILE_EXTENSION_MXML);
         ImportRange importRange = ImportRange.fromOffsetNode(offsetNode);
         if (isMXML)
         {

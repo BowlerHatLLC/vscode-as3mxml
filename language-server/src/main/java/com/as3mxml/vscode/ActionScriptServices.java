@@ -176,9 +176,9 @@ import org.eclipse.lsp4j.services.WorkspaceService;
  */
 public class ActionScriptServices implements TextDocumentService, WorkspaceService
 {
-    private static final String MXML_EXTENSION = ".mxml";
-    private static final String AS_EXTENSION = ".as";
-    private static final String SWC_EXTENSION = ".swc";
+    private static final String FILE_EXTENSION_MXML = ".mxml";
+    private static final String FILE_EXTENSION_AS = ".as";
+    private static final String FILE_EXTENSION_SWC = ".swc";
     private static final String PROPERTY_FRAMEWORK_LIB = "royalelib";
     private static final String ROYALE_ASJS_RELATIVE_PATH_CHILD = "./royale-asjs";
     private static final String FRAMEWORKS_RELATIVE_PATH_CHILD = "./frameworks";
@@ -759,8 +759,8 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     {
         TextDocumentItem textDocument = params.getTextDocument();
         String textDocumentUri = textDocument.getUri();
-        if (!textDocumentUri.endsWith(AS_EXTENSION)
-                && !textDocumentUri.endsWith(MXML_EXTENSION))
+        if (!textDocumentUri.endsWith(FILE_EXTENSION_AS)
+                && !textDocumentUri.endsWith(FILE_EXTENSION_MXML))
         {
             //code intelligence is available only in .as and .mxml files
             //so we ignore other file extensions
@@ -823,8 +823,8 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     {
         VersionedTextDocumentIdentifier textDocument = params.getTextDocument();
         String textDocumentUri = textDocument.getUri();
-        if (!textDocumentUri.endsWith(AS_EXTENSION)
-                && !textDocumentUri.endsWith(MXML_EXTENSION))
+        if (!textDocumentUri.endsWith(FILE_EXTENSION_AS)
+                && !textDocumentUri.endsWith(FILE_EXTENSION_MXML))
         {
             //code intelligence is available only in .as and .mxml files
             //so we ignore other file extensions
@@ -935,8 +935,8 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     {
         TextDocumentIdentifier textDocument = params.getTextDocument();
         String textDocumentUri = textDocument.getUri();
-        if (!textDocumentUri.endsWith(AS_EXTENSION)
-                && !textDocumentUri.endsWith(MXML_EXTENSION))
+        if (!textDocumentUri.endsWith(FILE_EXTENSION_AS)
+                && !textDocumentUri.endsWith(FILE_EXTENSION_MXML))
         {
             //code intelligence is available only in .as and .mxml files
             //so we ignore other file extensions
@@ -1029,8 +1029,8 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
 
         TextDocumentIdentifier textDocument = params.getTextDocument();
         String textDocumentUri = textDocument.getUri();
-        if (!textDocumentUri.endsWith(AS_EXTENSION)
-                && !textDocumentUri.endsWith(MXML_EXTENSION))
+        if (!textDocumentUri.endsWith(FILE_EXTENSION_AS)
+                && !textDocumentUri.endsWith(FILE_EXTENSION_MXML))
         {
             //code intelligence is available only in .as and .mxml files
             //so we ignore other file extensions
@@ -1102,7 +1102,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             //then, check if source or library files have changed
             FileChangeType changeType = event.getType();
             String normalizedChangedPathAsString = FilenameNormalization.normalize(changedPath.toAbsolutePath().toString());
-            if (normalizedChangedPathAsString.endsWith(SWC_EXTENSION))
+            if (normalizedChangedPathAsString.endsWith(FILE_EXTENSION_SWC))
             {
                 List<WorkspaceFolderData> allFolderData = workspaceFolderManager.getAllWorkspaceFolderDataForSWCFile(changedPath);
                 if (allFolderData.size() > 0)
@@ -1119,7 +1119,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                     foldersToCheck.addAll(allFolderData);
                 }
             }
-            else if (normalizedChangedPathAsString.endsWith(AS_EXTENSION) || normalizedChangedPathAsString.endsWith(MXML_EXTENSION))
+            else if (normalizedChangedPathAsString.endsWith(FILE_EXTENSION_AS) || normalizedChangedPathAsString.endsWith(FILE_EXTENSION_MXML))
             {
                 List<WorkspaceFolderData> allFolderData = workspaceFolderManager.getAllWorkspaceFolderDataForSourceFile(changedPath);
                 if (changeType.equals(FileChangeType.Deleted) ||
@@ -1160,7 +1160,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                         public FileVisitResult visitFile(Path subPath, BasicFileAttributes attrs)
                         {
                             String normalizedSubPath = FilenameNormalization.normalize(subPath.toAbsolutePath().toString());
-                            if (normalizedSubPath.endsWith(AS_EXTENSION) || normalizedSubPath.endsWith(MXML_EXTENSION))
+                            if (normalizedSubPath.endsWith(FILE_EXTENSION_AS) || normalizedSubPath.endsWith(FILE_EXTENSION_MXML))
                             {
                                 IFileSpecification fileSpec = fileTracker.getFileSpecification(normalizedSubPath);
                                 compilerWorkspace.fileAdded(fileSpec);

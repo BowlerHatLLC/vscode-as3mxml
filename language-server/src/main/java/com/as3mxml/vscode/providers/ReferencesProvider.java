@@ -53,7 +53,7 @@ import org.eclipse.lsp4j.jsonrpc.CancelChecker;
 
 public class ReferencesProvider
 {
-    private static final String MXML_EXTENSION = ".mxml";
+    private static final String FILE_EXTENSION_MXML = ".mxml";
 
     private WorkspaceFolderManager workspaceFolderManager;
     private FileTracker fileTracker;
@@ -91,28 +91,31 @@ public class ReferencesProvider
 			cancelToken.checkCanceled();
 			return Collections.emptyList();
 		}
-		MXMLData mxmlData = workspaceFolderManager.getMXMLDataForPath(path, folderData);
-
-		IMXMLTagData offsetTag = MXMLDataUtils.getOffsetMXMLTag(mxmlData, currentOffset);
-		if (offsetTag != null)
-		{
-			IASNode embeddedNode = workspaceFolderManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, currentOffset, folderData);
-			if (embeddedNode != null)
-			{
-				List<? extends Location> result = actionScriptReferences(embeddedNode, project);
-				cancelToken.checkCanceled();
-				return result;
-			}
-			//if we're inside an <fx:Script> tag, we want ActionScript lookup,
-			//so that's why we call isMXMLTagValidForCompletion()
-			if (MXMLDataUtils.isMXMLCodeIntelligenceAvailableForTag(offsetTag))
-			{
-				ICompilationUnit offsetUnit = CompilerProjectUtils.findCompilationUnit(path, project);
-				List<? extends Location> result = mxmlReferences(offsetTag, currentOffset, offsetUnit, project);
-				cancelToken.checkCanceled();
-				return result;
-			}
-		}
+        boolean isMXML = textDocument.getUri().endsWith(FILE_EXTENSION_MXML);
+        if (isMXML)
+        {
+            MXMLData mxmlData = workspaceFolderManager.getMXMLDataForPath(path, folderData);
+            IMXMLTagData offsetTag = MXMLDataUtils.getOffsetMXMLTag(mxmlData, currentOffset);
+            if (offsetTag != null)
+            {
+                IASNode embeddedNode = workspaceFolderManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, currentOffset, folderData);
+                if (embeddedNode != null)
+                {
+                    List<? extends Location> result = actionScriptReferences(embeddedNode, project);
+                    cancelToken.checkCanceled();
+                    return result;
+                }
+                //if we're inside an <fx:Script> tag, we want ActionScript lookup,
+                //so that's why we call isMXMLTagValidForCompletion()
+                if (MXMLDataUtils.isMXMLCodeIntelligenceAvailableForTag(offsetTag))
+                {
+                    ICompilationUnit offsetUnit = CompilerProjectUtils.findCompilationUnit(path, project);
+                    List<? extends Location> result = mxmlReferences(offsetTag, currentOffset, offsetUnit, project);
+                    cancelToken.checkCanceled();
+                    return result;
+                }
+            }
+        }
 		IASNode offsetNode = workspaceFolderManager.getOffsetNode(path, currentOffset, folderData);
 		List<? extends Location> result = actionScriptReferences(offsetNode, project);
 		cancelToken.checkCanceled();
@@ -235,7 +238,7 @@ public class ReferencesProvider
     
     private void referencesForDefinitionInCompilationUnit(IDefinition definition, ICompilationUnit compilationUnit, ILspProject project, List<Location> result)
     {
-        if (compilationUnit.getAbsoluteFilename().endsWith(MXML_EXTENSION))
+        if (compilationUnit.getAbsoluteFilename().endsWith(FILE_EXTENSION_MXML))
         {
             IMXMLDataManager mxmlDataManager = project.getWorkspace().getMXMLDataManager();
             MXMLData mxmlData = (MXMLData) mxmlDataManager.get(fileTracker.getFileSpecification(compilationUnit.getAbsoluteFilename()));

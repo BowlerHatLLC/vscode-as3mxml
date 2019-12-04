@@ -66,7 +66,7 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either;
 
 public class CodeActionProvider
 {
-    private static final String MXML_EXTENSION = ".mxml";
+    private static final String FILE_EXTENSION_MXML = ".mxml";
 
     private WorkspaceFolderManager workspaceFolderManager;
     private FileTracker fileTracker;
@@ -614,7 +614,7 @@ public class CodeActionProvider
 		int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position, includeFileData);
         IASNode offsetNode = workspaceFolderManager.getOffsetNode(path, currentOffset, folderData);
         IMXMLTagData offsetTag = null;
-        boolean isMXML = path.toUri().toString().endsWith(MXML_EXTENSION);
+        boolean isMXML = path.toUri().toString().endsWith(FILE_EXTENSION_MXML);
         if (isMXML)
         {
             MXMLData mxmlData = workspaceFolderManager.getMXMLDataForPath(path, folderData);

@@ -62,8 +62,8 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either;
 
 public class RenameProvider
 {
-    private static final String MXML_EXTENSION = ".mxml";
-    private static final String SWC_EXTENSION = ".swc";
+    private static final String FILE_EXTENSION_MXML = ".mxml";
+    private static final String FILE_EXTENSION_SWC = ".swc";
 
     private WorkspaceFolderManager workspaceFolderManager;
     private FileTracker fileTracker;
@@ -101,27 +101,30 @@ public class RenameProvider
 			cancelToken.checkCanceled();
 			return new WorkspaceEdit(new HashMap<>());
 		}
-
-		MXMLData mxmlData = workspaceFolderManager.getMXMLDataForPath(path, folderData);
-		IMXMLTagData offsetTag = MXMLDataUtils.getOffsetMXMLTag(mxmlData, currentOffset);
-		if (offsetTag != null)
-		{
-			IASNode embeddedNode = workspaceFolderManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, currentOffset, folderData);
-			if (embeddedNode != null)
-			{
-				WorkspaceEdit result = actionScriptRename(embeddedNode, params.getNewName(), project);
-				cancelToken.checkCanceled();
-				return result;
-			}
-			//if we're inside an <fx:Script> tag, we want ActionScript rename,
-			//so that's why we call isMXMLTagValidForCompletion()
-			if (MXMLDataUtils.isMXMLCodeIntelligenceAvailableForTag(offsetTag))
-			{
-				WorkspaceEdit result = mxmlRename(offsetTag, currentOffset, params.getNewName(), project);
-				cancelToken.checkCanceled();
-				return result;
-			}
-		}
+        boolean isMXML = textDocument.getUri().endsWith(FILE_EXTENSION_MXML);
+        if (isMXML)
+        {
+            MXMLData mxmlData = workspaceFolderManager.getMXMLDataForPath(path, folderData);
+            IMXMLTagData offsetTag = MXMLDataUtils.getOffsetMXMLTag(mxmlData, currentOffset);
+            if (offsetTag != null)
+            {
+                IASNode embeddedNode = workspaceFolderManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, currentOffset, folderData);
+                if (embeddedNode != null)
+                {
+                    WorkspaceEdit result = actionScriptRename(embeddedNode, params.getNewName(), project);
+                    cancelToken.checkCanceled();
+                    return result;
+                }
+                //if we're inside an <fx:Script> tag, we want ActionScript rename,
+                //so that's why we call isMXMLTagValidForCompletion()
+                if (MXMLDataUtils.isMXMLCodeIntelligenceAvailableForTag(offsetTag))
+                {
+                    WorkspaceEdit result = mxmlRename(offsetTag, currentOffset, params.getNewName(), project);
+                    cancelToken.checkCanceled();
+                    return result;
+                }
+            }
+        }
 		IASNode offsetNode = workspaceFolderManager.getOffsetNode(path, currentOffset, folderData);
 		WorkspaceEdit result = actionScriptRename(offsetNode, params.getNewName(), project);
 		cancelToken.checkCanceled();
@@ -188,7 +191,7 @@ public class RenameProvider
         WorkspaceEdit result = new WorkspaceEdit();
         List<Either<TextDocumentEdit, ResourceOperation>> documentChanges = new ArrayList<>();
         result.setDocumentChanges(documentChanges);
-        if (definition.getContainingFilePath().endsWith(SWC_EXTENSION))
+        if (definition.getContainingFilePath().endsWith(FILE_EXTENSION_SWC))
         {
 			//Cannot rename this element
 			return null;
@@ -213,7 +216,7 @@ public class RenameProvider
                 continue;
             }
             ArrayList<TextEdit> textEdits = new ArrayList<>();
-            if (unit.getAbsoluteFilename().endsWith(MXML_EXTENSION))
+            if (unit.getAbsoluteFilename().endsWith(FILE_EXTENSION_MXML))
             {
                 IMXMLDataManager mxmlDataManager = project.getWorkspace().getMXMLDataManager();
                 MXMLData mxmlData = (MXMLData) mxmlDataManager.get(fileTracker.getFileSpecification(unit.getAbsoluteFilename()));

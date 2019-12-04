@@ -53,6 +53,8 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either;
 
 public class DefinitionProvider
 {
+    private static final String FILE_EXTENSION_MXML = ".mxml";
+
     private WorkspaceFolderManager workspaceFolderManager;
     private FileTracker fileTracker;
 
@@ -87,27 +89,30 @@ public class DefinitionProvider
 			cancelToken.checkCanceled();
 			return Either.forLeft(Collections.emptyList());
 		}
-		MXMLData mxmlData = workspaceFolderManager.getMXMLDataForPath(path, folderData);
-
-		IMXMLTagData offsetTag = MXMLDataUtils.getOffsetMXMLTag(mxmlData, currentOffset);
-		if (offsetTag != null)
-		{
-			IASNode embeddedNode = workspaceFolderManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, currentOffset, folderData);
-			if (embeddedNode != null)
-			{
-				List<? extends Location> result = actionScriptDefinition(embeddedNode, folderData);
-				cancelToken.checkCanceled();
-				return Either.forLeft(result);
-			}
-			//if we're inside an <fx:Script> tag, we want ActionScript lookup,
-			//so that's why we call isMXMLTagValidForCompletion()
-			if (MXMLDataUtils.isMXMLCodeIntelligenceAvailableForTag(offsetTag))
-			{
-				List<? extends Location> result = mxmlDefinition(offsetTag, currentOffset, folderData);
-				cancelToken.checkCanceled();
-				return Either.forLeft(result);
-			}
-		}
+        boolean isMXML = textDocument.getUri().endsWith(FILE_EXTENSION_MXML);
+        if (isMXML)
+        {
+            MXMLData mxmlData = workspaceFolderManager.getMXMLDataForPath(path, folderData);
+            IMXMLTagData offsetTag = MXMLDataUtils.getOffsetMXMLTag(mxmlData, currentOffset);
+            if (offsetTag != null)
+            {
+                IASNode embeddedNode = workspaceFolderManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, currentOffset, folderData);
+                if (embeddedNode != null)
+                {
+                    List<? extends Location> result = actionScriptDefinition(embeddedNode, folderData);
+                    cancelToken.checkCanceled();
+                    return Either.forLeft(result);
+                }
+                //if we're inside an <fx:Script> tag, we want ActionScript lookup,
+                //so that's why we call isMXMLTagValidForCompletion()
+                if (MXMLDataUtils.isMXMLCodeIntelligenceAvailableForTag(offsetTag))
+                {
+                    List<? extends Location> result = mxmlDefinition(offsetTag, currentOffset, folderData);
+                    cancelToken.checkCanceled();
+                    return Either.forLeft(result);
+                }
+            }
+        }
 		IASNode offsetNode = workspaceFolderManager.getOffsetNode(path, currentOffset, folderData);
 		List<? extends Location> result = actionScriptDefinition(offsetNode, folderData);
 		cancelToken.checkCanceled();

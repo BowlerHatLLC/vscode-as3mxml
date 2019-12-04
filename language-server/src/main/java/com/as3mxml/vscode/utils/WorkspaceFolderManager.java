@@ -60,9 +60,9 @@ import org.eclipse.lsp4j.WorkspaceFolder;
 
 public class WorkspaceFolderManager
 {
-    private static final String AS_EXTENSION = ".as";
-    private static final String MXML_EXTENSION = ".mxml";
-    private static final String SWC_EXTENSION = ".swc";
+    private static final String FILE_EXTENSION_AS = ".as";
+    private static final String FILE_EXTENSION_MXML = ".mxml";
+    private static final String FILE_EXTENSION_SWC = ".swc";
     private static final String SDK_LIBRARY_PATH_SIGNATURE_UNIX = "/frameworks/libs/";
     private static final String SDK_LIBRARY_PATH_SIGNATURE_WINDOWS = "\\frameworks\\libs\\";
 
@@ -318,7 +318,7 @@ public class WorkspaceFolderManager
         {
             path = Paths.get(includeFileData.parentPath);
         }
-        if (!path.toString().endsWith(MXML_EXTENSION))
+        if (!path.toString().endsWith(FILE_EXTENSION_MXML))
         {
             // don't try to parse ActionScript files as MXML
             return null;
@@ -422,7 +422,7 @@ public class WorkspaceFolderManager
             return null;
         }
         Location location = null;
-        if (sourcePath.endsWith(SWC_EXTENSION))
+        if (sourcePath.endsWith(FILE_EXTENSION_SWC))
         {
             DefinitionAsText definitionText = DefinitionTextUtils.definitionToTextDocument(definition, project);
             //may be null if definitionToTextDocument() doesn't know how
@@ -459,7 +459,7 @@ public class WorkspaceFolderManager
             return null;
         }
         Range range = null;
-        if (sourcePath.endsWith(SWC_EXTENSION))
+        if (sourcePath.endsWith(FILE_EXTENSION_SWC))
         {
             DefinitionAsText definitionText = DefinitionTextUtils.definitionToTextDocument(definition, project);
             //may be null if definitionToTextDocument() doesn't know how
@@ -626,8 +626,8 @@ public class WorkspaceFolderManager
                 return;
             }
             //however, getContainingFilePath() also works for SWCs
-            if (!definitionPath.endsWith(AS_EXTENSION)
-                    && !definitionPath.endsWith(MXML_EXTENSION)
+            if (!definitionPath.endsWith(FILE_EXTENSION_AS)
+                    && !definitionPath.endsWith(FILE_EXTENSION_MXML)
                     && (definitionPath.contains(SDK_LIBRARY_PATH_SIGNATURE_UNIX)
                     || definitionPath.contains(SDK_LIBRARY_PATH_SIGNATURE_WINDOWS)))
             {
@@ -639,7 +639,7 @@ public class WorkspaceFolderManager
                     definitionPath = debugPath;
                 }
             }
-            if (definitionPath.endsWith(SWC_EXTENSION))
+            if (definitionPath.endsWith(FILE_EXTENSION_SWC))
             {
                 DefinitionAsText definitionText = DefinitionTextUtils.definitionToTextDocument(definition, folderData.project);
                 //may be null if definitionToTextDocument() doesn't know how
@@ -653,8 +653,8 @@ public class WorkspaceFolderManager
                 }
                 return;
             }
-            if (!definitionPath.endsWith(AS_EXTENSION)
-                    && !definitionPath.endsWith(MXML_EXTENSION))
+            if (!definitionPath.endsWith(FILE_EXTENSION_AS)
+                    && !definitionPath.endsWith(FILE_EXTENSION_MXML))
             {
                 //if it's anything else, we don't know how to resolve
                 return;

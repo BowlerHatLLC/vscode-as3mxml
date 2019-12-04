@@ -53,6 +53,8 @@ import org.eclipse.lsp4j.jsonrpc.CancelChecker;
 
 public class SignatureHelpProvider
 {
+    private static final String FILE_EXTENSION_MXML = ".mxml";
+
 	private WorkspaceFolderManager workspaceFolderManager;
 	private FileTracker fileTracker;
 
@@ -88,19 +90,22 @@ public class SignatureHelpProvider
 			cancelToken.checkCanceled();
 			return new SignatureHelp(Collections.emptyList(), -1, -1);
 		}
-		MXMLData mxmlData = workspaceFolderManager.getMXMLDataForPath(path, folderData);
-
 		IASNode offsetNode = null;
-		IMXMLTagData offsetTag = MXMLDataUtils.getOffsetMXMLTag(mxmlData, currentOffset);
-		if (offsetTag != null)
-		{
-			offsetNode = workspaceFolderManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, currentOffset, folderData);
-			if (offsetNode != null)
+        boolean isMXML = textDocument.getUri().endsWith(FILE_EXTENSION_MXML);
+        if (isMXML)
+        {
+			MXMLData mxmlData = workspaceFolderManager.getMXMLDataForPath(path, folderData);
+			IMXMLTagData offsetTag = MXMLDataUtils.getOffsetMXMLTag(mxmlData, currentOffset);
+			if (offsetTag != null)
 			{
-				IASNode containingNode = ASTUtils.getContainingNodeIncludingStart(offsetNode, currentOffset);
-				if (containingNode != null)
+				offsetNode = workspaceFolderManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, currentOffset, folderData);
+				if (offsetNode != null)
 				{
-					offsetNode = containingNode;
+					IASNode containingNode = ASTUtils.getContainingNodeIncludingStart(offsetNode, currentOffset);
+					if (containingNode != null)
+					{
+						offsetNode = containingNode;
+					}
 				}
 			}
 		}

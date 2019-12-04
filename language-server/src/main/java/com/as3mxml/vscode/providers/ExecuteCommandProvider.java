@@ -61,8 +61,8 @@ import org.eclipse.lsp4j.jsonrpc.CompletableFutures;
 
 public class ExecuteCommandProvider
 {
-    private static final String MXML_EXTENSION = ".mxml";
-    private static final String AS_EXTENSION = ".as";
+    private static final String FILE_EXTENSION_MXML = ".mxml";
+    private static final String FILE_EXTENSION_AS = ".as";
 
     private WorkspaceFolderManager workspaceFolderManager;
     private FileTracker fileTracker;
@@ -140,7 +140,7 @@ public class ExecuteCommandProvider
                     directories.add(file);
                     continue;
                 }
-                if (!file.getName().endsWith(AS_EXTENSION) && !file.getName().endsWith(MXML_EXTENSION))
+                if (!file.getName().endsWith(FILE_EXTENSION_AS) && !file.getName().endsWith(FILE_EXTENSION_MXML))
                 {
                     continue;
                 }
@@ -377,7 +377,7 @@ public class ExecuteCommandProvider
                 }
                 int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(new StringReader(text), new Position(line, character));
                 ImportRange importRange = null;
-                if(uri.endsWith(MXML_EXTENSION))
+                if(uri.endsWith(FILE_EXTENSION_MXML))
                 {
                     MXMLData mxmlData = workspaceFolderManager.getMXMLDataForPath(pathForImport, folderData);
                     IMXMLTagData offsetTag = MXMLDataUtils.getOffsetMXMLTag(mxmlData, currentOffset);

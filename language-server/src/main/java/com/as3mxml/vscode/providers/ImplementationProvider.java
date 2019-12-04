@@ -49,6 +49,8 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either;
 
 public class ImplementationProvider
 {
+    private static final String FILE_EXTENSION_MXML = ".mxml";
+
     private WorkspaceFolderManager workspaceFolderManager;
     private FileTracker fileTracker;
 
@@ -84,19 +86,22 @@ public class ImplementationProvider
 			cancelToken.checkCanceled();
 			return Either.forLeft(Collections.emptyList());
 		}
-		MXMLData mxmlData = workspaceFolderManager.getMXMLDataForPath(path, folderData);
-
-		IMXMLTagData offsetTag = MXMLDataUtils.getOffsetMXMLTag(mxmlData, currentOffset);
-		if (offsetTag != null)
-		{
-			IASNode embeddedNode = workspaceFolderManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, currentOffset, folderData);
-			if (embeddedNode != null)
-			{
-				List<? extends Location> result = actionScriptImplementation(embeddedNode, project);
-				cancelToken.checkCanceled();
-				return Either.forLeft(result);
-			}
-		}
+        boolean isMXML = textDocument.getUri().endsWith(FILE_EXTENSION_MXML);
+        if (isMXML)
+        {
+            MXMLData mxmlData = workspaceFolderManager.getMXMLDataForPath(path, folderData);
+            IMXMLTagData offsetTag = MXMLDataUtils.getOffsetMXMLTag(mxmlData, currentOffset);
+            if (offsetTag != null)
+            {
+                IASNode embeddedNode = workspaceFolderManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, currentOffset, folderData);
+                if (embeddedNode != null)
+                {
+                    List<? extends Location> result = actionScriptImplementation(embeddedNode, project);
+                    cancelToken.checkCanceled();
+                    return Either.forLeft(result);
+                }
+            }
+        }
 		IASNode offsetNode = workspaceFolderManager.getOffsetNode(path, currentOffset, folderData);
 		List<? extends Location> result = actionScriptImplementation(offsetNode, project);
 		cancelToken.checkCanceled();
