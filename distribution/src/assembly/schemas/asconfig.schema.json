@@ -148,7 +148,7 @@
 		{
 			"type": "string",
 			"description": "The package target for Adobe AIR applications.",
-			"pattern": "^(air|bundle|native|ipa-app-store|ipa-ad-hoc|ipa-debug|ipa-test|ipa-debug-interpreter|ipa-test-interpreter|ipa-debug-interpreter-simulator|ipa-test-interpreter-simulator|apk-captive-runtime|apk|apk-debug|apk-profile)$"
+			"pattern": "^(air|bundle|native|ipa-app-store|ipa-ad-hoc|ipa-debug|ipa-test|ipa-debug-interpreter|ipa-test-interpreter|ipa-debug-interpreter-simulator|ipa-test-interpreter-simulator|apk-captive-runtime|apk|apk-debug|apk-profile|aab)$"
 		},
 		"airOptionsDesktopTargets":
 		{
@@ -331,8 +331,8 @@
 						"target":
 						{
 							"type": "string",
-							"description": "The package target for iOS.",
-							"pattern": "^(apk-captive-runtime|apk|apk-debug|apk-profile)$"
+							"description": "The package target for Android.",
+							"pattern": "^(apk-captive-runtime|apk|apk-debug|apk-profile|aab)$"
 						}
 					},
 					"required":
