@@ -99,7 +99,12 @@ public class MXMLNamespaceUtils
     {
         IMXMLDataManager mxmlDataManager = workspace.getMXMLDataManager();
         MXMLData mxmlData = (MXMLData) mxmlDataManager.get(fileSpec);
-        return getMXMLLanguageNamespace(mxmlData.getRootTag());
+        IMXMLTagData rootTag = mxmlData.getRootTag();
+        if (rootTag == null)
+        {
+            return null;
+        }
+        return getMXMLLanguageNamespace(rootTag);
     }
 
     public static MXMLNamespace getNamespaceFromURI(String uri, PrefixMap prefixMap)
