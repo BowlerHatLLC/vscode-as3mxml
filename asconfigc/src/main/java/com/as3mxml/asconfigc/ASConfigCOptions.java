@@ -37,6 +37,7 @@ public class ASConfigCOptions
 	private static final String OPTION_PUBLISH_ANIMATE = "publish-animate";
 	private static final String OPTION_VERBOSE = "verbose";
 	private static final String OPTION_JVMARGS = "jvmargs";
+	private static final String OPTION_PRINT_CONFIG = "print-config";
 
 	public String project = null;
 	public String sdk = null;
@@ -50,6 +51,7 @@ public class ASConfigCOptions
 	public Boolean publishAnimate = null;
 	public boolean verbose = false;
 	public List<String> jvmargs = null;
+	public boolean printConfig = false;
 
 	public ASConfigCOptions(String project, String sdk, Boolean debug, String air, String storepass, Boolean unpackageANEs, IASConfigCCompiler compiler)
 	{
@@ -120,6 +122,11 @@ public class ASConfigCOptions
 				String[] argsArray = argsString.split(" ");
 				jvmargs = Arrays.stream(argsArray).collect(Collectors.toList());
 			}
+		}
+		if(line.hasOption(OPTION_PRINT_CONFIG))
+		{
+			String printConfigString = line.getOptionValue(OPTION_PRINT_CONFIG, Boolean.FALSE.toString());
+			printConfig = printConfigString.equals(Boolean.TRUE.toString());
 		}
 		compiler = new DefaultCompiler(verbose, jvmargs);
 	}

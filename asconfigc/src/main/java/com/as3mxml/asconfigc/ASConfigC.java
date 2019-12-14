@@ -78,6 +78,7 @@ import com.as3mxml.asconfigc.compiler.RoyaleTarget;
 import com.as3mxml.asconfigc.htmlTemplate.HTMLTemplateOptionsParser;
 import com.as3mxml.asconfigc.utils.ApacheFlexJSUtils;
 import com.as3mxml.asconfigc.utils.ApacheRoyaleUtils;
+import com.as3mxml.asconfigc.utils.ConfigUtils;
 import com.as3mxml.asconfigc.utils.GenericSDKUtils;
 import com.as3mxml.asconfigc.utils.JsonUtils;
 import com.as3mxml.asconfigc.utils.OptionsFormatter;
@@ -147,6 +148,10 @@ public class ASConfigC
 		jvmargsOption.setArgName("ARGS");
 		jvmargsOption.setOptionalArg(true);
 		options.addOption(jvmargsOption);
+		Option printConfigOption = new Option(null, "print-config", true, "(Advanced) Prints the contents of the asconfig.json file used to build, including any extensions.");
+		printConfigOption.setArgName("true OR false");
+		printConfigOption.setOptionalArg(true);
+		options.addOption(printConfigOption);
 
 		ASConfigCOptions asconfigcOptions = null;
 		try
@@ -205,15 +210,16 @@ public class ASConfigC
 	{
 		this.options = options;
 		File configFile = findConfigurationFile(options.project);
-		if(options.verbose)
-		{
-			System.out.println("Configuration file: " + configFile.getAbsolutePath());
-		}
 
 		//the current working directory must be where asconfig.json is located
 		System.setProperty("user.dir", configFile.getParent());
 
-		JsonNode json = loadConfig(configFile);
+		JsonNode json = loadConfigFromFile(configFile);
+		if(options.printConfig)
+		{
+			printConfig(json);
+			return;
+		}
 		parseConfig(json);
 		if(animateFile != null)
 		{
@@ -288,7 +294,7 @@ public class ASConfigC
 		return projectFile;
 	}
 
-	private JsonNode loadConfig(File configFile) throws ASConfigCException
+	private JsonNode loadConfigFromFile(File configFile) throws ASConfigCException
 	{
         JsonSchema schema = null;
         try (InputStream schemaInputStream = getClass().getResourceAsStream("/schemas/asconfig.schema.json"))
@@ -300,13 +306,22 @@ public class ASConfigC
         {
             //this exception is unexpected, so it should be reported
             throw new ASConfigCException("Failed to load asconfig.json schema: " + e);
-        }
+		}
+		return loadConfigFromFileWithSchema(configFile, schema);
+	}
+
+	private JsonNode loadConfigFromFileWithSchema(File configFile, JsonSchema schema) throws ASConfigCException
+	{
         JsonNode json = null;
         try
         {
 			if(options.verbose)
 			{
-				System.err.println("Reading configuration file...");
+				System.out.println("Configuration file: " + configFile.getAbsolutePath());
+			}
+			if(options.verbose)
+			{
+				System.out.println("Reading configuration file...");
 			}
             String contents = new String(Files.readAllBytes(configFile.toPath()));
             ObjectMapper mapper = new ObjectMapper();
@@ -316,7 +331,7 @@ public class ASConfigC
             json = mapper.readTree(contents);
 			if(options.verbose)
 			{
-				System.err.println("Validating configuration file...");
+				System.out.println("Validating configuration file...");
 			}
             Set<ValidationMessage> errors = schema.validate(json);
             if (!errors.isEmpty())
@@ -328,26 +343,49 @@ public class ASConfigC
 					combinedMessage.append(error.getMessage() + "\n");
 				}
             	throw new ASConfigCException(combinedMessage.toString());
-            }
+			}
+			if(json.has(TopLevelFields.EXTENDS))
+			{
+				String otherConfigPath = json.get(TopLevelFields.EXTENDS).asText();
+				File otherConfigFile = new File(otherConfigPath);
+				JsonNode otherJson = loadConfigFromFileWithSchema(otherConfigFile, schema);
+				json = ConfigUtils.mergeConfigs(json, otherJson);
+			}
 		}
 		catch(JsonProcessingException e)
 		{
 			//this exception is expected sometimes if the JSON is invalid
 			JsonLocation location = e.getLocation();
-			throw new ASConfigCException("Invalid asconfig.json:\n" + e.getOriginalMessage() + " (line " + location.getLineNr() + ", column " + location.getColumnNr() + ")");
+			throw new ASConfigCException("Invalid configuration in file " + configFile.getName() + ":\n" + e.getOriginalMessage() + " (line " + location.getLineNr() + ", column " + location.getColumnNr() + ")");
 		}
         catch(IOException e)
         {
-			throw new ASConfigCException("Failed to read asconfig.json: " + e);
+			throw new ASConfigCException("Failed to read " + configFile.getName() + ": " + e);
 		}
 		return json;
+	}
+
+	private void printConfig(JsonNode json) throws ASConfigCException
+	{
+		ObjectMapper mapper = new ObjectMapper();
+		try
+		{
+			String configAsString = mapper
+				.writerWithDefaultPrettyPrinter()
+				.writeValueAsString(json);
+			System.out.println(configAsString);
+		}
+		catch(JsonProcessingException e)
+		{
+			throw new ASConfigCException("Failed to write config: " + e);
+		}
 	}
 	
 	private void parseConfig(JsonNode json) throws ASConfigCException
 	{
 		if(options.verbose)
 		{
-			System.err.println("Parsing configuration file...");
+			System.out.println("Parsing configuration file...");
 		}
 		clean = options.clean != null && options.clean.equals(true);
 		debugBuild = options.debug != null && options.debug.equals(true);
@@ -1143,7 +1181,7 @@ public class ASConfigC
 
 		if(options.verbose)
 		{
-			System.err.println("Copying HTML template...");
+			System.out.println("Copying HTML template...");
 		}
 
 		File templateDirectory = new File(htmlTemplate);
@@ -1414,7 +1452,7 @@ public class ASConfigC
 
 		if(options.verbose)
 		{
-			System.err.println("Copying Adobe AIR application files...");
+			System.out.println("Copying Adobe AIR application files...");
 		}
 
 		String outputDirectoryPath = ProjectUtils.findOutputDirectory(mainFile, outputPath, !outputIsJS);
@@ -1577,7 +1615,7 @@ public class ASConfigC
 		}
 		if(options.verbose)
 		{
-			System.err.println("Processing Adobe AIR application descriptor(s)...");
+			System.out.println("Processing Adobe AIR application descriptor(s)...");
 		}
 		boolean populateTemplate = false;
 		if(airDescriptorPaths == null || airDescriptorPaths.size() == 0)
@@ -1588,7 +1626,7 @@ public class ASConfigC
 			populateTemplate = true;
 			if(options.verbose)
 			{
-				System.err.println("Using template fallback: " + templatePath);
+				System.out.println("Using template fallback: " + templatePath);
 			}
 		}
 		String outputDirectory = ProjectUtils.findOutputDirectory(mainFile, outputPath, !outputIsJS);
@@ -1599,7 +1637,7 @@ public class ASConfigC
 		}
 		if(options.verbose)
 		{
-			System.err.println("Initial window content: " + contentValue);
+			System.out.println("Initial window content: " + contentValue);
 		}
 		for(String airDescriptorPath : airDescriptorPaths)
 		{
@@ -1610,7 +1648,7 @@ public class ASConfigC
 			}
 			if(options.verbose)
 			{
-				System.err.println("Descriptor: " + resolvedDescriptorPath);
+				System.out.println("Descriptor: " + resolvedDescriptorPath);
 			}
 			String descriptorContents = null;
 			try
@@ -1630,7 +1668,7 @@ public class ASConfigC
 				}
 				if(options.verbose)
 				{
-					System.err.println("Generated application ID: " + appID);
+					System.out.println("Generated application ID: " + appID);
 				}
 				descriptorContents = ProjectUtils.populateAdobeAIRDescriptorTemplate(descriptorContents, appID);
 
