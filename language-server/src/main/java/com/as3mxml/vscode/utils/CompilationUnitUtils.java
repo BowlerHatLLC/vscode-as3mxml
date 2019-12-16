@@ -211,7 +211,7 @@ public class CompilationUnitUtils
 					Path mxmlPath = Paths.get(mxmlData.getPath());
 					scriptPath = mxmlPath.getParent().resolve(scriptPath);
 				}
-				if(!Files.exists(scriptPath))
+				if(!scriptPath.toFile().exists())
 				{
 					//the file doesn't actually exist, and getAbsoluteOffset()
 					//will throw an exception if we call it

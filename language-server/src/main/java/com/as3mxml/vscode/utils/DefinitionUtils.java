@@ -297,7 +297,7 @@ public class DefinitionUtils
 		String newSourceFilePath = sourceFilePath.substring(index + SDK_FRAMEWORKS_PATH_SIGNATURE.length());
 		Path frameworkPath = Paths.get(System.getProperty(PROPERTY_FRAMEWORK_LIB));
         Path transformedPath = frameworkPath.resolve(newSourceFilePath);
-		if(Files.exists(transformedPath))
+		if(transformedPath.toFile().exists())
 		{
 			//only transform the path if the transformed file exists
 			//if it doesn't exist, the original path may be valid

@@ -1064,18 +1064,13 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         checkProjectForProblems(folderData);
     }
 
-    public void didChangeWatchedFiles(DidChangeWatchedFilesParams params)
-    {
-        didChangeWatchedFiles(params, true);
-    }
-
     /**
      * Called when certain files in the workspace are added, removed, or
      * changed, even if they are not considered open for editing. Also checks if
      * the project configuration strategy has changed. If it has, checks for
      * errors on the whole project.
      */
-    public void didChangeWatchedFiles(DidChangeWatchedFilesParams params, boolean checkForProblems)
+    public void didChangeWatchedFiles(DidChangeWatchedFilesParams params)
     {
         Set<WorkspaceFolderData> foldersToCheck = new HashSet<>();
 
@@ -1126,7 +1121,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
 
                     //this is weird, but it's possible for a renamed file to
                     //result in a Changed event, but not a Deleted event
-                    (changeType.equals(FileChangeType.Changed) && !java.nio.file.Files.exists(changedPath))
+                    (changeType.equals(FileChangeType.Changed) && !changedPath.toFile().exists())
                 )
                 {
                     IFileSpecification fileSpec = fileTracker.getFileSpecification(normalizedChangedPathAsString);
@@ -1241,12 +1236,9 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                 }
             }
         }
-        if (checkForProblems)
+        for (WorkspaceFolderData folderData : foldersToCheck)
         {
-            for (WorkspaceFolderData folderData : foldersToCheck)
-            {
-                checkProjectForProblems(folderData);
-            }
+            checkProjectForProblems(folderData);
         }
     }
 
@@ -1552,7 +1544,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                     {
                         return;
                     }
-                    Set<WorkspaceFolderData> foldersToCheckForProblems = new HashSet<WorkspaceFolderData>();
+                    List<FileEvent> changes = new ArrayList<>();
                     while (watchKey != null)
                     {
                         for (WorkspaceFolder folder : workspaceFolderManager.getWorkspaceFolders())
@@ -1562,8 +1554,6 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                             {
                                 continue;
                             }
-                            foldersToCheckForProblems.add(folderData);
-                            List<FileEvent> changes = new ArrayList<>();
                             Path path = folderData.sourceOrLibraryPathWatchKeys.get(watchKey);
                             for (WatchEvent<?> event : watchKey.pollEvents())
                             {
@@ -1596,23 +1586,19 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                             {
                                 folderData.sourceOrLibraryPathWatchKeys.remove(watchKey);
                             }
-                            //convert to DidChangeWatchedFilesParams and pass
-                            //to didChangeWatchedFiles, as if a notification
-                            //had been sent from the client.
-                            DidChangeWatchedFilesParams params = new DidChangeWatchedFilesParams();
-                            params.setChanges(changes);
-                            didChangeWatchedFiles(params, false);
                         }
                         //keep handling new changes until we run out
                         watchKey = sourcePathWatcher.poll();
                     }
-                    //if we get here, watchKey is null, so there are no more
-                    //pending changes. now, we can check for problems.
-                    for (WorkspaceFolderData folderData : foldersToCheckForProblems)
+                    if (changes.size() > 0)
                     {
-                        checkProjectForProblems(folderData);
+                        //convert to DidChangeWatchedFilesParams and pass
+                        //to didChangeWatchedFiles, as if a notification
+                        //had been sent from the client.
+                        DidChangeWatchedFilesParams params = new DidChangeWatchedFilesParams();
+                        params.setChanges(changes);
+                        didChangeWatchedFiles(params);
                     }
-                    foldersToCheckForProblems.clear();
                 }
             }
         };
@@ -1771,7 +1757,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             
             Path configFilePath = folderData.config.getConfigFilePath();
             if(configFilePath != null
-                    && !Files.exists(configFilePath)
+                    && !configFilePath.toFile().exists()
                     && fileTracker.getOpenFiles().size() > 0)
             {
                 //the config file is missing, so add a problem about it
