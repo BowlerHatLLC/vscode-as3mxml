@@ -520,9 +520,23 @@ public class ASConfigC
 				}
 				if(size > 0)
 				{
+					//mainClass is preferred, but for backwards compatibility,
+					//we need to support setting the entry point with files too
 					mainFile = files.get(size - 1).asText();
 				}
 			}
+		}
+		//mainClass must be parsed after files
+		if(ProjectType.APP.equals(projectType) && json.has(TopLevelFields.MAIN_CLASS))
+		{
+			//if set already, clear it because we're going to replace it
+			String mainClass = json.get(TopLevelFields.MAIN_CLASS).asText();
+			mainFile = ConfigUtils.resolveMainClass(mainClass, sourcePaths);
+			if(mainFile == null)
+			{
+				throw new ASConfigCException("Main class not found in source paths: " + mainClass);
+			}
+			compilerOptions.add(mainFile);
 		}
 		if(json.has(TopLevelFields.AIR_OPTIONS))
 		{

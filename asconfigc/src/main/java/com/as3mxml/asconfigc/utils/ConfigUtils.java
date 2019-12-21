@@ -15,9 +15,14 @@ limitations under the License.
 */
 package com.as3mxml.asconfigc.utils;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -33,6 +38,43 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class ConfigUtils
 {
+	private static final String FILE_EXTENSION_AS = ".as";
+	private static final String FILE_EXTENSION_MXML = ".mxml";
+
+	public static String resolveMainClass(String mainClass, List<String> sourcePaths)
+	{
+		String mainClassBasePath = mainClass.replace(".", File.separator);
+		if(sourcePaths != null)
+		{
+			for(String sourcePath : sourcePaths)
+			{
+				Path sourcePathPath = Paths.get(sourcePath);
+				Path mainClassPath = sourcePathPath.resolve(mainClassBasePath + FILE_EXTENSION_AS);
+				if(mainClassPath.toFile().exists())
+				{
+					return mainClassPath.toString();
+				}
+				mainClassPath = sourcePathPath.resolve(mainClassBasePath + FILE_EXTENSION_MXML);
+				if(mainClassPath.toFile().exists())
+				{
+					return mainClassPath.toString();
+				}
+			}
+		}
+		//as a final fallback, try in the current working directory
+		Path mainClassPath = Paths.get(mainClassBasePath + FILE_EXTENSION_AS);
+		if(mainClassPath.toFile().exists())
+		{
+			return mainClassPath.toString();
+		}
+		mainClassPath = Paths.get(mainClassBasePath + FILE_EXTENSION_MXML);
+		if(mainClassPath.toFile().exists())
+		{
+			return mainClassPath.toString();
+		}
+		return null;
+	}
+
 	public static JsonNode mergeConfigs(JsonNode configData, JsonNode baseConfigData)
 	{
 		ObjectMapper mapper = new ObjectMapper();
