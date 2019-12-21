@@ -26,6 +26,13 @@ public class ProjectOptions
 {
     public String type;
     public String config;
+    public String mainClass;
+
+    /**
+     * In an application project, the final file must be the main class. Each
+     * path must be absolute and canonical, or there will be problems on Windows
+     * where the drive letter could have different cases.
+     */
     public String[] files;
     public List<String> compilerOptions;
     public String additionalOptions;

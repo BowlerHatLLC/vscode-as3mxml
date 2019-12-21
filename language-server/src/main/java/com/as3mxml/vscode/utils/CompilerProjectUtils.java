@@ -223,7 +223,10 @@ public class CompilerProjectUtils
         }
         else // app
         {
-            combinedOptions.addAll(Arrays.asList(files));
+            if (files != null && files.length > 0)
+            {
+                combinedOptions.addAll(Arrays.asList(files));
+            }
             configurator.setConfiguration(combinedOptions.toArray(new String[combinedOptions.size()]),
                     ICompilerSettingsConstants.FILE_SPECS_VAR);
         }
@@ -238,6 +241,7 @@ public class CompilerProjectUtils
         }
         else
         {
+            //fallback for backwards compatibility
             appendConfigPath = frameworkLibPath.resolve("../ide/vscode-nextgenas/vscode-nextgenas-config.xml");
             appendConfigFile = appendConfigPath.toFile();
             if (appendConfigFile.exists())

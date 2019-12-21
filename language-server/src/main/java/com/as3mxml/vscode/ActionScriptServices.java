@@ -1825,8 +1825,17 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                     if(configuration.getTargetFile() == null)
                     {
                         result = false;
-                        ConfigurationException e = new ConfigurationException.MustSpecifyTarget(null, folderData.config.getConfigFilePath().toString(), -1);
-                        configProblems.add(new ConfigurationProblem(e));
+                        if(projectOptions.mainClass == null)
+                        {
+                            ConfigurationException e = new ConfigurationException.MustSpecifyTarget(null, folderData.config.getConfigFilePath().toString(), -1);
+                            configProblems.add(new ConfigurationProblem(e));
+                        }
+                        else
+                        {
+                            String mainClassRelativePath = projectOptions.mainClass.replace(".", File.separator) + FILE_EXTENSION_AS;
+                            Path mainClassPath = Paths.get(mainClassRelativePath).toAbsolutePath();
+                            configProblems.add(new FileNotFoundProblem(mainClassPath.toString()));
+                        }
                     }
                 }
                 configProblems.addAll(configurator.getConfigurationProblems());

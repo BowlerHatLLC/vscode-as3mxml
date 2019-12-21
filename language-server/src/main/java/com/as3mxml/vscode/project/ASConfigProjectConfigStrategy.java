@@ -21,6 +21,8 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 
 import com.fasterxml.jackson.core.JsonParser;
@@ -34,6 +36,8 @@ import com.as3mxml.asconfigc.compiler.CompilerOptions;
 import com.as3mxml.asconfigc.compiler.CompilerOptionsParser;
 import com.as3mxml.asconfigc.compiler.ProjectType;
 import com.as3mxml.asconfigc.compiler.CompilerOptionsParser.UnknownCompilerOptionException;
+import com.as3mxml.asconfigc.utils.ConfigUtils;
+import com.as3mxml.asconfigc.utils.JsonUtils;
 import com.as3mxml.vscode.utils.ActionScriptSDKUtils;
 
 import org.apache.commons.io.FileUtils;
@@ -112,10 +116,12 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy
         {
             config = CONFIG_ROYALE;
         }
-        String[] files = null;
+        String mainClass = null;
+        String[] files = new String[0];
         String additionalOptions = null;
-        ArrayList<String> compilerOptions = null;
-        ArrayList<String> targets = null;
+        List<String> compilerOptions = null;
+        List<String> targets = null;
+        List<String> sourcePaths = null;
         JsonSchema schema = null;
         try (InputStream schemaInputStream = getClass().getResourceAsStream("/schemas/asconfig.schema.json"))
         {
@@ -194,6 +200,24 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy
                         targets.add(target);
                     }
                 }
+                //we use this to resolve the mainClass
+                if(jsonCompilerOptions.has(CompilerOptions.SOURCE_PATH))
+                {
+                    JsonNode sourcePath = jsonCompilerOptions.get(CompilerOptions.SOURCE_PATH);
+                    sourcePaths = JsonUtils.jsonNodeToListOfStrings(sourcePath);
+                }
+            }
+            if (json.has(TopLevelFields.MAIN_CLASS))
+            {
+                mainClass = json.get(TopLevelFields.MAIN_CLASS).asText();
+                String resolvedMainClass = ConfigUtils.resolveMainClass(mainClass, sourcePaths);
+                if(resolvedMainClass != null)
+                {
+                    Path mainClassPath = Paths.get(resolvedMainClass);
+                    mainClassPath = projectRoot.resolve(resolvedMainClass);
+                    files = Arrays.copyOf(files, files.length + 1);
+                    files[files.length - 1] = mainClassPath.toString();
+                }
             }
             //these options are formatted as if sent in through the command line
             if (json.has(TopLevelFields.ADDITIONAL_OPTIONS)) //optional
@@ -228,6 +252,7 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy
         options.type = projectType;
         options.config = config;
         options.files = files;
+        options.mainClass = mainClass;
         options.compilerOptions = compilerOptions;
         options.additionalOptions = additionalOptions;
         options.targets = targets;
