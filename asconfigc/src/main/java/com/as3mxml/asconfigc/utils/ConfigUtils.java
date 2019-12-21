@@ -16,7 +16,6 @@ limitations under the License.
 package com.as3mxml.asconfigc.utils;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
