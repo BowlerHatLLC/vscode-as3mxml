@@ -45,9 +45,10 @@ A sample _asconfig.json_ file for an Apache Royale project appears below:
 {
   "compilerOptions": {
     "targets": ["JSRoyale"],
+    "source-path": ["src"],
     "source-map": true
   },
-  "files": ["src/HelloRoyale.mxml"]
+  "mainClass": "HelloRoyale"
 }
 ```
 
@@ -57,10 +58,11 @@ Here's another sample _asconfig.json_ file for a pure ActionScript project targe
 {
   "config": "airmobile",
   "compilerOptions": {
+    "source-path": ["src"],
     "output": "bin/HelloAIR.swf"
   },
+  "mainClass": "HelloAIR",
   "application": "src/HelloAIR-app.xml",
-  "files": ["src/HelloAIR.as"],
   "airOptions": {
     "android": {
       "output": "bin/HelloAIR.apk",
