@@ -32,6 +32,7 @@
 - Build: Fixed issue where a file not found error could be reported when using `-arch` option when packaging an Adobe AIR application.
 - General: Fixed null reference exception in _.mxml_ file when root tag is not found.
 - General: Fixed incorrect code intelligence near beginning or end of _.as_ files included with `<fx:Script>` in MXML.
+- Syntax: Fixed syntax highlighting issues in MXML for `<fx:Metadata>` and `<fx:Script>` tags that start and end on the same line.
 - Tasks: When no target is specified for an Adobe AIR desktop app, tasks list now includes both _captive runtime_ and _shared runtime_ packaging tasks. Previously, it was necessary to specify the `bundle` target.
 
 ### Other Changes

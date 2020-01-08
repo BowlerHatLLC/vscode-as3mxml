@@ -21,7 +21,7 @@
 			<array>
 				<dict>
 					<key>match</key>
-					<string>&lt;(?:fx|mx):Script.*&gt;</string>
+					<string>&lt;(?:fx|mx):Script[^&gt;]*&gt;</string>
 					<key>name</key>
 					<string>entity.name.tag.xml</string>
 				</dict>
@@ -74,7 +74,7 @@
 			<array>
 				<dict>
 					<key>match</key>
-					<string>&lt;(?:fx|mx):Metadata.*&gt;</string>
+					<string>&lt;(?:fx|mx):Metadata[^&gt;]*&gt;</string>
 					<key>name</key>
 					<string>entity.name.tag.xml</string>
 				</dict>
