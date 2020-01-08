@@ -91,6 +91,9 @@ class ConfigUtilsTopLevelTests
 
 	//files is an array, but unlike other arrays, it does not get merged,
 	//so it should be tested as a special case
+
+	//the files array is not merged because the order elements in the array must
+	//be preserved, unlike other arrays which can be handled more leniently
 	
 	@Test
 	void testFilesWithBaseOnly() throws IOException
@@ -165,7 +168,7 @@ class ConfigUtilsTopLevelTests
 
 	//--- application
 
-	//application can be a string or a file, and it has special rules for
+	//application can be a string or an object, and it has special rules for
 	//merging
 	
 	@Test
