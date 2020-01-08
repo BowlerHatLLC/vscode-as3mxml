@@ -35,13 +35,13 @@ import org.eclipse.lsp4j.jsonrpc.Launcher;
 public class Main
 {
     private static final int SERVER_CONNECT_ERROR = 101;
-    private static final String SYSTEM_PROPERTY_PORT = "nextgeas.vscode.port";
+    private static final String SYSTEM_PROPERTY_PORT = "as3mxml.server.port";
     private static final String SOCKET_HOST = "localhost";
 
     /**
      * The main entry point when the JAR is run. Opens a socket to communicate
      * with Visual Studio Code using the port specified with the
-     * -Dnextgeas.vscode.port command line option. Then, instantiates the
+     * -Das3mxml.server.port command line option. Then, instantiates the
      * ActionScriptLanguageServer, and passes it to the LSP4J library,
      * which handles all of the language server protocol communication.
      * LSP4J calls methods on ActionScriptLanguageServer as requests come in
