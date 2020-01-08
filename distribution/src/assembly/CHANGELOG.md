@@ -1,5 +1,43 @@
 # ActionScript & MXML for Visual Studio Code Changelog
 
+## v0.25.0
+
+### New Features
+
+- Build: Added `aab` as a value for the Adobe AIR `arch` option for Android to support Harman's latest SDK.
+- Build: Added `mainClass` field to _asconfig.json_ to optionally use instead of `files`.
+  Example:
+
+  ```json
+  {
+    "compilerOptions": {
+      "source-path": ["src"]
+    },
+    "mainClass": "com.example.Main"
+  }
+  ```
+
+- Build: Added `extends` field to _asconfig.json_ that may be used to reference another _asconfig_ file to use as a base template while overriding some values.
+  For example, you could override the `mainClass` field for a custom build:
+
+  ```json
+  {
+    "extends": "asconfig.base.json",
+    "mainClass": "com.example.MainOverride"
+  }
+  ```
+
+### Fixed Issues
+
+- Build: Fixed issue where a file not found error could be reported when using `-arch` option when packaging an Adobe AIR application.
+- General: Fixed null reference exception in _.mxml_ file when root tag is not found.
+- General: Fixed incorrect code intelligence near beginning or end of _.as_ files included with `<fx:Script>` in MXML.
+- Tasks: When no target is specified for an Adobe AIR desktop app, tasks list now includes both _captive runtime_ and _shared runtime_ packaging tasks. Previously, it was necessary to specify the `bundle` target.
+
+### Other Changes
+
+- Language Server: Specifying the socket port to use for protocol communication requires the `-Das3mxml.server.port` command line option. Other editors besides Visual Studio Code may need to update their launch command. However, using stdio instead of sockets is recommended.
+
 ## v0.24.1
 
 ### Fixed Issues
