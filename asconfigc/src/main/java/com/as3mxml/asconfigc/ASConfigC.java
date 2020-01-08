@@ -530,11 +530,17 @@ public class ASConfigC
 		if(ProjectType.APP.equals(projectType) && json.has(TopLevelFields.MAIN_CLASS))
 		{
 			//if set already, clear it because we're going to replace it
+			boolean hadMainFile = mainFile != null;
 			String mainClass = json.get(TopLevelFields.MAIN_CLASS).asText();
 			mainFile = ConfigUtils.resolveMainClass(mainClass, sourcePaths);
 			if(mainFile == null)
 			{
 				throw new ASConfigCException("Main class not found in source paths: " + mainClass);
+			}
+			if(!hadMainFile)
+			{
+				//terminate previous options and start default options
+				compilerOptions.add("--");
 			}
 			compilerOptions.add(mainFile);
 		}
