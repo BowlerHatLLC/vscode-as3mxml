@@ -1825,16 +1825,34 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                     if(configuration.getTargetFile() == null)
                     {
                         result = false;
-                        if(projectOptions.mainClass == null)
-                        {
-                            ConfigurationException e = new ConfigurationException.MustSpecifyTarget(null, folderData.config.getConfigFilePath().toString(), -1);
-                            configProblems.add(new ConfigurationProblem(e));
-                        }
-                        else
+                        if(projectOptions.mainClass != null)
                         {
                             String mainClassRelativePath = projectOptions.mainClass.replace(".", File.separator) + FILE_EXTENSION_AS;
                             Path mainClassPath = Paths.get(mainClassRelativePath).toAbsolutePath();
                             configProblems.add(new FileNotFoundProblem(mainClassPath.toString()));
+                        }
+                        else
+                        {
+                            String[] files = projectOptions.files;
+                            //mainClass didn't always exist, so just to be safe,
+                            //fall back to the last entry of files, if available
+                            if(files != null && files.length > 0)
+                            {
+                                configProblems.add(new FileNotFoundProblem(files[files.length - 1]));
+                            }
+                            else
+                            {
+                                //finally, fall back to the config file or the
+                                //workspace folder
+                                Path problemPath = LanguageServerCompilerUtils.getPathFromLanguageServerURI(folderData.folder.getUri());
+                                Path configFilePath = folderData.config.getConfigFilePath();
+                                if(configFilePath != null)
+                                {
+                                    problemPath = configFilePath;
+                                }
+                                ConfigurationException e = new ConfigurationException.MustSpecifyTarget(null, problemPath != null ? problemPath.toString() : null, -1);
+                                configProblems.add(new ConfigurationProblem(e));
+                            }
                         }
                     }
                 }
