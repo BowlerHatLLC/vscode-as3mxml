@@ -174,19 +174,31 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
     @Override
     public void initialized(InitializedParams params)
     {
-        List<FileSystemWatcher> watchers = new ArrayList<>();
-        //ideally, we'd only check .as, .mxml, asconfig.json, and directories
-        //but there's no way to target directories without *
-        watchers.add(new FileSystemWatcher("**/*"));
+        boolean canRegisterDidChangeWatchedFiles = false;
+        try
+        {
+            canRegisterDidChangeWatchedFiles = actionScriptServices.getClientCapabilities().getWorkspace().getDidChangeWatchedFiles().getDynamicRegistration();
+        }
+        catch(NullPointerException e)
+        {
+            canRegisterDidChangeWatchedFiles = false;
+        }
+        if(canRegisterDidChangeWatchedFiles)
+        {
+            List<FileSystemWatcher> watchers = new ArrayList<>();
+            //ideally, we'd only check .as, .mxml, asconfig.json, and directories
+            //but there's no way to target directories without *
+            watchers.add(new FileSystemWatcher("**/*"));
 
-        String id = "as3mxml-language-server-" + Math.random();
-        DidChangeWatchedFilesRegistrationOptions options = new DidChangeWatchedFilesRegistrationOptions(watchers);
-        Registration registration = new Registration(id, "workspace/didChangeWatchedFiles", options);
-        List<Registration> registrations = new ArrayList<>();
-        registrations.add(registration);
+            String id = "as3mxml-language-server-" + Math.random();
+            DidChangeWatchedFilesRegistrationOptions options = new DidChangeWatchedFilesRegistrationOptions(watchers);
+            Registration registration = new Registration(id, "workspace/didChangeWatchedFiles", options);
+            List<Registration> registrations = new ArrayList<>();
+            registrations.add(registration);
 
-        RegistrationParams registrationParams = new RegistrationParams(registrations);
-        languageClient.registerCapability(registrationParams);
+            RegistrationParams registrationParams = new RegistrationParams(registrations);
+            languageClient.registerCapability(registrationParams);
+        }
 
         //we can't notify the client about problems until we receive this
         //initialized notification. this is the first time that we'll start
