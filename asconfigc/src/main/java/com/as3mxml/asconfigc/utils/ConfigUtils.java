@@ -118,6 +118,10 @@ public class ConfigUtils
 				{
 					result.set(fieldName, mergeAirOptions(newValue, baseValue, true));
 				}
+				else if(newValue.isArray() && baseValue.isArray())
+				{
+					result.set(fieldName, mergeArrays(newValue, baseValue));
+				}
 				else
 				{
 					result.set(fieldName, mergeObjectsSimple(newValue, baseValue));

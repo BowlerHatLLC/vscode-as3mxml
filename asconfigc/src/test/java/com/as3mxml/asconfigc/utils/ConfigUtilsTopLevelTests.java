@@ -88,9 +88,7 @@ class ConfigUtilsTopLevelTests
 	}
 
 	//--- files
-
-	//files is an array, but unlike other arrays, it does not get merged,
-	//so it should be tested as a special case
+	//files is an array of strings, and items should not be duplicated
 	
 	@Test
 	void testFilesWithBaseOnly() throws IOException
@@ -159,7 +157,44 @@ class ConfigUtilsTopLevelTests
 		Iterator<JsonNode> elements = resultValue.elements();
 		Assertions.assertTrue(elements.hasNext());
 		String resultValue0 = elements.next().asText();
-		Assertions.assertEquals(newValue, resultValue0);
+		Assertions.assertEquals(baseValue, resultValue0);
+		Assertions.assertTrue(elements.hasNext());
+		String resultValue1 = elements.next().asText();
+		Assertions.assertEquals(newValue, resultValue1);
+		Assertions.assertFalse(elements.hasNext());
+	}
+	
+	@Test
+	void testFilesMergeDuplicates() throws IOException
+	{
+		String baseValue = "src/Base.as";
+		String newValue0 = "src/Base.as";
+		String newValue1 = "src/New.as";
+		ObjectMapper mapper = new ObjectMapper();
+		JsonNode baseConfigData = mapper.readTree(
+			"{" +
+				"\"files\": [\"" + baseValue + "\"]" +
+			"}"
+		);
+		JsonNode configData = mapper.readTree(
+			"{" +
+				"\"files\": [" +
+					"\"" + newValue0 + "\"," + 
+					"\"" + newValue1 + "\"" + 
+				"]" +
+			"}"
+		);
+		JsonNode result = ConfigUtils.mergeConfigs(configData, baseConfigData);
+		Assertions.assertTrue(result.has(TopLevelFields.FILES));
+		JsonNode resultValue = result.get(TopLevelFields.FILES);
+		Assertions.assertTrue(resultValue.isArray());
+		Iterator<JsonNode> elements = resultValue.elements();
+		Assertions.assertTrue(elements.hasNext());
+		String resultValue0 = elements.next().asText();
+		Assertions.assertEquals(baseValue, resultValue0);
+		Assertions.assertTrue(elements.hasNext());
+		String resultValue1 = elements.next().asText();
+		Assertions.assertEquals(newValue1, resultValue1);
 		Assertions.assertFalse(elements.hasNext());
 	}
 
