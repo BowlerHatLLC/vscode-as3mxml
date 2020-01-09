@@ -59,6 +59,7 @@
     "workspaceContains:**/asconfig.json",
     "workspaceContains:**/asconfig.*.json",
     "workspaceContains:.actionScriptProperties",
+    "workspaceContains:*.as3proj",
     "onView:actionScriptSourcePaths",
     "onCommand:as3mxml.organizeImportsInUri",
     "onCommand:as3mxml.organizeImportsInDirectory",
@@ -66,6 +67,7 @@
     "onCommand:as3mxml.selectWorkspaceSDK",
     "onCommand:as3mxml.restartServer",
     "onCommand:as3mxml.importFlashBuilderProject",
+    "onCommand:as3mxml.importFlashDevelopProject",
     "onCommand:as3mxml.quickCompile",
     "onCommand:as3mxml.quickCompileAndDebug",
     "onCommand:as3mxml.quickCompileAndRun",
@@ -109,6 +111,11 @@
       {
         "command": "as3mxml.importFlashBuilderProject",
         "title": "Import Adobe Flash Builder Project",
+        "category": "ActionScript"
+      },
+      {
+        "command": "as3mxml.importFlashDevelopProject",
+        "title": "Import FlashDevelop Project",
         "category": "ActionScript"
       }
     ],
