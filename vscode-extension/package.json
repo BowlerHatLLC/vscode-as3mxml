@@ -37,7 +37,7 @@
     "bowlerhatllc.vscode-swf-debug"
   ],
   "devDependencies": {
-    "@rgrove/parse-xml": "^2.0.1",
+    "@rgrove/parse-xml": "^2.0.2",
     "@types/json5": "0.0.30",
     "@types/mocha": "^5.2.7",
     "@types/node": "^8.10.53",

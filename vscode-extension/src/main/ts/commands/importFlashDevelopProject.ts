@@ -448,8 +448,7 @@ function migrateBuildElement(buildElement: any, result: any)
 			let compilerConstants = attributes.compilerConstants as string;
 			if(compilerConstants.length > 0)
 			{
-				//TODO: rgrove/parse-xml#6
-				let splitConstants = compilerConstants.split(" ")
+				let splitConstants = compilerConstants.split("\n")
 				let define = splitConstants.map((value) =>
 				{
 					let parts = value.split(",")
