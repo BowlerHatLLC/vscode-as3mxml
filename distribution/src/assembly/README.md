@@ -22,7 +22,7 @@ Extension created and maintained by [Josh Tynjala](https://patreon.com/josht). B
 - **Debug** SWF projects in Adobe AIR and Flash Player.
 - **Debug** Apache Royale (formerly known as FlexJS) projects in web browsers and Node.js.
 - **Adobe Animate** integration includes _Test Movie_, _Debug Movie_, and _Publish_.
-- **Import Projects** from Adobe Flash Builder.
+- **Import Projects** from Adobe Flash Builder and FlashDevelop.
 
 ## Help and Support
 
