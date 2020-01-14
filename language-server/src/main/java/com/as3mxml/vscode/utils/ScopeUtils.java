@@ -16,6 +16,7 @@ limitations under the License.
 package com.as3mxml.vscode.utils;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.royale.compiler.definitions.IClassDefinition;
@@ -32,7 +33,7 @@ public class ScopeUtils
 {
     public static Set<INamespaceDefinition> getNamespaceSetForScopes(TypeScope typeScope, ASScope otherScope, ICompilerProject project)
     {
-        Set<INamespaceDefinition> namespaceSet = otherScope.getNamespaceSet(project);
+        Set<INamespaceDefinition> namespaceSet = new HashSet<>(otherScope.getNamespaceSet(project));
         if (typeScope.getContainingDefinition() instanceof IInterfaceDefinition)
         {
             //interfaces have a special namespace that isn't actually the same
