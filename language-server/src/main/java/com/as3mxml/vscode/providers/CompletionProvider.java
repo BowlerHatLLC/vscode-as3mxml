@@ -1749,7 +1749,7 @@ public class CompletionProvider
                     {
                         builder.append("<");
                     }
-                    if(prefix != null)
+                    if(prefix != null && prefix.length() > 0)
                     {
                         builder.append(prefix);
                         builder.append(IMXMLCoreConstants.colon);
@@ -1761,7 +1761,7 @@ public class CompletionProvider
                         builder.append(">");
                         builder.append("$0");
                         builder.append("</");
-                        if(prefix != null)
+                        if(prefix != null && prefix.length() > 0)
                         {
                             builder.append(prefix);
                             builder.append(IMXMLCoreConstants.colon);
@@ -1837,7 +1837,7 @@ public class CompletionProvider
                     {
                         builder.append("<");
                     }
-                    if(prefix != null)
+                    if(prefix != null && prefix.length() > 0)
                     {
                         builder.append(prefix);
                         builder.append(IMXMLCoreConstants.colon);
@@ -1849,7 +1849,7 @@ public class CompletionProvider
                         builder.append(">");
                         builder.append("$0");
                         builder.append("</");
-                        if(prefix != null)
+                        if(prefix != null && prefix.length() > 0)
                         {
                             builder.append(prefix);
                             builder.append(IMXMLCoreConstants.colon);
@@ -1961,7 +1961,9 @@ public class CompletionProvider
         }
         else if (!isAttribute)
         {
-            if (definition instanceof ITypeDefinition && prefix != null)
+            if (definition instanceof ITypeDefinition
+                    && prefix != null
+                    && prefix.length() > 0)
             {
                 StringBuilder labelBuilder = new StringBuilder();
                 labelBuilder.append(prefix);
@@ -1976,7 +1978,7 @@ public class CompletionProvider
             {
                 insertTextBuilder.append("<");
             }
-            if(prefix != null)
+            if(prefix != null && prefix.length() > 0)
             {
                 insertTextBuilder.append(prefix);
                 insertTextBuilder.append(IMXMLCoreConstants.colon);
@@ -1984,6 +1986,7 @@ public class CompletionProvider
             insertTextBuilder.append(definitionBaseName);
             if (definition instanceof ITypeDefinition
                     && prefix != null
+                    && prefix.length() > 0
                     && (offsetTag == null || offsetTag.equals(offsetTag.getParent().getRootTag()))
                     && xmlnsPosition == null)
             {
@@ -2021,7 +2024,7 @@ public class CompletionProvider
                 insertTextBuilder.append(">");
                 insertTextBuilder.append("$0");
                 insertTextBuilder.append("</");
-                if(prefix != null)
+                if(prefix != null && prefix.length() > 0)
                 {
                     insertTextBuilder.append(prefix);
                     insertTextBuilder.append(IMXMLCoreConstants.colon);
@@ -2031,7 +2034,9 @@ public class CompletionProvider
             }
             item.setInsertText(insertTextBuilder.toString());
             if (definition instanceof ITypeDefinition
-                    && prefix != null && uri != null
+                    && prefix != null
+                    && prefix.length() > 0
+                    && uri != null
                     && MXMLDataUtils.needsNamespace(offsetTag, prefix, uri)
                     && xmlnsPosition != null)
             {
