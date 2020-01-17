@@ -339,7 +339,16 @@ public class CompilerOptionsParser
 				}
 				case CompilerOptions.THEME:
 				{
-					OptionsFormatter.setPathValue(key, options.get(key).asText(), result);
+					JsonNode themeNode = options.get(key);
+					if(themeNode.isArray())
+					{
+						List<String> values = JsonUtils.jsonNodeToListOfStrings(themeNode);
+						OptionsFormatter.setThenAppendPaths(key, values, result);
+					}
+					else
+					{
+						OptionsFormatter.setPathValue(key, options.get(key).asText(), result);
+					}
 					break;
 				}
 				case CompilerOptions.TOOLS_LOCALE:

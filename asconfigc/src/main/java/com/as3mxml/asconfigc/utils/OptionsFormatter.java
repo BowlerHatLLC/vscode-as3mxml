@@ -83,4 +83,21 @@ public class OptionsFormatter
 			result.add("--" + optionName + "+=" + currentPath);
 		}
 	}
+
+	public static void setThenAppendPaths(String optionName, List<String> paths, List<String> result)
+	{
+		int pathsCount = paths.size();
+		for(int i = 0; i < pathsCount; i++)
+		{
+			String currentPath = paths.get(i);
+			if(i == 0)
+			{
+				result.add("--" + optionName + "=" + currentPath);
+			}
+			else
+			{
+				result.add("--" + optionName + "+=" + currentPath);
+			}
+		}
+	}
 }

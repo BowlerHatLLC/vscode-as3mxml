@@ -897,8 +897,19 @@
 				},
 				"theme":
 				{
-					"type": "string",
-					"description": "Specifies a theme file to use with this application."
+					"anyOf": [
+						{
+							"type": "string"
+						},
+						{
+							"type": "array",
+							"items":
+							{
+								"type": "string"
+							}
+						}
+					],
+					"description": "Specifies one or more theme files to use with this application."
 				},
 				"tools-locale":
 				{
