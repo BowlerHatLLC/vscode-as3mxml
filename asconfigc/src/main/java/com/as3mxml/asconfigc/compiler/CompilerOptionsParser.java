@@ -146,6 +146,12 @@ public class CompilerOptionsParser
 					parseIncludeFile(options.get(key), result);
 					break;
 				}
+				case CompilerOptions.INCLUDE_LIBRARIES:
+				{
+					List<String> values = JsonUtils.jsonNodeToListOfStrings(options.get(key));
+					OptionsFormatter.appendPaths(key, values, result);
+					break;
+				}
 				case CompilerOptions.INCLUDE_NAMESPACES:
 				{
 					List<String> values = JsonUtils.jsonNodeToListOfStrings(options.get(key));

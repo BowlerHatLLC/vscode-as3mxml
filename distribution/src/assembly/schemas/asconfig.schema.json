@@ -605,6 +605,15 @@
 						"type": "string"
 					}
 				},
+				"include-libraries":
+				{
+					"type": "array",
+					"description": "Specifies a list of SWC files to link in the output, regardless of whether they are referenced.",
+					"items":
+					{
+						"type": "string"
+					}
+				},
 				"include-file":
 				{
 					"type": "array",

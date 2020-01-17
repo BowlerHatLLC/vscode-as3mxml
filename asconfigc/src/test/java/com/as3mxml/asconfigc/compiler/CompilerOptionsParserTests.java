@@ -498,6 +498,38 @@ class CompilerOptionsParserTests
 	}
 	
 	@Test
+	void testIncludeLibraries()
+	{
+		String value1 = "library/path1.swc";
+		String value2 = "library/path2 with spaces.swc";
+		String value3 = "./library/path3.swc";
+
+		ObjectNode options = JsonNodeFactory.instance.objectNode();
+		ArrayNode includeLibraries = JsonNodeFactory.instance.arrayNode();
+
+		includeLibraries.add(JsonNodeFactory.instance.textNode(value1));
+		includeLibraries.add(JsonNodeFactory.instance.textNode(value2));
+		includeLibraries.add(JsonNodeFactory.instance.textNode(value3));
+
+		options.set(CompilerOptions.INCLUDE_LIBRARIES, includeLibraries);
+
+		ArrayList<String> result = new ArrayList<>();
+		try
+		{
+			parser.parse(options, null, result);
+		}
+		catch(UnknownCompilerOptionException e) {}
+		Assertions.assertEquals(3, result.size(),
+			"CompilerOptionsParser.parse() created incorrect number of options.");
+		Assertions.assertEquals("--" + CompilerOptions.INCLUDE_LIBRARIES + "+=" + value1, result.get(0),
+			"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
+		Assertions.assertEquals("--" + CompilerOptions.INCLUDE_LIBRARIES + "+=" + value2, result.get(1),
+			"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
+		Assertions.assertEquals("--" + CompilerOptions.INCLUDE_LIBRARIES + "+=" + value3, result.get(2),
+			"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
+	}
+	
+	@Test
 	void testIncludeNamespaces()
 	{	
 		String value1 = "http://ns.example.com";
