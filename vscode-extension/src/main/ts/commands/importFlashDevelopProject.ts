@@ -198,28 +198,28 @@ function migrateProjectFile(project: any, result: any)
 	let libraryPathsElement = findChildElementByName(rootChildren, "libraryPaths");
 	if(libraryPathsElement)
 	{
-		//migrateLibraryPathsElement(libraryPathsElement, result);
+		migrateLibraryPathsElement(libraryPathsElement, result);
 	}
 	let externalLibraryPathsElement = findChildElementByName(rootChildren, "externalLibraryPaths");
 	if(externalLibraryPathsElement)
 	{
-		//migrateExternalLibraryPathsElement(externalLibraryPathsElement, result);
+		migrateExternalLibraryPathsElement(externalLibraryPathsElement, result);
 	}
-
-	//TODO: includeLibraries
-
+	let includeLibrariesElement = findChildElementByName(rootChildren, "includeLibraries");
+	if(includeLibrariesElement)
+	{
+		migrateIncludeLibrariesElement(includeLibrariesElement, result);
+	}
 	let preBuildCommandElement = findChildElementByName(rootChildren, "preBuildCommand")
 	if(preBuildCommandElement)
 	{
 		migratePreBuildCommandElement(preBuildCommandElement, result);
 	}
-
 	let postBuildCommandElement = findChildElementByName(rootChildren, "postBuildCommand")
 	if(postBuildCommandElement)
 	{
 		migratePostBuildCommandElement(postBuildCommandElement, result);
 	}
-	
 	let optionsElement = findChildElementByName(rootChildren, "options");
 	if(optionsElement)
 	{
@@ -514,6 +514,87 @@ function migrateBuildElement(buildElement: any, result: any)
 			}
 		}
 	});
+}
+
+function migrateLibraryPathsElement(libraryPathsElement: any, result: any)
+{
+	let libraryPaths = [];
+	let children = libraryPathsElement.children as any[];
+	children.forEach((child) =>
+	{
+		if(child.type !== "element" || child.name !== "element")
+		{
+			return;
+		}
+		let attributes = child.attributes;
+		if("path" in attributes)
+		{
+			let libraryPath = attributes.path as string;
+			libraryPath = normalizeFilePath(libraryPath);
+			if(libraryPath.length > 0)
+			{
+				libraryPaths.push(libraryPath);
+			}
+		}
+	});
+	if(libraryPaths.length > 0)
+	{
+		result.compilerOptions["library-path"] = libraryPaths;
+	}
+}
+
+function migrateExternalLibraryPathsElement(externalLibraryPathsElement: any, result: any)
+{
+	let externalLibraryPaths = [];
+	let children = externalLibraryPathsElement.children as any[];
+	children.forEach((child) =>
+	{
+		if(child.type !== "element" || child.name !== "element")
+		{
+			return;
+		}
+		let attributes = child.attributes;
+		if("path" in attributes)
+		{
+			let externalLibraryPath = attributes.path as string;
+			externalLibraryPath = normalizeFilePath(externalLibraryPath);
+			if(externalLibraryPath.length > 0)
+			{
+				externalLibraryPaths.push(externalLibraryPath);
+			}
+		}
+	});
+	if(externalLibraryPaths.length > 0)
+	{
+		result.compilerOptions["external-library-path"] = externalLibraryPaths;
+	}
+}
+
+function migrateIncludeLibrariesElement(includeLibrariesElement: any, result: any)
+{
+	let includeLibraries = [];
+	let children = includeLibrariesElement.children as any[];
+	children.forEach((child) =>
+	{
+		if(child.type !== "element" || child.name !== "element")
+		{
+			return;
+		}
+		let attributes = child.attributes;
+		if("path" in attributes)
+		{
+			let includeLibrary = attributes.path as string;
+			includeLibrary = normalizeFilePath(includeLibrary);
+			if(includeLibrary.length > 0)
+			{
+				includeLibraries.push(includeLibrary);
+			}
+		}
+	});
+	if(includeLibraries.length > 0)
+	{
+		result.compilerOptions["include-libraries"] = includeLibraries;
+	}
 }
 
 function migratePreBuildCommandElement(optionsElement: any, result: any)
