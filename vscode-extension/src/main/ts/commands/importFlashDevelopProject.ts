@@ -17,6 +17,7 @@ import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
 import parseXML = require("@rgrove/parse-xml");
+import validateFrameworkSDK from "../utils/validateFrameworkSDK";
 
 const FILE_EXTENSION_AS3PROJ = ".as3proj";
 const FILE_ASCONFIG_JSON = "asconfig.json";
@@ -110,7 +111,6 @@ function importFlashDevelopProjectInternal(workspaceFolder: vscode.WorkspaceFold
 		addError(ERROR_FILE_READ + projectFilePath);
 		return false;
 	}
-	console.log("*** " + projectText);
 	let project = null;
 	try
 	{
@@ -349,6 +349,20 @@ function migrateOutputElement(outputElement: any, result: any)
 		{
 			let backgroundColor = attributes.background as string;
 			result.compilerOptions["default-background-color"] = backgroundColor;
+		}
+		else if("preferredSDK" in attributes)
+		{
+			let frameworkSDKConfig = vscode.workspace.getConfiguration("as3mxml");
+			let frameworkSDK = frameworkSDKConfig.inspect("sdk.framework").workspaceValue;
+			if(!frameworkSDK)
+			{
+				let preferredSDK = attributes.preferredSDK as string;
+				let validatedSDKPath = validateFrameworkSDK(preferredSDK);
+				if(validatedSDKPath !== null)
+				{
+					frameworkSDKConfig.update("sdk.framework", validatedSDKPath);
+				}
+			}
 		}
 	});
 	result.compilerOptions["default-size"] = {width, height};
