@@ -31,8 +31,11 @@ const ERROR_NO_PROJECTS = "No FlashDevelop projects found in workspace.";
 const ERROR_FILE_READ = "Failed to read file: ";
 const ERROR_XML_PARSE = "Failed to parse FlashDevelop project. Invalid XML in file: ";
 const ERROR_PROJECT_PARSE = "Failed to parse FlashDevelop project: ";
-const ERROR_OUTPUT_TYPE = "Project output type not supported: ";
 const WARNING_INVALID_DEFINE = "Failed to parse define: ";
+const WARNING_PRE_BUILD_COMMAND = "Custom pre-build commands are not supported. Skipping... ";
+const WARNING_POST_BUILD_COMMAND = "Custom post-build commands are not supported. Skipping... ";
+const WARNING_TEST_MOVIE_COMMAND = "Custom test movie commands are not supported. Skipping... ";
+const WARNING_COMMAND_TASK = "To run this command, you may define a custom \"shell\" task in .vscode/tasks.json.";
 
 const CHANNEL_NAME_IMPORTER = "FlashDevelop Importer";
 
@@ -143,13 +146,6 @@ function importFlashDevelopProjectInternal(workspaceFolder: vscode.WorkspaceFold
 
 function createProjectFiles(folderPath: string, projectFilePath: string, project: any)
 {
-	let outputType = findOutputType(project);
-	if(outputType !== "Application")
-	{
-		addError(ERROR_OUTPUT_TYPE + outputType);
-		return false;
-	}
-
 	let result: any =
 	{
 		compilerOptions: {}
@@ -199,9 +195,36 @@ function migrateProjectFile(project: any, result: any)
 	{
 		migrateBuildElement(buildElement, result);
 	}
-	/*migrateLibraryPathsElement();
-	migrateExternalLibraryPathsElement();
-	migrateIncludeLibrariesElement();*/
+	let libraryPathsElement = findChildElementByName(rootChildren, "libraryPaths");
+	if(libraryPathsElement)
+	{
+		//migrateLibraryPathsElement(libraryPathsElement, result);
+	}
+	let externalLibraryPathsElement = findChildElementByName(rootChildren, "externalLibraryPaths");
+	if(externalLibraryPathsElement)
+	{
+		//migrateExternalLibraryPathsElement(externalLibraryPathsElement, result);
+	}
+
+	//TODO: includeLibraries
+
+	let preBuildCommandElement = findChildElementByName(rootChildren, "preBuildCommand")
+	if(preBuildCommandElement)
+	{
+		migratePreBuildCommandElement(preBuildCommandElement, result);
+	}
+
+	let postBuildCommandElement = findChildElementByName(rootChildren, "postBuildCommand")
+	if(postBuildCommandElement)
+	{
+		migratePostBuildCommandElement(postBuildCommandElement, result);
+	}
+	
+	let optionsElement = findChildElementByName(rootChildren, "options");
+	if(optionsElement)
+	{
+		migrateOptionsElement(optionsElement, result);
+	}
 }
 
 function migrateClasspathsElement(classpathsElement: any, result: any)
@@ -219,7 +242,10 @@ function migrateClasspathsElement(classpathsElement: any, result: any)
 		{
 			let sourcePath = attributes.path as string;
 			sourcePath = normalizeFilePath(sourcePath);
-			sourcePaths.push(sourcePath);
+			if(sourcePath.length > 0)
+			{
+				sourcePaths.push(sourcePath);
+			}
 		}
 	});
 	if(sourcePaths.length > 0)
@@ -243,7 +269,10 @@ function migrateCompileTargetsElement(compileTargetsElement: any, result: any)
 		{
 			let compileTargetPath = attributes.path as string;
 			compileTargetPath = normalizeFilePath(compileTargetPath);
-			files.push(compileTargetPath);
+			if(compileTargetPath.length > 0)
+			{
+				files.push(compileTargetPath);
+			}
 		}
 	});
 	if(files.length > 0)
@@ -290,7 +319,10 @@ function migrateOutputElement(outputElement: any, result: any)
 		{
 			let outputPath = attributes.path as string;
 			outputPath = normalizeFilePath(outputPath);
-			result.compilerOptions.output = outputPath;
+			if(outputPath.length > 0)
+			{
+				result.compilerOptions.output = outputPath;
+			}
 		}
 		else if("fps" in attributes)
 		{
@@ -362,9 +394,9 @@ function migrateBuildElement(buildElement: any, result: any)
 		else if("loadConfig" in attributes)
 		{
 			let loadConfig = attributes.loadConfig as string;
+			loadConfig = normalizeFilePath(loadConfig);
 			if(loadConfig.length > 0)
 			{
-				loadConfig = normalizeFilePath(loadConfig);
 				result.compilerOptions["load-config"] = [loadConfig];
 			}
 		}
@@ -415,18 +447,18 @@ function migrateBuildElement(buildElement: any, result: any)
 		else if("linkReport" in attributes)
 		{
 			let linkReport = attributes.linkReport as string;
+			linkReport = normalizeFilePath(linkReport);
 			if(linkReport.length > 0)
 			{
-				linkReport = normalizeFilePath(linkReport);
 				result.compilerOptions["link-report"] = [linkReport];
 			}
 		}
 		else if("loadExterns" in attributes)
 		{
 			let loadExterns = attributes.loadExterns as string;
+			loadExterns = normalizeFilePath(loadExterns);
 			if(loadExterns.length > 0)
 			{
-				loadExterns = normalizeFilePath(loadExterns);
 				result.compilerOptions["load-externs"] = [loadExterns];
 			}
 		}
@@ -484,41 +516,81 @@ function migrateBuildElement(buildElement: any, result: any)
 	});
 }
 
-function normalizeFilePath(filePath: string)
+function migratePreBuildCommandElement(optionsElement: any, result: any)
 {
-	return filePath.replace(/\\/g, "/");
+	let children = optionsElement.children as any[];
+	if(children.length > 1)
+	{
+		return;
+	}
+	children.forEach((child) =>
+	{
+		if(child.type !== "text")
+		{
+			return;
+		}
+		let preBuildCommand = child.text.trim();
+		if(preBuildCommand.length > 0)
+		{
+			addWarning(WARNING_PRE_BUILD_COMMAND + preBuildCommand);
+			addWarning(WARNING_COMMAND_TASK);
+		}
+	});
 }
 
-function findOutputType(project: any)
+function migratePostBuildCommandElement(optionsElement: any, result: any)
 {
-	if(!project)
+	let children = optionsElement.children as any[];
+	if(children.length > 1)
 	{
-		return null;
+		return;
 	}
-	let rootChildren = project.children as any[];
-	if(!rootChildren)
+	children.forEach((child) =>
 	{
-		return null;
-	}
-	let outputElement = findChildElementByName(rootChildren, "output");
-	if(!outputElement)
-	{
-		return [];
-	}
-	let outputChildren = outputElement.children as any[];
-	if(!outputChildren)
-	{
-		return null;
-	}
-	let result = outputChildren.find((child) =>
-	{
-		return child.type === "element" && child.name === "movie" && "outputType" in child.attributes;
+		if(child.type !== "text")
+		{
+			return;
+		}
+		let postBuildCommand = child.text.trim();
+		if(postBuildCommand.length > 0)
+		{
+			addWarning(WARNING_POST_BUILD_COMMAND + postBuildCommand);
+			addWarning(WARNING_COMMAND_TASK);
+		}
 	});
-	if(!result)
+}
+
+function migrateOptionsElement(optionsElement: any, result: any)
+{
+	let customTestMovie = false;
+	let testMovieCommand = "";
+	let children = optionsElement.children as any[];
+	children.forEach((child) =>
 	{
-		return null;
+		if(child.type !== "element" || child.name !== "option")
+		{
+			return;
+		}
+		let attributes = child.attributes;
+		if("testMovie" in attributes)
+		{
+			customTestMovie = attributes.testMovie === "Custom";
+		}
+		if("testMovieCommand" in attributes)
+		{
+			testMovieCommand = attributes.testMovieCommand.trim();
+		}
+	});
+	if(customTestMovie && testMovieCommand.length > 0)
+	{
+		addWarning(WARNING_TEST_MOVIE_COMMAND + testMovieCommand);
+		addWarning(WARNING_COMMAND_TASK);
 	}
-	return result.attributes.outputType;
+}
+
+function normalizeFilePath(filePath: string)
+{
+	return filePath.replace(/\\/g, "/").trim();
 }
 
 let outputChannel: vscode.OutputChannel;
