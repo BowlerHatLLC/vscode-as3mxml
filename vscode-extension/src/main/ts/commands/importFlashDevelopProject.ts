@@ -37,6 +37,8 @@ const WARNING_PRE_BUILD_COMMAND = "Custom pre-build commands are not supported. 
 const WARNING_POST_BUILD_COMMAND = "Custom post-build commands are not supported. Skipping... ";
 const WARNING_TEST_MOVIE_COMMAND = "Custom test movie commands are not supported. Skipping... ";
 const WARNING_COMMAND_TASK = "To run this command, you may define a custom \"shell\" task in .vscode/tasks.json.";
+const WARNING_RSL_PATHS = "Runtime shared libraries are not supported. Skipping... ";
+const WARNING_LIBRARY_ASSETS = "Library assets are not supported. Skipping... ";
 
 const CHANNEL_NAME_IMPORTER = "FlashDevelop Importer";
 
@@ -210,6 +212,11 @@ function migrateProjectFile(project: any, result: any)
 	{
 		migrateIncludeLibrariesElement(includeLibrariesElement, result);
 	}
+	let rslPathsElement = findChildElementByName(rootChildren, "rslPaths");
+	if(rslPathsElement)
+	{
+		migrateRslPathsElement(rslPathsElement, result);
+	}
 	let preBuildCommandElement = findChildElementByName(rootChildren, "preBuildCommand")
 	if(preBuildCommandElement)
 	{
@@ -224,6 +231,11 @@ function migrateProjectFile(project: any, result: any)
 	if(optionsElement)
 	{
 		migrateOptionsElement(optionsElement, result);
+	}
+	let libraryElement = findChildElementByName(rootChildren, "library");
+	if(libraryElement)
+	{
+		migrateLibraryElement(libraryElement, result);
 	}
 }
 
@@ -681,6 +693,42 @@ function migrateOptionsElement(optionsElement: any, result: any)
 		addWarning(WARNING_TEST_MOVIE_COMMAND + testMovieCommand);
 		addWarning(WARNING_COMMAND_TASK);
 	}
+}
+
+function migrateRslPathsElement(rslPathsElement: any, result: any)
+{
+	let children = rslPathsElement.children as any[];
+	children.forEach((child) =>
+	{
+		if(child.type !== "element" && child.name !== "element")
+		{
+			return;
+		}
+		let attributes = child.attributes;
+		if("path" in attributes)
+		{
+			let rslPath = attributes.path as string;
+			addWarning(WARNING_RSL_PATHS + rslPath);
+		}
+	});
+}
+
+function migrateLibraryElement(libraryElement: any, result: any)
+{
+	let children = libraryElement.children as any[];
+	children.forEach((child) =>
+	{
+		if(child.type !== "element" && child.name !== "asset")
+		{
+			return;
+		}
+		let attributes = child.attributes;
+		if("path" in attributes)
+		{
+			let assetPath = attributes.path as string;
+			addWarning(WARNING_LIBRARY_ASSETS + assetPath);
+		}
+	});
 }
 
 function normalizeFilePath(filePath: string)
