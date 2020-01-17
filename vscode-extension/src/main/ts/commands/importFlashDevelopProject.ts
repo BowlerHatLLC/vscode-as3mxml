@@ -32,6 +32,7 @@ const ERROR_FILE_READ = "Failed to read file: ";
 const ERROR_XML_PARSE = "Failed to parse FlashDevelop project. Invalid XML in file: ";
 const ERROR_PROJECT_PARSE = "Failed to parse FlashDevelop project: ";
 const ERROR_OUTPUT_TYPE = "Project output type not supported: ";
+const WARNING_INVALID_DEFINE = "Failed to parse define: ";
 
 const CHANNEL_NAME_IMPORTER = "FlashDevelop Importer";
 
@@ -448,12 +449,34 @@ function migrateBuildElement(buildElement: any, result: any)
 			let compilerConstants = attributes.compilerConstants as string;
 			if(compilerConstants.length > 0)
 			{
-				let splitConstants = compilerConstants.split("\n")
-				let define = splitConstants.map((value) =>
+				let splitConstants = compilerConstants.split("\n");
+				let define = splitConstants.map((constant) =>
 				{
-					let parts = value.split(",")
-					//TODO: handle booleans and numbers
-					return {name: parts[0], value: parts[1]};
+					let parts = constant.split(",")
+					let name = parts[0];
+					let valueAsString = parts[1];
+					let value: any = undefined;
+					if(valueAsString.startsWith("\"") && valueAsString.endsWith("\""))
+					{
+						value = valueAsString;
+					}
+					else if(valueAsString.startsWith("'") && valueAsString.endsWith("'"))
+					{
+						value = valueAsString;
+					}
+					else if(valueAsString === "true" || valueAsString === "false")
+					{
+						value = valueAsString === "true";
+					}
+					else if(/^-?[0-9]+(\.[0-9]+)?([eE](\-|\+)?[0-9]+)?$/.test(valueAsString))
+					{
+						value = parseFloat(valueAsString);
+					}
+					else
+					{
+						addWarning(WARNING_INVALID_DEFINE + name);
+					}
+					return { name, value };
 				});
 				result.compilerOptions.define = define;
 			}
