@@ -62,7 +62,8 @@ function validatePossibleFrameworkSDK(sdkPath: string): boolean
 	//one of these files to describe the SDK is required
 	let airDescription = path.join(sdkPath, "air-sdk-description.xml");
 	let flexDescription = path.join(sdkPath, "flex-sdk-description.xml");
-	if(!fs.existsSync(airDescription) && !fs.existsSync(flexDescription))
+	let royaleDescription = path.join(sdkPath, "royale-sdk-description.xml");
+	if(!fs.existsSync(airDescription) && !fs.existsSync(flexDescription) && !fs.existsSync(royaleDescription))
 	{
 		return false;
 	}
