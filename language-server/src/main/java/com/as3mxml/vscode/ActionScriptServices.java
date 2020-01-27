@@ -52,6 +52,7 @@ import com.as3mxml.asconfigc.compiler.ProjectType;
 import com.as3mxml.vscode.asdoc.VSCodeASDocDelegate;
 import com.as3mxml.vscode.commands.ICommandConstants;
 import com.as3mxml.vscode.compiler.CompilerShell;
+import com.as3mxml.vscode.compiler.problems.LSPFileNotFoundProblem;
 import com.as3mxml.vscode.compiler.problems.SyntaxFallbackProblem;
 import com.as3mxml.vscode.project.ILspProject;
 import com.as3mxml.vscode.project.IProjectConfigStrategy;
@@ -1825,34 +1826,26 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                     if(configuration.getTargetFile() == null)
                     {
                         result = false;
-                        if(projectOptions.mainClass != null)
+
+                        //fall back to the config file or the workspace folder
+                        Path problemPath = LanguageServerCompilerUtils.getPathFromLanguageServerURI(folderData.folder.getUri());
+                        Path configFilePath = folderData.config.getConfigFilePath();
+                        if(configFilePath != null)
                         {
-                            String mainClassRelativePath = projectOptions.mainClass.replace(".", File.separator) + FILE_EXTENSION_AS;
-                            Path mainClassPath = Paths.get(mainClassRelativePath).toAbsolutePath();
-                            configProblems.add(new FileNotFoundProblem(mainClassPath.toString()));
+                            problemPath = configFilePath;
+                        }
+
+                        String[] files = projectOptions.files;
+                        if(files != null && files.length > 0)
+                        {
+                            //even if mainClass is set, an entry must be added
+                            //to the files array
+                            configProblems.add(new LSPFileNotFoundProblem(files[files.length - 1], problemPath != null ? problemPath.toString() : null));
                         }
                         else
                         {
-                            String[] files = projectOptions.files;
-                            //mainClass didn't always exist, so just to be safe,
-                            //fall back to the last entry of files, if available
-                            if(files != null && files.length > 0)
-                            {
-                                configProblems.add(new FileNotFoundProblem(files[files.length - 1]));
-                            }
-                            else
-                            {
-                                //finally, fall back to the config file or the
-                                //workspace folder
-                                Path problemPath = LanguageServerCompilerUtils.getPathFromLanguageServerURI(folderData.folder.getUri());
-                                Path configFilePath = folderData.config.getConfigFilePath();
-                                if(configFilePath != null)
-                                {
-                                    problemPath = configFilePath;
-                                }
-                                ConfigurationException e = new ConfigurationException.MustSpecifyTarget(null, problemPath != null ? problemPath.toString() : null, -1);
-                                configProblems.add(new ConfigurationProblem(e));
-                            }
+                            ConfigurationException e = new ConfigurationException.MustSpecifyTarget(null, problemPath != null ? problemPath.toString() : null, -1);
+                            configProblems.add(new ConfigurationProblem(e));
                         }
                     }
                 }

@@ -26,7 +26,6 @@ public class ProjectOptions
 {
     public String type;
     public String config;
-    public String mainClass;
 
     /**
      * In an application project, the final file must be the main class. Each
