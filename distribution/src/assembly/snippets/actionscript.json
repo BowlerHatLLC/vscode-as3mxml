@@ -114,7 +114,7 @@
 	"For Loop": {
 		"prefix": "for",
 		"body": [
-			"var len:int = ${2:array}.length",
+			"var len:int = ${2:array}.length;",
 			"for(var ${1:index}:int = 0; ${1:index} < len; ${1:index}++)",
 			"{",
 			"\tvar ${3:element}:Object = ${2:array}[${1:index}];",
