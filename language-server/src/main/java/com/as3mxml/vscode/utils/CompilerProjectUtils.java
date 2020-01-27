@@ -223,6 +223,7 @@ public class CompilerProjectUtils
         }
         else // app
         {
+            combinedOptions.add("--");
             if (files != null && files.length > 0)
             {
                 combinedOptions.addAll(Arrays.asList(files));
