@@ -41,6 +41,7 @@ import org.apache.royale.compiler.definitions.IPackageDefinition;
 import org.apache.royale.compiler.definitions.IStyleDefinition;
 import org.apache.royale.compiler.definitions.ITypeDefinition;
 import org.apache.royale.compiler.definitions.IVariableDefinition;
+import org.apache.royale.compiler.definitions.IVariableDefinition.VariableClassification;
 import org.apache.royale.compiler.internal.parsing.as.OffsetCue;
 import org.apache.royale.compiler.problems.CompilerProblemSeverity;
 import org.apache.royale.compiler.problems.ICompilerProblem;
@@ -360,16 +361,20 @@ public class LanguageServerCompilerUtils
         else if (definition instanceof IVariableDefinition)
         {
             IVariableDefinition variableDefinition = (IVariableDefinition) definition;
-            switch(variableDefinition.getVariableClassification())
+            VariableClassification variableClassification = variableDefinition.getVariableClassification();
+            if (variableClassification != null)
             {
-                case INTERFACE_MEMBER:
-                case CLASS_MEMBER:
+                switch(variableClassification)
                 {
-                    return CompletionItemKind.Field;
-                }
-                default:
-                {
-                    return CompletionItemKind.Variable;
+                    case INTERFACE_MEMBER:
+                    case CLASS_MEMBER:
+                    {
+                        return CompletionItemKind.Field;
+                    }
+                    default:
+                    {
+                        return CompletionItemKind.Variable;
+                    }
                 }
             }
         }
@@ -423,16 +428,20 @@ public class LanguageServerCompilerUtils
         else if (definition instanceof IVariableDefinition)
         {
             IVariableDefinition variableDefinition = (IVariableDefinition) definition;
-            switch(variableDefinition.getVariableClassification())
+            VariableClassification variableClassification = variableDefinition.getVariableClassification();
+            if (variableClassification != null)
             {
-                case INTERFACE_MEMBER:
-                case CLASS_MEMBER:
+                switch(variableClassification)
                 {
-                    return SymbolKind.Field;
-                }
-                default:
-                {
-                    return SymbolKind.Variable;
+                    case INTERFACE_MEMBER:
+                    case CLASS_MEMBER:
+                    {
+                        return SymbolKind.Field;
+                    }
+                    default:
+                    {
+                        return SymbolKind.Variable;
+                    }
                 }
             }
         }

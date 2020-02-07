@@ -103,7 +103,7 @@ public class CodeActionsUtils
             {
                 //we want variables, but not constants or accessors
                 IVariableDefinition variableDefinition = (IVariableDefinition) definition;
-                if (variableDefinition.getVariableClassification().equals(VariableClassification.CLASS_MEMBER))
+                if (VariableClassification.CLASS_MEMBER.equals(variableDefinition.getVariableClassification()))
                 {
                     createCodeActionsForGenerateGetterAndSetter(variableNode, uri, fileText, range, codeActions);
                 }
