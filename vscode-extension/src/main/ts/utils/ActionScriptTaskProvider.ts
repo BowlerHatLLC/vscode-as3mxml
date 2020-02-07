@@ -448,6 +448,10 @@ export default class ActionScriptTaskProvider implements vscode.TaskProvider
 		{
 			options.push("--publish-animate=false");
 		}
+		if(vscode.workspace.getConfiguration("as3mxml").get("asconfigc.verboseOutput"))
+		{
+			options.push("--verbose=true");
+		}
 		if(jsonURI)
 		{
 			options.push("--project", jsonURI.fsPath);
