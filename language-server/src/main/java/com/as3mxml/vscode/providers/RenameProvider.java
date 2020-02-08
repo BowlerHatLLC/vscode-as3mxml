@@ -37,6 +37,9 @@ import org.apache.royale.compiler.definitions.IClassDefinition;
 import org.apache.royale.compiler.definitions.IDefinition;
 import org.apache.royale.compiler.definitions.IFunctionDefinition;
 import org.apache.royale.compiler.definitions.IPackageDefinition;
+import org.apache.royale.compiler.definitions.IVariableDefinition;
+import org.apache.royale.compiler.definitions.IFunctionDefinition.FunctionClassification;
+import org.apache.royale.compiler.definitions.IVariableDefinition.VariableClassification;
 import org.apache.royale.compiler.internal.mxml.MXMLData;
 import org.apache.royale.compiler.mxml.IMXMLDataManager;
 import org.apache.royale.compiler.mxml.IMXMLTagData;
@@ -201,6 +204,18 @@ public class RenameProvider
 			//Cannot rename this element
 			return null;
         }
+        boolean isLocal = false;
+        if (definition instanceof IVariableDefinition)
+        {
+            IVariableDefinition variableDef = (IVariableDefinition) definition;
+            isLocal = VariableClassification.LOCAL.equals(variableDef.getVariableClassification());
+        }
+        else if (definition instanceof IFunctionDefinition)
+        {
+            IFunctionDefinition functionDef = (IFunctionDefinition) definition;
+            isLocal = FunctionClassification.LOCAL.equals(functionDef.getFunctionClassification());
+        }
+            
         Path originalDefinitionFilePath = null;
         Path newDefinitionFilePath = null;
         for (ICompilationUnit unit : project.getCompilationUnits())
@@ -213,6 +228,11 @@ public class RenameProvider
             if (!UnitType.AS_UNIT.equals(unitType) && !UnitType.MXML_UNIT.equals(unitType))
             {
                 //compiled compilation units won't have problems
+                continue;
+            }
+            if (isLocal && !unit.getAbsoluteFilename().equals(definition.getContainingFilePath()))
+            {
+                // no need to check this file
                 continue;
             }
             ArrayList<TextEdit> textEdits = new ArrayList<>();

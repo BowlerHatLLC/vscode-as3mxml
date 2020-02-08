@@ -35,6 +35,10 @@ import com.as3mxml.vscode.utils.WorkspaceFolderManager;
 import org.apache.royale.compiler.common.ISourceLocation;
 import org.apache.royale.compiler.definitions.IClassDefinition;
 import org.apache.royale.compiler.definitions.IDefinition;
+import org.apache.royale.compiler.definitions.IFunctionDefinition;
+import org.apache.royale.compiler.definitions.IVariableDefinition;
+import org.apache.royale.compiler.definitions.IFunctionDefinition.FunctionClassification;
+import org.apache.royale.compiler.definitions.IVariableDefinition.VariableClassification;
 import org.apache.royale.compiler.internal.mxml.MXMLData;
 import org.apache.royale.compiler.mxml.IMXMLDataManager;
 import org.apache.royale.compiler.mxml.IMXMLLanguageConstants;
@@ -220,6 +224,18 @@ public class ReferencesProvider
 
     private void referencesForDefinition(IDefinition definition, ILspProject project, List<Location> result)
     {
+        boolean isLocal = false;
+        if (definition instanceof IVariableDefinition)
+        {
+            IVariableDefinition variableDef = (IVariableDefinition) definition;
+            isLocal = VariableClassification.LOCAL.equals(variableDef.getVariableClassification());
+        }
+        else if (definition instanceof IFunctionDefinition)
+        {
+            IFunctionDefinition functionDef = (IFunctionDefinition) definition;
+            isLocal = FunctionClassification.LOCAL.equals(functionDef.getFunctionClassification());
+        }
+
         for (ICompilationUnit unit : project.getCompilationUnits())
         {
             if (unit == null)
@@ -230,6 +246,11 @@ public class ReferencesProvider
             if (!UnitType.AS_UNIT.equals(unitType) && !UnitType.MXML_UNIT.equals(unitType))
             {
                 //compiled compilation units won't have problems
+                continue;
+            }
+            if (isLocal && !unit.getAbsoluteFilename().equals(definition.getContainingFilePath()))
+            {
+                // no need to check this file
                 continue;
             }
             referencesForDefinitionInCompilationUnit(definition, unit, project, result);
