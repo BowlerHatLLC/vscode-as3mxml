@@ -51,6 +51,7 @@ import org.apache.royale.compiler.tree.as.IFunctionNode;
 import org.apache.royale.compiler.tree.as.IIdentifierNode;
 import org.apache.royale.compiler.tree.as.IImportNode;
 import org.apache.royale.compiler.tree.as.IInterfaceNode;
+import org.apache.royale.compiler.tree.as.ILiteralContainerNode;
 import org.apache.royale.compiler.tree.as.ILiteralNode;
 import org.apache.royale.compiler.tree.as.IMemberAccessExpressionNode;
 import org.apache.royale.compiler.tree.as.IPackageNode;
@@ -478,7 +479,10 @@ public class ASTUtils
                     }
                 }
             }
-            return;
+            if (!(node instanceof ILiteralContainerNode))
+            {
+                return;
+            }
         }
         for (int i = 0, count = node.getChildCount(); i < count; i++)
         {
