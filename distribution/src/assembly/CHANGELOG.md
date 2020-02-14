@@ -1,5 +1,26 @@
 # ActionScript & MXML for Visual Studio Code Changelog
 
+## v1.0.0
+
+### New Features
+
+- Project: Import projects from FlashDevelop. If you open a folder containing a FlashDevelop project, Visual Studio Code will prompt to convert it to _asconfig.json_.
+
+### Fixed Issues
+
+- Build: Fixed issue where `as3mxml.asconfigc.verboseOutput` setting was ignored when building with Adobe Animate.
+- General: Fixed issue where certain compiler options could be incorrectly interpreted as file names, resulting in strange errors.
+- General: Fixed issue where an Apache Royale SDK that contains _royale-sdk-description.xml_, but not _flex-sdk-description.xml_, was not considered valid.
+- Problems: Fixed issue where wrong path was displayed when `mainClass` was not found.
+- Rename: Fixed issue where references were not found inside array `[]` and object `{}` literals.
+- Snippets: Fixed issue where for-loop snippet was missing a semi-colon.
+
+### Other Changes
+
+- Build: The `theme` compiler option may now be either a string or an array of strings.
+- Build: Added the `include-libraries` compiler option.
+- Rename: Optimized renaming a local variable or function inside a method, which previously searched for references in multiple files.
+
 ## v0.25.0
 
 ### New Features

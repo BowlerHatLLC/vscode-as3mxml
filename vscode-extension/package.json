@@ -2,7 +2,7 @@
   "name": "vscode-nextgenas",
   "displayName": "ActionScript & MXML",
   "description": "Language support for ActionScript and MXML",
-  "version": "0.26.0-SNAPSHOT",
+  "version": "1.0.0",
   "publisher": "bowlerhatllc",
   "homepage": "https://as3mxml.com/",
   "repository": {
@@ -439,29 +439,6 @@
       {
         "language": "mxml",
         "path": "./snippets/mxml.json"
-      }
-    ],
-    "debuggers": [
-      {
-        "type": "node-royale",
-        "label": "Node.js (Apache Royale)",
-        "enableBreakpointsFor": {
-          "languageIds": [
-            "actionscript",
-            "mxml"
-          ]
-        },
-        "initialConfigurations": [
-          {
-            "name": "Node.js (Apache Royale) Launch",
-            "type": "node",
-            "request": "launch",
-            "program": "${workspaceRoot}/bin/js-debug/index.js",
-            "cwd": "${workspaceRoot}/bin/js-debug",
-            "sourceMaps": true,
-            "outDir": "${workspaceRoot}/bin/js-debug"
-          }
-        ]
       }
     ]
   }
