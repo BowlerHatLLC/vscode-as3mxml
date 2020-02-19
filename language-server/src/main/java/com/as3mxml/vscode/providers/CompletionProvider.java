@@ -207,11 +207,11 @@ public class CompletionProvider
                 else if(mxmlData != null && mxmlData.getRootTag() == null)
                 {
                     ICompilationUnit offsetUnit = CompilerProjectUtils.findCompilationUnit(path, project);
-                    boolean tagsNeedOpenBracket = getTagsNeedOpenBracket(path, currentOffset);
+                    boolean includeOpenTagBracket = getTagNeedsOpenBracket(path, currentOffset);
                     CompletionList result = new CompletionList();
                     result.setIsIncomplete(false);
                     result.setItems(new ArrayList<>());
-                    autoCompleteDefinitionsForMXML(result, project, offsetUnit, offsetTag, true, tagsNeedOpenBracket, (char) -1, null, null, null);
+                    autoCompleteDefinitionsForMXML(result, project, offsetUnit, offsetTag, true, includeOpenTagBracket, (char) -1, null, null, null);
                     cancelToken.checkCanceled();
                     return Either.forRight(result);
                 }
@@ -661,7 +661,7 @@ public class CompletionProvider
             xmlnsPosition = LanguageServerCompilerUtils.getPositionFromOffset(new StringReader(fileText), xmlnsRange.endIndex);
         }
 
-        boolean tagsNeedOpenBracket = getTagsNeedOpenBracket(path, currentOffset);
+        boolean includeOpenTagBracket = getTagNeedsOpenBracket(path, currentOffset);
 
         char nextChar = (char) -1;
         if(fileText.length() > currentOffset)
@@ -721,7 +721,7 @@ public class CompletionProvider
         {
             if (!isAttribute)
             {
-                autoCompleteDefinitionsForMXML(result, project, offsetUnit, offsetTag, true, tagsNeedOpenBracket, nextChar, null, addImportData, xmlnsPosition);
+                autoCompleteDefinitionsForMXML(result, project, offsetUnit, offsetTag, true, includeOpenTagBracket, nextChar, null, addImportData, xmlnsPosition);
             }
             return result;
         }
@@ -745,7 +745,7 @@ public class CompletionProvider
                         //only add members if the prefix is the same as the
                         //parent tag. members can't have different prefixes.
                         //also allow members when we don't have a prefix.
-                        addMembersForMXMLTypeToAutoComplete(classDefinition, parentTag, offsetUnit, false, offsetPrefix.length() == 0, false, nextChar, addImportData, xmlnsPosition, project, result);
+                        addMembersForMXMLTypeToAutoComplete(classDefinition, parentTag, offsetUnit, false, false, offsetPrefix.length() == 0, nextChar, addImportData, xmlnsPosition, project, result);
                     }
                     if (!isAttribute)
                     {
@@ -757,7 +757,7 @@ public class CompletionProvider
                             if (offsetPrefix.length() == 0)
                             {
                                 //this tag doesn't have a prefix
-                                addRootMXMLLanguageTagsToAutoComplete(offsetTag, fxNS.prefix, true, tagsNeedOpenBracket, result);
+                                addRootMXMLLanguageTagsToAutoComplete(offsetTag, fxNS.prefix, true, includeOpenTagBracket, result);
                             }
                             else if (offsetPrefix.equals(fxNS.prefix))
                             {
@@ -768,7 +768,7 @@ public class CompletionProvider
                         if (offsetPrefix.length() == 0)
                         {
                             //this tag doesn't have a prefix
-                            addMXMLLanguageTagToAutoComplete(IMXMLLanguageConstants.COMPONENT, fxNS.prefix, true, tagsNeedOpenBracket, result);
+                            addMXMLLanguageTagToAutoComplete(IMXMLLanguageConstants.COMPONENT, fxNS.prefix, includeOpenTagBracket, true, result);
                         }
                         else if (offsetPrefix.equals(fxNS.prefix))
                         {
@@ -839,7 +839,7 @@ public class CompletionProvider
             }
 
             IClassDefinition classDefinition = (IClassDefinition) offsetDefinition;
-            addMembersForMXMLTypeToAutoComplete(classDefinition, offsetTag, offsetUnit, isAttribute, !isAttribute, tagsNeedOpenBracket, nextChar, addImportData, xmlnsPosition, project, result);
+            addMembersForMXMLTypeToAutoComplete(classDefinition, offsetTag, offsetUnit, isAttribute, includeOpenTagBracket, !isAttribute, nextChar, addImportData, xmlnsPosition, project, result);
 
             if (!isAttribute)
             {
@@ -848,9 +848,9 @@ public class CompletionProvider
                 MXMLNamespace fxNS = MXMLNamespaceUtils.getMXMLLanguageNamespace(fileSpec, project.getWorkspace());
                 if (mxmlParent != null && offsetTag.equals(mxmlParent.getRootTag()))
                 {
-                    addRootMXMLLanguageTagsToAutoComplete(offsetTag, fxNS.prefix, true, tagsNeedOpenBracket, result);
+                    addRootMXMLLanguageTagsToAutoComplete(offsetTag, fxNS.prefix, true, includeOpenTagBracket, result);
                 }
-                addMXMLLanguageTagToAutoComplete(IMXMLLanguageConstants.COMPONENT, fxNS.prefix, true, tagsNeedOpenBracket, result);
+                addMXMLLanguageTagToAutoComplete(IMXMLLanguageConstants.COMPONENT, fxNS.prefix, includeOpenTagBracket, true, result);
                 String defaultPropertyName = classDefinition.getDefaultPropertyName(project);
                 //if [DefaultProperty] is set, then we can instantiate
                 //types as child elements
@@ -878,7 +878,7 @@ public class CompletionProvider
                         }
                     }
 
-                    autoCompleteDefinitionsForMXML(result, project, offsetUnit, offsetTag, true, tagsNeedOpenBracket, nextChar, typeFilter, addImportData, xmlnsPosition);
+                    autoCompleteDefinitionsForMXML(result, project, offsetUnit, offsetTag, true, includeOpenTagBracket, nextChar, typeFilter, addImportData, xmlnsPosition);
                 }
             }
             return result;
@@ -890,7 +890,7 @@ public class CompletionProvider
             if (!isAttribute)
             {
                 String typeFilter = DefinitionUtils.getMXMLChildElementTypeForDefinition(offsetDefinition, project);
-                autoCompleteDefinitionsForMXML(result, project, offsetUnit, offsetTag, true, tagsNeedOpenBracket, nextChar, typeFilter, addImportData, xmlnsPosition);
+                autoCompleteDefinitionsForMXML(result, project, offsetUnit, offsetTag, true, includeOpenTagBracket, nextChar, typeFilter, addImportData, xmlnsPosition);
             }
             return result;
         }
@@ -1111,7 +1111,7 @@ public class CompletionProvider
             if (currentScope instanceof TypeScope && !typesOnly)
             {
                 TypeScope typeScope = (TypeScope) currentScope;
-                addDefinitionsInTypeScopeToAutoComplete(typeScope, scope, true, true, false, false, null, false, nextChar, addImportData, null, null, project, result);
+                addDefinitionsInTypeScopeToAutoComplete(typeScope, scope, true, true, false, false, null, false, false, nextChar, addImportData, null, null, project, result);
                 if (!staticOnly)
                 {
                     addDefinitionsInTypeScopeToAutoCompleteActionScript(typeScope, scope, false, nextChar, addImportData, project, result);
@@ -1404,7 +1404,7 @@ public class CompletionProvider
         }
     }
 
-    private void addMXMLLanguageTagToAutoComplete(String tagName, String prefix, boolean includeOpenTagPrefix, boolean tagsNeedOpenBracket, CompletionList result)
+    private void addMXMLLanguageTagToAutoComplete(String tagName, String prefix, boolean includeOpenTagBracket, boolean includeOpenTagPrefix, CompletionList result)
     {
         List<CompletionItem> items = result.getItems();
         CompletionItem item = new CompletionItem();
@@ -1417,7 +1417,7 @@ public class CompletionProvider
         item.setFilterText(tagName);
         item.setSortText(tagName);
         StringBuilder builder = new StringBuilder();
-        if (tagsNeedOpenBracket)
+        if (includeOpenTagBracket)
         {
             builder.append("<");
         }
@@ -1445,7 +1445,7 @@ public class CompletionProvider
         items.add(item);
     }
 
-    private void addRootMXMLLanguageTagsToAutoComplete(IMXMLTagData offsetTag, String prefix, boolean includeOpenTagPrefix, boolean tagsNeedOpenBracket, CompletionList result)
+    private void addRootMXMLLanguageTagsToAutoComplete(IMXMLTagData offsetTag, String prefix, boolean includeOpenTagPrefix, boolean includeOpenTagBracket, CompletionList result)
     {
         List<CompletionItem> items = result.getItems();
                             
@@ -1459,7 +1459,7 @@ public class CompletionProvider
         item.setFilterText(IMXMLLanguageConstants.SCRIPT);
         item.setSortText(IMXMLLanguageConstants.SCRIPT);
         StringBuilder builder = new StringBuilder();
-        if (tagsNeedOpenBracket)
+        if (includeOpenTagBracket)
         {
             builder.append("<");
         }
@@ -1492,14 +1492,14 @@ public class CompletionProvider
         item.setInsertText(builder.toString());
         items.add(item);
 
-        addMXMLLanguageTagToAutoComplete(IMXMLLanguageConstants.BINDING, prefix, includeOpenTagPrefix, tagsNeedOpenBracket, result);
-        addMXMLLanguageTagToAutoComplete(IMXMLLanguageConstants.DECLARATIONS, prefix, includeOpenTagPrefix, tagsNeedOpenBracket, result);
-        addMXMLLanguageTagToAutoComplete(IMXMLLanguageConstants.METADATA, prefix, includeOpenTagPrefix, tagsNeedOpenBracket, result);
-        addMXMLLanguageTagToAutoComplete(IMXMLLanguageConstants.STYLE, prefix, includeOpenTagPrefix, tagsNeedOpenBracket, result);
+        addMXMLLanguageTagToAutoComplete(IMXMLLanguageConstants.BINDING, prefix, includeOpenTagBracket, includeOpenTagPrefix, result);
+        addMXMLLanguageTagToAutoComplete(IMXMLLanguageConstants.DECLARATIONS, prefix, includeOpenTagBracket, includeOpenTagPrefix, result);
+        addMXMLLanguageTagToAutoComplete(IMXMLLanguageConstants.METADATA, prefix, includeOpenTagBracket, includeOpenTagPrefix, result);
+        addMXMLLanguageTagToAutoComplete(IMXMLLanguageConstants.STYLE, prefix, includeOpenTagBracket, includeOpenTagPrefix, result);
     }
 
     private void addMembersForMXMLTypeToAutoComplete(IClassDefinition definition,
-            IMXMLTagData offsetTag, ICompilationUnit offsetUnit, boolean isAttribute, boolean includePrefix, boolean tagsNeedOpenBracket,
+            IMXMLTagData offsetTag, ICompilationUnit offsetUnit, boolean isAttribute, boolean includeOpenTagBracket, boolean includeOpenTagPrefix,
             char nextChar, AddImportData addImportData, Position xmlnsPosition, ILspProject project, CompletionList result)
     {
         IASScope[] scopes;
@@ -1514,19 +1514,16 @@ public class CompletionProvider
         if (scopes != null && scopes.length > 0)
         {
             String propertyElementPrefix = null;
-            if (includePrefix)
+            String prefix = offsetTag.getPrefix();
+            if (prefix.length() > 0)
             {
-                String prefix = offsetTag.getPrefix();
-                if (prefix.length() > 0)
-                {
-                    propertyElementPrefix = prefix;
-                }
+                propertyElementPrefix = prefix;
             }
             TypeScope typeScope = (TypeScope) definition.getContainedScope();
             ASScope scope = (ASScope) scopes[0];
-            addDefinitionsInTypeScopeToAutoCompleteMXML(typeScope, scope, isAttribute, propertyElementPrefix, tagsNeedOpenBracket, addImportData, xmlnsPosition, offsetTag, project, result);
-            addStyleMetadataToAutoCompleteMXML(typeScope, isAttribute, propertyElementPrefix, tagsNeedOpenBracket, nextChar, project, result);
-            addEventMetadataToAutoCompleteMXML(typeScope, isAttribute, propertyElementPrefix, tagsNeedOpenBracket, nextChar, project, result);
+            addDefinitionsInTypeScopeToAutoCompleteMXML(typeScope, scope, isAttribute, propertyElementPrefix, includeOpenTagBracket, includeOpenTagPrefix, addImportData, xmlnsPosition, offsetTag, project, result);
+            addStyleMetadataToAutoCompleteMXML(typeScope, isAttribute, propertyElementPrefix, includeOpenTagBracket, includeOpenTagPrefix, nextChar, project, result);
+            addEventMetadataToAutoCompleteMXML(typeScope, isAttribute, propertyElementPrefix, includeOpenTagBracket, includeOpenTagPrefix, nextChar, project, result);
             if(isAttribute)
             {
                 addLanguageAttributesToAutoCompleteMXML(typeScope, scope, nextChar, project, result);
@@ -1600,20 +1597,20 @@ public class CompletionProvider
         boolean isStatic, char nextChar, AddImportData addImportData,
         ILspProject project, CompletionList result)
     {
-        addDefinitionsInTypeScopeToAutoComplete(typeScope, otherScope, isStatic, false, false, false, null, false, nextChar, addImportData, null, null, project, result);
+        addDefinitionsInTypeScopeToAutoComplete(typeScope, otherScope, isStatic, false, false, false, null, false, false, nextChar, addImportData, null, null, project, result);
     }
 
     private void addDefinitionsInTypeScopeToAutoCompleteMXML(TypeScope typeScope, ASScope otherScope,
-        boolean isAttribute, String prefix, boolean tagsNeedOpenBracket,
+        boolean isAttribute, String prefix, boolean includeOpenTagBracket, boolean includeOpenTagPrefix,
         AddImportData addImportData, Position xmlnsPosition,
         IMXMLTagData offsetTag, ILspProject project, CompletionList result)
     {
-        addDefinitionsInTypeScopeToAutoComplete(typeScope, otherScope, false, false, true, isAttribute, prefix, tagsNeedOpenBracket, (char) -1, addImportData, xmlnsPosition, offsetTag, project, result);
+        addDefinitionsInTypeScopeToAutoComplete(typeScope, otherScope, false, false, true, isAttribute, prefix, includeOpenTagBracket, includeOpenTagPrefix, (char) -1, addImportData, xmlnsPosition, offsetTag, project, result);
     }
 
     private void addDefinitionsInTypeScopeToAutoComplete(TypeScope typeScope, ASScope otherScope,
         boolean isStatic, boolean includeSuperStatics,
-        boolean forMXML, boolean isAttribute, String prefix, boolean tagsNeedOpenBracket,
+        boolean forMXML, boolean isAttribute, String prefix, boolean includeOpenTagBracket, boolean includeOpenTagPrefix,
         char nextChar, AddImportData addImportData, Position xmlnsPosition,
         IMXMLTagData offsetTag, ILspProject project, CompletionList result)
     {
@@ -1698,7 +1695,7 @@ public class CompletionProvider
             }
             if (forMXML)
             {
-                addDefinitionAutoCompleteMXML(localDefinition, xmlnsPosition, isAttribute, prefix, null, tagsNeedOpenBracket, nextChar, offsetTag, project, result);
+                addDefinitionAutoCompleteMXML(localDefinition, xmlnsPosition, isAttribute, prefix, null, includeOpenTagBracket, includeOpenTagPrefix, nextChar, offsetTag, project, result);
             }
             else //actionscript
             {
@@ -1707,7 +1704,7 @@ public class CompletionProvider
         }
     }
 
-    private void addEventMetadataToAutoCompleteMXML(TypeScope typeScope, boolean isAttribute, String prefix, boolean tagsNeedOpenBracket, char nextChar, ILspProject project, CompletionList result)
+    private void addEventMetadataToAutoCompleteMXML(TypeScope typeScope, boolean isAttribute, String prefix, boolean includeOpenTagBracket, boolean includeOpenTagPrefix, char nextChar, ILspProject project, CompletionList result)
     {
         ArrayList<String> eventNames = new ArrayList<>();
         IDefinition definition = typeScope.getDefinition();
@@ -1745,11 +1742,11 @@ public class CompletionProvider
                 else if (!isAttribute)
                 {
                     StringBuilder builder = new StringBuilder();
-                    if (tagsNeedOpenBracket)
+                    if (includeOpenTagBracket)
                     {
                         builder.append("<");
                     }
-                    if(prefix != null && prefix.length() > 0)
+                    if(includeOpenTagPrefix && prefix != null && prefix.length() > 0)
                     {
                         builder.append(prefix);
                         builder.append(IMXMLCoreConstants.colon);
@@ -1777,7 +1774,7 @@ public class CompletionProvider
         }
     }
 
-    private void addStyleMetadataToAutoCompleteMXML(TypeScope typeScope, boolean isAttribute, String prefix, boolean tagsNeedOpenBracket, char nextChar, ILspProject project, CompletionList result)
+    private void addStyleMetadataToAutoCompleteMXML(TypeScope typeScope, boolean isAttribute, String prefix, boolean includeOpenTagBracket, boolean includeOpenTagPrefix, char nextChar, ILspProject project, CompletionList result)
     {
         ArrayList<String> styleNames = new ArrayList<>();
         IDefinition definition = typeScope.getDefinition();
@@ -1833,11 +1830,11 @@ public class CompletionProvider
                 else if (!isAttribute)
                 {
                     StringBuilder builder = new StringBuilder();
-                    if (tagsNeedOpenBracket)
+                    if (includeOpenTagBracket)
                     {
                         builder.append("<");
                     }
-                    if(prefix != null && prefix.length() > 0)
+                    if(includeOpenTagPrefix && prefix != null && prefix.length() > 0)
                     {
                         builder.append(prefix);
                         builder.append(IMXMLCoreConstants.colon);
@@ -1865,12 +1862,12 @@ public class CompletionProvider
         }
     }
 
-    private void addMXMLTypeDefinitionAutoComplete(ITypeDefinition definition, Position xmlnsPosition, ICompilationUnit offsetUnit, IMXMLTagData offsetTag, boolean tagsNeedOpenBracket, char nextChar, ILspProject project, CompletionList result)
+    private void addMXMLTypeDefinitionAutoComplete(ITypeDefinition definition, Position xmlnsPosition, ICompilationUnit offsetUnit, IMXMLTagData offsetTag, boolean includeOpenTagBracket, char nextChar, ILspProject project, CompletionList result)
     {
         IMXMLDataManager mxmlDataManager = project.getWorkspace().getMXMLDataManager();
         MXMLData mxmlData = (MXMLData) mxmlDataManager.get(fileTracker.getFileSpecification(offsetUnit.getAbsoluteFilename()));
         MXMLNamespace discoveredNS = MXMLNamespaceUtils.getMXMLNamespaceForTypeDefinition(definition, mxmlData, project);
-        addDefinitionAutoCompleteMXML(definition, xmlnsPosition, false, discoveredNS.prefix, discoveredNS.uri, tagsNeedOpenBracket, nextChar, offsetTag, project, result);
+        addDefinitionAutoCompleteMXML(definition, xmlnsPosition, false, discoveredNS.prefix, discoveredNS.uri, includeOpenTagBracket, true, nextChar, offsetTag, project, result);
     }
 
     private void addDefinitionAutoCompleteActionScript(IDefinition definition, IASNode offsetNode, char nextChar, AddImportData addImportData, ILspProject project, CompletionList result)
@@ -1930,7 +1927,7 @@ public class CompletionProvider
         result.getItems().add(item);
     }
 
-    private void addDefinitionAutoCompleteMXML(IDefinition definition, Position xmlnsPosition, boolean isAttribute, String prefix, String uri, boolean tagsNeedOpenBracket, char nextChar, IMXMLTagData offsetTag, ILspProject project, CompletionList result)
+    private void addDefinitionAutoCompleteMXML(IDefinition definition, Position xmlnsPosition, boolean isAttribute, String prefix, String uri, boolean includeOpenTagBracket, boolean includeOpenTagPrefix, char nextChar, IMXMLTagData offsetTag, ILspProject project, CompletionList result)
     {
         if (definition.getBaseName().startsWith(VECTOR_HIDDEN_PREFIX))
         {
@@ -1962,6 +1959,7 @@ public class CompletionProvider
         else if (!isAttribute)
         {
             if (definition instanceof ITypeDefinition
+                    && includeOpenTagPrefix
                     && prefix != null
                     && prefix.length() > 0)
             {
@@ -1974,11 +1972,11 @@ public class CompletionProvider
                 item.setFilterText(definitionBaseName);
             }
             StringBuilder insertTextBuilder = new StringBuilder();
-            if (tagsNeedOpenBracket)
+            if (includeOpenTagBracket)
             {
                 insertTextBuilder.append("<");
             }
-            if(prefix != null && prefix.length() > 0)
+            if(includeOpenTagPrefix && prefix != null && prefix.length() > 0)
             {
                 insertTextBuilder.append(prefix);
                 insertTextBuilder.append(IMXMLCoreConstants.colon);
@@ -2055,9 +2053,9 @@ public class CompletionProvider
         result.getItems().add(item);
     }
 
-    private boolean getTagsNeedOpenBracket(Path path, int currentOffset)
+    private boolean getTagNeedsOpenBracket(Path path, int currentOffset)
     {
-        boolean tagsNeedOpenBracket = currentOffset == 0;
+        boolean tagNeedsOpenBracket = currentOffset == 0;
         if (currentOffset > 0)
         {
             Reader reader = fileTracker.getReader(path);
@@ -2067,7 +2065,7 @@ public class CompletionProvider
                 {
                     reader.skip(currentOffset - 1);
                     char prevChar = (char) reader.read();
-                    tagsNeedOpenBracket = prevChar != '<';
+                    tagNeedsOpenBracket = prevChar != '<';
                 }
                 catch(IOException e)
                 {
@@ -2083,7 +2081,7 @@ public class CompletionProvider
                 }
             }
         }
-        return tagsNeedOpenBracket;
+        return tagNeedsOpenBracket;
     }
 
     private CompletionList mxmlStatesCompletion(ICompilationUnit unit, CompletionList result)
@@ -2284,7 +2282,7 @@ public class CompletionProvider
                                 {
                                     if (tagPrefix.equals(otherPrefix))
                                     {
-                                        addDefinitionAutoCompleteMXML(typeDefinition, xmlnsPosition, false, null, null, false, nextChar, offsetTag, project, result);
+                                        addDefinitionAutoCompleteMXML(typeDefinition, xmlnsPosition, false, null, null, false, false, nextChar, offsetTag, project, result);
                                     }
                                 }
                             }
@@ -2292,21 +2290,21 @@ public class CompletionProvider
                         if (tagNamespacePackage != null
                                 && tagNamespacePackage.equals(typeDefinition.getPackageName()))
                         {
-                            addDefinitionAutoCompleteMXML(typeDefinition, xmlnsPosition, false, null, null, false, nextChar, offsetTag, project, result);
+                            addDefinitionAutoCompleteMXML(typeDefinition, xmlnsPosition, false, null, null, false, false, nextChar, offsetTag, project, result);
                         }
                     }
                     else
                     {
                         //no prefix yet, so complete the definition with a prefix
                         MXMLNamespace ns = MXMLNamespaceUtils.getMXMLNamespaceForTypeDefinition(typeDefinition, mxmlData, project);
-                        addDefinitionAutoCompleteMXML(typeDefinition, xmlnsPosition, false, ns.prefix, ns.uri, false, nextChar, offsetTag, project, result);
+                        addDefinitionAutoCompleteMXML(typeDefinition, xmlnsPosition, false, ns.prefix, ns.uri, false, true, nextChar, offsetTag, project, result);
                     }
                 }
             }
         }
     }
 
-    private void autoCompleteDefinitionsForMXML(CompletionList result, ILspProject project, ICompilationUnit offsetUnit, IMXMLTagData offsetTag, boolean typesOnly, boolean tagsNeedOpenBracket, char nextChar, String typeFilter, AddImportData addImportData, Position xmlnsPosition)
+    private void autoCompleteDefinitionsForMXML(CompletionList result, ILspProject project, ICompilationUnit offsetUnit, IMXMLTagData offsetTag, boolean typesOnly, boolean includeOpenTagBracket, char nextChar, String typeFilter, AddImportData addImportData, Position xmlnsPosition)
     {
         for (ICompilationUnit unit : project.getCompilationUnits())
         {
@@ -2346,7 +2344,7 @@ public class CompletionProvider
                             continue;
                         }
 
-                        addMXMLTypeDefinitionAutoComplete(typeDefinition, xmlnsPosition, offsetUnit, offsetTag, tagsNeedOpenBracket, nextChar, project, result);
+                        addMXMLTypeDefinitionAutoComplete(typeDefinition, xmlnsPosition, offsetUnit, offsetTag, includeOpenTagBracket, nextChar, project, result);
                     }
                     else
                     {
@@ -2360,7 +2358,7 @@ public class CompletionProvider
     private void autoCompleteDefinitionsForActionScript(CompletionList result,
             ILspProject project, IASNode offsetNode,
             boolean typesOnly, String requiredPackageName, IDefinition definitionToSkip,
-            boolean tagsNeedOpenBracket, String typeFilter, char nextChar, AddImportData addImportData)
+            boolean includeOpenTagBracket, String typeFilter, char nextChar, AddImportData addImportData)
     {
         String skipQualifiedName = null;
         if (definitionToSkip != null)

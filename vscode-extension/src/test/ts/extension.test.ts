@@ -6283,6 +6283,27 @@ suite("MXML completion item provider: Application workspace", () =>
 					});
 		});
 	});
+	test("vscode.executeCompletionItemProvider includes property as child element (after < bracket and existing prefix)", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "MXMLCompletion.mxml"));
+		let position = new vscode.Position(14, 12);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
+				.then((list: vscode.CompletionList) =>
+					{
+						let items = list.items;
+						let propertyItem = findCompletionItem("className", items);
+						assert.notEqual(propertyItem, null, "vscode.executeCompletionItemProvider failed to provide property as child element: " + uri);
+						assert.strictEqual(propertyItem.kind, vscode.CompletionItemKind.Property, "vscode.executeCompletionItemProvider failed to provide correct kind of property: " + uri);
+						let snippet = propertyItem.insertText as vscode.SnippetString;
+						assert.strictEqual(snippet.value, "className>$0</js:className>", "vscode.executeCompletionItemProvider failed to provide correct insert text for property as child element: " + uri);
+					}, (err) =>
+					{
+						assert(false, "Failed to execute completion item provider: " + uri);
+					});
+		});
+	});
 	test("vscode.executeCompletionItemProvider omits property as attribute of closing element", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "MXMLCompletion.mxml"));
@@ -6364,6 +6385,27 @@ suite("MXML completion item provider: Application workspace", () =>
 					});
 		});
 	});
+	test("vscode.executeCompletionItemProvider includes member variable as child element (after < bracket and exiting prefix)", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "MXMLCompletion.mxml"));
+		let position = new vscode.Position(14, 12);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
+				.then((list: vscode.CompletionList) =>
+					{
+						let items = list.items;
+						let propertyItem = findCompletionItem("beads", items);
+						assert.notEqual(propertyItem, null, "vscode.executeCompletionItemProvider failed to provide member variable as child element: " + uri);
+						assert.strictEqual(propertyItem.kind, vscode.CompletionItemKind.Field, "vscode.executeCompletionItemProvider failed to provide correct kind of member variable: " + uri);
+						let snippet = propertyItem.insertText as vscode.SnippetString;
+						assert.strictEqual(snippet.value, "beads>$0</js:beads>", "vscode.executeCompletionItemProvider failed to provide correct insert text for member variable as child element: " + uri);
+					}, (err) =>
+					{
+						assert(false, "Failed to execute completion item provider: " + uri);
+					});
+		});
+	});
 	test("vscode.executeCompletionItemProvider omits member variable as attribute of closing element", () =>
 	{
 		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "MXMLCompletion.mxml"));
@@ -6439,6 +6481,27 @@ suite("MXML completion item provider: Application workspace", () =>
 						assert.strictEqual(eventItem.kind, vscode.CompletionItemKind.Event, "vscode.executeCompletionItemProvider failed to provide correct kind of event: " + uri);
 						let snippet = eventItem.insertText as vscode.SnippetString;
 						assert.strictEqual(snippet.value, "<js:click>$0</js:click>", "vscode.executeCompletionItemProvider failed to provide correct insert text for event as child element: " + uri);
+					}, (err) =>
+					{
+						assert(false, "Failed to execute completion item provider: " + uri);
+					});
+		});
+	});
+	test("vscode.executeCompletionItemProvider includes event as child element (after < bracket and existing prefix)", () =>
+	{
+		let uri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "src", "MXMLCompletion.mxml"));
+		let position = new vscode.Position(14, 12);
+		return openAndEditDocument(uri, (editor: vscode.TextEditor) =>
+		{
+			return vscode.commands.executeCommand("vscode.executeCompletionItemProvider", uri, position)
+				.then((list: vscode.CompletionList) =>
+					{
+						let items = list.items;
+						let eventItem = findCompletionItem("click", items);
+						assert.notEqual(eventItem, null, "vscode.executeCompletionItemProvider failed to provide event as child element: " + uri);
+						assert.strictEqual(eventItem.kind, vscode.CompletionItemKind.Event, "vscode.executeCompletionItemProvider failed to provide correct kind of event: " + uri);
+						let snippet = eventItem.insertText as vscode.SnippetString;
+						assert.strictEqual(snippet.value, "click>$0</js:click>", "vscode.executeCompletionItemProvider failed to provide correct insert text for event as child element: " + uri);
 					}, (err) =>
 					{
 						assert(false, "Failed to execute completion item provider: " + uri);
