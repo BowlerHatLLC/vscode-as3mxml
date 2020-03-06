@@ -98,6 +98,8 @@ public class ASConfigC
 	private static final String FILE_NAME_UNPACKAGED_ANES = ".as3mxml-unpackaged-anes";
 	private static final String FILE_NAME_ANIMATE_PUBLISH_LOG = "AnimateDocument.log";
 	private static final String FILE_NAME_ANIMATE_ERROR_LOG = "AnimateErrors.log";
+	private static final String FILE_NAME_BIN_JS_DEBUG = "bin/js-debug";
+	private static final String FILE_NAME_BIN_JS_RELEASE = "bin/js-release";
 
 	public static void main(String[] args)
 	{
@@ -1038,9 +1040,9 @@ public class ASConfigC
 		Path outputPath = Paths.get(outputDirectory);
 		if(outputIsJS)
 		{
-			Path debugOutputPath = outputPath.resolve("bin/js-debug");
+			Path debugOutputPath = outputPath.resolve(FILE_NAME_BIN_JS_DEBUG);
 			deleteOutputDirectory(debugOutputPath);
-			Path releaseOutputPath = outputPath.resolve("bin/js-release");
+			Path releaseOutputPath = outputPath.resolve(FILE_NAME_BIN_JS_RELEASE);
 			deleteOutputDirectory(releaseOutputPath);
 		}
 		else //swf
@@ -1129,13 +1131,7 @@ public class ASConfigC
 		{
 			throw new ASConfigCException(e.getMessage());
 		}
-		File targetFile = new File(targetPath);
-		File targetParent = targetFile.getParentFile();
-		if(!targetParent.exists() && !targetParent.mkdirs())
-		{
-			throw new ASConfigCException("Failed to copy file from source " + assetPath + " to destination " + targetParent.getAbsolutePath() + " because the directories could not be created.");
-		}
-		copyAsset(Paths.get(assetPath), targetFile.toPath());
+		createParentAndCopyAsset(Paths.get(assetPath), Paths.get(targetPath));
 	}
 	
 	private void copySourcePathAssets() throws ASConfigCException
@@ -1176,11 +1172,11 @@ public class ASConfigC
 		{
 			if(outputIsJS)
 			{
-				File outputDirectoryJSDebug = new File(outputDirectory, "bin/js-debug");
+				File outputDirectoryJSDebug = new File(outputDirectory, FILE_NAME_BIN_JS_DEBUG);
 				copySourcePathAssetToOutputDirectory(assetPath, mainFile, sourcePaths, outputDirectoryJSDebug.getAbsolutePath());
 				if(!debugBuild)
 				{
-					File outputDirectoryJSRelease = new File(outputDirectory, "bin/js-release");
+					File outputDirectoryJSRelease = new File(outputDirectory, FILE_NAME_BIN_JS_RELEASE);
 					copySourcePathAssetToOutputDirectory(assetPath, mainFile, sourcePaths, outputDirectoryJSRelease.getAbsolutePath());
 				}
 			}
@@ -1268,7 +1264,7 @@ public class ASConfigC
 					}
 				}
 				File outputFile = new File(outputDirectory, fileName);
-				copyAsset(file.toPath(), outputFile.toPath());
+				createParentAndCopyAsset(file.toPath(), outputFile.toPath());
 			}
 		}
 		catch(IOException e)
@@ -1420,8 +1416,14 @@ public class ASConfigC
 		}
 	}
 
-	private void copyAsset(Path srcPath, Path destPath) throws ASConfigCException
+	private void createParentAndCopyAsset(Path srcPath, Path destPath) throws ASConfigCException
 	{
+		File destFile = new File(destPath.toString());
+		File destParent = destFile.getParentFile();
+		if(!destParent.exists() && !destParent.mkdirs())
+		{
+			throw new ASConfigCException("Failed to copy file from source " + srcPath + " to destination " + destParent.getAbsolutePath() + " because the directories could not be created.");
+		}
 		copyAsset(srcPath, destPath, true);
 	}
 
@@ -1488,33 +1490,20 @@ public class ASConfigC
 				File srcFile = new File(filePath);
 				if(outputIsJS)
 				{
-					File outputDirectoryJSDebug = new File(outputDirectory, "bin/js-debug");
-					if(!outputDirectoryJSDebug.exists() && !outputDirectoryJSDebug.mkdirs())
-					{
-						throw new ASConfigCException("Failed to copy file from source " + srcFile.getAbsolutePath() + " to destination " + outputDirectoryJSDebug.getAbsolutePath() + " because the directories could not be created.");
-					}
+					File outputDirectoryJSDebug = new File(outputDirectory, FILE_NAME_BIN_JS_DEBUG);
 					File destFileJSDebug = new File(outputDirectoryJSDebug, srcFile.getName());
-					copyAsset(srcFile.toPath(), destFileJSDebug.toPath());
+					createParentAndCopyAsset(srcFile.toPath(), destFileJSDebug.toPath());
 					if(!debugBuild)
 					{
-						File outputDirectoryJSRelease = new File(outputDirectory, "bin/js-release");
-						if(!outputDirectoryJSRelease.exists() && !outputDirectoryJSRelease.mkdirs())
-						{
-							throw new ASConfigCException("Failed to copy file from source " + srcFile.getAbsolutePath() + " to destination " + outputDirectoryJSRelease.getAbsolutePath() + " because the directories could not be created.");
-						}
+						File outputDirectoryJSRelease = new File(outputDirectory, FILE_NAME_BIN_JS_RELEASE);
 						File destFileJSRelease = new File(outputDirectoryJSRelease, srcFile.getName());
-						copyAsset(srcFile.toPath(), destFileJSRelease.toPath());
+						createParentAndCopyAsset(srcFile.toPath(), destFileJSRelease.toPath());
 					}
 				}
 				else //swf
 				{
 					File destFile = new File(outputDirectory, srcFile.getName());
-					File destParent = destFile.getParentFile();
-					if(!destParent.exists() && !destParent.mkdirs())
-					{
-						throw new ASConfigCException("Failed to copy file from source " + srcFile.getAbsolutePath() + " to destination " + destParent.getAbsolutePath() + " because the directories could not be created.");
-					}
-					copyAsset(srcFile.toPath(), destFile.toPath());
+					createParentAndCopyAsset(srcFile.toPath(), destFile.toPath());
 				}
 			}
 			else //JSON object
@@ -1544,32 +1533,34 @@ public class ASConfigC
 
 				if(srcFile.isDirectory())
 				{
-					List<String> assetDirList = Arrays.asList(srcFile.getAbsolutePath());
 					Set<String> assetPaths = null;
 					try
 					{
+						List<String> assetDirList = Arrays.asList(srcFile.getAbsolutePath());
 						assetPaths = ProjectUtils.findSourcePathAssets(null, assetDirList, outputDirectory.getAbsolutePath(), null, null);
 					}
 					catch(IOException e)
 					{
 						throw new ASConfigCException(e.getMessage());
 					}
-					assetDirList = Arrays.asList(srcFile.getParentFile().getAbsolutePath());
 					for(String assetPath : assetPaths)
 					{
+						Path assetPathPath = Paths.get(assetPath);
+						Path relativeAssetPath = srcFile.toPath().relativize(assetPathPath);
 						if(outputIsJS)
 						{
-							File outputDirectoryJSDebug = new File(outputDirectory, "bin/js-debug");
-							copySourcePathAssetToOutputDirectory(assetPath, null, assetDirList, outputDirectoryJSDebug.getAbsolutePath());
+							Path jsDebugAssetOutputPath = destFile.toPath().resolve(FILE_NAME_BIN_JS_DEBUG).resolve(relativeAssetPath);
+							createParentAndCopyAsset(assetPathPath, jsDebugAssetOutputPath);
 							if(!debugBuild)
 							{
-								File outputDirectoryJSRelease = new File(outputDirectory, "bin/js-release");
-								copySourcePathAssetToOutputDirectory(assetPath, null, assetDirList, outputDirectoryJSRelease.getAbsolutePath());
+								Path jsReleaseAssetOutputPath = destFile.toPath().resolve(FILE_NAME_BIN_JS_RELEASE).resolve(relativeAssetPath);
+								createParentAndCopyAsset(assetPathPath, jsReleaseAssetOutputPath);
 							}
 						}
 						else //swf
 						{
-							copySourcePathAssetToOutputDirectory(assetPath, null, assetDirList, outputDirectory.getAbsolutePath());
+							Path assetOutputPath = destFile.toPath().resolve(relativeAssetPath);
+							createParentAndCopyAsset(assetPathPath, assetOutputPath);
 						}
 					}
 				}
@@ -1577,32 +1568,19 @@ public class ASConfigC
 				{
 					if(outputIsJS)
 					{
-						File outputDirectoryJSDebug = new File(outputDirectory, "bin/js-debug");
-						if(!outputDirectoryJSDebug.exists() && !outputDirectoryJSDebug.mkdirs())
-						{
-							throw new ASConfigCException("Failed to copy file from source " + srcFile.getAbsolutePath() + " to destination " + outputDirectoryJSDebug.getAbsolutePath() + " because the directories could not be created.");
-						}
+						File outputDirectoryJSDebug = new File(outputDirectory, FILE_NAME_BIN_JS_DEBUG);
 						File destFileJSDebug = new File(outputDirectoryJSDebug, destFilePath);
-						copyAsset(srcFile.toPath(), destFileJSDebug.toPath());
+						createParentAndCopyAsset(srcFile.toPath(), destFileJSDebug.toPath());
 						if(!debugBuild)
 						{
-							File outputDirectoryJSRelease = new File(outputDirectory, "bin/js-release");
-							if(!outputDirectoryJSRelease.exists() && !outputDirectoryJSRelease.mkdirs())
-							{
-								throw new ASConfigCException("Failed to copy file from source " + srcFile.getAbsolutePath() + " to destination " + outputDirectoryJSRelease.getAbsolutePath() + " because the directories could not be created.");
-							}
+							File outputDirectoryJSRelease = new File(outputDirectory, FILE_NAME_BIN_JS_RELEASE);
 							File destFileJSRelease = new File(outputDirectoryJSRelease, destFilePath);
-							copyAsset(srcFile.toPath(), destFileJSRelease.toPath());
+							createParentAndCopyAsset(srcFile.toPath(), destFileJSRelease.toPath());
 						}
 					}
 					else //swf
 					{
-						File destParent = destFile.getParentFile();
-						if(!destParent.exists() && !destParent.mkdirs())
-						{
-							throw new ASConfigCException("Failed to copy file from source " + srcFile.getAbsolutePath() + " to destination " + destParent.getAbsolutePath() + " because the directories could not be created.");
-						}
-						copyAsset(srcFile.toPath(), destFile.toPath());
+						createParentAndCopyAsset(srcFile.toPath(), destFile.toPath());
 					}
 				}
 			}
