@@ -210,6 +210,38 @@ class CompilerOptionsParserTests
 	}
 	
 	@Test
+	void testDefaultsCssFiles()
+	{
+		String value1 = "defaults/css/path1";
+		String value2 = "defaults/css/path2 with spaces";
+		String value3 = "./defaults/css/path3";
+
+		ObjectNode options = JsonNodeFactory.instance.objectNode();
+		ArrayNode externalLibraryPath = JsonNodeFactory.instance.arrayNode();
+
+		externalLibraryPath.add(JsonNodeFactory.instance.textNode(value1));
+		externalLibraryPath.add(JsonNodeFactory.instance.textNode(value2));
+		externalLibraryPath.add(JsonNodeFactory.instance.textNode(value3));
+
+		options.set(CompilerOptions.DEFAULTS_CSS_FILES, externalLibraryPath);
+
+		ArrayList<String> result = new ArrayList<>();
+		try
+		{
+			parser.parse(options, null, result);
+		}
+		catch(UnknownCompilerOptionException e) {}
+		Assertions.assertEquals(3, result.size(),
+			"CompilerOptionsParser.parse() created incorrect number of options.");
+		Assertions.assertEquals("--" + CompilerOptions.DEFAULTS_CSS_FILES + "+=" + value1, result.get(0),
+			"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
+		Assertions.assertEquals("--" + CompilerOptions.DEFAULTS_CSS_FILES + "+=" + value2, result.get(1),
+			"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
+		Assertions.assertEquals("--" + CompilerOptions.DEFAULTS_CSS_FILES + "+=" + value3, result.get(2),
+			"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
+	}
+	
+	@Test
 	void testDefine()
 	{
 		String name1 = "CONFIG::bool";

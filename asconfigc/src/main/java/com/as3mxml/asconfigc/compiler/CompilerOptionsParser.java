@@ -99,6 +99,12 @@ public class CompilerOptionsParser
 					setDefaultSize(options.get(key), result);
 					break;
 				}
+				case CompilerOptions.DEFAULTS_CSS_FILES:
+				{
+					List<String> values = JsonUtils.jsonNodeToListOfStrings(options.get(key));
+					OptionsFormatter.appendPaths(key, values, result);
+					break;
+				}
 				case CompilerOptions.DEFINE:
 				{
 					setDefine(key, options.get(key), result);
