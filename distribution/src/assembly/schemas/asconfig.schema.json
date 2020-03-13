@@ -504,6 +504,15 @@
 						"height"
 					]
 				},
+				"defaults-css-files":
+				{
+					"type": "array",
+					"description": "Specifies a list of CSS files to provide style defaults",
+					"items":
+					{
+						"type": "string"
+					}
+				},
 				"define":
 				{
 					"type": "array",
