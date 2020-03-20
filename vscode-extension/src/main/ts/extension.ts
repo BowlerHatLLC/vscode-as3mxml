@@ -35,13 +35,11 @@ import normalizeUri from "./utils/normalizeUri";
 import findQuickCompileWorkspaceFolders from "./commands/findQuickCompileWorkspaceFolders";
 
 const INVALID_SDK_ERROR = "as3mxml.sdk.editor in settings does not point to a valid SDK. Requires Apache Royale 0.9.6 or newer.";
-const MISSING_FRAMEWORK_SDK_ERROR = "You must configure an SDK to enable all ActionScript & MXML features.";
 const INVALID_JAVA_ERROR = "as3mxml.java.path in settings does not point to a valid executable. It cannot be a directory, and Java 1.8 or newer is required.";
 const MISSING_JAVA_ERROR = "Could not locate valid Java executable. To configure Java manually, use the as3mxml.java.path setting.";
 const INITIALIZING_MESSAGE = "Initializing ActionScript & MXML language server...";
 const RELOAD_WINDOW_MESSAGE = "To apply new settings for ActionScript & MXML, please reload the window.";
 const RELOAD_WINDOW_BUTTON_LABEL = "Reload Window";
-const CONFIGURE_SDK_LABEL = "Configure SDK";
 const STARTUP_ERROR = "The ActionScript & MXML extension failed to start.";
 const QUICK_COMPILE_AND_DEBUG_INIT_MESSAGE = "Quick Compile & Debug is waiting for initialization...";
 const QUICK_COMPILE_AND_RUN_INIT_MESSAGE = "Quick Compile & Run is waiting for initialization...";
@@ -272,7 +270,7 @@ export function activate(context: vscode.ExtensionContext)
 
 	sdkStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
 	updateSDKStatusBarItem();
-	sdkStatusBarItem.tooltip = "Select ActionScript SDK";
+	sdkStatusBarItem.tooltip = "Select ActionScript & MXML SDK";
 	sdkStatusBarItem.command = "as3mxml.selectWorkspaceSDK";
 	sdkStatusBarItem.show();
 
@@ -329,17 +327,6 @@ function hasInvalidEditorSDK(): boolean
 	return !editorSDKHome && sdkPath != null;
 }
 
-function showMissingFrameworkSDKError()
-{
-	vscode.window.showErrorMessage(MISSING_FRAMEWORK_SDK_ERROR, CONFIGURE_SDK_LABEL).then((value: string) =>
-	{
-		if(value === CONFIGURE_SDK_LABEL)
-		{
-			selectWorkspaceSDK();
-		}
-	});
-}
-
 function startClient()
 {
 	if(!savedContext)
@@ -360,11 +347,6 @@ function startClient()
 	if(hasInvalidEditorSDK())
 	{
 		vscode.window.showErrorMessage(INVALID_SDK_ERROR);
-		return;
-	}
-	if(!frameworkSDKHome)
-	{
-		showMissingFrameworkSDKError();
 		return;
 	}
 
