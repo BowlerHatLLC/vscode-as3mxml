@@ -200,6 +200,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     private CompilerProblemFilter compilerProblemFilter = new CompilerProblemFilter();
     private boolean initialized = false;
     private boolean frameworkSDKIsRoyale = false;
+    private boolean frameworkSDKIsFallback = false;
     private RealTimeProblemsChecker realTimeProblemsChecker;
     private Future<?> realTimeProblemsFuture;
     private Set<URI> notOnSourcePathSet = new HashSet<>();
@@ -1334,8 +1335,33 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         compilerProblemFilter.royaleProblems = compilerPath.toFile().exists();
 
         frameworkSDKIsRoyale = ActionScriptSDKUtils.isRoyaleFramework(frameworkPath);
+        frameworkSDKIsFallback = isFallbackFramework();
 
         updateFallbackWorkspaceFolder();
+    }
+    private boolean isFallbackFramework()
+    {
+        String jarPath = null;
+        try
+        {
+            URI uri = IASNode.class.getProtectionDomain().getCodeSource().getLocation().toURI();
+            jarPath = Paths.get(uri).normalize().toString();
+        }
+        catch (Exception e)
+        {
+            return false;
+        }
+        if(jarPath == null)
+        {
+            return false;
+        }
+        
+        String frameworkSDKPath = System.getProperty(PROPERTY_FRAMEWORK_LIB);
+        if(frameworkSDKPath == null)
+        {
+            return true;
+        }
+        return Paths.get(jarPath).getParent().getParent().resolve("frameworks").equals(Paths.get(frameworkSDKPath));
     }
 
     private void updateFallbackWorkspaceFolder()
@@ -1618,7 +1644,14 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         }
         //if the configuration changed, start fresh with a whole new project
         folderData.cleanup();
-        folderData.options = currentConfig.getOptions();
+        if(frameworkSDKIsFallback)
+        {
+            folderData.options = null;
+        }
+        else
+        {
+            folderData.options = currentConfig.getOptions();
+        }
     }
 
     private void addCompilerProblem(ICompilerProblem problem, PublishDiagnosticsParams publish, boolean isConfigFile)
@@ -1758,7 +1791,32 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             folderData.cleanup();
             
             Path configFilePath = folderData.config.getConfigFilePath();
-            if(configFilePath != null
+            if(frameworkSDKIsFallback)
+            {
+                Path problemPath = null;
+                if(configFilePath != null && configFilePath.toFile().exists())
+                {
+                    problemPath = configFilePath;
+                }
+                else
+                {
+                    //if there's no project file, just grab the first open file
+                    for(Path openFile : fileTracker.getOpenFiles())
+                    {
+                        problemPath = openFile;
+                        break;
+                    }
+                }
+                if(problemPath != null)
+                {
+                    folderData.codeProblemTracker.trackFileWithProblems(problemPath.toUri());
+                    ProblemQuery problemQuery = new ProblemQuery();
+                    problemQuery.add(new SyntaxFallbackProblem(problemPath.toString(),
+                            "ActionScript & MXML code intelligence disabled. SDK not found."));
+                    publishDiagnosticsForProblemQuery(problemQuery, folderData.configProblemTracker, folderData, true);
+                }
+            }
+            else if(configFilePath != null
                     && !configFilePath.toFile().exists()
                     && fileTracker.getOpenFiles().size() > 0)
             {
