@@ -1514,6 +1514,7 @@ public class ASConfigC
 				{
 					srcFile = new File(System.getProperty("user.dir"), srcFilePath);
 				}
+				boolean srcIsDir = srcFile.isDirectory();
 
 				String destFilePath = fileJSON.get(AIROptions.FILES__PATH).asText();
 				File destFile = new File(outputDirectory, destFilePath);
@@ -1521,7 +1522,7 @@ public class ASConfigC
 				Path relativePath = outputDirectory.toPath().relativize(destFile.toPath());
 				try
 				{
-					if(relativePath.toString().startsWith("..") || destFile.getCanonicalPath().equals(outputDirectory.getCanonicalPath()))
+					if(relativePath.toString().startsWith("..") || (!srcIsDir && destFile.getCanonicalPath().equals(outputDirectory.getCanonicalPath())))
 					{
 						throw new ASConfigCException("Invalid destination path for file in Adobe AIR application. Source: " + srcFilePath + ", Destination: " + destFilePath);
 					}
@@ -1531,7 +1532,7 @@ public class ASConfigC
 					throw new ASConfigCException(e.getMessage());
 				}
 
-				if(srcFile.isDirectory())
+				if(srcIsDir)
 				{
 					Set<String> assetPaths = null;
 					try
