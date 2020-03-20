@@ -28,6 +28,7 @@
         <include>snippets/*</include>
         <include>bin/*</include>
         <include>jsfl/*</include>
+        <include>frameworks/*</include>
       </includes>
     </fileSet>
     <fileSet>
