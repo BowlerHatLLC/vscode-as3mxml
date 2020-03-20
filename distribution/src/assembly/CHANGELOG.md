@@ -1,5 +1,21 @@
 # ActionScript & MXML for Visual Studio Code Changelog
 
+## v1.1.0
+
+### New Features
+
+- Project: Added the `defaults-css-files` compiler option to _asconfig.json_.
+
+### Fixed Issues
+
+- Build: Fixed issue where Adobe AIR files copied into the debug folder did not have the same relative paths as they would when packaging the final application.
+- Completion: Fixed issue where completing a property in MXML as a child tag with an existing prefix would incorrectly omit the same prefix from the closing tag.
+
+### Other Changes
+
+- Problems: When the _as3mxml.sdk.framework_ setting is empty, and no SDKs are automatically detected from the environment, the extension no longer displays a pop-up error notification. Instead, the message appears in the problems view when an _.as_ or _.mxml_ file is open, or if an _asconfig.json_ file is present at the root of the workspace.
+- Tasks: The extension does not automatically activate when a full list of tasks is requested by VSCode. However, tasks will be provided if the extension is activated in another way, such as when the workspace contains _asconfig.json_ or when an _.as_ or _.mxml_ file is open in an editor.
+
 ## v1.0.0
 
 ### New Features
