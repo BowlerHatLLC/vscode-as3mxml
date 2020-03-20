@@ -1344,7 +1344,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         String jarPath = null;
         try
         {
-            URI uri = IASNode.class.getProtectionDomain().getCodeSource().getLocation().toURI();
+            URI uri = ActionScriptServices.class.getProtectionDomain().getCodeSource().getLocation().toURI();
             jarPath = Paths.get(uri).normalize().toString();
         }
         catch (Exception e)
