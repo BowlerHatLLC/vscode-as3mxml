@@ -1,5 +1,11 @@
 # ActionScript & MXML for Visual Studio Code Changelog
 
+## v1.1.1
+
+### Fixed Issues
+
+- Problems: Fixed issue where setting both `as3mxml.sdk.framework` and `as3mxml.sdk.editor` to the same SDK would be incorrectly detected as having no SDK configured.
+
 ## v1.1.0
 
 ### New Features
