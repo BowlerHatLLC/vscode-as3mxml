@@ -15,7 +15,7 @@ limitations under the License.
 */
 import * as path from "path";
 
-export default function(settingsPath: string, validate: (javaPath: string) => boolean): string
+export default function findJava(settingsPath: string, validate: (javaPath: string) => boolean): string
 {
 	if(settingsPath)
 	{
