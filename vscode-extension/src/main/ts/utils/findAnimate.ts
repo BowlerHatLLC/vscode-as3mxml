@@ -1,5 +1,21 @@
+/*
+Copyright 2016-2020 Bowler Hat LLC
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+	http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
 import * as fs from "fs";
 import * as path from "path";
+import * as vscode from "vscode";
 
 const ANIMATE_PATH_WINDOWS_REGEXP = /^c:\\Program Files( \(x86\))?\\Adobe\\Adobe (Animate|Flash) [\w \.]+$/i;
 const ANIMATE_PATH_MACOS_REGEXP = /^\/Applications\/Adobe (Animate|Flash) [\w \.]+$/i;
@@ -19,6 +35,23 @@ const EXE_NAMES_WINDOWS =
 
 export default function findAnimate(): string
 {
+	let settingsPath = vscode.workspace.getConfiguration("as3mxml").get("sdk.animate") as string;
+	if(settingsPath !== undefined)
+	{
+		if(process.platform === "win32" && fs.existsSync(settingsPath) && !fs.statSync(settingsPath).isDirectory())
+		{
+			return settingsPath;
+		}
+		else if(process.platform === "darwin") //macOS
+		{
+			let appName = path.basename(settingsPath)
+			if(ANIMATE_APP_MACOS_REGEXP.test(appName))
+			{
+				return settingsPath;
+			}
+		}
+		return null;
+	}
 	if(process.platform === "win32")
 	{
 		let animatePath: string = null;

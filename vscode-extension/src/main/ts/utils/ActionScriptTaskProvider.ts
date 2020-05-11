@@ -549,7 +549,7 @@ export default class ActionScriptTaskProvider implements vscode.TaskProvider
 		}
 		catch(error)
 		{
-
+			console.error(`Error reading file: ${jsonPath}. ${error}`);
 		}
 		return null;
 	}

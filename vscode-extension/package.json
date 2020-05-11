@@ -413,6 +413,14 @@
           "default": null,
           "description": "(Advanced) Specifies the folder path of the Apache Royale SDK used internally by the extension for code intelligence. Unless you know what you're doing, you should probably set as3mxml.sdk.framework instead."
         },
+        "as3mxml.sdk.animate": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null,
+          "description": "(Advanced) Specifies the absolute path of the Adobe Animate executable."
+        },
         "nextgenas.sdk.framework": {
           "deprecationMessage": "DEPRECATED: Use as3mxml.sdk.framework instead."
         },
