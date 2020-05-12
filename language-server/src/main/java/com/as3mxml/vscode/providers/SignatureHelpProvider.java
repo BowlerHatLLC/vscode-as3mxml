@@ -157,7 +157,7 @@ public class SignatureHelpProvider
 
 			SignatureInformation signatureInfo = new SignatureInformation();
 			signatureInfo.setLabel(DefinitionTextUtils.functionDefinitionToSignature(functionDefinition, project));
-			String docs = DefinitionDocumentationUtils.getDocumentationForDefinition(functionDefinition, true);
+			String docs = DefinitionDocumentationUtils.getDocumentationForDefinition(functionDefinition, true, project.getWorkspace(), false);
 			if (docs != null)
 			{
 				signatureInfo.setDocumentation(docs);

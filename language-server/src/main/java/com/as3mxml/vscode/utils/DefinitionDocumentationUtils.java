@@ -15,6 +15,11 @@ limitations under the License.
 */
 package com.as3mxml.vscode.utils;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.Collection;
 
 import com.as3mxml.vscode.asdoc.VSCodeASDocComment;
@@ -24,12 +29,15 @@ import org.apache.royale.compiler.definitions.IDefinition;
 import org.apache.royale.compiler.definitions.IDocumentableDefinition;
 import org.apache.royale.compiler.definitions.IFunctionDefinition;
 import org.apache.royale.compiler.definitions.IParameterDefinition;
+import org.apache.royale.compiler.workspaces.IWorkspace;
+import org.apache.royale.swc.ISWC;
+import org.apache.royale.swc.dita.IDITAList;
 
 public class DefinitionDocumentationUtils
 {
     private static final String ASDOC_TAG_PARAM = "param";
 
-	public static String getDocumentationForDefinition(IDefinition definition, boolean useMarkdown)
+	public static String getDocumentationForDefinition(IDefinition definition, boolean useMarkdown, IWorkspace workspace, boolean allowDITA)
     {
         if (!(definition instanceof IDocumentableDefinition))
         {
@@ -37,6 +45,52 @@ public class DefinitionDocumentationUtils
         }
         IDocumentableDefinition documentableDefinition = (IDocumentableDefinition) definition;
         VSCodeASDocComment comment = (VSCodeASDocComment) documentableDefinition.getExplicitSourceComment();
+        String definitionFilePath = definition.getContainingFilePath();
+        if (allowDITA && comment == null && definitionFilePath.endsWith(".swc"))
+        {
+            IDITAList ditaList = null;
+            String fileName = new File(definitionFilePath).getName();
+            if (fileName.contains("playerglobal") || fileName.contains("airglobal"))
+            {
+                try
+                {
+                    File jarPath = new File(DefinitionDocumentationUtils.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+                    File packageDitaFile = new File(jarPath.getParentFile().getParentFile(), "playerglobal_docs/packages.dita");
+                    FileInputStream packageDitaStream = new FileInputStream(packageDitaFile);
+                    ditaList = workspace.getASDocDelegate().getPackageDitaParser().parse(definitionFilePath, packageDitaStream);
+                    try
+                    {
+                        packageDitaStream.close();
+                    }
+                    catch(IOException e) {}
+                }
+                catch(URISyntaxException e)
+                {
+                    return null;
+                }
+                catch(FileNotFoundException e)
+                {
+                    return null;
+                }
+            }
+            else
+            {
+                ISWC swc = workspace.getSWCManager().get(new File(definitionFilePath));
+                ditaList = swc.getDITAList();
+            }
+            if (ditaList == null)
+            {
+                return null;
+            }
+            try
+            {
+                comment = (VSCodeASDocComment) ditaList.getComment(definition);
+            }
+            catch(Exception e)
+            {
+                return null;
+            }
+        }
         if (comment == null)
         {
             return null;

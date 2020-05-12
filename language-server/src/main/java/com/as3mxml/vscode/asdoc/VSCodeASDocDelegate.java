@@ -28,26 +28,18 @@ import org.apache.royale.compiler.asdoc.IPackageDITAParser;
 import org.apache.royale.compiler.common.ISourceLocation;
 import org.apache.royale.compiler.definitions.IDocumentableDefinition;
 import org.apache.royale.compiler.tree.as.IDocumentableDefinitionNode;
+import org.apache.royale.compiler.workspaces.IWorkspace;
 
 /**
  * A custom implementation of IASDocDelegate for the AS3 & MXML language server.
  */
 public final class VSCodeASDocDelegate implements IASDocDelegate
 {
-    private static final VSCodeASDocDelegate INSTANCE = new VSCodeASDocDelegate();
+    private IWorkspace workspace;
 
-    /**
-     * Gets the single instance of this delegate.
-     * 
-     * @return The single instance of this delegate.
-     */
-    public static IASDocDelegate get()
+    public VSCodeASDocDelegate(IWorkspace workspace)
     {
-        return INSTANCE;
-    }
-
-    public VSCodeASDocDelegate()
-    {
+        this.workspace = workspace;
     }
 
     @Override
@@ -62,10 +54,16 @@ public final class VSCodeASDocDelegate implements IASDocDelegate
         return null;
     }
 
+    private VSCodePackageDITAParser packageDitaParser = null;
+
     @Override
     public IPackageDITAParser getPackageDitaParser()
     {
-        return IPackageDITAParser.NIL_PARSER;
+        if(packageDitaParser == null)
+        {
+            packageDitaParser = new VSCodePackageDITAParser(workspace);
+        }
+        return packageDitaParser;
     }
 
     private static final class ASDelegate implements IASParserASDocDelegate, IMetadataParserASDocDelegate

@@ -165,7 +165,7 @@ public class HoverProvider
         MarkedString markedDetail = new MarkedString(MARKED_STRING_LANGUAGE_ACTIONSCRIPT, detail);
         List<Either<String,MarkedString>> contents = new ArrayList<>();
         contents.add(Either.forRight(markedDetail));
-        String docs = DefinitionDocumentationUtils.getDocumentationForDefinition(definition, true);
+        String docs = DefinitionDocumentationUtils.getDocumentationForDefinition(definition, true, project.getWorkspace(), true);
         if(docs != null)
         {
             contents.add(Either.forLeft(docs));

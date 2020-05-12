@@ -213,7 +213,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     public ActionScriptServices()
     {
         compilerWorkspace = new Workspace();
-        compilerWorkspace.setASDocDelegate(new VSCodeASDocDelegate());
+        compilerWorkspace.setASDocDelegate(new VSCodeASDocDelegate(compilerWorkspace));
         fileTracker = new FileTracker(compilerWorkspace);
         workspaceFolderManager = new WorkspaceFolderManager(fileTracker);
         updateFrameworkSDK();

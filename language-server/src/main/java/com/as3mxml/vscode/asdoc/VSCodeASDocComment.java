@@ -34,10 +34,15 @@ public class VSCodeASDocComment implements IASDocComment
 {
     public VSCodeASDocComment(Token t)
     {
-        token = t;
-    }
+        token = t.getText();
+	}
+	
+	public VSCodeASDocComment(String t)
+	{
+		token = t;
+	}
 
-    private Token token;
+    private String token;
     private String description = null;
 	private Map<String, List<IASDocTag>> tagMap = new HashMap<String, List<IASDocTag>>();
 	private boolean insidePreformatted = false;
@@ -59,8 +64,7 @@ public class VSCodeASDocComment implements IASDocComment
     {
 		usingMarkdown = useMarkdown;
 		insidePreformatted = false;
-        String s = token.getText();
-        String[] lines = s.split("\n");
+        String[] lines = token.split("\n");
         StringBuilder sb = new StringBuilder();
         int n = lines.length;
         if (n == 1)
@@ -184,14 +188,16 @@ public class VSCodeASDocComment implements IASDocComment
 		{
 			line = line.trim();
 		}
+		//remove all attributes (including namespaced)
+		line = line.replaceAll("<(\\w+)(?:\\s+\\w+(?::\\w+)?=(\"|\')[^\"\']*\\2)*\\s*>", "<$1>");
 		int beforeLength = line.length();
 		if(useMarkdown)
 		{
-			line = line.replaceAll("<(pre|listing)( \\w+=(\"|\')([\\w\\. ]+)?(\"|\'))*>", "\n\n```\n");
+			line = line.replaceAll("<(pre|listing|codeblock)>", "\n\n```\n");
 		}
 		else
 		{
-			line = line.replaceAll("<(pre|listing)( \\w+=(\"|\')([\\w\\. ]+)?(\"|\'))*>", "\n\n");
+			line = line.replaceAll("<(pre|listing|codeblock)>", "\n\n");
 		}
 		if(line.length() < beforeLength)
 		{
@@ -200,11 +206,11 @@ public class VSCodeASDocComment implements IASDocComment
 		beforeLength = line.length();
 		if(useMarkdown)
 		{
-			line = line.replaceAll("</(pre|listing)>", "\n```\n");
+			line = line.replaceAll("</(pre|listing|codeblock)>", "\n```\n");
 		}
 		else
 		{
-			line = line.replaceAll("</(pre|listing)>", "");
+			line = line.replaceAll("</(pre|listing|codeblock)>", "");
 		}
 		if(line.length() < beforeLength)
 		{
@@ -212,11 +218,12 @@ public class VSCodeASDocComment implements IASDocComment
 		}
 		if(useMarkdown)
 		{
-			line = line.replaceAll("</?em>", "*");
-			line = line.replaceAll("</?strong>", "**");
-			line = line.replaceAll("</?code>", "`");
+			line = line.replaceAll("</?(em|i)>", "_");
+			line = line.replaceAll("</?(strong|b)>", "**");
+			line = line.replaceAll("</?(code|codeph)>", "`");
+			line = line.replaceAll("<hr ?\\/>", "\n\n---\n\n");
 		}
-		line = line.replaceAll("<(p|ul|ol|li|table|tr|div)( \\w+=(\"|\')([\\w\\. ]+)?(\"|\'))*>", "\n\n");
+		line = line.replaceAll("<(p|ul|ol|dl|li|dt|table|tr|div|blockquote)>", "\n\n");
 		
 		//note: we allow <br/>, but not <br> because asdoc expects XHTML
 		if(useMarkdown)

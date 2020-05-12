@@ -30,7 +30,7 @@ public class CompletionItemUtils
 		item.setKind(LanguageServerCompilerUtils.getCompletionItemKindFromDefinition(definition));
 		item.setDetail(DefinitionTextUtils.definitionToDetail(definition, project));
 		item.setLabel(definition.getBaseName());
-		String docs = DefinitionDocumentationUtils.getDocumentationForDefinition(definition, false);
+		String docs = DefinitionDocumentationUtils.getDocumentationForDefinition(definition, false, project.getWorkspace(), false);
 		if (docs != null)
 		{
 			item.setDocumentation(docs);
