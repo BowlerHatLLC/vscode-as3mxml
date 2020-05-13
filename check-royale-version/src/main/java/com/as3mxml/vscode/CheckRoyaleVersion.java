@@ -29,7 +29,7 @@ public class CheckRoyaleVersion
 
     private static final int MIN_MAJOR = 0;
     private static final int MIN_MINOR = 9;
-    private static final int MIN_REVISION = 6;
+    private static final int MIN_REVISION = 7;
 
     public static void main(String[] args)
     {
