@@ -189,7 +189,7 @@ public class VSCodeASDocComment implements IASDocComment
 			line = line.trim();
 		}
 		//remove all attributes (including namespaced)
-		line = line.replaceAll("<(\\w+)(?:\\s+\\w+(?::\\w+)?=(\"|\')[^\"\']*\\2)*\\s*>", "<$1>");
+		line = line.replaceAll("<(\\w+)(?:\\s+\\w+(?::\\w+)?=(\"|\')[^\"\']*\\2)*\\s*(\\/{0,1})>", "<$1$3>");
 		int beforeLength = line.length();
 		if(useMarkdown)
 		{
