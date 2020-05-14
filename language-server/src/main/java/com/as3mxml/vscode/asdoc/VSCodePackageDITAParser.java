@@ -117,7 +117,8 @@ public final class VSCodePackageDITAParser implements IPackageDITAParser
 				{
 					return null;
 				}
-				Element apiDetailElement = defElement.element(defElement.getName() + "Detail");
+				String defName = defElement.getName();
+				Element apiDetailElement = defElement.element(defName + "Detail");
 				if(apiDetailElement == null)
 				{
 					return null;
@@ -137,9 +138,10 @@ public final class VSCodePackageDITAParser implements IPackageDITAParser
 					builder.append("\n * ");
 					builder.append(line);
 				}
-				if(defElement.getName().equals("apiOperation"))
+				if("apiOperation".equals(defName)
+						|| "apiConstructor".equals(defName))
 				{
-					Element apiDefElement = apiDetailElement.element(defElement.getName() + "Def");
+					Element apiDefElement = apiDetailElement.element(defName + "Def");
 					if(apiDefElement != null)
 					{
 						for (Element apiParamElement : apiDefElement.elements("apiParam"))
@@ -209,7 +211,15 @@ public final class VSCodePackageDITAParser implements IPackageDITAParser
 				}
 				else if (definition instanceof IFunctionDefinition)
 				{
-					elementName = "apiOperation";
+					IFunctionDefinition functionDefinition = (IFunctionDefinition) definition;
+					if(functionDefinition.isConstructor())
+					{
+						elementName = "apiConstructor";
+					}
+					else
+					{
+						elementName = "apiOperation";
+					}
 				}
 				String definitionID = builder.toString();
 
