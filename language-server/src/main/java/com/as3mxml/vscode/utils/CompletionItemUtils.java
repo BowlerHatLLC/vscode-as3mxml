@@ -21,6 +21,8 @@ import org.apache.royale.compiler.projects.ICompilerProject;
 import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.CompletionItemKind;
 import org.eclipse.lsp4j.InsertTextFormat;
+import org.eclipse.lsp4j.MarkupContent;
+import org.eclipse.lsp4j.MarkupKind;
 
 public class CompletionItemUtils
 {
@@ -30,10 +32,10 @@ public class CompletionItemUtils
 		item.setKind(LanguageServerCompilerUtils.getCompletionItemKindFromDefinition(definition));
 		item.setDetail(DefinitionTextUtils.definitionToDetail(definition, project));
 		item.setLabel(definition.getBaseName());
-		String docs = DefinitionDocumentationUtils.getDocumentationForDefinition(definition, false, project.getWorkspace(), false);
+		String docs = DefinitionDocumentationUtils.getDocumentationForDefinition(definition, true, project.getWorkspace(), false);
 		if (docs != null)
 		{
-			item.setDocumentation(docs);
+			item.setDocumentation(new MarkupContent(MarkupKind.MARKDOWN, docs));
 		}
 		return item;
 	}
