@@ -93,7 +93,7 @@ public class DefinitionDocumentationUtils
     {
         VSCodeASDocComment comment = (VSCodeASDocComment) documentableDefinition.getExplicitSourceComment();
         String definitionFilePath = documentableDefinition.getContainingFilePath();
-        if (allowDITA && comment == null && definitionFilePath.endsWith(".swc"))
+        if (allowDITA && comment == null && definitionFilePath != null && definitionFilePath.endsWith(".swc"))
         {
             IDITAList ditaList = null;
             String fileName = new File(definitionFilePath).getName();
