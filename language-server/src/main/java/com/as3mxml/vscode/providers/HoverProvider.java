@@ -37,8 +37,11 @@ import org.apache.royale.compiler.definitions.IFunctionDefinition;
 import org.apache.royale.compiler.internal.mxml.MXMLData;
 import org.apache.royale.compiler.mxml.IMXMLTagData;
 import org.apache.royale.compiler.tree.as.IASNode;
+import org.apache.royale.compiler.tree.as.IClassNode;
+import org.apache.royale.compiler.tree.as.IExpressionNode;
 import org.apache.royale.compiler.tree.as.IFunctionCallNode;
 import org.apache.royale.compiler.tree.as.IIdentifierNode;
+import org.apache.royale.compiler.tree.as.ILanguageIdentifierNode;
 import org.apache.royale.compiler.tree.as.INamespaceDecorationNode;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.MarkedString;
@@ -135,6 +138,39 @@ public class HoverProvider
         {
             IIdentifierNode identifierNode = (IIdentifierNode) offsetNode;
             definition = DefinitionUtils.resolveWithExtras(identifierNode, project);
+        }
+
+        if(definition == null
+                && offsetNode instanceof ILanguageIdentifierNode)
+        {
+            ILanguageIdentifierNode languageIdentifierNode = (ILanguageIdentifierNode) offsetNode;
+            IExpressionNode expressionToResolve = null;
+            switch (languageIdentifierNode.getKind())
+            {
+                case THIS:
+                {
+                    IClassNode classNode = (IClassNode) offsetNode.getAncestorOfType(IClassNode.class);
+                    if (classNode != null)
+                    {
+                        expressionToResolve = classNode.getNameExpressionNode();
+                    }
+                    break;
+                }
+                case SUPER:
+                {
+                    IClassNode classNode = (IClassNode) offsetNode.getAncestorOfType(IClassNode.class);
+                    if (classNode != null)
+                    {
+                        expressionToResolve = classNode.getBaseClassExpressionNode();
+                    }
+                    break;
+                }
+                default:
+            }
+            if (expressionToResolve != null)
+            {
+                definition = expressionToResolve.resolve(project);
+            }
         }
 
         if (definition == null)
