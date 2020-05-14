@@ -43,6 +43,8 @@ import org.apache.royale.compiler.tree.as.IASNode;
 import org.apache.royale.compiler.tree.as.IExpressionNode;
 import org.apache.royale.compiler.tree.as.IFunctionCallNode;
 import org.apache.royale.compiler.tree.as.IIdentifierNode;
+import org.eclipse.lsp4j.MarkupContent;
+import org.eclipse.lsp4j.MarkupKind;
 import org.eclipse.lsp4j.ParameterInformation;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.SignatureHelp;
@@ -157,10 +159,10 @@ public class SignatureHelpProvider
 
 			SignatureInformation signatureInfo = new SignatureInformation();
 			signatureInfo.setLabel(DefinitionTextUtils.functionDefinitionToSignature(functionDefinition, project));
-			String docs = DefinitionDocumentationUtils.getDocumentationForDefinition(functionDefinition, true, project.getWorkspace(), false);
+			String docs = DefinitionDocumentationUtils.getDocumentationForDefinition(functionDefinition, true, project.getWorkspace(), true);
 			if (docs != null)
 			{
-				signatureInfo.setDocumentation(docs);
+				signatureInfo.setDocumentation(new MarkupContent(MarkupKind.MARKDOWN, docs));
 			}
 
 			List<ParameterInformation> parameters = new ArrayList<>();
@@ -171,7 +173,7 @@ public class SignatureHelpProvider
 				String paramDocs = DefinitionDocumentationUtils.getDocumentationForParameter(param, true);
 				if (paramDocs != null)
 				{
-					paramInfo.setDocumentation(paramDocs);
+					paramInfo.setDocumentation(new MarkupContent(MarkupKind.MARKDOWN, paramDocs));
 				}
 				parameters.add(paramInfo);
 			}
