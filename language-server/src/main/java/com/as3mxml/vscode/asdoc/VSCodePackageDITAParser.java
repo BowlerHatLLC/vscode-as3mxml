@@ -24,12 +24,10 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.StringReader;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 
@@ -46,15 +44,17 @@ import org.apache.royale.swc.ISWC;
 import org.apache.royale.swc.dita.IDITAEntry;
 import org.apache.royale.swc.dita.IDITAList;
 import org.apache.royale.swc.io.SWCReader;
+import org.dom4j.Attribute;
+import org.dom4j.Document;
+import org.dom4j.DocumentException;
+import org.dom4j.Element;
+import org.dom4j.io.SAXReader;
 
 /**
  * A custom implementation of IPackageDITAParser for the AS3 & MXML language server.
  */
 public final class VSCodePackageDITAParser implements IPackageDITAParser
 {
-	private static final Pattern ENTRY_PATTERN = Pattern.compile("<apiItemRef\\s+href=\"([\\w\\.]*?)\"\\s*/>");
-	private static final Pattern DESC_PATTERN = Pattern.compile("<(apiDesc)[^>]*?>([\\s\\S]*?)<\\/\\1>");
-
 	private IWorkspace workspace;
 
 	public VSCodePackageDITAParser(IWorkspace workspace)
@@ -64,38 +64,27 @@ public final class VSCodePackageDITAParser implements IPackageDITAParser
 
 	public IDITAList parse(String swcFilePath, InputStream stream)
 	{
-		BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
-		StringBuilder builder = new StringBuilder();
+		SAXReader xmlReader = new SAXReader();
+		Document xmlDoc = null;
 		try
 		{
-			String line = null;
-			while((line = reader.readLine()) != null)
-			{
-				builder.append(line);
-				builder.append("\n");
-			}
+			xmlDoc = xmlReader.read(stream);
 		}
-		catch(IOException e)
+		catch(DocumentException e)
 		{
 			return null;
 		}
-		finally
-		{
-			try
-			{
-				reader.close();
-			}
-			catch(IOException e) {}
-		}
-		String contents = builder.toString();
 
-		Matcher entryMatcher = ENTRY_PATTERN.matcher(contents);
 		final ArrayList<String> entryHrefs = new ArrayList<>();
-		while (entryMatcher.find())
+		for(Element apiItemRefElement : xmlDoc.getRootElement().elements("apiItemRef"))
 		{
-			String href = entryMatcher.group(1);
-			entryHrefs.add(href);
+			Attribute hrefAttribute = apiItemRefElement.attribute("href");
+			if (hrefAttribute != null)
+			{
+				entryHrefs.add(hrefAttribute.getStringValue());
+			}
 		}
+
 		return new IDITAList(){
 			@Override
 			public boolean hasEntries() {
@@ -114,42 +103,56 @@ public final class VSCodePackageDITAParser implements IPackageDITAParser
 		
 			@Override
 			public IASDocComment getComment(IDefinition definition) throws Exception {
-				String defDocs = null;
+				Element defElement = null;
 				IDefinition parentDef = definition.getParent();
 				if(parentDef instanceof IPackageDefinition || parentDef == null)
 				{
-					defDocs = getDefinitionDITAFromPackageDITA(definition);
+					defElement = getDefinitionDITAFromPackageDITA(definition);
 				}
 				else if(parentDef instanceof ITypeDefinition)
 				{
-					defDocs = getDefinitionDITAFromTypeDITA(definition);
+					defElement = getDefinitionDITAFromTypeDITA(definition);
 				}
-				if (defDocs == null)
+				if (defElement == null)
 				{
 					return null;
 				}
-				Matcher descMatcher = DESC_PATTERN.matcher(defDocs);
-				if (!descMatcher.find())
+				Element apiDetailElement = defElement.element(defElement.getName() + "Detail");
+				if(apiDetailElement == null)
 				{
 					return null;
 				}
-				String description = descMatcher.group(2);
-				description = "/**\n * " + String.join("\n * ", description.split("\n")) + "\n */";
-				return new VSCodeASDocComment(description);
+				Element apiDescElement = apiDetailElement.element("apiDesc");
+				if(apiDescElement == null)
+				{
+					return null;
+				}
+				String description = apiDescElement.asXML();
+				StringBuilder builder = new StringBuilder();
+				builder.append("/**");
+				BufferedReader reader = new BufferedReader(new StringReader(description));
+				String line = null;
+				while((line = reader.readLine()) != null)
+				{
+					builder.append("\n * ");
+					builder.append(line);
+				}
+				builder.append("\n */");
+				return new VSCodeASDocComment(builder.toString());
 			}
 
-			private String getDefinitionDITAFromTypeDITA(IDefinition definition)
+			private Element getDefinitionDITAFromTypeDITA(IDefinition definition)
 			{
 				ITypeDefinition typeDef = (ITypeDefinition) definition.getParent();
-				String typeDITA = getDefinitionDITAFromPackageDITA(typeDef);
-				if(typeDITA == null)
+				Element parentElement = getDefinitionDITAFromPackageDITA(typeDef);
+				if(parentElement == null)
 				{
 					return null;
 				}
 				StringBuilder builder = new StringBuilder();
 				if (typeDef.getPackageName().length() > 0)
 				{
-					builder.append(typeDef.getPackageName().replace(".", "\\."));
+					builder.append(typeDef.getPackageName());
 					builder.append(":");
 				}
 				builder.append(typeDef.getBaseName());
@@ -160,55 +163,60 @@ public final class VSCodePackageDITAParser implements IPackageDITAParser
 					builder.append(":get");
 				}
 				String elementName = null;
-				String elementNameDef = null;
 				if (definition instanceof IVariableDefinition)
 				{
 					elementName = "apiValue";
-					elementNameDef = "apiValueDef";
 				}
 				else if (definition instanceof IFunctionDefinition)
 				{
 					elementName = "apiOperation";
-					elementNameDef = "apiOperationDef";
 				}
 				String definitionID = builder.toString();
-				Pattern apiOperationPattern = Pattern.compile("<(" + elementName + ") [^>]*?id=\"" + definitionID + "\"[^>]*?>[\\s\\S]*?<\\/\\1>");
-				Matcher matcher = apiOperationPattern.matcher(typeDITA);
-				if(!matcher.find())
+
+				for(Element childElement : parentElement.elements(elementName))
+				{
+					Attribute idAttribute = childElement.attribute("id");
+					if(idAttribute != null && idAttribute.getStringValue().equals(definitionID))
+					{
+						return childElement;
+					}
+				}
+				return null;
+				
+			}
+
+			private Element getDefinitionDITAFromPackageDITA(IDefinition definition)
+			{
+				InputStream packageDITAStream = getPackageDITAStream(definition.getPackageName());
+				if(packageDITAStream == null)
 				{
 					return null;
 				}
-				String result = matcher.group();
-				result = result.replaceAll("<(" + elementNameDef + ")[^>]*?>[\\s\\S]*?<\\/\\1>", "");
-				return result;
-			}
-
-			private String getDefinitionDITAFromPackageDITA(IDefinition definition)
-			{
-				String packageDITA = getPackageDITA(definition.getPackageName());
-				if(packageDITA == null)
+				SAXReader xmlReader = new SAXReader();
+				Document xmlDoc = null;
+				try
+				{
+					xmlDoc = xmlReader.read(packageDITAStream);
+				}
+				catch(DocumentException e)
 				{
 					return null;
 				}
 				String elementName = null;
-				String elementNameDef = null;
 				StringBuilder builder = new StringBuilder();
 				if (definition instanceof IVariableDefinition)
 				{
 					elementName = "apiValue";
-					elementNameDef = "apiValueDef";
 					builder.append("globalValue:");
 				}
 				else if (definition instanceof IFunctionDefinition)
 				{
 					elementName = "apiOperation";
-					elementNameDef = "apiOperationDef";
 					builder.append("globalOperation:");
 				}
 				else if (definition instanceof ITypeDefinition)
 				{
 					elementName = "apiClassifier";
-					elementNameDef = "apiClassifierDef";
 					if (definition.getPackageName().length() == 0)
 					{
 						builder.append("globalClassifier:");
@@ -216,23 +224,24 @@ public final class VSCodePackageDITAParser implements IPackageDITAParser
 				}
 				if (definition.getPackageName().length() > 0)
 				{
-					builder.append(definition.getPackageName().replace(".", "\\."));
+					builder.append(definition.getPackageName());
 					builder.append(":");
 				}
 				builder.append(definition.getBaseName());
 				String definitionID = builder.toString();
-				Pattern apiClassifierPattern = Pattern.compile("<(" + elementName + ") [^>]*?id=\"" + definitionID + "\"[^>]*?>[\\s\\S]*?<\\/\\1>");
-				Matcher classifierMatcher = apiClassifierPattern.matcher(packageDITA);
-				if(!classifierMatcher.find())
+
+				for(Element childElement : xmlDoc.getRootElement().elements(elementName))
 				{
-					return null;
+					Attribute idAttribute = childElement.attribute("id");
+					if(idAttribute != null && idAttribute.getStringValue().equals(definitionID))
+					{
+						return childElement;
+					}
 				}
-				String result = classifierMatcher.group();
-				result = result.replaceAll("<(" + elementNameDef + ")[^>]*?>[\\s\\S]*?<\\/\\1>", "");
-				return result;
+				return null;
 			}
 
-			private String getPackageDITA(String packageName)
+			private InputStream getPackageDITAStream(String packageName)
 			{
 				if(packageName == null || packageName.length() == 0)
 				{
@@ -279,34 +288,7 @@ public final class VSCodePackageDITAParser implements IPackageDITAParser
 						return null;
 					}
 				}
-				if(stream == null)
-				{
-					return null;
-				}
-				StringBuilder builder = new StringBuilder();
-				BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
-				try
-				{
-					String line = null;
-					while((line = reader.readLine()) != null)
-					{
-						builder.append(line);
-						builder.append("\n");
-					}
-				}
-				catch(IOException e)
-				{
-					return null;
-				}
-				finally
-				{
-					try
-					{
-						reader.close();
-					}
-					catch(IOException e) {}
-				}
-				return builder.toString();
+				return stream;
 			}
 		};
 	}

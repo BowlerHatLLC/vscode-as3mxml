@@ -75,6 +75,7 @@
         <include>json-schema-validator*.jar</include>
         <include>slf4j*.jar</include>
         <include>jackson*.jar</include>
+        <include>dom4j*.jar</include>
       </includes>
     </fileSet>
     <fileSet>
