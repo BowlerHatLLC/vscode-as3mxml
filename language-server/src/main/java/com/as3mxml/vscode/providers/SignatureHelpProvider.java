@@ -170,7 +170,7 @@ public class SignatureHelpProvider
 			{
 				ParameterInformation paramInfo = new ParameterInformation();
 				paramInfo.setLabel(param.getBaseName());
-				String paramDocs = DefinitionDocumentationUtils.getDocumentationForParameter(param, true);
+				String paramDocs = DefinitionDocumentationUtils.getDocumentationForParameter(param, true, project.getWorkspace());
 				if (paramDocs != null)
 				{
 					paramInfo.setDocumentation(new MarkupContent(MarkupKind.MARKDOWN, paramDocs));

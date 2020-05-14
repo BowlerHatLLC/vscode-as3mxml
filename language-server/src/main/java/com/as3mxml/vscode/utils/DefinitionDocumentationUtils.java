@@ -44,8 +44,55 @@ public class DefinitionDocumentationUtils
             return null;
         }
         IDocumentableDefinition documentableDefinition = (IDocumentableDefinition) definition;
+        VSCodeASDocComment comment = getCommentForDefinition(documentableDefinition, useMarkdown, workspace, allowDITA);
+        if (comment == null)
+        {
+            return null;
+        }
+        comment.compile(useMarkdown);
+        String description = comment.getDescription();
+        if (description == null)
+        {
+            return null;
+        }
+        return description;
+    }
+    
+    public static String getDocumentationForParameter(IParameterDefinition definition, boolean useMarkdown, IWorkspace workspace)
+    {
+        IDefinition parentDefinition = definition.getParent();
+        if (!(parentDefinition instanceof IFunctionDefinition))
+        {
+            return null;
+        }
+        IFunctionDefinition functionDefinition = (IFunctionDefinition) parentDefinition;
+        VSCodeASDocComment comment = getCommentForDefinition(functionDefinition, useMarkdown, workspace, true);
+        if (comment == null)
+        {
+            return null;
+        }
+        comment.compile(useMarkdown);
+        Collection<IASDocTag> paramTags = comment.getTagsByName(ASDOC_TAG_PARAM);
+        if (paramTags == null)
+        {
+            return null;
+        }
+        String paramName = definition.getBaseName();
+        for (IASDocTag paramTag : paramTags)
+        {
+            String description = paramTag.getDescription();
+            if (description.startsWith(paramName + " "))
+            {
+                return description.substring(paramName.length() + 1);
+            }
+        }
+        return null;
+    }
+
+    private static VSCodeASDocComment getCommentForDefinition(IDocumentableDefinition documentableDefinition, boolean useMarkdown, IWorkspace workspace, boolean allowDITA)
+    {
         VSCodeASDocComment comment = (VSCodeASDocComment) documentableDefinition.getExplicitSourceComment();
-        String definitionFilePath = definition.getContainingFilePath();
+        String definitionFilePath = documentableDefinition.getContainingFilePath();
         if (allowDITA && comment == null && definitionFilePath.endsWith(".swc"))
         {
             IDITAList ditaList = null;
@@ -84,54 +131,13 @@ public class DefinitionDocumentationUtils
             }
             try
             {
-                comment = (VSCodeASDocComment) ditaList.getComment(definition);
+                comment = (VSCodeASDocComment) ditaList.getComment(documentableDefinition);
             }
             catch(Exception e)
             {
                 return null;
             }
         }
-        if (comment == null)
-        {
-            return null;
-        }
-        comment.compile(useMarkdown);
-        String description = comment.getDescription();
-        if (description == null)
-        {
-            return null;
-        }
-        return description;
-    }
-    
-    public static String getDocumentationForParameter(IParameterDefinition definition, boolean useMarkdown)
-    {
-        IDefinition parentDefinition = definition.getParent();
-        if (!(parentDefinition instanceof IFunctionDefinition))
-        {
-            return null;
-        }
-        IFunctionDefinition functionDefinition = (IFunctionDefinition) parentDefinition;
-        VSCodeASDocComment comment = (VSCodeASDocComment) functionDefinition.getExplicitSourceComment();
-        if (comment == null)
-        {
-            return null;
-        }
-        comment.compile(useMarkdown);
-        Collection<IASDocTag> paramTags = comment.getTagsByName(ASDOC_TAG_PARAM);
-        if (paramTags == null)
-        {
-            return null;
-        }
-        String paramName = definition.getBaseName();
-        for (IASDocTag paramTag : paramTags)
-        {
-            String description = paramTag.getDescription();
-            if (description.startsWith(paramName + " "))
-            {
-                return description.substring(paramName.length() + 1);
-            }
-        }
-        return null;
+        return comment;
     }
 }

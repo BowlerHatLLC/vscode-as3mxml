@@ -137,6 +137,46 @@ public final class VSCodePackageDITAParser implements IPackageDITAParser
 					builder.append("\n * ");
 					builder.append(line);
 				}
+				if(defElement.getName().equals("apiOperation"))
+				{
+					Element apiDefElement = apiDetailElement.element(defElement.getName() + "Def");
+					if(apiDefElement != null)
+					{
+						for (Element apiParamElement : apiDefElement.elements("apiParam"))
+						{
+							Element apiItemNameElement = apiParamElement.element("apiItemName");
+							builder.append("\n * @param ");
+							if(apiItemNameElement == null)
+							{
+								builder.append("_");
+							}
+							else
+							{
+								builder.append(apiItemNameElement.getStringValue());
+								Element paramApiDescElement = apiParamElement.element("apiDesc");
+								if(paramApiDescElement != null)
+								{
+									String paramDescription = paramApiDescElement.getStringValue();
+									paramDescription = paramDescription.replaceAll("\n", " ");
+									builder.append(" ");
+									builder.append(paramDescription);
+								}
+							}
+						}
+						Element apiReturnElement = apiDefElement.element("apiReturn");
+						if(apiReturnElement != null)
+						{
+							Element returnApiDescElement = apiReturnElement.element("apiDesc");
+							if(returnApiDescElement != null)
+							{
+								String returnDescription = returnApiDescElement.getStringValue();
+								returnDescription = returnDescription.replaceAll("\n", " ");
+								builder.append("\n * @return ");
+								builder.append(returnDescription);
+							}
+						}
+					}
+				}
 				builder.append("\n */");
 				return new VSCodeASDocComment(builder.toString());
 			}
