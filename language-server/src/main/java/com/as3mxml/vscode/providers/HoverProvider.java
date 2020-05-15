@@ -46,6 +46,7 @@ import org.apache.royale.compiler.tree.as.INamespaceDecorationNode;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.HoverParams;
 import org.eclipse.lsp4j.MarkedString;
+import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.jsonrpc.CancelChecker;
@@ -223,7 +224,6 @@ public class HoverProvider
             //inside the prefix
             String prefix = offsetTag.getPrefix();
             Hover result = new Hover();
-            List<Either<String,MarkedString>> contents = new ArrayList<>();
             StringBuilder detailBuilder = new StringBuilder();
             if (prefix.length() > 0)
             {
@@ -233,18 +233,15 @@ public class HoverProvider
             {
                 detailBuilder.append("xmlns=\"" + offsetTag.getURI() + "\"");
             }
-            MarkedString markedDetail = new MarkedString(MARKED_STRING_LANGUAGE_MXML, detailBuilder.toString());
-            contents.add(Either.forRight(markedDetail));
-            result.setContents(contents);
+            MarkupContent markedDetail = new MarkupContent(MARKED_STRING_LANGUAGE_MXML, detailBuilder.toString());
+            result.setContents(markedDetail);
             return result;
         }
 
         Hover result = new Hover();
         String detail = DefinitionTextUtils.definitionToDetail(definition, project);
-        MarkedString markedDetail = new MarkedString(MARKED_STRING_LANGUAGE_ACTIONSCRIPT, detail);
-        List<Either<String,MarkedString>> contents = new ArrayList<>();
-        contents.add(Either.forRight(markedDetail));
-        result.setContents(contents);
+        MarkupContent markedDetail = new MarkupContent(MARKED_STRING_LANGUAGE_ACTIONSCRIPT, detail);
+        result.setContents(markedDetail);
         return result;
     }
 }
