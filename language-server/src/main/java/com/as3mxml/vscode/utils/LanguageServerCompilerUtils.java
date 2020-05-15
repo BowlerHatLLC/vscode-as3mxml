@@ -21,6 +21,7 @@ import java.lang.reflect.Field;
 import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.Optional;
 
 import com.as3mxml.vscode.compiler.problems.DisabledConfigConditionBlockProblem;
@@ -44,11 +45,13 @@ import org.apache.royale.compiler.definitions.IVariableDefinition;
 import org.apache.royale.compiler.definitions.IVariableDefinition.VariableClassification;
 import org.apache.royale.compiler.internal.parsing.as.OffsetCue;
 import org.apache.royale.compiler.problems.CompilerProblemSeverity;
+import org.apache.royale.compiler.problems.DeprecatedAPIProblem;
 import org.apache.royale.compiler.problems.ICompilerProblem;
 import org.apache.royale.compiler.projects.ICompilerProject;
 import org.eclipse.lsp4j.CompletionItemKind;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
+import org.eclipse.lsp4j.DiagnosticTag;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
@@ -463,6 +466,15 @@ public class LanguageServerCompilerUtils
         DiagnosticSeverity severity = LanguageServerCompilerUtils.getDiagnosticSeverityFromCompilerProblem(problem);
         diagnostic.setSeverity(severity);
 
+        if (problem instanceof DisabledConfigConditionBlockProblem)
+        {
+            diagnostic.setTags(Collections.singletonList(DiagnosticTag.Unnecessary));
+        }
+        else if (problem instanceof DeprecatedAPIProblem)
+        {
+            diagnostic.setTags(Collections.singletonList(DiagnosticTag.Deprecated));
+        }
+
         Range range = LanguageServerCompilerUtils.getRangeFromSourceLocation(problem);
         if (range == null)
         {
@@ -512,6 +524,29 @@ public class LanguageServerCompilerUtils
             catch (Exception e)
             {
                 //skip it
+            }
+        }
+
+        if(diagnostic.getCode() != null)
+        {
+            String code = diagnostic.getCode().isLeft() ? diagnostic.getCode().getLeft() : diagnostic.getCode().getRight().toString();
+            switch(code)
+            {
+                case "as3mxml-unused-import":
+                case "as3mxml-disabled-config-condition-block":
+                {
+                    diagnostic.setTags(Collections.singletonList(DiagnosticTag.Unnecessary));
+                    break;
+                }
+                case "3602":
+                case "3604":
+                case "3606":
+                case "3608":
+                case "3610":
+                {
+                    diagnostic.setTags(Collections.singletonList(DiagnosticTag.Deprecated));
+                    break;
+                }
             }
         }
         

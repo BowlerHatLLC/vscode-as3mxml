@@ -374,35 +374,6 @@ function startClient()
 					},
 					//this is just the default behavior, but we need to define both
 					protocol2Code: value => vscode.Uri.parse(value)
-				},
-				middleware:
-				{
-					//TODO: move tags to language server when lsp4j supports it
-					handleDiagnostics: (uri, diagnostics, next) =>
-					{
-						diagnostics.forEach((diagnostic) =>
-						{
-							switch(diagnostic.code)
-							{
-								case "as3mxml-unused-import":
-								case "as3mxml-disabled-config-condition-block":
-								{
-									diagnostic.tags = [vscode.DiagnosticTag.Unnecessary];
-									break;
-								}
-								case "3602":
-								case "3604":
-								case "3606":
-								case "3608":
-								case "3610":
-								{
-									diagnostic.tags = [vscode.DiagnosticTag.Deprecated];
-									break;
-								}
-							}
-						});
-						next(uri, diagnostics);
-					}
 				}
 			};
 			let cpDelimiter = getJavaClassPathDelimiter();

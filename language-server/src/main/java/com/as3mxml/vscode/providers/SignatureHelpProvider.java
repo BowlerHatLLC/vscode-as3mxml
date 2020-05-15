@@ -48,9 +48,9 @@ import org.eclipse.lsp4j.MarkupKind;
 import org.eclipse.lsp4j.ParameterInformation;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.SignatureHelp;
+import org.eclipse.lsp4j.SignatureHelpParams;
 import org.eclipse.lsp4j.SignatureInformation;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
-import org.eclipse.lsp4j.TextDocumentPositionParams;
 import org.eclipse.lsp4j.jsonrpc.CancelChecker;
 
 public class SignatureHelpProvider
@@ -66,7 +66,7 @@ public class SignatureHelpProvider
 		this.fileTracker = fileTracker;
 	}
 
-	public SignatureHelp signatureHelp(TextDocumentPositionParams params, CancelChecker cancelToken)
+	public SignatureHelp signatureHelp(SignatureHelpParams params, CancelChecker cancelToken)
 	{
 		cancelToken.checkCanceled();
 		TextDocumentIdentifier textDocument = params.getTextDocument();

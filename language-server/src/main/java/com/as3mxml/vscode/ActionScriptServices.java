@@ -126,6 +126,7 @@ import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.CompletionItemCapabilities;
 import org.eclipse.lsp4j.CompletionList;
 import org.eclipse.lsp4j.CompletionParams;
+import org.eclipse.lsp4j.DefinitionParams;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DidChangeConfigurationParams;
 import org.eclipse.lsp4j.DidChangeTextDocumentParams;
@@ -136,6 +137,7 @@ import org.eclipse.lsp4j.DidOpenTextDocumentParams;
 import org.eclipse.lsp4j.DidSaveTextDocumentParams;
 import org.eclipse.lsp4j.DocumentFormattingParams;
 import org.eclipse.lsp4j.DocumentHighlight;
+import org.eclipse.lsp4j.DocumentHighlightParams;
 import org.eclipse.lsp4j.DocumentOnTypeFormattingParams;
 import org.eclipse.lsp4j.DocumentRangeFormattingParams;
 import org.eclipse.lsp4j.DocumentSymbol;
@@ -144,6 +146,7 @@ import org.eclipse.lsp4j.ExecuteCommandParams;
 import org.eclipse.lsp4j.FileChangeType;
 import org.eclipse.lsp4j.FileEvent;
 import org.eclipse.lsp4j.Hover;
+import org.eclipse.lsp4j.HoverParams;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.LocationLink;
 import org.eclipse.lsp4j.MessageParams;
@@ -154,6 +157,7 @@ import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.ReferenceParams;
 import org.eclipse.lsp4j.RenameParams;
 import org.eclipse.lsp4j.SignatureHelp;
+import org.eclipse.lsp4j.SignatureHelpParams;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
@@ -357,7 +361,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
      * something in a text document.
      */
     @Override
-    public CompletableFuture<Hover> hover(TextDocumentPositionParams params)
+    public CompletableFuture<Hover> hover(HoverParams params)
     {
         return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken ->
         {
@@ -390,7 +394,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
      * current position.
      */
     @Override
-    public CompletableFuture<SignatureHelp> signatureHelp(TextDocumentPositionParams params)
+    public CompletableFuture<SignatureHelp> signatureHelp(SignatureHelpParams params)
     {
         return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken ->
         {
@@ -421,7 +425,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
      * document is defined.
      */
     @Override
-    public CompletableFuture<Either<List<? extends Location>, List<? extends LocationLink>>> definition(TextDocumentPositionParams params)
+    public CompletableFuture<Either<List<? extends Location>, List<? extends LocationLink>>> definition(DefinitionParams params)
     {
         return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken ->
         {
@@ -542,7 +546,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
      * This feature is not implemented at this time.
      */
     @Override
-    public CompletableFuture<List<? extends DocumentHighlight>> documentHighlight(TextDocumentPositionParams params)
+    public CompletableFuture<List<? extends DocumentHighlight>> documentHighlight(DocumentHighlightParams params)
     {
         return CompletableFuture.completedFuture(Collections.emptyList());
     }

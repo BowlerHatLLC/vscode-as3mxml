@@ -152,7 +152,7 @@ public class CodeActionProvider
         for (Diagnostic diagnostic : diagnostics)
         {
             //I don't know why this can be null
-            String code = diagnostic.getCode();
+            String code = diagnostic.getCode().isLeft() ? diagnostic.getCode().getLeft() : diagnostic.getCode().getRight().toString();
             if (code == null)
             {
                 continue;

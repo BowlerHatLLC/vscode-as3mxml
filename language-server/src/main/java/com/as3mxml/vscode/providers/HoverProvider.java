@@ -44,10 +44,10 @@ import org.apache.royale.compiler.tree.as.IIdentifierNode;
 import org.apache.royale.compiler.tree.as.ILanguageIdentifierNode;
 import org.apache.royale.compiler.tree.as.INamespaceDecorationNode;
 import org.eclipse.lsp4j.Hover;
+import org.eclipse.lsp4j.HoverParams;
 import org.eclipse.lsp4j.MarkedString;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
-import org.eclipse.lsp4j.TextDocumentPositionParams;
 import org.eclipse.lsp4j.jsonrpc.CancelChecker;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 
@@ -66,7 +66,7 @@ public class HoverProvider
         this.fileTracker = fileTracker;
 	}
 
-	public Hover hover(TextDocumentPositionParams params, CancelChecker cancelToken)
+	public Hover hover(HoverParams params, CancelChecker cancelToken)
 	{
 		cancelToken.checkCanceled();
 		TextDocumentIdentifier textDocument = params.getTextDocument();
