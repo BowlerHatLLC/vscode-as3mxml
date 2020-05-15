@@ -39,11 +39,11 @@ import org.apache.royale.compiler.tree.as.IASNode;
 import org.apache.royale.compiler.tree.as.IIdentifierNode;
 import org.apache.royale.compiler.units.ICompilationUnit;
 import org.apache.royale.compiler.units.ICompilationUnit.UnitType;
+import org.eclipse.lsp4j.ImplementationParams;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.LocationLink;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
-import org.eclipse.lsp4j.TextDocumentPositionParams;
 import org.eclipse.lsp4j.jsonrpc.CancelChecker;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 
@@ -60,7 +60,7 @@ public class ImplementationProvider
         this.fileTracker = fileTracker;
 	}
 
-	public Either<List<? extends Location>, List<? extends LocationLink>> implementation(TextDocumentPositionParams params, CancelChecker cancelToken)
+	public Either<List<? extends Location>, List<? extends LocationLink>> implementation(ImplementationParams params, CancelChecker cancelToken)
 	{
 		cancelToken.checkCanceled();
 		TextDocumentIdentifier textDocument = params.getTextDocument();

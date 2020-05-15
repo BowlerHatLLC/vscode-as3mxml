@@ -147,6 +147,7 @@ import org.eclipse.lsp4j.FileChangeType;
 import org.eclipse.lsp4j.FileEvent;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.HoverParams;
+import org.eclipse.lsp4j.ImplementationParams;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.LocationLink;
 import org.eclipse.lsp4j.MessageParams;
@@ -162,8 +163,8 @@ import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.TextDocumentItem;
-import org.eclipse.lsp4j.TextDocumentPositionParams;
 import org.eclipse.lsp4j.TextEdit;
+import org.eclipse.lsp4j.TypeDefinitionParams;
 import org.eclipse.lsp4j.VersionedTextDocumentIdentifier;
 import org.eclipse.lsp4j.WorkspaceEdit;
 import org.eclipse.lsp4j.WorkspaceFolder;
@@ -455,7 +456,8 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
      * Finds where the type of the definition referenced at the current position
      * in a text document is defined.
      */
-    public CompletableFuture<Either<List<? extends Location>, List<? extends LocationLink>>> typeDefinition(TextDocumentPositionParams params)
+    @Override
+    public CompletableFuture<Either<List<? extends Location>, List<? extends LocationLink>>> typeDefinition(TypeDefinitionParams params)
     {
         return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken ->
         {
@@ -484,7 +486,8 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     /**
      * Finds all implemenations of an interface.
      */
-    public CompletableFuture<Either<List<? extends Location>, List<? extends LocationLink>>> implementation(TextDocumentPositionParams params)
+    @Override
+    public CompletableFuture<Either<List<? extends Location>, List<? extends LocationLink>>> implementation(ImplementationParams params)
     {
         return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken ->
         {
@@ -554,6 +557,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     /**
      * Searches by name for a symbol in the workspace.
      */
+    @Override
     public CompletableFuture<List<? extends SymbolInformation>> symbol(WorkspaceSymbolParams params)
     {
         return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken ->
@@ -741,6 +745,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
      * Called when one of the commands registered in ActionScriptLanguageServer
      * is executed.
      */
+    @Override
     public CompletableFuture<Object> executeCommand(ExecuteCommandParams params)
     {
         if(params.getCommand().equals(ICommandConstants.QUICK_COMPILE))

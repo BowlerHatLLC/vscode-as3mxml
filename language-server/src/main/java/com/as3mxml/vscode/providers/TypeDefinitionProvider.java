@@ -37,7 +37,7 @@ import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.LocationLink;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
-import org.eclipse.lsp4j.TextDocumentPositionParams;
+import org.eclipse.lsp4j.TypeDefinitionParams;
 import org.eclipse.lsp4j.jsonrpc.CancelChecker;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 
@@ -54,7 +54,7 @@ public class TypeDefinitionProvider
 		this.fileTracker = fileTracker;
 	}
 
-	public Either<List<? extends Location>, List<? extends LocationLink>> typeDefinition(TextDocumentPositionParams params, CancelChecker cancelToken)
+	public Either<List<? extends Location>, List<? extends LocationLink>> typeDefinition(TypeDefinitionParams params, CancelChecker cancelToken)
 	{
 		cancelToken.checkCanceled();
 		TextDocumentIdentifier textDocument = params.getTextDocument();
