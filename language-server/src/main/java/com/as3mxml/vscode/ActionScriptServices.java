@@ -2307,8 +2307,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                 {
                     Set<String> requiredImports = project.getQNamesOfDependencies(unit);
                     ASTUtils.findUnusedImportProblems(ast, requiredImports, problems);
-                    //TODO: enable after royale-compiler provides the correct range
-                    //ASTUtils.findDisabledConfigConditionBlockProblems(ast, problems);
+                    ASTUtils.findDisabledConfigConditionBlockProblems(ast, problems);
                 }
             }
             else

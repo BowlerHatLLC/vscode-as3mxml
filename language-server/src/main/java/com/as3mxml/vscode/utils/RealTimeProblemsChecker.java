@@ -272,8 +272,7 @@ public class RealTimeProblemsChecker implements Runnable
 			Set<String> requiredImports = project.getQNamesOfDependencies(compilationUnit);
 			IASNode ast = syntaxTreeRequest.get().getAST();
 			ASTUtils.findUnusedImportProblems(ast, requiredImports, problems);
-			//TODO: enable after royale-compiler provides the correct range
-			//ASTUtils.findDisabledConfigConditionBlockProblems(ast, problems);
+			ASTUtils.findDisabledConfigConditionBlockProblems(ast, problems);
         }
         catch (Exception e)
         {
