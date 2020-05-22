@@ -25,7 +25,7 @@ This project is divided into several modules.
 Requires [Apache Maven](https://maven.apache.org/) and [Node.js](https://nodejs.org/). Run the following command in the root directory to build the extension:
 
 ```
-mvn clean package -s settings-template.xml
+mvn clean package
 ```
 
 The extension will be generated in _distribution/target/vscode-as3mxml/vscode-as3mxml_. This directory may be run inside Visual Studio Code's extension host. Additionally, a _.vsix_ file will be generated that may be manually installed in Visual Studio Code.
