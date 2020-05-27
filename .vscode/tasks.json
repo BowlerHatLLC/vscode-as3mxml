@@ -6,9 +6,7 @@
 			"command": "mvn",
 			"args": [
 				"clean",
-				"package",
-				"-s",
-				"settings-template.xml"
+				"package"
 			]
 		},
 		{
@@ -16,8 +14,6 @@
 			"command": "mvn",
 			"args": [
 				"package",
-				"-s",
-				"settings-template.xml",
 				"-Dskip-vsce=true",
 				"-DskipTests"
 			]
@@ -27,8 +23,6 @@
 			"command": "mvn",
 			"args": [
 				"package",
-				"-s",
-				"settings-template.xml",
 				"-Dskip-vsce=true"
 			]
 		}
