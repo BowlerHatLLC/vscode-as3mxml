@@ -16,9 +16,7 @@ limitations under the License.
 package com.as3mxml.vscode.providers;
 
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 
 import com.as3mxml.vscode.project.ILspProject;
 import com.as3mxml.vscode.project.WorkspaceFolderData;
@@ -45,17 +43,16 @@ import org.apache.royale.compiler.tree.as.ILanguageIdentifierNode;
 import org.apache.royale.compiler.tree.as.INamespaceDecorationNode;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.HoverParams;
-import org.eclipse.lsp4j.MarkedString;
 import org.eclipse.lsp4j.MarkupContent;
+import org.eclipse.lsp4j.MarkupKind;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.jsonrpc.CancelChecker;
-import org.eclipse.lsp4j.jsonrpc.messages.Either;
 
 public class HoverProvider
 {
     private static final String MARKED_STRING_LANGUAGE_ACTIONSCRIPT = "actionscript";
-    private static final String MARKED_STRING_LANGUAGE_MXML = "mxml";
+    private static final String MARKED_STRING_LANGUAGE_XML = "xml";
     private static final String FILE_EXTENSION_MXML = ".mxml";
 
     private WorkspaceFolderManager workspaceFolderManager;
@@ -199,16 +196,26 @@ public class HoverProvider
 
         Hover result = new Hover();
         String detail = DefinitionTextUtils.definitionToDetail(definition, project);
-        MarkedString markedDetail = new MarkedString(MARKED_STRING_LANGUAGE_ACTIONSCRIPT, detail);
-        List<Either<String,MarkedString>> contents = new ArrayList<>();
-        contents.add(Either.forRight(markedDetail));
+        detail = codeBlock(MARKED_STRING_LANGUAGE_ACTIONSCRIPT, detail);
         String docs = DefinitionDocumentationUtils.getDocumentationForDefinition(definition, true, project.getWorkspace(), true);
         if(docs != null)
         {
-            contents.add(Either.forLeft(docs));
+            detail += "\n\n---\n\n" + docs;
         }
-        result.setContents(contents);
+        result.setContents(new MarkupContent(MarkupKind.MARKDOWN, detail));
         return result;
+    }
+
+    private static String codeBlock(String languageId, String code)
+    {
+        StringBuilder builder = new StringBuilder();
+        builder.append("```");
+        builder.append(languageId);
+        builder.append("\n");
+        builder.append(code);
+        builder.append("\n");
+        builder.append("```");
+        return builder.toString();
     }
 
     private Hover mxmlHover(IMXMLTagData offsetTag, int currentOffset, ILspProject project)
@@ -233,15 +240,15 @@ public class HoverProvider
             {
                 detailBuilder.append("xmlns=\"" + offsetTag.getURI() + "\"");
             }
-            MarkupContent markedDetail = new MarkupContent(MARKED_STRING_LANGUAGE_MXML, detailBuilder.toString());
-            result.setContents(markedDetail);
+            String detail = codeBlock(MARKED_STRING_LANGUAGE_XML, detailBuilder.toString());
+            result.setContents(new MarkupContent(MarkupKind.MARKDOWN, detail));
             return result;
         }
 
         Hover result = new Hover();
         String detail = DefinitionTextUtils.definitionToDetail(definition, project);
-        MarkupContent markedDetail = new MarkupContent(MARKED_STRING_LANGUAGE_ACTIONSCRIPT, detail);
-        result.setContents(markedDetail);
+        detail = codeBlock(MARKED_STRING_LANGUAGE_ACTIONSCRIPT, detail);
+        result.setContents(new MarkupContent(MarkupKind.MARKDOWN, detail));
         return result;
     }
 }
