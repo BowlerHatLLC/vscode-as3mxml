@@ -79,6 +79,7 @@ function onDidChangeConfiguration(event: vscode.ConfigurationChangeEvent)
 	let restarting = false;
 	if(event.affectsConfiguration("as3mxml.java.path") ||
 		event.affectsConfiguration("as3mxml.sdk.editor") ||
+		event.affectsConfiguration("as3mxml.languageServer.jvmargs") ||
 		(frameworkChanged && !explicitFrameworkSetting))
 	{
 		//we're going to try to kill the language server and then restart
@@ -404,6 +405,12 @@ function startClient()
 			if(frameworkSDKHome)
 			{
 				args.unshift("-Droyalelib=" + path.join(frameworkSDKHome, "frameworks"));
+			}
+			let jvmargsString = vscode.workspace.getConfiguration("as3mxml").get("languageServer.jvmargs") as string;
+			if(jvmargsString !== undefined)
+			{
+				let jvmargs = jvmargsString.split(" ");
+				args.unshift(...jvmargs);
 			}
 			let primaryWorkspaceFolder: vscode.WorkspaceFolder = null;
 			if(vscode.workspace.workspaceFolders !== undefined)
