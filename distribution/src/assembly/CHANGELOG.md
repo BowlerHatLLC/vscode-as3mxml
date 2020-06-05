@@ -1,5 +1,13 @@
 # ActionScript & MXML for Visual Studio Code Changelog
 
+## v1.2.0
+
+### New Features
+
+### Fixed Issues
+
+### Other Changes
+
 ## v1.1.1
 
 ### Fixed Issues
