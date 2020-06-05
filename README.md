@@ -8,15 +8,13 @@ This project is divided into several modules.
 
 1. **language-server** provides ActionScript and MXML code intelligence for Visual Studio Code and other editors (like [Moonshine IDE](https://moonshine-ide.com/)) that support the [Language Server Protocol](https://microsoft.github.io/language-server-protocol/). Code intelligence is powered by the ActionScript compiler from [Apache Royale](https://royale.apache.org/), but it supports a variety of ActionScript SDKs. This module is written in Java.
 
-1. **swf-debugger** provides SWF debugging for Visual Studio Code and other editors that support the [Debug Adapter Protocol](https://microsoft.github.io/debug-adapter-protocol/). This module is written in Java.
-
 1. **asconfigc** creates an executable JAR file that can parse the [_asconfig.json_](https://github.com/BowlerHatLLC/vscode-as3mxml/wiki/asconfig.json) file format and execute the compiler with the specified options. This module is written in Java.
 
 1. **check-java-version** creates an executable JAR file that will verify that the current version of Java meets the minimum requirements for the language server.
 
 1. **check-royale-version** creates an executable JAR file that will verify that the current version of the Apache Royale compiler meets the minimum requirements for the language server.
 
-1. **vscode-extension** implements various features that are specific to Visual Studio Code, and initializes the various Java processes (like language-server and swf-debugger). This module is written in TypeScript.
+1. **vscode-extension** implements various features that are specific to Visual Studio Code, and initializes the language server Java process. This module is written in TypeScript.
 
 1. **distribution** packages everything together to create the final extension that is compatible with Visual Studio Code.
 
