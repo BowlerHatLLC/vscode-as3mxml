@@ -4,9 +4,26 @@
 
 ### New Features
 
+- Editor: Fades out sections of code that are disabled by conditional compilation.
+- Hover: Documentation for native Adobe AIR and Flash Player classes, like `flash.display.Sprite`, is now displayed.
+- Hover: Documentation for _.swc_ files that embed the appropriate asdoc XML files is now displayed.
+- Hover/Definition: Resolves `this` and `super` to the appropriate class so that some details may be displayed.
+- Settings: Added new `as3mxml.languageServer.jvmargs` setting to pass additional arguments to the language server (the code intelligence engine) on startup.
+  Example:
+  ```json
+  {
+    "as3mxml.languageServer.jvmargs": "-Xms512m -Xmx1024m"
+  }
+  ```
+- Settings: Added new `as3mxml.sdk.animate` setting to optionally configure a custom path for Adobe Animate if it is installed at a non-standard location.
+
 ### Fixed Issues
 
+- Hover: Fixed null pointer exception when hovering over the `void` keyword.
+
 ### Other Changes
+
+- Dependencies: Apache Royale compiler updated to v0.9.7.
 
 ## v1.1.1
 
