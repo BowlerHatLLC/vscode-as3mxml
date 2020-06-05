@@ -407,7 +407,7 @@ function startClient()
 				args.unshift("-Droyalelib=" + path.join(frameworkSDKHome, "frameworks"));
 			}
 			let jvmargsString = vscode.workspace.getConfiguration("as3mxml").get("languageServer.jvmargs") as string;
-			if(jvmargsString !== undefined)
+			if(jvmargsString)
 			{
 				let jvmargs = jvmargsString.split(" ");
 				args.unshift(...jvmargs);
