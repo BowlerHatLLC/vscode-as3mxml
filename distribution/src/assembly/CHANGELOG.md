@@ -1,5 +1,11 @@
 # ActionScript & MXML for Visual Studio Code Changelog
 
+## v1.2.1
+
+### Fixed Issues
+
+- Settings: Fixed issue where `as3mxml.sdk.animate` setting was not properly handled when using the default value of `null`.
+
 ## v1.2.0
 
 ### New Features
