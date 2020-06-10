@@ -36,7 +36,7 @@ const EXE_NAMES_WINDOWS =
 export default function findAnimate(): string
 {
 	let settingsPath = vscode.workspace.getConfiguration("as3mxml").get("sdk.animate") as string;
-	if(settingsPath !== undefined)
+	if(settingsPath)
 	{
 		if(process.platform === "win32" && fs.existsSync(settingsPath) && !fs.statSync(settingsPath).isDirectory())
 		{
