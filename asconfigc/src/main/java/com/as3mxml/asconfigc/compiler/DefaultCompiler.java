@@ -87,6 +87,11 @@ public class DefaultCompiler implements IASConfigCCompiler
 		{
 			compilerOptions.addAll(0, jvmargs);
 		}
+		boolean isMacOS = System.getProperty("os.name").toLowerCase().startsWith("mac os");
+		if(isMacOS)
+		{
+			compilerOptions.add(0, "-Dapple.awt.UIElement=true");
+		}
 		Path javaExecutablePath = Paths.get(System.getProperty("java.home"), "bin", "java");
 		compilerOptions.add(0, javaExecutablePath.toString());
 
