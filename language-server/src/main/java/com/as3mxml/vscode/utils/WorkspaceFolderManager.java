@@ -63,6 +63,7 @@ public class WorkspaceFolderManager
     private static final String FILE_EXTENSION_AS = ".as";
     private static final String FILE_EXTENSION_MXML = ".mxml";
     private static final String FILE_EXTENSION_SWC = ".swc";
+    private static final String FILE_EXTENSION_ANE = ".ane";
     private static final String SDK_LIBRARY_PATH_SIGNATURE_UNIX = "/frameworks/libs/";
     private static final String SDK_LIBRARY_PATH_SIGNATURE_WINDOWS = "\\frameworks\\libs\\";
 
@@ -422,7 +423,7 @@ public class WorkspaceFolderManager
             return null;
         }
         Location location = null;
-        if (sourcePath.endsWith(FILE_EXTENSION_SWC))
+        if (sourcePath.endsWith(FILE_EXTENSION_SWC) || sourcePath.endsWith(FILE_EXTENSION_ANE))
         {
             DefinitionAsText definitionText = DefinitionTextUtils.definitionToTextDocument(definition, project);
             //may be null if definitionToTextDocument() doesn't know how
@@ -459,7 +460,7 @@ public class WorkspaceFolderManager
             return null;
         }
         Range range = null;
-        if (sourcePath.endsWith(FILE_EXTENSION_SWC))
+        if (sourcePath.endsWith(FILE_EXTENSION_SWC) || sourcePath.endsWith(FILE_EXTENSION_ANE))
         {
             DefinitionAsText definitionText = DefinitionTextUtils.definitionToTextDocument(definition, project);
             //may be null if definitionToTextDocument() doesn't know how
@@ -639,7 +640,7 @@ public class WorkspaceFolderManager
                     definitionPath = debugPath;
                 }
             }
-            if (definitionPath.endsWith(FILE_EXTENSION_SWC))
+            if (definitionPath.endsWith(FILE_EXTENSION_SWC) || definitionPath.endsWith(FILE_EXTENSION_ANE))
             {
                 DefinitionAsText definitionText = DefinitionTextUtils.definitionToTextDocument(definition, folderData.project);
                 //may be null if definitionToTextDocument() doesn't know how
