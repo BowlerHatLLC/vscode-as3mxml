@@ -228,6 +228,11 @@ public class CompilerShell implements IASConfigCCompiler
         {
             options.addAll(jvmargs);
         }
+		boolean isMacOS = System.getProperty("os.name").toLowerCase().startsWith("mac os");
+		if(isMacOS)
+		{
+            options.add("-Dapple.awt.UIElement=true");
+        }
         if(isRoyale)
         {
 			//Royale requires this so that it doesn't changing the encoding of
