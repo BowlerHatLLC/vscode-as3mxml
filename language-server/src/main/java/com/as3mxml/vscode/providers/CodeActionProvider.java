@@ -151,8 +151,20 @@ public class CodeActionProvider
         boolean handledUnimplementedMethods = false;
         for (Diagnostic diagnostic : diagnostics)
         {
+            String code = null;
+            if(diagnostic.getCode().isLeft())
+            {
+                code = diagnostic.getCode().getLeft();
+            }
+            else
+            {
+                Number numberCode = diagnostic.getCode().getRight();
+                if(numberCode != null)
+                {
+                    code = numberCode.toString();
+                }
+            }
             //I don't know why this can be null
-            String code = diagnostic.getCode().isLeft() ? diagnostic.getCode().getLeft() : diagnostic.getCode().getRight().toString();
             if (code == null)
             {
                 continue;
