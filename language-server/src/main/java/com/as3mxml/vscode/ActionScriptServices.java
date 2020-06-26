@@ -1016,15 +1016,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         if (clearProblems)
         {
             //immediately clear any diagnostics published for this file
-            URI uri = path.toUri();
-            PublishDiagnosticsParams publish = new PublishDiagnosticsParams();
-            ArrayList<Diagnostic> diagnostics = new ArrayList<>();
-            publish.setDiagnostics(diagnostics);
-            publish.setUri(uri.toString());
-            if (languageClient != null)
-            {
-                languageClient.publishDiagnostics(publish);
-            }
+            clearProblemsForURI(path.toUri());
             return;
         }
 
@@ -1146,6 +1138,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                 {
                     IFileSpecification fileSpec = fileTracker.getFileSpecification(normalizedChangedPathAsString);
                     compilerWorkspace.fileRemoved(fileSpec);
+                    clearProblemsForURI(Paths.get(normalizedChangedPathAsString).toUri());
                     //deleting a file may change errors in other existing files,
                     //so we need to do a full check
                     foldersToCheck.addAll(allFolderData);
@@ -1253,6 +1246,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                     fileToRemove = FilenameNormalization.normalize(pathToRemove.toAbsolutePath().toString());
                     IFileSpecification fileSpec = fileTracker.getFileSpecification(fileToRemove);
                     compilerWorkspace.fileRemoved(fileSpec);
+                    clearProblemsForURI(pathToRemove.toUri());
                 }
             }
         }
@@ -1982,6 +1976,18 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
         }
         return project;
+    }
+
+    private void clearProblemsForURI(URI uri)
+    {
+        PublishDiagnosticsParams publish = new PublishDiagnosticsParams();
+        ArrayList<Diagnostic> diagnostics = new ArrayList<>();
+        publish.setDiagnostics(diagnostics);
+        publish.setUri(uri.toString());
+        if (languageClient != null)
+        {
+            languageClient.publishDiagnostics(publish);
+        }
     }
 
     private void checkProjectForProblems(WorkspaceFolderData folderData)
