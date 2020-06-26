@@ -296,6 +296,14 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     public void setLanguageClient(ActionScriptLanguageClient value)
     {
         languageClient = value;
+        for(WorkspaceFolderData folderData : workspaceFolderManager.getAllWorkspaceFolderData())
+        {
+            folderData.codeProblemTracker.setLanguageClient(value);
+            folderData.configProblemTracker.setLanguageClient(value);
+        }
+        WorkspaceFolderData folderData = workspaceFolderManager.getFallbackFolderData();
+        folderData.codeProblemTracker.setLanguageClient(value);
+        folderData.configProblemTracker.setLanguageClient(value);
     }
 
     public void shutdown()

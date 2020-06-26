@@ -387,6 +387,13 @@ public class WorkspaceFolderManager
         return result;
     }
 
+    public List<WorkspaceFolderData> getAllWorkspaceFolderData()
+    {
+        List<WorkspaceFolderData> result = new ArrayList<>();
+        result.addAll(workspaceFolderToData.values());
+        return result;
+    }
+
     public List<WorkspaceFolderData> getAllWorkspaceFolderDataForSWCFile(Path path)
     {
         List<WorkspaceFolderData> result = new ArrayList<>();
