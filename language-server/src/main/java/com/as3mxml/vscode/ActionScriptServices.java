@@ -928,7 +928,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                 realTimeProblemsChecker.setCompilationUnit(unit, fileSpec, folderData);
             }
         }
-        else
+        else if(realTimeProblemsFuture != null)
         {
             realTimeProblemsChecker.clear();
             realTimeProblemsChecker = null;
