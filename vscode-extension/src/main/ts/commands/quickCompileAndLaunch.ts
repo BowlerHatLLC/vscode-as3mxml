@@ -19,35 +19,41 @@ import * as fs from "fs";
 import * as path from "path";
 import * as json5 from "json5";
 import findAnimate from "../utils/findAnimate";
-import findQuickCompileWorkspaceFolders from "./findQuickCompileWorkspaceFolders";
 
 const QUICK_COMPILE_MESSAGE = "Building ActionScript & MXML project...";
 const CANNOT_LAUNCH_QUICK_COMPILE_FAILED_ERROR = "Quick compile failed with errors. Launch cancelled.";
 
-export default function quickCompileAndLaunch(debug: boolean)
+export default function quickCompileAndLaunch(uris: string[], debug: boolean)
 {
-	let workspaceFolders = findQuickCompileWorkspaceFolders();
-	if(workspaceFolders.length === 0)
+	if(uris.length === 0)
 	{
 		return;
 	}
-	else if(workspaceFolders.length === 1)
+	else if(uris.length === 1)
 	{
-		quickCompileAndDebugWorkspaceFolder(workspaceFolders[0], debug);
+		quickCompileAndLaunchURI(uris[0], debug);
 	}
 	else
 	{
-		let items = workspaceFolders.map((folder): vscode.QuickPickItem =>
+		let items = uris.map((uri): vscode.QuickPickItem =>
 		{
-			return { label: folder.name, description: folder.uri.fsPath, uri: folder.uri } as any;
+			let vscodeUri = vscode.Uri.parse(uri);
+			return { label: path.basename(vscodeUri.fsPath), description: vscodeUri.fsPath, uri: uri } as any;
 		})
-		vscode.window.showQuickPick(items).then(result => quickCompileAndDebugWorkspaceFolder(result, debug));
+		vscode.window.showQuickPick(items).then(result =>
+		{
+			if(!("uri" in result))
+			{
+				return;
+			}
+			quickCompileAndLaunchURI(result["uri"], debug);
+		});
 	}
 }
 
-async function quickCompileAndDebugWorkspaceFolder(workspaceFolder, debug: boolean)
+async function quickCompileAndLaunchURI(uri: string, debug: boolean)
 {
-	if(!workspaceFolder)
+	if(!uri)
 	{
 		//it's possible for no folder to be chosen when using
 		//showWorkspaceFolderPick()
@@ -56,7 +62,6 @@ async function quickCompileAndDebugWorkspaceFolder(workspaceFolder, debug: boole
 	//before running a task, VSCode saves all files. we should do the same
 	//before running a quick compile, since it's like a task.
 	await vscode.commands.executeCommand("workbench.action.files.saveAll");
-	let workspaceFolderUri = workspaceFolder.uri.toString();
 	vscode.window.withProgress({location: vscode.ProgressLocation.Window}, (progress) =>
 	{
 		progress.report({message: QUICK_COMPILE_MESSAGE});
@@ -64,7 +69,7 @@ async function quickCompileAndDebugWorkspaceFolder(workspaceFolder, debug: boole
 		{
 			return vscode.commands.executeCommand("workbench.action.debug.stop").then(() =>
 			{
-				let animateFile = getAnimateFile(workspaceFolder);
+				let animateFile = getAnimateFile(uri);
 				if(animateFile)
 				{
 					let animatePath = findAnimate();
@@ -90,7 +95,7 @@ async function quickCompileAndDebugWorkspaceFolder(workspaceFolder, debug: boole
 					resolve();
 					return;
 				}
-				return vscode.commands.executeCommand("as3mxml.quickCompile", workspaceFolderUri, debug).then((result) =>
+				return vscode.commands.executeCommand("as3mxml.quickCompile", uri, debug).then((result) =>
 				{
 					resolve();
 	
@@ -123,9 +128,10 @@ async function quickCompileAndDebugWorkspaceFolder(workspaceFolder, debug: boole
 	});
 }
 
-function getAnimateFile(folder: vscode.WorkspaceFolder)
+function getAnimateFile(uri: string)
 {
-	let asconfigPath = path.resolve(folder.uri.fsPath, "asconfig.json");
+	let vscodeUri = vscode.Uri.parse(uri);
+	let asconfigPath = path.resolve(vscodeUri.fsPath, "asconfig.json");
 	if(!fs.existsSync(asconfigPath) || fs.statSync(asconfigPath).isDirectory())
 	{
 		return null;
@@ -152,7 +158,7 @@ function getAnimateFile(folder: vscode.WorkspaceFolder)
 		{
 			return flaPath;
 		}
-		return path.resolve(folder.uri.fsPath, flaPath);
+		return path.resolve(vscodeUri.fsPath, flaPath);
 	}
 	catch(error)
 	{

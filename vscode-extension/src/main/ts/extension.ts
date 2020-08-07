@@ -33,7 +33,6 @@ import quickCompileAndLaunch from "./commands/quickCompileAndLaunch";
 import migrateSettings from "./utils/migrateSettings";
 import saveSessionPassword from "./commands/saveSessionPassword";
 import normalizeUri from "./utils/normalizeUri";
-import findQuickCompileWorkspaceFolders from "./commands/findQuickCompileWorkspaceFolders";
 
 const INVALID_SDK_ERROR = "as3mxml.sdk.editor in settings does not point to a valid SDK. Requires Apache Royale 0.9.7 or newer.";
 const INVALID_JAVA_ERROR = "as3mxml.java.path in settings does not point to a valid executable. It cannot be a directory, and Java 1.8 or newer is required.";
@@ -229,37 +228,39 @@ export function activate(context: vscode.ExtensionContext)
 	});
 	vscode.commands.registerCommand("as3mxml.quickCompileAndDebug", () =>
 	{
-		let workspaceFolders = findQuickCompileWorkspaceFolders();
-		if(workspaceFolders.length === 0)
-		{
-			//no workspace folders with asconfig.json files
-			return;
-		}
-		if(!savedLanguageClient || !isLanguageClientReady)
-		{
-			pendingQuickCompileAndDebug = true;
-			pendingQuickCompileAndRun = false;
-			logCompilerShellOutput(QUICK_COMPILE_AND_DEBUG_INIT_MESSAGE, true, false);
-			return;
-		}
-		quickCompileAndLaunch(true);
+		vscode.commands.executeCommand("as3mxml.getActiveProjectURIs", true).then((uris: string[]) => {
+			if(uris.length === 0)
+			{
+				//no projects with asconfig.json files
+				return;
+			}
+			if(!savedLanguageClient || !isLanguageClientReady)
+			{
+				pendingQuickCompileAndDebug = true;
+				pendingQuickCompileAndRun = false;
+				logCompilerShellOutput(QUICK_COMPILE_AND_DEBUG_INIT_MESSAGE, true, false);
+				return;
+			}
+			quickCompileAndLaunch(uris, true);
+		});
 	});
 	vscode.commands.registerCommand("as3mxml.quickCompileAndRun", () =>
 	{	
-		let workspaceFolders = findQuickCompileWorkspaceFolders();
-		if(workspaceFolders.length === 0)
-		{
-			//no workspace folders with asconfig.json files
-			return;
-		}
-		if(!savedLanguageClient || !isLanguageClientReady)
-		{
-			pendingQuickCompileAndRun = true;
-			pendingQuickCompileAndDebug = false;
-			logCompilerShellOutput(QUICK_COMPILE_AND_RUN_INIT_MESSAGE, true, false);
-			return;
-		}
-		quickCompileAndLaunch(false);
+		vscode.commands.executeCommand("as3mxml.getActiveProjectURIs", true).then((uris: string[]) => {
+			if(uris.length === 0)
+			{
+				//no projects with asconfig.json files
+				return;
+			}
+			if(!savedLanguageClient || !isLanguageClientReady)
+			{
+				pendingQuickCompileAndRun = true;
+				pendingQuickCompileAndDebug = false;
+				logCompilerShellOutput(QUICK_COMPILE_AND_RUN_INIT_MESSAGE, true, false);
+				return;
+			}
+			quickCompileAndLaunch(uris, false);
+		});
 	});
 	
 	//don't activate these things unless we're in a workspace
