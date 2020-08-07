@@ -25,6 +25,7 @@ import findSDKShortName from "./utils/findSDKShortName";
 import getFrameworkSDKPathWithFallbacks from "./utils/getFrameworkSDKPathWithFallbacks";
 import selectWorkspaceSDK from "./commands/selectWorkspaceSDK";
 import { pickProjectInWorkspace, checkForProjectsToImport } from "./commands/importProject";
+import * as fs from "fs";
 import * as path from "path";
 import * as vscode from "vscode";
 import {LanguageClient, LanguageClientOptions, Executable, ExecutableOptions} from "vscode-languageclient";
@@ -44,6 +45,7 @@ const STARTUP_ERROR = "The ActionScript & MXML extension failed to start.";
 const QUICK_COMPILE_AND_DEBUG_INIT_MESSAGE = "Quick Compile & Debug is waiting for initialization...";
 const QUICK_COMPILE_AND_RUN_INIT_MESSAGE = "Quick Compile & Run is waiting for initialization...";
 const NO_SDK = "$(alert) No SDK";
+const ASCONFIG_JSON = "asconfig.json";
 let savedContext: vscode.ExtensionContext;
 let savedLanguageClient: LanguageClient;
 let isLanguageClientReady = false;
@@ -228,38 +230,69 @@ export function activate(context: vscode.ExtensionContext)
 	});
 	vscode.commands.registerCommand("as3mxml.quickCompileAndDebug", () =>
 	{
-		vscode.commands.executeCommand("as3mxml.getActiveProjectURIs", true).then((uris: string[]) => {
-			if(uris.length === 0)
+		vscode.commands.getCommands(true).then(commands =>
+		{
+			if(commands.some(command => command === "as3mxml.getActiveProjectURIs"))
 			{
-				//no projects with asconfig.json files
-				return;
+				vscode.commands.executeCommand("as3mxml.getActiveProjectURIs", true).then((uris: string[]) =>
+				{
+					if(uris.length === 0)
+					{
+						//no projects with asconfig.json files
+						return;
+					}
+					quickCompileAndLaunch(uris, true);
+				});
 			}
-			if(!savedLanguageClient || !isLanguageClientReady)
+			else if(!savedLanguageClient || !isLanguageClientReady)
 			{
+				if(vscode.workspace.workspaceFolders === undefined
+						|| !vscode.workspace.workspaceFolders.some(workspaceFolder => fs.existsSync(path.resolve(workspaceFolder.uri.fsPath, ASCONFIG_JSON))))
+				{
+					//skip the message if there aren't any workspace folders
+					//that contain asconfig.json
+					pendingQuickCompileAndDebug = false;
+					pendingQuickCompileAndRun = false;
+					return;
+				}
 				pendingQuickCompileAndDebug = true;
 				pendingQuickCompileAndRun = false;
 				logCompilerShellOutput(QUICK_COMPILE_AND_DEBUG_INIT_MESSAGE, true, false);
-				return;
 			}
-			quickCompileAndLaunch(uris, true);
 		});
 	});
 	vscode.commands.registerCommand("as3mxml.quickCompileAndRun", () =>
 	{	
-		vscode.commands.executeCommand("as3mxml.getActiveProjectURIs", true).then((uris: string[]) => {
-			if(uris.length === 0)
+		vscode.commands.getCommands(true).then(commands =>
+		{
+			if(commands.some(command => command === "as3mxml.getActiveProjectURIs"))
 			{
-				//no projects with asconfig.json files
-				return;
+				vscode.commands.executeCommand("as3mxml.getActiveProjectURIs", true).then((uris: string[]) =>
+				{
+					if(uris.length === 0)
+					{
+						//no projects with asconfig.json files
+						return;
+					}
+					quickCompileAndLaunch(uris, false);
+				});
 			}
-			if(!savedLanguageClient || !isLanguageClientReady)
+			else if(!savedLanguageClient || !isLanguageClientReady)
 			{
+				if(vscode.workspace.workspaceFolders === undefined
+						|| !vscode.workspace.workspaceFolders.some(workspaceFolder => fs.existsSync(path.resolve(workspaceFolder.uri.fsPath, ASCONFIG_JSON))))
+				{
+					//skip the message if there aren't any workspace folders
+					//that contain asconfig.json
+					pendingQuickCompileAndDebug = false;
+					pendingQuickCompileAndRun = false;
+					return;
+				}
 				pendingQuickCompileAndRun = true;
 				pendingQuickCompileAndDebug = false;
 				logCompilerShellOutput(QUICK_COMPILE_AND_RUN_INIT_MESSAGE, true, false);
 				return;
 			}
-			quickCompileAndLaunch(uris, false);
 		});
 	});
 	
