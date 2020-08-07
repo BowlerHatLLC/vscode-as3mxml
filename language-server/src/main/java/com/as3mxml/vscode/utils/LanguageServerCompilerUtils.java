@@ -81,7 +81,10 @@ public class LanguageServerCompilerUtils
         Optional<Path> optionalPath = getFilePath(uri);
         if (!optionalPath.isPresent())
         {
-            System.err.println("Could not find URI " + uri);
+            if(!apiURI.startsWith("vscode-userdata:/"))
+            {
+                System.err.println("Could not find URI " + uri);
+            }
             return null;
         }
         return optionalPath.get();
