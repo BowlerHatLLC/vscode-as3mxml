@@ -13,16 +13,12 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-import * as fs from "fs";
-import * as json5 from "json5";
 import * as path from "path";
 import * as vscode from "vscode";
 import getFrameworkSDKPathWithFallbacks from "./getFrameworkSDKPathWithFallbacks";
-import findAnimate from "./findAnimate";
+import BaseAsconfigTaskProvider from "./BaseAsconfigTaskProvider";
 
 const ASCONFIG_JSON = "asconfig.json"
-const FILE_EXTENSION_AS = ".as";;
-const FILE_EXTENSION_MXML = ".mxml";
 const CONFIG_AIR = "air";
 const CONFIG_AIRMOBILE = "airmobile";
 const FIELD_CONFIG = "config";
@@ -42,14 +38,10 @@ const TARGET_BUNDLE = "bundle";
 const TARGET_NATIVE = "native";
 const MATCHER = [];
 const TASK_TYPE_ACTIONSCRIPT = "actionscript";
-const TASK_TYPE_ANIMATE = "animate";
 const TASK_SOURCE_ACTIONSCRIPT = "ActionScript";
 const TASK_SOURCE_AIR = "Adobe AIR";
-const TASK_SOURCE_ANIMATE = "Adobe Animate";
 const TASK_NAME_COMPILE_DEBUG = "compile debug";
 const TASK_NAME_COMPILE_RELEASE = "compile release";
-const TASK_NAME_PUBLISH_DEBUG = "publish debug";
-const TASK_NAME_PUBLISH_RELEASE = "publish release";
 const TASK_NAME_CLEAN = "clean";
 const TASK_NAME_PACKAGE_IOS_DEBUG = "package iOS debug";
 const TASK_NAME_PACKAGE_IOS_RELEASE = "package iOS release";
@@ -77,60 +69,9 @@ interface ActionScriptTaskDefinition extends vscode.TaskDefinition
 	clean?: boolean;
 }
 
-interface AnimateTaskDefinition extends vscode.TaskDefinition
+export default class ActionScriptTaskProvider extends BaseAsconfigTaskProvider implements vscode.TaskProvider
 {
-	type: typeof TASK_TYPE_ANIMATE;
-	debug: boolean;
-	publish: boolean;
-	asconfig?: string;
-}
-
-export default class ActionScriptTaskProvider implements vscode.TaskProvider
-{
-	constructor(context: vscode.ExtensionContext, public javaExecutablePath: string)
-	{
-		this._context = context;
-	}
-
-	private _context: vscode.ExtensionContext;
-
-	provideTasks(token: vscode.CancellationToken): vscode.ProviderResult<vscode.Task[]>
-	{
-		if(vscode.workspace.workspaceFolders === undefined)
-		{
-			return [];
-		}
-
-		return new Promise(async (resolve) =>
-		{
-			let result: vscode.Task[] = [];
-			let asconfigJSONs = await vscode.workspace.findFiles("**/asconfig*.json", "**/node_modules/**");
-			asconfigJSONs.forEach((jsonURI) =>
-			{
-				let workspaceFolder = vscode.workspace.getWorkspaceFolder(jsonURI);
-				this.provideTasksForASConfigJSON(jsonURI, workspaceFolder, result);
-			});
-			if(result.length === 0 && vscode.window.activeTextEditor)
-			{
-				let activeURI = vscode.window.activeTextEditor.document.uri;
-				let workspaceFolder = vscode.workspace.getWorkspaceFolder(activeURI);
-				if(workspaceFolder)
-				{
-					let activePath = activeURI.fsPath;
-					if(activePath.endsWith(FILE_EXTENSION_AS) || activePath.endsWith(FILE_EXTENSION_MXML))
-					{
-						//we couldn't find asconfig.json, but an .as or .mxml file
-						//is currently open from the this workspace, so might as
-						//well provide the tasks
-						this.provideTasksForASConfigJSON(null, workspaceFolder, result);
-					}
-				}
-			}
-			resolve(result);
-		});
-	}
-
-	private provideTasksForASConfigJSON(jsonURI: vscode.Uri, workspaceFolder: vscode.WorkspaceFolder, result: vscode.Task[])
+	protected provideTasksForASConfigJSON(jsonURI: vscode.Uri, workspaceFolder: vscode.WorkspaceFolder, result: vscode.Task[])
 	{
 		let isAnimate = false;
 		let isAIRMobile = false;
@@ -181,29 +122,7 @@ export default class ActionScriptTaskProvider implements vscode.TaskProvider
 
 		if(isAnimate)
 		{
-			//compile SWF with Animate
-			let animatePath = findAnimate();
-			//don't add the tasks if we cannot find Adobe Animate
-			if(animatePath)
-			{
-				let flaPath = asconfigJson[FIELD_ANIMATE_OPTIONS][FIELD_FILE];
-				if(!path.isAbsolute(flaPath))
-				{
-					flaPath = path.resolve(workspaceFolder.uri.fsPath, flaPath);
-				}
-				if(fs.existsSync(flaPath))
-				{
-					let taskNameSuffix = path.basename(flaPath);
-					result.push(this.getAnimateTask(`${TASK_NAME_COMPILE_DEBUG} - ${taskNameSuffix}`,
-						jsonURI, workspaceFolder, command, animatePath, true, false));
-					result.push(this.getAnimateTask(`${TASK_NAME_COMPILE_RELEASE} - ${taskNameSuffix}`,
-						jsonURI, workspaceFolder, command, animatePath, false, false));
-					result.push(this.getAnimateTask(`${TASK_NAME_PUBLISH_DEBUG} - ${taskNameSuffix}`,
-						jsonURI, workspaceFolder, command, animatePath, true, true));
-					result.push(this.getAnimateTask(`${TASK_NAME_PUBLISH_RELEASE} - ${taskNameSuffix}`,
-						jsonURI, workspaceFolder, command, animatePath, false, true));
-				}
-			}
+			//handled by the Animate task provider
 			return;
 		}
 
@@ -313,11 +232,6 @@ export default class ActionScriptTaskProvider implements vscode.TaskProvider
 		}
 	}
 
-	resolveTask(task: vscode.Task, token?: vscode.CancellationToken): vscode.ProviderResult<vscode.Task>
-	{
-		return undefined;
-	}
-
 	private getTaskNameSuffix(jsonURI: vscode.Uri, workspaceFolder: vscode.WorkspaceFolder): string
 	{
 		let suffix = "";
@@ -423,135 +337,6 @@ export default class ActionScriptTaskProvider implements vscode.TaskProvider
 			"ActionScript", execution, MATCHER);
 		task.group = vscode.TaskGroup.Build;
 		return task;
-	}
-
-	private getAnimateTask(description: string, jsonURI: vscode.Uri,
-		workspaceFolder: vscode.WorkspaceFolder, command: string[],
-		animatePath: string, debug: boolean, publish: boolean): vscode.Task
-	{
-		let asconfig: string = this.getASConfigValue(jsonURI, workspaceFolder.uri);
-		let definition: AnimateTaskDefinition = { type: TASK_TYPE_ANIMATE, debug, publish, asconfig };
-		let options = ["--animate", animatePath];
-		if(debug)
-		{
-			options.push("--debug=true");
-		}
-		else
-		{
-			options.push("--debug=false");
-		}
-		if(publish)
-		{
-			options.push("--publish-animate=true");
-		}
-		else
-		{
-			options.push("--publish-animate=false");
-		}
-		if(vscode.workspace.getConfiguration("as3mxml").get("asconfigc.verboseOutput"))
-		{
-			options.push("--verbose=true");
-		}
-		if(jsonURI)
-		{
-			options.push("--project", jsonURI.fsPath);
-		}
-		if(command.length > 1)
-		{
-			options.unshift(...command.slice(1));
-		}
-		let execution = new vscode.ProcessExecution(command[0], options);
-		let task = new vscode.Task(definition, workspaceFolder, description,
-			TASK_SOURCE_ANIMATE, execution, MATCHER);
-		task.group = vscode.TaskGroup.Build;
-		return task;
-	}
-
-	private getDefaultCommand(): string[]
-	{
-		return [this.javaExecutablePath, "-jar", path.join(this._context.extensionPath, "bin", "asconfigc.jar")];
-	}
-
-	private getCommand(workspaceRoot: vscode.WorkspaceFolder): string[]
-	{
-		let nodeModulesBin = path.join(workspaceRoot.uri.fsPath, "node_modules", ".bin");
-		if(process.platform === "win32")
-		{
-			let executableName = "asconfigc.cmd";
-			//start out by looking for asconfigc in the workspace's local Node modules
-			let winPath = path.join(nodeModulesBin, executableName);
-			if(fs.existsSync(winPath))
-			{
-				return [winPath];
-			}
-			let useBundled = <string> vscode.workspace.getConfiguration("as3mxml").get("asconfigc.useBundled");
-			if(!useBundled)
-			{
-				//use an executable on the system path
-				return [executableName];
-			}
-			//use the version bundled with the extension
-			return this.getDefaultCommand();
-		}
-		let executableName = "asconfigc";
-		let unixPath = path.join(nodeModulesBin, executableName);
-		if(fs.existsSync(unixPath))
-		{
-			return [unixPath];
-		}
-		let useBundled = <string> vscode.workspace.getConfiguration("as3mxml").get("asconfigc.useBundled");
-		if(!useBundled)
-		{
-			//use an executable on the system path
-			return [executableName];
-		}
-		//use the version bundled with the extension
-		return this.getDefaultCommand();
-	}
-
-	private getASConfigValue(jsonURI: vscode.Uri, workspaceURI: vscode.Uri): string
-	{
-		if(!jsonURI)
-		{
-			return undefined;
-		}
-		let rootJSON = path.resolve(workspaceURI.fsPath, ASCONFIG_JSON);
-		if(rootJSON === jsonURI.fsPath)
-		{
-			//the asconfig field should remain empty if it's the root
-			//asconfig.json in the workspace.
-			//this is different than TypeScript because we didn't originally
-			//create tasks for additional asconfig files in the workspace, and
-			//we don't want to break old tasks.json files that already existed
-			//before this feature was added.
-			//ideally, we'd be able to use resolveTask() to populate the
-			//asconfig field, but that function never seems to be called.
-			return undefined;
-		}
-		return jsonURI.toString().substr(workspaceURI.toString().length + 1);
-	}
-	
-	private readASConfigJSON(jsonURI: vscode.Uri)
-	{
-		if(!jsonURI)
-		{
-			return null;
-		}
-		let jsonPath = jsonURI.fsPath;
-		if(!fs.existsSync(jsonPath))
-		{
-			return null;
-		}
-		try
-		{
-			let contents = fs.readFileSync(jsonPath, "utf8");
-			return json5.parse(contents);
-		}
-		catch(error)
-		{
-			console.error(`Error reading file: ${jsonPath}. ${error}`);
-		}
-		return null;
 	}
 	
 	private isAnimate(asconfigJson: any): boolean

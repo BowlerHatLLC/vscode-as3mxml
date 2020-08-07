@@ -18,6 +18,7 @@ import validateJava from "./utils/validateJava";
 import validateEditorSDK from "./utils/validateEditorSDK";
 import ActionScriptSourcePathDataProvider, { ActionScriptSourcePath } from "./utils/ActionScriptSourcePathDataProvider";
 import ActionScriptTaskProvider from "./utils/ActionScriptTaskProvider";
+import AnimateTaskProvider from "./utils/AnimateTaskProvider";
 import SWCTextDocumentContentProvider from "./utils/SWCTextDocumentContentProvider";
 import getJavaClassPathDelimiter from "./utils/getJavaClassPathDelimiter";
 import findSDKShortName from "./utils/findSDKShortName";
@@ -54,6 +55,7 @@ let sdkStatusBarItem: vscode.StatusBarItem;
 let sourcePathView: vscode.TreeView<ActionScriptSourcePath> = null;
 let sourcePathDataProvider: ActionScriptSourcePathDataProvider = null;
 let actionScriptTaskProvider: ActionScriptTaskProvider = null;
+let animateTaskProvider: AnimateTaskProvider = null;
 let swcTextDocumentContentProvider: SWCTextDocumentContentProvider = null;
 let pendingQuickCompileAndDebug = false;
 let pendingQuickCompileAndRun = false;
@@ -276,8 +278,12 @@ export function activate(context: vscode.ExtensionContext)
 	sdkStatusBarItem.show();
 
 	actionScriptTaskProvider = new ActionScriptTaskProvider(context, javaExecutablePath);
-	let taskProviderDisposable = vscode.tasks.registerTaskProvider("actionscript", actionScriptTaskProvider);
-	context.subscriptions.push(taskProviderDisposable);
+	let actionScriptTaskDisposable = vscode.tasks.registerTaskProvider("actionscript", actionScriptTaskProvider);
+	context.subscriptions.push(actionScriptTaskDisposable);
+
+	animateTaskProvider = new AnimateTaskProvider(context, javaExecutablePath);
+	let animateTaskDisposable = vscode.tasks.registerTaskProvider("animate", animateTaskProvider);
+	context.subscriptions.push(animateTaskDisposable);
 
 	swcTextDocumentContentProvider = new SWCTextDocumentContentProvider();
 	let swcContentDisposable = vscode.workspace.registerTextDocumentContentProvider("swc", swcTextDocumentContentProvider);
