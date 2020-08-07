@@ -77,15 +77,15 @@ public class SignatureHelpProvider
 			cancelToken.checkCanceled();
 			return new SignatureHelp(Collections.emptyList(), -1, -1);
 		}
-		ActionScriptProjectData folderData = actionScriptProjectManager.getWorkspaceFolderDataForSourceFile(path);
-		if(folderData == null || folderData.project == null)
+		ActionScriptProjectData projectData = actionScriptProjectManager.getProjectDataForSourceFile(path);
+		if(projectData == null || projectData.project == null)
 		{
 			cancelToken.checkCanceled();
 			return new SignatureHelp(Collections.emptyList(), -1, -1);
 		}
-		ILspProject project = folderData.project;
+		ILspProject project = projectData.project;
 
-        IncludeFileData includeFileData = folderData.includedFiles.get(path.toString());
+        IncludeFileData includeFileData = projectData.includedFiles.get(path.toString());
 		int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position, includeFileData);
 		if (currentOffset == -1)
 		{
@@ -96,11 +96,11 @@ public class SignatureHelpProvider
         boolean isMXML = textDocument.getUri().endsWith(FILE_EXTENSION_MXML);
         if (isMXML)
         {
-			MXMLData mxmlData = actionScriptProjectManager.getMXMLDataForPath(path, folderData);
+			MXMLData mxmlData = actionScriptProjectManager.getMXMLDataForPath(path, projectData);
 			IMXMLTagData offsetTag = MXMLDataUtils.getOffsetMXMLTag(mxmlData, currentOffset);
 			if (offsetTag != null)
 			{
-				offsetNode = actionScriptProjectManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, currentOffset, folderData);
+				offsetNode = actionScriptProjectManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, currentOffset, projectData);
 				if (offsetNode != null)
 				{
 					IASNode containingNode = ASTUtils.getContainingNodeIncludingStart(offsetNode, currentOffset);
@@ -113,7 +113,7 @@ public class SignatureHelpProvider
 		}
 		if (offsetNode == null)
 		{
-			offsetNode = actionScriptProjectManager.getOffsetNode(path, currentOffset, folderData);
+			offsetNode = actionScriptProjectManager.getOffsetNode(path, currentOffset, projectData);
 		}
 		if (offsetNode == null)
 		{

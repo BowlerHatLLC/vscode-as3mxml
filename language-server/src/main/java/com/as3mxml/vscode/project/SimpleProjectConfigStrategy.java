@@ -34,17 +34,24 @@ public class SimpleProjectConfigStrategy implements IProjectConfigStrategy
     private static final String CONFIG_ROYALE = "royale";
     private static final String CONFIG_FLEX = "flex";
 
-    private boolean changed = true;
+    private Path projectPath;
     private WorkspaceFolder workspaceFolder;
+    private boolean changed = true;
 
-    public SimpleProjectConfigStrategy(WorkspaceFolder workspaceFolder)
+    public SimpleProjectConfigStrategy(Path projectPath, WorkspaceFolder workspaceFolder)
     {
+        this.projectPath = projectPath;
         this.workspaceFolder = workspaceFolder;
     }
 
     public String getDefaultConfigurationProblemPath()
     {
         return null;
+    }
+
+    public Path getProjectPath()
+    {
+        return projectPath;
     }
 
     public WorkspaceFolder getWorkspaceFolder()

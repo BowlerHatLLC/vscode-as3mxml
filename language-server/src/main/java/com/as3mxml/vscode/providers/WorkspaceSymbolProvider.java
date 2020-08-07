@@ -36,7 +36,6 @@ import org.apache.royale.compiler.scopes.IASScope;
 import org.apache.royale.compiler.units.ICompilationUnit;
 import org.apache.royale.compiler.units.ICompilationUnit.UnitType;
 import org.eclipse.lsp4j.SymbolInformation;
-import org.eclipse.lsp4j.WorkspaceFolder;
 import org.eclipse.lsp4j.WorkspaceSymbolParams;
 import org.eclipse.lsp4j.jsonrpc.CancelChecker;
 
@@ -71,10 +70,9 @@ public class WorkspaceSymbolProvider
 		{
 			queries.add(currentQuery.toString().toLowerCase());
 		}
-		for (WorkspaceFolder folder : actionScriptProjectManager.getWorkspaceFolders())
+		for (ActionScriptProjectData projectData : actionScriptProjectManager.getAllProjectData())
 		{
-			ActionScriptProjectData folderData = actionScriptProjectManager.getWorkspaceFolderData(folder);
-			ILspProject project = folderData.project;
+			ILspProject project = projectData.project;
 			if (project == null)
 			{
 				continue;

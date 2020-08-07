@@ -93,17 +93,17 @@ public class CodeActionProvider
 			cancelToken.checkCanceled();
 			return Collections.emptyList();
 		}
-		ActionScriptProjectData folderData = actionScriptProjectManager.getWorkspaceFolderDataForSourceFile(path);
-		if (folderData == null || folderData.project == null
-                || folderData.equals(actionScriptProjectManager.getFallbackFolderData()))
+		ActionScriptProjectData projectData = actionScriptProjectManager.getProjectDataForSourceFile(path);
+		if (projectData == null || projectData.project == null
+                || projectData.equals(actionScriptProjectManager.getFallbackProjectData()))
 		{
 			cancelToken.checkCanceled();
 			//the path must be in the workspace or source-path
 			return Collections.emptyList();
 		}
-		ILspProject project = folderData.project;
+		ILspProject project = projectData.project;
 
-		if (project == null || !SourcePathUtils.isInProjectSourcePath(path, project, folderData.configurator))
+		if (project == null || !SourcePathUtils.isInProjectSourcePath(path, project, projectData.configurator))
 		{
 			cancelToken.checkCanceled();
 			//the path must be in the workspace or source-path
@@ -113,7 +113,7 @@ public class CodeActionProvider
 		List<? extends Diagnostic> diagnostics = params.getContext().getDiagnostics();
 		List<Either<Command, CodeAction>> codeActions = new ArrayList<>();
 		findSourceActions(path, codeActions);
-		findCodeActionsForDiagnostics(path, folderData, diagnostics, codeActions);
+		findCodeActionsForDiagnostics(path, projectData, diagnostics, codeActions);
 
 		ICompilationUnit unit = CompilerProjectUtils.findCompilationUnit(path, project);
 		if (unit != null)
@@ -146,7 +146,7 @@ public class CodeActionProvider
         codeActions.add(Either.forRight(organizeImports));
     }
 
-    private void findCodeActionsForDiagnostics(Path path, ActionScriptProjectData folderData, List<? extends Diagnostic> diagnostics, List<Either<Command, CodeAction>> codeActions)
+    private void findCodeActionsForDiagnostics(Path path, ActionScriptProjectData projectData, List<? extends Diagnostic> diagnostics, List<Either<Command, CodeAction>> codeActions)
     {
         boolean handledUnimplementedMethods = false;
         for (Diagnostic diagnostic : diagnostics)
@@ -179,57 +179,57 @@ public class CodeActionProvider
                 case "1120": //AccessUndefinedPropertyProblem
                 {
                     //see if there's anything we can import
-                    createCodeActionsForImport(path, diagnostic, folderData, codeActions);
-                    createCodeActionForMissingLocalVariable(path, diagnostic, folderData, codeActions);
-                    createCodeActionForMissingField(path, diagnostic, folderData, codeActions);
-                    createCodeActionForMissingEventListener(path, diagnostic, folderData, codeActions);
+                    createCodeActionsForImport(path, diagnostic, projectData, codeActions);
+                    createCodeActionForMissingLocalVariable(path, diagnostic, projectData, codeActions);
+                    createCodeActionForMissingField(path, diagnostic, projectData, codeActions);
+                    createCodeActionForMissingEventListener(path, diagnostic, projectData, codeActions);
                     break;
                 }
                 case "1046": //UnknownTypeProblem
                 {
                     //see if there's anything we can import
-                    createCodeActionsForImport(path, diagnostic, folderData, codeActions);
+                    createCodeActionsForImport(path, diagnostic, projectData, codeActions);
                     break;
                 }
                 case "1017": //UnknownSuperclassProblem
                 {
                     //see if there's anything we can import
-                    createCodeActionsForImport(path, diagnostic, folderData, codeActions);
+                    createCodeActionsForImport(path, diagnostic, projectData, codeActions);
                     break;
                 }
                 case "1045": //UnknownInterfaceProblem
                 {
                     //see if there's anything we can import
-                    createCodeActionsForImport(path, diagnostic, folderData, codeActions);
+                    createCodeActionsForImport(path, diagnostic, projectData, codeActions);
                     break;
                 }
                 case "1061": //StrictUndefinedMethodProblem
                 {
-                    createCodeActionForMissingMethod(path, diagnostic, folderData, codeActions);
+                    createCodeActionForMissingMethod(path, diagnostic, projectData, codeActions);
                     break;
                 }
                 case "1073": //MissingCatchOrFinallyProblem
                 {
-                    createCodeActionForMissingCatchOrFinally(path, diagnostic, folderData, codeActions);
+                    createCodeActionForMissingCatchOrFinally(path, diagnostic, projectData, codeActions);
                     break;
                 }
                 case "1119": //AccessUndefinedMemberProblem
                 {
-                    createCodeActionForMissingField(path, diagnostic, folderData, codeActions);
-                    createCodeActionForMissingEventListener(path, diagnostic, folderData, codeActions);
+                    createCodeActionForMissingField(path, diagnostic, projectData, codeActions);
+                    createCodeActionForMissingEventListener(path, diagnostic, projectData, codeActions);
                     break;
                 }
                 case "1178": //InaccessiblePropertyReferenceProblem
                 {
                     //see if there's anything we can import
-                    createCodeActionsForImport(path, diagnostic, folderData, codeActions);
+                    createCodeActionsForImport(path, diagnostic, projectData, codeActions);
                     break;
                 }
                 case "1180": //CallUndefinedMethodProblem
                 {
                     //see if there's anything we can import
-                    createCodeActionsForImport(path, diagnostic, folderData, codeActions);
-                    createCodeActionForMissingMethod(path, diagnostic, folderData, codeActions);
+                    createCodeActionsForImport(path, diagnostic, projectData, codeActions);
+                    createCodeActionForMissingMethod(path, diagnostic, projectData, codeActions);
                     break;
                 }
                 case "1044": //UnimplementedInterfaceMethodProblem
@@ -238,27 +238,27 @@ public class CodeActionProvider
                     if(!handledUnimplementedMethods)
                     {
                         handledUnimplementedMethods = true;
-                        createCodeActionForUnimplementedMethods(path, diagnostic, folderData, codeActions);
+                        createCodeActionForUnimplementedMethods(path, diagnostic, projectData, codeActions);
                     }
                     break;
                 }
                 case "as3mxml-unused-import":
                 {
-                    createCodeActionsForUnusedImport(path, diagnostic, folderData, codeActions);
+                    createCodeActionsForUnusedImport(path, diagnostic, projectData, codeActions);
                 }
             }
         }
     }
 
-    private void createCodeActionForMissingField(Path path, Diagnostic diagnostic, ActionScriptProjectData folderData, List<Either<Command, CodeAction>> codeActions)
+    private void createCodeActionForMissingField(Path path, Diagnostic diagnostic, ActionScriptProjectData projectData, List<Either<Command, CodeAction>> codeActions)
     {
         Position position = diagnostic.getRange().getStart();
-        IncludeFileData includeFileData = folderData.includedFiles.get(path.toString());
+        IncludeFileData includeFileData = projectData.includedFiles.get(path.toString());
 		int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position, includeFileData);
-        IASNode offsetNode = actionScriptProjectManager.getOffsetNode(path, currentOffset, folderData);
+        IASNode offsetNode = actionScriptProjectManager.getOffsetNode(path, currentOffset, projectData);
         if (offsetNode instanceof IMXMLInstanceNode)
         {
-            MXMLData mxmlData = actionScriptProjectManager.getMXMLDataForPath(path, folderData);
+            MXMLData mxmlData = actionScriptProjectManager.getMXMLDataForPath(path, projectData);
             if (mxmlData != null)
             {
                 IMXMLTagData offsetTag = MXMLDataUtils.getOffsetMXMLTag(mxmlData, currentOffset);
@@ -267,7 +267,7 @@ public class CodeActionProvider
                     //workaround for bug in Royale compiler
                     Position newPosition = new Position(position.getLine(), position.getCharacter() + 1);
                     int newOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), newPosition, includeFileData);
-                    offsetNode = actionScriptProjectManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, newOffset, folderData);
+                    offsetNode = actionScriptProjectManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, newOffset, projectData);
                 }
             }
         }
@@ -317,15 +317,15 @@ public class CodeActionProvider
         codeActions.add(Either.forRight(codeAction));
     }
     
-    private void createCodeActionForMissingLocalVariable(Path path, Diagnostic diagnostic, ActionScriptProjectData folderData, List<Either<Command, CodeAction>> codeActions)
+    private void createCodeActionForMissingLocalVariable(Path path, Diagnostic diagnostic, ActionScriptProjectData projectData, List<Either<Command, CodeAction>> codeActions)
     {
         Position position = diagnostic.getRange().getStart();
-        IncludeFileData includeFileData = folderData.includedFiles.get(path.toString());
+        IncludeFileData includeFileData = projectData.includedFiles.get(path.toString());
 		int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position, includeFileData);
-        IASNode offsetNode = actionScriptProjectManager.getOffsetNode(path, currentOffset, folderData);
+        IASNode offsetNode = actionScriptProjectManager.getOffsetNode(path, currentOffset, projectData);
         if (offsetNode instanceof IMXMLInstanceNode)
         {
-            MXMLData mxmlData = actionScriptProjectManager.getMXMLDataForPath(path, folderData);
+            MXMLData mxmlData = actionScriptProjectManager.getMXMLDataForPath(path, projectData);
             if (mxmlData != null)
             {
                 IMXMLTagData offsetTag = MXMLDataUtils.getOffsetMXMLTag(mxmlData, currentOffset);
@@ -334,7 +334,7 @@ public class CodeActionProvider
                     //workaround for bug in Royale compiler
                     Position newPosition = new Position(position.getLine(), position.getCharacter() + 1);
                     int newOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), newPosition, includeFileData);
-                    offsetNode = actionScriptProjectManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, newOffset, folderData);
+                    offsetNode = actionScriptProjectManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, newOffset, projectData);
                 }
             }
         }
@@ -368,13 +368,13 @@ public class CodeActionProvider
         codeActions.add(Either.forRight(codeAction));
     }
 
-    private void createCodeActionForMissingCatchOrFinally(Path path, Diagnostic diagnostic, ActionScriptProjectData folderData, List<Either<Command, CodeAction>> codeActions)
+    private void createCodeActionForMissingCatchOrFinally(Path path, Diagnostic diagnostic, ActionScriptProjectData projectData, List<Either<Command, CodeAction>> codeActions)
     {
-        ILspProject project = folderData.project;
+        ILspProject project = projectData.project;
         Position position = diagnostic.getRange().getStart();
-        IncludeFileData includeFileData = folderData.includedFiles.get(path.toString());
+        IncludeFileData includeFileData = projectData.includedFiles.get(path.toString());
 		int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position, includeFileData);
-        IASNode offsetNode = actionScriptProjectManager.getOffsetNode(path, currentOffset, folderData);
+        IASNode offsetNode = actionScriptProjectManager.getOffsetNode(path, currentOffset, projectData);
         if(!(offsetNode instanceof ITryNode))
         {
             return;
@@ -401,13 +401,13 @@ public class CodeActionProvider
         codeActions.add(Either.forRight(codeAction));
     }
 
-    private void createCodeActionForUnimplementedMethods(Path path, Diagnostic diagnostic, ActionScriptProjectData folderData, List<Either<Command, CodeAction>> codeActions)
+    private void createCodeActionForUnimplementedMethods(Path path, Diagnostic diagnostic, ActionScriptProjectData projectData, List<Either<Command, CodeAction>> codeActions)
     {
-        ILspProject project = folderData.project;
+        ILspProject project = projectData.project;
         Position position = diagnostic.getRange().getStart();
-        IncludeFileData includeFileData = folderData.includedFiles.get(path.toString());
+        IncludeFileData includeFileData = projectData.includedFiles.get(path.toString());
 		int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position, includeFileData);
-        IASNode offsetNode = actionScriptProjectManager.getOffsetNode(path, currentOffset, folderData);
+        IASNode offsetNode = actionScriptProjectManager.getOffsetNode(path, currentOffset, projectData);
         if (offsetNode == null)
         {
             return;
@@ -448,20 +448,20 @@ public class CodeActionProvider
         }
     }
 
-    private void createCodeActionForMissingMethod(Path path, Diagnostic diagnostic, ActionScriptProjectData folderData, List<Either<Command, CodeAction>> codeActions)
+    private void createCodeActionForMissingMethod(Path path, Diagnostic diagnostic, ActionScriptProjectData projectData, List<Either<Command, CodeAction>> codeActions)
     {
-        ILspProject project = folderData.project;
+        ILspProject project = projectData.project;
         Position position = diagnostic.getRange().getStart();
-        IncludeFileData includeFileData = folderData.includedFiles.get(path.toString());
+        IncludeFileData includeFileData = projectData.includedFiles.get(path.toString());
 		int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position, includeFileData);
-        IASNode offsetNode = actionScriptProjectManager.getOffsetNode(path, currentOffset, folderData);
+        IASNode offsetNode = actionScriptProjectManager.getOffsetNode(path, currentOffset, projectData);
         if (offsetNode == null)
         {
             return;
         }
         if (offsetNode instanceof IMXMLInstanceNode)
         {
-            MXMLData mxmlData = actionScriptProjectManager.getMXMLDataForPath(path, folderData);
+            MXMLData mxmlData = actionScriptProjectManager.getMXMLDataForPath(path, projectData);
             if (mxmlData != null)
             {
                 IMXMLTagData offsetTag = MXMLDataUtils.getOffsetMXMLTag(mxmlData, currentOffset);
@@ -470,7 +470,7 @@ public class CodeActionProvider
                     //workaround for bug in Royale compiler
                     Position newPosition = new Position(position.getLine(), position.getCharacter() + 1);
                     int newOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), newPosition, includeFileData);
-                    offsetNode = actionScriptProjectManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, newOffset, folderData);
+                    offsetNode = actionScriptProjectManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, newOffset, projectData);
                 }
             }
         }
@@ -519,20 +519,20 @@ public class CodeActionProvider
         codeActions.add(Either.forRight(codeAction));
     }
 
-    private void createCodeActionForMissingEventListener(Path path, Diagnostic diagnostic, ActionScriptProjectData folderData, List<Either<Command, CodeAction>> codeActions)
+    private void createCodeActionForMissingEventListener(Path path, Diagnostic diagnostic, ActionScriptProjectData projectData, List<Either<Command, CodeAction>> codeActions)
     {
-        ILspProject project = folderData.project;
+        ILspProject project = projectData.project;
         Position position = diagnostic.getRange().getStart();
-        IncludeFileData includeFileData = folderData.includedFiles.get(path.toString());
+        IncludeFileData includeFileData = projectData.includedFiles.get(path.toString());
 		int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position, includeFileData);
-        IASNode offsetNode = actionScriptProjectManager.getOffsetNode(path, currentOffset, folderData);
+        IASNode offsetNode = actionScriptProjectManager.getOffsetNode(path, currentOffset, projectData);
         if (offsetNode == null)
         {
             return;
         }
         if (offsetNode instanceof IMXMLInstanceNode)
         {
-            MXMLData mxmlData = actionScriptProjectManager.getMXMLDataForPath(path, folderData);
+            MXMLData mxmlData = actionScriptProjectManager.getMXMLDataForPath(path, projectData);
             if (mxmlData != null)
             {
                 IMXMLTagData offsetTag = MXMLDataUtils.getOffsetMXMLTag(mxmlData, currentOffset);
@@ -541,7 +541,7 @@ public class CodeActionProvider
                     //workaround for bug in Royale compiler
                     Position newPosition = new Position(position.getLine(), position.getCharacter() + 1);
                     int newOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), newPosition, includeFileData);
-                    offsetNode = actionScriptProjectManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, newOffset, folderData);
+                    offsetNode = actionScriptProjectManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, newOffset, projectData);
                 }
             }
         }
@@ -623,18 +623,18 @@ public class CodeActionProvider
         codeActions.add(Either.forRight(codeAction));
     }
 
-    private void createCodeActionsForImport(Path path, Diagnostic diagnostic, ActionScriptProjectData folderData, List<Either<Command, CodeAction>> codeActions)
+    private void createCodeActionsForImport(Path path, Diagnostic diagnostic, ActionScriptProjectData projectData, List<Either<Command, CodeAction>> codeActions)
     {
-        ILspProject project = folderData.project;
+        ILspProject project = projectData.project;
         Position position = diagnostic.getRange().getStart();
-        IncludeFileData includeFileData = folderData.includedFiles.get(path.toString());
+        IncludeFileData includeFileData = projectData.includedFiles.get(path.toString());
 		int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position, includeFileData);
-        IASNode offsetNode = actionScriptProjectManager.getOffsetNode(path, currentOffset, folderData);
+        IASNode offsetNode = actionScriptProjectManager.getOffsetNode(path, currentOffset, projectData);
         IMXMLTagData offsetTag = null;
         boolean isMXML = path.toUri().toString().endsWith(FILE_EXTENSION_MXML);
         if (isMXML)
         {
-            MXMLData mxmlData = actionScriptProjectManager.getMXMLDataForPath(path, folderData);
+            MXMLData mxmlData = actionScriptProjectManager.getMXMLDataForPath(path, projectData);
             if (mxmlData != null)
             {
                 offsetTag = MXMLDataUtils.getOffsetMXMLTag(mxmlData, currentOffset);
@@ -645,7 +645,7 @@ public class CodeActionProvider
             //workaround for bug in Royale compiler
             Position newPosition = new Position(position.getLine(), position.getCharacter() + 1);
             int newOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), newPosition, includeFileData);
-            offsetNode = actionScriptProjectManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, newOffset, folderData);
+            offsetNode = actionScriptProjectManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, newOffset, projectData);
         }
         if (offsetNode == null || !(offsetNode instanceof IIdentifierNode))
         {
@@ -687,7 +687,7 @@ public class CodeActionProvider
         }
     }
 
-    private void createCodeActionsForUnusedImport(Path path, Diagnostic diagnostic, ActionScriptProjectData folderData, List<Either<Command, CodeAction>> codeActions)
+    private void createCodeActionsForUnusedImport(Path path, Diagnostic diagnostic, ActionScriptProjectData projectData, List<Either<Command, CodeAction>> codeActions)
     {
         String fileText = fileTracker.getText(path);
         if(fileText == null)

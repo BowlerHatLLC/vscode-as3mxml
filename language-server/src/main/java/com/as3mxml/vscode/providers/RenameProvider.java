@@ -88,16 +88,16 @@ public class RenameProvider
 			cancelToken.checkCanceled();
 			return new WorkspaceEdit(new HashMap<>());
 		}
-		ActionScriptProjectData folderData = actionScriptProjectManager.getWorkspaceFolderDataForSourceFile(path);
-        if(folderData == null || folderData.project == null
-                || folderData.equals(actionScriptProjectManager.getFallbackFolderData()))
+		ActionScriptProjectData projectData = actionScriptProjectManager.getProjectDataForSourceFile(path);
+        if(projectData == null || projectData.project == null
+                || projectData.equals(actionScriptProjectManager.getFallbackProjectData()))
 		{
 			cancelToken.checkCanceled();
 			return new WorkspaceEdit(new HashMap<>());
 		}
-        ILspProject project = folderData.project;
+        ILspProject project = projectData.project;
 
-        IncludeFileData includeFileData = folderData.includedFiles.get(path.toString());
+        IncludeFileData includeFileData = projectData.includedFiles.get(path.toString());
 		int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position, includeFileData);
 		if (currentOffset == -1)
 		{
@@ -107,11 +107,11 @@ public class RenameProvider
         boolean isMXML = textDocument.getUri().endsWith(FILE_EXTENSION_MXML);
         if (isMXML)
         {
-            MXMLData mxmlData = actionScriptProjectManager.getMXMLDataForPath(path, folderData);
+            MXMLData mxmlData = actionScriptProjectManager.getMXMLDataForPath(path, projectData);
             IMXMLTagData offsetTag = MXMLDataUtils.getOffsetMXMLTag(mxmlData, currentOffset);
             if (offsetTag != null)
             {
-                IASNode embeddedNode = actionScriptProjectManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, currentOffset, folderData);
+                IASNode embeddedNode = actionScriptProjectManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, currentOffset, projectData);
                 if (embeddedNode != null)
                 {
                     WorkspaceEdit result = actionScriptRename(embeddedNode, params.getNewName(), project);
@@ -128,7 +128,7 @@ public class RenameProvider
                 }
             }
         }
-		IASNode offsetNode = actionScriptProjectManager.getOffsetNode(path, currentOffset, folderData);
+		IASNode offsetNode = actionScriptProjectManager.getOffsetNode(path, currentOffset, projectData);
 		WorkspaceEdit result = actionScriptRename(offsetNode, params.getNewName(), project);
 		cancelToken.checkCanceled();
 		return result;

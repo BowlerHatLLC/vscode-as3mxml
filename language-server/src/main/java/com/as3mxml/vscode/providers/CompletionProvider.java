@@ -159,8 +159,8 @@ public class CompletionProvider
 				cancelToken.checkCanceled();
 				return Either.forRight(result);
 			}
-			ActionScriptProjectData folderData = actionScriptProjectManager.getWorkspaceFolderDataForSourceFile(path);
-			if(folderData == null || folderData.project == null)
+			ActionScriptProjectData projectData = actionScriptProjectManager.getProjectDataForSourceFile(path);
+			if(projectData == null || projectData.project == null)
 			{
 				CompletionList result = new CompletionList();
 				result.setIsIncomplete(false);
@@ -168,9 +168,9 @@ public class CompletionProvider
 				cancelToken.checkCanceled();
 				return Either.forRight(result);
 			}
-			ILspProject project = folderData.project;
+			ILspProject project = projectData.project;
 
-            IncludeFileData includeFileData = folderData.includedFiles.get(path.toString());
+            IncludeFileData includeFileData = projectData.includedFiles.get(path.toString());
 			int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position, includeFileData);
 			if (currentOffset == -1)
 			{
@@ -183,14 +183,14 @@ public class CompletionProvider
             boolean isMXML = textDocument.getUri().endsWith(FILE_EXTENSION_MXML);
             if (isMXML)
             {
-                MXMLData mxmlData = actionScriptProjectManager.getMXMLDataForPath(path, folderData);
+                MXMLData mxmlData = actionScriptProjectManager.getMXMLDataForPath(path, projectData);
                 IMXMLTagData offsetTag = MXMLDataUtils.getOffsetMXMLTag(mxmlData, currentOffset);
                 if (offsetTag != null)
                 {
-                    IASNode embeddedNode = actionScriptProjectManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, currentOffset, folderData);
+                    IASNode embeddedNode = actionScriptProjectManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, currentOffset, projectData);
                     if (embeddedNode != null)
                     {
-                        CompletionList result = actionScriptCompletion(embeddedNode, path, position, currentOffset, folderData);
+                        CompletionList result = actionScriptCompletion(embeddedNode, path, position, currentOffset, projectData);
                         cancelToken.checkCanceled();
                         return Either.forRight(result);
                     }
@@ -229,8 +229,8 @@ public class CompletionProvider
                     return Either.forRight(result);
                 }
             }
-			IASNode offsetNode = actionScriptProjectManager.getOffsetNode(path, currentOffset, folderData);
-			CompletionList result = actionScriptCompletion(offsetNode, path, position, currentOffset, folderData);
+			IASNode offsetNode = actionScriptProjectManager.getOffsetNode(path, currentOffset, projectData);
+			CompletionList result = actionScriptCompletion(offsetNode, path, position, currentOffset, projectData);
 			cancelToken.checkCanceled();
 			return Either.forRight(result);
 		}
@@ -240,7 +240,7 @@ public class CompletionProvider
 		}
 	}
 
-    private CompletionList actionScriptCompletion(IASNode offsetNode, Path path, Position position, int currentOffset, ActionScriptProjectData folderData)
+    private CompletionList actionScriptCompletion(IASNode offsetNode, Path path, Position position, int currentOffset, ActionScriptProjectData projectData)
     {
         CompletionList result = new CompletionList();
         result.setIsIncomplete(false);
@@ -268,7 +268,7 @@ public class CompletionProvider
         if (isMXML)
         {
             IMXMLTagData offsetTag = null;
-            MXMLData mxmlData = actionScriptProjectManager.getMXMLDataForPath(path, folderData);
+            MXMLData mxmlData = actionScriptProjectManager.getMXMLDataForPath(path, projectData);
             if (mxmlData != null)
             {
                 offsetTag = MXMLDataUtils.getOffsetMXMLTag(mxmlData, currentOffset);
@@ -278,7 +278,7 @@ public class CompletionProvider
                 importRange = ImportRange.fromOffsetTag(offsetTag, currentOffset);
             }
         }
-        ILspProject project = folderData.project;
+        ILspProject project = projectData.project;
         AddImportData addImportData = CodeActionsUtils.findAddImportData(fileText, importRange);
 
         char nextChar = (char) -1;

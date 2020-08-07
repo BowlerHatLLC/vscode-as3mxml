@@ -52,11 +52,11 @@ public class RealTimeProblemsChecker implements Runnable
 	public CompilerProblemFilter compilerProblemFilter;
 	public LanguageClient languageClient;
 
-	private ActionScriptProjectData pendingFolderData;
+	private ActionScriptProjectData pendingProjectData;
 	private IFileSpecification pendingFileSpec;
 	private ICompilationUnit pendingCompilationUnit;
 
-	private ActionScriptProjectData folderData;
+	private ActionScriptProjectData projectData;
 	private IFileSpecification fileSpec;
 	private ICompilationUnit compilationUnit;
 	
@@ -67,25 +67,25 @@ public class RealTimeProblemsChecker implements Runnable
 
 	public synchronized void setFileSpecification(IFileSpecification newFileSpec)
 	{
-		pendingFolderData = folderData;
+		pendingProjectData = projectData;
 		pendingCompilationUnit = compilationUnit;
 		pendingFileSpec = newFileSpec;
 	}
 
-	public synchronized void setCompilationUnit(ICompilationUnit compilationUnit, IFileSpecification fileSpec, ActionScriptProjectData folderData)
+	public synchronized void setCompilationUnit(ICompilationUnit compilationUnit, IFileSpecification fileSpec, ActionScriptProjectData projectData)
 	{
 		if(this.compilationUnit != null && this.compilationUnit != compilationUnit)
 		{
 			updateNow();
-			pendingFolderData = folderData;
+			pendingProjectData = projectData;
 			pendingCompilationUnit = compilationUnit;
 			pendingFileSpec = fileSpec;
 			return;
 		}
-		this.folderData = folderData;
+		this.projectData = projectData;
 		this.compilationUnit = compilationUnit;
 		this.fileSpec = fileSpec;
-		pendingFolderData = null;
+		pendingProjectData = null;
 		pendingCompilationUnit = null;
 		pendingFileSpec = null;
 		syntaxTreeRequest = compilationUnit.getSyntaxTreeRequest();
@@ -96,10 +96,10 @@ public class RealTimeProblemsChecker implements Runnable
 
 	public synchronized void clear()
 	{
-		folderData = null;
+		projectData = null;
 		compilationUnit = null;
 		fileSpec = null;
-		pendingFolderData = null;
+		pendingProjectData = null;
 		pendingCompilationUnit = null;
 		pendingFileSpec = null;
 	}
@@ -229,16 +229,16 @@ public class RealTimeProblemsChecker implements Runnable
 
 		if(pendingCompilationUnit == compilationUnit)
 		{
-			IWorkspace workspace = folderData.project.getWorkspace();
+			IWorkspace workspace = projectData.project.getWorkspace();
 			workspace.fileChanged(pendingFileSpec);
 		}
 
 		compilationUnit = pendingCompilationUnit;
 		fileSpec = pendingFileSpec;
-		folderData = pendingFolderData;
+		projectData = pendingProjectData;
 		pendingCompilationUnit = null;
 		pendingFileSpec = null;
-		pendingFolderData = null;
+		pendingProjectData = null;
 
 		syntaxTreeRequest = null;
 		fileScopeRequest = null;
@@ -268,7 +268,7 @@ public class RealTimeProblemsChecker implements Runnable
 				}
 			}
 			
-			ILspProject project = folderData.project;
+			ILspProject project = projectData.project;
 			Set<String> requiredImports = project.getQNamesOfDependencies(compilationUnit);
 			IASNode ast = syntaxTreeRequest.get().getAST();
 			ASTUtils.findUnusedImportProblems(ast, requiredImports, problems);
@@ -285,7 +285,7 @@ public class RealTimeProblemsChecker implements Runnable
 			diagnostics.add(diagnostic);
 		}
 
-		ProblemQuery problemQuery = new ProblemQuery(folderData.configurator.getCompilerProblemSettings());
+		ProblemQuery problemQuery = new ProblemQuery(projectData.configurator.getCompilerProblemSettings());
 		problemQuery.addAll(problems);
 		for (ICompilerProblem problem : problemQuery.getFilteredProblems())
 		{

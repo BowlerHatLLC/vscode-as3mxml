@@ -21,13 +21,11 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
+import com.as3mxml.vscode.project.ActionScriptProjectData;
 import com.as3mxml.vscode.project.ILspProject;
 import com.as3mxml.vscode.project.IProjectConfigStrategy;
-import com.as3mxml.vscode.project.ActionScriptProjectData;
 import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
 import com.as3mxml.vscode.utils.DefinitionTextUtils.DefinitionAsText;
 
@@ -68,89 +66,90 @@ public class ActionScriptProjectManager
     private static final String SDK_LIBRARY_PATH_SIGNATURE_UNIX = "/frameworks/libs/";
     private static final String SDK_LIBRARY_PATH_SIGNATURE_WINDOWS = "\\frameworks\\libs\\";
 
+    private List<ActionScriptProjectData> allProjectData = new ArrayList<>();
     private List<WorkspaceFolder> workspaceFolders = new ArrayList<>();
-    private Map<WorkspaceFolder, ActionScriptProjectData> workspaceFolderToData = new HashMap<>();
     private FileTracker fileTracker;
-    private ActionScriptProjectData fallbackFolderData;
+    private ActionScriptProjectData fallbackProjectData;
     
     public ActionScriptProjectManager(FileTracker fileTracker)
     {
         this.fileTracker = fileTracker;
     }
 
-    public List<WorkspaceFolder> getWorkspaceFolders()
+    public List<ActionScriptProjectData> getAllProjectData()
     {
-        return workspaceFolders;
-    }
-
-    public ActionScriptProjectData getWorkspaceFolderData(WorkspaceFolder folder)
-    {
-        return workspaceFolderToData.get(folder);
+        return allProjectData;
     }
 
     public ActionScriptProjectData addWorkspaceFolder(WorkspaceFolder folder, IProjectConfigStrategy config)
     {
         workspaceFolders.add(folder);
         Path projectRoot = Paths.get(URI.create(folder.getUri()));
-        ActionScriptProjectData folderData = new ActionScriptProjectData(projectRoot, folder, config);
-        workspaceFolderToData.put(folder, folderData);
-        return folderData;
+        ActionScriptProjectData projectData = new ActionScriptProjectData(projectRoot, folder, config);
+        allProjectData.add(projectData);
+        return projectData;
     }
 
     public void removeWorkspaceFolder(WorkspaceFolder folder)
     {
-        if(!workspaceFolderToData.containsKey(folder))
+        if(!workspaceFolders.contains(folder))
         {
             return;
         }
         workspaceFolders.remove(folder);
-        ActionScriptProjectData folderData = workspaceFolderToData.get(folder);
-        workspaceFolderToData.remove(folder);
-        folderData.cleanup();
-    }
-
-    public ActionScriptProjectData getFallbackFolderData()
-    {
-        return fallbackFolderData;
-    }
-
-    public ActionScriptProjectData setFallbackFolderData(Path projectRoot, WorkspaceFolder folder, IProjectConfigStrategy config)
-    {
-        if(fallbackFolderData != null)
+        for(ActionScriptProjectData projectData : allProjectData)
         {
-            if(fallbackFolderData.projectRoot.equals(projectRoot)
-                    && fallbackFolderData.folder.equals(folder)
-                    && fallbackFolderData.config.equals(config))
+            if(!folder.equals(projectData.folder))
             {
-                return fallbackFolderData;
+                continue;
             }
-            fallbackFolderData.cleanup();
-            fallbackFolderData = null;
+            allProjectData.remove(projectData);
+            projectData.cleanup();
         }
-        ActionScriptProjectData folderData = new ActionScriptProjectData(projectRoot, folder, config);
-        fallbackFolderData = folderData;
-        return fallbackFolderData;
     }
 
-    public ActionScriptProjectData getWorkspaceFolderDataForSourceFile(Path path)
+    public ActionScriptProjectData getFallbackProjectData()
+    {
+        return fallbackProjectData;
+    }
+
+    public ActionScriptProjectData setFallbackProjectData(Path projectRoot, WorkspaceFolder folder, IProjectConfigStrategy config)
+    {
+        if(fallbackProjectData != null)
+        {
+            if(fallbackProjectData.projectRoot.equals(projectRoot)
+                    && fallbackProjectData.folder.equals(folder)
+                    && fallbackProjectData.config.equals(config))
+            {
+                return fallbackProjectData;
+            }
+            fallbackProjectData.cleanup();
+            fallbackProjectData = null;
+        }
+        ActionScriptProjectData projectData = new ActionScriptProjectData(projectRoot, folder, config);
+        fallbackProjectData = projectData;
+        return fallbackProjectData;
+    }
+
+    public ActionScriptProjectData getProjectDataForSourceFile(Path path)
     {
         //first try to find the path in an existing project
         ActionScriptProjectData fallback = null;
-        for (ActionScriptProjectData folderData : workspaceFolderToData.values())
+        for (ActionScriptProjectData projectData : allProjectData)
         {
-            ILspProject project = folderData.project;
+            ILspProject project = projectData.project;
             if (project == null)
             {
                 continue;
             }
-            Path projectRoot = folderData.projectRoot;
-            if (projectRoot != null && SourcePathUtils.isInProjectSourcePath(path, project, folderData.configurator))
+            Path projectRoot = projectData.projectRoot;
+            if (projectRoot != null && SourcePathUtils.isInProjectSourcePath(path, project, projectData.configurator))
             {
                 if(path.startsWith(projectRoot))
                 {
                     //if the source path is inside the workspace folder, it's a
                     //perfect match
-                    return folderData;
+                    return projectData;
                 }
                 //if path is in the source path, but not inside the workspace
                 //folder, save it as possible result for later. in other words,
@@ -158,7 +157,7 @@ public class ActionScriptProjectManager
                 //check the other workspaces before using the fallback.
                 if (fallback == null)
                 {
-                    fallback = folderData;
+                    fallback = projectData;
                 }
             }
         }
@@ -170,37 +169,37 @@ public class ActionScriptProjectManager
         }
         //if none of the existing projects worked, try a folder where a project
         //hasn't been created yet
-        for (ActionScriptProjectData folderData : workspaceFolderToData.values())
+        for (ActionScriptProjectData projectData : allProjectData)
         {
-            ILspProject project = folderData.project;
+            ILspProject project = projectData.project;
             if (project != null)
             {
                 //if there's already a project, there's nothing to create later
                 continue;
             }
-            Path projectRoot = folderData.projectRoot;
+            Path projectRoot = projectData.projectRoot;
             if (projectRoot == null)
             {
                 continue;
             }
             if (path.startsWith(projectRoot))
             {
-                return folderData;
+                return projectData;
             }
         }
         //a project where "everything else" goes
-        return fallbackFolderData;
+        return fallbackProjectData;
     }
 
-    public IASNode getOffsetNode(Path path, int currentOffset, ActionScriptProjectData folderData)
+    public IASNode getOffsetNode(Path path, int currentOffset, ActionScriptProjectData projectData)
     {
-        IncludeFileData includeFileData = folderData.includedFiles.get(path.toString());
+        IncludeFileData includeFileData = projectData.includedFiles.get(path.toString());
         if(includeFileData != null)
         {
             path = Paths.get(includeFileData.parentPath);
         }
-        ILspProject project = folderData.project;
-        if (!SourcePathUtils.isInProjectSourcePath(path, project, folderData.configurator))
+        ILspProject project = projectData.project;
+        if (!SourcePathUtils.isInProjectSourcePath(path, project, projectData.configurator))
         {
             //the path must be in the workspace or source-path
             return null;
@@ -222,9 +221,9 @@ public class ActionScriptProjectManager
         return ASTUtils.getContainingNodeIncludingStart(ast, currentOffset);
     }
 
-    public IASNode getEmbeddedActionScriptNodeInMXMLTag(IMXMLTagData tag, Path path, int currentOffset, ActionScriptProjectData folderData)
+    public IASNode getEmbeddedActionScriptNodeInMXMLTag(IMXMLTagData tag, Path path, int currentOffset, ActionScriptProjectData projectData)
     {
-        ILspProject project = folderData.project;
+        ILspProject project = projectData.project;
         IMXMLTagAttributeData attributeData = MXMLDataUtils.getMXMLTagAttributeWithValueAtOffset(tag, currentOffset);
         if (attributeData != null)
         {
@@ -245,7 +244,7 @@ public class ActionScriptProjectManager
             IDefinition attributeDefinition = project.resolveSpecifier(tagDefinition, attributeData.getShortName());
             if (attributeDefinition instanceof IEventDefinition)
             {
-                IASNode offsetNode = getOffsetNode(path, currentOffset, folderData);
+                IASNode offsetNode = getOffsetNode(path, currentOffset, projectData);
                 if (offsetNode instanceof IMXMLClassReferenceNode)
                 {
                     IMXMLClassReferenceNode mxmlNode = (IMXMLClassReferenceNode) offsetNode;
@@ -268,7 +267,7 @@ public class ActionScriptProjectManager
             }
             else
             {
-                IASNode offsetNode = getOffsetNode(path, currentOffset, folderData);
+                IASNode offsetNode = getOffsetNode(path, currentOffset, projectData);
                 if (offsetNode instanceof IMXMLClassReferenceNode)
                 {
                     IMXMLClassReferenceNode mxmlNode = (IMXMLClassReferenceNode) offsetNode;
@@ -313,9 +312,9 @@ public class ActionScriptProjectManager
         return null;
     }
 
-    public MXMLData getMXMLDataForPath(Path path, ActionScriptProjectData folderData)
+    public MXMLData getMXMLDataForPath(Path path, ActionScriptProjectData projectData)
     {
-        IncludeFileData includeFileData = folderData.includedFiles.get(path.toString());
+        IncludeFileData includeFileData = projectData.includedFiles.get(path.toString());
         if(includeFileData != null)
         {
             path = Paths.get(includeFileData.parentPath);
@@ -325,8 +324,8 @@ public class ActionScriptProjectManager
             // don't try to parse ActionScript files as MXML
             return null;
         }
-        ILspProject project = folderData.project;
-        if (!SourcePathUtils.isInProjectSourcePath(path, project, folderData.configurator))
+        ILspProject project = projectData.project;
+        if (!SourcePathUtils.isInProjectSourcePath(path, project, projectData.configurator))
         {
             //the path must be in the workspace or source-path
             return null;
@@ -349,9 +348,9 @@ public class ActionScriptProjectManager
 
     public ICompilationUnit findCompilationUnit(Path pathToFind)
     {
-        for (ActionScriptProjectData folderData : workspaceFolderToData.values())
+        for (ActionScriptProjectData projectData : allProjectData)
         {
-            ILspProject project = folderData.project;
+            ILspProject project = projectData.project;
             if (project == null)
             {
                 continue;
@@ -365,55 +364,48 @@ public class ActionScriptProjectManager
         return null;
     }
 
-    public List<ActionScriptProjectData> getAllWorkspaceFolderDataForSourceFile(Path path)
+    public List<ActionScriptProjectData> getAllProjectDataForSourceFile(Path path)
     {
         List<ActionScriptProjectData> result = new ArrayList<>();
-        for (ActionScriptProjectData folderData : workspaceFolderToData.values())
+        for (ActionScriptProjectData projectData : allProjectData)
         {
-            ILspProject project = folderData.project;
+            ILspProject project = projectData.project;
             if (project == null)
             {
-                Path projectRoot = folderData.projectRoot;
+                Path projectRoot = projectData.projectRoot;
                 if (path.startsWith(projectRoot))
                 {
-                    result.add(folderData);
+                    result.add(projectData);
                 }
             }
-            else if (SourcePathUtils.isInProjectSourcePath(path, project, folderData.configurator))
+            else if (SourcePathUtils.isInProjectSourcePath(path, project, projectData.configurator))
             {
-                result.add(folderData);
+                result.add(projectData);
             }
         }
         return result;
     }
 
-    public List<ActionScriptProjectData> getAllWorkspaceFolderData()
+    public List<ActionScriptProjectData> getAllProjectDataForSWCFile(Path path)
     {
         List<ActionScriptProjectData> result = new ArrayList<>();
-        result.addAll(workspaceFolderToData.values());
-        return result;
-    }
-
-    public List<ActionScriptProjectData> getAllWorkspaceFolderDataForSWCFile(Path path)
-    {
-        List<ActionScriptProjectData> result = new ArrayList<>();
-        for (ActionScriptProjectData folderData : workspaceFolderToData.values())
+        for (ActionScriptProjectData projectData : allProjectData)
         {
-            ILspProject project = folderData.project;
+            ILspProject project = projectData.project;
             if (project == null)
             {
-                Path projectRoot = folderData.projectRoot;
+                Path projectRoot = projectData.projectRoot;
                 if (path.startsWith(projectRoot))
                 {
-                    result.add(folderData);
+                    result.add(projectData);
                 }
             }
             else
             {
-                Configuration configuration = folderData.configurator.getConfiguration();
+                Configuration configuration = projectData.configurator.getConfiguration();
                 if (SourcePathUtils.isInProjectLibraryPathOrExternalLibraryPath(path, project, configuration))
                 {
-                    result.add(folderData);
+                    result.add(projectData);
                 }
             }
         }
@@ -614,11 +606,11 @@ public class ActionScriptProjectManager
         return symbol;
     }
 
-    public void resolveDefinition(IDefinition definition, ActionScriptProjectData folderData, List<Location> result)
+    public void resolveDefinition(IDefinition definition, ActionScriptProjectData projectData, List<Location> result)
     {
         String definitionPath = definition.getSourcePath();
-        String containingSourceFilePath = definition.getContainingSourceFilePath(folderData.project);
-        if(folderData.includedFiles.containsKey(containingSourceFilePath))
+        String containingSourceFilePath = definition.getContainingSourceFilePath(projectData.project);
+        if(projectData.includedFiles.containsKey(containingSourceFilePath))
         {
             definitionPath = containingSourceFilePath;
         }
@@ -640,7 +632,7 @@ public class ActionScriptProjectManager
             {
                 //if it's a framework SWC, we're going to attempt to resolve
                 //the source file 
-                String debugPath = DefinitionUtils.getDefinitionDebugSourceFilePath(definition, folderData.project);
+                String debugPath = DefinitionUtils.getDefinitionDebugSourceFilePath(definition, projectData.project);
                 if (debugPath != null)
                 {
                     definitionPath = debugPath;
@@ -648,7 +640,7 @@ public class ActionScriptProjectManager
             }
             if (definitionPath.endsWith(FILE_EXTENSION_SWC) || definitionPath.endsWith(FILE_EXTENSION_ANE))
             {
-                DefinitionAsText definitionText = DefinitionTextUtils.definitionToTextDocument(definition, folderData.project);
+                DefinitionAsText definitionText = DefinitionTextUtils.definitionToTextDocument(definition, projectData.project);
                 //may be null if definitionToTextDocument() doesn't know how
                 //to parse that type of definition
                 if (definitionText != null)

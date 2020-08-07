@@ -76,14 +76,14 @@ public class DefinitionProvider
 			cancelToken.checkCanceled();
 			return Either.forLeft(Collections.emptyList());
 		}
-        ActionScriptProjectData folderData = actionScriptProjectManager.getWorkspaceFolderDataForSourceFile(path);
-		if(folderData == null || folderData.project == null)
+        ActionScriptProjectData projectData = actionScriptProjectManager.getProjectDataForSourceFile(path);
+		if(projectData == null || projectData.project == null)
 		{
 			cancelToken.checkCanceled();
 			return Either.forLeft(Collections.emptyList());
 		}
 
-        IncludeFileData includeFileData = folderData.includedFiles.get(path.toString());
+        IncludeFileData includeFileData = projectData.includedFiles.get(path.toString());
 		int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position, includeFileData);
 		if (currentOffset == -1)
 		{
@@ -93,14 +93,14 @@ public class DefinitionProvider
         boolean isMXML = textDocument.getUri().endsWith(FILE_EXTENSION_MXML);
         if (isMXML)
         {
-            MXMLData mxmlData = actionScriptProjectManager.getMXMLDataForPath(path, folderData);
+            MXMLData mxmlData = actionScriptProjectManager.getMXMLDataForPath(path, projectData);
             IMXMLTagData offsetTag = MXMLDataUtils.getOffsetMXMLTag(mxmlData, currentOffset);
             if (offsetTag != null)
             {
-                IASNode embeddedNode = actionScriptProjectManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, currentOffset, folderData);
+                IASNode embeddedNode = actionScriptProjectManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, currentOffset, projectData);
                 if (embeddedNode != null)
                 {
-                    List<? extends Location> result = actionScriptDefinition(embeddedNode, folderData);
+                    List<? extends Location> result = actionScriptDefinition(embeddedNode, projectData);
                     cancelToken.checkCanceled();
                     return Either.forLeft(result);
                 }
@@ -108,19 +108,19 @@ public class DefinitionProvider
                 //so that's why we call isMXMLTagValidForCompletion()
                 if (MXMLDataUtils.isMXMLCodeIntelligenceAvailableForTag(offsetTag))
                 {
-                    List<? extends Location> result = mxmlDefinition(offsetTag, currentOffset, folderData);
+                    List<? extends Location> result = mxmlDefinition(offsetTag, currentOffset, projectData);
                     cancelToken.checkCanceled();
                     return Either.forLeft(result);
                 }
             }
         }
-		IASNode offsetNode = actionScriptProjectManager.getOffsetNode(path, currentOffset, folderData);
-		List<? extends Location> result = actionScriptDefinition(offsetNode, folderData);
+		IASNode offsetNode = actionScriptProjectManager.getOffsetNode(path, currentOffset, projectData);
+		List<? extends Location> result = actionScriptDefinition(offsetNode, projectData);
 		cancelToken.checkCanceled();
 		return Either.forLeft(result);
 	}
 
-    private List<? extends Location> actionScriptDefinition(IASNode offsetNode, ActionScriptProjectData folderData)
+    private List<? extends Location> actionScriptDefinition(IASNode offsetNode, ActionScriptProjectData projectData)
     {
         if (offsetNode == null)
         {
@@ -133,7 +133,7 @@ public class DefinitionProvider
         if (offsetNode instanceof IIdentifierNode)
         {
             IIdentifierNode identifierNode = (IIdentifierNode) offsetNode;
-            definition = DefinitionUtils.resolveWithExtras(identifierNode, folderData.project);
+            definition = DefinitionUtils.resolveWithExtras(identifierNode, projectData.project);
         }
 
         if(definition == null
@@ -165,7 +165,7 @@ public class DefinitionProvider
             }
             if (expressionToResolve != null)
             {
-                definition = expressionToResolve.resolve(folderData.project);
+                definition = expressionToResolve.resolve(projectData.project);
             }
         }
 
@@ -195,13 +195,13 @@ public class DefinitionProvider
         }
 
         List<Location> result = new ArrayList<>();
-        actionScriptProjectManager.resolveDefinition(definition, folderData, result);
+        actionScriptProjectManager.resolveDefinition(definition, projectData, result);
         return result;
     }
 
-    private List<? extends Location> mxmlDefinition(IMXMLTagData offsetTag, int currentOffset, ActionScriptProjectData folderData)
+    private List<? extends Location> mxmlDefinition(IMXMLTagData offsetTag, int currentOffset, ActionScriptProjectData projectData)
     {
-        IDefinition definition = MXMLDataUtils.getDefinitionForMXMLNameAtOffset(offsetTag, currentOffset, folderData.project);
+        IDefinition definition = MXMLDataUtils.getDefinitionForMXMLNameAtOffset(offsetTag, currentOffset, projectData.project);
         if (definition == null)
         {
             XMLName offsetXMLName = offsetTag.getXMLName();
@@ -239,7 +239,7 @@ public class DefinitionProvider
         }
 
         List<Location> result = new ArrayList<>();
-        actionScriptProjectManager.resolveDefinition(definition, folderData, result);
+        actionScriptProjectManager.resolveDefinition(definition, projectData, result);
         return result;
     }
 }

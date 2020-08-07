@@ -62,13 +62,13 @@ public class DocumentSymbolProvider
 			cancelToken.checkCanceled();
 			return Collections.emptyList();
 		}
-		ActionScriptProjectData folderData = actionScriptProjectManager.getWorkspaceFolderDataForSourceFile(path);
-		if(folderData == null || folderData.project == null)
+		ActionScriptProjectData projectData = actionScriptProjectManager.getProjectDataForSourceFile(path);
+		if(projectData == null || projectData.project == null)
 		{
 			cancelToken.checkCanceled();
 			return Collections.emptyList();
 		}
-		ILspProject project = folderData.project;
+		ILspProject project = projectData.project;
 
 		ICompilationUnit unit = CompilerProjectUtils.findCompilationUnit(path, project);
 		if (unit == null)

@@ -289,12 +289,12 @@ public class ExecuteCommandProvider
         {
             return;
         }
-        ActionScriptProjectData folderData = actionScriptProjectManager.getWorkspaceFolderDataForSourceFile(path);
-        if(folderData == null || folderData.project == null)
+        ActionScriptProjectData projectData = actionScriptProjectManager.getProjectDataForSourceFile(path);
+        if(projectData == null || projectData.project == null)
         {
             return;
         }
-        ILspProject project = folderData.project;
+        ILspProject project = projectData.project;
         
         ICompilationUnit unit = CompilerProjectUtils.findCompilationUnit(path, project);
         if(unit == null)
@@ -365,8 +365,8 @@ public class ExecuteCommandProvider
                 {
                     return new Object();
                 }
-                ActionScriptProjectData folderData = actionScriptProjectManager.getWorkspaceFolderDataForSourceFile(pathForImport);
-                if(folderData == null || folderData.project == null)
+                ActionScriptProjectData projectData = actionScriptProjectManager.getProjectDataForSourceFile(pathForImport);
+                if(projectData == null || projectData.project == null)
                 {
                     return new Object();
                 }
@@ -379,13 +379,13 @@ public class ExecuteCommandProvider
                 ImportRange importRange = null;
                 if(uri.endsWith(FILE_EXTENSION_MXML))
                 {
-                    MXMLData mxmlData = actionScriptProjectManager.getMXMLDataForPath(pathForImport, folderData);
+                    MXMLData mxmlData = actionScriptProjectManager.getMXMLDataForPath(pathForImport, projectData);
                     IMXMLTagData offsetTag = MXMLDataUtils.getOffsetMXMLTag(mxmlData, currentOffset);
                     importRange = ImportRange.fromOffsetTag(offsetTag, currentOffset);
                 }
                 else
                 {
-                    IASNode offsetNode = actionScriptProjectManager.getOffsetNode(pathForImport, currentOffset, folderData);
+                    IASNode offsetNode = actionScriptProjectManager.getOffsetNode(pathForImport, currentOffset, projectData);
                     importRange = ImportRange.fromOffsetNode(offsetNode);
                 }
                 WorkspaceEdit workspaceEdit = CodeActionsUtils.createWorkspaceEditForAddImport(
