@@ -432,7 +432,7 @@ function startClient()
 				args: args,
 				options:
 				{
-					cwd: primaryWorkspaceFolder ? vscode.workspace.workspaceFolders[0].uri.fsPath : undefined
+					cwd: primaryWorkspaceFolder ? primaryWorkspaceFolder.uri.fsPath : undefined
 				}
 			};
 			isLanguageClientReady = false;
