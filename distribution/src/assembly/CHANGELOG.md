@@ -1,5 +1,15 @@
 # ActionScript & MXML for Visual Studio Code Changelog
 
+## v1.2.2
+
+### Fixed Issues
+
+- Build: Hide Java icon from dock on macOS.
+- Code Actions: Fix null exception for errors/warnings that don't have a code.
+- Definition: Go to definition works for symbols from _.ane_ files (showing a decompiled stub, similar to _.swc_ files).
+- Problems: Fix null exception on file change when real-time problems are disabled.
+- Problems: Fix issue where problems might not be cleared for deleted files.
+
 ## v1.2.1
 
 ### Fixed Issues
