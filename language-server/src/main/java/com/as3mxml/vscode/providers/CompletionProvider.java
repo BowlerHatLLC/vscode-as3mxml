@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.as3mxml.vscode.project.ILspProject;
-import com.as3mxml.vscode.project.WorkspaceFolderData;
+import com.as3mxml.vscode.project.ActionScriptProjectData;
 import com.as3mxml.vscode.utils.ASTUtils;
 import com.as3mxml.vscode.utils.AddImportData;
 import com.as3mxml.vscode.utils.CodeActionsUtils;
@@ -44,7 +44,7 @@ import com.as3mxml.vscode.utils.MXMLNamespace;
 import com.as3mxml.vscode.utils.MXMLNamespaceUtils;
 import com.as3mxml.vscode.utils.ScopeUtils;
 import com.as3mxml.vscode.utils.SourcePathUtils;
-import com.as3mxml.vscode.utils.WorkspaceFolderManager;
+import com.as3mxml.vscode.utils.ActionScriptProjectManager;
 import com.as3mxml.vscode.utils.XmlnsRange;
 
 import org.apache.royale.compiler.common.ASModifier;
@@ -123,16 +123,16 @@ public class CompletionProvider
     private static final String FILE_EXTENSION_MXML = ".mxml";
     private static final String VECTOR_HIDDEN_PREFIX = "Vector$";
 
-    private WorkspaceFolderManager workspaceFolderManager;
+    private ActionScriptProjectManager actionScriptProjectManager;
     private FileTracker fileTracker;
 	private boolean completionSupportsSnippets;
 	private boolean frameworkSDKIsRoyale;
     private List<String> completionTypes = new ArrayList<>();
 
-    public CompletionProvider(WorkspaceFolderManager workspaceFolderManager, FileTracker fileTracker,
+    public CompletionProvider(ActionScriptProjectManager actionScriptProjectManager, FileTracker fileTracker,
         boolean completionSupportsSnippets, boolean frameworkSDKIsRoyale)
 	{
-        this.workspaceFolderManager = workspaceFolderManager;
+        this.actionScriptProjectManager = actionScriptProjectManager;
         this.fileTracker = fileTracker;
 		this.completionSupportsSnippets = completionSupportsSnippets;
 		this.frameworkSDKIsRoyale = frameworkSDKIsRoyale;
@@ -159,7 +159,7 @@ public class CompletionProvider
 				cancelToken.checkCanceled();
 				return Either.forRight(result);
 			}
-			WorkspaceFolderData folderData = workspaceFolderManager.getWorkspaceFolderDataForSourceFile(path);
+			ActionScriptProjectData folderData = actionScriptProjectManager.getWorkspaceFolderDataForSourceFile(path);
 			if(folderData == null || folderData.project == null)
 			{
 				CompletionList result = new CompletionList();
@@ -183,11 +183,11 @@ public class CompletionProvider
             boolean isMXML = textDocument.getUri().endsWith(FILE_EXTENSION_MXML);
             if (isMXML)
             {
-                MXMLData mxmlData = workspaceFolderManager.getMXMLDataForPath(path, folderData);
+                MXMLData mxmlData = actionScriptProjectManager.getMXMLDataForPath(path, folderData);
                 IMXMLTagData offsetTag = MXMLDataUtils.getOffsetMXMLTag(mxmlData, currentOffset);
                 if (offsetTag != null)
                 {
-                    IASNode embeddedNode = workspaceFolderManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, currentOffset, folderData);
+                    IASNode embeddedNode = actionScriptProjectManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, currentOffset, folderData);
                     if (embeddedNode != null)
                     {
                         CompletionList result = actionScriptCompletion(embeddedNode, path, position, currentOffset, folderData);
@@ -229,7 +229,7 @@ public class CompletionProvider
                     return Either.forRight(result);
                 }
             }
-			IASNode offsetNode = workspaceFolderManager.getOffsetNode(path, currentOffset, folderData);
+			IASNode offsetNode = actionScriptProjectManager.getOffsetNode(path, currentOffset, folderData);
 			CompletionList result = actionScriptCompletion(offsetNode, path, position, currentOffset, folderData);
 			cancelToken.checkCanceled();
 			return Either.forRight(result);
@@ -240,7 +240,7 @@ public class CompletionProvider
 		}
 	}
 
-    private CompletionList actionScriptCompletion(IASNode offsetNode, Path path, Position position, int currentOffset, WorkspaceFolderData folderData)
+    private CompletionList actionScriptCompletion(IASNode offsetNode, Path path, Position position, int currentOffset, ActionScriptProjectData folderData)
     {
         CompletionList result = new CompletionList();
         result.setIsIncomplete(false);
@@ -268,7 +268,7 @@ public class CompletionProvider
         if (isMXML)
         {
             IMXMLTagData offsetTag = null;
-            MXMLData mxmlData = workspaceFolderManager.getMXMLDataForPath(path, folderData);
+            MXMLData mxmlData = actionScriptProjectManager.getMXMLDataForPath(path, folderData);
             if (mxmlData != null)
             {
                 offsetTag = MXMLDataUtils.getOffsetMXMLTag(mxmlData, currentOffset);

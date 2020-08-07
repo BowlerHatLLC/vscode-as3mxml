@@ -22,7 +22,7 @@ import java.util.Collections;
 import java.util.Set;
 
 import com.as3mxml.vscode.project.ILspProject;
-import com.as3mxml.vscode.project.WorkspaceFolderData;
+import com.as3mxml.vscode.project.ActionScriptProjectData;
 
 import org.apache.royale.compiler.clients.problems.ProblemQuery;
 import org.apache.royale.compiler.filespecs.IFileSpecification;
@@ -52,11 +52,11 @@ public class RealTimeProblemsChecker implements Runnable
 	public CompilerProblemFilter compilerProblemFilter;
 	public LanguageClient languageClient;
 
-	private WorkspaceFolderData pendingFolderData;
+	private ActionScriptProjectData pendingFolderData;
 	private IFileSpecification pendingFileSpec;
 	private ICompilationUnit pendingCompilationUnit;
 
-	private WorkspaceFolderData folderData;
+	private ActionScriptProjectData folderData;
 	private IFileSpecification fileSpec;
 	private ICompilationUnit compilationUnit;
 	
@@ -72,7 +72,7 @@ public class RealTimeProblemsChecker implements Runnable
 		pendingFileSpec = newFileSpec;
 	}
 
-	public synchronized void setCompilationUnit(ICompilationUnit compilationUnit, IFileSpecification fileSpec, WorkspaceFolderData folderData)
+	public synchronized void setCompilationUnit(ICompilationUnit compilationUnit, IFileSpecification fileSpec, ActionScriptProjectData folderData)
 	{
 		if(this.compilationUnit != null && this.compilationUnit != compilationUnit)
 		{

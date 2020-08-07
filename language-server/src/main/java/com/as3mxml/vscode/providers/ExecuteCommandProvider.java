@@ -29,7 +29,7 @@ import java.util.concurrent.CompletableFuture;
 
 import com.as3mxml.vscode.commands.ICommandConstants;
 import com.as3mxml.vscode.project.ILspProject;
-import com.as3mxml.vscode.project.WorkspaceFolderData;
+import com.as3mxml.vscode.project.ActionScriptProjectData;
 import com.as3mxml.vscode.services.ActionScriptLanguageClient;
 import com.as3mxml.vscode.utils.ASTUtils;
 import com.as3mxml.vscode.utils.CodeActionsUtils;
@@ -39,7 +39,7 @@ import com.as3mxml.vscode.utils.ImportRange;
 import com.as3mxml.vscode.utils.ImportTextEditUtils;
 import com.as3mxml.vscode.utils.LanguageServerCompilerUtils;
 import com.as3mxml.vscode.utils.MXMLDataUtils;
-import com.as3mxml.vscode.utils.WorkspaceFolderManager;
+import com.as3mxml.vscode.utils.ActionScriptProjectManager;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
@@ -64,15 +64,15 @@ public class ExecuteCommandProvider
     private static final String FILE_EXTENSION_MXML = ".mxml";
     private static final String FILE_EXTENSION_AS = ".as";
 
-    private WorkspaceFolderManager workspaceFolderManager;
+    private ActionScriptProjectManager actionScriptProjectManager;
     private FileTracker fileTracker;
 	private Workspace compilerWorkspace;
 	private ActionScriptLanguageClient languageClient;
 
-    public ExecuteCommandProvider(WorkspaceFolderManager workspaceFolderManager, FileTracker fileTracker,
+    public ExecuteCommandProvider(ActionScriptProjectManager actionScriptProjectManager, FileTracker fileTracker,
         Workspace compilerWorkspace, ActionScriptLanguageClient languageClient)
 	{
-        this.workspaceFolderManager = workspaceFolderManager;
+        this.actionScriptProjectManager = actionScriptProjectManager;
         this.fileTracker = fileTracker;
 		this.compilerWorkspace = compilerWorkspace;
 		this.languageClient = languageClient;
@@ -289,7 +289,7 @@ public class ExecuteCommandProvider
         {
             return;
         }
-        WorkspaceFolderData folderData = workspaceFolderManager.getWorkspaceFolderDataForSourceFile(path);
+        ActionScriptProjectData folderData = actionScriptProjectManager.getWorkspaceFolderDataForSourceFile(path);
         if(folderData == null || folderData.project == null)
         {
             return;
@@ -365,7 +365,7 @@ public class ExecuteCommandProvider
                 {
                     return new Object();
                 }
-                WorkspaceFolderData folderData = workspaceFolderManager.getWorkspaceFolderDataForSourceFile(pathForImport);
+                ActionScriptProjectData folderData = actionScriptProjectManager.getWorkspaceFolderDataForSourceFile(pathForImport);
                 if(folderData == null || folderData.project == null)
                 {
                     return new Object();
@@ -379,13 +379,13 @@ public class ExecuteCommandProvider
                 ImportRange importRange = null;
                 if(uri.endsWith(FILE_EXTENSION_MXML))
                 {
-                    MXMLData mxmlData = workspaceFolderManager.getMXMLDataForPath(pathForImport, folderData);
+                    MXMLData mxmlData = actionScriptProjectManager.getMXMLDataForPath(pathForImport, folderData);
                     IMXMLTagData offsetTag = MXMLDataUtils.getOffsetMXMLTag(mxmlData, currentOffset);
                     importRange = ImportRange.fromOffsetTag(offsetTag, currentOffset);
                 }
                 else
                 {
-                    IASNode offsetNode = workspaceFolderManager.getOffsetNode(pathForImport, currentOffset, folderData);
+                    IASNode offsetNode = actionScriptProjectManager.getOffsetNode(pathForImport, currentOffset, folderData);
                     importRange = ImportRange.fromOffsetNode(offsetNode);
                 }
                 WorkspaceEdit workspaceEdit = CodeActionsUtils.createWorkspaceEditForAddImport(

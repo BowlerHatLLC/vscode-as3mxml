@@ -23,7 +23,7 @@ import java.util.List;
 
 import com.as3mxml.vscode.commands.ICommandConstants;
 import com.as3mxml.vscode.project.ILspProject;
-import com.as3mxml.vscode.project.WorkspaceFolderData;
+import com.as3mxml.vscode.project.ActionScriptProjectData;
 import com.as3mxml.vscode.utils.ASTUtils;
 import com.as3mxml.vscode.utils.CodeActionsUtils;
 import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
@@ -33,7 +33,7 @@ import com.as3mxml.vscode.utils.ImportRange;
 import com.as3mxml.vscode.utils.LanguageServerCompilerUtils;
 import com.as3mxml.vscode.utils.MXMLDataUtils;
 import com.as3mxml.vscode.utils.SourcePathUtils;
-import com.as3mxml.vscode.utils.WorkspaceFolderManager;
+import com.as3mxml.vscode.utils.ActionScriptProjectManager;
 import com.google.common.collect.Lists;
 import com.google.gson.JsonObject;
 
@@ -68,12 +68,12 @@ public class CodeActionProvider
 {
     private static final String FILE_EXTENSION_MXML = ".mxml";
 
-    private WorkspaceFolderManager workspaceFolderManager;
+    private ActionScriptProjectManager actionScriptProjectManager;
     private FileTracker fileTracker;
 
-	public CodeActionProvider(WorkspaceFolderManager workspaceFolderManager, FileTracker fileTracker)
+	public CodeActionProvider(ActionScriptProjectManager actionScriptProjectManager, FileTracker fileTracker)
 	{
-        this.workspaceFolderManager = workspaceFolderManager;
+        this.actionScriptProjectManager = actionScriptProjectManager;
         this.fileTracker = fileTracker;
 	}
 
@@ -93,9 +93,9 @@ public class CodeActionProvider
 			cancelToken.checkCanceled();
 			return Collections.emptyList();
 		}
-		WorkspaceFolderData folderData = workspaceFolderManager.getWorkspaceFolderDataForSourceFile(path);
+		ActionScriptProjectData folderData = actionScriptProjectManager.getWorkspaceFolderDataForSourceFile(path);
 		if (folderData == null || folderData.project == null
-                || folderData.equals(workspaceFolderManager.getFallbackFolderData()))
+                || folderData.equals(actionScriptProjectManager.getFallbackFolderData()))
 		{
 			cancelToken.checkCanceled();
 			//the path must be in the workspace or source-path
@@ -146,7 +146,7 @@ public class CodeActionProvider
         codeActions.add(Either.forRight(organizeImports));
     }
 
-    private void findCodeActionsForDiagnostics(Path path, WorkspaceFolderData folderData, List<? extends Diagnostic> diagnostics, List<Either<Command, CodeAction>> codeActions)
+    private void findCodeActionsForDiagnostics(Path path, ActionScriptProjectData folderData, List<? extends Diagnostic> diagnostics, List<Either<Command, CodeAction>> codeActions)
     {
         boolean handledUnimplementedMethods = false;
         for (Diagnostic diagnostic : diagnostics)
@@ -250,15 +250,15 @@ public class CodeActionProvider
         }
     }
 
-    private void createCodeActionForMissingField(Path path, Diagnostic diagnostic, WorkspaceFolderData folderData, List<Either<Command, CodeAction>> codeActions)
+    private void createCodeActionForMissingField(Path path, Diagnostic diagnostic, ActionScriptProjectData folderData, List<Either<Command, CodeAction>> codeActions)
     {
         Position position = diagnostic.getRange().getStart();
         IncludeFileData includeFileData = folderData.includedFiles.get(path.toString());
 		int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position, includeFileData);
-        IASNode offsetNode = workspaceFolderManager.getOffsetNode(path, currentOffset, folderData);
+        IASNode offsetNode = actionScriptProjectManager.getOffsetNode(path, currentOffset, folderData);
         if (offsetNode instanceof IMXMLInstanceNode)
         {
-            MXMLData mxmlData = workspaceFolderManager.getMXMLDataForPath(path, folderData);
+            MXMLData mxmlData = actionScriptProjectManager.getMXMLDataForPath(path, folderData);
             if (mxmlData != null)
             {
                 IMXMLTagData offsetTag = MXMLDataUtils.getOffsetMXMLTag(mxmlData, currentOffset);
@@ -267,7 +267,7 @@ public class CodeActionProvider
                     //workaround for bug in Royale compiler
                     Position newPosition = new Position(position.getLine(), position.getCharacter() + 1);
                     int newOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), newPosition, includeFileData);
-                    offsetNode = workspaceFolderManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, newOffset, folderData);
+                    offsetNode = actionScriptProjectManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, newOffset, folderData);
                 }
             }
         }
@@ -317,15 +317,15 @@ public class CodeActionProvider
         codeActions.add(Either.forRight(codeAction));
     }
     
-    private void createCodeActionForMissingLocalVariable(Path path, Diagnostic diagnostic, WorkspaceFolderData folderData, List<Either<Command, CodeAction>> codeActions)
+    private void createCodeActionForMissingLocalVariable(Path path, Diagnostic diagnostic, ActionScriptProjectData folderData, List<Either<Command, CodeAction>> codeActions)
     {
         Position position = diagnostic.getRange().getStart();
         IncludeFileData includeFileData = folderData.includedFiles.get(path.toString());
 		int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position, includeFileData);
-        IASNode offsetNode = workspaceFolderManager.getOffsetNode(path, currentOffset, folderData);
+        IASNode offsetNode = actionScriptProjectManager.getOffsetNode(path, currentOffset, folderData);
         if (offsetNode instanceof IMXMLInstanceNode)
         {
-            MXMLData mxmlData = workspaceFolderManager.getMXMLDataForPath(path, folderData);
+            MXMLData mxmlData = actionScriptProjectManager.getMXMLDataForPath(path, folderData);
             if (mxmlData != null)
             {
                 IMXMLTagData offsetTag = MXMLDataUtils.getOffsetMXMLTag(mxmlData, currentOffset);
@@ -334,7 +334,7 @@ public class CodeActionProvider
                     //workaround for bug in Royale compiler
                     Position newPosition = new Position(position.getLine(), position.getCharacter() + 1);
                     int newOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), newPosition, includeFileData);
-                    offsetNode = workspaceFolderManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, newOffset, folderData);
+                    offsetNode = actionScriptProjectManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, newOffset, folderData);
                 }
             }
         }
@@ -368,13 +368,13 @@ public class CodeActionProvider
         codeActions.add(Either.forRight(codeAction));
     }
 
-    private void createCodeActionForMissingCatchOrFinally(Path path, Diagnostic diagnostic, WorkspaceFolderData folderData, List<Either<Command, CodeAction>> codeActions)
+    private void createCodeActionForMissingCatchOrFinally(Path path, Diagnostic diagnostic, ActionScriptProjectData folderData, List<Either<Command, CodeAction>> codeActions)
     {
         ILspProject project = folderData.project;
         Position position = diagnostic.getRange().getStart();
         IncludeFileData includeFileData = folderData.includedFiles.get(path.toString());
 		int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position, includeFileData);
-        IASNode offsetNode = workspaceFolderManager.getOffsetNode(path, currentOffset, folderData);
+        IASNode offsetNode = actionScriptProjectManager.getOffsetNode(path, currentOffset, folderData);
         if(!(offsetNode instanceof ITryNode))
         {
             return;
@@ -401,13 +401,13 @@ public class CodeActionProvider
         codeActions.add(Either.forRight(codeAction));
     }
 
-    private void createCodeActionForUnimplementedMethods(Path path, Diagnostic diagnostic, WorkspaceFolderData folderData, List<Either<Command, CodeAction>> codeActions)
+    private void createCodeActionForUnimplementedMethods(Path path, Diagnostic diagnostic, ActionScriptProjectData folderData, List<Either<Command, CodeAction>> codeActions)
     {
         ILspProject project = folderData.project;
         Position position = diagnostic.getRange().getStart();
         IncludeFileData includeFileData = folderData.includedFiles.get(path.toString());
 		int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position, includeFileData);
-        IASNode offsetNode = workspaceFolderManager.getOffsetNode(path, currentOffset, folderData);
+        IASNode offsetNode = actionScriptProjectManager.getOffsetNode(path, currentOffset, folderData);
         if (offsetNode == null)
         {
             return;
@@ -448,20 +448,20 @@ public class CodeActionProvider
         }
     }
 
-    private void createCodeActionForMissingMethod(Path path, Diagnostic diagnostic, WorkspaceFolderData folderData, List<Either<Command, CodeAction>> codeActions)
+    private void createCodeActionForMissingMethod(Path path, Diagnostic diagnostic, ActionScriptProjectData folderData, List<Either<Command, CodeAction>> codeActions)
     {
         ILspProject project = folderData.project;
         Position position = diagnostic.getRange().getStart();
         IncludeFileData includeFileData = folderData.includedFiles.get(path.toString());
 		int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position, includeFileData);
-        IASNode offsetNode = workspaceFolderManager.getOffsetNode(path, currentOffset, folderData);
+        IASNode offsetNode = actionScriptProjectManager.getOffsetNode(path, currentOffset, folderData);
         if (offsetNode == null)
         {
             return;
         }
         if (offsetNode instanceof IMXMLInstanceNode)
         {
-            MXMLData mxmlData = workspaceFolderManager.getMXMLDataForPath(path, folderData);
+            MXMLData mxmlData = actionScriptProjectManager.getMXMLDataForPath(path, folderData);
             if (mxmlData != null)
             {
                 IMXMLTagData offsetTag = MXMLDataUtils.getOffsetMXMLTag(mxmlData, currentOffset);
@@ -470,7 +470,7 @@ public class CodeActionProvider
                     //workaround for bug in Royale compiler
                     Position newPosition = new Position(position.getLine(), position.getCharacter() + 1);
                     int newOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), newPosition, includeFileData);
-                    offsetNode = workspaceFolderManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, newOffset, folderData);
+                    offsetNode = actionScriptProjectManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, newOffset, folderData);
                 }
             }
         }
@@ -519,20 +519,20 @@ public class CodeActionProvider
         codeActions.add(Either.forRight(codeAction));
     }
 
-    private void createCodeActionForMissingEventListener(Path path, Diagnostic diagnostic, WorkspaceFolderData folderData, List<Either<Command, CodeAction>> codeActions)
+    private void createCodeActionForMissingEventListener(Path path, Diagnostic diagnostic, ActionScriptProjectData folderData, List<Either<Command, CodeAction>> codeActions)
     {
         ILspProject project = folderData.project;
         Position position = diagnostic.getRange().getStart();
         IncludeFileData includeFileData = folderData.includedFiles.get(path.toString());
 		int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position, includeFileData);
-        IASNode offsetNode = workspaceFolderManager.getOffsetNode(path, currentOffset, folderData);
+        IASNode offsetNode = actionScriptProjectManager.getOffsetNode(path, currentOffset, folderData);
         if (offsetNode == null)
         {
             return;
         }
         if (offsetNode instanceof IMXMLInstanceNode)
         {
-            MXMLData mxmlData = workspaceFolderManager.getMXMLDataForPath(path, folderData);
+            MXMLData mxmlData = actionScriptProjectManager.getMXMLDataForPath(path, folderData);
             if (mxmlData != null)
             {
                 IMXMLTagData offsetTag = MXMLDataUtils.getOffsetMXMLTag(mxmlData, currentOffset);
@@ -541,7 +541,7 @@ public class CodeActionProvider
                     //workaround for bug in Royale compiler
                     Position newPosition = new Position(position.getLine(), position.getCharacter() + 1);
                     int newOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), newPosition, includeFileData);
-                    offsetNode = workspaceFolderManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, newOffset, folderData);
+                    offsetNode = actionScriptProjectManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, newOffset, folderData);
                 }
             }
         }
@@ -623,18 +623,18 @@ public class CodeActionProvider
         codeActions.add(Either.forRight(codeAction));
     }
 
-    private void createCodeActionsForImport(Path path, Diagnostic diagnostic, WorkspaceFolderData folderData, List<Either<Command, CodeAction>> codeActions)
+    private void createCodeActionsForImport(Path path, Diagnostic diagnostic, ActionScriptProjectData folderData, List<Either<Command, CodeAction>> codeActions)
     {
         ILspProject project = folderData.project;
         Position position = diagnostic.getRange().getStart();
         IncludeFileData includeFileData = folderData.includedFiles.get(path.toString());
 		int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position, includeFileData);
-        IASNode offsetNode = workspaceFolderManager.getOffsetNode(path, currentOffset, folderData);
+        IASNode offsetNode = actionScriptProjectManager.getOffsetNode(path, currentOffset, folderData);
         IMXMLTagData offsetTag = null;
         boolean isMXML = path.toUri().toString().endsWith(FILE_EXTENSION_MXML);
         if (isMXML)
         {
-            MXMLData mxmlData = workspaceFolderManager.getMXMLDataForPath(path, folderData);
+            MXMLData mxmlData = actionScriptProjectManager.getMXMLDataForPath(path, folderData);
             if (mxmlData != null)
             {
                 offsetTag = MXMLDataUtils.getOffsetMXMLTag(mxmlData, currentOffset);
@@ -645,7 +645,7 @@ public class CodeActionProvider
             //workaround for bug in Royale compiler
             Position newPosition = new Position(position.getLine(), position.getCharacter() + 1);
             int newOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), newPosition, includeFileData);
-            offsetNode = workspaceFolderManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, newOffset, folderData);
+            offsetNode = actionScriptProjectManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, newOffset, folderData);
         }
         if (offsetNode == null || !(offsetNode instanceof IIdentifierNode))
         {
@@ -687,7 +687,7 @@ public class CodeActionProvider
         }
     }
 
-    private void createCodeActionsForUnusedImport(Path path, Diagnostic diagnostic, WorkspaceFolderData folderData, List<Either<Command, CodeAction>> codeActions)
+    private void createCodeActionsForUnusedImport(Path path, Diagnostic diagnostic, ActionScriptProjectData folderData, List<Either<Command, CodeAction>> codeActions)
     {
         String fileText = fileTracker.getText(path);
         if(fileText == null)

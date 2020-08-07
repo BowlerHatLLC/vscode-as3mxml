@@ -22,10 +22,10 @@ import java.util.Collections;
 import java.util.List;
 
 import com.as3mxml.vscode.project.ILspProject;
-import com.as3mxml.vscode.project.WorkspaceFolderData;
+import com.as3mxml.vscode.project.ActionScriptProjectData;
 import com.as3mxml.vscode.utils.CompilerProjectUtils;
 import com.as3mxml.vscode.utils.LanguageServerCompilerUtils;
-import com.as3mxml.vscode.utils.WorkspaceFolderManager;
+import com.as3mxml.vscode.utils.ActionScriptProjectManager;
 
 import org.apache.royale.compiler.definitions.IDefinition;
 import org.apache.royale.compiler.definitions.IFunctionDefinition;
@@ -43,12 +43,12 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either;
 
 public class DocumentSymbolProvider
 {
-	private WorkspaceFolderManager workspaceFolderManager;
+	private ActionScriptProjectManager actionScriptProjectManager;
 	private boolean hierarchicalDocumentSymbolSupport;
 
-	public DocumentSymbolProvider(WorkspaceFolderManager workspaceFolderManager, boolean hierarchicalDocumentSymbolSupport)
+	public DocumentSymbolProvider(ActionScriptProjectManager actionScriptProjectManager, boolean hierarchicalDocumentSymbolSupport)
 	{
-		this.workspaceFolderManager = workspaceFolderManager;
+		this.actionScriptProjectManager = actionScriptProjectManager;
 		this.hierarchicalDocumentSymbolSupport = hierarchicalDocumentSymbolSupport;
 	}
 
@@ -62,7 +62,7 @@ public class DocumentSymbolProvider
 			cancelToken.checkCanceled();
 			return Collections.emptyList();
 		}
-		WorkspaceFolderData folderData = workspaceFolderManager.getWorkspaceFolderDataForSourceFile(path);
+		ActionScriptProjectData folderData = actionScriptProjectManager.getWorkspaceFolderDataForSourceFile(path);
 		if(folderData == null || folderData.project == null)
 		{
 			cancelToken.checkCanceled();
@@ -134,7 +134,7 @@ public class DocumentSymbolProvider
                 IASScope typeScope = typeDefinition.getContainedScope();
                 if (!definition.isImplicit())
                 {
-                    SymbolInformation typeSymbol = workspaceFolderManager.definitionToSymbolInformation(typeDefinition, project);
+                    SymbolInformation typeSymbol = actionScriptProjectManager.definitionToSymbolInformation(typeDefinition, project);
                     result.add(typeSymbol);
                 }
                 scopeToSymbolInformation(typeScope, project, result);
@@ -147,7 +147,7 @@ public class DocumentSymbolProvider
                 {
                     continue;
                 }
-                SymbolInformation localSymbol = workspaceFolderManager.definitionToSymbolInformation(definition, project);
+                SymbolInformation localSymbol = actionScriptProjectManager.definitionToSymbolInformation(definition, project);
                 if (localSymbol != null)
                 {
                     result.add(localSymbol);
@@ -180,7 +180,7 @@ public class DocumentSymbolProvider
                 }
                 else
                 {
-                    DocumentSymbol typeSymbol = workspaceFolderManager.definitionToDocumentSymbol(typeDefinition, project);
+                    DocumentSymbol typeSymbol = actionScriptProjectManager.definitionToDocumentSymbol(typeDefinition, project);
                     if (typeSymbol == null)
                     {
                         result.addAll(childSymbols);
@@ -200,7 +200,7 @@ public class DocumentSymbolProvider
                 {
                     continue;
                 }
-                DocumentSymbol localSymbol = workspaceFolderManager.definitionToDocumentSymbol(definition, project);
+                DocumentSymbol localSymbol = actionScriptProjectManager.definitionToDocumentSymbol(definition, project);
                 if (localSymbol != null)
                 {
                     result.add(localSymbol);

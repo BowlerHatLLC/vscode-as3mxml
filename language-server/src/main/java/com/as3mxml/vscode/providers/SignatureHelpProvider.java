@@ -21,7 +21,7 @@ import java.util.Collections;
 import java.util.List;
 
 import com.as3mxml.vscode.project.ILspProject;
-import com.as3mxml.vscode.project.WorkspaceFolderData;
+import com.as3mxml.vscode.project.ActionScriptProjectData;
 import com.as3mxml.vscode.utils.ASTUtils;
 import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
 import com.as3mxml.vscode.utils.DefinitionDocumentationUtils;
@@ -29,7 +29,7 @@ import com.as3mxml.vscode.utils.DefinitionTextUtils;
 import com.as3mxml.vscode.utils.FileTracker;
 import com.as3mxml.vscode.utils.LanguageServerCompilerUtils;
 import com.as3mxml.vscode.utils.MXMLDataUtils;
-import com.as3mxml.vscode.utils.WorkspaceFolderManager;
+import com.as3mxml.vscode.utils.ActionScriptProjectManager;
 
 import org.apache.royale.compiler.constants.IASKeywordConstants;
 import org.apache.royale.compiler.definitions.IClassDefinition;
@@ -57,12 +57,12 @@ public class SignatureHelpProvider
 {
     private static final String FILE_EXTENSION_MXML = ".mxml";
 
-	private WorkspaceFolderManager workspaceFolderManager;
+	private ActionScriptProjectManager actionScriptProjectManager;
 	private FileTracker fileTracker;
 
-	public SignatureHelpProvider(WorkspaceFolderManager workspaceFolderManager, FileTracker fileTracker)
+	public SignatureHelpProvider(ActionScriptProjectManager actionScriptProjectManager, FileTracker fileTracker)
 	{
-		this.workspaceFolderManager = workspaceFolderManager;
+		this.actionScriptProjectManager = actionScriptProjectManager;
 		this.fileTracker = fileTracker;
 	}
 
@@ -77,7 +77,7 @@ public class SignatureHelpProvider
 			cancelToken.checkCanceled();
 			return new SignatureHelp(Collections.emptyList(), -1, -1);
 		}
-		WorkspaceFolderData folderData = workspaceFolderManager.getWorkspaceFolderDataForSourceFile(path);
+		ActionScriptProjectData folderData = actionScriptProjectManager.getWorkspaceFolderDataForSourceFile(path);
 		if(folderData == null || folderData.project == null)
 		{
 			cancelToken.checkCanceled();
@@ -96,11 +96,11 @@ public class SignatureHelpProvider
         boolean isMXML = textDocument.getUri().endsWith(FILE_EXTENSION_MXML);
         if (isMXML)
         {
-			MXMLData mxmlData = workspaceFolderManager.getMXMLDataForPath(path, folderData);
+			MXMLData mxmlData = actionScriptProjectManager.getMXMLDataForPath(path, folderData);
 			IMXMLTagData offsetTag = MXMLDataUtils.getOffsetMXMLTag(mxmlData, currentOffset);
 			if (offsetTag != null)
 			{
-				offsetNode = workspaceFolderManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, currentOffset, folderData);
+				offsetNode = actionScriptProjectManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, currentOffset, folderData);
 				if (offsetNode != null)
 				{
 					IASNode containingNode = ASTUtils.getContainingNodeIncludingStart(offsetNode, currentOffset);
@@ -113,7 +113,7 @@ public class SignatureHelpProvider
 		}
 		if (offsetNode == null)
 		{
-			offsetNode = workspaceFolderManager.getOffsetNode(path, currentOffset, folderData);
+			offsetNode = actionScriptProjectManager.getOffsetNode(path, currentOffset, folderData);
 		}
 		if (offsetNode == null)
 		{

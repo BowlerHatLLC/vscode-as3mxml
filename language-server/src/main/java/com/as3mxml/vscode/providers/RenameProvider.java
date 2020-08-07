@@ -22,14 +22,14 @@ import java.util.HashMap;
 import java.util.List;
 
 import com.as3mxml.vscode.project.ILspProject;
-import com.as3mxml.vscode.project.WorkspaceFolderData;
+import com.as3mxml.vscode.project.ActionScriptProjectData;
 import com.as3mxml.vscode.utils.ASTUtils;
 import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
 import com.as3mxml.vscode.utils.DefinitionUtils;
 import com.as3mxml.vscode.utils.FileTracker;
 import com.as3mxml.vscode.utils.LanguageServerCompilerUtils;
 import com.as3mxml.vscode.utils.MXMLDataUtils;
-import com.as3mxml.vscode.utils.WorkspaceFolderManager;
+import com.as3mxml.vscode.utils.ActionScriptProjectManager;
 import com.google.common.io.Files;
 
 import org.apache.royale.compiler.common.ISourceLocation;
@@ -68,12 +68,12 @@ public class RenameProvider
     private static final String FILE_EXTENSION_MXML = ".mxml";
     private static final String FILE_EXTENSION_SWC = ".swc";
 
-    private WorkspaceFolderManager workspaceFolderManager;
+    private ActionScriptProjectManager actionScriptProjectManager;
     private FileTracker fileTracker;
 
-	public RenameProvider(WorkspaceFolderManager workspaceFolderManager, FileTracker fileTracker)
+	public RenameProvider(ActionScriptProjectManager actionScriptProjectManager, FileTracker fileTracker)
 	{
-        this.workspaceFolderManager = workspaceFolderManager;
+        this.actionScriptProjectManager = actionScriptProjectManager;
         this.fileTracker = fileTracker;
 	}
 
@@ -88,9 +88,9 @@ public class RenameProvider
 			cancelToken.checkCanceled();
 			return new WorkspaceEdit(new HashMap<>());
 		}
-		WorkspaceFolderData folderData = workspaceFolderManager.getWorkspaceFolderDataForSourceFile(path);
+		ActionScriptProjectData folderData = actionScriptProjectManager.getWorkspaceFolderDataForSourceFile(path);
         if(folderData == null || folderData.project == null
-                || folderData.equals(workspaceFolderManager.getFallbackFolderData()))
+                || folderData.equals(actionScriptProjectManager.getFallbackFolderData()))
 		{
 			cancelToken.checkCanceled();
 			return new WorkspaceEdit(new HashMap<>());
@@ -107,11 +107,11 @@ public class RenameProvider
         boolean isMXML = textDocument.getUri().endsWith(FILE_EXTENSION_MXML);
         if (isMXML)
         {
-            MXMLData mxmlData = workspaceFolderManager.getMXMLDataForPath(path, folderData);
+            MXMLData mxmlData = actionScriptProjectManager.getMXMLDataForPath(path, folderData);
             IMXMLTagData offsetTag = MXMLDataUtils.getOffsetMXMLTag(mxmlData, currentOffset);
             if (offsetTag != null)
             {
-                IASNode embeddedNode = workspaceFolderManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, currentOffset, folderData);
+                IASNode embeddedNode = actionScriptProjectManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, currentOffset, folderData);
                 if (embeddedNode != null)
                 {
                     WorkspaceEdit result = actionScriptRename(embeddedNode, params.getNewName(), project);
@@ -128,7 +128,7 @@ public class RenameProvider
                 }
             }
         }
-		IASNode offsetNode = workspaceFolderManager.getOffsetNode(path, currentOffset, folderData);
+		IASNode offsetNode = actionScriptProjectManager.getOffsetNode(path, currentOffset, folderData);
 		WorkspaceEdit result = actionScriptRename(offsetNode, params.getNewName(), project);
 		cancelToken.checkCanceled();
 		return result;

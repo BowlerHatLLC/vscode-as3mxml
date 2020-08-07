@@ -23,8 +23,8 @@ import java.util.List;
 import java.util.Set;
 
 import com.as3mxml.vscode.project.ILspProject;
-import com.as3mxml.vscode.project.WorkspaceFolderData;
-import com.as3mxml.vscode.utils.WorkspaceFolderManager;
+import com.as3mxml.vscode.project.ActionScriptProjectData;
+import com.as3mxml.vscode.utils.ActionScriptProjectManager;
 
 import org.apache.royale.compiler.definitions.IDefinition;
 import org.apache.royale.compiler.definitions.IFunctionDefinition;
@@ -42,11 +42,11 @@ import org.eclipse.lsp4j.jsonrpc.CancelChecker;
 
 public class WorkspaceSymbolProvider
 {
-	private WorkspaceFolderManager workspaceFolderManager;
+	private ActionScriptProjectManager actionScriptProjectManager;
 
-	public WorkspaceSymbolProvider(WorkspaceFolderManager workspaceFolderManager)
+	public WorkspaceSymbolProvider(ActionScriptProjectManager actionScriptProjectManager)
 	{
-		this.workspaceFolderManager = workspaceFolderManager;
+		this.actionScriptProjectManager = actionScriptProjectManager;
 	}
 
 	public List<? extends SymbolInformation> workspaceSymbol(WorkspaceSymbolParams params, CancelChecker cancelToken)
@@ -71,9 +71,9 @@ public class WorkspaceSymbolProvider
 		{
 			queries.add(currentQuery.toString().toLowerCase());
 		}
-		for (WorkspaceFolder folder : workspaceFolderManager.getWorkspaceFolders())
+		for (WorkspaceFolder folder : actionScriptProjectManager.getWorkspaceFolders())
 		{
-			WorkspaceFolderData folderData = workspaceFolderManager.getWorkspaceFolderData(folder);
+			ActionScriptProjectData folderData = actionScriptProjectManager.getWorkspaceFolderData(folder);
 			ILspProject project = folderData.project;
 			if (project == null)
 			{
@@ -115,7 +115,7 @@ public class WorkspaceSymbolProvider
 							//folders in the workspace
 							continue;
 						}
-						SymbolInformation symbol = workspaceFolderManager.definitionToSymbolInformation(definition, project);
+						SymbolInformation symbol = actionScriptProjectManager.definitionToSymbolInformation(definition, project);
 						if (symbol != null)
 						{
 							qualifiedNames.add(qualifiedName);
@@ -169,7 +169,7 @@ public class WorkspaceSymbolProvider
                 ITypeDefinition typeDefinition = (ITypeDefinition) definition;
                 if (!definition.isImplicit() && matchesQueries(queries, qualifiedName))
                 {
-                    SymbolInformation symbol = workspaceFolderManager.definitionToSymbolInformation(typeDefinition, project);
+                    SymbolInformation symbol = actionScriptProjectManager.definitionToSymbolInformation(typeDefinition, project);
                     if (symbol != null)
                     {
                         result.add(symbol);
@@ -189,7 +189,7 @@ public class WorkspaceSymbolProvider
                     continue;
                 }
                 IFunctionDefinition functionDefinition = (IFunctionDefinition) definition;
-                SymbolInformation symbol = workspaceFolderManager.definitionToSymbolInformation(functionDefinition, project);
+                SymbolInformation symbol = actionScriptProjectManager.definitionToSymbolInformation(functionDefinition, project);
                 if (symbol != null)
                 {
                     result.add(symbol);
@@ -206,7 +206,7 @@ public class WorkspaceSymbolProvider
                     continue;
                 }
                 IVariableDefinition variableDefinition = (IVariableDefinition) definition;
-                SymbolInformation symbol = workspaceFolderManager.definitionToSymbolInformation(variableDefinition, project);
+                SymbolInformation symbol = actionScriptProjectManager.definitionToSymbolInformation(variableDefinition, project);
                 if (symbol != null)
                 {
                     result.add(symbol);

@@ -26,14 +26,16 @@ import com.as3mxml.vscode.utils.ProblemTracker;
 import org.apache.royale.compiler.internal.projects.RoyaleProjectConfigurator;
 import org.eclipse.lsp4j.WorkspaceFolder;
 
-public class WorkspaceFolderData
+public class ActionScriptProjectData
 {
-	public WorkspaceFolderData(WorkspaceFolder folder, IProjectConfigStrategy config)
+	public ActionScriptProjectData(Path projectRoot, WorkspaceFolder folder, IProjectConfigStrategy config)
 	{
+		this.projectRoot = projectRoot;
 		this.folder = folder;
 		this.config = config;
 	}
 
+	public Path projectRoot;
 	public WorkspaceFolder folder;
 	public IProjectConfigStrategy config;
 	public ProjectOptions options;

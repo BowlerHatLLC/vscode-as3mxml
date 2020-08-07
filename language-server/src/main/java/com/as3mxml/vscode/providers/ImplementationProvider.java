@@ -22,13 +22,13 @@ import java.util.Collections;
 import java.util.List;
 
 import com.as3mxml.vscode.project.ILspProject;
-import com.as3mxml.vscode.project.WorkspaceFolderData;
+import com.as3mxml.vscode.project.ActionScriptProjectData;
 import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
 import com.as3mxml.vscode.utils.DefinitionUtils;
 import com.as3mxml.vscode.utils.FileTracker;
 import com.as3mxml.vscode.utils.LanguageServerCompilerUtils;
 import com.as3mxml.vscode.utils.MXMLDataUtils;
-import com.as3mxml.vscode.utils.WorkspaceFolderManager;
+import com.as3mxml.vscode.utils.ActionScriptProjectManager;
 
 import org.apache.royale.compiler.definitions.IClassDefinition;
 import org.apache.royale.compiler.definitions.IDefinition;
@@ -51,12 +51,12 @@ public class ImplementationProvider
 {
     private static final String FILE_EXTENSION_MXML = ".mxml";
 
-    private WorkspaceFolderManager workspaceFolderManager;
+    private ActionScriptProjectManager actionScriptProjectManager;
     private FileTracker fileTracker;
 
-	public ImplementationProvider(WorkspaceFolderManager workspaceFolderManager, FileTracker fileTracker)
+	public ImplementationProvider(ActionScriptProjectManager actionScriptProjectManager, FileTracker fileTracker)
 	{
-        this.workspaceFolderManager = workspaceFolderManager;
+        this.actionScriptProjectManager = actionScriptProjectManager;
         this.fileTracker = fileTracker;
 	}
 
@@ -71,7 +71,7 @@ public class ImplementationProvider
 			cancelToken.checkCanceled();
 			return Either.forLeft(Collections.emptyList());
 		}
-		WorkspaceFolderData folderData = workspaceFolderManager.getWorkspaceFolderDataForSourceFile(path);
+		ActionScriptProjectData folderData = actionScriptProjectManager.getWorkspaceFolderDataForSourceFile(path);
 		if(folderData == null || folderData.project == null)
 		{
 			cancelToken.checkCanceled();
@@ -89,11 +89,11 @@ public class ImplementationProvider
         boolean isMXML = textDocument.getUri().endsWith(FILE_EXTENSION_MXML);
         if (isMXML)
         {
-            MXMLData mxmlData = workspaceFolderManager.getMXMLDataForPath(path, folderData);
+            MXMLData mxmlData = actionScriptProjectManager.getMXMLDataForPath(path, folderData);
             IMXMLTagData offsetTag = MXMLDataUtils.getOffsetMXMLTag(mxmlData, currentOffset);
             if (offsetTag != null)
             {
-                IASNode embeddedNode = workspaceFolderManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, currentOffset, folderData);
+                IASNode embeddedNode = actionScriptProjectManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, currentOffset, folderData);
                 if (embeddedNode != null)
                 {
                     List<? extends Location> result = actionScriptImplementation(embeddedNode, project);
@@ -102,7 +102,7 @@ public class ImplementationProvider
                 }
             }
         }
-		IASNode offsetNode = workspaceFolderManager.getOffsetNode(path, currentOffset, folderData);
+		IASNode offsetNode = actionScriptProjectManager.getOffsetNode(path, currentOffset, folderData);
 		List<? extends Location> result = actionScriptImplementation(offsetNode, project);
 		cancelToken.checkCanceled();
 		return Either.forLeft(result);
@@ -167,7 +167,7 @@ public class ImplementationProvider
                 IClassDefinition classDefinition = (IClassDefinition) definition;
                 if (DefinitionUtils.isImplementationOfInterface(classDefinition, interfaceDefinition, project))
                 {
-                    Location location = workspaceFolderManager.getLocationFromDefinition(classDefinition, project);
+                    Location location = actionScriptProjectManager.getLocationFromDefinition(classDefinition, project);
                     if (location != null)
                     {
                         result.add(location);

@@ -19,7 +19,7 @@ import java.nio.file.Path;
 import java.util.Collections;
 
 import com.as3mxml.vscode.project.ILspProject;
-import com.as3mxml.vscode.project.WorkspaceFolderData;
+import com.as3mxml.vscode.project.ActionScriptProjectData;
 import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
 import com.as3mxml.vscode.utils.DefinitionDocumentationUtils;
 import com.as3mxml.vscode.utils.DefinitionTextUtils;
@@ -27,7 +27,7 @@ import com.as3mxml.vscode.utils.DefinitionUtils;
 import com.as3mxml.vscode.utils.FileTracker;
 import com.as3mxml.vscode.utils.LanguageServerCompilerUtils;
 import com.as3mxml.vscode.utils.MXMLDataUtils;
-import com.as3mxml.vscode.utils.WorkspaceFolderManager;
+import com.as3mxml.vscode.utils.ActionScriptProjectManager;
 
 import org.apache.royale.compiler.definitions.IClassDefinition;
 import org.apache.royale.compiler.definitions.IDefinition;
@@ -55,12 +55,12 @@ public class HoverProvider
     private static final String MARKED_STRING_LANGUAGE_XML = "xml";
     private static final String FILE_EXTENSION_MXML = ".mxml";
 
-    private WorkspaceFolderManager workspaceFolderManager;
+    private ActionScriptProjectManager actionScriptProjectManager;
     private FileTracker fileTracker;
 
-	public HoverProvider(WorkspaceFolderManager workspaceFolderManager, FileTracker fileTracker)
+	public HoverProvider(ActionScriptProjectManager actionScriptProjectManager, FileTracker fileTracker)
 	{
-        this.workspaceFolderManager = workspaceFolderManager;
+        this.actionScriptProjectManager = actionScriptProjectManager;
         this.fileTracker = fileTracker;
 	}
 
@@ -75,7 +75,7 @@ public class HoverProvider
 			cancelToken.checkCanceled();
 			return new Hover(Collections.emptyList(), null);
 		}
-		WorkspaceFolderData folderData = workspaceFolderManager.getWorkspaceFolderDataForSourceFile(path);
+		ActionScriptProjectData folderData = actionScriptProjectManager.getWorkspaceFolderDataForSourceFile(path);
 		if(folderData == null || folderData.project == null)
 		{
 			cancelToken.checkCanceled();
@@ -92,11 +92,11 @@ public class HoverProvider
         boolean isMXML = textDocument.getUri().endsWith(FILE_EXTENSION_MXML);
         if (isMXML)
         {
-            MXMLData mxmlData = workspaceFolderManager.getMXMLDataForPath(path, folderData);
+            MXMLData mxmlData = actionScriptProjectManager.getMXMLDataForPath(path, folderData);
             IMXMLTagData offsetTag = MXMLDataUtils.getOffsetMXMLTag(mxmlData, currentOffset);
             if (offsetTag != null)
             {
-                IASNode embeddedNode = workspaceFolderManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, currentOffset, folderData);
+                IASNode embeddedNode = actionScriptProjectManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, currentOffset, folderData);
                 if (embeddedNode != null)
                 {
                     Hover result = actionScriptHover(embeddedNode, folderData.project);
@@ -113,7 +113,7 @@ public class HoverProvider
                 }
             }
         }
-		IASNode offsetNode = workspaceFolderManager.getOffsetNode(path, currentOffset, folderData);
+		IASNode offsetNode = actionScriptProjectManager.getOffsetNode(path, currentOffset, folderData);
 		Hover result = actionScriptHover(offsetNode, folderData.project);
 		cancelToken.checkCanceled();
 		return result;
