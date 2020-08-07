@@ -9,6 +9,8 @@
 - Definition: Go to definition works for symbols from _.ane_ files (showing a decompiled stub, similar to _.swc_ files).
 - Problems: Fix null exception on file change when real-time problems are disabled.
 - Problems: Fix issue where problems might not be cleared for deleted files.
+- Tasks: Fix exception when searching for Adobe Animate on Windows, and no Adobe software is installed.
+- Tasks: Fix error _The task provider for "actionscript" tasks unexpectedly provided a task of type "animate"._
 
 ## v1.2.1
 
