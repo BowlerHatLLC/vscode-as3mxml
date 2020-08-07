@@ -57,6 +57,10 @@ export default function findAnimate(): string
 		let animatePath: string = null;
 		ADOBE_FOLDERS_WINDOWS.find((folderPath) =>
 		{
+			if(!fs.existsSync(folderPath) || !fs.statSync(folderPath).isDirectory())
+			{
+				return false;
+			}
 			let files = fs.readdirSync(folderPath);
 			files.find((filePath) =>
 			{
