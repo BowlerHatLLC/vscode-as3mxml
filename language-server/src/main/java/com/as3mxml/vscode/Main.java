@@ -20,6 +20,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.nio.file.Path;
 
 import com.as3mxml.vscode.project.ASConfigProjectConfigStrategy;
 import com.as3mxml.vscode.project.IProjectConfigStrategy;
@@ -106,9 +107,9 @@ public class Main
 
     private static class ASConfigProjectConfigStrategyFactory implements IProjectConfigStrategyFactory
     {
-        public IProjectConfigStrategy create(WorkspaceFolder folder)
+        public IProjectConfigStrategy create(Path projectPath, WorkspaceFolder workspaceFolder)
         {
-            return new ASConfigProjectConfigStrategy(folder);
+            return new ASConfigProjectConfigStrategy(projectPath, workspaceFolder);
         }
     }
 }

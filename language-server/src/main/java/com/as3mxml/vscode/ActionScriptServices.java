@@ -246,7 +246,8 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
 
     public void addWorkspaceFolder(WorkspaceFolder folder)
     {
-        IProjectConfigStrategy config = projectConfigStrategyFactory.create(folder);
+        Path folderPath = Paths.get(URI.create(folder.getUri()));
+        IProjectConfigStrategy config = projectConfigStrategyFactory.create(folderPath, folder);
         WorkspaceFolderData folderData = workspaceFolderManager.addWorkspaceFolder(folder, config);
         folderData.codeProblemTracker.setLanguageClient(languageClient);
         folderData.configProblemTracker.setLanguageClient(languageClient);

@@ -17,7 +17,6 @@ package com.as3mxml.vscode.project;
 
 import java.io.File;
 import java.io.InputStream;
-import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -53,16 +52,17 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy
     private static final String CONFIG_ROYALE = "royale";
     private static final String CONFIG_FLEX = "flex";
 
+    private WorkspaceFolder workspaceFolder;
+    private Path projectPath;
     private Path asconfigPath;
     private boolean changed = true;
-    private WorkspaceFolder workspaceFolder;
 
-    public ASConfigProjectConfigStrategy(WorkspaceFolder workspaceFolder)
+    public ASConfigProjectConfigStrategy(Path projectPath, WorkspaceFolder workspaceFolder)
     {
+        this.projectPath = projectPath;
         this.workspaceFolder = workspaceFolder;
 
-        Path workspacePath = Paths.get(URI.create(workspaceFolder.getUri()));
-        asconfigPath = workspacePath.resolve(ASCONFIG_JSON);
+        asconfigPath = projectPath.resolve(ASCONFIG_JSON);
     }
 
     public String getDefaultConfigurationProblemPath()
@@ -73,6 +73,11 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy
     public WorkspaceFolder getWorkspaceFolder()
     {
         return workspaceFolder;
+    }
+
+    public Path getProjectPath()
+    {
+        return projectPath;
     }
 
     public Path getConfigFilePath()
