@@ -193,7 +193,6 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     private static final String SOURCE_CONFIG = "config.as";
 
     private ActionScriptLanguageClient languageClient;
-    private IProjectConfigStrategyFactory projectConfigStrategyFactory;
     private String oldFrameworkSDKPath;
     private Workspace compilerWorkspace;
     private ActionScriptProjectManager actionScriptProjectManager;
@@ -215,30 +214,18 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     private CompilerShell compilerShell;
     private String jvmargs;
 
-    public ActionScriptServices()
+    public ActionScriptServices(IProjectConfigStrategyFactory factory)
     {
         compilerWorkspace = new Workspace();
         compilerWorkspace.setASDocDelegate(new VSCodeASDocDelegate(compilerWorkspace));
         fileTracker = new FileTracker(compilerWorkspace);
-        actionScriptProjectManager = new ActionScriptProjectManager(fileTracker);
+        actionScriptProjectManager = new ActionScriptProjectManager(fileTracker, factory);
         updateFrameworkSDK();
-    }
-
-    public IProjectConfigStrategyFactory getProjectConfigStrategyFactory()
-    {
-        return projectConfigStrategyFactory;
-    }
-
-    public void setProjectConfigStrategyFactory(IProjectConfigStrategyFactory value)
-    {
-        projectConfigStrategyFactory = value;
     }
 
     public void addWorkspaceFolder(WorkspaceFolder folder)
     {
-        Path folderPath = Paths.get(URI.create(folder.getUri()));
-        IProjectConfigStrategy config = projectConfigStrategyFactory.create(folderPath, folder);
-        ActionScriptProjectData projectData = actionScriptProjectManager.addWorkspaceFolder(folder, config);
+        ActionScriptProjectData projectData = actionScriptProjectManager.addWorkspaceFolder(folder);
         projectData.codeProblemTracker.setLanguageClient(languageClient);
         projectData.configProblemTracker.setLanguageClient(languageClient);
         
@@ -287,14 +274,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     public void setLanguageClient(ActionScriptLanguageClient value)
     {
         languageClient = value;
-        for(ActionScriptProjectData projectData : actionScriptProjectManager.getAllProjectData())
-        {
-            projectData.codeProblemTracker.setLanguageClient(value);
-            projectData.configProblemTracker.setLanguageClient(value);
-        }
-        ActionScriptProjectData projectData = actionScriptProjectManager.getFallbackProjectData();
-        projectData.codeProblemTracker.setLanguageClient(value);
-        projectData.configProblemTracker.setLanguageClient(value);
+        actionScriptProjectManager.setLanguageClient(languageClient);
     }
 
     public void shutdown()

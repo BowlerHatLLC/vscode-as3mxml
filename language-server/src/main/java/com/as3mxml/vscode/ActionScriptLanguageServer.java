@@ -64,12 +64,11 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
     private static final String FRAMEWORKS_RELATIVE_PATH_PARENT = "../frameworks";
 
     protected ActionScriptServices actionScriptServices;
-    protected IProjectConfigStrategyFactory projectConfigStrategyFactory;
     protected ActionScriptLanguageClient languageClient;
 
     public ActionScriptLanguageServer(IProjectConfigStrategyFactory factory)
     {
-        this.projectConfigStrategyFactory = factory;
+        actionScriptServices = new ActionScriptServices(factory);
 
         //the royalelib system property may be configured in the command line
         //options, but if it isn't, use the framework included with Royale
@@ -97,7 +96,6 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
     {
         actionScriptServices.setClientCapabilities(params.getCapabilities());
         actionScriptServices.setLanguageClient(languageClient);
-        actionScriptServices.setProjectConfigStrategyFactory(projectConfigStrategyFactory);
         //setting everything above must happen before adding workspace folders
         List<WorkspaceFolder> folders = params.getWorkspaceFolders();
         if(folders != null)
@@ -229,10 +227,6 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
     @Override
     public WorkspaceService getWorkspaceService()
     {
-        if (actionScriptServices == null)
-        {
-            actionScriptServices = new ActionScriptServices();
-        }
         return actionScriptServices;
     }
 
@@ -243,10 +237,6 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
     @Override
     public TextDocumentService getTextDocumentService()
     {
-        if (actionScriptServices == null)
-        {
-            actionScriptServices = new ActionScriptServices();
-        }
         return actionScriptServices;
     }
 
