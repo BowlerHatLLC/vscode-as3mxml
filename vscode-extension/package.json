@@ -70,7 +70,8 @@
     "onCommand:as3mxml.importFlashDevelopProject",
     "onCommand:as3mxml.quickCompile",
     "onCommand:as3mxml.quickCompileAndDebug",
-    "onCommand:as3mxml.quickCompileAndRun"
+    "onCommand:as3mxml.quickCompileAndRun",
+    "onCommand:as3mxml.getActiveProjectURIs"
   ],
   "contributes": {
     "commands": [

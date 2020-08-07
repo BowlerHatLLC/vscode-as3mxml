@@ -26,7 +26,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
+import com.as3mxml.asconfigc.compiler.ProjectType;
 import com.as3mxml.vscode.commands.ICommandConstants;
 import com.as3mxml.vscode.project.ILspProject;
 import com.as3mxml.vscode.project.ActionScriptProjectData;
@@ -97,6 +99,10 @@ public class ExecuteCommandProvider
             case ICommandConstants.ORGANIZE_IMPORTS_IN_DIRECTORY:
             {
                 return executeOrganizeImportsInDirectoryCommand(params);
+            }
+            case ICommandConstants.GET_ACTIVE_PROJECT_URIS:
+            {
+                return executeGetActiveProjectUrisCommand(params);
             }
             default:
             {
@@ -457,5 +463,16 @@ public class ExecuteCommandProvider
                 compilerWorkspace.doneBuilding();
             }
         });
+    }
+
+    private CompletableFuture<Object> executeGetActiveProjectUrisCommand(ExecuteCommandParams params)
+    {
+        List<Object> args = params.getArguments();
+        final boolean appsOnly = args.size() > 0 && ((JsonPrimitive) args.get(0)).getAsBoolean();
+        List<String> result = actionScriptProjectManager.getAllProjectData().stream()
+                .filter(projectData -> appsOnly ? ProjectType.APP.equals(projectData.options.type) : true)
+                .map(projectData -> projectData.projectRoot.toUri().toString())
+                .collect(Collectors.toList());
+        return CompletableFuture.completedFuture(result);
     }
 }
