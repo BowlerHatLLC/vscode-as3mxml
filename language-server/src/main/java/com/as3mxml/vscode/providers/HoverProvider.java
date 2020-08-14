@@ -248,6 +248,11 @@ public class HoverProvider
         Hover result = new Hover();
         String detail = DefinitionTextUtils.definitionToDetail(definition, project);
         detail = codeBlock(MARKED_STRING_LANGUAGE_ACTIONSCRIPT, detail);
+        String docs = DefinitionDocumentationUtils.getDocumentationForDefinition(definition, true, project.getWorkspace(), true);
+        if(docs != null)
+        {
+            detail += "\n\n---\n\n" + docs;
+        }
         result.setContents(new MarkupContent(MarkupKind.MARKDOWN, detail));
         return result;
     }
