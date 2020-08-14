@@ -68,8 +68,6 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
 
     public ActionScriptLanguageServer(IProjectConfigStrategyFactory factory)
     {
-        actionScriptServices = new ActionScriptServices(factory);
-
         //the royalelib system property may be configured in the command line
         //options, but if it isn't, use the framework included with Royale
         if (System.getProperty(PROPERTY_FRAMEWORK_LIB) == null)
@@ -86,6 +84,8 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
             }
             System.setProperty(PROPERTY_FRAMEWORK_LIB, frameworksPath);
         }
+
+        actionScriptServices = new ActionScriptServices(factory);
     }
 
     /**
