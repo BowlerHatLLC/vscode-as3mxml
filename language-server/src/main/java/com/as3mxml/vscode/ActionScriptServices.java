@@ -1308,7 +1308,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     private void updateFrameworkSDK()
     {
         String frameworkSDKPath = System.getProperty(PROPERTY_FRAMEWORK_LIB);
-        if(frameworkSDKPath.equals(oldFrameworkSDKPath))
+        if(frameworkSDKPath == null || frameworkSDKPath.equals(oldFrameworkSDKPath))
         {
             return;
         }

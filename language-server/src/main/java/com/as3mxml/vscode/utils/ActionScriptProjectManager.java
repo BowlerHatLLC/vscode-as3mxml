@@ -125,8 +125,11 @@ public class ActionScriptProjectManager
             projectData.codeProblemTracker.setLanguageClient(value);
             projectData.configProblemTracker.setLanguageClient(value);
         }
-        fallbackProjectData.codeProblemTracker.setLanguageClient(value);
-        fallbackProjectData.configProblemTracker.setLanguageClient(value);
+        if(fallbackProjectData != null)
+        {
+            fallbackProjectData.codeProblemTracker.setLanguageClient(value);
+            fallbackProjectData.configProblemTracker.setLanguageClient(value);
+        }
     }
 
     public ActionScriptProjectData getFallbackProjectData()
