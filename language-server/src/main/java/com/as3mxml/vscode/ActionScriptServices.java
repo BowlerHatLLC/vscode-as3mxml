@@ -219,16 +219,18 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         compilerWorkspace = new Workspace();
         compilerWorkspace.setASDocDelegate(new VSCodeASDocDelegate(compilerWorkspace));
         fileTracker = new FileTracker(compilerWorkspace);
-        actionScriptProjectManager = new ActionScriptProjectManager(fileTracker, factory);
+        actionScriptProjectManager = new ActionScriptProjectManager(fileTracker, factory,
+                (projectData) -> onAddProject(projectData), (projectData) -> onRemoveProject(projectData));
         updateFrameworkSDK();
     }
 
     public void addWorkspaceFolder(WorkspaceFolder folder)
     {
-        ActionScriptProjectData projectData = actionScriptProjectManager.addWorkspaceFolder(folder);
-        projectData.codeProblemTracker.setLanguageClient(languageClient);
-        projectData.configProblemTracker.setLanguageClient(languageClient);
-        
+        actionScriptProjectManager.addWorkspaceFolder(folder);
+    }
+
+    private boolean onAddProject(ActionScriptProjectData projectData)
+    {
         //let's get the code intelligence up and running!
         Path path = getMainCompilationUnitPath(projectData);
         if (path != null)
@@ -239,6 +241,12 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         }
 
         checkProjectForProblems(projectData);
+        return true;
+    }
+
+    private boolean onRemoveProject(ActionScriptProjectData projectData)
+    {
+        return true;
     }
 
     public void removeWorkspaceFolder(WorkspaceFolder folder)

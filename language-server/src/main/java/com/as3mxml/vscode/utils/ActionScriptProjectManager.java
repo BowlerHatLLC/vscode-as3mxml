@@ -22,6 +22,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import com.as3mxml.vscode.project.ActionScriptProjectData;
 import com.as3mxml.vscode.project.ILspProject;
@@ -74,11 +76,16 @@ public class ActionScriptProjectManager
     private IProjectConfigStrategyFactory projectConfigStrategyFactory;
     private ActionScriptProjectData fallbackProjectData;
     private LanguageClient languageClient;
+    private Predicate<ActionScriptProjectData> addProjectCallback;
+    private Predicate<ActionScriptProjectData> removeProjectCallback;
     
-    public ActionScriptProjectManager(FileTracker fileTracker, IProjectConfigStrategyFactory factory)
+    public ActionScriptProjectManager(FileTracker fileTracker, IProjectConfigStrategyFactory factory,
+            Predicate<ActionScriptProjectData> addProjectCallback, Predicate<ActionScriptProjectData> removeProjectCallback)
     {
         this.fileTracker = fileTracker;
         this.projectConfigStrategyFactory = factory;
+        this.addProjectCallback = addProjectCallback;
+        this.removeProjectCallback = removeProjectCallback;
     }
 
     public List<ActionScriptProjectData> getAllProjectData()
@@ -86,11 +93,11 @@ public class ActionScriptProjectManager
         return allProjectData;
     }
 
-    public ActionScriptProjectData addWorkspaceFolder(WorkspaceFolder folder)
+    public void addWorkspaceFolder(WorkspaceFolder folder)
     {
         workspaceFolders.add(folder);
         Path projectRoot = Paths.get(URI.create(folder.getUri()));
-        return addProject(projectRoot, folder);
+        addProject(projectRoot, folder);
     }
 
     public void removeWorkspaceFolder(WorkspaceFolder folder)
@@ -106,17 +113,8 @@ public class ActionScriptProjectManager
             {
                 continue;
             }
-            allProjectData.remove(projectData);
-            projectData.cleanup();
+            removeProject(projectData);
         }
-    }
-
-    private ActionScriptProjectData addProject(Path projectRoot, WorkspaceFolder workspaceFolder)
-    {
-        IProjectConfigStrategy config = projectConfigStrategyFactory.create(projectRoot, workspaceFolder);
-        ActionScriptProjectData projectData = new ActionScriptProjectData(projectRoot, workspaceFolder, config);
-        allProjectData.add(projectData);
-        return projectData;
     }
 
     public void setLanguageClient(LanguageClient value)
@@ -149,14 +147,18 @@ public class ActionScriptProjectManager
             fallbackProjectData.cleanup();
             fallbackProjectData = null;
         }
-        ActionScriptProjectData projectData = new ActionScriptProjectData(projectRoot, folder, config);
-        fallbackProjectData = projectData;
+        fallbackProjectData = new ActionScriptProjectData(projectRoot, folder, config);
+        fallbackProjectData.codeProblemTracker.setLanguageClient(languageClient);
+        fallbackProjectData.configProblemTracker.setLanguageClient(languageClient);
         return fallbackProjectData;
     }
 
     public ActionScriptProjectData getProjectDataForSourceFile(Path path)
     {
+        checkForMissingProjectsContainingSourceFile(path);
+
         //first try to find the path in an existing project
+        ActionScriptProjectData bestMatch = null;
         ActionScriptProjectData fallback = null;
         for (ActionScriptProjectData projectData : allProjectData)
         {
@@ -170,13 +172,19 @@ public class ActionScriptProjectManager
             {
                 continue;
             }
+            if (bestMatch != null && bestMatch.projectDepth >= projectData.projectDepth)
+            {
+                //even if it's in the source path, it's not a better match
+                continue;
+            }
             if(SourcePathUtils.isInProjectSourcePath(path, project, projectData.configurator))
             {
                 if(path.startsWith(projectRoot))
                 {
-                    //if the source path is inside the workspace folder, it's a
-                    //perfect match
-                    return projectData;
+                    //if the source path is inside the project root folder, then
+                    //the project is a candidate (we'll compare depths later)
+                    bestMatch = projectData;
+                    continue;
                 }
                 //if path is in the source path, but not inside the workspace
                 //folder, save it as possible result for later. in other words,
@@ -185,8 +193,13 @@ public class ActionScriptProjectManager
                 if (fallback == null)
                 {
                     fallback = projectData;
+                    continue;
                 }
             }
+        }
+        if (bestMatch != null)
+        {
+            return bestMatch;
         }
         //we found the path in a project's source path, but not inside any the
         //workspace folders
@@ -742,5 +755,95 @@ public class ActionScriptProjectManager
         range.setEnd(end);
         location.setRange(range);
         result.add(location);
+    }
+
+    private ActionScriptProjectData addProject(Path projectRoot, WorkspaceFolder workspaceFolder)
+    {
+        IProjectConfigStrategy config = projectConfigStrategyFactory.create(projectRoot, workspaceFolder);
+        ActionScriptProjectData projectData = new ActionScriptProjectData(projectRoot, workspaceFolder, config);
+        projectData.codeProblemTracker.setLanguageClient(languageClient);
+        projectData.configProblemTracker.setLanguageClient(languageClient);
+        allProjectData.add(projectData);
+        addProjectCallback.test(projectData);
+        return projectData;
+    }
+
+    private void removeProject(ActionScriptProjectData projectData)
+    {
+        removeProjectCallback.test(projectData);
+        allProjectData.remove(projectData);
+        projectData.cleanup();
+    }
+
+    private void checkForMissingProjectsContainingSourceFile(Path path)
+    {
+        String configFileName = null;
+        for(ActionScriptProjectData projectData : allProjectData)
+        {
+            if(projectData.config == null)
+            {
+                continue;
+            }
+            Path configFilePath = projectData.config.getConfigFilePath();
+            if(configFilePath == null)
+            {
+                continue;
+            }
+            // this assumes that the configFileName is the same for all projects
+            configFileName = configFilePath.getFileName().toString();
+            break;
+        }
+
+        if(configFileName == null)
+        {
+            return;
+        }
+
+        for (WorkspaceFolder folder : workspaceFolders)
+        {
+            Path workspaceFolderPath = LanguageServerCompilerUtils.getPathFromLanguageServerURI(folder.getUri());
+            if(workspaceFolderPath == null)
+            {
+                continue;
+            }
+            if(!path.startsWith(workspaceFolderPath))
+            {
+                continue;
+            }
+            List<ActionScriptProjectData> workspaceProjects = getAllProjectDataForWorkspaceFolder(folder);
+            Path currentPath = path.getParent();
+            do
+            {
+                Path configFilePath = currentPath.resolve(configFileName);
+                if (configFilePath.toFile().exists())
+                {
+                    ActionScriptProjectData foundProjectData = null;
+                    for(ActionScriptProjectData projectData : workspaceProjects)
+                    {
+                        if(projectData.config == null)
+                        {
+                            continue;
+                        }
+                        
+                        if(configFilePath.equals(projectData.config.getConfigFilePath()))
+                        {
+                            foundProjectData = projectData;
+                            break;
+                        }
+                    }
+                    if(foundProjectData == null)
+                    {
+                        addProject(currentPath, folder);
+                    }
+                }
+                currentPath = currentPath.getParent();
+            }
+            while(currentPath != null && path.startsWith(workspaceFolderPath));
+        }
+    }
+
+    private List<ActionScriptProjectData> getAllProjectDataForWorkspaceFolder(WorkspaceFolder folder)
+    {
+        return allProjectData.stream().filter(projectData -> folder.equals(projectData.folder)).collect(Collectors.toList());
     }
 }

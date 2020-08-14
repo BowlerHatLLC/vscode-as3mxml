@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
+import com.as3mxml.vscode.utils.LanguageServerCompilerUtils;
 import com.as3mxml.vscode.utils.ProblemTracker;
 
 import org.apache.royale.compiler.internal.projects.RoyaleProjectConfigurator;
@@ -33,10 +34,22 @@ public class ActionScriptProjectData
 		this.projectRoot = projectRoot;
 		this.folder = folder;
 		this.config = config;
+
+		// the project's depth determines its priority when determining if it
+		// contains a particular source file. the deeper, the better.
+		Path folderPath = LanguageServerCompilerUtils.getPathFromLanguageServerURI(folder.getUri());
+		projectDepth = 0;
+		Path currentPath = projectRoot;
+		while(currentPath.startsWith(folderPath) && !currentPath.equals(folderPath))
+		{
+			projectDepth++;
+			currentPath = currentPath.getParent();
+		}
 	}
 
 	public Path projectRoot;
 	public WorkspaceFolder folder;
+	public int projectDepth;
 	public IProjectConfigStrategy config;
 	public ProjectOptions options;
 	public ILspProject project;
