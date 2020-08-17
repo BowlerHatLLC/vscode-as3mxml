@@ -829,13 +829,16 @@ public class DefinitionTextUtils
                 if (functionDefinition.isConstructor())
                 {
                     detailBuilder.append("(constructor) ");
+                    //don't append the parent definition before the constructor,
+                    //like we do with methods, because the constructor name
+                    //already includes the full package
                 }
                 else
                 {
                     detailBuilder.append("(method) ");
+                    detailBuilder.append(parentDefinition.getBaseName());
+                    detailBuilder.append(".");
                 }
-                detailBuilder.append(parentDefinition.getBaseName());
-                detailBuilder.append(".");
             }
             else if (parentDefinition instanceof IFunctionDefinition)
             {
