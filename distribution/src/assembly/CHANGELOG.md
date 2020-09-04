@@ -1,5 +1,18 @@
 # ActionScript & MXML for Visual Studio Code Changelog
 
+## v1.3.0
+
+### New Features
+
+- Projects: Multiple projects in a single workspace folder. If a workspace folder contains additional _asconfig.json_ files in sub-folders, these will be detected as separate projects. Perfect for projects containing tests and for quickly opening a shared parent folder without manually adding each project as a separate workspace folder.
+
+### Fixed Issues
+
+- Build: Quick compile commands no longer print incorrect "pending" message before initialization when no _asconfig.json_ files are detected.
+- General: Fix warning in output console that referenced a _vscode-userdata:_ URI.
+- Hover: fix formatting of constructor names to look like `ClassName.com.example.ClassName`.
+- Hover: fix missing ASDoc documentation when hovering over symbols in _.mxml_ files.
+
 ## v1.2.2
 
 ### Fixed Issues
