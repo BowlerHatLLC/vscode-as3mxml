@@ -1801,9 +1801,11 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             }
             else if(configFilePath != null
                     && !configFilePath.toFile().exists()
-                    && fileTracker.getOpenFiles().size() > 0)
+                    && actionScriptProjectManager.hasOpenFilesForProject(projectData))
             {
-                //the config file is missing, so add a problem about it
+                //the config file is missing, and there are open files in this
+                //project, so we should add a hint that suggests how to properly
+                //configure the project for the full experience.
                 projectData.codeProblemTracker.trackFileWithProblems(configFilePath.toUri());
                 ProblemQuery problemQuery = new ProblemQuery();
                 problemQuery.add(new SyntaxFallbackProblem(configFilePath.toString(),

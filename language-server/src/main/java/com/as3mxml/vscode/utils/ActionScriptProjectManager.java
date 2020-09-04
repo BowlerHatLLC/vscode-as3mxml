@@ -234,6 +234,19 @@ public class ActionScriptProjectManager
         return fallbackProjectData;
     }
 
+    public boolean hasOpenFilesForProject(ActionScriptProjectData project)
+    {
+        for(Path openFilePath : fileTracker.getOpenFiles())
+        {
+            ActionScriptProjectData otherProject = getProjectDataForSourceFile(openFilePath);
+            if(otherProject == project)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public IASNode getOffsetNode(Path path, int currentOffset, ActionScriptProjectData projectData)
     {
         IncludeFileData includeFileData = projectData.includedFiles.get(path.toString());
