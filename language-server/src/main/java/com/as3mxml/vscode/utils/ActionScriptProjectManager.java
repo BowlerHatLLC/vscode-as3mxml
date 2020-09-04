@@ -841,7 +841,7 @@ public class ActionScriptProjectManager
                 }
                 currentPath = currentPath.getParent();
             }
-            while(currentPath != null && path.startsWith(workspaceFolderPath));
+            while(currentPath != null && currentPath.startsWith(workspaceFolderPath));
         }
     }
 
