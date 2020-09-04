@@ -1326,6 +1326,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
 
         updateFallbackProject();
     }
+
     private boolean isFallbackFramework()
     {
         String jarPath = null;
