@@ -49,69 +49,55 @@ import org.apache.royale.compiler.tree.as.IIdentifierNode;
 import org.apache.royale.compiler.tree.as.IMemberAccessExpressionNode;
 import org.apache.royale.compiler.units.ICompilationUnit;
 
-public class DefinitionUtils
-{
-    private static final String PROPERTY_FRAMEWORK_LIB = "royalelib";
-    private static final String SDK_FRAMEWORKS_PATH_SIGNATURE = "/frameworks/";
-    private static final String SDK_SOURCE_PATH_SIGNATURE_UNIX = "/frameworks/projects/";
-    private static final String SDK_SOURCE_PATH_SIGNATURE_WINDOWS = "\\frameworks\\projects\\";
+public class DefinitionUtils {
+	private static final String PROPERTY_FRAMEWORK_LIB = "royalelib";
+	private static final String SDK_FRAMEWORKS_PATH_SIGNATURE = "/frameworks/";
+	private static final String SDK_SOURCE_PATH_SIGNATURE_UNIX = "/frameworks/projects/";
+	private static final String SDK_SOURCE_PATH_SIGNATURE_WINDOWS = "\\frameworks\\projects\\";
 
 	/**
 	 * Returns the qualified name of the required type for child elements, or
 	 * null.
 	 */
-	public static String getMXMLChildElementTypeForDefinition(IDefinition definition, ICompilerProject project)
-	{
+	public static String getMXMLChildElementTypeForDefinition(IDefinition definition, ICompilerProject project) {
 		return getMXMLChildElementTypeForDefinition(definition, project, true);
 	}
 
-	private static String getMXMLChildElementTypeForDefinition(IDefinition definition, ICompilerProject project, boolean resolvePaired)
-	{
+	private static String getMXMLChildElementTypeForDefinition(IDefinition definition, ICompilerProject project,
+			boolean resolvePaired) {
 		IMetaTag arrayElementType = definition.getMetaTagByName(IMetaAttributeConstants.ATTRIBUTE_ARRAYELEMENTTYPE);
-		if (arrayElementType != null)
-		{
+		if (arrayElementType != null) {
 			return arrayElementType.getValue();
 		}
 		IMetaTag instanceType = definition.getMetaTagByName(IMetaAttributeConstants.ATTRIBUTE_INSTANCETYPE);
-		if (instanceType != null)
-		{
+		if (instanceType != null) {
 			return instanceType.getValue();
 		}
-		if (resolvePaired)
-		{
-			if (definition instanceof IGetterDefinition)
-			{
+		if (resolvePaired) {
+			if (definition instanceof IGetterDefinition) {
 				IGetterDefinition getterDefinition = (IGetterDefinition) definition;
 				ISetterDefinition setterDefinition = getterDefinition.resolveSetter(project);
-				if (setterDefinition != null)
-				{
+				if (setterDefinition != null) {
 					String result = getMXMLChildElementTypeForDefinition(setterDefinition, project, false);
-					if (result != null)
-					{
+					if (result != null) {
 						return result;
 					}
 				}
-			}
-			else if (definition instanceof ISetterDefinition)
-			{
+			} else if (definition instanceof ISetterDefinition) {
 				ISetterDefinition setterDefinition = (ISetterDefinition) definition;
 				IGetterDefinition getterDefinition = setterDefinition.resolveGetter(project);
-				if (getterDefinition != null)
-				{
+				if (getterDefinition != null) {
 					String result = getMXMLChildElementTypeForDefinition(getterDefinition, project, false);
-					if (result != null)
-					{
+					if (result != null) {
 						return result;
 					}
 				}
 			}
 		}
 		ITypeDefinition typeDefinition = definition.resolveType(project);
-		if (typeDefinition != null)
-		{
+		if (typeDefinition != null) {
 			String qualifiedName = typeDefinition.getQualifiedName();
-			if (qualifiedName.equals(IASLanguageConstants.Array))
-			{
+			if (qualifiedName.equals(IASLanguageConstants.Array)) {
 				//the wrapping array can be omitted, and since there's no
 				//[ArrayElementType] metadata, default to Object
 				return IASLanguageConstants.Object;
@@ -121,110 +107,92 @@ public class DefinitionUtils
 		return null;
 	}
 
-	public static String getDefinitionDebugSourceFilePath(IDefinition definition, ICompilerProject project)
-	{
+	public static String getDefinitionDebugSourceFilePath(IDefinition definition, ICompilerProject project) {
 		ASProjectScope projectScope = (ASProjectScope) project.getScope();
 		ICompilationUnit unit = projectScope.getCompilationUnitForDefinition(definition);
-		if (unit == null)
-		{
+		if (unit == null) {
 			return null;
 		}
-		try
-		{
+		try {
 			byte[] abcBytes = unit.getABCBytesRequest().get().getABCBytes();
 			ABCParser parser = new ABCParser(abcBytes);
 			PoolingABCVisitor visitor = new PoolingABCVisitor();
 			parser.parseABC(visitor);
 			Pool<String> pooledStrings = visitor.getStringPool();
-			for (String pooledString : pooledStrings.getValues())
-			{
+			for (String pooledString : pooledStrings.getValues()) {
 				if (pooledString.contains(SDK_SOURCE_PATH_SIGNATURE_UNIX)
-						|| pooledString.contains(SDK_SOURCE_PATH_SIGNATURE_WINDOWS))
-				{
+						|| pooledString.contains(SDK_SOURCE_PATH_SIGNATURE_WINDOWS)) {
 					//just go with the first one that we find
 					return transformDebugFilePath(pooledString);
 				}
 			}
-		}
-		catch (InterruptedException e)
-		{
+		} catch (InterruptedException e) {
 			//safe to ignore
 		}
 		return null;
 	}
 
-	public static boolean isImplementationOfInterface(IClassDefinition classDefinition, IInterfaceDefinition interfaceDefinition, ICompilerProject project)
-	{
+	public static boolean isImplementationOfInterface(IClassDefinition classDefinition,
+			IInterfaceDefinition interfaceDefinition, ICompilerProject project) {
 		Iterator<IInterfaceDefinition> interfaceIterator = classDefinition.interfaceIterator(project);
-		while (interfaceIterator.hasNext())
-		{
+		while (interfaceIterator.hasNext()) {
 			IInterfaceDefinition implementedInterfaceDefinition = interfaceIterator.next();
-			if (implementedInterfaceDefinition.equals(interfaceDefinition))
-			{
+			if (implementedInterfaceDefinition.equals(interfaceDefinition)) {
 				return true;
 			}
 		}
 		return false;
 	}
 
-	public static boolean extendsOrImplements(ICompilerProject project, ITypeDefinition typeDefinition, String qualifiedNameToFind)
-    {
-		if (typeDefinition instanceof IClassDefinition)
-		{
+	public static boolean extendsOrImplements(ICompilerProject project, ITypeDefinition typeDefinition,
+			String qualifiedNameToFind) {
+		if (typeDefinition instanceof IClassDefinition) {
 			IClassDefinition classDefinition = (IClassDefinition) typeDefinition;
 			IClassIterator classIterator = classDefinition.classIterator(project, true);
-			while (classIterator.hasNext())
-			{
+			while (classIterator.hasNext()) {
 				IClassDefinition baseClassDefinition = classIterator.next();
-				if (baseClassDefinition.getQualifiedName().equals(qualifiedNameToFind))
-				{
+				if (baseClassDefinition.getQualifiedName().equals(qualifiedNameToFind)) {
 					return true;
 				}
 			}
 			Iterator<IInterfaceDefinition> interfaceIterator = classDefinition.interfaceIterator(project);
-			if (interfaceIteratorContainsQualifiedName(interfaceIterator, qualifiedNameToFind))
-			{
+			if (interfaceIteratorContainsQualifiedName(interfaceIterator, qualifiedNameToFind)) {
 				return true;
 			}
-		}
-		else if (typeDefinition instanceof IInterfaceDefinition)
-		{
+		} else if (typeDefinition instanceof IInterfaceDefinition) {
 			IInterfaceDefinition interfaceDefinition = (IInterfaceDefinition) typeDefinition;
 			Iterator<IInterfaceDefinition> interfaceIterator = interfaceDefinition.interfaceIterator(project, true);
-			if (interfaceIteratorContainsQualifiedName(interfaceIterator, qualifiedNameToFind))
-			{
+			if (interfaceIteratorContainsQualifiedName(interfaceIterator, qualifiedNameToFind)) {
 				return true;
 			}
 		}
 		return false;
 	}
 
-	public static IDefinition resolveWithExtras(IIdentifierNode identifierNode, ILspProject project)
-	{
+	public static IDefinition resolveWithExtras(IIdentifierNode identifierNode, ILspProject project) {
 		IDefinition definition = identifierNode.resolve(project);
-		if (definition != null)
-		{
+		if (definition != null) {
 			return definition;
 		}
-		 
+
 		IASNode parentNode = identifierNode.getParent();
 		if (parentNode instanceof IMemberAccessExpressionNode) {
 			IMemberAccessExpressionNode memberAccess = (IMemberAccessExpressionNode) parentNode;
 			IExpressionNode leftOperand = memberAccess.getLeftOperandNode();
-			if (leftOperand instanceof IDynamicAccessNode)
-			{
+			if (leftOperand instanceof IDynamicAccessNode) {
 				IDynamicAccessNode dynamicAccess = (IDynamicAccessNode) leftOperand;
 				IExpressionNode dynamicLeftOperandNode = dynamicAccess.getLeftOperandNode();
 				ITypeDefinition leftType = dynamicLeftOperandNode.resolveType(project);
-				if (leftType instanceof IAppliedVectorDefinition)
-				{
+				if (leftType instanceof IAppliedVectorDefinition) {
 					IAppliedVectorDefinition vectorDef = (IAppliedVectorDefinition) leftType;
 					ITypeDefinition elementType = vectorDef.resolveElementType(project);
 					if (elementType != null) {
 						TypeScope typeScope = (TypeScope) elementType.getContainedScope();
 						ASScope otherScope = (ASScope) identifierNode.getContainingScope().getScope();
-						Set<INamespaceDefinition> namespaceSet = ScopeUtils.getNamespaceSetForScopes(typeScope, otherScope, project);
-						definition = typeScope.getPropertyByNameForMemberAccess((CompilerProject) project, identifierNode.getName(), namespaceSet);
+						Set<INamespaceDefinition> namespaceSet = ScopeUtils.getNamespaceSetForScopes(typeScope,
+								otherScope, project);
+						definition = typeScope.getPropertyByNameForMemberAccess((CompilerProject) project,
+								identifierNode.getName(), namespaceSet);
 					}
 				}
 			}
@@ -233,34 +201,31 @@ public class DefinitionUtils
 		return definition;
 	}
 
-	public static IDefinition resolveTypeWithExtras(IIdentifierNode identifierNode, ILspProject project)
-	{
+	public static IDefinition resolveTypeWithExtras(IIdentifierNode identifierNode, ILspProject project) {
 		ITypeDefinition definition = identifierNode.resolveType(project);
-		if (definition != null)
-		{
+		if (definition != null) {
 			return definition;
 		}
-		 
+
 		IASNode parentNode = identifierNode.getParent();
 		if (parentNode instanceof IMemberAccessExpressionNode) {
 			IMemberAccessExpressionNode memberAccess = (IMemberAccessExpressionNode) parentNode;
 			IExpressionNode leftOperand = memberAccess.getLeftOperandNode();
-			if (leftOperand instanceof IDynamicAccessNode)
-			{
+			if (leftOperand instanceof IDynamicAccessNode) {
 				IDynamicAccessNode dynamicAccess = (IDynamicAccessNode) leftOperand;
 				IExpressionNode dynamicLeftOperandNode = dynamicAccess.getLeftOperandNode();
 				ITypeDefinition leftType = dynamicLeftOperandNode.resolveType(project);
-				if (leftType instanceof IAppliedVectorDefinition)
-				{
+				if (leftType instanceof IAppliedVectorDefinition) {
 					IAppliedVectorDefinition vectorDef = (IAppliedVectorDefinition) leftType;
 					ITypeDefinition elementType = vectorDef.resolveElementType(project);
 					if (elementType != null) {
 						TypeScope typeScope = (TypeScope) elementType.getContainedScope();
 						ASScope otherScope = (ASScope) identifierNode.getContainingScope().getScope();
-						Set<INamespaceDefinition> namespaceSet = ScopeUtils.getNamespaceSetForScopes(typeScope, otherScope, project);
-						IDefinition propertyDefinition = typeScope.getPropertyByNameForMemberAccess((CompilerProject) project, identifierNode.getName(), namespaceSet);
-						if (propertyDefinition != null)
-						{
+						Set<INamespaceDefinition> namespaceSet = ScopeUtils.getNamespaceSetForScopes(typeScope,
+								otherScope, project);
+						IDefinition propertyDefinition = typeScope.getPropertyByNameForMemberAccess(
+								(CompilerProject) project, identifierNode.getName(), namespaceSet);
+						if (propertyDefinition != null) {
 							definition = propertyDefinition.resolveType(project);
 						}
 
@@ -272,46 +237,38 @@ public class DefinitionUtils
 		return definition;
 	}
 
-    private static String transformDebugFilePath(String sourceFilePath)
-    {
+	private static String transformDebugFilePath(String sourceFilePath) {
 		int index = -1;
-        if (System.getProperty("os.name").toLowerCase().startsWith("windows"))
-        {
-            //the debug file path divides directories with ; instead of slash in
-            //a couple of places, but it's easy to fix
-            sourceFilePath = sourceFilePath.replace(';', '\\');
-            sourceFilePath = sourceFilePath.replace('/', '\\');
-            index = sourceFilePath.indexOf(SDK_SOURCE_PATH_SIGNATURE_WINDOWS);
-        }
-        else
-        {
-            sourceFilePath = sourceFilePath.replace(';', '/');
-            sourceFilePath = sourceFilePath.replace('\\', '/');
-            index = sourceFilePath.indexOf(SDK_SOURCE_PATH_SIGNATURE_UNIX);
-        }
-        if (index == -1)
-        {
-            return sourceFilePath;
-        }
+		if (System.getProperty("os.name").toLowerCase().startsWith("windows")) {
+			//the debug file path divides directories with ; instead of slash in
+			//a couple of places, but it's easy to fix
+			sourceFilePath = sourceFilePath.replace(';', '\\');
+			sourceFilePath = sourceFilePath.replace('/', '\\');
+			index = sourceFilePath.indexOf(SDK_SOURCE_PATH_SIGNATURE_WINDOWS);
+		} else {
+			sourceFilePath = sourceFilePath.replace(';', '/');
+			sourceFilePath = sourceFilePath.replace('\\', '/');
+			index = sourceFilePath.indexOf(SDK_SOURCE_PATH_SIGNATURE_UNIX);
+		}
+		if (index == -1) {
+			return sourceFilePath;
+		}
 		String newSourceFilePath = sourceFilePath.substring(index + SDK_FRAMEWORKS_PATH_SIGNATURE.length());
 		Path frameworkPath = Paths.get(System.getProperty(PROPERTY_FRAMEWORK_LIB));
-        Path transformedPath = frameworkPath.resolve(newSourceFilePath);
-		if(transformedPath.toFile().exists())
-		{
+		Path transformedPath = frameworkPath.resolve(newSourceFilePath);
+		if (transformedPath.toFile().exists()) {
 			//only transform the path if the transformed file exists
 			//if it doesn't exist, the original path may be valid
 			return transformedPath.toFile().getAbsolutePath();
 		}
 		return sourceFilePath;
-    }
-	
-	private static boolean interfaceIteratorContainsQualifiedName(Iterator<IInterfaceDefinition> interfaceIterator, String qualifiedName)
-	{
-		while (interfaceIterator.hasNext())
-		{
+	}
+
+	private static boolean interfaceIteratorContainsQualifiedName(Iterator<IInterfaceDefinition> interfaceIterator,
+			String qualifiedName) {
+		while (interfaceIterator.hasNext()) {
 			IInterfaceDefinition interfaceDefinition = interfaceIterator.next();
-			if (interfaceDefinition.getQualifiedName().equals(qualifiedName))
-			{
+			if (interfaceDefinition.getQualifiedName().equals(qualifiedName)) {
 				return true;
 			}
 		}

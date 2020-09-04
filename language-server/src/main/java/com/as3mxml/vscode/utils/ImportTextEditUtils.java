@@ -29,22 +29,21 @@ import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
 
-public class ImportTextEditUtils
-{
-    private static final Pattern organizeImportPattern = Pattern.compile("(?m)^([ \\t]*)import ((\\w+\\.)+\\w+(\\.\\*)?);?");
-    private static final Pattern packagePattern = Pattern.compile("(?m)^package(?: [\\w\\.]+)*\\s*\\{(?:[ \\t]*[\\r\\n]+)+([ \\t]*)");
+public class ImportTextEditUtils {
+    private static final Pattern organizeImportPattern = Pattern
+            .compile("(?m)^([ \\t]*)import ((\\w+\\.)+\\w+(\\.\\*)?);?");
+    private static final Pattern packagePattern = Pattern
+            .compile("(?m)^package(?: [\\w\\.]+)*\\s*\\{(?:[ \\t]*[\\r\\n]+)+([ \\t]*)");
 
-    protected static int organizeImportsFromStartIndex(String text, int startIndex, List<IImportNode> importsToRemove, Set<String> importsToAdd, List<TextEdit> edits)
-    {
+    protected static int organizeImportsFromStartIndex(String text, int startIndex, List<IImportNode> importsToRemove,
+            Set<String> importsToAdd, List<TextEdit> edits) {
         Matcher importMatcher = organizeImportPattern.matcher(text);
-        if(startIndex != -1)
-        {
+        if (startIndex != -1) {
             importMatcher.region(startIndex, text.length());
         }
         //use a Set to avoid adding duplicate names
         Set<String> nameSet = new HashSet<>();
-        if (importsToAdd != null && startIndex == 0)
-        {
+        if (importsToAdd != null && startIndex == 0) {
             //add our extra imports at the first available opportunity
             nameSet.addAll(importsToAdd);
         }
@@ -52,54 +51,44 @@ public class ImportTextEditUtils
         int startImportsIndex = -1;
         int endImportsIndex = -1;
         int endIndex = -1;
-        while (importMatcher.find())
-        {
+        while (importMatcher.find()) {
             int matchIndex = importMatcher.start();
-            if (startImportsIndex == -1)
-            {
+            if (startImportsIndex == -1) {
                 startImportsIndex = matchIndex;
                 int nextBlockOpenIndex = text.indexOf("{", startImportsIndex);
                 int nextBlockCloseIndex = text.indexOf("}", startImportsIndex);
                 endIndex = nextBlockOpenIndex;
-                if(endIndex == -1 || (nextBlockCloseIndex != -1 && nextBlockCloseIndex < endIndex))
-                {
+                if (endIndex == -1 || (nextBlockCloseIndex != -1 && nextBlockCloseIndex < endIndex)) {
                     endIndex = nextBlockCloseIndex;
                 }
                 indent = importMatcher.group(1);
             }
-            if(endIndex != -1 && matchIndex >= endIndex)
-            {
+            if (endIndex != -1 && matchIndex >= endIndex) {
                 break;
             }
             endImportsIndex = matchIndex + importMatcher.group(0).length();
             String importName = importMatcher.group(2);
             boolean removeImport = false;
-            if (importsToRemove != null)
-            {
-                for (IImportNode importNode : importsToRemove)
-                {
+            if (importsToRemove != null) {
+                for (IImportNode importNode : importsToRemove) {
                     int importStart = importNode.getAbsoluteStart();
                     if (importStart >= matchIndex && importStart < endImportsIndex
-                            && importNode.getImportName().equals(importName))
-                    {
+                            && importNode.getImportName().equals(importName)) {
                         removeImport = true;
                         break;
                     }
                 }
             }
-            if (!removeImport)
-            {
+            if (!removeImport) {
                 nameSet.add(importName);
             }
         }
-        if(nameSet.size() == 0 && importsToRemove.size() == 0)
-        {
+        if (nameSet.size() == 0 && importsToRemove.size() == 0) {
             //nothing to organize
             return endIndex;
         }
-        
-        if (startImportsIndex == -1)
-        {
+
+        if (startImportsIndex == -1) {
             Matcher packageMatcher = packagePattern.matcher(text);
             packageMatcher.region(0, text.length());
             if (packageMatcher.find()) //found the package
@@ -113,24 +102,19 @@ public class ImportTextEditUtils
         Collections.sort(names);
         StringBuilder result = new StringBuilder();
         String previousFirstPart = null;
-        for(int i = 0, count = names.size(); i < count; i++)
-        {
+        for (int i = 0, count = names.size(); i < count; i++) {
             String name = names.get(i);
             String[] parts = name.split("\\.");
             String firstPart = parts[0];
-            if(previousFirstPart == null)
-            {
+            if (previousFirstPart == null) {
                 previousFirstPart = firstPart;
-            }
-            else if(parts.length > 1 && !firstPart.equals(previousFirstPart))
-            {
+            } else if (parts.length > 1 && !firstPart.equals(previousFirstPart)) {
                 //add an extra line when the first part of the package name
                 //is different than the previous import
                 result.append("\n");
                 previousFirstPart = firstPart;
             }
-            if(i > 0)
-            {
+            if (i > 0) {
                 result.append("\n");
             }
             result.append(indent);
@@ -139,11 +123,9 @@ public class ImportTextEditUtils
             result.append(";");
         }
 
-        if (endImportsIndex == -1)
-        {
+        if (endImportsIndex == -1) {
             endImportsIndex = startImportsIndex;
-            if (nameSet.size() > 0)
-            {
+            if (nameSet.size() > 0) {
                 //we're only adding new imports, so add some extra whitespace
                 result.append("\n\n");
             }
@@ -157,21 +139,18 @@ public class ImportTextEditUtils
         edits.add(edit);
         return endIndex;
     }
-    
-    public static List<TextEdit> organizeImports(String text)
-    {
+
+    public static List<TextEdit> organizeImports(String text) {
         return organizeImports(text, null, null);
     }
 
-    public static List<TextEdit> organizeImports(String text, List<IImportNode> importsToRemove, Set<String> importsToAdd)
-    {
+    public static List<TextEdit> organizeImports(String text, List<IImportNode> importsToRemove,
+            Set<String> importsToAdd) {
         List<TextEdit> edits = new ArrayList<>();
         int index = 0;
-        do
-        {
+        do {
             index = organizeImportsFromStartIndex(text, index, importsToRemove, importsToAdd, edits);
-        }
-        while(index != -1);
+        } while (index != -1);
         return edits;
     }
 }

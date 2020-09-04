@@ -15,8 +15,7 @@ limitations under the License.
 */
 package com.as3mxml.asconfigc.compiler;
 
-public class ConfigName
-{
+public class ConfigName {
 	public static final String JS = "js";
 	public static final String NODE = "node";
 	public static final String ROYALE = "royale";

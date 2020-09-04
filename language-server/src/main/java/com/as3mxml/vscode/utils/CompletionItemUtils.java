@@ -24,28 +24,24 @@ import org.eclipse.lsp4j.InsertTextFormat;
 import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.MarkupKind;
 
-public class CompletionItemUtils
-{
-	public static CompletionItem createDefinitionItem(IDefinition definition, ICompilerProject project)
-	{
-		CompletionItem item = new CompletionItem();
-		item.setKind(LanguageServerCompilerUtils.getCompletionItemKindFromDefinition(definition));
-		item.setDetail(DefinitionTextUtils.definitionToDetail(definition, project));
-		item.setLabel(definition.getBaseName());
-		String docs = DefinitionDocumentationUtils.getDocumentationForDefinition(definition, true, project.getWorkspace(), false);
-		if (docs != null)
-		{
-			item.setDocumentation(new MarkupContent(MarkupKind.MARKDOWN, docs));
-		}
-		return item;
-	}
+public class CompletionItemUtils {
+    public static CompletionItem createDefinitionItem(IDefinition definition, ICompilerProject project) {
+        CompletionItem item = new CompletionItem();
+        item.setKind(LanguageServerCompilerUtils.getCompletionItemKindFromDefinition(definition));
+        item.setDetail(DefinitionTextUtils.definitionToDetail(definition, project));
+        item.setLabel(definition.getBaseName());
+        String docs = DefinitionDocumentationUtils.getDocumentationForDefinition(definition, true,
+                project.getWorkspace(), false);
+        if (docs != null) {
+            item.setDocumentation(new MarkupContent(MarkupKind.MARKDOWN, docs));
+        }
+        return item;
+    }
 
-	public static CompletionItem createPackageBlockItem(String packageName, boolean asSnippet)
-	{
-		StringBuilder labelBuilder = new StringBuilder();
+    public static CompletionItem createPackageBlockItem(String packageName, boolean asSnippet) {
+        StringBuilder labelBuilder = new StringBuilder();
         labelBuilder.append(IASKeywordConstants.PACKAGE);
-        if (packageName.length() > 0)
-        {
+        if (packageName.length() > 0) {
             labelBuilder.append(" ");
             labelBuilder.append(packageName);
         }
@@ -53,8 +49,7 @@ public class CompletionItemUtils
 
         StringBuilder insertTextBuilder = new StringBuilder();
         insertTextBuilder.append(IASKeywordConstants.PACKAGE);
-        if (packageName.length() > 0)
-        {
+        if (packageName.length() > 0) {
             insertTextBuilder.append(" ");
             insertTextBuilder.append(packageName);
         }
@@ -62,8 +57,7 @@ public class CompletionItemUtils
         insertTextBuilder.append("{");
         insertTextBuilder.append("\n");
         insertTextBuilder.append("\t");
-        if (asSnippet)
-        {
+        if (asSnippet) {
             insertTextBuilder.append("$0");
         }
         insertTextBuilder.append("\n");
@@ -73,10 +67,9 @@ public class CompletionItemUtils
         packageItem.setKind(CompletionItemKind.Module);
         packageItem.setLabel(labelBuilder.toString());
         packageItem.setInsertText(insertTextBuilder.toString());
-        if (asSnippet)
-        {
+        if (asSnippet) {
             packageItem.setInsertTextFormat(InsertTextFormat.Snippet);
-		}
-		return packageItem;
-	}
+        }
+        return packageItem;
+    }
 }

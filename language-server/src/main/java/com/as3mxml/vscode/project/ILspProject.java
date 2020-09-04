@@ -25,13 +25,18 @@ import org.apache.royale.compiler.projects.IRoyaleProject;
 import org.apache.royale.compiler.targets.ITargetSettings;
 import org.apache.royale.compiler.units.ICompilationUnit;
 
-public interface ILspProject extends IRoyaleProject
-{  
+public interface ILspProject extends IRoyaleProject {
 	public Set<String> getQNamesOfDependencies(ICompilationUnit from);
+
 	public IDefinition resolveSpecifier(IClassDefinition classDefinition, String specifierName);
+
 	public Collection<ICompilerProblem> getFatalProblems();
+
 	public ITargetSettings getTargetSettings();
+
 	public void setTargetSettings(ITargetSettings value);
+
 	public String getContainerInterface();
+
 	public void collectProblems(Collection<ICompilerProblem> problems);
 }

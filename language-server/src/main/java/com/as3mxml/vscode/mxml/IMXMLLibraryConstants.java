@@ -18,12 +18,11 @@ package com.as3mxml.vscode.mxml;
 /**
  * Namespace constants for MXML libraries.
  */
-public interface IMXMLLibraryConstants
-{
+public interface IMXMLLibraryConstants {
     //Flex
     String MX = "library://ns.adobe.com/flex/mx";
     String SPARK = "library://ns.adobe.com/flex/spark";
-    
+
     //Royale
     String FLEXJS_BASIC = "library://ns.apache.org/flexjs/basic";
     String FLEXJS_EXPRESS = "library://ns.apache.org/flexjs/express";
@@ -32,7 +31,7 @@ public interface IMXMLLibraryConstants
     String ROYALE_BASIC = "library://ns.apache.org/royale/basic";
     String ROYALE_EXPRESS = "library://ns.apache.org/royale/express";
     String ROYALE_JEWEL = "library://ns.apache.org/royale/jewel";
-    
+
     //Feathers
     String FEATHERS = "library://ns.feathersui.com/mxml";
 }

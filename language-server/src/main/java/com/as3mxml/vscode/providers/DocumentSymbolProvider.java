@@ -41,168 +41,131 @@ import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.jsonrpc.CancelChecker;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 
-public class DocumentSymbolProvider
-{
-	private ActionScriptProjectManager actionScriptProjectManager;
-	private boolean hierarchicalDocumentSymbolSupport;
+public class DocumentSymbolProvider {
+    private ActionScriptProjectManager actionScriptProjectManager;
+    private boolean hierarchicalDocumentSymbolSupport;
 
-	public DocumentSymbolProvider(ActionScriptProjectManager actionScriptProjectManager, boolean hierarchicalDocumentSymbolSupport)
-	{
-		this.actionScriptProjectManager = actionScriptProjectManager;
-		this.hierarchicalDocumentSymbolSupport = hierarchicalDocumentSymbolSupport;
-	}
+    public DocumentSymbolProvider(ActionScriptProjectManager actionScriptProjectManager,
+            boolean hierarchicalDocumentSymbolSupport) {
+        this.actionScriptProjectManager = actionScriptProjectManager;
+        this.hierarchicalDocumentSymbolSupport = hierarchicalDocumentSymbolSupport;
+    }
 
-	public List<Either<SymbolInformation, DocumentSymbol>> documentSymbol(DocumentSymbolParams params, CancelChecker cancelToken)
-	{
-		cancelToken.checkCanceled();
-		TextDocumentIdentifier textDocument = params.getTextDocument();
-		Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocument.getUri());
-		if (path == null)
-		{
-			cancelToken.checkCanceled();
-			return Collections.emptyList();
-		}
-		ActionScriptProjectData projectData = actionScriptProjectManager.getProjectDataForSourceFile(path);
-		if(projectData == null || projectData.project == null)
-		{
-			cancelToken.checkCanceled();
-			return Collections.emptyList();
-		}
-		ILspProject project = projectData.project;
+    public List<Either<SymbolInformation, DocumentSymbol>> documentSymbol(DocumentSymbolParams params,
+            CancelChecker cancelToken) {
+        cancelToken.checkCanceled();
+        TextDocumentIdentifier textDocument = params.getTextDocument();
+        Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocument.getUri());
+        if (path == null) {
+            cancelToken.checkCanceled();
+            return Collections.emptyList();
+        }
+        ActionScriptProjectData projectData = actionScriptProjectManager.getProjectDataForSourceFile(path);
+        if (projectData == null || projectData.project == null) {
+            cancelToken.checkCanceled();
+            return Collections.emptyList();
+        }
+        ILspProject project = projectData.project;
 
-		ICompilationUnit unit = CompilerProjectUtils.findCompilationUnit(path, project);
-		if (unit == null)
-		{
-			cancelToken.checkCanceled();
-			//we couldn't find a compilation unit with the specified path
-			return Collections.emptyList();
-		}
+        ICompilationUnit unit = CompilerProjectUtils.findCompilationUnit(path, project);
+        if (unit == null) {
+            cancelToken.checkCanceled();
+            //we couldn't find a compilation unit with the specified path
+            return Collections.emptyList();
+        }
 
-		IASScope[] scopes;
-		try
-		{
-			scopes = unit.getFileScopeRequest().get().getScopes();
-		}
-		catch (Exception e)
-		{
-			cancelToken.checkCanceled();
-			return Collections.emptyList();
-		}
-		List<Either<SymbolInformation, DocumentSymbol>> result = new ArrayList<>();
-		if (hierarchicalDocumentSymbolSupport)
-		{
-			List<DocumentSymbol> symbols = new ArrayList<>();
-			for (IASScope scope : scopes)
-			{
-				scopeToDocumentSymbols(scope, project, symbols);
-			}
-			for (DocumentSymbol symbol : symbols)
-			{
-				result.add(Either.forRight(symbol));
-			}
-		}
-		else //fallback to non-hierarchical
-		{
-			List<SymbolInformation> symbols = new ArrayList<>();
-			for (IASScope scope : scopes)
-			{
-				scopeToSymbolInformation(scope, project, symbols);
-			}
-			for (SymbolInformation symbol : symbols)
-			{
-				result.add(Either.forLeft(symbol));
-			}
-		}
-		cancelToken.checkCanceled();
-		return result;
-	}
-
-    private void scopeToSymbolInformation(IASScope scope, ILspProject project, List<SymbolInformation> result)
-    {
-        Collection<IDefinition> definitions = scope.getAllLocalDefinitions();
-        for (IDefinition definition : definitions)
+        IASScope[] scopes;
+        try {
+            scopes = unit.getFileScopeRequest().get().getScopes();
+        } catch (Exception e) {
+            cancelToken.checkCanceled();
+            return Collections.emptyList();
+        }
+        List<Either<SymbolInformation, DocumentSymbol>> result = new ArrayList<>();
+        if (hierarchicalDocumentSymbolSupport) {
+            List<DocumentSymbol> symbols = new ArrayList<>();
+            for (IASScope scope : scopes) {
+                scopeToDocumentSymbols(scope, project, symbols);
+            }
+            for (DocumentSymbol symbol : symbols) {
+                result.add(Either.forRight(symbol));
+            }
+        } else //fallback to non-hierarchical
         {
-            if (definition instanceof IPackageDefinition)
-            {
+            List<SymbolInformation> symbols = new ArrayList<>();
+            for (IASScope scope : scopes) {
+                scopeToSymbolInformation(scope, project, symbols);
+            }
+            for (SymbolInformation symbol : symbols) {
+                result.add(Either.forLeft(symbol));
+            }
+        }
+        cancelToken.checkCanceled();
+        return result;
+    }
+
+    private void scopeToSymbolInformation(IASScope scope, ILspProject project, List<SymbolInformation> result) {
+        Collection<IDefinition> definitions = scope.getAllLocalDefinitions();
+        for (IDefinition definition : definitions) {
+            if (definition instanceof IPackageDefinition) {
                 IPackageDefinition packageDefinition = (IPackageDefinition) definition;
                 IASScope packageScope = packageDefinition.getContainedScope();
                 scopeToSymbolInformation(packageScope, project, result);
-            }
-            else if (definition instanceof ITypeDefinition)
-            {
+            } else if (definition instanceof ITypeDefinition) {
                 ITypeDefinition typeDefinition = (ITypeDefinition) definition;
                 IASScope typeScope = typeDefinition.getContainedScope();
-                if (!definition.isImplicit())
-                {
-                    SymbolInformation typeSymbol = actionScriptProjectManager.definitionToSymbolInformation(typeDefinition, project);
+                if (!definition.isImplicit()) {
+                    SymbolInformation typeSymbol = actionScriptProjectManager
+                            .definitionToSymbolInformation(typeDefinition, project);
                     result.add(typeSymbol);
                 }
                 scopeToSymbolInformation(typeScope, project, result);
-                
-            }
-            else if (definition instanceof IFunctionDefinition
-                    || definition instanceof IVariableDefinition)
-            {
-                if (definition.isImplicit())
-                {
+
+            } else if (definition instanceof IFunctionDefinition || definition instanceof IVariableDefinition) {
+                if (definition.isImplicit()) {
                     continue;
                 }
-                SymbolInformation localSymbol = actionScriptProjectManager.definitionToSymbolInformation(definition, project);
-                if (localSymbol != null)
-                {
+                SymbolInformation localSymbol = actionScriptProjectManager.definitionToSymbolInformation(definition,
+                        project);
+                if (localSymbol != null) {
                     result.add(localSymbol);
                 }
             }
         }
     }
 
-    private void scopeToDocumentSymbols(IASScope scope, ILspProject project, List<DocumentSymbol> result)
-    {
+    private void scopeToDocumentSymbols(IASScope scope, ILspProject project, List<DocumentSymbol> result) {
         Collection<IDefinition> definitions = scope.getAllLocalDefinitions();
-        for (IDefinition definition : definitions)
-        {
-            if (definition instanceof IPackageDefinition)
-            {
+        for (IDefinition definition : definitions) {
+            if (definition instanceof IPackageDefinition) {
                 IPackageDefinition packageDefinition = (IPackageDefinition) definition;
                 IASScope packageScope = packageDefinition.getContainedScope();
                 scopeToDocumentSymbols(packageScope, project, result);
-            }
-            else if (definition instanceof ITypeDefinition)
-            {
+            } else if (definition instanceof ITypeDefinition) {
                 ITypeDefinition typeDefinition = (ITypeDefinition) definition;
                 IASScope typeScope = typeDefinition.getContainedScope();
                 List<DocumentSymbol> childSymbols = new ArrayList<>();
                 scopeToDocumentSymbols(typeScope, project, childSymbols);
 
-                if (definition.isImplicit())
-                {
+                if (definition.isImplicit()) {
                     result.addAll(childSymbols);
-                }
-                else
-                {
-                    DocumentSymbol typeSymbol = actionScriptProjectManager.definitionToDocumentSymbol(typeDefinition, project);
-                    if (typeSymbol == null)
-                    {
+                } else {
+                    DocumentSymbol typeSymbol = actionScriptProjectManager.definitionToDocumentSymbol(typeDefinition,
+                            project);
+                    if (typeSymbol == null) {
                         result.addAll(childSymbols);
-                    }
-                    else
-                    {
+                    } else {
                         typeSymbol.setChildren(childSymbols);
                         result.add(typeSymbol);
                     }
                 }
-                
-            }
-            else if (definition instanceof IFunctionDefinition
-                    || definition instanceof IVariableDefinition)
-            {
-                if (definition.isImplicit())
-                {
+
+            } else if (definition instanceof IFunctionDefinition || definition instanceof IVariableDefinition) {
+                if (definition.isImplicit()) {
                     continue;
                 }
                 DocumentSymbol localSymbol = actionScriptProjectManager.definitionToDocumentSymbol(definition, project);
-                if (localSymbol != null)
-                {
+                if (localSymbol != null) {
                     result.add(localSymbol);
                 }
             }

@@ -17,10 +17,8 @@ package com.as3mxml.vscode.utils;
 
 import org.eclipse.lsp4j.Position;
 
-public class AddImportData
-{
-	public AddImportData(Position position, String indent, String newLines, ImportRange importRange)
-	{
+public class AddImportData {
+	public AddImportData(Position position, String indent, String newLines, ImportRange importRange) {
 		this.position = position;
 		this.indent = indent;
 		this.newLines = newLines;

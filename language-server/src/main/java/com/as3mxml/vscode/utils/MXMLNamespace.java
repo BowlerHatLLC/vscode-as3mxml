@@ -16,10 +16,8 @@ limitations under the License.
 */
 package com.as3mxml.vscode.utils;
 
-public class MXMLNamespace
-{
-	public MXMLNamespace(String prefix, String uri)
-	{
+public class MXMLNamespace {
+	public MXMLNamespace(String prefix, String uri) {
 		this.prefix = prefix;
 		this.uri = uri;
 	}

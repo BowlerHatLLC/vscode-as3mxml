@@ -39,101 +39,79 @@ import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.WorkspaceSymbolParams;
 import org.eclipse.lsp4j.jsonrpc.CancelChecker;
 
-public class WorkspaceSymbolProvider
-{
+public class WorkspaceSymbolProvider {
 	private ActionScriptProjectManager actionScriptProjectManager;
 
-	public WorkspaceSymbolProvider(ActionScriptProjectManager actionScriptProjectManager)
-	{
+	public WorkspaceSymbolProvider(ActionScriptProjectManager actionScriptProjectManager) {
 		this.actionScriptProjectManager = actionScriptProjectManager;
 	}
 
-	public List<? extends SymbolInformation> workspaceSymbol(WorkspaceSymbolParams params, CancelChecker cancelToken)
-	{
+	public List<? extends SymbolInformation> workspaceSymbol(WorkspaceSymbolParams params, CancelChecker cancelToken) {
 		cancelToken.checkCanceled();
 		Set<String> qualifiedNames = new HashSet<>();
 		List<SymbolInformation> result = new ArrayList<>();
 		String query = params.getQuery();
 		StringBuilder currentQuery = new StringBuilder();
 		List<String> queries = new ArrayList<>();
-		for(int i = 0, length = query.length(); i < length; i++)
-		{
+		for (int i = 0, length = query.length(); i < length; i++) {
 			String charAtI = query.substring(i, i + 1);
-			if(i > 0 && charAtI.toUpperCase().equals(charAtI))
-			{
+			if (i > 0 && charAtI.toUpperCase().equals(charAtI)) {
 				queries.add(currentQuery.toString().toLowerCase());
 				currentQuery = new StringBuilder();
 			}
 			currentQuery.append(charAtI);
 		}
-		if(currentQuery.length() > 0)
-		{
+		if (currentQuery.length() > 0) {
 			queries.add(currentQuery.toString().toLowerCase());
 		}
-		for (ActionScriptProjectData projectData : actionScriptProjectManager.getAllProjectData())
-		{
+		for (ActionScriptProjectData projectData : actionScriptProjectManager.getAllProjectData()) {
 			ILspProject project = projectData.project;
-			if (project == null)
-			{
+			if (project == null) {
 				continue;
 			}
-			for (ICompilationUnit unit : project.getCompilationUnits())
-			{
-				if (unit == null)
-				{
+			for (ICompilationUnit unit : project.getCompilationUnits()) {
+				if (unit == null) {
 					continue;
 				}
 				UnitType unitType = unit.getCompilationUnitType();
-				if (UnitType.SWC_UNIT.equals(unitType))
-				{
+				if (UnitType.SWC_UNIT.equals(unitType)) {
 					List<IDefinition> definitions = unit.getDefinitionPromises();
-					for (IDefinition definition : definitions)
-					{
-						if (definition instanceof DefinitionPromise)
-						{
+					for (IDefinition definition : definitions) {
+						if (definition instanceof DefinitionPromise) {
 							//we won't be able to detect what type of definition
 							//this is without getting the actual definition from the
 							//promise.
 							DefinitionPromise promise = (DefinitionPromise) definition;
 							definition = promise.getActualDefinition();
 						}
-						if (definition.isImplicit())
-						{
+						if (definition.isImplicit()) {
 							continue;
 						}
-						if (!matchesQueries(queries, definition.getQualifiedName()))
-						{
+						if (!matchesQueries(queries, definition.getQualifiedName())) {
 							continue;
 						}
 						String qualifiedName = definition.getQualifiedName();
-						if (qualifiedNames.contains(qualifiedName))
-						{
+						if (qualifiedNames.contains(qualifiedName)) {
 							//we've already added this symbol
 							//this can happen when there are multiple root
 							//folders in the workspace
 							continue;
 						}
-						SymbolInformation symbol = actionScriptProjectManager.definitionToSymbolInformation(definition, project);
-						if (symbol != null)
-						{
+						SymbolInformation symbol = actionScriptProjectManager.definitionToSymbolInformation(definition,
+								project);
+						if (symbol != null) {
 							qualifiedNames.add(qualifiedName);
 							result.add(symbol);
 						}
 					}
-				}
-				else if (UnitType.AS_UNIT.equals(unitType) || UnitType.MXML_UNIT.equals(unitType))
-				{
+				} else if (UnitType.AS_UNIT.equals(unitType) || UnitType.MXML_UNIT.equals(unitType)) {
 					IASScope[] scopes;
-					try
-					{
+					try {
 						scopes = unit.getFileScopeRequest().get().getScopes();
-					}
-					catch (Exception e)
-					{
+					} catch (Exception e) {
 						return Collections.emptyList();
 					}
-					for (IASScope scope : scopes)
-					{
+					for (IASScope scope : scopes) {
 						querySymbolsInScope(queries, scope, qualifiedNames, project, result);
 					}
 				}
@@ -143,89 +121,72 @@ public class WorkspaceSymbolProvider
 		return result;
 	}
 
-    private void querySymbolsInScope(List<String> queries, IASScope scope, Set<String> foundTypes, ILspProject project, Collection<SymbolInformation> result)
-    {
-        Collection<IDefinition> definitions = scope.getAllLocalDefinitions();
-        for (IDefinition definition : definitions)
-        {
-            if (definition instanceof IPackageDefinition)
-            {
-                IPackageDefinition packageDefinition = (IPackageDefinition) definition;
-                IASScope packageScope = packageDefinition.getContainedScope();
-                querySymbolsInScope(queries, packageScope, foundTypes, project, result);
-            }
-            else if (definition instanceof ITypeDefinition)
-            {
-                String qualifiedName = definition.getQualifiedName();
-                if (foundTypes.contains(qualifiedName))
-                {
-                    //skip types that we've already encountered because we don't
-                    //want duplicates in the result
-                    continue;
-                }
-                foundTypes.add(qualifiedName);
-                ITypeDefinition typeDefinition = (ITypeDefinition) definition;
-                if (!definition.isImplicit() && matchesQueries(queries, qualifiedName))
-                {
-                    SymbolInformation symbol = actionScriptProjectManager.definitionToSymbolInformation(typeDefinition, project);
-                    if (symbol != null)
-                    {
-                        result.add(symbol);
-                    }
-                }
-                IASScope typeScope = typeDefinition.getContainedScope();
-                querySymbolsInScope(queries, typeScope, foundTypes, project, result);
-            }
-            else if (definition instanceof IFunctionDefinition)
-            {
-                if (definition.isImplicit())
-                {
-                    continue;
-                }
-                if (!matchesQueries(queries, definition.getQualifiedName()))
-                {
-                    continue;
-                }
-                IFunctionDefinition functionDefinition = (IFunctionDefinition) definition;
-                SymbolInformation symbol = actionScriptProjectManager.definitionToSymbolInformation(functionDefinition, project);
-                if (symbol != null)
-                {
-                    result.add(symbol);
-                }
-            }
-            else if (definition instanceof IVariableDefinition)
-            {
-                if (definition.isImplicit())
-                {
-                    continue;
-                }
-                if (!matchesQueries(queries, definition.getQualifiedName()))
-                {
-                    continue;
-                }
-                IVariableDefinition variableDefinition = (IVariableDefinition) definition;
-                SymbolInformation symbol = actionScriptProjectManager.definitionToSymbolInformation(variableDefinition, project);
-                if (symbol != null)
-                {
-                    result.add(symbol);
-                }
-            }
-        }
-    }
+	private void querySymbolsInScope(List<String> queries, IASScope scope, Set<String> foundTypes, ILspProject project,
+			Collection<SymbolInformation> result) {
+		Collection<IDefinition> definitions = scope.getAllLocalDefinitions();
+		for (IDefinition definition : definitions) {
+			if (definition instanceof IPackageDefinition) {
+				IPackageDefinition packageDefinition = (IPackageDefinition) definition;
+				IASScope packageScope = packageDefinition.getContainedScope();
+				querySymbolsInScope(queries, packageScope, foundTypes, project, result);
+			} else if (definition instanceof ITypeDefinition) {
+				String qualifiedName = definition.getQualifiedName();
+				if (foundTypes.contains(qualifiedName)) {
+					//skip types that we've already encountered because we don't
+					//want duplicates in the result
+					continue;
+				}
+				foundTypes.add(qualifiedName);
+				ITypeDefinition typeDefinition = (ITypeDefinition) definition;
+				if (!definition.isImplicit() && matchesQueries(queries, qualifiedName)) {
+					SymbolInformation symbol = actionScriptProjectManager.definitionToSymbolInformation(typeDefinition,
+							project);
+					if (symbol != null) {
+						result.add(symbol);
+					}
+				}
+				IASScope typeScope = typeDefinition.getContainedScope();
+				querySymbolsInScope(queries, typeScope, foundTypes, project, result);
+			} else if (definition instanceof IFunctionDefinition) {
+				if (definition.isImplicit()) {
+					continue;
+				}
+				if (!matchesQueries(queries, definition.getQualifiedName())) {
+					continue;
+				}
+				IFunctionDefinition functionDefinition = (IFunctionDefinition) definition;
+				SymbolInformation symbol = actionScriptProjectManager.definitionToSymbolInformation(functionDefinition,
+						project);
+				if (symbol != null) {
+					result.add(symbol);
+				}
+			} else if (definition instanceof IVariableDefinition) {
+				if (definition.isImplicit()) {
+					continue;
+				}
+				if (!matchesQueries(queries, definition.getQualifiedName())) {
+					continue;
+				}
+				IVariableDefinition variableDefinition = (IVariableDefinition) definition;
+				SymbolInformation symbol = actionScriptProjectManager.definitionToSymbolInformation(variableDefinition,
+						project);
+				if (symbol != null) {
+					result.add(symbol);
+				}
+			}
+		}
+	}
 
-    private boolean matchesQueries(List<String> queries, String target)
-    {
-        String lowerCaseTarget = target.toLowerCase();
-        int fromIndex = 0;
-        for (String query : queries)
-        {
-            int index = lowerCaseTarget.indexOf(query, fromIndex);
-            if (index == -1)
-            {
-                return false;
-            }
-            fromIndex = index + query.length();
-        }
-        return true;
-    }
+	private boolean matchesQueries(List<String> queries, String target) {
+		String lowerCaseTarget = target.toLowerCase();
+		int fromIndex = 0;
+		for (String query : queries) {
+			int index = lowerCaseTarget.indexOf(query, fromIndex);
+			if (index == -1) {
+				return false;
+			}
+			fromIndex = index + query.length();
+		}
+		return true;
+	}
 }

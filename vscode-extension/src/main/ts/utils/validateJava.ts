@@ -17,24 +17,23 @@ import * as child_process from "child_process";
 import * as fs from "fs";
 import * as path from "path";
 
-export default function validateJava(extensionPath: string, javaPath: string): boolean
-{
-	//on macOS, /usr/libexec/java_home may be specified accidentally
-	//it's an executable, and it returns 0 (even if it receives invalid
-	//options), so for usability, we treat it as a special case.
-	if(path.basename(javaPath) === "java_home")
-	{
-		return false;
-	}
-	if(!fs.existsSync(javaPath))
-	{
-		return false;
-	}
-	let args =
-	[
-		"-jar",
-		path.join(extensionPath, "bin", "check-java-version.jar")
-	];
-	let result = child_process.spawnSync(javaPath, args);
-	return result.status === 0;
+export default function validateJava(
+  extensionPath: string,
+  javaPath: string
+): boolean {
+  //on macOS, /usr/libexec/java_home may be specified accidentally
+  //it's an executable, and it returns 0 (even if it receives invalid
+  //options), so for usability, we treat it as a special case.
+  if (path.basename(javaPath) === "java_home") {
+    return false;
+  }
+  if (!fs.existsSync(javaPath)) {
+    return false;
+  }
+  let args = [
+    "-jar",
+    path.join(extensionPath, "bin", "check-java-version.jar"),
+  ];
+  let result = child_process.spawnSync(javaPath, args);
+  return result.status === 0;
 }

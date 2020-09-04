@@ -15,8 +15,7 @@ limitations under the License.
 */
 package com.as3mxml.vscode.commands;
 
-public interface ICommandConstants
-{
+public interface ICommandConstants {
 	public static final String ADD_IMPORT = "as3mxml.addImport";
 	public static final String ADD_MXML_NAMESPACE = "as3mxml.addMXMLNamespace";
 	public static final String ORGANIZE_IMPORTS_IN_URI = "as3mxml.organizeImportsInUri";

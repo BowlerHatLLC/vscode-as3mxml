@@ -33,95 +33,80 @@ import org.apache.royale.compiler.workspaces.IWorkspace;
 /**
  * A custom implementation of IASDocDelegate for the AS3 & MXML language server.
  */
-public final class VSCodeASDocDelegate implements IASDocDelegate
-{
+public final class VSCodeASDocDelegate implements IASDocDelegate {
     private IWorkspace workspace;
 
-    public VSCodeASDocDelegate(IWorkspace workspace)
-    {
+    public VSCodeASDocDelegate(IWorkspace workspace) {
         this.workspace = workspace;
     }
 
     @Override
-    public IASParserASDocDelegate getASParserASDocDelegate()
-    {
+    public IASParserASDocDelegate getASParserASDocDelegate() {
         return new ASDelegate();
     }
 
     @Override
-    public IASDocComment createASDocComment(ISourceLocation location, IDocumentableDefinition definition)
-    {
+    public IASDocComment createASDocComment(ISourceLocation location, IDocumentableDefinition definition) {
         return null;
     }
 
     private VSCodePackageDITAParser packageDitaParser = null;
 
     @Override
-    public IPackageDITAParser getPackageDitaParser()
-    {
-        if(packageDitaParser == null)
-        {
+    public IPackageDITAParser getPackageDitaParser() {
+        if (packageDitaParser == null) {
             packageDitaParser = new VSCodePackageDITAParser(workspace);
         }
         return packageDitaParser;
     }
 
-    private static final class ASDelegate implements IASParserASDocDelegate, IMetadataParserASDocDelegate
-    {
+    private static final class ASDelegate implements IASParserASDocDelegate, IMetadataParserASDocDelegate {
         @SuppressWarnings("unused")
-		static final ASDelegate INSTANCE = new ASDelegate();
+        static final ASDelegate INSTANCE = new ASDelegate();
 
         @Override
-        public void beforeVariable()
-        {
+        public void beforeVariable() {
         }
 
         @Override
-        public void afterVariable()
-        {
+        public void afterVariable() {
         }
 
         Token currentToken;
-        
+
         @Override
-        public void setCurrentASDocToken(Token asDocToken)
-        {
+        public void setCurrentASDocToken(Token asDocToken) {
             currentToken = asDocToken;
         }
 
         @Override
-        public IASDocComment afterDefinition(IDocumentableDefinitionNode definitionNode)
-        {
-			if (currentToken == null)
-			{
-				return null;
-			}
-            
-			VSCodeASDocComment comment = new VSCodeASDocComment(currentToken);
+        public IASDocComment afterDefinition(IDocumentableDefinitionNode definitionNode) {
+            if (currentToken == null) {
+                return null;
+            }
+
+            VSCodeASDocComment comment = new VSCodeASDocComment(currentToken);
             currentToken = null;
             return comment;
         }
 
         @Override
-        public IMetadataParserASDocDelegate getMetadataParserASDocDelegate()
-        {
-        	// ASDelegate is also MetadataDelegate because when metadata like
-        	// event metadata has asdoc, the parser sees the asdoc token before
-        	// seeing the metadata tokens so it tells the ASDelegate about
-        	// the token but then asks the metadata delegate after the
-        	// definition.  Sharing the token between the two types of
-        	// delegates seems to fix the problem.
+        public IMetadataParserASDocDelegate getMetadataParserASDocDelegate() {
+            // ASDelegate is also MetadataDelegate because when metadata like
+            // event metadata has asdoc, the parser sees the asdoc token before
+            // seeing the metadata tokens so it tells the ASDelegate about
+            // the token but then asks the metadata delegate after the
+            // definition.  Sharing the token between the two types of
+            // delegates seems to fix the problem.
             return this;
         }
 
         @Override
-        public void clearMetadataComment(String metaDataTagName)
-        {
+        public void clearMetadataComment(String metaDataTagName) {
         }
 
         @Override
-        public void afterMetadata(int metaDataEndOffset)
-        {
+        public void afterMetadata(int metaDataEndOffset) {
         }
     }
 }

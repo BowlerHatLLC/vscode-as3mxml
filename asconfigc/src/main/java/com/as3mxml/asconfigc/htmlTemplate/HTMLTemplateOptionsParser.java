@@ -24,85 +24,61 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.as3mxml.asconfigc.utils.ProjectUtils;
 import com.as3mxml.asconfigc.compiler.CompilerOptions;
 
-public class HTMLTemplateOptionsParser
-{
-	public HTMLTemplateOptionsParser()
-	{
+public class HTMLTemplateOptionsParser {
+	public HTMLTemplateOptionsParser() {
 	}
 
-	public Map<String, String> parse(JsonNode compilerOptions, String mainFile, String outputPath)
-	{
+	public Map<String, String> parse(JsonNode compilerOptions, String mainFile, String outputPath) {
 		Map<String, String> result = new HashMap<>();
-		if(compilerOptions != null && compilerOptions.has(CompilerOptions.DEFAULT_SIZE))
-		{
+		if (compilerOptions != null && compilerOptions.has(CompilerOptions.DEFAULT_SIZE)) {
 			JsonNode defaultSizeJson = compilerOptions.get(CompilerOptions.DEFAULT_SIZE);
 			result.put(HTMLTemplateOptions.WIDTH, defaultSizeJson.get(CompilerOptions.DEFAULT_SIZE__WIDTH).asText());
 			result.put(HTMLTemplateOptions.HEIGHT, defaultSizeJson.get(CompilerOptions.DEFAULT_SIZE__HEIGHT).asText());
-		}
-		else
-		{
+		} else {
 			result.put(HTMLTemplateOptions.WIDTH, "100%");
 			result.put(HTMLTemplateOptions.HEIGHT, "100%");
 		}
-		if(compilerOptions != null && compilerOptions.has(CompilerOptions.DEFAULT_BACKGROUND_COLOR))
-		{
+		if (compilerOptions != null && compilerOptions.has(CompilerOptions.DEFAULT_BACKGROUND_COLOR)) {
 			String defaultBackgroundColor = compilerOptions.get(CompilerOptions.DEFAULT_BACKGROUND_COLOR).asText();
 			result.put(HTMLTemplateOptions.BGCOLOR, defaultBackgroundColor);
-		}
-		else
-		{
+		} else {
 			result.put(HTMLTemplateOptions.BGCOLOR, "#ffffff");
 		}
-		if(compilerOptions != null && compilerOptions.has(CompilerOptions.TARGET_PLAYER))
-		{
+		if (compilerOptions != null && compilerOptions.has(CompilerOptions.TARGET_PLAYER)) {
 			String targetPlayer = compilerOptions.get(CompilerOptions.TARGET_PLAYER).asText();
 			String[] parts = targetPlayer.split("\\.");
 			result.put(HTMLTemplateOptions.VERSION_MAJOR, parts[0]);
-			if(parts.length > 1)
-			{
+			if (parts.length > 1) {
 				result.put(HTMLTemplateOptions.VERSION_MINOR, parts[1]);
-			}
-			else
-			{
+			} else {
 				result.put(HTMLTemplateOptions.VERSION_MINOR, "0");
 			}
-			if(parts.length > 2)
-			{
+			if (parts.length > 2) {
 				result.put(HTMLTemplateOptions.VERSION_REVISION, parts[2]);
-			}
-			else
-			{
+			} else {
 				result.put(HTMLTemplateOptions.VERSION_REVISION, "0");
 			}
-		}
-		else
-		{
+		} else {
 			//TODO: get the default target-player value from the SDK
 			result.put(HTMLTemplateOptions.VERSION_MAJOR, "9");
 			result.put(HTMLTemplateOptions.VERSION_MINOR, "0");
 			result.put(HTMLTemplateOptions.VERSION_REVISION, "124");
 		}
 		String outputFileName = ProjectUtils.findOutputFileName(mainFile, outputPath);
-		if(outputFileName != null)
-		{
+		if (outputFileName != null) {
 			int extensionIndex = outputFileName.indexOf(".");
 			String swfName = outputFileName.substring(0, extensionIndex);
 			result.put(HTMLTemplateOptions.SWF, swfName);
-			if(mainFile != null)
-			{
+			if (mainFile != null) {
 				Path mainFilePath = Paths.get(mainFile);
 				//remove any directory names from the beginning
 				String mainFileName = mainFilePath.getFileName().toString();
 				extensionIndex = mainFileName.indexOf(".");
 				result.put(HTMLTemplateOptions.APPLICATION, mainFileName.substring(0, extensionIndex));
-			}
-			else
-			{
+			} else {
 				result.put(HTMLTemplateOptions.APPLICATION, swfName);
 			}
-		}
-		else
-		{
+		} else {
 			result.put(HTMLTemplateOptions.APPLICATION, "");
 		}
 		result.put(HTMLTemplateOptions.EXPRESS_INSTALL_SWF, "playerProductInstall.swf");

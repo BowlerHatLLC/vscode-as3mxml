@@ -15,8 +15,7 @@ limitations under the License.
 */
 package com.as3mxml.asconfigc.air;
 
-public class AIROptions
-{
+public class AIROptions {
 	public static final String EXTDIR = "extdir";
 	public static final String FILES = "files";
 	public static final String OUTPUT = "output";
@@ -37,7 +36,7 @@ public class AIROptions
 	//android
 	public static final String AIR_DOWNLOAD_URL = "airDownloadURL";
 	public static final String ARCH = "arch";
-	
+
 	//sub-values
 	public static final String FILES__FILE = "file";
 	public static final String FILES__PATH = "path";

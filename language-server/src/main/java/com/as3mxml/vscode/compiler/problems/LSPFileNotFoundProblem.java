@@ -17,19 +17,16 @@ package com.as3mxml.vscode.compiler.problems;
 
 import org.apache.royale.compiler.problems.CompilerProblem;
 
-public class LSPFileNotFoundProblem extends CompilerProblem
-{
-    public static String DESCRIPTION =
-        "File not found: ${file}";
-   
+public class LSPFileNotFoundProblem extends CompilerProblem {
+    public static String DESCRIPTION = "File not found: ${file}";
+
     public static final int errorCode = 1457;
 
-	public LSPFileNotFoundProblem(String filePath, String sourcePath)
-    {
+    public LSPFileNotFoundProblem(String filePath, String sourcePath) {
         super(sourcePath != null ? sourcePath : filePath);
         file = filePath;
     }
-    
+
     /// Path to the file that was not found.
     public final String file;
 }

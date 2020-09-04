@@ -55,64 +55,56 @@ import org.eclipse.lsp4j.ReferenceParams;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.jsonrpc.CancelChecker;
 
-public class ReferencesProvider
-{
+public class ReferencesProvider {
     private static final String FILE_EXTENSION_MXML = ".mxml";
 
     private ActionScriptProjectManager actionScriptProjectManager;
     private FileTracker fileTracker;
 
-	public ReferencesProvider(ActionScriptProjectManager actionScriptProjectManager, FileTracker fileTracker)
-	{
+    public ReferencesProvider(ActionScriptProjectManager actionScriptProjectManager, FileTracker fileTracker) {
         this.actionScriptProjectManager = actionScriptProjectManager;
         this.fileTracker = fileTracker;
-	}
+    }
 
-	public List<? extends Location> references(ReferenceParams params, CancelChecker cancelToken)
-	{
-		cancelToken.checkCanceled();
-		TextDocumentIdentifier textDocument = params.getTextDocument();
-		Position position = params.getPosition();
-		Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocument.getUri());
-		if (path == null)
-		{
-			cancelToken.checkCanceled();
-			return Collections.emptyList();
-		}
-		ActionScriptProjectData projectData = actionScriptProjectManager.getProjectDataForSourceFile(path);
-		if(projectData == null || projectData.project == null
-                || projectData.equals(actionScriptProjectManager.getFallbackProjectData()))
-		{
-			cancelToken.checkCanceled();
-			return Collections.emptyList();
-		}
-		ILspProject project = projectData.project;
+    public List<? extends Location> references(ReferenceParams params, CancelChecker cancelToken) {
+        cancelToken.checkCanceled();
+        TextDocumentIdentifier textDocument = params.getTextDocument();
+        Position position = params.getPosition();
+        Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocument.getUri());
+        if (path == null) {
+            cancelToken.checkCanceled();
+            return Collections.emptyList();
+        }
+        ActionScriptProjectData projectData = actionScriptProjectManager.getProjectDataForSourceFile(path);
+        if (projectData == null || projectData.project == null
+                || projectData.equals(actionScriptProjectManager.getFallbackProjectData())) {
+            cancelToken.checkCanceled();
+            return Collections.emptyList();
+        }
+        ILspProject project = projectData.project;
 
         IncludeFileData includeFileData = projectData.includedFiles.get(path.toString());
-		int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position, includeFileData);
-		if (currentOffset == -1)
-		{
-			cancelToken.checkCanceled();
-			return Collections.emptyList();
-		}
+        int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position,
+                includeFileData);
+        if (currentOffset == -1) {
+            cancelToken.checkCanceled();
+            return Collections.emptyList();
+        }
         boolean isMXML = textDocument.getUri().endsWith(FILE_EXTENSION_MXML);
-        if (isMXML)
-        {
+        if (isMXML) {
             MXMLData mxmlData = actionScriptProjectManager.getMXMLDataForPath(path, projectData);
             IMXMLTagData offsetTag = MXMLDataUtils.getOffsetMXMLTag(mxmlData, currentOffset);
-            if (offsetTag != null)
-            {
-                IASNode embeddedNode = actionScriptProjectManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, currentOffset, projectData);
-                if (embeddedNode != null)
-                {
+            if (offsetTag != null) {
+                IASNode embeddedNode = actionScriptProjectManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path,
+                        currentOffset, projectData);
+                if (embeddedNode != null) {
                     List<? extends Location> result = actionScriptReferences(embeddedNode, project);
                     cancelToken.checkCanceled();
                     return result;
                 }
                 //if we're inside an <fx:Script> tag, we want ActionScript lookup,
                 //so that's why we call isMXMLTagValidForCompletion()
-                if (MXMLDataUtils.isMXMLCodeIntelligenceAvailableForTag(offsetTag))
-                {
+                if (MXMLDataUtils.isMXMLCodeIntelligenceAvailableForTag(offsetTag)) {
                     ICompilationUnit offsetUnit = CompilerProjectUtils.findCompilationUnit(path, project);
                     List<? extends Location> result = mxmlReferences(offsetTag, currentOffset, offsetUnit, project);
                     cancelToken.checkCanceled();
@@ -120,26 +112,22 @@ public class ReferencesProvider
                 }
             }
         }
-		IASNode offsetNode = actionScriptProjectManager.getOffsetNode(path, currentOffset, projectData);
-		List<? extends Location> result = actionScriptReferences(offsetNode, project);
-		cancelToken.checkCanceled();
-		return result;
-	}
+        IASNode offsetNode = actionScriptProjectManager.getOffsetNode(path, currentOffset, projectData);
+        List<? extends Location> result = actionScriptReferences(offsetNode, project);
+        cancelToken.checkCanceled();
+        return result;
+    }
 
-    private List<? extends Location> actionScriptReferences(IASNode offsetNode, ILspProject project)
-    {
-        if (offsetNode == null)
-        {
+    private List<? extends Location> actionScriptReferences(IASNode offsetNode, ILspProject project) {
+        if (offsetNode == null) {
             //we couldn't find a node at the specified location
             return Collections.emptyList();
         }
 
-        if (offsetNode instanceof IIdentifierNode)
-        {
+        if (offsetNode instanceof IIdentifierNode) {
             IIdentifierNode identifierNode = (IIdentifierNode) offsetNode;
             IDefinition resolved = DefinitionUtils.resolveWithExtras(identifierNode, project);
-            if (resolved == null)
-            {
+            if (resolved == null) {
                 return Collections.emptyList();
             }
             List<Location> result = new ArrayList<>();
@@ -152,13 +140,11 @@ public class ReferencesProvider
         return Collections.emptyList();
     }
 
-    private List<? extends Location> mxmlReferences(IMXMLTagData offsetTag, int currentOffset, ICompilationUnit offsetUnit, ILspProject project)
-    {
+    private List<? extends Location> mxmlReferences(IMXMLTagData offsetTag, int currentOffset,
+            ICompilationUnit offsetUnit, ILspProject project) {
         IDefinition definition = MXMLDataUtils.getDefinitionForMXMLNameAtOffset(offsetTag, currentOffset, project);
-        if (definition != null)
-        {
-            if (MXMLDataUtils.isInsideTagPrefix(offsetTag, currentOffset))
-            {
+        if (definition != null) {
+            if (MXMLDataUtils.isInsideTagPrefix(offsetTag, currentOffset)) {
                 //ignore the tag's prefix
                 return Collections.emptyList();
             }
@@ -168,51 +154,41 @@ public class ReferencesProvider
         }
 
         //finally, check if we're looking for references to a tag's id
-        IMXMLTagAttributeData attributeData = MXMLDataUtils.getMXMLTagAttributeWithValueAtOffset(offsetTag, currentOffset);
-        if (attributeData == null || !attributeData.getName().equals(IMXMLLanguageConstants.ATTRIBUTE_ID))
-        {
+        IMXMLTagAttributeData attributeData = MXMLDataUtils.getMXMLTagAttributeWithValueAtOffset(offsetTag,
+                currentOffset);
+        if (attributeData == null || !attributeData.getName().equals(IMXMLLanguageConstants.ATTRIBUTE_ID)) {
             //VSCode may call definition() when there isn't necessarily a
             //definition referenced at the current position.
             return Collections.emptyList();
         }
         Collection<IDefinition> definitions = null;
-        try
-        {
+        try {
             definitions = offsetUnit.getFileScopeRequest().get().getExternallyVisibleDefinitions();
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             //safe to ignore
         }
-        if (definitions == null || definitions.size() == 0)
-        {
+        if (definitions == null || definitions.size() == 0) {
             return Collections.emptyList();
         }
         IClassDefinition classDefinition = null;
-        for (IDefinition currentDefinition : definitions)
-        {
-            if (currentDefinition instanceof IClassDefinition)
-            {
+        for (IDefinition currentDefinition : definitions) {
+            if (currentDefinition instanceof IClassDefinition) {
                 classDefinition = (IClassDefinition) currentDefinition;
                 break;
             }
         }
-        if (classDefinition == null)
-        {
+        if (classDefinition == null) {
             //this probably shouldn't happen, but check just to be safe
             return Collections.emptyList();
         }
         IASScope scope = classDefinition.getContainedScope();
-        for (IDefinition currentDefinition : scope.getAllLocalDefinitions())
-        {
-            if (currentDefinition.getBaseName().equals(attributeData.getRawValue()))
-            {
+        for (IDefinition currentDefinition : scope.getAllLocalDefinitions()) {
+            if (currentDefinition.getBaseName().equals(attributeData.getRawValue())) {
                 definition = currentDefinition;
                 break;
             }
         }
-        if (definition == null)
-        {
+        if (definition == null) {
             //VSCode may call definition() when there isn't necessarily a
             //definition referenced at the current position.
             return Collections.emptyList();
@@ -222,57 +198,46 @@ public class ReferencesProvider
         return result;
     }
 
-    private void referencesForDefinition(IDefinition definition, ILspProject project, List<Location> result)
-    {
+    private void referencesForDefinition(IDefinition definition, ILspProject project, List<Location> result) {
         boolean isLocal = false;
-        if (definition instanceof IVariableDefinition)
-        {
+        if (definition instanceof IVariableDefinition) {
             IVariableDefinition variableDef = (IVariableDefinition) definition;
             isLocal = VariableClassification.LOCAL.equals(variableDef.getVariableClassification());
-        }
-        else if (definition instanceof IFunctionDefinition)
-        {
+        } else if (definition instanceof IFunctionDefinition) {
             IFunctionDefinition functionDef = (IFunctionDefinition) definition;
             isLocal = FunctionClassification.LOCAL.equals(functionDef.getFunctionClassification());
         }
 
-        for (ICompilationUnit unit : project.getCompilationUnits())
-        {
-            if (unit == null)
-            {
+        for (ICompilationUnit unit : project.getCompilationUnits()) {
+            if (unit == null) {
                 continue;
             }
             UnitType unitType = unit.getCompilationUnitType();
-            if (!UnitType.AS_UNIT.equals(unitType) && !UnitType.MXML_UNIT.equals(unitType))
-            {
+            if (!UnitType.AS_UNIT.equals(unitType) && !UnitType.MXML_UNIT.equals(unitType)) {
                 //compiled compilation units won't have problems
                 continue;
             }
-            if (isLocal && !unit.getAbsoluteFilename().equals(definition.getContainingFilePath()))
-            {
+            if (isLocal && !unit.getAbsoluteFilename().equals(definition.getContainingFilePath())) {
                 // no need to check this file
                 continue;
             }
             referencesForDefinitionInCompilationUnit(definition, unit, project, result);
         }
     }
-    
-    private void referencesForDefinitionInCompilationUnit(IDefinition definition, ICompilationUnit compilationUnit, ILspProject project, List<Location> result)
-    {
-        if (compilationUnit.getAbsoluteFilename().endsWith(FILE_EXTENSION_MXML))
-        {
+
+    private void referencesForDefinitionInCompilationUnit(IDefinition definition, ICompilationUnit compilationUnit,
+            ILspProject project, List<Location> result) {
+        if (compilationUnit.getAbsoluteFilename().endsWith(FILE_EXTENSION_MXML)) {
             IMXMLDataManager mxmlDataManager = project.getWorkspace().getMXMLDataManager();
-            MXMLData mxmlData = (MXMLData) mxmlDataManager.get(fileTracker.getFileSpecification(compilationUnit.getAbsoluteFilename()));
+            MXMLData mxmlData = (MXMLData) mxmlDataManager
+                    .get(fileTracker.getFileSpecification(compilationUnit.getAbsoluteFilename()));
             IMXMLTagData rootTag = mxmlData.getRootTag();
-            if (rootTag != null)
-            {
+            if (rootTag != null) {
                 ArrayList<ISourceLocation> units = new ArrayList<>();
                 MXMLDataUtils.findMXMLUnits(mxmlData.getRootTag(), definition, project, units);
-                for (ISourceLocation otherUnit : units)
-                {
+                for (ISourceLocation otherUnit : units) {
                     Location location = LanguageServerCompilerUtils.getLocationFromSourceLocation(otherUnit);
-                    if (location == null)
-                    {
+                    if (location == null) {
                         continue;
                     }
                     result.add(location);
@@ -280,17 +245,14 @@ public class ReferencesProvider
             }
         }
         IASNode ast = ASTUtils.getCompilationUnitAST(compilationUnit);
-        if(ast == null)
-        {
+        if (ast == null) {
             return;
         }
         ArrayList<IIdentifierNode> identifiers = new ArrayList<>();
         ASTUtils.findIdentifiersForDefinition(ast, definition, project, identifiers);
-        for (IIdentifierNode otherNode : identifiers)
-        {
+        for (IIdentifierNode otherNode : identifiers) {
             Location location = LanguageServerCompilerUtils.getLocationFromSourceLocation(otherNode);
-            if (location == null)
-            {
+            if (location == null) {
                 continue;
             }
             result.add(location);

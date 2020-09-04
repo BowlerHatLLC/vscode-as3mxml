@@ -30,117 +30,159 @@ const TASK_NAME_COMPILE_RELEASE = "compile release";
 const TASK_NAME_PUBLISH_DEBUG = "publish debug";
 const TASK_NAME_PUBLISH_RELEASE = "publish release";
 
-interface AnimateTaskDefinition extends vscode.TaskDefinition
-{
-	type: typeof TASK_TYPE_ANIMATE;
-	debug: boolean;
-	publish: boolean;
-	asconfig?: string;
+interface AnimateTaskDefinition extends vscode.TaskDefinition {
+  type: typeof TASK_TYPE_ANIMATE;
+  debug: boolean;
+  publish: boolean;
+  asconfig?: string;
 }
 
-export default class ActionScriptTaskProvider extends BaseAsconfigTaskProvider implements vscode.TaskProvider
-{
-	protected provideTasksForASConfigJSON(jsonURI: vscode.Uri, workspaceFolder: vscode.WorkspaceFolder, result: vscode.Task[])
-	{
-		let isAnimate = false;
-		let asconfigJson = this.readASConfigJSON(jsonURI);
-		if(asconfigJson !== null)
-		{
-			isAnimate = this.isAnimate(asconfigJson);
-		}
+export default class ActionScriptTaskProvider
+  extends BaseAsconfigTaskProvider
+  implements vscode.TaskProvider {
+  protected provideTasksForASConfigJSON(
+    jsonURI: vscode.Uri,
+    workspaceFolder: vscode.WorkspaceFolder,
+    result: vscode.Task[]
+  ) {
+    let isAnimate = false;
+    let asconfigJson = this.readASConfigJSON(jsonURI);
+    if (asconfigJson !== null) {
+      isAnimate = this.isAnimate(asconfigJson);
+    }
 
-		let frameworkSDK = getFrameworkSDKPathWithFallbacks();
-		if(frameworkSDK === null)
-		{
-			//we don't have a valid SDK
-			return;
-		}
-		let command = this.getCommand(workspaceFolder);
+    let frameworkSDK = getFrameworkSDKPathWithFallbacks();
+    if (frameworkSDK === null) {
+      //we don't have a valid SDK
+      return;
+    }
+    let command = this.getCommand(workspaceFolder);
 
-		if(!isAnimate)
-		{
-			//handled by the ActionScript task provider
-			return;
-		}
+    if (!isAnimate) {
+      //handled by the ActionScript task provider
+      return;
+    }
 
-		//compile SWF with Animate
-		let animatePath = findAnimate();
-		if(!animatePath)
-		{
-			//don't add the tasks if we cannot find Adobe Animate
-			return;
-		}
-		let flaPath = asconfigJson[FIELD_ANIMATE_OPTIONS][FIELD_FILE];
-		if(!path.isAbsolute(flaPath))
-		{
-			flaPath = path.resolve(workspaceFolder.uri.fsPath, flaPath);
-		}
-		if(!fs.existsSync(flaPath))
-		{
-			//don't add the tasks if we cannot find the FLA file
-			return;
-		}
+    //compile SWF with Animate
+    let animatePath = findAnimate();
+    if (!animatePath) {
+      //don't add the tasks if we cannot find Adobe Animate
+      return;
+    }
+    let flaPath = asconfigJson[FIELD_ANIMATE_OPTIONS][FIELD_FILE];
+    if (!path.isAbsolute(flaPath)) {
+      flaPath = path.resolve(workspaceFolder.uri.fsPath, flaPath);
+    }
+    if (!fs.existsSync(flaPath)) {
+      //don't add the tasks if we cannot find the FLA file
+      return;
+    }
 
-		let taskNameSuffix = path.basename(flaPath);
-		result.push(this.getAnimateTask(`${TASK_NAME_COMPILE_DEBUG} - ${taskNameSuffix}`,
-			jsonURI, workspaceFolder, command, animatePath, true, false));
-		result.push(this.getAnimateTask(`${TASK_NAME_COMPILE_RELEASE} - ${taskNameSuffix}`,
-			jsonURI, workspaceFolder, command, animatePath, false, false));
-		result.push(this.getAnimateTask(`${TASK_NAME_PUBLISH_DEBUG} - ${taskNameSuffix}`,
-			jsonURI, workspaceFolder, command, animatePath, true, true));
-		result.push(this.getAnimateTask(`${TASK_NAME_PUBLISH_RELEASE} - ${taskNameSuffix}`,
-			jsonURI, workspaceFolder, command, animatePath, false, true));
-	}
+    let taskNameSuffix = path.basename(flaPath);
+    result.push(
+      this.getAnimateTask(
+        `${TASK_NAME_COMPILE_DEBUG} - ${taskNameSuffix}`,
+        jsonURI,
+        workspaceFolder,
+        command,
+        animatePath,
+        true,
+        false
+      )
+    );
+    result.push(
+      this.getAnimateTask(
+        `${TASK_NAME_COMPILE_RELEASE} - ${taskNameSuffix}`,
+        jsonURI,
+        workspaceFolder,
+        command,
+        animatePath,
+        false,
+        false
+      )
+    );
+    result.push(
+      this.getAnimateTask(
+        `${TASK_NAME_PUBLISH_DEBUG} - ${taskNameSuffix}`,
+        jsonURI,
+        workspaceFolder,
+        command,
+        animatePath,
+        true,
+        true
+      )
+    );
+    result.push(
+      this.getAnimateTask(
+        `${TASK_NAME_PUBLISH_RELEASE} - ${taskNameSuffix}`,
+        jsonURI,
+        workspaceFolder,
+        command,
+        animatePath,
+        false,
+        true
+      )
+    );
+  }
 
-	private getAnimateTask(description: string, jsonURI: vscode.Uri,
-		workspaceFolder: vscode.WorkspaceFolder, command: string[],
-		animatePath: string, debug: boolean, publish: boolean): vscode.Task
-	{
-		let asconfig: string = this.getASConfigValue(jsonURI, workspaceFolder.uri);
-		let definition: AnimateTaskDefinition = { type: TASK_TYPE_ANIMATE, debug, publish, asconfig };
-		let options = ["--animate", animatePath];
-		if(debug)
-		{
-			options.push("--debug=true");
-		}
-		else
-		{
-			options.push("--debug=false");
-		}
-		if(publish)
-		{
-			options.push("--publish-animate=true");
-		}
-		else
-		{
-			options.push("--publish-animate=false");
-		}
-		if(vscode.workspace.getConfiguration("as3mxml").get("asconfigc.verboseOutput"))
-		{
-			options.push("--verbose=true");
-		}
-		if(jsonURI)
-		{
-			options.push("--project", jsonURI.fsPath);
-		}
-		if(command.length > 1)
-		{
-			options.unshift(...command.slice(1));
-		}
-		let execution = new vscode.ProcessExecution(command[0], options);
-		let task = new vscode.Task(definition, workspaceFolder, description,
-			TASK_SOURCE_ANIMATE, execution, MATCHER);
-		task.group = vscode.TaskGroup.Build;
-		return task;
-	}
-	
-	private isAnimate(asconfigJson: any): boolean
-	{
-		if(!(FIELD_ANIMATE_OPTIONS in asconfigJson))
-		{
-			return false;
-		}
-		let animateOptions = asconfigJson[FIELD_ANIMATE_OPTIONS];
-		return FIELD_FILE in animateOptions;
-	}
+  private getAnimateTask(
+    description: string,
+    jsonURI: vscode.Uri,
+    workspaceFolder: vscode.WorkspaceFolder,
+    command: string[],
+    animatePath: string,
+    debug: boolean,
+    publish: boolean
+  ): vscode.Task {
+    let asconfig: string = this.getASConfigValue(jsonURI, workspaceFolder.uri);
+    let definition: AnimateTaskDefinition = {
+      type: TASK_TYPE_ANIMATE,
+      debug,
+      publish,
+      asconfig,
+    };
+    let options = ["--animate", animatePath];
+    if (debug) {
+      options.push("--debug=true");
+    } else {
+      options.push("--debug=false");
+    }
+    if (publish) {
+      options.push("--publish-animate=true");
+    } else {
+      options.push("--publish-animate=false");
+    }
+    if (
+      vscode.workspace
+        .getConfiguration("as3mxml")
+        .get("asconfigc.verboseOutput")
+    ) {
+      options.push("--verbose=true");
+    }
+    if (jsonURI) {
+      options.push("--project", jsonURI.fsPath);
+    }
+    if (command.length > 1) {
+      options.unshift(...command.slice(1));
+    }
+    let execution = new vscode.ProcessExecution(command[0], options);
+    let task = new vscode.Task(
+      definition,
+      workspaceFolder,
+      description,
+      TASK_SOURCE_ANIMATE,
+      execution,
+      MATCHER
+    );
+    task.group = vscode.TaskGroup.Build;
+    return task;
+  }
+
+  private isAnimate(asconfigJson: any): boolean {
+    if (!(FIELD_ANIMATE_OPTIONS in asconfigJson)) {
+      return false;
+    }
+    let animateOptions = asconfigJson[FIELD_ANIMATE_OPTIONS];
+    return FIELD_FILE in animateOptions;
+  }
 }

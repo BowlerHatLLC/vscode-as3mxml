@@ -15,7 +15,6 @@ limitations under the License.
 */
 package com.as3mxml.asconfigc.animate;
 
-public class AnimateOptions
-{
+public class AnimateOptions {
 	public static final String FILE = "file";
 }

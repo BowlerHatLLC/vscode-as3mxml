@@ -21,15 +21,13 @@ import org.apache.royale.compiler.problems.CompilerProblemSeverity;
 import org.apache.royale.compiler.problems.annotations.DefaultSeverity;
 
 @DefaultSeverity(CompilerProblemSeverity.WARNING)
-public class SyntaxFallbackProblem extends CompilerProblem
-{
+public class SyntaxFallbackProblem extends CompilerProblem {
     public static final String DESCRIPTION = "${reason}";
-    
-    public SyntaxFallbackProblem(String fileName, String reason)
-    {
+
+    public SyntaxFallbackProblem(String fileName, String reason) {
         super(fileName, -1, -1, 0, -1, !CommandLineConfigurator.SOURCE_COMMAND_LINE.equals(fileName));
         this.reason = reason;
     }
-	
-	public String reason;
+
+    public String reason;
 }

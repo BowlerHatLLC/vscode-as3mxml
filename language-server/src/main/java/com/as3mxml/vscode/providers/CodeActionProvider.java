@@ -64,81 +64,70 @@ import org.eclipse.lsp4j.WorkspaceEdit;
 import org.eclipse.lsp4j.jsonrpc.CancelChecker;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 
-public class CodeActionProvider
-{
+public class CodeActionProvider {
     private static final String FILE_EXTENSION_MXML = ".mxml";
 
     private ActionScriptProjectManager actionScriptProjectManager;
     private FileTracker fileTracker;
 
-	public CodeActionProvider(ActionScriptProjectManager actionScriptProjectManager, FileTracker fileTracker)
-	{
+    public CodeActionProvider(ActionScriptProjectManager actionScriptProjectManager, FileTracker fileTracker) {
         this.actionScriptProjectManager = actionScriptProjectManager;
         this.fileTracker = fileTracker;
-	}
+    }
 
-	public List<Either<Command, CodeAction>> codeAction(CodeActionParams params, CancelChecker cancelToken)
-	{
-		cancelToken.checkCanceled();
-		TextDocumentIdentifier textDocument = params.getTextDocument();
-		Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocument.getUri());
-		if (path == null)
-		{
-			cancelToken.checkCanceled();
-			return Collections.emptyList();
-		}
-		//we don't need to create code actions for non-open files
-		if (!fileTracker.isOpen(path))
-		{
-			cancelToken.checkCanceled();
-			return Collections.emptyList();
-		}
-		ActionScriptProjectData projectData = actionScriptProjectManager.getProjectDataForSourceFile(path);
-		if (projectData == null || projectData.project == null
-                || projectData.equals(actionScriptProjectManager.getFallbackProjectData()))
-		{
-			cancelToken.checkCanceled();
-			//the path must be in the workspace or source-path
-			return Collections.emptyList();
-		}
-		ILspProject project = projectData.project;
+    public List<Either<Command, CodeAction>> codeAction(CodeActionParams params, CancelChecker cancelToken) {
+        cancelToken.checkCanceled();
+        TextDocumentIdentifier textDocument = params.getTextDocument();
+        Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocument.getUri());
+        if (path == null) {
+            cancelToken.checkCanceled();
+            return Collections.emptyList();
+        }
+        //we don't need to create code actions for non-open files
+        if (!fileTracker.isOpen(path)) {
+            cancelToken.checkCanceled();
+            return Collections.emptyList();
+        }
+        ActionScriptProjectData projectData = actionScriptProjectManager.getProjectDataForSourceFile(path);
+        if (projectData == null || projectData.project == null
+                || projectData.equals(actionScriptProjectManager.getFallbackProjectData())) {
+            cancelToken.checkCanceled();
+            //the path must be in the workspace or source-path
+            return Collections.emptyList();
+        }
+        ILspProject project = projectData.project;
 
-		if (project == null || !SourcePathUtils.isInProjectSourcePath(path, project, projectData.configurator))
-		{
-			cancelToken.checkCanceled();
-			//the path must be in the workspace or source-path
-			return Collections.emptyList();
-		}
+        if (project == null || !SourcePathUtils.isInProjectSourcePath(path, project, projectData.configurator)) {
+            cancelToken.checkCanceled();
+            //the path must be in the workspace or source-path
+            return Collections.emptyList();
+        }
 
-		List<? extends Diagnostic> diagnostics = params.getContext().getDiagnostics();
-		List<Either<Command, CodeAction>> codeActions = new ArrayList<>();
-		findSourceActions(path, codeActions);
-		findCodeActionsForDiagnostics(path, projectData, diagnostics, codeActions);
+        List<? extends Diagnostic> diagnostics = params.getContext().getDiagnostics();
+        List<Either<Command, CodeAction>> codeActions = new ArrayList<>();
+        findSourceActions(path, codeActions);
+        findCodeActionsForDiagnostics(path, projectData, diagnostics, codeActions);
 
-		ICompilationUnit unit = CompilerProjectUtils.findCompilationUnit(path, project);
-		if (unit != null)
-		{
-			IASNode ast = ASTUtils.getCompilationUnitAST(unit);
-			if (ast != null)
-			{
-				String fileText = fileTracker.getText(path);
-				CodeActionsUtils.findGetSetCodeActions(ast, project, textDocument.getUri(), fileText, params.getRange(), codeActions);
-			}
-		}
-		cancelToken.checkCanceled();
-		return codeActions;
-	}
+        ICompilationUnit unit = CompilerProjectUtils.findCompilationUnit(path, project);
+        if (unit != null) {
+            IASNode ast = ASTUtils.getCompilationUnitAST(unit);
+            if (ast != null) {
+                String fileText = fileTracker.getText(path);
+                CodeActionsUtils.findGetSetCodeActions(ast, project, textDocument.getUri(), fileText, params.getRange(),
+                        codeActions);
+            }
+        }
+        cancelToken.checkCanceled();
+        return codeActions;
+    }
 
-    private void findSourceActions(Path path, List<Either<Command, CodeAction>> codeActions)
-    {
+    private void findSourceActions(Path path, List<Either<Command, CodeAction>> codeActions) {
         Command organizeCommand = new Command();
         organizeCommand.setTitle("Organize Imports");
         organizeCommand.setCommand(ICommandConstants.ORGANIZE_IMPORTS_IN_URI);
         JsonObject uri = new JsonObject();
         uri.addProperty("external", path.toUri().toString());
-        organizeCommand.setArguments(Lists.newArrayList(
-            uri
-        ));
+        organizeCommand.setArguments(Lists.newArrayList(uri));
         CodeAction organizeImports = new CodeAction();
         organizeImports.setKind(CodeActionKind.SourceOrganizeImports);
         organizeImports.setTitle(organizeCommand.getTitle());
@@ -146,36 +135,28 @@ public class CodeActionProvider
         codeActions.add(Either.forRight(organizeImports));
     }
 
-    private void findCodeActionsForDiagnostics(Path path, ActionScriptProjectData projectData, List<? extends Diagnostic> diagnostics, List<Either<Command, CodeAction>> codeActions)
-    {
+    private void findCodeActionsForDiagnostics(Path path, ActionScriptProjectData projectData,
+            List<? extends Diagnostic> diagnostics, List<Either<Command, CodeAction>> codeActions) {
         boolean handledUnimplementedMethods = false;
-        for (Diagnostic diagnostic : diagnostics)
-        {
+        for (Diagnostic diagnostic : diagnostics) {
             String code = null;
             Either<String, Number> eitherCode = diagnostic.getCode();
             //I don't know why this can be null
-            if (eitherCode == null)
-            {
+            if (eitherCode == null) {
                 continue;
             }
-            if (eitherCode.isLeft())
-            {
+            if (eitherCode.isLeft()) {
                 code = eitherCode.getLeft();
-            }
-            else
-            {
+            } else {
                 Number numberCode = eitherCode.getRight();
-                if(numberCode != null)
-                {
+                if (numberCode != null) {
                     code = numberCode.toString();
                 }
             }
-            if (code == null)
-            {
+            if (code == null) {
                 continue;
             }
-            switch (code)
-            {
+            switch (code) {
                 case "1120": //AccessUndefinedPropertyProblem
                 {
                     //see if there's anything we can import
@@ -235,80 +216,71 @@ public class CodeActionProvider
                 case "1044": //UnimplementedInterfaceMethodProblem
                 {
                     //only needs to be handled one time
-                    if(!handledUnimplementedMethods)
-                    {
+                    if (!handledUnimplementedMethods) {
                         handledUnimplementedMethods = true;
                         createCodeActionForUnimplementedMethods(path, diagnostic, projectData, codeActions);
                     }
                     break;
                 }
-                case "as3mxml-unused-import":
-                {
+                case "as3mxml-unused-import": {
                     createCodeActionsForUnusedImport(path, diagnostic, projectData, codeActions);
                 }
             }
         }
     }
 
-    private void createCodeActionForMissingField(Path path, Diagnostic diagnostic, ActionScriptProjectData projectData, List<Either<Command, CodeAction>> codeActions)
-    {
+    private void createCodeActionForMissingField(Path path, Diagnostic diagnostic, ActionScriptProjectData projectData,
+            List<Either<Command, CodeAction>> codeActions) {
         Position position = diagnostic.getRange().getStart();
         IncludeFileData includeFileData = projectData.includedFiles.get(path.toString());
-		int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position, includeFileData);
+        int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position,
+                includeFileData);
         IASNode offsetNode = actionScriptProjectManager.getOffsetNode(path, currentOffset, projectData);
-        if (offsetNode instanceof IMXMLInstanceNode)
-        {
+        if (offsetNode instanceof IMXMLInstanceNode) {
             MXMLData mxmlData = actionScriptProjectManager.getMXMLDataForPath(path, projectData);
-            if (mxmlData != null)
-            {
+            if (mxmlData != null) {
                 IMXMLTagData offsetTag = MXMLDataUtils.getOffsetMXMLTag(mxmlData, currentOffset);
-                if(offsetTag != null)
-                {
+                if (offsetTag != null) {
                     //workaround for bug in Royale compiler
                     Position newPosition = new Position(position.getLine(), position.getCharacter() + 1);
-                    int newOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), newPosition, includeFileData);
-                    offsetNode = actionScriptProjectManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, newOffset, projectData);
+                    int newOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path),
+                            newPosition, includeFileData);
+                    offsetNode = actionScriptProjectManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path,
+                            newOffset, projectData);
                 }
             }
         }
         IIdentifierNode identifierNode = null;
-        if (offsetNode instanceof IIdentifierNode)
-        {
+        if (offsetNode instanceof IIdentifierNode) {
             IASNode parentNode = offsetNode.getParent();
-            if (parentNode instanceof IMemberAccessExpressionNode)
-            {
-                IMemberAccessExpressionNode memberAccessExpressionNode = (IMemberAccessExpressionNode) offsetNode.getParent();
+            if (parentNode instanceof IMemberAccessExpressionNode) {
+                IMemberAccessExpressionNode memberAccessExpressionNode = (IMemberAccessExpressionNode) offsetNode
+                        .getParent();
                 IExpressionNode leftOperandNode = memberAccessExpressionNode.getLeftOperandNode();
-                if (leftOperandNode instanceof ILanguageIdentifierNode)
-                {
+                if (leftOperandNode instanceof ILanguageIdentifierNode) {
                     ILanguageIdentifierNode leftIdentifierNode = (ILanguageIdentifierNode) leftOperandNode;
-                    if (leftIdentifierNode.getKind() == ILanguageIdentifierNode.LanguageIdentifierKind.THIS)
-                    {
+                    if (leftIdentifierNode.getKind() == ILanguageIdentifierNode.LanguageIdentifierKind.THIS) {
                         identifierNode = (IIdentifierNode) offsetNode;
                     }
                 }
-            }
-            else //no member access
+            } else //no member access
             {
                 identifierNode = (IIdentifierNode) offsetNode;
             }
         }
-        if (identifierNode == null)
-        {
+        if (identifierNode == null) {
             return;
         }
         String fileText = fileTracker.getText(path);
-        if(fileText == null)
-        {
+        if (fileText == null) {
             return;
         }
-        WorkspaceEdit edit = CodeActionsUtils.createWorkspaceEditForGenerateFieldVariable(
-            identifierNode, path.toUri().toString(), fileText);
-        if(edit == null)
-        {
+        WorkspaceEdit edit = CodeActionsUtils.createWorkspaceEditForGenerateFieldVariable(identifierNode,
+                path.toUri().toString(), fileText);
+        if (edit == null) {
             return;
         }
-        
+
         CodeAction codeAction = new CodeAction();
         codeAction.setDiagnostics(Collections.singletonList(diagnostic));
         codeAction.setTitle("Generate Field Variable");
@@ -316,47 +288,43 @@ public class CodeActionProvider
         codeAction.setKind(CodeActionKind.QuickFix);
         codeActions.add(Either.forRight(codeAction));
     }
-    
-    private void createCodeActionForMissingLocalVariable(Path path, Diagnostic diagnostic, ActionScriptProjectData projectData, List<Either<Command, CodeAction>> codeActions)
-    {
+
+    private void createCodeActionForMissingLocalVariable(Path path, Diagnostic diagnostic,
+            ActionScriptProjectData projectData, List<Either<Command, CodeAction>> codeActions) {
         Position position = diagnostic.getRange().getStart();
         IncludeFileData includeFileData = projectData.includedFiles.get(path.toString());
-		int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position, includeFileData);
+        int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position,
+                includeFileData);
         IASNode offsetNode = actionScriptProjectManager.getOffsetNode(path, currentOffset, projectData);
-        if (offsetNode instanceof IMXMLInstanceNode)
-        {
+        if (offsetNode instanceof IMXMLInstanceNode) {
             MXMLData mxmlData = actionScriptProjectManager.getMXMLDataForPath(path, projectData);
-            if (mxmlData != null)
-            {
+            if (mxmlData != null) {
                 IMXMLTagData offsetTag = MXMLDataUtils.getOffsetMXMLTag(mxmlData, currentOffset);
-                if(offsetTag != null)
-                {
+                if (offsetTag != null) {
                     //workaround for bug in Royale compiler
                     Position newPosition = new Position(position.getLine(), position.getCharacter() + 1);
-                    int newOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), newPosition, includeFileData);
-                    offsetNode = actionScriptProjectManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, newOffset, projectData);
+                    int newOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path),
+                            newPosition, includeFileData);
+                    offsetNode = actionScriptProjectManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path,
+                            newOffset, projectData);
                 }
             }
         }
         IIdentifierNode identifierNode = null;
-        if (offsetNode instanceof IIdentifierNode)
-        {
+        if (offsetNode instanceof IIdentifierNode) {
             identifierNode = (IIdentifierNode) offsetNode;
         }
-        if (identifierNode == null)
-        {
+        if (identifierNode == null) {
             return;
         }
         String fileText = fileTracker.getText(path);
-        if(fileText == null)
-        {
+        if (fileText == null) {
             return;
         }
 
-        WorkspaceEdit edit = CodeActionsUtils.createWorkspaceEditForGenerateLocalVariable(
-            identifierNode, path.toUri().toString(), fileText);
-        if(edit == null)
-        {
+        WorkspaceEdit edit = CodeActionsUtils.createWorkspaceEditForGenerateLocalVariable(identifierNode,
+                path.toUri().toString(), fileText);
+        if (edit == null) {
             return;
         }
 
@@ -368,28 +336,26 @@ public class CodeActionProvider
         codeActions.add(Either.forRight(codeAction));
     }
 
-    private void createCodeActionForMissingCatchOrFinally(Path path, Diagnostic diagnostic, ActionScriptProjectData projectData, List<Either<Command, CodeAction>> codeActions)
-    {
+    private void createCodeActionForMissingCatchOrFinally(Path path, Diagnostic diagnostic,
+            ActionScriptProjectData projectData, List<Either<Command, CodeAction>> codeActions) {
         ILspProject project = projectData.project;
         Position position = diagnostic.getRange().getStart();
         IncludeFileData includeFileData = projectData.includedFiles.get(path.toString());
-		int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position, includeFileData);
+        int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position,
+                includeFileData);
         IASNode offsetNode = actionScriptProjectManager.getOffsetNode(path, currentOffset, projectData);
-        if(!(offsetNode instanceof ITryNode))
-        {
+        if (!(offsetNode instanceof ITryNode)) {
             return;
         }
         ITryNode tryNode = (ITryNode) offsetNode;
         String fileText = fileTracker.getText(path);
-        if(fileText == null)
-        {
+        if (fileText == null) {
             return;
         }
 
-        WorkspaceEdit edit = CodeActionsUtils.createWorkspaceEditForGenerateCatch(
-            tryNode, path.toUri().toString(), fileText, project);
-        if(edit == null)
-        {
+        WorkspaceEdit edit = CodeActionsUtils.createWorkspaceEditForGenerateCatch(tryNode, path.toUri().toString(),
+                fileText, project);
+        if (edit == null) {
             return;
         }
 
@@ -401,41 +367,36 @@ public class CodeActionProvider
         codeActions.add(Either.forRight(codeAction));
     }
 
-    private void createCodeActionForUnimplementedMethods(Path path, Diagnostic diagnostic, ActionScriptProjectData projectData, List<Either<Command, CodeAction>> codeActions)
-    {
+    private void createCodeActionForUnimplementedMethods(Path path, Diagnostic diagnostic,
+            ActionScriptProjectData projectData, List<Either<Command, CodeAction>> codeActions) {
         ILspProject project = projectData.project;
         Position position = diagnostic.getRange().getStart();
         IncludeFileData includeFileData = projectData.includedFiles.get(path.toString());
-		int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position, includeFileData);
+        int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position,
+                includeFileData);
         IASNode offsetNode = actionScriptProjectManager.getOffsetNode(path, currentOffset, projectData);
-        if (offsetNode == null)
-        {
+        if (offsetNode == null) {
             return;
         }
 
         IClassNode classNode = (IClassNode) offsetNode.getAncestorOfType(IClassNode.class);
-        if (classNode == null)
-        {
+        if (classNode == null) {
             return;
         }
 
         String fileText = fileTracker.getText(path);
-        if(fileText == null)
-        {
+        if (fileText == null) {
             return;
         }
 
-        for (IExpressionNode exprNode : classNode.getImplementedInterfaceNodes())
-        {
+        for (IExpressionNode exprNode : classNode.getImplementedInterfaceNodes()) {
             IInterfaceDefinition interfaceDefinition = (IInterfaceDefinition) exprNode.resolve(project);
-            if (interfaceDefinition == null)
-            {
+            if (interfaceDefinition == null) {
                 continue;
             }
-            WorkspaceEdit edit = CodeActionsUtils.createWorkspaceEditForImplementInterface(
-                classNode, interfaceDefinition, path.toUri().toString(), fileText, project);
-            if (edit == null)
-            {
+            WorkspaceEdit edit = CodeActionsUtils.createWorkspaceEditForImplementInterface(classNode,
+                    interfaceDefinition, path.toUri().toString(), fileText, project);
+            if (edit == null) {
                 continue;
             }
 
@@ -448,66 +409,55 @@ public class CodeActionProvider
         }
     }
 
-    private void createCodeActionForMissingMethod(Path path, Diagnostic diagnostic, ActionScriptProjectData projectData, List<Either<Command, CodeAction>> codeActions)
-    {
+    private void createCodeActionForMissingMethod(Path path, Diagnostic diagnostic, ActionScriptProjectData projectData,
+            List<Either<Command, CodeAction>> codeActions) {
         ILspProject project = projectData.project;
         Position position = diagnostic.getRange().getStart();
         IncludeFileData includeFileData = projectData.includedFiles.get(path.toString());
-		int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position, includeFileData);
+        int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position,
+                includeFileData);
         IASNode offsetNode = actionScriptProjectManager.getOffsetNode(path, currentOffset, projectData);
-        if (offsetNode == null)
-        {
+        if (offsetNode == null) {
             return;
         }
-        if (offsetNode instanceof IMXMLInstanceNode)
-        {
+        if (offsetNode instanceof IMXMLInstanceNode) {
             MXMLData mxmlData = actionScriptProjectManager.getMXMLDataForPath(path, projectData);
-            if (mxmlData != null)
-            {
+            if (mxmlData != null) {
                 IMXMLTagData offsetTag = MXMLDataUtils.getOffsetMXMLTag(mxmlData, currentOffset);
-                if(offsetTag != null)
-                {
+                if (offsetTag != null) {
                     //workaround for bug in Royale compiler
                     Position newPosition = new Position(position.getLine(), position.getCharacter() + 1);
-                    int newOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), newPosition, includeFileData);
-                    offsetNode = actionScriptProjectManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, newOffset, projectData);
+                    int newOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path),
+                            newPosition, includeFileData);
+                    offsetNode = actionScriptProjectManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path,
+                            newOffset, projectData);
                 }
             }
         }
         IASNode parentNode = offsetNode.getParent();
 
         IFunctionCallNode functionCallNode = null;
-        if (offsetNode instanceof IFunctionCallNode)
-        {
+        if (offsetNode instanceof IFunctionCallNode) {
             functionCallNode = (IFunctionCallNode) offsetNode;
-        }
-        else if (parentNode instanceof IFunctionCallNode)
-        {
+        } else if (parentNode instanceof IFunctionCallNode) {
             functionCallNode = (IFunctionCallNode) offsetNode.getParent();
-        }
-        else if(offsetNode instanceof IIdentifierNode
-                && parentNode instanceof IMemberAccessExpressionNode)
-        {
+        } else if (offsetNode instanceof IIdentifierNode && parentNode instanceof IMemberAccessExpressionNode) {
             IASNode gpNode = parentNode.getParent();
-            if (gpNode instanceof IFunctionCallNode)
-            {
+            if (gpNode instanceof IFunctionCallNode) {
                 functionCallNode = (IFunctionCallNode) gpNode;
             }
         }
-        if (functionCallNode == null)
-        {
+        if (functionCallNode == null) {
             return;
         }
         String fileText = fileTracker.getText(path);
-        if(fileText == null)
-        {
+        if (fileText == null) {
             return;
         }
 
-        WorkspaceEdit edit = CodeActionsUtils.createWorkspaceEditForGenerateMethod(
-            functionCallNode, path.toUri().toString(), fileText, project);
-        if(edit == null)
-        {
+        WorkspaceEdit edit = CodeActionsUtils.createWorkspaceEditForGenerateMethod(functionCallNode,
+                path.toUri().toString(), fileText, project);
+        if (edit == null) {
             return;
         }
 
@@ -519,99 +469,85 @@ public class CodeActionProvider
         codeActions.add(Either.forRight(codeAction));
     }
 
-    private void createCodeActionForMissingEventListener(Path path, Diagnostic diagnostic, ActionScriptProjectData projectData, List<Either<Command, CodeAction>> codeActions)
-    {
+    private void createCodeActionForMissingEventListener(Path path, Diagnostic diagnostic,
+            ActionScriptProjectData projectData, List<Either<Command, CodeAction>> codeActions) {
         ILspProject project = projectData.project;
         Position position = diagnostic.getRange().getStart();
         IncludeFileData includeFileData = projectData.includedFiles.get(path.toString());
-		int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position, includeFileData);
+        int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position,
+                includeFileData);
         IASNode offsetNode = actionScriptProjectManager.getOffsetNode(path, currentOffset, projectData);
-        if (offsetNode == null)
-        {
+        if (offsetNode == null) {
             return;
         }
-        if (offsetNode instanceof IMXMLInstanceNode)
-        {
+        if (offsetNode instanceof IMXMLInstanceNode) {
             MXMLData mxmlData = actionScriptProjectManager.getMXMLDataForPath(path, projectData);
-            if (mxmlData != null)
-            {
+            if (mxmlData != null) {
                 IMXMLTagData offsetTag = MXMLDataUtils.getOffsetMXMLTag(mxmlData, currentOffset);
-                if(offsetTag != null)
-                {
+                if (offsetTag != null) {
                     //workaround for bug in Royale compiler
                     Position newPosition = new Position(position.getLine(), position.getCharacter() + 1);
-                    int newOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), newPosition, includeFileData);
-                    offsetNode = actionScriptProjectManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, newOffset, projectData);
+                    int newOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path),
+                            newPosition, includeFileData);
+                    offsetNode = actionScriptProjectManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path,
+                            newOffset, projectData);
                 }
             }
         }
-        if (!(offsetNode instanceof IIdentifierNode))
-        {
+        if (!(offsetNode instanceof IIdentifierNode)) {
             return;
         }
         IASNode parentNode = offsetNode.getParent();
-        if (parentNode instanceof IMemberAccessExpressionNode)
-        {
+        if (parentNode instanceof IMemberAccessExpressionNode) {
             IMemberAccessExpressionNode memberAccessExpressionNode = (IMemberAccessExpressionNode) parentNode;
             IExpressionNode leftOperandNode = memberAccessExpressionNode.getLeftOperandNode();
             IExpressionNode rightOperandNode = memberAccessExpressionNode.getRightOperandNode();
-            if (rightOperandNode instanceof IIdentifierNode
-                    && leftOperandNode instanceof ILanguageIdentifierNode)
-            {
+            if (rightOperandNode instanceof IIdentifierNode && leftOperandNode instanceof ILanguageIdentifierNode) {
                 ILanguageIdentifierNode leftIdentifierNode = (ILanguageIdentifierNode) leftOperandNode;
-                if (leftIdentifierNode.getKind() == ILanguageIdentifierNode.LanguageIdentifierKind.THIS)
-                {
+                if (leftIdentifierNode.getKind() == ILanguageIdentifierNode.LanguageIdentifierKind.THIS) {
                     parentNode = parentNode.getParent();
                 }
             }
         }
-        if (!(parentNode instanceof IContainerNode))
-        {
+        if (!(parentNode instanceof IContainerNode)) {
             return;
         }
 
         IASNode gpNode = parentNode.getParent();
-        if (!(gpNode instanceof IFunctionCallNode))
-        {
+        if (!(gpNode instanceof IFunctionCallNode)) {
             return;
         }
 
         IFunctionCallNode functionCallNode = (IFunctionCallNode) gpNode;
-        if(!ASTUtils.isFunctionCallWithName(functionCallNode, "addEventListener"))
-        {
+        if (!ASTUtils.isFunctionCallWithName(functionCallNode, "addEventListener")) {
             return;
         }
 
         IExpressionNode[] args = functionCallNode.getArgumentNodes();
-        if (args.length < 2 || (args[1] != offsetNode && args[1] != offsetNode.getParent()))
-        {
+        if (args.length < 2 || (args[1] != offsetNode && args[1] != offsetNode.getParent())) {
             return;
         }
 
-        String eventTypeClassName = ASTUtils.findEventClassNameFromAddEventListenerFunctionCall(functionCallNode, project);
-        if (eventTypeClassName == null)
-        {
+        String eventTypeClassName = ASTUtils.findEventClassNameFromAddEventListenerFunctionCall(functionCallNode,
+                project);
+        if (eventTypeClassName == null) {
             return;
         }
 
         IIdentifierNode functionIdentifier = (IIdentifierNode) offsetNode;
         String functionName = functionIdentifier.getName();
-        if (functionName.length() == 0)
-        {
+        if (functionName.length() == 0) {
             return;
         }
 
         String fileText = fileTracker.getText(path);
-        if(fileText == null)
-        {
+        if (fileText == null) {
             return;
         }
 
-        WorkspaceEdit edit = CodeActionsUtils.createWorkspaceEditForGenerateEventListener(
-            functionIdentifier, functionName, eventTypeClassName,
-            path.toUri().toString(), fileText, project);
-        if(edit == null)
-        {
+        WorkspaceEdit edit = CodeActionsUtils.createWorkspaceEditForGenerateEventListener(functionIdentifier,
+                functionName, eventTypeClassName, path.toUri().toString(), fileText, project);
+        if (edit == null) {
             return;
         }
 
@@ -623,47 +559,42 @@ public class CodeActionProvider
         codeActions.add(Either.forRight(codeAction));
     }
 
-    private void createCodeActionsForImport(Path path, Diagnostic diagnostic, ActionScriptProjectData projectData, List<Either<Command, CodeAction>> codeActions)
-    {
+    private void createCodeActionsForImport(Path path, Diagnostic diagnostic, ActionScriptProjectData projectData,
+            List<Either<Command, CodeAction>> codeActions) {
         ILspProject project = projectData.project;
         Position position = diagnostic.getRange().getStart();
         IncludeFileData includeFileData = projectData.includedFiles.get(path.toString());
-		int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position, includeFileData);
+        int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position,
+                includeFileData);
         IASNode offsetNode = actionScriptProjectManager.getOffsetNode(path, currentOffset, projectData);
         IMXMLTagData offsetTag = null;
         boolean isMXML = path.toUri().toString().endsWith(FILE_EXTENSION_MXML);
-        if (isMXML)
-        {
+        if (isMXML) {
             MXMLData mxmlData = actionScriptProjectManager.getMXMLDataForPath(path, projectData);
-            if (mxmlData != null)
-            {
+            if (mxmlData != null) {
                 offsetTag = MXMLDataUtils.getOffsetMXMLTag(mxmlData, currentOffset);
             }
         }
-        if (offsetNode instanceof IMXMLInstanceNode && offsetTag != null)
-        {
+        if (offsetNode instanceof IMXMLInstanceNode && offsetTag != null) {
             //workaround for bug in Royale compiler
             Position newPosition = new Position(position.getLine(), position.getCharacter() + 1);
-            int newOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), newPosition, includeFileData);
-            offsetNode = actionScriptProjectManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, newOffset, projectData);
+            int newOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), newPosition,
+                    includeFileData);
+            offsetNode = actionScriptProjectManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, newOffset,
+                    projectData);
         }
-        if (offsetNode == null || !(offsetNode instanceof IIdentifierNode))
-        {
+        if (offsetNode == null || !(offsetNode instanceof IIdentifierNode)) {
             return;
         }
         ImportRange importRange = null;
-        if (offsetTag != null)
-        {
+        if (offsetTag != null) {
             importRange = ImportRange.fromOffsetTag(offsetTag, currentOffset);
-        }
-        else
-        {
+        } else {
             importRange = ImportRange.fromOffsetNode(offsetNode);
         }
         String uri = importRange.uri;
         String fileText = fileTracker.getText(path);
-        if(fileText == null)
-        {
+        if (fileText == null) {
             return;
         }
 
@@ -671,11 +602,10 @@ public class CodeActionProvider
         String typeString = identifierNode.getName();
 
         List<IDefinition> types = ASTUtils.findTypesThatMatchName(typeString, project.getCompilationUnits());
-        for (IDefinition definitionToImport : types)
-        {
-            WorkspaceEdit edit = CodeActionsUtils.createWorkspaceEditForAddImport(definitionToImport, fileText, uri, importRange);
-            if (edit == null)
-            {
+        for (IDefinition definitionToImport : types) {
+            WorkspaceEdit edit = CodeActionsUtils.createWorkspaceEditForAddImport(definitionToImport, fileText, uri,
+                    importRange);
+            if (edit == null) {
                 continue;
             }
             CodeAction codeAction = new CodeAction();
@@ -687,22 +617,22 @@ public class CodeActionProvider
         }
     }
 
-    private void createCodeActionsForUnusedImport(Path path, Diagnostic diagnostic, ActionScriptProjectData projectData, List<Either<Command, CodeAction>> codeActions)
-    {
+    private void createCodeActionsForUnusedImport(Path path, Diagnostic diagnostic, ActionScriptProjectData projectData,
+            List<Either<Command, CodeAction>> codeActions) {
         String fileText = fileTracker.getText(path);
-        if(fileText == null)
-        {
+        if (fileText == null) {
             return;
         }
 
         Range range = diagnostic.getRange();
-        WorkspaceEdit edit = CodeActionsUtils.createWorkspaceEditForRemoveUnusedImport(fileText, path.toUri().toString(), diagnostic.getRange());
-        if (edit == null)
-        {
+        WorkspaceEdit edit = CodeActionsUtils.createWorkspaceEditForRemoveUnusedImport(fileText,
+                path.toUri().toString(), diagnostic.getRange());
+        if (edit == null) {
             return;
         }
 
-        int startOffset = LanguageServerCompilerUtils.getOffsetFromPosition(new StringReader(fileText), range.getStart());
+        int startOffset = LanguageServerCompilerUtils.getOffsetFromPosition(new StringReader(fileText),
+                range.getStart());
         int endOffset = LanguageServerCompilerUtils.getOffsetFromPosition(new StringReader(fileText), range.getEnd());
 
         String importText = fileText.substring(startOffset, endOffset);

@@ -13,19 +13,15 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-import * as fs from "fs";
-import * as path from "path";
 import validateFrameworkSDK from "./validateFrameworkSDK";
 
 const ENVIRONMENT_VARIABLE_FLEX_HOME = "FLEX_HOME";
 
-export default function findSDKInFlexHomeEnvironmentVariable(): string
-{
-	if(ENVIRONMENT_VARIABLE_FLEX_HOME in process.env)
-	{
-		let flexHome = process.env.FLEX_HOME;
-		//this may return null
-		return validateFrameworkSDK(flexHome);
-	}
-	return null;
+export default function findSDKInFlexHomeEnvironmentVariable(): string {
+  if (ENVIRONMENT_VARIABLE_FLEX_HOME in process.env) {
+    let flexHome = process.env.FLEX_HOME;
+    //this may return null
+    return validateFrameworkSDK(flexHome);
+  }
+  return null;
 }

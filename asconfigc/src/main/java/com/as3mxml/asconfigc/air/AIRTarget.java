@@ -15,8 +15,7 @@ limitations under the License.
 */
 package com.as3mxml.asconfigc.air;
 
-public class AIRTarget
-{
+public class AIRTarget {
 	public static final String AIR = "air";
 	public static final String AIRN = "airn";
 	public static final String ANE = "ane";

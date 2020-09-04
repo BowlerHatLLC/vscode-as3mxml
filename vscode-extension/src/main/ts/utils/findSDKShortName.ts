@@ -26,59 +26,53 @@ const APACHE_ROYALE = "Apache Royale ";
 const FEATHERS_SDK = "Feathers SDK ";
 const FP = " FP";
 
-function stripAfterNextSpace(sdkName: string, prefix: string, replacementPrefix?: string): string
-{
-	//stop after the next space, which should be the version number
-	let index = sdkName.indexOf(" ", prefix.length);
-	if(replacementPrefix)
-	{
-		if(index === -1)
-		{
-			return replacementPrefix + sdkName.substr(prefix.length);
-		}
-		return replacementPrefix + sdkName.substr(prefix.length, index - prefix.length);
-	}
-	if(index === -1)
-	{
-		return sdkName;
-	}
-	return sdkName.substr(0, index);
+function stripAfterNextSpace(
+  sdkName: string,
+  prefix: string,
+  replacementPrefix?: string
+): string {
+  //stop after the next space, which should be the version number
+  let index = sdkName.indexOf(" ", prefix.length);
+  if (replacementPrefix) {
+    if (index === -1) {
+      return replacementPrefix + sdkName.substr(prefix.length);
+    }
+    return (
+      replacementPrefix + sdkName.substr(prefix.length, index - prefix.length)
+    );
+  }
+  if (index === -1) {
+    return sdkName;
+  }
+  return sdkName.substr(0, index);
 }
 
-export default function findSDKShortName(sdkPath: string): string
-{
-	let sdkName = findSDKName(sdkPath);
-	if(sdkName === null)
-	{
-		return null;
-	}
-	if(sdkName.startsWith(AIR) || sdkName.startsWith(FLEX))
-	{
-		//it's already short enough
-		return sdkName;
-	}
-	if(sdkName.startsWith(FEATHERS_SDK))
-	{
-		return stripAfterNextSpace(sdkName, FEATHERS_SDK, FEATHERS);
-	}
-	if(sdkName.startsWith(APACHE_ROYALE))
-	{
-		return stripAfterNextSpace(sdkName, APACHE_ROYALE, ROYALE);
-	}
-	if(sdkName.startsWith(APACHE_FLEXJS))
-	{
-		return stripAfterNextSpace(sdkName, APACHE_FLEXJS, FLEXJS);
-	}
-	if(sdkName.startsWith(APACHE_FLEX))
-	{
-		return stripAfterNextSpace(sdkName, APACHE_FLEX);
-	}
-	//we don't know what type of SDK this is, but if it lists Flash Player and
-	//AIR versions after the main name, we will strip those away
-	let index = sdkName.indexOf(FP);
-	if(index !== -1)
-	{
-		return sdkName.substr(0, index);
-	}
-	return sdkName;
+export default function findSDKShortName(sdkPath: string): string {
+  let sdkName = findSDKName(sdkPath);
+  if (sdkName === null) {
+    return null;
+  }
+  if (sdkName.startsWith(AIR) || sdkName.startsWith(FLEX)) {
+    //it's already short enough
+    return sdkName;
+  }
+  if (sdkName.startsWith(FEATHERS_SDK)) {
+    return stripAfterNextSpace(sdkName, FEATHERS_SDK, FEATHERS);
+  }
+  if (sdkName.startsWith(APACHE_ROYALE)) {
+    return stripAfterNextSpace(sdkName, APACHE_ROYALE, ROYALE);
+  }
+  if (sdkName.startsWith(APACHE_FLEXJS)) {
+    return stripAfterNextSpace(sdkName, APACHE_FLEXJS, FLEXJS);
+  }
+  if (sdkName.startsWith(APACHE_FLEX)) {
+    return stripAfterNextSpace(sdkName, APACHE_FLEX);
+  }
+  //we don't know what type of SDK this is, but if it lists Flash Player and
+  //AIR versions after the main name, we will strip those away
+  let index = sdkName.indexOf(FP);
+  if (index !== -1) {
+    return sdkName.substr(0, index);
+  }
+  return sdkName;
 }

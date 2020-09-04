@@ -19,91 +19,76 @@ import org.apache.royale.compiler.common.PrefixMap;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-class MXMLNamespaceUtilsTests
-{
+class MXMLNamespaceUtilsTests {
 	//--- getNamespaceFromURI
 
 	@Test
-	void testGetNamespaceFromURIWithRoyaleLibrary()
-	{
+	void testGetNamespaceFromURIWithRoyaleLibrary() {
 		String uri = "library://ns.apache.org/royale/example";
 		MXMLNamespace result = MXMLNamespaceUtils.getNamespaceFromURI(uri, new PrefixMap());
 		Assertions.assertNotNull(result);
-		Assertions.assertEquals(uri, result.uri,
-			"MXMLNamespaceUtils.getNamespaceFromURI() returned incorrect uri.");
+		Assertions.assertEquals(uri, result.uri, "MXMLNamespaceUtils.getNamespaceFromURI() returned incorrect uri.");
 		Assertions.assertEquals("example", result.prefix,
-			"MXMLNamespaceUtils.getNamespaceFromURI() returned incorrect prefix.");
+				"MXMLNamespaceUtils.getNamespaceFromURI() returned incorrect prefix.");
 	}
 
 	@Test
-	void testGetNamespaceFromURIWithFlexJSLibrary()
-	{
+	void testGetNamespaceFromURIWithFlexJSLibrary() {
 		String uri = "library://ns.apache.org/flexjs/example";
 		MXMLNamespace result = MXMLNamespaceUtils.getNamespaceFromURI(uri, new PrefixMap());
 		Assertions.assertNotNull(result);
-		Assertions.assertEquals(uri, result.uri,
-			"MXMLNamespaceUtils.getNamespaceFromURI() returned incorrect uri.");
+		Assertions.assertEquals(uri, result.uri, "MXMLNamespaceUtils.getNamespaceFromURI() returned incorrect uri.");
 		Assertions.assertEquals("example", result.prefix,
-			"MXMLNamespaceUtils.getNamespaceFromURI() returned incorrect prefix.");
-}
+				"MXMLNamespaceUtils.getNamespaceFromURI() returned incorrect prefix.");
+	}
 
 	@Test
-	void testGetNamespaceFromURIWithFlexLibrary()
-	{
+	void testGetNamespaceFromURIWithFlexLibrary() {
 		String uri = "http://flex.apache.org/example/ns";
 		MXMLNamespace result = MXMLNamespaceUtils.getNamespaceFromURI(uri, new PrefixMap());
 		Assertions.assertNotNull(result);
-		Assertions.assertEquals(uri, result.uri,
-			"MXMLNamespaceUtils.getNamespaceFromURI() returned incorrect uri.");
+		Assertions.assertEquals(uri, result.uri, "MXMLNamespaceUtils.getNamespaceFromURI() returned incorrect uri.");
 		Assertions.assertEquals("example", result.prefix,
-			"MXMLNamespaceUtils.getNamespaceFromURI() returned incorrect prefix.");
+				"MXMLNamespaceUtils.getNamespaceFromURI() returned incorrect prefix.");
 	}
 
 	@Test
-	void testGetNamespaceFromURIWithHTTPAndWWW()
-	{
+	void testGetNamespaceFromURIWithHTTPAndWWW() {
 		String uri = "http://www.example.com/2006/mxml";
 		MXMLNamespace result = MXMLNamespaceUtils.getNamespaceFromURI(uri, new PrefixMap());
 		Assertions.assertNotNull(result);
-		Assertions.assertEquals(uri, result.uri,
-			"MXMLNamespaceUtils.getNamespaceFromURI() returned incorrect uri.");
+		Assertions.assertEquals(uri, result.uri, "MXMLNamespaceUtils.getNamespaceFromURI() returned incorrect uri.");
 		Assertions.assertEquals("example", result.prefix,
-			"MXMLNamespaceUtils.getNamespaceFromURI() returned incorrect prefix.");
+				"MXMLNamespaceUtils.getNamespaceFromURI() returned incorrect prefix.");
 	}
 
 	@Test
-	void testGetNamespaceFromURIWithHTTPAndNoSubdomain()
-	{
+	void testGetNamespaceFromURIWithHTTPAndNoSubdomain() {
 		String uri = "http://example.com/2006/mxml";
 		MXMLNamespace result = MXMLNamespaceUtils.getNamespaceFromURI(uri, new PrefixMap());
 		Assertions.assertNotNull(result);
-		Assertions.assertEquals(uri, result.uri,
-			"MXMLNamespaceUtils.getNamespaceFromURI() returned incorrect uri.");
+		Assertions.assertEquals(uri, result.uri, "MXMLNamespaceUtils.getNamespaceFromURI() returned incorrect uri.");
 		Assertions.assertEquals("example", result.prefix,
-			"MXMLNamespaceUtils.getNamespaceFromURI() returned incorrect prefix.");
+				"MXMLNamespaceUtils.getNamespaceFromURI() returned incorrect prefix.");
 	}
 
 	@Test
-	void testGetNamespaceFromURIWithLibraryProtocolAndWWW()
-	{
+	void testGetNamespaceFromURIWithLibraryProtocolAndWWW() {
 		String uri = "library://www.example.com/2006/mxml";
 		MXMLNamespace result = MXMLNamespaceUtils.getNamespaceFromURI(uri, new PrefixMap());
 		Assertions.assertNotNull(result);
-		Assertions.assertEquals(uri, result.uri,
-			"MXMLNamespaceUtils.getNamespaceFromURI() returned incorrect uri.");
+		Assertions.assertEquals(uri, result.uri, "MXMLNamespaceUtils.getNamespaceFromURI() returned incorrect uri.");
 		Assertions.assertEquals("example", result.prefix,
-			"MXMLNamespaceUtils.getNamespaceFromURI() returned incorrect prefix.");
+				"MXMLNamespaceUtils.getNamespaceFromURI() returned incorrect prefix.");
 	}
 
 	@Test
-	void testGetNamespaceFromURIWithLibraryProtocolAndNoSubdomain()
-	{
+	void testGetNamespaceFromURIWithLibraryProtocolAndNoSubdomain() {
 		String uri = "library://example.com/2006/mxml";
 		MXMLNamespace result = MXMLNamespaceUtils.getNamespaceFromURI(uri, new PrefixMap());
 		Assertions.assertNotNull(result);
-		Assertions.assertEquals(uri, result.uri,
-			"MXMLNamespaceUtils.getNamespaceFromURI() returned incorrect uri.");
+		Assertions.assertEquals(uri, result.uri, "MXMLNamespaceUtils.getNamespaceFromURI() returned incorrect uri.");
 		Assertions.assertEquals("example", result.prefix,
-			"MXMLNamespaceUtils.getNamespaceFromURI() returned incorrect prefix.");
+				"MXMLNamespaceUtils.getNamespaceFromURI() returned incorrect prefix.");
 	}
 }

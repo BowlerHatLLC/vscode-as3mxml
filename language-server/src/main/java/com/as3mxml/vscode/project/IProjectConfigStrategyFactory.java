@@ -24,18 +24,16 @@ import org.eclipse.lsp4j.WorkspaceFolder;
 /**
  * Creates an IProjectConfigStrategy
  */
-public interface IProjectConfigStrategyFactory
-{
+public interface IProjectConfigStrategyFactory {
     @Deprecated
     /**
      * Create a project config strategy for a workspace folder.
      */
-    default IProjectConfigStrategy create(WorkspaceFolder workspaceFolder)
-    {
+    default IProjectConfigStrategy create(WorkspaceFolder workspaceFolder) {
         Path projectPath = Paths.get(URI.create(workspaceFolder.getUri()));
         return create(projectPath, workspaceFolder);
     }
-    
+
     /**
      * Create a project config strategy for a path inside a workspace folder.
      */

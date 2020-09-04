@@ -15,17 +15,14 @@ limitations under the License.
 */
 package com.as3mxml.asconfigc;
 
-public class ASConfigCException extends Exception
-{
+public class ASConfigCException extends Exception {
 	private static final long serialVersionUID = 1L;
 
-	public ASConfigCException(String message)
-	{
+	public ASConfigCException(String message) {
 		super(message);
 	}
 
-	public ASConfigCException(int status)
-	{
+	public ASConfigCException(int status) {
 		super();
 		this.status = status;
 	}

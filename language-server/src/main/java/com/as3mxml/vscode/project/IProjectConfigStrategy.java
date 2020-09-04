@@ -22,8 +22,7 @@ import org.eclipse.lsp4j.WorkspaceFolder;
 /**
  * Loads the configuration for a project. 
  */
-public interface IProjectConfigStrategy
-{
+public interface IProjectConfigStrategy {
     /**
      * The project's workspace folder.
      */

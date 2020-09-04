@@ -20,8 +20,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public class ApacheRoyaleUtils
-{
+public class ApacheRoyaleUtils {
 	private static final String ENV_ROYALE_HOME = "ROYALE_HOME";
 	private static final String ENV_PATH = "PATH";
 	private static final String ROYALE_ASJS = "royale-asjs";
@@ -33,116 +32,94 @@ public class ApacheRoyaleUtils
 	private static final String BIN = "bin";
 	private static final String ASJSC = "asjsc";
 	private static final String ROYALE_SDK_DESCRIPTION = "royale-sdk-description.xml";
-	
+
 	/**
 	 * Determines if a directory contains a valid Apache Royale SDK. May modify
 	 * the path of the "real" SDK is in royale-asjs
 	 */
-	public static Path isValidSDK(Path absolutePath)
-	{
-		if(absolutePath == null)
-		{
+	public static Path isValidSDK(Path absolutePath) {
+		if (absolutePath == null) {
 			return null;
 		}
-		if(isValidSDKInternal(absolutePath))
-		{
+		if (isValidSDKInternal(absolutePath)) {
 			return absolutePath;
 		}
 		Path royalePath = absolutePath.resolve(ROYALE_ASJS);
-		if(isValidSDKInternal(royalePath))
-		{
+		if (isValidSDKInternal(royalePath)) {
 			return royalePath;
 		}
 		return null;
 	}
-	
-	private static boolean isValidSDKInternal(Path absolutePath)
-	{
-		if(absolutePath == null || !absolutePath.isAbsolute())
-		{
+
+	private static boolean isValidSDKInternal(Path absolutePath) {
+		if (absolutePath == null || !absolutePath.isAbsolute()) {
 			return false;
 		}
 		File file = absolutePath.toFile();
-		if(!file.isDirectory())
-		{
+		if (!file.isDirectory()) {
 			return false;
 		}
 		Path sdkDescriptionPath = absolutePath.resolve(ROYALE_SDK_DESCRIPTION);
 		file = sdkDescriptionPath.toFile();
-		if(!file.exists() || file.isDirectory())
-		{
+		if (!file.exists() || file.isDirectory()) {
 			return false;
 		}
 		Path compilerPath = absolutePath.resolve(JS).resolve(BIN).resolve(ASJSC);
 		file = compilerPath.toFile();
-		if(!file.exists() || file.isDirectory())
-		{
+		if (!file.exists() || file.isDirectory()) {
 			return false;
 		}
 		return true;
 	}
-	
+
 	/**
 	 * Attempts to find a valid Apache Royale SDK by searching for the
 	 * royale NPM module, testing the ROYALE_HOME environment variable, and
 	 * finally, testing the PATH environment variable.
 	 */
-	public static String findSDK()
-	{
+	public static String findSDK() {
 		String royaleHome = System.getenv(ENV_ROYALE_HOME);
-		if(royaleHome != null)
-		{
+		if (royaleHome != null) {
 			Path royaleHomePath = Paths.get(royaleHome);
 			royaleHomePath = isValidSDK(royaleHomePath);
-			if(royaleHomePath != null)
-			{
+			if (royaleHomePath != null) {
 				return royaleHomePath.toString();
 			}
 		}
 		String envPath = System.getenv(ENV_PATH);
-		if(envPath != null)
-		{
+		if (envPath != null) {
 			String[] paths = envPath.split(File.pathSeparator);
-			for(String currentPath : paths)
-			{
+			for (String currentPath : paths) {
 				//first check if this directory contains the NPM version for
 				//Windows
 				File file = new File(currentPath, ASJSC + ".cmd");
-				if(file.exists() && !file.isDirectory())
-				{
+				if (file.exists() && !file.isDirectory()) {
 					Path npmPath = Paths.get(currentPath, NODE_MODULES, NPM_ORG_ROYALE, NPM_PACKAGE_ROYALE_JS);
 					npmPath = isValidSDK(npmPath);
-					if(npmPath != null)
-					{
+					if (npmPath != null) {
 						return npmPath.toString();
 					}
 					npmPath = Paths.get(currentPath, NODE_MODULES, NPM_ORG_ROYALE, NPM_PACKAGE_ROYALE_SWF);
 					npmPath = isValidSDK(npmPath);
-					if(npmPath != null)
-					{
+					if (npmPath != null) {
 						return npmPath.toString();
 					}
 				}
 				file = new File(currentPath, ASJSC);
-				if(file.exists() && !file.isDirectory())
-				{
+				if (file.exists() && !file.isDirectory()) {
 					//this may a symbolic link rather than the actual file,
 					//such as when Apache Royale is installed with NPM on
 					//Mac, so get the real path.
 					Path sdkPath = file.toPath();
-					try
-					{
+					try {
 						sdkPath = sdkPath.toRealPath();
-					}
-					catch(IOException e)
-					{
+					} catch (IOException e) {
 						//didn't seem to work, for some reason
 						return null;
 					}
 					sdkPath = sdkPath.getParent().getParent().getParent();
 					sdkPath = isValidSDK(sdkPath);
-					if(sdkPath != null)
-					{
+					if (sdkPath != null) {
 						return sdkPath.toString();
 					}
 				}

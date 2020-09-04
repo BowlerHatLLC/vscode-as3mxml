@@ -15,8 +15,7 @@ limitations under the License.
 */
 package com.as3mxml.asconfigc.compiler;
 
-public class RoyaleTarget
-{
+public class RoyaleTarget {
 	public static final String JS = "JS";
 	public static final String JS_FLEX = "JSFlex";
 	public static final String JS_ROYALE = "JSRoyale";

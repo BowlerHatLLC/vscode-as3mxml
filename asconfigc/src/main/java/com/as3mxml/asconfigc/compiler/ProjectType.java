@@ -15,8 +15,7 @@ limitations under the License.
 */
 package com.as3mxml.asconfigc.compiler;
 
-public class ProjectType
-{
+public class ProjectType {
 	public static final String APP = "app";
 	public static final String LIB = "lib";
 }

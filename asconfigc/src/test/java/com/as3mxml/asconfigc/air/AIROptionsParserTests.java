@@ -18,39 +18,30 @@ package com.as3mxml.asconfigc.air;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.as3mxml.asconfigc.air.AIROptions;
-import com.as3mxml.asconfigc.air.AIROptionsParser;
-import com.as3mxml.asconfigc.air.AIRPlatform;
-import com.as3mxml.asconfigc.air.AIRSigningOptions;
-import com.as3mxml.asconfigc.air.AIRTarget;
-
-class AIROptionsParserTests
-{
+class AIROptionsParserTests {
 	private AIROptionsParser parser;
 
 	@BeforeEach
-	void setup()
-	{
+	void setup() {
 		parser = new AIROptionsParser();
 	}
 
 	@AfterEach
-	void tearDown()
-	{
+	void tearDown() {
 		parser = null;
 	}
 
 	@Test
-	void testDefaultOptions()
-	{
+	void testDefaultOptions() {
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		ArrayList<String> result = new ArrayList<>();
 		parser.parse(AIRPlatform.AIR, false, "application.xml", "content.swf", options, result);
@@ -60,8 +51,7 @@ class AIROptionsParserTests
 	}
 
 	@Test
-	void testApplicationContent()
-	{
+	void testApplicationContent() {
 		String filename = "content.swf";
 		String dirPath = "path/to";
 		String value = dirPath + "/" + filename;
@@ -70,7 +60,7 @@ class AIROptionsParserTests
 		ArrayList<String> result = new ArrayList<>();
 		parser.parse(AIRPlatform.AIR, false, "application.xml", value, options, result);
 		Assertions.assertFalse(result.contains(value),
-			"AIROptionsParser.parse() incorrectly contains application content path.");
+				"AIROptionsParser.parse() incorrectly contains application content path.");
 		int optionIndex = result.indexOf("-C");
 		Assertions.assertNotEquals(-1, optionIndex);
 		Assertions.assertEquals(optionIndex + 1, result.indexOf(formattedDirPath));
@@ -78,8 +68,7 @@ class AIROptionsParserTests
 	}
 
 	@Test
-	void testDescriptor()
-	{
+	void testDescriptor() {
 		String value = "path/to/application.xml";
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		ArrayList<String> result = new ArrayList<>();
@@ -88,8 +77,7 @@ class AIROptionsParserTests
 	}
 
 	@Test
-	void testAIRDownloadURL()
-	{
+	void testAIRDownloadURL() {
 		String value = "http://example.com";
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		ObjectNode android = JsonNodeFactory.instance.objectNode();
@@ -103,8 +91,7 @@ class AIROptionsParserTests
 	}
 
 	@Test
-	void testArch()
-	{
+	void testArch() {
 		String value = "x86";
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		ObjectNode android = JsonNodeFactory.instance.objectNode();
@@ -118,8 +105,7 @@ class AIROptionsParserTests
 	}
 
 	@Test
-	void testEmbedBitcode()
-	{
+	void testEmbedBitcode() {
 		boolean value = true;
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		ObjectNode ios = JsonNodeFactory.instance.objectNode();
@@ -133,8 +119,7 @@ class AIROptionsParserTests
 	}
 
 	@Test
-	void testExtdir()
-	{
+	void testExtdir() {
 		String value1 = "path/to/subpath1";
 		String value2 = "path to/subpath2";
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
@@ -147,14 +132,14 @@ class AIROptionsParserTests
 		int optionIndex1 = result.indexOf("-" + AIROptions.EXTDIR);
 		Assertions.assertNotEquals(-1, optionIndex1);
 		Assertions.assertEquals(optionIndex1 + 1, result.indexOf(value1));
-		int optionIndex2 = optionIndex1 + 1 + result.subList(optionIndex1 + 1, result.size()).indexOf("-" + AIROptions.EXTDIR);
+		int optionIndex2 = optionIndex1 + 1
+				+ result.subList(optionIndex1 + 1, result.size()).indexOf("-" + AIROptions.EXTDIR);
 		Assertions.assertEquals(optionIndex1 + 2, optionIndex2);
 		Assertions.assertEquals(optionIndex2 + 1, result.indexOf(value2));
 	}
 
 	@Test
-	void testFiles()
-	{
+	void testFiles() {
 		String file1 = "path/to/file1.png";
 		String path1 = ".";
 		String file2 = "file2.jpg";
@@ -194,8 +179,7 @@ class AIROptionsParserTests
 	}
 
 	@Test
-	void testHideAneLibSymbols()
-	{
+	void testHideAneLibSymbols() {
 		boolean value = true;
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		ObjectNode ios = JsonNodeFactory.instance.objectNode();
@@ -209,8 +193,7 @@ class AIROptionsParserTests
 	}
 
 	@Test
-	void testOutput()
-	{
+	void testOutput() {
 		String value = "path/to/file.air";
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		options.set(AIROptions.OUTPUT, JsonNodeFactory.instance.textNode(value));
@@ -222,8 +205,7 @@ class AIROptionsParserTests
 	}
 
 	@Test
-	void testAndroidOutput()
-	{
+	void testAndroidOutput() {
 		String androidValue = "path/to/file.apk";
 		String iOSValue = "path/to/file.ipa";
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
@@ -240,8 +222,7 @@ class AIROptionsParserTests
 	}
 
 	@Test
-	void testIOSOutput()
-	{
+	void testIOSOutput() {
 		String androidValue = "path/to/file.apk";
 		String iOSValue = "path/to/file.ipa";
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
@@ -258,8 +239,7 @@ class AIROptionsParserTests
 	}
 
 	@Test
-	void testAndroidPlatformSDK()
-	{
+	void testAndroidPlatformSDK() {
 		String androidValue = "path/to/android_sdk";
 		String iOSValue = "path/to/ios_sdk";
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
@@ -278,8 +258,7 @@ class AIROptionsParserTests
 	}
 
 	@Test
-	void testIOSPlatformSDK()
-	{
+	void testIOSPlatformSDK() {
 		String androidValue = "path/to/android_sdk";
 		String iOSValue = "path/to/ios_sdk";
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
@@ -298,8 +277,7 @@ class AIROptionsParserTests
 	}
 
 	@Test
-	void testSampler()
-	{
+	void testSampler() {
 		boolean value = true;
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		ObjectNode ios = JsonNodeFactory.instance.objectNode();
@@ -312,8 +290,7 @@ class AIROptionsParserTests
 	}
 
 	@Test
-	void testTarget()
-	{
+	void testTarget() {
 		String value = AIRTarget.NATIVE;
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		options.set(AIROptions.TARGET, JsonNodeFactory.instance.textNode(value));
@@ -325,8 +302,7 @@ class AIROptionsParserTests
 	}
 
 	@Test
-	void testIOSTarget()
-	{
+	void testIOSTarget() {
 		String androidValue = AIRTarget.APK_CAPTIVE_RUNTIME;
 		String iOSValue = AIRTarget.IPA_AD_HOC;
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
@@ -345,8 +321,7 @@ class AIROptionsParserTests
 	}
 
 	@Test
-	void testAndroidTarget()
-	{
+	void testAndroidTarget() {
 		String androidValue = AIRTarget.APK_CAPTIVE_RUNTIME;
 		String iOSValue = AIRTarget.IPA_AD_HOC;
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
@@ -367,8 +342,7 @@ class AIROptionsParserTests
 	//----- signing options
 
 	@Test
-	void testSigningOptionsAlias()
-	{
+	void testSigningOptionsAlias() {
 		String value = "AIRCert";
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		ObjectNode signingOptions = JsonNodeFactory.instance.objectNode();
@@ -382,8 +356,7 @@ class AIROptionsParserTests
 	}
 
 	@Test
-	void testSigningOptionsKeystore()
-	{
+	void testSigningOptionsKeystore() {
 		String value = "path/to/keystore.p12";
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		ObjectNode signingOptions = JsonNodeFactory.instance.objectNode();
@@ -397,8 +370,7 @@ class AIROptionsParserTests
 	}
 
 	@Test
-	void testSigningOptionsProviderName()
-	{
+	void testSigningOptionsProviderName() {
 		String value = "className";
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		ObjectNode signingOptions = JsonNodeFactory.instance.objectNode();
@@ -412,8 +384,7 @@ class AIROptionsParserTests
 	}
 
 	@Test
-	void testSigningOptionsTsa()
-	{
+	void testSigningOptionsTsa() {
 		String value = "none";
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		ObjectNode signingOptions = JsonNodeFactory.instance.objectNode();
@@ -427,8 +398,7 @@ class AIROptionsParserTests
 	}
 
 	@Test
-	void testSigningOptionsProvisioningProfile()
-	{
+	void testSigningOptionsProvisioningProfile() {
 		String value = "path/to/file.mobileprovision";
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		ObjectNode signingOptions = JsonNodeFactory.instance.objectNode();
@@ -444,8 +414,7 @@ class AIROptionsParserTests
 	//----- overrides
 
 	@Test
-	void testOutputPlatformOverride()
-	{
+	void testOutputPlatformOverride() {
 		String androidValue = "path/to/file.apk";
 		String defaultValue = "path/to/file.air";
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
@@ -460,8 +429,7 @@ class AIROptionsParserTests
 	}
 
 	@Test
-	void testTargetPlatformOverride()
-	{
+	void testTargetPlatformOverride() {
 		String androidValue = AIRTarget.APK_CAPTIVE_RUNTIME;
 		String defaultValue = AIRTarget.NATIVE;
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
@@ -476,8 +444,7 @@ class AIROptionsParserTests
 	}
 
 	@Test
-	void testExtdirPlatformOverride()
-	{
+	void testExtdirPlatformOverride() {
 		String androidValue1 = "path/to/android/subpath1";
 		String androidValue2 = "path/to/android/subpath2";
 		String defaultValue1 = "path/to/subpath1";
@@ -501,14 +468,14 @@ class AIROptionsParserTests
 		int optionIndex1 = result.indexOf("-" + AIROptions.EXTDIR);
 		Assertions.assertNotEquals(-1, optionIndex1);
 		Assertions.assertEquals(optionIndex1 + 1, result.indexOf(androidValue1));
-		int optionIndex2 = optionIndex1 + 1 + result.subList(optionIndex1 + 1, result.size()).indexOf("-" + AIROptions.EXTDIR);
+		int optionIndex2 = optionIndex1 + 1
+				+ result.subList(optionIndex1 + 1, result.size()).indexOf("-" + AIROptions.EXTDIR);
 		Assertions.assertEquals(optionIndex1 + 2, optionIndex2);
 		Assertions.assertEquals(optionIndex2 + 1, result.indexOf(androidValue2));
 	}
 
 	@Test
-	void testSigningOptionsPlatformOverride()
-	{
+	void testSigningOptionsPlatformOverride() {
 		String androidKeystore = "path/to/android/subpath1";
 		String androidStoretype = "pkcs12";
 		String defaultKeystore = "path/to/keystore.p12";
@@ -534,7 +501,8 @@ class AIROptionsParserTests
 		int optionIndex1 = result.indexOf("-" + AIRSigningOptions.STORETYPE);
 		Assertions.assertNotEquals(-1, optionIndex1);
 		Assertions.assertEquals(optionIndex1 + 1, result.indexOf(androidStoretype));
-		int optionIndex2 = optionIndex1 + 1 + result.subList(optionIndex1 + 1, result.size()).indexOf("-" + AIRSigningOptions.KEYSTORE);
+		int optionIndex2 = optionIndex1 + 1
+				+ result.subList(optionIndex1 + 1, result.size()).indexOf("-" + AIRSigningOptions.KEYSTORE);
 		Assertions.assertEquals(optionIndex1 + 2, optionIndex2);
 		Assertions.assertEquals(optionIndex2 + 1, result.indexOf(androidKeystore));
 		Assertions.assertEquals(-1, result.indexOf("-" + AIRSigningOptions.TSA));
@@ -544,8 +512,7 @@ class AIROptionsParserTests
 	//----- debug vs release
 
 	@Test
-	void testSigningOptionsDebug()
-	{
+	void testSigningOptionsDebug() {
 		String debugKeystore = "path/to/debug_keystore.p12";
 		String debugStoretype = "pkcs12";
 		String releaseKeystore = "path/to/keystore.keystore";
@@ -571,14 +538,14 @@ class AIROptionsParserTests
 		int optionIndex1 = result.indexOf("-" + AIRSigningOptions.STORETYPE);
 		Assertions.assertNotEquals(-1, optionIndex1);
 		Assertions.assertEquals(optionIndex1 + 1, result.indexOf(debugStoretype));
-		int optionIndex2 = optionIndex1 + 1 + result.subList(optionIndex1 + 1, result.size()).indexOf("-" + AIRSigningOptions.KEYSTORE);
+		int optionIndex2 = optionIndex1 + 1
+				+ result.subList(optionIndex1 + 1, result.size()).indexOf("-" + AIRSigningOptions.KEYSTORE);
 		Assertions.assertEquals(optionIndex1 + 2, optionIndex2);
 		Assertions.assertEquals(optionIndex2 + 1, result.indexOf(debugKeystore));
 	}
 
 	@Test
-	void testSigningOptionsRelease()
-	{
+	void testSigningOptionsRelease() {
 		String debugKeystore = "path/to/debug_keystore.p12";
 		String debugStoretype = "pkcs12";
 		String releaseKeystore = "path/to/keystore.keystore";
@@ -604,14 +571,14 @@ class AIROptionsParserTests
 		int optionIndex1 = result.indexOf("-" + AIRSigningOptions.STORETYPE);
 		Assertions.assertNotEquals(-1, optionIndex1);
 		Assertions.assertEquals(optionIndex1 + 1, result.indexOf(releaseStoretype));
-		int optionIndex2 = optionIndex1 + 1 + result.subList(optionIndex1 + 1, result.size()).indexOf("-" + AIRSigningOptions.KEYSTORE);
+		int optionIndex2 = optionIndex1 + 1
+				+ result.subList(optionIndex1 + 1, result.size()).indexOf("-" + AIRSigningOptions.KEYSTORE);
 		Assertions.assertEquals(optionIndex1 + 2, optionIndex2);
 		Assertions.assertEquals(optionIndex2 + 1, result.indexOf(releaseKeystore));
 	}
 
 	@Test
-	void testConnectDebugAndroid()
-	{
+	void testConnectDebugAndroid() {
 		boolean value = true;
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		ObjectNode android = JsonNodeFactory.instance.objectNode();
@@ -624,8 +591,7 @@ class AIROptionsParserTests
 	}
 
 	@Test
-	void testConnectHostStringDebugAndroid()
-	{
+	void testConnectHostStringDebugAndroid() {
 		String value = "192.168.1.100";
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		ObjectNode android = JsonNodeFactory.instance.objectNode();
@@ -639,8 +605,7 @@ class AIROptionsParserTests
 	}
 
 	@Test
-	void testNoConnectDebugAndroid()
-	{
+	void testNoConnectDebugAndroid() {
 		boolean value = false;
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		ObjectNode android = JsonNodeFactory.instance.objectNode();
@@ -653,8 +618,7 @@ class AIROptionsParserTests
 	}
 
 	@Test
-	void testConnectReleaseAndroid()
-	{
+	void testConnectReleaseAndroid() {
 		boolean value = true;
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		ObjectNode android = JsonNodeFactory.instance.objectNode();
@@ -667,8 +631,7 @@ class AIROptionsParserTests
 	}
 
 	@Test
-	void testListenDebugAndroid()
-	{
+	void testListenDebugAndroid() {
 		boolean value = true;
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		ObjectNode android = JsonNodeFactory.instance.objectNode();
@@ -681,8 +644,7 @@ class AIROptionsParserTests
 	}
 
 	@Test
-	void testListenPortDebugAndroid()
-	{
+	void testListenPortDebugAndroid() {
 		int value = 9000;
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		ObjectNode android = JsonNodeFactory.instance.objectNode();
@@ -696,8 +658,7 @@ class AIROptionsParserTests
 	}
 
 	@Test
-	void testNoListenDebugAndroid()
-	{
+	void testNoListenDebugAndroid() {
 		boolean value = false;
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		ObjectNode android = JsonNodeFactory.instance.objectNode();
@@ -710,8 +671,7 @@ class AIROptionsParserTests
 	}
 
 	@Test
-	void testListenReleaseAndroid()
-	{
+	void testListenReleaseAndroid() {
 		boolean value = true;
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		ObjectNode android = JsonNodeFactory.instance.objectNode();
@@ -724,8 +684,7 @@ class AIROptionsParserTests
 	}
 
 	@Test
-	void testConnectListenDebugDefaultsAndroid()
-	{
+	void testConnectListenDebugDefaultsAndroid() {
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
 		ObjectNode android = JsonNodeFactory.instance.objectNode();
 		options.set(AIRPlatform.ANDROID, android);

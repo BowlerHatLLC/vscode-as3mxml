@@ -35,110 +35,83 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-public class ConfigUtils
-{
+public class ConfigUtils {
 	private static final String FILE_EXTENSION_AS = ".as";
 	private static final String FILE_EXTENSION_MXML = ".mxml";
 
-	public static String resolveMainClass(String mainClass, List<String> sourcePaths)
-	{
+	public static String resolveMainClass(String mainClass, List<String> sourcePaths) {
 		String mainClassBasePath = mainClass.replace(".", File.separator);
-		if(sourcePaths != null)
-		{
-			for(String sourcePath : sourcePaths)
-			{
+		if (sourcePaths != null) {
+			for (String sourcePath : sourcePaths) {
 				Path sourcePathPath = Paths.get(sourcePath);
 				Path mainClassPath = sourcePathPath.resolve(mainClassBasePath + FILE_EXTENSION_AS);
-				if(mainClassPath.toFile().exists())
-				{
+				if (mainClassPath.toFile().exists()) {
 					return mainClassPath.toString();
 				}
 				mainClassPath = sourcePathPath.resolve(mainClassBasePath + FILE_EXTENSION_MXML);
-				if(mainClassPath.toFile().exists())
-				{
+				if (mainClassPath.toFile().exists()) {
 					return mainClassPath.toString();
 				}
 			}
 		}
 		//as a final fallback, try in the current working directory
 		Path mainClassPath = Paths.get(mainClassBasePath + FILE_EXTENSION_AS);
-		if(mainClassPath.toFile().exists())
-		{
+		if (mainClassPath.toFile().exists()) {
 			return mainClassPath.toString();
 		}
 		mainClassPath = Paths.get(mainClassBasePath + FILE_EXTENSION_MXML);
-		if(mainClassPath.toFile().exists())
-		{
+		if (mainClassPath.toFile().exists()) {
 			return mainClassPath.toString();
 		}
 		return null;
 	}
 
-	public static JsonNode mergeConfigs(JsonNode configData, JsonNode baseConfigData)
-	{
+	public static JsonNode mergeConfigs(JsonNode configData, JsonNode baseConfigData) {
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode result = mapper.createObjectNode();
 
 		Set<String> allFieldNames = new HashSet<>();
 		Iterator<String> fieldNames = baseConfigData.fieldNames();
-		while(fieldNames.hasNext())
-		{
+		while (fieldNames.hasNext()) {
 			String fieldName = fieldNames.next();
 			allFieldNames.add(fieldName);
 		}
 		fieldNames = configData.fieldNames();
-		while(fieldNames.hasNext())
-		{
+		while (fieldNames.hasNext()) {
 			String fieldName = fieldNames.next();
 			allFieldNames.add(fieldName);
 		}
 
-		allFieldNames.forEach(fieldName ->
-		{
-			if(TopLevelFields.EXTENDS.equals(fieldName))
-			{
+		allFieldNames.forEach(fieldName -> {
+			if (TopLevelFields.EXTENDS.equals(fieldName)) {
 				//safe to skip
 				return;
 			}
 			boolean hasField = configData.has(fieldName);
 			boolean baseHasField = baseConfigData.has(fieldName);
-			if(hasField && baseHasField)
-			{
+			if (hasField && baseHasField) {
 				JsonNode newValue = configData.get(fieldName);
 				JsonNode baseValue = baseConfigData.get(fieldName);
-				if(TopLevelFields.APPLICATION.equals(fieldName))
-				{
+				if (TopLevelFields.APPLICATION.equals(fieldName)) {
 					result.set(fieldName, mergeApplication(newValue, baseValue));
-				}
-				else if(TopLevelFields.COMPILER_OPTIONS.equals(fieldName))
-				{
+				} else if (TopLevelFields.COMPILER_OPTIONS.equals(fieldName)) {
 					result.set(fieldName, mergeCompilerOptions(newValue, baseValue));
-				}
-				else if(TopLevelFields.AIR_OPTIONS.equals(fieldName))
-				{
+				} else if (TopLevelFields.AIR_OPTIONS.equals(fieldName)) {
 					result.set(fieldName, mergeAirOptions(newValue, baseValue, true));
-				}
-				else
-				{
+				} else {
 					result.set(fieldName, mergeObjectsSimple(newValue, baseValue));
 				}
-			}
-			else if(hasField)
-			{
+			} else if (hasField) {
 				result.set(fieldName, configData.get(fieldName));
-			}
-			else if(baseHasField)
-			{
+			} else if (baseHasField) {
 				result.set(fieldName, baseConfigData.get(fieldName));
 			}
 		});
 		return result;
 	}
 
-	private static JsonNode mergeObjectsSimple(JsonNode object, JsonNode baseObject)
-	{
-		if(!object.isObject())
-		{
+	private static JsonNode mergeObjectsSimple(JsonNode object, JsonNode baseObject) {
+		if (!object.isObject()) {
 			return object;
 		}
 
@@ -146,35 +119,30 @@ public class ConfigUtils
 		ObjectNode result = mapper.createObjectNode();
 
 		Iterator<String> fieldNames = baseObject.fieldNames();
-		while(fieldNames.hasNext())
-		{
+		while (fieldNames.hasNext()) {
 			String fieldName = fieldNames.next();
 			result.set(fieldName, baseObject.get(fieldName));
 		}
 
 		fieldNames = object.fieldNames();
-		while(fieldNames.hasNext())
-		{
+		while (fieldNames.hasNext()) {
 			String fieldName = fieldNames.next();
 			result.set(fieldName, object.get(fieldName));
 		}
 		return result;
 	}
 
-	private static JsonNode mergeArrays(JsonNode array, JsonNode baseArray)
-	{
+	private static JsonNode mergeArrays(JsonNode array, JsonNode baseArray) {
 		Set<JsonNode> combinedNodes = new HashSet<>();
-		
+
 		Iterator<JsonNode> elements = baseArray.elements();
-		while(elements.hasNext())
-		{
+		while (elements.hasNext()) {
 			JsonNode element = elements.next();
 			combinedNodes.add(element);
 		}
-		
+
 		elements = array.elements();
-		while(elements.hasNext())
-		{
+		while (elements.hasNext()) {
 			JsonNode element = elements.next();
 			combinedNodes.add(element);
 		}
@@ -185,26 +153,21 @@ public class ConfigUtils
 		return result;
 	}
 
-	private static JsonNode mergeArraysWithComparisonKey(JsonNode array, JsonNode baseArray, String comparisonKey)
-	{
+	private static JsonNode mergeArraysWithComparisonKey(JsonNode array, JsonNode baseArray, String comparisonKey) {
 		Set<JsonNode> combinedNodes = new HashSet<>();
 
 		Iterator<JsonNode> elements = array.elements();
-		while(elements.hasNext())
-		{
+		while (elements.hasNext()) {
 			JsonNode element = elements.next();
 			combinedNodes.add(element);
 		}
 
 		elements = baseArray.elements();
-		while(elements.hasNext())
-		{
+		while (elements.hasNext()) {
 			JsonNode element = elements.next();
-			if(combinedNodes.stream().noneMatch(otherElement ->
-			{
+			if (combinedNodes.stream().noneMatch(otherElement -> {
 				return otherElement.get(comparisonKey).equals(element.get(comparisonKey));
-			}))
-			{
+			})) {
 				combinedNodes.add(element);
 			}
 		}
@@ -215,49 +178,36 @@ public class ConfigUtils
 		return result;
 	}
 
-	private static JsonNode mergeCompilerOptions(JsonNode compilerOptions, JsonNode baseCompilerOptions)
-	{
+	private static JsonNode mergeCompilerOptions(JsonNode compilerOptions, JsonNode baseCompilerOptions) {
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode result = mapper.createObjectNode();
-		
+
 		Iterator<String> fieldNames = baseCompilerOptions.fieldNames();
-		while(fieldNames.hasNext())
-		{
+		while (fieldNames.hasNext()) {
 			String fieldName = fieldNames.next();
 			result.set(fieldName, baseCompilerOptions.get(fieldName));
 		}
-		
+
 		fieldNames = compilerOptions.fieldNames();
-		while(fieldNames.hasNext())
-		{
+		while (fieldNames.hasNext()) {
 			String fieldName = fieldNames.next();
 			JsonNode newValue = compilerOptions.get(fieldName);
-			if(CompilerOptions.DEFINE.equals(fieldName))
-			{
-				if(result.has(fieldName))
-				{
+			if (CompilerOptions.DEFINE.equals(fieldName)) {
+				if (result.has(fieldName)) {
 					JsonNode oldDefine = result.get(fieldName);
-					result.set(fieldName, mergeArraysWithComparisonKey(newValue, oldDefine, CompilerOptions.DEFINE__NAME));
-				}
-				else
-				{
+					result.set(fieldName,
+							mergeArraysWithComparisonKey(newValue, oldDefine, CompilerOptions.DEFINE__NAME));
+				} else {
 					result.set(fieldName, newValue);
 				}
-			}
-			else if(newValue.isArray())
-			{
+			} else if (newValue.isArray()) {
 				JsonNode oldArray = result.get(fieldName);
-				if(oldArray != null && oldArray.isArray())
-				{
+				if (oldArray != null && oldArray.isArray()) {
 					result.set(fieldName, mergeArrays(newValue, oldArray));
-				}
-				else
-				{
+				} else {
 					result.set(fieldName, newValue);
 				}
-			}
-			else
-			{
+			} else {
 				result.set(fieldName, newValue);
 			}
 		}
@@ -265,169 +215,124 @@ public class ConfigUtils
 		return result;
 	}
 
-	private static JsonNode mergeApplication(JsonNode application, JsonNode baseApplication)
-	{
-		if(application.isTextual())
-		{
+	private static JsonNode mergeApplication(JsonNode application, JsonNode baseApplication) {
+		if (application.isTextual()) {
 			return application;
 		}
 
 		JsonNode result = null;
-		if(baseApplication.isTextual())
-		{
+		if (baseApplication.isTextual()) {
 			ObjectMapper mapper = new ObjectMapper();
 			ObjectNode stringAsObject = mapper.createObjectNode();
-			
-			Set<String> platforms = Arrays.asList(AIRPlatform.class.getDeclaredFields())
-				.stream()
-				.map((field) -> 
-				{
-					String value = null;
-					try
-					{
-						value = (String) field.get(AIRPlatform.class);
-					} catch (IllegalAccessException e) {
-						System.err.println("Fatal error");
-					}
-					return value;
-				})
-				.collect(Collectors.toSet());
-			for(String platform : platforms)
-			{
+
+			Set<String> platforms = Arrays.asList(AIRPlatform.class.getDeclaredFields()).stream().map((field) -> {
+				String value = null;
+				try {
+					value = (String) field.get(AIRPlatform.class);
+				} catch (IllegalAccessException e) {
+					System.err.println("Fatal error");
+				}
+				return value;
+			}).collect(Collectors.toSet());
+			for (String platform : platforms) {
 				stringAsObject.set(platform, baseApplication);
 			}
 			result = stringAsObject;
-		}
-		else
-		{
+		} else {
 			result = baseApplication;
 		}
 
 		return mergeObjectsSimple(application, result);
 	}
 
-	private static JsonNode mergeAirOptions(JsonNode airOptions, JsonNode baseAirOptions, boolean handlePlatforms)
-	{
+	private static JsonNode mergeAirOptions(JsonNode airOptions, JsonNode baseAirOptions, boolean handlePlatforms) {
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode result = mapper.createObjectNode();
 
 		Set<String> allFieldNames = new HashSet<>();
 		Iterator<String> fieldNames = baseAirOptions.fieldNames();
-		while(fieldNames.hasNext())
-		{
+		while (fieldNames.hasNext()) {
 			String fieldName = fieldNames.next();
 			allFieldNames.add(fieldName);
 		}
 		fieldNames = airOptions.fieldNames();
-		while(fieldNames.hasNext())
-		{
+		while (fieldNames.hasNext()) {
 			String fieldName = fieldNames.next();
 			allFieldNames.add(fieldName);
 		}
 
-		Set<String> platforms = Arrays.asList(AIRPlatform.class.getDeclaredFields())
-			.stream()
-			.map((field) -> 
-			{
-				String value = null;
-				try
-				{
-					value = (String) field.get(AIRPlatform.class);
-				} catch (IllegalAccessException e) {
-					System.err.println("Fatal error");
-				}
-				return value;
-			})
-			.collect(Collectors.toSet());
-		allFieldNames.forEach(fieldName ->
-		{
+		Set<String> platforms = Arrays.asList(AIRPlatform.class.getDeclaredFields()).stream().map((field) -> {
+			String value = null;
+			try {
+				value = (String) field.get(AIRPlatform.class);
+			} catch (IllegalAccessException e) {
+				System.err.println("Fatal error");
+			}
+			return value;
+		}).collect(Collectors.toSet());
+		allFieldNames.forEach(fieldName -> {
 			boolean hasField = airOptions.has(fieldName);
 			boolean baseHasField = baseAirOptions.has(fieldName);
-			if(hasField && baseHasField)
-			{
+			if (hasField && baseHasField) {
 				JsonNode newValue = airOptions.get(fieldName);
 				JsonNode baseValue = baseAirOptions.get(fieldName);
-				if(handlePlatforms && platforms.contains(fieldName))
-				{
+				if (handlePlatforms && platforms.contains(fieldName)) {
 					result.set(fieldName, mergeAirOptions(newValue, baseValue, false));
-				}
-				else if(AIROptions.FILES.equals(fieldName))
-				{
+				} else if (AIROptions.FILES.equals(fieldName)) {
 					result.set(fieldName, mergeArraysWithComparisonKey(newValue, baseValue, AIROptions.FILES__PATH));
-				}
-				else if(AIROptions.SIGNING_OPTIONS.equals(fieldName))
-				{
+				} else if (AIROptions.SIGNING_OPTIONS.equals(fieldName)) {
 					result.set(fieldName, mergeSigningOptions(newValue, baseValue));
-				}
-				else if(newValue.isArray() && baseValue.isArray())
-				{
+				} else if (newValue.isArray() && baseValue.isArray()) {
 					result.set(fieldName, mergeArrays(newValue, baseValue));
-				}
-				else
-				{
+				} else {
 					result.set(fieldName, mergeObjectsSimple(newValue, baseValue));
 				}
-			}
-			else if(hasField)
-			{
+			} else if (hasField) {
 				result.set(fieldName, airOptions.get(fieldName));
-			}
-			else if(baseHasField)
-			{
+			} else if (baseHasField) {
 				result.set(fieldName, baseAirOptions.get(fieldName));
 			}
 		});
-		
+
 		return result;
 	}
 
-	private static JsonNode mergeSigningOptions(JsonNode signingOptions, JsonNode baseSigningOptions)
-	{
+	private static JsonNode mergeSigningOptions(JsonNode signingOptions, JsonNode baseSigningOptions) {
 		boolean hasDebug = signingOptions.has(AIRSigningOptions.DEBUG);
 		boolean hasRelease = signingOptions.has(AIRSigningOptions.RELEASE);
-		if(!hasDebug && !hasRelease)
-		{
+		if (!hasDebug && !hasRelease) {
 			//nothing to merge. fully overrides the base
 			return signingOptions;
 		}
-		if(hasDebug && hasRelease)
-		{
+		if (hasDebug && hasRelease) {
 			//fully overrides the base
 			return signingOptions;
 		}
-		
+
 		boolean baseHasDebug = baseSigningOptions.has(AIRSigningOptions.DEBUG);
 		boolean baseHasRelease = baseSigningOptions.has(AIRSigningOptions.RELEASE);
 
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode result = mapper.createObjectNode();
 
-		if(hasDebug)
-		{
+		if (hasDebug) {
 			result.set(AIRSigningOptions.DEBUG, signingOptions.get(AIRSigningOptions.DEBUG));
-		}
-		else if(baseHasDebug)
-		{
+		} else if (baseHasDebug) {
 			result.set(AIRSigningOptions.DEBUG, baseSigningOptions.get(AIRSigningOptions.DEBUG));
-		}
-		else if(!baseHasRelease) //neither debug nor release
+		} else if (!baseHasRelease) //neither debug nor release
 		{
 			result.set(AIRSigningOptions.DEBUG, baseSigningOptions);
 		}
-		
-		if(hasRelease)
-		{
+
+		if (hasRelease) {
 			result.set(AIRSigningOptions.RELEASE, signingOptions.get(AIRSigningOptions.RELEASE));
-		}
-		else if(baseHasRelease)
-		{
+		} else if (baseHasRelease) {
 			result.set(AIRSigningOptions.RELEASE, baseSigningOptions.get(AIRSigningOptions.RELEASE));
-		}
-		else if(!baseHasDebug) //neither debug nor release
+		} else if (!baseHasDebug) //neither debug nor release
 		{
 			result.set(AIRSigningOptions.RELEASE, baseSigningOptions);
 		}
-		
+
 		return result;
 	}
 }

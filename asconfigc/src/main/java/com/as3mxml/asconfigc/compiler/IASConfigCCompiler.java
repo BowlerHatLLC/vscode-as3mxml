@@ -23,7 +23,7 @@ import com.as3mxml.asconfigc.ASConfigCException;
 /**
  * Interface to allow a compiler shell to be passed into asconfigc.
  */
-public interface IASConfigCCompiler
-{
-	public void compile(String projectType, List<String> compilerOptions, Path workspaceRoot, Path sdkPath) throws ASConfigCException;
+public interface IASConfigCCompiler {
+	public void compile(String projectType, List<String> compilerOptions, Path workspaceRoot, Path sdkPath)
+			throws ASConfigCException;
 }

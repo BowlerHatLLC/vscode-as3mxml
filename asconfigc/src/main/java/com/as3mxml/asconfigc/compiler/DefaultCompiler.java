@@ -25,15 +25,12 @@ import com.as3mxml.asconfigc.ASConfigCException;
 import com.as3mxml.asconfigc.utils.ApacheRoyaleUtils;
 import com.as3mxml.asconfigc.utils.ProjectUtils;
 
-public class DefaultCompiler implements IASConfigCCompiler
-{
-	public DefaultCompiler()
-	{
+public class DefaultCompiler implements IASConfigCCompiler {
+	public DefaultCompiler() {
 		this(false, null);
 	}
 
-	public DefaultCompiler(boolean verbose, List<String> jvmargs)
-	{
+	public DefaultCompiler(boolean verbose, List<String> jvmargs) {
 		this.verbose = verbose;
 		this.jvmargs = jvmargs;
 	}
@@ -41,28 +38,23 @@ public class DefaultCompiler implements IASConfigCCompiler
 	private boolean verbose = false;
 	private List<String> jvmargs = null;
 
-	public void compile(String projectType, List<String> compilerOptions, Path workspaceRoot, Path sdkPath) throws ASConfigCException
-	{
-		if(verbose)
-		{
-			if(ProjectType.LIB.equals(projectType))
-			{
+	public void compile(String projectType, List<String> compilerOptions, Path workspaceRoot, Path sdkPath)
+			throws ASConfigCException {
+		if (verbose) {
+			if (ProjectType.LIB.equals(projectType)) {
 				System.out.println("Compiling library...");
-			}
-			else //app
+			} else //app
 			{
 				System.out.println("Compiling application...");
 			}
 		}
 		boolean sdkIsRoyale = ApacheRoyaleUtils.isValidSDK(sdkPath) != null;
 		Path jarPath = ProjectUtils.findCompilerJarPath(projectType, sdkPath.toString(), !sdkIsRoyale);
-		if(jarPath == null)
-		{
+		if (jarPath == null) {
 			throw new ASConfigCException("Compiler not found in SDK. Expected in SDK: " + sdkPath);
 		}
 		Path frameworkPath = sdkPath.resolve("frameworks");
-		if(sdkIsRoyale)
-		{
+		if (sdkIsRoyale) {
 			//royale is a special case that has renamed many of the common
 			//configuration options for the compiler
 			compilerOptions.add(0, "+royalelib=" + frameworkPath.toString());
@@ -73,9 +65,7 @@ public class DefaultCompiler implements IASConfigCCompiler
 			//Royale requires this so that it doesn't changing the encoding of
 			//UTF-8 characters and display ???? instead
 			compilerOptions.add(0, "-Dfile.encoding=UTF8");
-		}
-		else
-		{
+		} else {
 			//other SDKs all use the same options
 			compilerOptions.add(0, "+flexlib=" + frameworkPath.toString());
 			compilerOptions.add(0, jarPath.toString());
@@ -83,42 +73,29 @@ public class DefaultCompiler implements IASConfigCCompiler
 			compilerOptions.add(0, "-Dflexlib=" + frameworkPath.toString());
 			compilerOptions.add(0, "-Dflexcompiler=" + sdkPath.toString());
 		}
-		if(jvmargs != null)
-		{
+		if (jvmargs != null) {
 			compilerOptions.addAll(0, jvmargs);
 		}
 		boolean isMacOS = System.getProperty("os.name").toLowerCase().startsWith("mac os");
-		if(isMacOS)
-		{
+		if (isMacOS) {
 			compilerOptions.add(0, "-Dapple.awt.UIElement=true");
 		}
 		Path javaExecutablePath = Paths.get(System.getProperty("java.home"), "bin", "java");
 		compilerOptions.add(0, javaExecutablePath.toString());
 
-		if(verbose)
-		{
+		if (verbose) {
 			System.out.println(String.join(" ", compilerOptions));
 		}
-		try
-		{
+		try {
 			File cwd = new File(System.getProperty("user.dir"));
-			Process process = new ProcessBuilder()
-				.command(compilerOptions)
-				.directory(cwd)
-				.inheritIO()
-				.start();
+			Process process = new ProcessBuilder().command(compilerOptions).directory(cwd).inheritIO().start();
 			int status = process.waitFor();
-			if(status != 0)
-			{
+			if (status != 0) {
 				throw new ASConfigCException(status);
 			}
-		}
-		catch(InterruptedException e)
-		{
+		} catch (InterruptedException e) {
 			throw new ASConfigCException("Failed to execute compiler: " + e.getMessage());
-		}
-		catch(IOException e)
-		{
+		} catch (IOException e) {
 			throw new ASConfigCException("Failed to execute compiler: " + e.getMessage());
 		}
 	}

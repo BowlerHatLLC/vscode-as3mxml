@@ -25,28 +25,24 @@ import org.apache.royale.compiler.tree.as.IExpressionNode;
 import org.apache.royale.compiler.tree.as.IImportNode;
 
 @DefaultSeverity(CompilerProblemSeverity.WARNING)
-public class UnusedImportProblem extends CompilerProblem
-{
+public class UnusedImportProblem extends CompilerProblem {
 	public static final String DESCRIPTION = "The import ${importName} is never used";
 	public static final String DIAGNOSTIC_CODE = "as3mxml-unused-import";
-    
-    public UnusedImportProblem(IImportNode site)
-    {
+
+	public UnusedImportProblem(IImportNode site) {
 		//TODO: change this to the full import node when royale-compiler range gets fixed
 		//this is a hack because royale-compiler does not return the correct
 		//range for import nodes.
 		super(getSite(site));
 		importName = site.getImportName();
 	}
-	
+
 	public String importName;
 
-	private static ISourceLocation getSite(IImportNode importNode)
-	{
+	private static ISourceLocation getSite(IImportNode importNode) {
 		SourceLocation location = new SourceLocation();
 		IExpressionNode importNameNode = importNode.getImportNameNode();
-		if(importNameNode instanceof FullNameNode)
-		{
+		if (importNameNode instanceof FullNameNode) {
 			FullNameNode fullName = (FullNameNode) importNameNode;
 			importNameNode = fullName.getRightOperandNode();
 		}

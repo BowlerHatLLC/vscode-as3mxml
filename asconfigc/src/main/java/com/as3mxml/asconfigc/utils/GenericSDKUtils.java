@@ -23,8 +23,7 @@ import java.nio.file.Paths;
 /**
  * Utilities for finding and using an ActionScript SDK.
  */
-public class GenericSDKUtils
-{
+public class GenericSDKUtils {
 	private static final String ENV_FLEX_HOME = "FLEX_HOME";
 	private static final String ENV_PATH = "PATH";
 	private static final String BIN = "bin";
@@ -33,54 +32,45 @@ public class GenericSDKUtils
 	private static final String FLEX_SDK_DESCRIPTION = "flex-sdk-description.xml";
 	private static final String AIR_SDK_DESCRIPTION = "air-sdk-description.xml";
 	private static final String ROYALE_SDK_DESCRIPTION = "royale-sdk-description.xml";
-	
+
 	/**
 	 * Determines if a directory contains a valid ActionScript SDK.
 	 */
-	public static boolean isValidSDK(Path absolutePath)
-	{
-		if(absolutePath == null || !absolutePath.isAbsolute())
-		{
+	public static boolean isValidSDK(Path absolutePath) {
+		if (absolutePath == null || !absolutePath.isAbsolute()) {
 			return false;
 		}
 		File file = absolutePath.toFile();
-		if(!file.isDirectory())
-		{
+		if (!file.isDirectory()) {
 			return false;
 		}
 		Path sdkDescriptionPath = absolutePath.resolve(FLEX_SDK_DESCRIPTION);
 		file = sdkDescriptionPath.toFile();
-		if(file.exists() && !file.isDirectory())
-		{
+		if (file.exists() && !file.isDirectory()) {
 			return hasCompilers(absolutePath);
 		}
 		sdkDescriptionPath = absolutePath.resolve(AIR_SDK_DESCRIPTION);
 		file = sdkDescriptionPath.toFile();
-		if(file.exists() && !file.isDirectory())
-		{
+		if (file.exists() && !file.isDirectory()) {
 			return hasCompilers(absolutePath);
 		}
 		sdkDescriptionPath = absolutePath.resolve(ROYALE_SDK_DESCRIPTION);
 		file = sdkDescriptionPath.toFile();
-		if(file.exists() && !file.isDirectory())
-		{
+		if (file.exists() && !file.isDirectory()) {
 			return hasCompilers(absolutePath);
 		}
 		return false;
 	}
 
-	private static boolean hasCompilers(Path sdkPath)
-	{
+	private static boolean hasCompilers(Path sdkPath) {
 		Path compilerPath = sdkPath.resolve(BIN).resolve(MXMLC);
 		File file = compilerPath.toFile();
-		if(!file.exists() || file.isDirectory())
-		{
+		if (!file.exists() || file.isDirectory()) {
 			return false;
 		}
 		compilerPath = sdkPath.resolve(BIN).resolve(COMPC);
 		file = compilerPath.toFile();
-		if(!file.exists() || file.isDirectory())
-		{
+		if (!file.exists() || file.isDirectory()) {
 			return false;
 		}
 		return true;
@@ -90,38 +80,29 @@ public class GenericSDKUtils
 	 * Attempts to find a valid SDK by searching for the FLEX_HOME
 	 * environment variable and testing the PATH environment variable.
 	 */
-	public static String findSDK()
-	{
+	public static String findSDK() {
 		String flexHome = System.getenv(ENV_FLEX_HOME);
-		if(flexHome != null && isValidSDK(Paths.get(flexHome)))
-		{
+		if (flexHome != null && isValidSDK(Paths.get(flexHome))) {
 			return flexHome;
 		}
 		String envPath = System.getenv(ENV_PATH);
-		if(envPath != null)
-		{
+		if (envPath != null) {
 			String[] paths = envPath.split(File.pathSeparator);
-			for(String currentPath : paths)
-			{
+			for (String currentPath : paths) {
 				File file = new File(currentPath, MXMLC);
-				if(file.exists() && !file.isDirectory())
-				{
+				if (file.exists() && !file.isDirectory()) {
 					//this may a symbolic link rather than the actual file,
 					//such as when Apache Royale is installed with NPM on
 					//Mac, so get the real path.
 					Path sdkPath = file.toPath();
-					try
-					{
+					try {
 						sdkPath = sdkPath.toRealPath();
-					}
-					catch(IOException e)
-					{
+					} catch (IOException e) {
 						//didn't seem to work, for some reason
 						return null;
 					}
 					sdkPath = sdkPath.getParent().getParent().getParent();
-					if(isValidSDK(sdkPath))
-					{
+					if (isValidSDK(sdkPath)) {
 						return sdkPath.toString();
 					}
 				}

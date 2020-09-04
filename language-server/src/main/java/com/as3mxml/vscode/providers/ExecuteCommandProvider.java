@@ -61,72 +61,59 @@ import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.WorkspaceEdit;
 import org.eclipse.lsp4j.jsonrpc.CompletableFutures;
 
-public class ExecuteCommandProvider
-{
+public class ExecuteCommandProvider {
     private static final String FILE_EXTENSION_MXML = ".mxml";
     private static final String FILE_EXTENSION_AS = ".as";
 
     private ActionScriptProjectManager actionScriptProjectManager;
     private FileTracker fileTracker;
-	private Workspace compilerWorkspace;
-	private ActionScriptLanguageClient languageClient;
+    private Workspace compilerWorkspace;
+    private ActionScriptLanguageClient languageClient;
 
     public ExecuteCommandProvider(ActionScriptProjectManager actionScriptProjectManager, FileTracker fileTracker,
-        Workspace compilerWorkspace, ActionScriptLanguageClient languageClient)
-	{
+            Workspace compilerWorkspace, ActionScriptLanguageClient languageClient) {
         this.actionScriptProjectManager = actionScriptProjectManager;
         this.fileTracker = fileTracker;
-		this.compilerWorkspace = compilerWorkspace;
-		this.languageClient = languageClient;
-	}
+        this.compilerWorkspace = compilerWorkspace;
+        this.languageClient = languageClient;
+    }
 
-	public CompletableFuture<Object> executeCommand(ExecuteCommandParams params)
-	{
-        switch(params.getCommand())
-        {
-            case ICommandConstants.ADD_IMPORT:
-            {
+    public CompletableFuture<Object> executeCommand(ExecuteCommandParams params) {
+        switch (params.getCommand()) {
+            case ICommandConstants.ADD_IMPORT: {
                 return executeAddImportCommand(params);
             }
-            case ICommandConstants.ADD_MXML_NAMESPACE:
-            {
+            case ICommandConstants.ADD_MXML_NAMESPACE: {
                 return executeAddMXMLNamespaceCommand(params);
             }
-            case ICommandConstants.ORGANIZE_IMPORTS_IN_URI:
-            {
+            case ICommandConstants.ORGANIZE_IMPORTS_IN_URI: {
                 return executeOrganizeImportsInUriCommand(params);
             }
-            case ICommandConstants.ORGANIZE_IMPORTS_IN_DIRECTORY:
-            {
+            case ICommandConstants.ORGANIZE_IMPORTS_IN_DIRECTORY: {
                 return executeOrganizeImportsInDirectoryCommand(params);
             }
-            case ICommandConstants.GET_ACTIVE_PROJECT_URIS:
-            {
+            case ICommandConstants.GET_ACTIVE_PROJECT_URIS: {
                 return executeGetActiveProjectUrisCommand(params);
             }
-            default:
-            {
+            default: {
                 System.err.println("Unknown command: " + params.getCommand());
                 return CompletableFuture.completedFuture(new Object());
             }
         }
-	}
+    }
 
-    private CompletableFuture<Object> executeOrganizeImportsInDirectoryCommand(ExecuteCommandParams params)
-    {
+    private CompletableFuture<Object> executeOrganizeImportsInDirectoryCommand(ExecuteCommandParams params) {
         List<Object> args = params.getArguments();
         JsonObject uriObject = (JsonObject) args.get(0);
         String directoryURI = uriObject.get("external").getAsString();
 
         Path directoryPath = LanguageServerCompilerUtils.getPathFromLanguageServerURI(directoryURI);
-        if (directoryPath == null)
-        {
+        if (directoryPath == null) {
             return CompletableFuture.completedFuture(new Object());
         }
 
         File directoryFile = directoryPath.toFile();
-        if (!directoryFile.isDirectory())
-        {
+        if (!directoryFile.isDirectory()) {
             return CompletableFuture.completedFuture(new Object());
         }
 
@@ -134,134 +121,108 @@ public class ExecuteCommandProvider
         List<String> fileURIs = new ArrayList<>();
         List<File> directories = new ArrayList<>();
         directories.add(directoryFile);
-        for(int i = 0; i < directories.size(); i++)
-        {
+        for (int i = 0; i < directories.size(); i++) {
             File currentDir = directories.get(i);
             File[] files = currentDir.listFiles();
-            for (File file : files)
-            {
-                if (file.isDirectory())
-                {
+            for (File file : files) {
+                if (file.isDirectory()) {
                     //add this directory to the list to search
                     directories.add(file);
                     continue;
                 }
-                if (!file.getName().endsWith(FILE_EXTENSION_AS) && !file.getName().endsWith(FILE_EXTENSION_MXML))
-                {
+                if (!file.getName().endsWith(FILE_EXTENSION_AS) && !file.getName().endsWith(FILE_EXTENSION_MXML)) {
                     continue;
                 }
                 fileURIs.add(file.toURI().toString());
                 Path filePath = file.toPath();
-                if(!fileTracker.isOpen(filePath))
-                {
+                if (!fileTracker.isOpen(filePath)) {
                     filesToClose.add(file.toPath());
                     openFileForOrganizeImports(filePath);
                 }
             }
         }
-        if (fileURIs.size() == 0)
-        {
+        if (fileURIs.size() == 0) {
             return CompletableFuture.completedFuture(new Object());
         }
 
-        return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken ->
-        {
+        return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken -> {
             cancelToken.checkCanceled();
 
             compilerWorkspace.startBuilding();
             ApplyWorkspaceEditParams editParams = null;
-            try
-            {
+            try {
                 cancelToken.checkCanceled();
-                Map<String,List<TextEdit>> changes = new HashMap<>();
-                for(String fileURI : fileURIs)
-                {
+                Map<String, List<TextEdit>> changes = new HashMap<>();
+                for (String fileURI : fileURIs) {
                     organizeImportsInUri(fileURI, changes);
                 }
-                
-                if(changes.keySet().size() > 0)
-                {
+
+                if (changes.keySet().size() > 0) {
                     editParams = new ApplyWorkspaceEditParams();
                     WorkspaceEdit workspaceEdit = new WorkspaceEdit();
                     workspaceEdit.setChanges(changes);
                     editParams.setEdit(workspaceEdit);
                 }
-            }
-            finally
-            {
+            } finally {
                 compilerWorkspace.doneBuilding();
             }
-            for(Path filePath : filesToClose)
-            {
+            for (Path filePath : filesToClose) {
                 fileTracker.closeFile(filePath);
             }
-            if(editParams != null)
-            {
+            if (editParams != null) {
                 languageClient.applyEdit(editParams);
             }
             return new Object();
         });
     }
-    
-    private CompletableFuture<Object> executeOrganizeImportsInUriCommand(ExecuteCommandParams params)
-    {
+
+    private CompletableFuture<Object> executeOrganizeImportsInUriCommand(ExecuteCommandParams params) {
         List<Object> args = params.getArguments();
         JsonObject uriObject = (JsonObject) args.get(0);
         String uri = uriObject.get("external").getAsString();
 
         Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(uri);
-        if (path == null)
-        {
+        if (path == null) {
             return CompletableFuture.completedFuture(new Object());
         }
 
         boolean isOpen = fileTracker.isOpen(path);
-        if(!isOpen)
-        {
+        if (!isOpen) {
             openFileForOrganizeImports(path);
         }
-        
-        return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken ->
-        {
+
+        return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken -> {
             cancelToken.checkCanceled();
 
             compilerWorkspace.startBuilding();
             ApplyWorkspaceEditParams editParams = null;
-            try
-            {
+            try {
                 cancelToken.checkCanceled();
-                
-                Map<String,List<TextEdit>> changes = new HashMap<>();
+
+                Map<String, List<TextEdit>> changes = new HashMap<>();
                 organizeImportsInUri(uri, changes);
 
-                if(changes.keySet().size() > 0)
-                {
+                if (changes.keySet().size() > 0) {
                     editParams = new ApplyWorkspaceEditParams();
                     WorkspaceEdit workspaceEdit = new WorkspaceEdit();
                     workspaceEdit.setChanges(changes);
                     editParams.setEdit(workspaceEdit);
                 }
-            }
-            finally
-            {
+            } finally {
                 compilerWorkspace.doneBuilding();
             }
-            if(!isOpen)
-            {
+            if (!isOpen) {
                 fileTracker.closeFile(path);
             }
-            if(editParams != null)
-            {
+            if (editParams != null) {
                 languageClient.applyEdit(editParams);
             }
             return new Object();
         });
     }
 
-    private void openFileForOrganizeImports(Path path)
-    {
-        if(fileTracker.isOpen(path))
-        {
+    private void openFileForOrganizeImports(Path path) {
+        if (fileTracker.isOpen(path)) {
             //already opened
             return;
         }
@@ -269,8 +230,7 @@ public class ExecuteCommandProvider
         //if the file isn't open in an editor, we need to read it from the
         //file system instead.
         String text = fileTracker.getText(path);
-        if(text == null)
-        {
+        if (text == null) {
             return;
         }
 
@@ -288,29 +248,24 @@ public class ExecuteCommandProvider
         compilerWorkspace.fileChanged(fileSpec);
     }
 
-    private void organizeImportsInUri(String uri, Map<String,List<TextEdit>> changes)
-    {
+    private void organizeImportsInUri(String uri, Map<String, List<TextEdit>> changes) {
         Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(uri);
-        if(path == null)
-        {
+        if (path == null) {
             return;
         }
         ActionScriptProjectData projectData = actionScriptProjectManager.getProjectDataForSourceFile(path);
-        if(projectData == null || projectData.project == null)
-        {
+        if (projectData == null || projectData.project == null) {
             return;
         }
         ILspProject project = projectData.project;
-        
+
         ICompilationUnit unit = CompilerProjectUtils.findCompilationUnit(path, project);
-        if(unit == null)
-        {
+        if (unit == null) {
             return;
         }
 
         String text = fileTracker.getText(path);
-        if(text == null)
-        {
+        if (text == null) {
             return;
         }
 
@@ -318,86 +273,73 @@ public class ExecuteCommandProvider
         Set<String> importsToAdd = null;
         List<IImportNode> importsToRemove = null;
         IASNode ast = ASTUtils.getCompilationUnitAST(unit);
-        if (ast != null)
-        {
+        if (ast != null) {
             missingNames = ASTUtils.findUnresolvedIdentifiersToImport(ast, project);
-			Set<String> requiredImports = project.getQNamesOfDependencies(unit);
+            Set<String> requiredImports = project.getQNamesOfDependencies(unit);
             importsToRemove = ASTUtils.findImportNodesToRemove(ast, requiredImports);
         }
-        if (missingNames != null)
-        {
+        if (missingNames != null) {
             importsToAdd = new HashSet<>();
             Collection<ICompilationUnit> units = project.getCompilationUnits();
-            for (String missingName : missingNames)
-            {
+            for (String missingName : missingNames) {
                 List<IDefinition> types = ASTUtils.findTypesThatMatchName(missingName, units);
-                if (types.size() == 1)
-                {
+                if (types.size() == 1) {
                     //add an import only if exactly one type is found
                     importsToAdd.add(types.get(0).getQualifiedName());
                 }
             }
         }
         List<TextEdit> edits = ImportTextEditUtils.organizeImports(text, importsToRemove, importsToAdd);
-        if(edits == null || edits.size() == 0)
-        {
+        if (edits == null || edits.size() == 0) {
             //no edit required
             return;
         }
         changes.put(uri, edits);
     }
-    
-    private CompletableFuture<Object> executeAddImportCommand(ExecuteCommandParams params)
-    {
-        return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken ->
-        {
+
+    private CompletableFuture<Object> executeAddImportCommand(ExecuteCommandParams params) {
+        return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken -> {
             cancelToken.checkCanceled();
 
             compilerWorkspace.startBuilding();
-            try
-            {
+            try {
                 cancelToken.checkCanceled();
                 List<Object> args = params.getArguments();
                 String qualifiedName = ((JsonPrimitive) args.get(0)).getAsString();
                 String uri = ((JsonPrimitive) args.get(1)).getAsString();
                 int line = ((JsonPrimitive) args.get(2)).getAsInt();
                 int character = ((JsonPrimitive) args.get(3)).getAsInt();
-                if(qualifiedName == null)
-                {
+                if (qualifiedName == null) {
                     return new Object();
                 }
                 Path pathForImport = LanguageServerCompilerUtils.getPathFromLanguageServerURI(uri);
-                if(pathForImport == null)
-                {
+                if (pathForImport == null) {
                     return new Object();
                 }
-                ActionScriptProjectData projectData = actionScriptProjectManager.getProjectDataForSourceFile(pathForImport);
-                if(projectData == null || projectData.project == null)
-                {
+                ActionScriptProjectData projectData = actionScriptProjectManager
+                        .getProjectDataForSourceFile(pathForImport);
+                if (projectData == null || projectData.project == null) {
                     return new Object();
                 }
                 String text = fileTracker.getText(pathForImport);
-                if(text == null)
-                {
+                if (text == null) {
                     return new Object();
                 }
-                int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(new StringReader(text), new Position(line, character));
+                int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(new StringReader(text),
+                        new Position(line, character));
                 ImportRange importRange = null;
-                if(uri.endsWith(FILE_EXTENSION_MXML))
-                {
+                if (uri.endsWith(FILE_EXTENSION_MXML)) {
                     MXMLData mxmlData = actionScriptProjectManager.getMXMLDataForPath(pathForImport, projectData);
                     IMXMLTagData offsetTag = MXMLDataUtils.getOffsetMXMLTag(mxmlData, currentOffset);
                     importRange = ImportRange.fromOffsetTag(offsetTag, currentOffset);
-                }
-                else
-                {
-                    IASNode offsetNode = actionScriptProjectManager.getOffsetNode(pathForImport, currentOffset, projectData);
+                } else {
+                    IASNode offsetNode = actionScriptProjectManager.getOffsetNode(pathForImport, currentOffset,
+                            projectData);
                     importRange = ImportRange.fromOffsetNode(offsetNode);
                 }
-                WorkspaceEdit workspaceEdit = CodeActionsUtils.createWorkspaceEditForAddImport(
-                    qualifiedName, text, uri, importRange);
-                if(workspaceEdit == null)
-                {
+                WorkspaceEdit workspaceEdit = CodeActionsUtils.createWorkspaceEditForAddImport(qualifiedName, text, uri,
+                        importRange);
+                if (workspaceEdit == null) {
                     //no edit required
                     return new Object();
                 }
@@ -407,23 +349,18 @@ public class ExecuteCommandProvider
 
                 languageClient.applyEdit(editParams);
                 return new Object();
-            }
-            finally
-            {
+            } finally {
                 compilerWorkspace.doneBuilding();
             }
         });
     }
-    
-    private CompletableFuture<Object> executeAddMXMLNamespaceCommand(ExecuteCommandParams params)
-    {
-        return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken ->
-        {
+
+    private CompletableFuture<Object> executeAddMXMLNamespaceCommand(ExecuteCommandParams params) {
+        return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken -> {
             cancelToken.checkCanceled();
 
             compilerWorkspace.startBuilding();
-            try
-            {
+            try {
                 cancelToken.checkCanceled();
                 List<Object> args = params.getArguments();
                 String nsPrefix = ((JsonPrimitive) args.get(0)).getAsString();
@@ -431,23 +368,20 @@ public class ExecuteCommandProvider
                 String uri = ((JsonPrimitive) args.get(2)).getAsString();
                 int startIndex = ((JsonPrimitive) args.get(3)).getAsInt();
                 int endIndex = ((JsonPrimitive) args.get(4)).getAsInt();
-                if(nsPrefix == null || nsUri == null)
-                {
+                if (nsPrefix == null || nsUri == null) {
                     return new Object();
                 }
                 Path pathForImport = LanguageServerCompilerUtils.getPathFromLanguageServerURI(uri);
-                if(pathForImport == null)
-                {
+                if (pathForImport == null) {
                     return new Object();
                 }
                 String text = fileTracker.getText(pathForImport);
-                if(text == null)
-                {
+                if (text == null) {
                     return new Object();
                 }
-                WorkspaceEdit workspaceEdit = CodeActionsUtils.createWorkspaceEditForAddMXMLNamespace(nsPrefix, nsUri, text, uri, startIndex, endIndex);
-                if(workspaceEdit == null)
-                {
+                WorkspaceEdit workspaceEdit = CodeActionsUtils.createWorkspaceEditForAddMXMLNamespace(nsPrefix, nsUri,
+                        text, uri, startIndex, endIndex);
+                if (workspaceEdit == null) {
                     //no edit required
                     return new Object();
                 }
@@ -457,22 +391,18 @@ public class ExecuteCommandProvider
 
                 languageClient.applyEdit(editParams);
                 return new Object();
-            }
-            finally
-            {
+            } finally {
                 compilerWorkspace.doneBuilding();
             }
         });
     }
 
-    private CompletableFuture<Object> executeGetActiveProjectUrisCommand(ExecuteCommandParams params)
-    {
+    private CompletableFuture<Object> executeGetActiveProjectUrisCommand(ExecuteCommandParams params) {
         List<Object> args = params.getArguments();
         final boolean appsOnly = args.size() > 0 && ((JsonPrimitive) args.get(0)).getAsBoolean();
         List<String> result = actionScriptProjectManager.getAllProjectData().stream()
                 .filter(projectData -> appsOnly ? ProjectType.APP.equals(projectData.options.type) : true)
-                .map(projectData -> projectData.projectRoot.toUri().toString())
-                .collect(Collectors.toList());
+                .map(projectData -> projectData.projectRoot.toUri().toString()).collect(Collectors.toList());
         return CompletableFuture.completedFuture(result);
     }
 }

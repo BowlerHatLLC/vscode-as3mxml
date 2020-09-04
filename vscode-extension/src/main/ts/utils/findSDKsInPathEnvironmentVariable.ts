@@ -20,81 +20,87 @@ import validateFrameworkSDK from "./validateFrameworkSDK";
 const ENVIRONMENT_VARIABLE_PATH = "PATH";
 const NODE_MODULES = "node_modules";
 const MODULE_ORG = "@apache-royale";
-const MODULE_NAMES =
-[
-	"royale-js",
-	"royale-js-swf",
-];
+const MODULE_NAMES = ["royale-js", "royale-js-swf"];
 const MODULE_NAME_FLEXJS = "flexjs";
 
-export default function findSDKsInPathEnvironmentVariable(): string[]
-{
-	let result: string[] = [];
+export default function findSDKsInPathEnvironmentVariable(): string[] {
+  let result: string[] = [];
 
-	if(!(ENVIRONMENT_VARIABLE_PATH in process.env))
-	{
-		return result;
-	}
-	
-	let PATH = <string> process.env.PATH;
-	let paths = PATH.split(path.delimiter);
-	paths.forEach((currentPath) =>
-	{
-		//first check if this directory contains the NPM version of either
-		//Apache Royale or Apache FlexJS for Windows
-		let mxmlcPath = path.join(currentPath, "mxmlc.cmd");
-		if(fs.existsSync(mxmlcPath))
-		{
-			for(let i = 0, count = MODULE_NAMES.length; i < count; i++)
-			{
-				let moduleName = MODULE_NAMES[i];
-				let sdkPath = path.join(path.dirname(mxmlcPath), NODE_MODULES, MODULE_ORG, moduleName);
-				let validSDK = validateFrameworkSDK(sdkPath);
-				if(validSDK !== null)
-				{
-					result.push(validSDK);
-				}
-			}
-			let sdkPath = path.join(path.dirname(mxmlcPath), NODE_MODULES, MODULE_NAME_FLEXJS);
-			let validSDK = validateFrameworkSDK(sdkPath);
-			if(validSDK !== null)
-			{
-				result.push(validSDK);
-			}
-		}
-		else
-		{
-			mxmlcPath = path.join(currentPath, "mxmlc");
-			if(fs.existsSync(mxmlcPath))
-			{
-				//this may a symbolic link rather than the actual file, such as
-				//when an SDK is installed with npm on macOS, so get the real
-				//path.
-				mxmlcPath = fs.realpathSync(mxmlcPath);
-				//first, check for bin/mxmlc
-				let frameworksPath = path.join(path.dirname(mxmlcPath), "..", "frameworks");
-				if(fs.existsSync(frameworksPath) && fs.statSync(frameworksPath).isDirectory())
-				{
-					let sdkPath = path.join(path.dirname(mxmlcPath), "..");
-					let validSDK = validateFrameworkSDK(sdkPath);
-					if(validSDK !== null)
-					{
-						result.push(validSDK);
-					}
-				}
-				//then, check for js/bin/mxmlc
-				frameworksPath = path.join(path.dirname(mxmlcPath), "..", "..", "frameworks");
-				if(fs.existsSync(frameworksPath) && fs.statSync(frameworksPath).isDirectory())
-				{
-					let sdkPath = path.join(path.dirname(mxmlcPath), "..", "..");
-					let validSDK = validateFrameworkSDK(sdkPath);
-					if(validSDK !== null)
-					{
-						result.push(validSDK);
-					}
-				}
-			}
-		}
-	});
-	return result;
+  if (!(ENVIRONMENT_VARIABLE_PATH in process.env)) {
+    return result;
+  }
+
+  let PATH = <string>process.env.PATH;
+  let paths = PATH.split(path.delimiter);
+  paths.forEach((currentPath) => {
+    //first check if this directory contains the NPM version of either
+    //Apache Royale or Apache FlexJS for Windows
+    let mxmlcPath = path.join(currentPath, "mxmlc.cmd");
+    if (fs.existsSync(mxmlcPath)) {
+      for (let i = 0, count = MODULE_NAMES.length; i < count; i++) {
+        let moduleName = MODULE_NAMES[i];
+        let sdkPath = path.join(
+          path.dirname(mxmlcPath),
+          NODE_MODULES,
+          MODULE_ORG,
+          moduleName
+        );
+        let validSDK = validateFrameworkSDK(sdkPath);
+        if (validSDK !== null) {
+          result.push(validSDK);
+        }
+      }
+      let sdkPath = path.join(
+        path.dirname(mxmlcPath),
+        NODE_MODULES,
+        MODULE_NAME_FLEXJS
+      );
+      let validSDK = validateFrameworkSDK(sdkPath);
+      if (validSDK !== null) {
+        result.push(validSDK);
+      }
+    } else {
+      mxmlcPath = path.join(currentPath, "mxmlc");
+      if (fs.existsSync(mxmlcPath)) {
+        //this may a symbolic link rather than the actual file, such as
+        //when an SDK is installed with npm on macOS, so get the real
+        //path.
+        mxmlcPath = fs.realpathSync(mxmlcPath);
+        //first, check for bin/mxmlc
+        let frameworksPath = path.join(
+          path.dirname(mxmlcPath),
+          "..",
+          "frameworks"
+        );
+        if (
+          fs.existsSync(frameworksPath) &&
+          fs.statSync(frameworksPath).isDirectory()
+        ) {
+          let sdkPath = path.join(path.dirname(mxmlcPath), "..");
+          let validSDK = validateFrameworkSDK(sdkPath);
+          if (validSDK !== null) {
+            result.push(validSDK);
+          }
+        }
+        //then, check for js/bin/mxmlc
+        frameworksPath = path.join(
+          path.dirname(mxmlcPath),
+          "..",
+          "..",
+          "frameworks"
+        );
+        if (
+          fs.existsSync(frameworksPath) &&
+          fs.statSync(frameworksPath).isDirectory()
+        ) {
+          let sdkPath = path.join(path.dirname(mxmlcPath), "..", "..");
+          let validSDK = validateFrameworkSDK(sdkPath);
+          if (validSDK !== null) {
+            result.push(validSDK);
+          }
+        }
+      }
+    }
+  });
+  return result;
 }

@@ -33,8 +33,7 @@ import org.eclipse.lsp4j.jsonrpc.Launcher;
 /**
  * Contains the entry point for the JAR.
  */
-public class Main
-{
+public class Main {
     private static final int SERVER_CONNECT_ERROR = 101;
     private static final String SYSTEM_PROPERTY_PORT = "as3mxml.server.port";
     private static final String SOCKET_HOST = "localhost";
@@ -48,67 +47,51 @@ public class Main
      * LSP4J calls methods on ActionScriptLanguageServer as requests come in
      * from the text editor.
      */
-    public static void main(String[] args)
-    {
+    public static void main(String[] args) {
         String port = System.getProperty(SYSTEM_PROPERTY_PORT);
         Socket socket = null;
-        try
-        {
+        try {
             InputStream inputStream = System.in;
             OutputStream outputStream = System.out;
-            if (port != null)
-            {
+            if (port != null) {
                 socket = new Socket(SOCKET_HOST, Integer.parseInt(port));
                 inputStream = socket.getInputStream();
                 outputStream = socket.getOutputStream();
             }
             ASConfigProjectConfigStrategyFactory configFactory = new ASConfigProjectConfigStrategyFactory();
             ActionScriptLanguageServer server = new ActionScriptLanguageServer(configFactory);
-            
+
             //to enable LSP inspector output on System.err, change to true
             boolean lspInspectorTrace = false;
             Launcher<ActionScriptLanguageClient> launcher = null;
-            if(lspInspectorTrace)
-            {
-                launcher = Launcher.createLauncher(
-                    server, ActionScriptLanguageClient.class, inputStream, outputStream, true, new PrintWriter(System.err));
-            }
-            else
-            {
-                launcher = Launcher.createLauncher(
-                    server, ActionScriptLanguageClient.class, inputStream, outputStream);
+            if (lspInspectorTrace) {
+                launcher = Launcher.createLauncher(server, ActionScriptLanguageClient.class, inputStream, outputStream,
+                        true, new PrintWriter(System.err));
+            } else {
+                launcher = Launcher.createLauncher(server, ActionScriptLanguageClient.class, inputStream, outputStream);
             }
 
             server.connect(launcher.getRemoteProxy());
             launcher.startListening();
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             System.err.println("ActionScript & MXML language server failed to connect.");
-            System.err.println("Visit the following URL to file an issue, and please include this log: https://github.com/BowlerHatLLC/vscode-as3mxml/issues");
+            System.err.println(
+                    "Visit the following URL to file an issue, and please include this log: https://github.com/BowlerHatLLC/vscode-as3mxml/issues");
             e.printStackTrace(System.err);
             System.exit(SERVER_CONNECT_ERROR);
-        }
-        finally
-        {
-            if(socket != null)
-            {
-                try
-                {
+        } finally {
+            if (socket != null) {
+                try {
                     socket.close();
-                }
-                catch(IOException e)
-                {
-                    
+                } catch (IOException e) {
+
                 }
             }
         }
     }
 
-    private static class ASConfigProjectConfigStrategyFactory implements IProjectConfigStrategyFactory
-    {
-        public IProjectConfigStrategy create(Path projectPath, WorkspaceFolder workspaceFolder)
-        {
+    private static class ASConfigProjectConfigStrategyFactory implements IProjectConfigStrategyFactory {
+        public IProjectConfigStrategy create(Path projectPath, WorkspaceFolder workspaceFolder) {
             return new ASConfigProjectConfigStrategy(projectPath, workspaceFolder);
         }
     }

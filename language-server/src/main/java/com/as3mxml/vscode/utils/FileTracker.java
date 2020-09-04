@@ -34,126 +34,93 @@ import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextDocumentContentChangeEvent;
 
-public class FileTracker
-{
-	private Map<Path,String> sourceByPath = new HashMap<>();
-	private LanguageServerFileSpecGetter fileSpecGetter;
-	
-	public FileTracker(IWorkspace compilerWorkspace)
-	{
+public class FileTracker {
+    private Map<Path, String> sourceByPath = new HashMap<>();
+    private LanguageServerFileSpecGetter fileSpecGetter;
+
+    public FileTracker(IWorkspace compilerWorkspace) {
         fileSpecGetter = new LanguageServerFileSpecGetter(compilerWorkspace, this);
-	}
+    }
 
-	public boolean isOpen(Path path)
-	{
-		return sourceByPath.containsKey(path);
-	}
+    public boolean isOpen(Path path) {
+        return sourceByPath.containsKey(path);
+    }
 
-	public Set<Path> getOpenFiles()
-	{
-		return sourceByPath.keySet();
-	}
+    public Set<Path> getOpenFiles() {
+        return sourceByPath.keySet();
+    }
 
-	public void openFile(Path path, String text)
-	{
-		sourceByPath.put(path, text);
-	}
+    public void openFile(Path path, String text) {
+        sourceByPath.put(path, text);
+    }
 
-	public String closeFile(Path path)
-	{
-		return sourceByPath.remove(path);
-	}
+    public String closeFile(Path path) {
+        return sourceByPath.remove(path);
+    }
 
-	public void changeFile(Path path, List<TextDocumentContentChangeEvent> contentChanges)
-	{
-        for (TextDocumentContentChangeEvent change : contentChanges)
-        {
-            if (change.getRange() == null)
-            {
+    public void changeFile(Path path, List<TextDocumentContentChangeEvent> contentChanges) {
+        for (TextDocumentContentChangeEvent change : contentChanges) {
+            if (change.getRange() == null) {
                 sourceByPath.put(path, change.getText());
-            }
-            else if(sourceByPath.containsKey(path))
-            {
+            } else if (sourceByPath.containsKey(path)) {
                 String existingText = sourceByPath.get(path);
                 String newText = patch(existingText, change);
                 sourceByPath.put(path, newText);
-            }
-            else
-            {
+            } else {
                 System.err.println("Failed to apply changes to code intelligence from path: " + path);
             }
         }
-	}
+    }
 
-    public Reader getReader(Path path)
-    {
-        if(path == null)
-        {
+    public Reader getReader(Path path) {
+        if (path == null) {
             return null;
         }
         Reader reader = null;
-        if (sourceByPath.containsKey(path))
-        {
+        if (sourceByPath.containsKey(path)) {
             //if the file is open, use the edited code
             String code = sourceByPath.get(path);
             reader = new StringReader(code);
-        }
-        else
-        {
+        } else {
             File file = new File(path.toAbsolutePath().toString());
-            if (!file.exists())
-            {
+            if (!file.exists()) {
                 return null;
             }
             //if the file is not open, read it from the file system
-            try
-            {
+            try {
                 reader = new FileReader(file);
-            }
-            catch (FileNotFoundException e)
-            {
+            } catch (FileNotFoundException e) {
                 //do nothing
             }
         }
         return reader;
     }
 
-    public String getText(Path path)
-    {
-        if(sourceByPath.containsKey(path))
-        {
+    public String getText(Path path) {
+        if (sourceByPath.containsKey(path)) {
             return sourceByPath.get(path);
         }
         Reader reader = getReader(path);
-        if(reader == null)
-        {
+        if (reader == null) {
             return null;
         }
-        try
-        {
+        try {
             return IOUtils.toString(reader);
-        }
-        catch (IOException e)
-        {
+        } catch (IOException e) {
             return null;
-        }
-        finally
-        {
-            try
-            {
+        } finally {
+            try {
                 reader.close();
+            } catch (IOException e) {
             }
-            catch(IOException e) {}
         }
     }
 
-    public IFileSpecification getFileSpecification(String filePath)
-    {
+    public IFileSpecification getFileSpecification(String filePath) {
         return fileSpecGetter.getFileSpecification(filePath);
     }
 
-    private String patch(String sourceText, TextDocumentContentChangeEvent change)
-    {
+    private String patch(String sourceText, TextDocumentContentChangeEvent change) {
         Range range = change.getRange();
         Position start = range.getStart();
         StringReader reader = new StringReader(sourceText);

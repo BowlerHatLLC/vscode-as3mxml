@@ -1,7 +1,6 @@
 package com.as3mxml.asconfigc.htmlTemplate;
 
-public class HTMLTemplateOptions
-{
+public class HTMLTemplateOptions {
 	public static final String TITLE = "title";
 	public static final String BGCOLOR = "bgcolor";
 	public static final String USE_BROWSER_HISTORY = "useBrowserHistory";

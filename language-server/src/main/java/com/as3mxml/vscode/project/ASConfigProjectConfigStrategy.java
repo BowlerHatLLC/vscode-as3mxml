@@ -45,8 +45,7 @@ import org.eclipse.lsp4j.WorkspaceFolder;
 /**
  * Configures a project using an asconfig.json file.
  */
-public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy
-{
+public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy {
     private static final String ASCONFIG_JSON = "asconfig.json";
     private static final String PROPERTY_FRAMEWORK_LIB = "royalelib";
     private static final String CONFIG_ROYALE = "royale";
@@ -57,59 +56,48 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy
     private Path asconfigPath;
     private boolean changed = true;
 
-    public ASConfigProjectConfigStrategy(Path projectPath, WorkspaceFolder workspaceFolder)
-    {
+    public ASConfigProjectConfigStrategy(Path projectPath, WorkspaceFolder workspaceFolder) {
         this.projectPath = projectPath;
         this.workspaceFolder = workspaceFolder;
 
         asconfigPath = projectPath.resolve(ASCONFIG_JSON);
     }
 
-    public String getDefaultConfigurationProblemPath()
-    {
+    public String getDefaultConfigurationProblemPath() {
         return ASCONFIG_JSON;
     }
 
-    public WorkspaceFolder getWorkspaceFolder()
-    {
+    public WorkspaceFolder getWorkspaceFolder() {
         return workspaceFolder;
     }
 
-    public Path getProjectPath()
-    {
+    public Path getProjectPath() {
         return projectPath;
     }
 
-    public Path getConfigFilePath()
-    {
+    public Path getConfigFilePath() {
         return asconfigPath;
     }
 
-    public void setASConfigPath(Path value)
-    {
+    public void setASConfigPath(Path value) {
         asconfigPath = value;
     }
 
-    public boolean getChanged()
-    {
+    public boolean getChanged() {
         return changed;
     }
 
-    public void forceChanged()
-    {
+    public void forceChanged() {
         changed = true;
     }
 
-    public ProjectOptions getOptions()
-    {
+    public ProjectOptions getOptions() {
         changed = false;
-        if (asconfigPath == null)
-        {
+        if (asconfigPath == null) {
             return null;
         }
         File asconfigFile = asconfigPath.toFile();
-        if (!asconfigFile.exists())
-        {
+        if (!asconfigFile.exists()) {
             return null;
         }
         Path sdkPath = Paths.get(System.getProperty(PROPERTY_FRAMEWORK_LIB));
@@ -117,8 +105,7 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy
         Path projectRoot = asconfigPath.getParent();
         String projectType = ProjectType.APP;
         String config = CONFIG_FLEX;
-        if(isRoyale)
-        {
+        if (isRoyale) {
             config = CONFIG_ROYALE;
         }
         String mainClass = null;
@@ -128,21 +115,17 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy
         List<String> targets = null;
         List<String> sourcePaths = null;
         JsonSchema schema = null;
-        try (InputStream schemaInputStream = getClass().getResourceAsStream("/schemas/asconfig.schema.json"))
-        {
+        try (InputStream schemaInputStream = getClass().getResourceAsStream("/schemas/asconfig.schema.json")) {
             JsonSchemaFactory factory = JsonSchemaFactory.getInstance();
             schema = factory.getSchema(schemaInputStream);
-        }
-        catch(Exception e)
-        {
+        } catch (Exception e) {
             //this exception is unexpected, so it should be reported
             System.err.println("Failed to load asconfig.json schema: " + e);
             e.printStackTrace(System.err);
             return null;
         }
         JsonNode json = null;
-        try
-        {
+        try {
             String contents = FileUtils.readFileToString(asconfigFile);
             ObjectMapper mapper = new ObjectMapper();
             //VSCode allows comments, so we should too
@@ -150,20 +133,16 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy
             mapper.configure(JsonParser.Feature.ALLOW_TRAILING_COMMA, true);
             json = mapper.readTree(contents);
             Set<ValidationMessage> errors = schema.validate(json);
-            if (!errors.isEmpty())
-            {
+            if (!errors.isEmpty()) {
                 //don't print anything to the console. the editor will validate
                 //and display any errors, if necessary.
                 return null;
             }
-        }
-        catch(Exception e)
-        {
+        } catch (Exception e) {
             //this exception is expected sometimes if the JSON is invalid
             return null;
         }
-        try
-        {
+        try {
             if (json.has(TopLevelFields.TYPE)) //optional, defaults to "app"
             {
                 projectType = json.get(TopLevelFields.TYPE).asText();
@@ -177,8 +156,7 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy
                 JsonNode jsonFiles = json.get(TopLevelFields.FILES);
                 int fileCount = jsonFiles.size();
                 files = new String[fileCount];
-                for (int i = 0; i < fileCount; i++)
-                {
+                for (int i = 0; i < fileCount; i++) {
                     String pathString = jsonFiles.get(i).asText();
                     Path filePath = projectRoot.resolve(pathString);
                     files[i] = filePath.toString();
@@ -190,34 +168,29 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy
                 JsonNode jsonCompilerOptions = json.get(TopLevelFields.COMPILER_OPTIONS);
                 CompilerOptionsParser parser = new CompilerOptionsParser();
                 parser.parse(jsonCompilerOptions, null, compilerOptions);
-                
+
                 //while the following compiler options will be included in the
                 //result above, we need to parse them separately because the
                 //language server needs to check their specific values for
                 //certain behaviors.
-                if (jsonCompilerOptions.has(CompilerOptions.TARGETS))
-                {
+                if (jsonCompilerOptions.has(CompilerOptions.TARGETS)) {
                     targets = new ArrayList<>();
                     JsonNode jsonTargets = jsonCompilerOptions.get(CompilerOptions.TARGETS);
-                    for (int i = 0, count = jsonTargets.size(); i < count; i++)
-                    {
+                    for (int i = 0, count = jsonTargets.size(); i < count; i++) {
                         String target = jsonTargets.get(i).asText();
                         targets.add(target);
                     }
                 }
                 //we use this to resolve the mainClass
-                if(jsonCompilerOptions.has(CompilerOptions.SOURCE_PATH))
-                {
+                if (jsonCompilerOptions.has(CompilerOptions.SOURCE_PATH)) {
                     JsonNode sourcePath = jsonCompilerOptions.get(CompilerOptions.SOURCE_PATH);
                     sourcePaths = JsonUtils.jsonNodeToListOfStrings(sourcePath);
                 }
             }
-            if (projectType.equals(ProjectType.APP) && json.has(TopLevelFields.MAIN_CLASS))
-            {
+            if (projectType.equals(ProjectType.APP) && json.has(TopLevelFields.MAIN_CLASS)) {
                 mainClass = json.get(TopLevelFields.MAIN_CLASS).asText();
                 String resolvedMainClass = ConfigUtils.resolveMainClass(mainClass, sourcePaths);
-                if(resolvedMainClass != null)
-                {
+                if (resolvedMainClass != null) {
                     Path mainClassPath = Paths.get(resolvedMainClass);
                     mainClassPath = projectRoot.resolve(resolvedMainClass);
                     files = Arrays.copyOf(files, files.length + 1);
@@ -229,14 +202,10 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy
             {
                 additionalOptions = json.get(TopLevelFields.ADDITIONAL_OPTIONS).asText();
             }
-        }
-        catch (UnknownCompilerOptionException e)
-        {
+        } catch (UnknownCompilerOptionException e) {
             //there's a compiler option that the parser doesn't recognize
             return null;
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             //this exception is unexpected, so it should be reported
             System.err.println("Failed to parse asconfig.json: " + e);
             e.printStackTrace(System.err);
@@ -244,10 +213,8 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy
         }
         //in a library project, the files field will be treated the same as the
         //include-sources compiler option
-        if (projectType.equals(ProjectType.LIB) && files != null)
-        {
-            for (int i = 0, count = files.length; i < count; i++)
-            {
+        if (projectType.equals(ProjectType.LIB) && files != null) {
+            for (int i = 0, count = files.length; i < count; i++) {
                 String filePath = files[i];
                 compilerOptions.add("--include-sources+=" + filePath);
             }

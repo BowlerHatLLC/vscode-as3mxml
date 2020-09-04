@@ -17,22 +17,17 @@ import * as vscode from "vscode";
 
 let savedPassword = null;
 
-export default async function saveSessionPassword(): Promise<string>
-{
-	do
-	{
-		savedPassword = await vscode.window.showInputBox(
-		{
-			placeHolder: "Password",
-			prompt: "Save your password for current session",
-			value: savedPassword,
-			password: true,
-		});
-		if(savedPassword === undefined)
-		{
-			break;
-		}
-	}
-	while(!savedPassword);
-	return Promise.resolve(savedPassword);
+export default async function saveSessionPassword(): Promise<string> {
+  do {
+    savedPassword = await vscode.window.showInputBox({
+      placeHolder: "Password",
+      prompt: "Save your password for current session",
+      value: savedPassword,
+      password: true,
+    });
+    if (savedPassword === undefined) {
+      break;
+    }
+  } while (!savedPassword);
+  return Promise.resolve(savedPassword);
 }

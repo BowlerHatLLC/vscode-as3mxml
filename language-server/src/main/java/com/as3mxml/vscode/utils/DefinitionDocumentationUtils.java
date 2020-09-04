@@ -33,108 +33,88 @@ import org.apache.royale.compiler.workspaces.IWorkspace;
 import org.apache.royale.swc.ISWC;
 import org.apache.royale.swc.dita.IDITAList;
 
-public class DefinitionDocumentationUtils
-{
+public class DefinitionDocumentationUtils {
     private static final String ASDOC_TAG_PARAM = "param";
 
-	public static String getDocumentationForDefinition(IDefinition definition, boolean useMarkdown, IWorkspace workspace, boolean allowDITA)
-    {
-        if (!(definition instanceof IDocumentableDefinition))
-        {
+    public static String getDocumentationForDefinition(IDefinition definition, boolean useMarkdown,
+            IWorkspace workspace, boolean allowDITA) {
+        if (!(definition instanceof IDocumentableDefinition)) {
             return null;
         }
         IDocumentableDefinition documentableDefinition = (IDocumentableDefinition) definition;
         VSCodeASDocComment comment = getCommentForDefinition(documentableDefinition, useMarkdown, workspace, allowDITA);
-        if (comment == null)
-        {
+        if (comment == null) {
             return null;
         }
         comment.compile(useMarkdown);
         String description = comment.getDescription();
-        if (description == null)
-        {
+        if (description == null) {
             return null;
         }
         return description;
     }
-    
-    public static String getDocumentationForParameter(IParameterDefinition definition, boolean useMarkdown, IWorkspace workspace)
-    {
+
+    public static String getDocumentationForParameter(IParameterDefinition definition, boolean useMarkdown,
+            IWorkspace workspace) {
         IDefinition parentDefinition = definition.getParent();
-        if (!(parentDefinition instanceof IFunctionDefinition))
-        {
+        if (!(parentDefinition instanceof IFunctionDefinition)) {
             return null;
         }
         IFunctionDefinition functionDefinition = (IFunctionDefinition) parentDefinition;
         VSCodeASDocComment comment = getCommentForDefinition(functionDefinition, useMarkdown, workspace, true);
-        if (comment == null)
-        {
+        if (comment == null) {
             return null;
         }
         comment.compile(useMarkdown);
         Collection<IASDocTag> paramTags = comment.getTagsByName(ASDOC_TAG_PARAM);
-        if (paramTags == null)
-        {
+        if (paramTags == null) {
             return null;
         }
         String paramName = definition.getBaseName();
-        for (IASDocTag paramTag : paramTags)
-        {
+        for (IASDocTag paramTag : paramTags) {
             String description = paramTag.getDescription();
-            if (description.startsWith(paramName + " "))
-            {
+            if (description.startsWith(paramName + " ")) {
                 return description.substring(paramName.length() + 1);
             }
         }
         return null;
     }
 
-    private static VSCodeASDocComment getCommentForDefinition(IDocumentableDefinition documentableDefinition, boolean useMarkdown, IWorkspace workspace, boolean allowDITA)
-    {
+    private static VSCodeASDocComment getCommentForDefinition(IDocumentableDefinition documentableDefinition,
+            boolean useMarkdown, IWorkspace workspace, boolean allowDITA) {
         VSCodeASDocComment comment = (VSCodeASDocComment) documentableDefinition.getExplicitSourceComment();
         String definitionFilePath = documentableDefinition.getContainingFilePath();
-        if (allowDITA && comment == null && definitionFilePath != null && definitionFilePath.endsWith(".swc"))
-        {
+        if (allowDITA && comment == null && definitionFilePath != null && definitionFilePath.endsWith(".swc")) {
             IDITAList ditaList = null;
             String fileName = new File(definitionFilePath).getName();
-            if (fileName.contains("playerglobal") || fileName.contains("airglobal"))
-            {
-                try
-                {
-                    File jarPath = new File(DefinitionDocumentationUtils.class.getProtectionDomain().getCodeSource().getLocation().toURI());
-                    File packageDitaFile = new File(jarPath.getParentFile().getParentFile(), "playerglobal_docs/packages.dita");
+            if (fileName.contains("playerglobal") || fileName.contains("airglobal")) {
+                try {
+                    File jarPath = new File(DefinitionDocumentationUtils.class.getProtectionDomain().getCodeSource()
+                            .getLocation().toURI());
+                    File packageDitaFile = new File(jarPath.getParentFile().getParentFile(),
+                            "playerglobal_docs/packages.dita");
                     FileInputStream packageDitaStream = new FileInputStream(packageDitaFile);
-                    ditaList = workspace.getASDocDelegate().getPackageDitaParser().parse(definitionFilePath, packageDitaStream);
-                    try
-                    {
+                    ditaList = workspace.getASDocDelegate().getPackageDitaParser().parse(definitionFilePath,
+                            packageDitaStream);
+                    try {
                         packageDitaStream.close();
+                    } catch (IOException e) {
                     }
-                    catch(IOException e) {}
-                }
-                catch(URISyntaxException e)
-                {
+                } catch (URISyntaxException e) {
+                    return null;
+                } catch (FileNotFoundException e) {
                     return null;
                 }
-                catch(FileNotFoundException e)
-                {
-                    return null;
-                }
-            }
-            else
-            {
+            } else {
                 ISWC swc = workspace.getSWCManager().get(new File(definitionFilePath));
                 ditaList = swc.getDITAList();
             }
-            if (ditaList == null)
-            {
+            if (ditaList == null) {
                 return null;
             }
-            try
-            {
+            try {
                 comment = (VSCodeASDocComment) ditaList.getComment(documentableDefinition);
-            }
-            catch(Exception e)
-            {
+            } catch (Exception e) {
                 return null;
             }
         }

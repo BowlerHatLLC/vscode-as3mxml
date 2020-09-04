@@ -20,8 +20,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public class ApacheFlexJSUtils
-{
+public class ApacheFlexJSUtils {
 	private static final String ENV_FLEX_HOME = "FLEX_HOME";
 	private static final String ENV_PATH = "PATH";
 	private static final String NPM_FLEXJS = "flexjs";
@@ -29,84 +28,68 @@ public class ApacheFlexJSUtils
 	private static final String BIN = "bin";
 	private static final String ASJSC = "asjsc";
 	private static final String FLEX_SDK_DESCRIPTION = "flex-sdk-description.xml";
-	
+
 	/**
 	 * Determines if a directory contains a valid Apache FlexJS SDK.
 	 */
-	public static boolean isValidSDK(Path absolutePath)
-	{
-		if(absolutePath == null || !absolutePath.isAbsolute())
-		{
+	public static boolean isValidSDK(Path absolutePath) {
+		if (absolutePath == null || !absolutePath.isAbsolute()) {
 			return false;
 		}
 		File file = absolutePath.toFile();
-		if(!file.isDirectory())
-		{
+		if (!file.isDirectory()) {
 			return false;
 		}
 		Path sdkDescriptionPath = absolutePath.resolve(FLEX_SDK_DESCRIPTION);
 		file = sdkDescriptionPath.toFile();
-		if(!file.exists() || file.isDirectory())
-		{
+		if (!file.exists() || file.isDirectory()) {
 			return false;
 		}
 		Path compilerPath = absolutePath.resolve(JS).resolve(BIN).resolve(ASJSC);
 		file = compilerPath.toFile();
-		if(!file.exists() || file.isDirectory())
-		{
+		if (!file.exists() || file.isDirectory()) {
 			return false;
 		}
 		return true;
 	}
-	
+
 	/**
 	 * Attempts to find a valid Apache FlexJS SDK by searching for the
 	 * flexjs NPM module, testing the FLEX_HOME environment variable, and
 	 * finally, testing the PATH environment variable.
 	 */
-	public static String findSDK()
-	{
+	public static String findSDK() {
 		String flexHome = System.getenv(ENV_FLEX_HOME);
-		if(flexHome != null && isValidSDK(Paths.get(flexHome)))
-		{
+		if (flexHome != null && isValidSDK(Paths.get(flexHome))) {
 			return flexHome;
 		}
 		String envPath = System.getenv(ENV_PATH);
-		if(envPath != null)
-		{
+		if (envPath != null) {
 			String[] paths = envPath.split(File.pathSeparator);
-			for(String currentPath : paths)
-			{
+			for (String currentPath : paths) {
 				//first check if this directory contains the NPM version for
 				//Windows
 				File file = new File(currentPath, ASJSC + ".cmd");
-				if(file.exists() && !file.isDirectory())
-				{
+				if (file.exists() && !file.isDirectory()) {
 					Path npmPath = Paths.get(currentPath, "node_modules", NPM_FLEXJS);
-					if(isValidSDK(npmPath))
-					{
+					if (isValidSDK(npmPath)) {
 						return npmPath.toString();
 					}
 				}
 				file = new File(currentPath, ASJSC);
-				if(file.exists() && !file.isDirectory())
-				{
+				if (file.exists() && !file.isDirectory()) {
 					//this may a symbolic link rather than the actual file,
 					//such as when Apache Royale is installed with NPM on
 					//Mac, so get the real path.
 					Path sdkPath = file.toPath();
-					try
-					{
+					try {
 						sdkPath = sdkPath.toRealPath();
-					}
-					catch(IOException e)
-					{
+					} catch (IOException e) {
 						//didn't seem to work, for some reason
 						return null;
 					}
 					sdkPath = sdkPath.getParent().getParent().getParent();
-					if(isValidSDK(sdkPath))
-					{
+					if (isValidSDK(sdkPath)) {
 						return sdkPath.toString();
 					}
 				}

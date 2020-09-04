@@ -32,8 +32,7 @@ import com.as3mxml.asconfigc.compiler.ProjectType;
 import com.as3mxml.vscode.services.ActionScriptLanguageClient;
 import com.as3mxml.vscode.utils.ActionScriptSDKUtils;
 
-public class CompilerShell implements IASConfigCCompiler
-{
+public class CompilerShell implements IASConfigCCompiler {
     private static final String ERROR_COMPILER_SHELL_NOT_FOUND = "Quick Compile requires the Adobe AIR SDK & Compiler or Apache Royale. Please choose a different SDK or build using a standard task.";
     private static final String ERROR_COMPILER_SHELL_START = "Quick Compile failed. Error starting compiler shell.";
     private static final String ERROR_COMPILER_SHELL_WRITE = "Quick Compile failed. Error writing to compiler shell.";
@@ -55,8 +54,8 @@ public class CompilerShell implements IASConfigCCompiler
     private static final String EXECUTABLE_MXMLC = "mxmlc";
     private static final String EXECUTABLE_COMPC = "compc";
 
-	private ActionScriptLanguageClient languageClient;
-	private Process process;
+    private ActionScriptLanguageClient languageClient;
+    private Process process;
     private String compileID;
     private String previousCommand;
     private Path previousSDKPath;
@@ -66,26 +65,24 @@ public class CompilerShell implements IASConfigCCompiler
     private boolean isAIR = false;
     private List<String> jvmargs = null;
 
-	public CompilerShell(ActionScriptLanguageClient languageClient, List<String> jvmargs) throws URISyntaxException
-	{
+    public CompilerShell(ActionScriptLanguageClient languageClient, List<String> jvmargs) throws URISyntaxException {
         this.languageClient = languageClient;
         this.jvmargs = jvmargs;
         URI uri = getClass().getProtectionDomain().getCodeSource().getLocation().toURI();
         Path binPath = Paths.get(uri).getParent().normalize();
         rcshPath = binPath.resolve(FILE_NAME_RCSH);
         ascshPath = binPath.resolve(FILE_NAME_ASCSH);
-	}
+    }
 
-	public void compile(String projectType, List<String> compilerOptions, Path workspaceRoot, Path sdkPath) throws ASConfigCException
-	{
+    public void compile(String projectType, List<String> compilerOptions, Path workspaceRoot, Path sdkPath)
+            throws ASConfigCException {
         isRoyale = ActionScriptSDKUtils.isRoyaleSDK(sdkPath);
         isAIR = ActionScriptSDKUtils.isAIRSDK(sdkPath);
 
         String oldCompileID = compileID;
 
         boolean isFCSH = !isRoyale && !isAIR;
-        if (isFCSH)
-        {
+        if (isFCSH) {
             //fcsh has a bug when run in Java 1.8 or newer that causes
             //exceptions to be thrown after multiple builds.
             //we can force a fresh build and still gain partial performance
@@ -93,8 +90,7 @@ public class CompilerShell implements IASConfigCCompiler
             compileID = null;
         }
         boolean sdkChanged = previousSDKPath != null && !previousSDKPath.equals(sdkPath);
-        if (sdkChanged)
-        {
+        if (sdkChanged) {
             //we need to start a different compiler shell process with the new
             //SDK, so the old compileID is no longer valid
             compileID = null;
@@ -104,22 +100,16 @@ public class CompilerShell implements IASConfigCCompiler
         String command = getCommand(projectType, compilerOptions);
 
         boolean compileIDChanged = oldCompileID != null && compileID == null;
-        if (process != null && (compileIDChanged || sdkChanged))
-        {
-            if (sdkChanged)
-            {
+        if (process != null && (compileIDChanged || sdkChanged)) {
+            if (sdkChanged) {
                 //we need to start a different compiler shell process with the
                 //new SDK
                 quit();
-            }
-            else if (isFCSH)
-            {
+            } else if (isFCSH) {
                 //we don't need to restart. we only need to clear.
                 String clearCommand = getClearCommand(oldCompileID);
                 executeCommandAndWaitForPrompt(clearCommand);
-            }
-            else
-            {
+            } else {
                 //if we have a new command, start with a fresh instance of the
                 //compiler shell.
                 quit();
@@ -129,78 +119,57 @@ public class CompilerShell implements IASConfigCCompiler
         executeCommandAndWaitForPrompt(command, true);
     }
 
-    public void dispose()
-    {
-        if(process == null)
-        {
+    public void dispose() {
+        if (process == null) {
             return;
         }
-        try
-        {
+        try {
             quit();
-        }
-        catch(ASConfigCException e)
-        {
+        } catch (ASConfigCException e) {
 
         }
     }
 
-    private void quit() throws ASConfigCException
-    {
+    private void quit() throws ASConfigCException {
         //we don't need to wait for the prompt because we'll just wait
         //for the process to end.
         executeCommand(COMMAND_QUIT);
-        try
-        {
+        try {
             Process oldProcess = process;
             process = null;
             int exitCode = oldProcess.waitFor();
             languageClient.logCompilerShellOutput("Compiler shell exited with code: " + exitCode + "\n");
-        }
-        catch(InterruptedException e)
-        {
+        } catch (InterruptedException e) {
             e.printStackTrace(System.err);
         }
     }
 
-    private void startProcess(Path sdkPath, Path workspaceRoot) throws ASConfigCException
-    {
+    private void startProcess(Path sdkPath, Path workspaceRoot) throws ASConfigCException {
         Path compilerShellPath = null;
 
-        if (isRoyale)
-        {
+        if (isRoyale) {
             compilerShellPath = rcshPath;
-        }
-        else if (isAIR)
-        {
+        } else if (isAIR) {
             compilerShellPath = ascshPath;
-        }
-        else
-        {
+        } else {
             Path fcshPath = sdkPath.resolve("lib/fcsh.jar");
-            if (fcshPath.toFile().exists())
-            {
+            if (fcshPath.toFile().exists()) {
                 compilerShellPath = fcshPath;
-            }
-            else
-            {
+            } else {
                 throw new ASConfigCException(ERROR_COMPILER_SHELL_NOT_FOUND);
             }
         }
 
-        if (process != null)
-        {
+        if (process != null) {
             languageClient.clearCompilerShellOutput();
             languageClient.logCompilerShellOutput(COMPILER_SHELL_PROMPT);
             return;
         }
 
         String classPath = null;
-        if (isRoyale || isAIR)
-        {
+        if (isRoyale || isAIR) {
             StringBuilder builder = new StringBuilder();
-            if (isRoyale)
-            {
+            if (isRoyale) {
                 builder.append(sdkPath.resolve("lib/").toString());
                 builder.append(File.separator);
                 builder.append("*");
@@ -209,9 +178,7 @@ public class CompilerShell implements IASConfigCCompiler
                 builder.append(File.separator);
                 builder.append("*");
                 builder.append(File.pathSeparator);
-            }
-            else if (isAIR)
-            {
+            } else if (isAIR) {
                 //we can't use * here because it might load a newer version of Guava
                 //which will result in strange errors
                 builder.append(sdkPath.resolve("lib/compiler.jar").toString());
@@ -224,19 +191,16 @@ public class CompilerShell implements IASConfigCCompiler
         Path javaExecutablePath = Paths.get(System.getProperty("java.home"), "bin", "java");
         ArrayList<String> options = new ArrayList<>();
         options.add(javaExecutablePath.toString());
-        if(jvmargs != null)
-        {
+        if (jvmargs != null) {
             options.addAll(jvmargs);
         }
-		boolean isMacOS = System.getProperty("os.name").toLowerCase().startsWith("mac os");
-		if(isMacOS)
-		{
+        boolean isMacOS = System.getProperty("os.name").toLowerCase().startsWith("mac os");
+        if (isMacOS) {
             options.add("-Dapple.awt.UIElement=true");
         }
-        if(isRoyale)
-        {
-			//Royale requires this so that it doesn't changing the encoding of
-			//UTF-8 characters and display ???? instead
+        if (isRoyale) {
+            //Royale requires this so that it doesn't changing the encoding of
+            //UTF-8 characters and display ???? instead
             options.add("-Dfile.encoding=UTF8");
         }
         options.add("-Dsun.io.useCanonCaches=false");
@@ -244,85 +208,63 @@ public class CompilerShell implements IASConfigCCompiler
         options.add("-Duser.region=en");
         options.add("-Dapplication.home=" + sdkPath);
         options.add("-Dtrace.error=true");
-        if (classPath != null)
-        {
+        if (classPath != null) {
             options.add("-cp");
             options.add(classPath.toString());
-            if (isRoyale)
-            {
+            if (isRoyale) {
                 options.add(CLASS_RCSH);
-            }
-            else if (isAIR)
-            {
+            } else if (isAIR) {
                 options.add(CLASS_ASCSH);
             }
-        }
-        else //fcsh
+        } else //fcsh
         {
             options.add("-jar");
             options.add(compilerShellPath.toAbsolutePath().toString());
         }
-        try
-        {
-            process = new ProcessBuilder()
-                .command(options)
-                .directory(workspaceRoot.toFile())
-                .start();
-        }
-        catch (IOException e)
-        {
+        try {
+            process = new ProcessBuilder().command(options).directory(workspaceRoot.toFile()).start();
+        } catch (IOException e) {
             e.printStackTrace(System.err);
             throw new ASConfigCException(ERROR_COMPILER_SHELL_START);
         }
 
         waitForPrompt();
     }
-    
-    private void executeCommand(String command) throws ASConfigCException
-    {
+
+    private void executeCommand(String command) throws ASConfigCException {
         languageClient.logCompilerShellOutput(command);
 
         OutputStream outputStream = process.getOutputStream();
-        try
-        {
+        try {
             outputStream.write(command.getBytes());
             outputStream.flush();
-        }
-        catch(IOException e)
-        {
+        } catch (IOException e) {
             e.printStackTrace(System.err);
             throw new ASConfigCException(ERROR_COMPILER_SHELL_WRITE);
         }
     }
-    
-    private void executeCommandAndWaitForPrompt(String command) throws ASConfigCException
-    {
+
+    private void executeCommandAndWaitForPrompt(String command) throws ASConfigCException {
         executeCommandAndWaitForPrompt(command, false);
     }
-    
-    private void executeCommandAndWaitForPrompt(String command, boolean measure) throws ASConfigCException
-    {
+
+    private void executeCommandAndWaitForPrompt(String command, boolean measure) throws ASConfigCException {
         executeCommand(command);
         waitForPrompt(measure);
     }
 
-    private void waitForPrompt() throws ASConfigCException
-    {
+    private void waitForPrompt() throws ASConfigCException {
         waitForPrompt(false);
     }
 
-    private boolean textContainsError(String text)
-    {
-        return text.contains(OUTPUT_PROBLEM_TYPE_ERROR)
-                || text.contains(OUTPUT_PROBLEM_TYPE_SYNTAX_ERROR)
+    private boolean textContainsError(String text) {
+        return text.contains(OUTPUT_PROBLEM_TYPE_ERROR) || text.contains(OUTPUT_PROBLEM_TYPE_SYNTAX_ERROR)
                 || text.contains(OUTPUT_PROBLEM_TYPE_INTERNAL_ERROR);
     }
 
-    private void waitForPrompt(boolean measure) throws ASConfigCException
-    {
+    private void waitForPrompt(boolean measure) throws ASConfigCException {
         long startTime = 0L;
-        if (measure)
-        {
+        if (measure) {
             startTime = System.nanoTime();
         }
         String currentError = "";
@@ -332,27 +274,19 @@ public class CompilerShell implements IASConfigCCompiler
         boolean waitingForInput = true;
         boolean waitingForError = false;
         boolean success = true;
-        try
-        {
+        try {
             waitingForError = errorStream.available() > 0;
-        }
-        catch (IOException e)
-        {
+        } catch (IOException e) {
             e.printStackTrace(System.err);
             throw new ASConfigCException(ERROR_COMPILER_SHELL_READ);
         }
-        do
-        {
-            try
-            {
-                if (waitingForError)
-                {
+        do {
+            try {
+                if (waitingForError) {
                     char next = (char) errorStream.read();
                     currentError += next;
-                    if (next == '\n')
-                    {
-                        if (textContainsError(currentError))
-                        {
+                    if (next == '\n') {
+                        if (textContainsError(currentError)) {
                             success = false;
                         }
                         languageClient.logCompilerShellOutput(currentError);
@@ -364,87 +298,67 @@ public class CompilerShell implements IASConfigCCompiler
                 //we need to check inputStream.available() here every time
                 //because if we just go straight to read, it may freeze while
                 //the errorStream still has data.
-                if (waitingForInput && inputStream.available() > 0)
-                {
+                if (waitingForInput && inputStream.available() > 0) {
                     char next = (char) inputStream.read();
                     currentInput += next;
                     //fcsh: Assigned 1 as the compile target id
-                    if (currentInput.startsWith(ASSIGNED_ID_PREFIX) && currentInput.endsWith(ASSIGNED_ID_SUFFIX))
-                    {
-                        compileID = currentInput.substring(ASSIGNED_ID_PREFIX.length(), currentInput.length() - ASSIGNED_ID_SUFFIX.length());
+                    if (currentInput.startsWith(ASSIGNED_ID_PREFIX) && currentInput.endsWith(ASSIGNED_ID_SUFFIX)) {
+                        compileID = currentInput.substring(ASSIGNED_ID_PREFIX.length(),
+                                currentInput.length() - ASSIGNED_ID_SUFFIX.length());
                     }
-                    if (next == '\n')
-                    {
+                    if (next == '\n') {
                         languageClient.logCompilerShellOutput(currentInput);
                         currentInput = "";
                     }
-                    if (currentInput.endsWith(COMPILER_SHELL_PROMPT))
-                    {
+                    if (currentInput.endsWith(COMPILER_SHELL_PROMPT)) {
                         waitingForInput = false;
-                        if (measure)
-                        {
+                        if (measure) {
                             double totalSeconds = (double) (System.nanoTime() - startTime) / 1000000000.0;
                             languageClient.logCompilerShellOutput("Elapsed time: " + totalSeconds + " seconds\n");
                         }
                     }
                 }
-            }
-            catch (IOException e)
-            {
+            } catch (IOException e) {
                 e.printStackTrace(System.err);
                 throw new ASConfigCException(ERROR_COMPILER_SHELL_READ);
             }
-        }
-        while (waitingForInput || waitingForError);
-        if (currentError.length() > 0)
-        {
-            if (textContainsError(currentError))
-            {
+        } while (waitingForInput || waitingForError);
+        if (currentError.length() > 0) {
+            if (textContainsError(currentError)) {
                 success = false;
             }
             languageClient.logCompilerShellOutput(currentError);
         }
-        if (currentInput.length() > 0)
-        {
+        if (currentInput.length() > 0) {
             languageClient.logCompilerShellOutput(currentInput);
         }
-        if(!success)
-        {
+        if (!success) {
             throw new ASConfigCException(ERROR_COMPILER_ERRORS_FOUND);
         }
     }
 
-    private String getCommand(String projectType, List<String> compilerOptions)
-    {
+    private String getCommand(String projectType, List<String> compilerOptions) {
         String command = getNewCommand(projectType, compilerOptions);
-        if (!command.equals(previousCommand))
-        {
+        if (!command.equals(previousCommand)) {
             //the compiler options have changed,
             //so we can't use the old ID anymore
             compileID = null;
             previousCommand = command;
-        }
-        else if (compileID != null)
-        {
+        } else if (compileID != null) {
             command = getCompileCommand();
         }
         return command;
     }
 
-    private String getNewCommand(String projectType, List<String> compilerOptions)
-    {
+    private String getNewCommand(String projectType, List<String> compilerOptions) {
         StringBuilder command = new StringBuilder();
-        if(projectType.equals(ProjectType.LIB))
-        {
+        if (projectType.equals(ProjectType.LIB)) {
             command.append(EXECUTABLE_COMPC);
-        }
-        else
-        {
+        } else {
             command.append(EXECUTABLE_MXMLC);
         }
         command.append(" ");
-        for(String option : compilerOptions)
-        {
+        for (String option : compilerOptions) {
             command.append(option);
             command.append(" ");
         }
@@ -452,8 +366,7 @@ public class CompilerShell implements IASConfigCCompiler
         return command.toString();
     }
 
-    private String getClearCommand(String compileID)
-    {
+    private String getClearCommand(String compileID) {
         StringBuilder builder = new StringBuilder();
         builder.append(COMMAND_CLEAR);
         builder.append(" ");
@@ -462,8 +375,7 @@ public class CompilerShell implements IASConfigCCompiler
         return builder.toString();
     }
 
-    private String getCompileCommand()
-    {
+    private String getCompileCommand() {
         StringBuilder builder = new StringBuilder();
         builder.append(COMMAND_COMPILE);
         builder.append(" ");

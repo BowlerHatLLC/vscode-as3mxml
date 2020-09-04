@@ -43,22 +43,17 @@ import org.apache.royale.compiler.units.ICompilationUnit;
 import org.apache.royale.compiler.units.ICompilationUnit.UnitType;
 import org.apache.royale.compiler.workspaces.IWorkspace;
 
-public class CompilationUnitUtils
-{
+public class CompilationUnitUtils {
 	private static final String FILE_EXTENSION_MXML = ".mxml";
 
-	private static class OffsetCue2 extends OffsetCue
-	{
-		public OffsetCue2(String filename, int absolute, int adjustment)
-		{
+	private static class OffsetCue2 extends OffsetCue {
+		public OffsetCue2(String filename, int absolute, int adjustment) {
 			super(filename, absolute, adjustment);
 		}
 	}
 
-	public static class IncludeFileData
-	{
-		public IncludeFileData(String parentPath)
-		{
+	public static class IncludeFileData {
+		public IncludeFileData(String parentPath) {
 			this.parentPath = parentPath;
 		}
 
@@ -66,204 +61,158 @@ public class CompilationUnitUtils
 
 		private List<OffsetCue> offsetCues = new ArrayList<>();
 
-		public List<OffsetCue> getOffsetCues()
-		{
+		public List<OffsetCue> getOffsetCues() {
 			return offsetCues;
 		}
 	}
 
-	public static void findIncludedFiles(ICompilationUnit unit, Map<String,IncludeFileData> result)
-	{
-		if(unit == null)
-		{
+	public static void findIncludedFiles(ICompilationUnit unit, Map<String, IncludeFileData> result) {
+		if (unit == null) {
 			return;
 		}
 		UnitType unitType = unit.getCompilationUnitType();
-		if(!UnitType.AS_UNIT.equals(unitType) && !UnitType.MXML_UNIT.equals(unitType))
-		{
+		if (!UnitType.AS_UNIT.equals(unitType) && !UnitType.MXML_UNIT.equals(unitType)) {
 			//compiled compilation units won't have problems
 			return;
 		}
 		String path = unit.getAbsoluteFilename();
-		if(path.endsWith(FILE_EXTENSION_MXML))
-		{
+		if (path.endsWith(FILE_EXTENSION_MXML)) {
 			findMXMLIncludes(unit, result);
-		}
-		else
-		{
+		} else {
 			findActionScriptIncludes(unit, result);
 		}
 	}
 
-	private static void findActionScriptIncludes(ICompilationUnit unit, Map<String,IncludeFileData> includes)
-	{
-		try
-		{
+	private static void findActionScriptIncludes(ICompilationUnit unit, Map<String, IncludeFileData> includes) {
+		try {
 			IASNode ast = unit.getSyntaxTreeRequest().get().getAST();
 			unit.getFileScopeRequest().get();
 			unit.getOutgoingDependenciesRequest().get();
 			unit.getABCBytesRequest().get();
-			if (ast instanceof FileNode)
-			{
+			if (ast instanceof FileNode) {
 				FileNode fileNode = (FileNode) ast;
 				String parentPath = unit.getAbsoluteFilename();
 				IncludeHandler includeHandler = fileNode.getIncludeHandler();
-				for(OffsetCue offsetCue : includeHandler.getOffsetCueList())
-				{
-					if(offsetCue.adjustment == 0
-							&& offsetCue.local == 0
-							&& offsetCue.absolute == 0)
-					{
+				for (OffsetCue offsetCue : includeHandler.getOffsetCueList()) {
+					if (offsetCue.adjustment == 0 && offsetCue.local == 0 && offsetCue.absolute == 0) {
 						//ignore because this data isn't valid, for some reason
 						continue;
 					}
 					String filename = offsetCue.filename;
-					if(!includes.containsKey(filename))
-					{
+					if (!includes.containsKey(filename)) {
 						includes.put(filename, new IncludeFileData(parentPath));
 					}
 					IncludeFileData includeFileData = includes.get(filename);
 					includeFileData.getOffsetCues().add(offsetCue);
 				}
 			}
-		}
-		catch(InterruptedException e)
-		{
+		} catch (InterruptedException e) {
 
 		}
 	}
 
-	private static void findMXMLIncludes(ICompilationUnit unit, Map<String,IncludeFileData> includes)
-	{
+	private static void findMXMLIncludes(ICompilationUnit unit, Map<String, IncludeFileData> includes) {
 		IWorkspace workspace = unit.getProject().getWorkspace();
 		IMXMLDataManager mxmlDataManager = workspace.getMXMLDataManager();
 		IFileSpecification fileSpecification = workspace.getFileSpecification(unit.getAbsoluteFilename());
 		MXMLData mxmlData = (MXMLData) mxmlDataManager.get(fileSpecification);
 
 		OffsetLookup offsetLookup = null;
-		try
-		{
+		try {
 			IASScope[] scopes = unit.getFileScopeRequest().get().getScopes();
-			if (scopes.length == 0)
-			{
+			if (scopes.length == 0) {
 				return;
 			}
 			IASScope firstScope = scopes[0];
-			if (firstScope instanceof MXMLFileScope)
-			{
+			if (firstScope instanceof MXMLFileScope) {
 				MXMLFileScope fileScope = (MXMLFileScope) firstScope;
 				offsetLookup = fileScope.getOffsetLookup();
 			}
-		}
-		catch(InterruptedException e)
-		{
+		} catch (InterruptedException e) {
 			return;
 		}
 
 		IMXMLTagData rootTag = mxmlData.getRootTag();
-		if(rootTag == null)
-		{
+		if (rootTag == null) {
 			return;
 		}
 		String parentPath = mxmlData.getPath();
 		IMXMLTagData[] scriptTags = MXMLDataUtils.findMXMLScriptTags(rootTag);
-		for(IMXMLTagData scriptTag : scriptTags)
-		{
-			IMXMLTagAttributeData sourceAttribute = scriptTag.getTagAttributeData(IMXMLLanguageConstants.ATTRIBUTE_SOURCE);
-			if(sourceAttribute == null)
-			{
+		for (IMXMLTagData scriptTag : scriptTags) {
+			IMXMLTagAttributeData sourceAttribute = scriptTag
+					.getTagAttributeData(IMXMLLanguageConstants.ATTRIBUTE_SOURCE);
+			if (sourceAttribute == null) {
 				IMXMLUnitData mxmlUnit = scriptTag.getFirstChildUnit();
-				while(mxmlUnit != null)
-				{
-					if (mxmlUnit instanceof IMXMLTextData)
-					{
+				while (mxmlUnit != null) {
+					if (mxmlUnit instanceof IMXMLTextData) {
 						IMXMLTextData mxmlTextData = (IMXMLTextData) mxmlUnit;
 						String text = mxmlTextData.getCompilableText();
-						if (!scriptTag.getMXMLDialect().isWhitespace(text))
-						{
+						if (!scriptTag.getMXMLDialect().isWhitespace(text)) {
 							int localOffset = mxmlTextData.getParentUnitData().getAbsoluteEnd();
 							int[] absoluteOffsets = offsetLookup.getAbsoluteOffset(parentPath, localOffset);
 							int absoluteOffset = absoluteOffsets[0];
-							
-							if(!includes.containsKey(parentPath))
-							{
+
+							if (!includes.containsKey(parentPath)) {
 								includes.put(parentPath, new IncludeFileData(parentPath));
 							}
 							IncludeFileData includeFileData = includes.get(parentPath);
-							includeFileData.getOffsetCues().add(new OffsetCue2(parentPath, absoluteOffset, absoluteOffset - localOffset));
+							includeFileData.getOffsetCues()
+									.add(new OffsetCue2(parentPath, absoluteOffset, absoluteOffset - localOffset));
 						}
 					}
 					mxmlUnit = mxmlUnit.getNextSiblingUnit();
 				}
-			}
-			else
-			{
+			} else {
 				String scriptSourceValue = sourceAttribute.getRawValue();
-				if(scriptSourceValue.length() == 0)
-				{
+				if (scriptSourceValue.length() == 0) {
 					//no file specified yet... it's empty!
 					continue;
 				}
 				Path scriptPath = Paths.get(sourceAttribute.getRawValue());
-				if(!scriptPath.isAbsolute())
-				{
+				if (!scriptPath.isAbsolute()) {
 					Path mxmlPath = Paths.get(mxmlData.getPath());
 					scriptPath = mxmlPath.getParent().resolve(scriptPath);
 				}
-				if(!scriptPath.toFile().exists())
-				{
+				if (!scriptPath.toFile().exists()) {
 					//the file doesn't actually exist, and getAbsoluteOffset()
 					//will throw an exception if we call it
 					continue;
 				}
 
 				int[] absoluteOffsets = offsetLookup.getAbsoluteOffset(scriptPath.toString(), 0);
-				if (absoluteOffsets.length == 0)
-				{
+				if (absoluteOffsets.length == 0) {
 					continue;
 				}
 				int absoluteOffset = absoluteOffsets[0];
 
-				if(absoluteOffset == 0)
-				{
+				if (absoluteOffset == 0) {
 					continue;
 				}
-				
+
 				String scriptFilename = scriptPath.toString();
 
 				int scriptLength = 0;
-				try
-				{
+				try {
 					IFileSpecification fileSpec = workspace.getFileSpecification(scriptFilename);
 					Reader scriptReader = fileSpec.createReader();
-					try
-					{
-						while(scriptReader.read() != -1)
-						{
+					try {
+						while (scriptReader.read() != -1) {
 							scriptLength++;
 						}
-					}
-					finally
-					{
+					} finally {
 						scriptReader.close();
 					}
-				}
-				catch(FileNotFoundException e)
-				{
+				} catch (FileNotFoundException e) {
 					continue;
-				}
-				catch(IOException e)
-				{
+				} catch (IOException e) {
 					//just ignore it
 				}
 
-				if(scriptLength == 0)
-				{
+				if (scriptLength == 0) {
 					continue;
 				}
 
-				if(!includes.containsKey(scriptFilename))
-				{
+				if (!includes.containsKey(scriptFilename)) {
 					includes.put(scriptFilename, new IncludeFileData(parentPath));
 				}
 				IncludeFileData includeFileData = includes.get(scriptFilename);

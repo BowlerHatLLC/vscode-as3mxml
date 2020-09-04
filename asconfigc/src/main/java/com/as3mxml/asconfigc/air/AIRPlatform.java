@@ -15,8 +15,7 @@ limitations under the License.
 */
 package com.as3mxml.asconfigc.air;
 
-public class AIRPlatform
-{
+public class AIRPlatform {
 	public static final String AIR = "air";
 	public static final String MAC = "mac";
 	public static final String WINDOWS = "windows";

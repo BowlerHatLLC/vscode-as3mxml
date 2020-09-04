@@ -23,12 +23,9 @@ import org.eclipse.lsp4j.Range;
  * Utility functions for converting between language server types and Flex
  * compiler types.
  */
-public class LSPUtils
-{
-	public static boolean rangesIntersect(Range r1, Range r2)
-	{
-		if(r1 == null || r2 == null)
-		{
+public class LSPUtils {
+	public static boolean rangesIntersect(Range r1, Range r2) {
+		if (r1 == null || r2 == null) {
 			return false;
 		}
 		int resultStartLine = r1.getStart().getLine();
@@ -39,42 +36,33 @@ public class LSPUtils
 		int otherStartChar = r2.getStart().getCharacter();
 		int otherEndLine = r2.getEnd().getLine();
 		int otherEndChar = r2.getEnd().getCharacter();
-		if (resultStartLine < otherStartLine)
-		{
+		if (resultStartLine < otherStartLine) {
 			resultStartLine = otherStartLine;
 			resultStartChar = otherStartChar;
-		}
-		else if(resultStartLine == otherStartLine && resultStartChar < otherStartChar)
-		{
+		} else if (resultStartLine == otherStartLine && resultStartChar < otherStartChar) {
 			resultStartChar = otherStartChar;
 		}
-		if (resultEndLine > otherEndLine)
-		{
+		if (resultEndLine > otherEndLine) {
 			resultEndLine = otherEndLine;
 			resultEndChar = otherEndChar;
-		}
-		else if(resultEndLine == otherEndLine && resultEndChar < otherEndChar)
-		{
+		} else if (resultEndLine == otherEndLine && resultEndChar < otherEndChar) {
 			resultEndChar = otherEndChar;
 		}
-		if(resultStartLine > resultEndLine)
-		{
+		if (resultStartLine > resultEndLine) {
 			return false;
 		}
-		if(resultStartLine == resultEndLine && resultStartChar > resultEndChar)
-		{
+		if (resultStartLine == resultEndLine && resultStartChar > resultEndChar) {
 			return false;
 		}
 		return true;
 	}
 
-    public static Diagnostic createDiagnosticWithoutRange()
-    {
-        Diagnostic diagnostic = new Diagnostic();
-        Range range = new Range();
-        range.setStart(new Position());
-        range.setEnd(new Position());
-        diagnostic.setRange(range);
-        return diagnostic;
-    }
+	public static Diagnostic createDiagnosticWithoutRange() {
+		Diagnostic diagnostic = new Diagnostic();
+		Range range = new Range();
+		range.setStart(new Position());
+		range.setEnd(new Position());
+		diagnostic.setRange(range);
+		return diagnostic;
+	}
 }

@@ -15,49 +15,43 @@ limitations under the License.
 */
 import * as path from "path";
 
-export default function findJava(settingsPath: string, validate: (javaPath: string) => boolean): string
-{
-	if(settingsPath)
-	{
-		if(validate(settingsPath))
-		{
-			return settingsPath;
-		}
-		//if the user specified java in the settings, no fallback
-		//otherwise, it could be confusing
-		return null;
-	}
+export default function findJava(
+  settingsPath: string,
+  validate: (javaPath: string) => boolean
+): string {
+  if (settingsPath) {
+    if (validate(settingsPath)) {
+      return settingsPath;
+    }
+    //if the user specified java in the settings, no fallback
+    //otherwise, it could be confusing
+    return null;
+  }
 
-	var executableFile: string = "java";
-	if(process["platform"] === "win32")
-	{
-		executableFile += ".exe";
-	}
+  var executableFile: string = "java";
+  if (process["platform"] === "win32") {
+    executableFile += ".exe";
+  }
 
-	if("JAVA_HOME" in process.env)
-	{
-		let javaHome = <string> process.env.JAVA_HOME;
-		let javaPath = path.join(javaHome, "bin", executableFile);
-		if(validate(javaPath))
-		{
-			return javaPath;
-		}
-	}
+  if ("JAVA_HOME" in process.env) {
+    let javaHome = <string>process.env.JAVA_HOME;
+    let javaPath = path.join(javaHome, "bin", executableFile);
+    if (validate(javaPath)) {
+      return javaPath;
+    }
+  }
 
-	if("PATH" in process.env)
-	{
-		let PATH = <string> process.env.PATH;
-		let paths = PATH.split(path.delimiter);
-		let pathCount = paths.length;
-		for(let i = 0; i < pathCount; i++)
-		{
-			let javaPath = path.join(paths[i], executableFile);
-			if(validate(javaPath))
-			{
-				return javaPath;
-			}
-		}
-	}
-     
-	return null;
+  if ("PATH" in process.env) {
+    let PATH = <string>process.env.PATH;
+    let paths = PATH.split(path.delimiter);
+    let pathCount = paths.length;
+    for (let i = 0; i < pathCount; i++) {
+      let javaPath = path.join(paths[i], executableFile);
+      if (validate(javaPath)) {
+        return javaPath;
+      }
+    }
+  }
+
+  return null;
 }

@@ -20,13 +20,10 @@ import java.util.List;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-public class JsonUtils
-{
-	public static List<String> jsonNodeToListOfStrings(JsonNode node)
-	{
+public class JsonUtils {
+	public static List<String> jsonNodeToListOfStrings(JsonNode node) {
 		ArrayList<String> result = new ArrayList<>();
-		for(int i = 0, size = node.size(); i < size; i++)
-		{
+		for (int i = 0, size = node.size(); i < size; i++) {
 			result.add(node.get(i).asText());
 		}
 		return result;

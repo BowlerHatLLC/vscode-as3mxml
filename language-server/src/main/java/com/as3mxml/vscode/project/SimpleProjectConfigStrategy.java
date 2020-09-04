@@ -28,8 +28,7 @@ import org.eclipse.lsp4j.WorkspaceFolder;
 /**
  * Configures a simple project inside a workspace folder.
  */
-public class SimpleProjectConfigStrategy implements IProjectConfigStrategy
-{
+public class SimpleProjectConfigStrategy implements IProjectConfigStrategy {
     private static final String PROPERTY_FRAMEWORK_LIB = "royalelib";
     private static final String CONFIG_ROYALE = "royale";
     private static final String CONFIG_FLEX = "flex";
@@ -38,77 +37,64 @@ public class SimpleProjectConfigStrategy implements IProjectConfigStrategy
     private WorkspaceFolder workspaceFolder;
     private boolean changed = true;
 
-    public SimpleProjectConfigStrategy(Path projectPath, WorkspaceFolder workspaceFolder)
-    {
+    public SimpleProjectConfigStrategy(Path projectPath, WorkspaceFolder workspaceFolder) {
         this.projectPath = projectPath;
         this.workspaceFolder = workspaceFolder;
     }
 
-    public String getDefaultConfigurationProblemPath()
-    {
+    public String getDefaultConfigurationProblemPath() {
         return null;
     }
 
-    public Path getProjectPath()
-    {
+    public Path getProjectPath() {
         return projectPath;
     }
 
-    public WorkspaceFolder getWorkspaceFolder()
-    {
+    public WorkspaceFolder getWorkspaceFolder() {
         return workspaceFolder;
     }
 
-    public Path getConfigFilePath()
-    {
+    public Path getConfigFilePath() {
         return null;
     }
 
-    public boolean getChanged()
-    {
+    public boolean getChanged() {
         return changed;
     }
 
-    public void forceChanged()
-    {
+    public void forceChanged() {
         changed = true;
     }
 
     private List<Path> openPaths = new ArrayList<>();
 
-    public void didOpen(Path path)
-    {
+    public void didOpen(Path path) {
         changed = true;
         openPaths.add(path);
     }
 
-    public void didClose(Path path)
-    {
+    public void didClose(Path path) {
         changed = true;
         openPaths.remove(path);
     }
 
-    public ProjectOptions getOptions()
-    {
+    public ProjectOptions getOptions() {
         changed = false;
 
-        if(openPaths.size() == 0)
-        {
+        if (openPaths.size() == 0) {
             return null;
         }
 
-		Path sdkPath = Paths.get(System.getProperty(PROPERTY_FRAMEWORK_LIB));
+        Path sdkPath = Paths.get(System.getProperty(PROPERTY_FRAMEWORK_LIB));
         boolean isRoyale = ActionScriptSDKUtils.isRoyaleFramework(sdkPath);
 
-		String config = CONFIG_FLEX;
-        if(isRoyale)
-        {
+        String config = CONFIG_FLEX;
+        if (isRoyale) {
             config = CONFIG_ROYALE;
         }
 
         ArrayList<String> compilerOptions = new ArrayList<>();
-        for(Path openPath : openPaths)
-        {
+        for (Path openPath : openPaths) {
             compilerOptions.add("--include-sources+=" + openPath);
         }
 
@@ -116,14 +102,13 @@ public class SimpleProjectConfigStrategy implements IProjectConfigStrategy
         //null pointer exception
         compilerOptions.add("--output=fake.swc");
 
-		ArrayList<String> targets = null;
-		if(isRoyale)
-		{
-			targets = new ArrayList<>();
-			targets.add("JSRoyale");
-		}
+        ArrayList<String> targets = null;
+        if (isRoyale) {
+            targets = new ArrayList<>();
+            targets.add("JSRoyale");
+        }
 
-		ProjectOptions options = new ProjectOptions();
+        ProjectOptions options = new ProjectOptions();
         options.type = ProjectType.LIB;
         options.config = config;
         options.files = null;

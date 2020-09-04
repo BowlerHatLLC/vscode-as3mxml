@@ -20,50 +20,43 @@ import java.util.ArrayList;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-class OptionsFormatterTests
-{
+class OptionsFormatterTests {
 	@Test
-	void testSetValue()
-	{
+	void testSetValue() {
 		String optionName = "optionName";
 		String value = "value";
 		ArrayList<String> result = new ArrayList<>();
 		OptionsFormatter.setValue(optionName, value, result);
-		Assertions.assertEquals(1, result.size(),
-			"OptionsFormatter.setValue() created incorrect number of options.");
-			Assertions.assertEquals("--optionName=value", result.get(0),
+		Assertions.assertEquals(1, result.size(), "OptionsFormatter.setValue() created incorrect number of options.");
+		Assertions.assertEquals("--optionName=value", result.get(0),
 				"OptionsFormatter.setValue() incorrectly formatted option.");
 	}
 
 	@Test
-	void testSetBoolean()
-	{
+	void testSetBoolean() {
 		String optionName = "optionName";
 		boolean value = true;
 		ArrayList<String> result = new ArrayList<>();
 		OptionsFormatter.setBoolean(optionName, value, result);
-		Assertions.assertEquals(1, result.size(),
-			"OptionsFormatter.setBoolean() created incorrect number of options.");
+		Assertions.assertEquals(1, result.size(), "OptionsFormatter.setBoolean() created incorrect number of options.");
 		Assertions.assertEquals("--optionName=true", result.get(0),
-			"OptionsFormatter.setBoolean() incorrectly formatted option.");
+				"OptionsFormatter.setBoolean() incorrectly formatted option.");
 	}
-	
+
 	@Test
-	void testSetPathValueWithoutSpaces()
-	{
+	void testSetPathValueWithoutSpaces() {
 		String optionName = "optionName";
 		String value = "path/to/file.txt";
 		ArrayList<String> result = new ArrayList<>();
 		OptionsFormatter.setPathValue(optionName, value, result);
 		Assertions.assertEquals(1, result.size(),
-			"OptionsFormatter.setPathValue() created incorrect number of options.");
+				"OptionsFormatter.setPathValue() created incorrect number of options.");
 		Assertions.assertEquals("--optionName=" + value, result.get(0),
-			"OptionsFormatter.setPathValue() incorrectly formatted option.");
+				"OptionsFormatter.setPathValue() incorrectly formatted option.");
 	}
-	
+
 	@Test
-	void testSetValues()
-	{
+	void testSetValues() {
 		String optionName = "optionName";
 		ArrayList<String> values = new ArrayList<>();
 		values.add("one");
@@ -71,19 +64,17 @@ class OptionsFormatterTests
 		values.add("three");
 		ArrayList<String> result = new ArrayList<>();
 		OptionsFormatter.setValues(optionName, values, result);
-		Assertions.assertEquals(3, result.size(),
-			"OptionsFormatter.setValues() created incorrect number of options.");
+		Assertions.assertEquals(3, result.size(), "OptionsFormatter.setValues() created incorrect number of options.");
 		Assertions.assertEquals("--optionName=one", result.get(0),
-			"OptionsFormatter.setValues() incorrectly formatted option.");
+				"OptionsFormatter.setValues() incorrectly formatted option.");
 		Assertions.assertEquals("--optionName+=two", result.get(1),
-			"OptionsFormatter.setValues() incorrectly formatted option.");
+				"OptionsFormatter.setValues() incorrectly formatted option.");
 		Assertions.assertEquals("--optionName+=three", result.get(2),
-			"OptionsFormatter.setValues() incorrectly formatted option.");
+				"OptionsFormatter.setValues() incorrectly formatted option.");
 	}
-	
+
 	@Test
-	void testAppendValues()
-	{
+	void testAppendValues() {
 		String optionName = "optionName";
 		ArrayList<String> values = new ArrayList<>();
 		values.add("one");
@@ -92,18 +83,17 @@ class OptionsFormatterTests
 		ArrayList<String> result = new ArrayList<>();
 		OptionsFormatter.appendValues(optionName, values, result);
 		Assertions.assertEquals(3, result.size(),
-			"OptionsFormatter.appendValues() created incorrect number of options.");
+				"OptionsFormatter.appendValues() created incorrect number of options.");
 		Assertions.assertEquals("--optionName+=one", result.get(0),
-			"OptionsFormatter.appendValues() incorrectly formatted option.");
+				"OptionsFormatter.appendValues() incorrectly formatted option.");
 		Assertions.assertEquals("--optionName+=two", result.get(1),
-			"OptionsFormatter.appendValues() incorrectly formatted option.");
+				"OptionsFormatter.appendValues() incorrectly formatted option.");
 		Assertions.assertEquals("--optionName+=three", result.get(2),
-			"OptionsFormatter.appendValues() incorrectly formatted option.");
+				"OptionsFormatter.appendValues() incorrectly formatted option.");
 	}
-	
+
 	@Test
-	void testSetValuesWithCommas()
-	{
+	void testSetValuesWithCommas() {
 		String optionName = "optionName";
 		ArrayList<String> values = new ArrayList<>();
 		values.add("one");
@@ -112,14 +102,13 @@ class OptionsFormatterTests
 		ArrayList<String> result = new ArrayList<>();
 		OptionsFormatter.setValuesWithCommas(optionName, values, result);
 		Assertions.assertEquals(1, result.size(),
-			"OptionsFormatter.setValuesWithCommas() created incorrect number of options.");
+				"OptionsFormatter.setValuesWithCommas() created incorrect number of options.");
 		Assertions.assertEquals("--optionName=one,two,three", result.get(0),
-			"OptionsFormatter.setValuesWithCommas() incorrectly formatted option.");
+				"OptionsFormatter.setValuesWithCommas() incorrectly formatted option.");
 	}
-	
+
 	@Test
-	void testAppendPaths()
-	{
+	void testAppendPaths() {
 		String optionName = "optionName";
 		String value1 = "path/to/file1.txt";
 		String value2 = "path/to/file2 with spaces.txt";
@@ -131,12 +120,12 @@ class OptionsFormatterTests
 		ArrayList<String> result = new ArrayList<>();
 		OptionsFormatter.appendPaths(optionName, values, result);
 		Assertions.assertEquals(3, result.size(),
-			"OptionsFormatter.testAppendPaths() created incorrect number of options.");
+				"OptionsFormatter.testAppendPaths() created incorrect number of options.");
 		Assertions.assertEquals("--optionName+=" + value1, result.get(0),
-			"OptionsFormatter.testAppendPaths() incorrectly formatted option.");
+				"OptionsFormatter.testAppendPaths() incorrectly formatted option.");
 		Assertions.assertEquals("--optionName+=" + value2, result.get(1),
-			"OptionsFormatter.testAppendPaths() incorrectly formatted option.");
+				"OptionsFormatter.testAppendPaths() incorrectly formatted option.");
 		Assertions.assertEquals("--optionName+=" + value3, result.get(2),
-			"OptionsFormatter.testAppendPaths() incorrectly formatted option.");
+				"OptionsFormatter.testAppendPaths() incorrectly formatted option.");
 	}
 }

@@ -21,13 +21,11 @@ import org.apache.royale.compiler.problems.CompilerProblemSeverity;
 import org.apache.royale.compiler.problems.annotations.DefaultSeverity;
 
 @DefaultSeverity(CompilerProblemSeverity.WARNING)
-public class DisabledConfigConditionBlockProblem extends CompilerProblem
-{
+public class DisabledConfigConditionBlockProblem extends CompilerProblem {
 	public static final String DESCRIPTION = "Disabled configuation condition block";
 	public static final String DIAGNOSTIC_CODE = "as3mxml-disabled-config-condition-block";
-    
-    public DisabledConfigConditionBlockProblem(ConfigConditionBlockNode site)
-    {
+
+	public DisabledConfigConditionBlockProblem(ConfigConditionBlockNode site) {
 		super(site);
 	}
 }

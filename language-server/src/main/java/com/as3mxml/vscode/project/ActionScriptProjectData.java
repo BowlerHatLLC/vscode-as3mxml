@@ -27,10 +27,8 @@ import com.as3mxml.vscode.utils.ProblemTracker;
 import org.apache.royale.compiler.internal.projects.RoyaleProjectConfigurator;
 import org.eclipse.lsp4j.WorkspaceFolder;
 
-public class ActionScriptProjectData
-{
-	public ActionScriptProjectData(Path projectRoot, WorkspaceFolder folder, IProjectConfigStrategy config)
-	{
+public class ActionScriptProjectData {
+	public ActionScriptProjectData(Path projectRoot, WorkspaceFolder folder, IProjectConfigStrategy config) {
 		this.projectRoot = projectRoot;
 		this.folder = folder;
 		this.config = config;
@@ -40,8 +38,7 @@ public class ActionScriptProjectData
 		Path folderPath = LanguageServerCompilerUtils.getPathFromLanguageServerURI(folder.getUri());
 		projectDepth = 0;
 		Path currentPath = projectRoot;
-		while(currentPath.startsWith(folderPath) && !currentPath.equals(folderPath))
-		{
+		while (currentPath.startsWith(folderPath) && !currentPath.equals(folderPath)) {
 			projectDepth++;
 			currentPath = currentPath.getParent();
 		}
@@ -56,24 +53,21 @@ public class ActionScriptProjectData
 	//needed for ProblemQuery filtering
 	public RoyaleProjectConfigurator configurator;
 	public Map<WatchKey, Path> sourceOrLibraryPathWatchKeys = new HashMap<>();
-    public ProblemTracker codeProblemTracker = new ProblemTracker();
+	public ProblemTracker codeProblemTracker = new ProblemTracker();
 	public ProblemTracker configProblemTracker = new ProblemTracker();
-    public Map<String,IncludeFileData> includedFiles = new HashMap<>();
-	
-	public void cleanup()
-	{
-		if(project != null)
-		{
+	public Map<String, IncludeFileData> includedFiles = new HashMap<>();
+
+	public void cleanup() {
+		if (project != null) {
 			project.delete();
 			project = null;
 		}
-		
-        for(WatchKey watchKey : sourceOrLibraryPathWatchKeys.keySet())
-        {
-            watchKey.cancel();
-        }
+
+		for (WatchKey watchKey : sourceOrLibraryPathWatchKeys.keySet()) {
+			watchKey.cancel();
+		}
 		sourceOrLibraryPathWatchKeys.clear();
-		
+
 		configurator = null;
 	}
 }

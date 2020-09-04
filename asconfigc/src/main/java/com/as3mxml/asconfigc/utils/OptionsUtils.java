@@ -20,16 +20,14 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class OptionsUtils
-{
-	private static final Pattern ADDITIONAL_OPTIONS_PATTERN = Pattern.compile("([\\-+]([^\\s]+\\+?=)(('([^'])*')|(\"([^\"])*\")|([^\\s\"',]+))(,(('([^'])*')|(\"([^\"])*\")|([^\\s\"']+)))*)|('([^'])*')|(\"([^\"])*\")|([^\\s\"']+)");
+public class OptionsUtils {
+	private static final Pattern ADDITIONAL_OPTIONS_PATTERN = Pattern.compile(
+			"([\\-+]([^\\s]+\\+?=)(('([^'])*')|(\"([^\"])*\")|([^\\s\"',]+))(,(('([^'])*')|(\"([^\"])*\")|([^\\s\"']+)))*)|('([^'])*')|(\"([^\"])*\")|([^\\s\"']+)");
 
-	public static List<String> parseAdditionalOptions(String combined)
-	{
+	public static List<String> parseAdditionalOptions(String combined) {
 		List<String> result = new ArrayList<>();
 		Matcher matcher = ADDITIONAL_OPTIONS_PATTERN.matcher(combined);
-		while (matcher.find())
-		{
+		while (matcher.find()) {
 			String option = matcher.group();
 			result.add(option);
 		}

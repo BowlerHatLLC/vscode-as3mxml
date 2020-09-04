@@ -21,37 +21,31 @@ import org.apache.royale.compiler.exceptions.ConfigurationException;
 import org.apache.royale.compiler.internal.config.annotations.Config;
 import org.apache.royale.compiler.internal.config.annotations.Mapping;
 
-public class VSCodeConfiguration extends Configuration
-{
+public class VSCodeConfiguration extends Configuration {
 	private final int UNSET_SWF_VERSION = -1;
 	private final int MINIMUM_SMART_PLAYER_VERSION = 12;
 	private final int MINIMUM_SMART_SWF_VERSION = 23;
 
-	public VSCodeConfiguration()
-	{
+	public VSCodeConfiguration() {
 		super();
 	}
 
 	private int swfVersion = UNSET_SWF_VERSION;
 
-	public int getSwfVersion()
-	{
-		if (swfVersion == UNSET_SWF_VERSION)
-		{
+	public int getSwfVersion() {
+		if (swfVersion == UNSET_SWF_VERSION) {
 			int targetPlayerMajorVersion = getTargetPlayerMajorVersion();
-			if (targetPlayerMajorVersion >= MINIMUM_SMART_PLAYER_VERSION)
-			{
+			if (targetPlayerMajorVersion >= MINIMUM_SMART_PLAYER_VERSION) {
 				return MINIMUM_SMART_SWF_VERSION + targetPlayerMajorVersion - MINIMUM_SMART_PLAYER_VERSION;
 			}
 		}
 		swfVersion = super.getSwfVersion();
 		return swfVersion;
 	}
-	
+
 	@Config
 	@Mapping("swf-version")
-	public void setSwfVersion(ConfigurationValue cv, int version) throws ConfigurationException
-	{
+	public void setSwfVersion(ConfigurationValue cv, int version) throws ConfigurationException {
 		super.setSwfVersion(cv, version);
 		swfVersion = version;
 	}

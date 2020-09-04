@@ -20,497 +20,452 @@ import java.util.List;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-class OptionsUtilsTests
-{
+class OptionsUtilsTests {
 	@Test
-	void testBasicOption()
-	{
+	void testBasicOption() {
 		List<String> options = OptionsUtils.parseAdditionalOptions("-optimize");
 		Assertions.assertEquals(1, options.size(),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
 		Assertions.assertEquals("-optimize", options.get(0),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
 	}
 
 	@Test
-	void testDoubleHyphenOption()
-	{
+	void testDoubleHyphenOption() {
 		List<String> options = OptionsUtils.parseAdditionalOptions("--optimize");
 		Assertions.assertEquals(1, options.size(),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
 		Assertions.assertEquals("--optimize", options.get(0),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
 	}
 
 	@Test
-	void testMultiWordOption()
-	{
+	void testMultiWordOption() {
 		List<String> options = OptionsUtils.parseAdditionalOptions("-multi-word-option");
 		Assertions.assertEquals(1, options.size(),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
 		Assertions.assertEquals("-multi-word-option", options.get(0),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
 	}
 
 	@Test
-	void testDoubleHyphenMultiWordOption()
-	{
+	void testDoubleHyphenMultiWordOption() {
 		List<String> options = OptionsUtils.parseAdditionalOptions("--multi-word-option");
 		Assertions.assertEquals(1, options.size(),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
 		Assertions.assertEquals("--multi-word-option", options.get(0),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
 	}
-	
+
 	@Test
-	void testOptionWithAssignment()
-	{
+	void testOptionWithAssignment() {
 		List<String> options = OptionsUtils.parseAdditionalOptions("-optimize=true");
 		Assertions.assertEquals(1, options.size(),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
 		Assertions.assertEquals("-optimize=true", options.get(0),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
 	}
-	
+
 	@Test
-	void testDoubleHyphenOptionWithAssignment()
-	{
+	void testDoubleHyphenOptionWithAssignment() {
 		List<String> options = OptionsUtils.parseAdditionalOptions("--optimize=true");
 		Assertions.assertEquals(1, options.size(),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
 		Assertions.assertEquals("--optimize=true", options.get(0),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
 	}
-	
+
 	@Test
-	void testMultiWordOptionWithAssignment()
-	{
+	void testMultiWordOptionWithAssignment() {
 		List<String> options = OptionsUtils.parseAdditionalOptions("-multi-word-option=true");
 		Assertions.assertEquals(1, options.size(),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
 		Assertions.assertEquals("-multi-word-option=true", options.get(0),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
 	}
-	
+
 	@Test
-	void testDoubleHyphenMultiWordOptionWithAssignment()
-	{
+	void testDoubleHyphenMultiWordOptionWithAssignment() {
 		List<String> options = OptionsUtils.parseAdditionalOptions("--multi-word-option=true");
 		Assertions.assertEquals(1, options.size(),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
 		Assertions.assertEquals("--multi-word-option=true", options.get(0),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
 	}
-	
+
 	@Test
-	void testOptionWithPlusAssignment()
-	{
+	void testOptionWithPlusAssignment() {
 		List<String> options = OptionsUtils.parseAdditionalOptions("-option+=true");
 		Assertions.assertEquals(1, options.size(),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
 		Assertions.assertEquals("-option+=true", options.get(0),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
 	}
-	
+
 	@Test
-	void testDoubleHyphenOptionWithPlusAssignment()
-	{
+	void testDoubleHyphenOptionWithPlusAssignment() {
 		List<String> options = OptionsUtils.parseAdditionalOptions("--option+=true");
 		Assertions.assertEquals(1, options.size(),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
 		Assertions.assertEquals("--option+=true", options.get(0),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
 	}
-	
+
 	@Test
-	void testMultiWordOptionWithPlusAssignment()
-	{
+	void testMultiWordOptionWithPlusAssignment() {
 		List<String> options = OptionsUtils.parseAdditionalOptions("-multi-word-option+=true");
 		Assertions.assertEquals(1, options.size(),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
 		Assertions.assertEquals("-multi-word-option+=true", options.get(0),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
 	}
-	
+
 	@Test
-	void testDoubleHyphenMultiWordOptionWithPlusAssignment()
-	{
+	void testDoubleHyphenMultiWordOptionWithPlusAssignment() {
 		List<String> options = OptionsUtils.parseAdditionalOptions("--multi-word-option+=true");
 		Assertions.assertEquals(1, options.size(),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
 		Assertions.assertEquals("--multi-word-option+=true", options.get(0),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
 	}
-	
+
 	@Test
-	void testOptionWithSeparateValue()
-	{
+	void testOptionWithSeparateValue() {
 		List<String> options = OptionsUtils.parseAdditionalOptions("-optimize true");
 		Assertions.assertEquals(2, options.size(),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
 		Assertions.assertEquals("-optimize", options.get(0),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
 		Assertions.assertEquals("true", options.get(1),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
 	}
-	
+
 	@Test
-	void testDoubleHyphenOptionWithSeparateValue()
-	{
+	void testDoubleHyphenOptionWithSeparateValue() {
 		List<String> options = OptionsUtils.parseAdditionalOptions("--optimize true");
 		Assertions.assertEquals(2, options.size(),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
 		Assertions.assertEquals("--optimize", options.get(0),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
 		Assertions.assertEquals("true", options.get(1),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
 	}
-	
+
 	@Test
-	void testMultiWordOptionWithSeparateValue()
-	{
+	void testMultiWordOptionWithSeparateValue() {
 		List<String> options = OptionsUtils.parseAdditionalOptions("-multi-word-option true");
 		Assertions.assertEquals(2, options.size(),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
 		Assertions.assertEquals("-multi-word-option", options.get(0),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
 		Assertions.assertEquals("true", options.get(1),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
 	}
-	
+
 	@Test
-	void testDoubleHyphenMultiWordOptionWithSeparateValue()
-	{
+	void testDoubleHyphenMultiWordOptionWithSeparateValue() {
 		List<String> options = OptionsUtils.parseAdditionalOptions("--multi-word-option true");
 		Assertions.assertEquals(2, options.size(),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
 		Assertions.assertEquals("--multi-word-option", options.get(0),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
 		Assertions.assertEquals("true", options.get(1),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
 	}
-	
+
 	@Test
-	void testOptionWithSeparateStringValueInDoubleQuotesWithoutSpaces()
-	{
+	void testOptionWithSeparateStringValueInDoubleQuotesWithoutSpaces() {
 		List<String> options = OptionsUtils.parseAdditionalOptions("-source-path \"path/to/src\"");
 		Assertions.assertEquals(2, options.size(),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
 		Assertions.assertEquals("-source-path", options.get(0),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
 		Assertions.assertEquals("\"path/to/src\"", options.get(1),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
 	}
-	
+
 	@Test
-	void testOptionWithSeparateStringValueInSingleQuotesWithoutSpaces()
-	{
+	void testOptionWithSeparateStringValueInSingleQuotesWithoutSpaces() {
 		List<String> options = OptionsUtils.parseAdditionalOptions("-source-path 'path/to/src'");
 		Assertions.assertEquals(2, options.size(),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
 		Assertions.assertEquals("-source-path", options.get(0),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
 		Assertions.assertEquals("'path/to/src'", options.get(1),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
 	}
-	
+
 	@Test
-	void testOptionWithSeparateStringValueWithNestedDoubleQuotesInsideSingleQuotesWithoutSpaces()
-	{
+	void testOptionWithSeparateStringValueWithNestedDoubleQuotesInsideSingleQuotesWithoutSpaces() {
 		List<String> options = OptionsUtils.parseAdditionalOptions("-define CONFIG::TEST '\"path/to/src\"'");
 		Assertions.assertEquals(3, options.size(),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
 		Assertions.assertEquals("-define", options.get(0),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
 		Assertions.assertEquals("CONFIG::TEST", options.get(1),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
 		Assertions.assertEquals("'\"path/to/src\"'", options.get(2),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
 	}
-	
+
 	@Test
-	void testOptionWithSeparateStringValueWithNestedSingleQuotesInsideDoubleQuotesWithoutSpaces()
-	{
+	void testOptionWithSeparateStringValueWithNestedSingleQuotesInsideDoubleQuotesWithoutSpaces() {
 		List<String> options = OptionsUtils.parseAdditionalOptions("-define CONFIG::TEST \"'path/to/src'\"");
 		Assertions.assertEquals(3, options.size(),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
 		Assertions.assertEquals("-define", options.get(0),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
 		Assertions.assertEquals("CONFIG::TEST", options.get(1),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
 		Assertions.assertEquals("\"'path/to/src'\"", options.get(2),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
 	}
-	
+
 	@Test
-	void testOptionWithSeparateStringValueInDoubleQuotesWithSpaces()
-	{
+	void testOptionWithSeparateStringValueInDoubleQuotesWithSpaces() {
 		List<String> options = OptionsUtils.parseAdditionalOptions("-source-path \"path/with spaces/to/src\"");
 		Assertions.assertEquals(2, options.size(),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
 		Assertions.assertEquals("-source-path", options.get(0),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
 		Assertions.assertEquals("\"path/with spaces/to/src\"", options.get(1),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
 	}
-	
+
 	@Test
-	void testOptionWithSeparateStringValueInSingleQuotesWithSpaces()
-	{
+	void testOptionWithSeparateStringValueInSingleQuotesWithSpaces() {
 		List<String> options = OptionsUtils.parseAdditionalOptions("-source-path 'path/with spaces/to/src'");
 		Assertions.assertEquals(2, options.size(),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
 		Assertions.assertEquals("-source-path", options.get(0),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
 		Assertions.assertEquals("'path/with spaces/to/src'", options.get(1),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
 	}
-	
+
 	@Test
-	void testOptionWithSeparateStringValueWithNestedDoubleQuotesInsideSingleQuotesWithSpaces()
-	{
-		List<String> options = OptionsUtils.parseAdditionalOptions("-define CONFIG::TEST '\"path/with spaces/to/src\"'");
+	void testOptionWithSeparateStringValueWithNestedDoubleQuotesInsideSingleQuotesWithSpaces() {
+		List<String> options = OptionsUtils
+				.parseAdditionalOptions("-define CONFIG::TEST '\"path/with spaces/to/src\"'");
 		Assertions.assertEquals(3, options.size(),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
 		Assertions.assertEquals("-define", options.get(0),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
 		Assertions.assertEquals("CONFIG::TEST", options.get(1),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
 		Assertions.assertEquals("'\"path/with spaces/to/src\"'", options.get(2),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
 	}
-	
+
 	@Test
-	void testOptionWithSeparateStringValueWithNestedSingleQuotesInsideDoubleQuotesWithSpaces()
-	{
-		List<String> options = OptionsUtils.parseAdditionalOptions("-define CONFIG::TEST \"'path/with spaces/to/src'\"");
+	void testOptionWithSeparateStringValueWithNestedSingleQuotesInsideDoubleQuotesWithSpaces() {
+		List<String> options = OptionsUtils
+				.parseAdditionalOptions("-define CONFIG::TEST \"'path/with spaces/to/src'\"");
 		Assertions.assertEquals(3, options.size(),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
 		Assertions.assertEquals("-define", options.get(0),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
 		Assertions.assertEquals("CONFIG::TEST", options.get(1),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
 		Assertions.assertEquals("\"'path/with spaces/to/src'\"", options.get(2),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
 	}
-	
+
 	@Test
-	void testOptionWithAssignedStringValueInDoubleQuotesWithoutSpaces()
-	{
+	void testOptionWithAssignedStringValueInDoubleQuotesWithoutSpaces() {
 		List<String> options = OptionsUtils.parseAdditionalOptions("-source-path=\"path/to/src\"");
 		Assertions.assertEquals(1, options.size(),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
 		Assertions.assertEquals("-source-path=\"path/to/src\"", options.get(0),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
 	}
-	
+
 	@Test
-	void testOptionWithAssignedStringValueInSingleQuotesWithoutSpaces()
-	{
+	void testOptionWithAssignedStringValueInSingleQuotesWithoutSpaces() {
 		List<String> options = OptionsUtils.parseAdditionalOptions("-source-path='path/to/src'");
 		Assertions.assertEquals(1, options.size(),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
 		Assertions.assertEquals("-source-path='path/to/src'", options.get(0),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
 	}
-	
+
 	@Test
-	void testOptionWithAssignedStringValueInDoubleQuotesWithSpaces()
-	{
+	void testOptionWithAssignedStringValueInDoubleQuotesWithSpaces() {
 		List<String> options = OptionsUtils.parseAdditionalOptions("-source-path=\"path/with spaces/to/src\"");
 		Assertions.assertEquals(1, options.size(),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
 		Assertions.assertEquals("-source-path=\"path/with spaces/to/src\"", options.get(0),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
 	}
-	
+
 	@Test
-	void testOptionWithAssignedStringValueInSingleQuotesWithSpaces()
-	{
+	void testOptionWithAssignedStringValueInSingleQuotesWithSpaces() {
 		List<String> options = OptionsUtils.parseAdditionalOptions("-source-path='path/with spaces/to/src'");
 		Assertions.assertEquals(1, options.size(),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
 		Assertions.assertEquals("-source-path='path/with spaces/to/src'", options.get(0),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
 	}
-	
+
 	@Test
-	void testOptionWithPlusAssignedStringValueInDoubleQuotesWithoutSpaces()
-	{
+	void testOptionWithPlusAssignedStringValueInDoubleQuotesWithoutSpaces() {
 		List<String> options = OptionsUtils.parseAdditionalOptions("-source-path+=\"path/to/src\"");
 		Assertions.assertEquals(1, options.size(),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
 		Assertions.assertEquals("-source-path+=\"path/to/src\"", options.get(0),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
 	}
-	
+
 	@Test
-	void testOptionWithPlusAssignedStringValueInSingleQuotesWithoutSpaces()
-	{
+	void testOptionWithPlusAssignedStringValueInSingleQuotesWithoutSpaces() {
 		List<String> options = OptionsUtils.parseAdditionalOptions("-source-path+='path/to/src'");
 		Assertions.assertEquals(1, options.size(),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
 		Assertions.assertEquals("-source-path+='path/to/src'", options.get(0),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
 	}
-	
+
 	@Test
-	void testOptionWithPlusAssignedStringValueInDoubleQuotesWithSpaces()
-	{
+	void testOptionWithPlusAssignedStringValueInDoubleQuotesWithSpaces() {
 		List<String> options = OptionsUtils.parseAdditionalOptions("-source-path+=\"path/with spaces/to/src\"");
 		Assertions.assertEquals(1, options.size(),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
 		Assertions.assertEquals("-source-path+=\"path/with spaces/to/src\"", options.get(0),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
 	}
-	
+
 	@Test
-	void testOptionWithPlusAssignedStringValueInSingleQuotesWithSpaces()
-	{
+	void testOptionWithPlusAssignedStringValueInSingleQuotesWithSpaces() {
 		List<String> options = OptionsUtils.parseAdditionalOptions("-source-path='path/with spaces/to/src'");
 		Assertions.assertEquals(1, options.size(),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
 		Assertions.assertEquals("-source-path='path/with spaces/to/src'", options.get(0),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
 	}
-	
+
 	@Test
-	void testOptionWithAssignmentAndMultipleValues()
-	{
+	void testOptionWithAssignmentAndMultipleValues() {
 		List<String> options = OptionsUtils.parseAdditionalOptions("-define=CONFIG::TEST,123");
 		Assertions.assertEquals(1, options.size(),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
 		Assertions.assertEquals("-define=CONFIG::TEST,123", options.get(0),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
 	}
-	
+
 	@Test
-	void testDoubleHyphenOptionWithAssignmentAndMultipleValues()
-	{
+	void testDoubleHyphenOptionWithAssignmentAndMultipleValues() {
 		List<String> options = OptionsUtils.parseAdditionalOptions("--define=CONFIG::TEST,123");
 		Assertions.assertEquals(1, options.size(),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
 		Assertions.assertEquals("--define=CONFIG::TEST,123", options.get(0),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
 	}
-	
+
 	@Test
-	void testOptionWithAssignmentAndMultipleValuesIncludingStringWithDoubleQuotes()
-	{
+	void testOptionWithAssignmentAndMultipleValuesIncludingStringWithDoubleQuotes() {
 		List<String> options = OptionsUtils.parseAdditionalOptions("-define=CONFIG::TEST,\"123\"");
 		Assertions.assertEquals(1, options.size(),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
 		Assertions.assertEquals("-define=CONFIG::TEST,\"123\"", options.get(0),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
 	}
-	
+
 	@Test
-	void testDoubleHyphenOptionWithAssignmentAndMultipleValuesIncludingStringWithDoubleQuotes()
-	{
+	void testDoubleHyphenOptionWithAssignmentAndMultipleValuesIncludingStringWithDoubleQuotes() {
 		List<String> options = OptionsUtils.parseAdditionalOptions("--define=CONFIG::TEST,\"123\"");
 		Assertions.assertEquals(1, options.size(),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
 		Assertions.assertEquals("--define=CONFIG::TEST,\"123\"", options.get(0),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
 	}
-	
+
 	@Test
-	void testOptionWithAssignmentAndMultipleValuesIncludingStringWithSingleQuotes()
-	{
+	void testOptionWithAssignmentAndMultipleValuesIncludingStringWithSingleQuotes() {
 		List<String> options = OptionsUtils.parseAdditionalOptions("-define=CONFIG::TEST,'123'");
 		Assertions.assertEquals(1, options.size(),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
 		Assertions.assertEquals("-define=CONFIG::TEST,'123'", options.get(0),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
 	}
-	
+
 	@Test
-	void testDoubleHyphenOptionWithAssignmentAndMultipleValuesIncludingStringWithSingleQuotes()
-	{
+	void testDoubleHyphenOptionWithAssignmentAndMultipleValuesIncludingStringWithSingleQuotes() {
 		List<String> options = OptionsUtils.parseAdditionalOptions("--define=CONFIG::TEST,'123'");
 		Assertions.assertEquals(1, options.size(),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
 		Assertions.assertEquals("--define=CONFIG::TEST,'123'", options.get(0),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
 	}
-	
+
 	@Test
-	void testOptionWithAssignmentAndMultipleValuesIncludingStringWithDoubleQuotesAndSpaces()
-	{
+	void testOptionWithAssignmentAndMultipleValuesIncludingStringWithDoubleQuotesAndSpaces() {
 		List<String> options = OptionsUtils.parseAdditionalOptions("-define=CONFIG::TEST,\"ABC 123\"");
 		Assertions.assertEquals(1, options.size(),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
 		Assertions.assertEquals("-define=CONFIG::TEST,\"ABC 123\"", options.get(0),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
 	}
-	
+
 	@Test
-	void testDoubleHyphenOptionWithAssignmentAndMultipleValuesIncludingStringWithDoubleQuotesAndSpaces()
-	{
+	void testDoubleHyphenOptionWithAssignmentAndMultipleValuesIncludingStringWithDoubleQuotesAndSpaces() {
 		List<String> options = OptionsUtils.parseAdditionalOptions("--define=CONFIG::TEST,\"ABC 123\"");
 		Assertions.assertEquals(1, options.size(),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
 		Assertions.assertEquals("--define=CONFIG::TEST,\"ABC 123\"", options.get(0),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
 	}
-	
+
 	@Test
-	void testOptionWithAssignmentAndMultipleValuesIncludingStringWithSingleQuotesAndSpaces()
-	{
+	void testOptionWithAssignmentAndMultipleValuesIncludingStringWithSingleQuotesAndSpaces() {
 		List<String> options = OptionsUtils.parseAdditionalOptions("-define=CONFIG::TEST,'ABC 123'");
 		Assertions.assertEquals(1, options.size(),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
 		Assertions.assertEquals("-define=CONFIG::TEST,'ABC 123'", options.get(0),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
 	}
-	
+
 	@Test
-	void testDoubleHyphenOptionWithAssignmentAndMultipleValuesIncludingStringWithSingleQuotesAndSpaces()
-	{
+	void testDoubleHyphenOptionWithAssignmentAndMultipleValuesIncludingStringWithSingleQuotesAndSpaces() {
 		List<String> options = OptionsUtils.parseAdditionalOptions("--define=CONFIG::TEST,'ABC 123'");
 		Assertions.assertEquals(1, options.size(),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
 		Assertions.assertEquals("--define=CONFIG::TEST,'ABC 123'", options.get(0),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
 	}
-	
+
 	@Test
-	void testOptionWithAssignmentAndMultipleValuesIncludingStringWithNestedDoubleInsideSingleQuotes()
-	{
+	void testOptionWithAssignmentAndMultipleValuesIncludingStringWithNestedDoubleInsideSingleQuotes() {
 		List<String> options = OptionsUtils.parseAdditionalOptions("-define=CONFIG::TEST,'\"123\"'");
 		Assertions.assertEquals(1, options.size(),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
 		Assertions.assertEquals("-define=CONFIG::TEST,'\"123\"'", options.get(0),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
 	}
-	
+
 	@Test
-	void testDoubleHyphenOptionWithAssignmentAndMultipleValuesIncludingStringWithNestedDoubleInsideSingleQuotes()
-	{
+	void testDoubleHyphenOptionWithAssignmentAndMultipleValuesIncludingStringWithNestedDoubleInsideSingleQuotes() {
 		List<String> options = OptionsUtils.parseAdditionalOptions("--define=CONFIG::TEST,'\"123\"'");
 		Assertions.assertEquals(1, options.size(),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
 		Assertions.assertEquals("--define=CONFIG::TEST,'\"123\"'", options.get(0),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
 	}
-	
+
 	@Test
-	void testOptionWithAssignmentAndMultipleValuesIncludingStringWithNestedSingleInsideDoubleQuotes()
-	{
+	void testOptionWithAssignmentAndMultipleValuesIncludingStringWithNestedSingleInsideDoubleQuotes() {
 		List<String> options = OptionsUtils.parseAdditionalOptions("-define=CONFIG::TEST,\"'123'\"");
 		Assertions.assertEquals(1, options.size(),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
 		Assertions.assertEquals("-define=CONFIG::TEST,\"'123'\"", options.get(0),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
 	}
-	
+
 	@Test
-	void testDoubleHyphenOptionWithAssignmentAndMultipleValuesIncludingStringWithNestedSingleInsideDoubleQuotes()
-	{
+	void testDoubleHyphenOptionWithAssignmentAndMultipleValuesIncludingStringWithNestedSingleInsideDoubleQuotes() {
 		List<String> options = OptionsUtils.parseAdditionalOptions("--define=CONFIG::TEST,\"'123'\"");
 		Assertions.assertEquals(1, options.size(),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect number of options.");
 		Assertions.assertEquals("--define=CONFIG::TEST,\"'123'\"", options.get(0),
-			"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
+				"OptionsUtils.parseAdditionalOptions() returned incorrect value.");
 	}
 }

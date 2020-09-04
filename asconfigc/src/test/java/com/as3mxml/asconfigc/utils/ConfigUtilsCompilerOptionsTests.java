@@ -26,28 +26,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-class ConfigUtilsCompilerOptionsTests
-{
+class ConfigUtilsCompilerOptionsTests {
 	//--- warnings
 	//warnings is a normal field that is not a special case
-	
+
 	@Test
-	void testWarningsWithBaseAndEmptyCompilerOptions() throws IOException
-	{
+	void testWarningsWithBaseAndEmptyCompilerOptions() throws IOException {
 		boolean baseValue = false;
 		ObjectMapper mapper = new ObjectMapper();
-		JsonNode baseConfigData = mapper.readTree(
-			"{" +
-				"\"compilerOptions\": {" +
-					"\"warnings\": " + baseValue +
-				"}" +
-			"}"
-		);
-		JsonNode configData = mapper.readTree(
-			"{" +
-				"\"compilerOptions\": {}" +
-			"}"
-		);
+		JsonNode baseConfigData = mapper
+				.readTree("{" + "\"compilerOptions\": {" + "\"warnings\": " + baseValue + "}" + "}");
+		JsonNode configData = mapper.readTree("{" + "\"compilerOptions\": {}" + "}");
 		JsonNode result = ConfigUtils.mergeConfigs(configData, baseConfigData);
 		Assertions.assertTrue(result.has(TopLevelFields.COMPILER_OPTIONS));
 		JsonNode compilerOptions = result.get(TopLevelFields.COMPILER_OPTIONS);
@@ -56,19 +45,13 @@ class ConfigUtilsCompilerOptionsTests
 		boolean resultValue = compilerOptions.get(CompilerOptions.WARNINGS).asBoolean();
 		Assertions.assertEquals(baseValue, resultValue);
 	}
-	
+
 	@Test
-	void testWarningsWithBaseOnly() throws IOException
-	{
+	void testWarningsWithBaseOnly() throws IOException {
 		boolean baseValue = false;
 		ObjectMapper mapper = new ObjectMapper();
-		JsonNode baseConfigData = mapper.readTree(
-			"{" +
-				"\"compilerOptions\": {" +
-					"\"warnings\": " + baseValue +
-				"}" +
-			"}"
-		);
+		JsonNode baseConfigData = mapper
+				.readTree("{" + "\"compilerOptions\": {" + "\"warnings\": " + baseValue + "}" + "}");
 		JsonNode configData = mapper.readTree("{}");
 		JsonNode result = ConfigUtils.mergeConfigs(configData, baseConfigData);
 		Assertions.assertTrue(result.has(TopLevelFields.COMPILER_OPTIONS));
@@ -78,24 +61,13 @@ class ConfigUtilsCompilerOptionsTests
 		boolean resultValue = compilerOptions.get(CompilerOptions.WARNINGS).asBoolean();
 		Assertions.assertEquals(baseValue, resultValue);
 	}
-	
+
 	@Test
-	void testWarningsWithEmptyBaseCompilerOptions() throws IOException
-	{
+	void testWarningsWithEmptyBaseCompilerOptions() throws IOException {
 		boolean newValue = true;
 		ObjectMapper mapper = new ObjectMapper();
-		JsonNode baseConfigData = mapper.readTree(
-			"{" +
-				"\"compilerOptions\": {}" +
-			"}"
-		);
-		JsonNode configData = mapper.readTree(
-			"{" +
-				"\"compilerOptions\": {" +
-					"\"warnings\": " + newValue +
-				"}" +
-			"}"
-		);
+		JsonNode baseConfigData = mapper.readTree("{" + "\"compilerOptions\": {}" + "}");
+		JsonNode configData = mapper.readTree("{" + "\"compilerOptions\": {" + "\"warnings\": " + newValue + "}" + "}");
 		JsonNode result = ConfigUtils.mergeConfigs(configData, baseConfigData);
 		Assertions.assertTrue(result.has(TopLevelFields.COMPILER_OPTIONS));
 		JsonNode compilerOptions = result.get(TopLevelFields.COMPILER_OPTIONS);
@@ -104,20 +76,13 @@ class ConfigUtilsCompilerOptionsTests
 		boolean resultValue = compilerOptions.get(CompilerOptions.WARNINGS).asBoolean();
 		Assertions.assertEquals(newValue, resultValue);
 	}
-	
+
 	@Test
-	void testWarningsWithoutBaseCompilerOptions() throws IOException
-	{
+	void testWarningsWithoutBaseCompilerOptions() throws IOException {
 		boolean newValue = true;
 		ObjectMapper mapper = new ObjectMapper();
 		JsonNode baseConfigData = mapper.readTree("{}");
-		JsonNode configData = mapper.readTree(
-			"{" +
-				"\"compilerOptions\": {" +
-					"\"warnings\": " + newValue +
-				"}" +
-			"}"
-		);
+		JsonNode configData = mapper.readTree("{" + "\"compilerOptions\": {" + "\"warnings\": " + newValue + "}" + "}");
 		JsonNode result = ConfigUtils.mergeConfigs(configData, baseConfigData);
 		Assertions.assertTrue(result.has(TopLevelFields.COMPILER_OPTIONS));
 		JsonNode compilerOptions = result.get(TopLevelFields.COMPILER_OPTIONS);
@@ -126,27 +91,15 @@ class ConfigUtilsCompilerOptionsTests
 		boolean resultValue = compilerOptions.get(CompilerOptions.WARNINGS).asBoolean();
 		Assertions.assertEquals(newValue, resultValue);
 	}
-	
+
 	@Test
-	void testWarningsMerge() throws IOException
-	{
+	void testWarningsMerge() throws IOException {
 		boolean baseValue = false;
 		boolean newValue = true;
 		ObjectMapper mapper = new ObjectMapper();
-		JsonNode baseConfigData = mapper.readTree(
-			"{" +
-				"\"compilerOptions\": {" +
-					"\"warnings\": " + baseValue +
-				"}" +
-			"}"
-		);
-		JsonNode configData = mapper.readTree(
-			"{" +
-				"\"compilerOptions\": {" +
-					"\"warnings\": " + newValue +
-				"}" +
-			"}"
-		);
+		JsonNode baseConfigData = mapper
+				.readTree("{" + "\"compilerOptions\": {" + "\"warnings\": " + baseValue + "}" + "}");
+		JsonNode configData = mapper.readTree("{" + "\"compilerOptions\": {" + "\"warnings\": " + newValue + "}" + "}");
 		JsonNode result = ConfigUtils.mergeConfigs(configData, baseConfigData);
 		Assertions.assertTrue(result.has(TopLevelFields.COMPILER_OPTIONS));
 		JsonNode compilerOptions = result.get(TopLevelFields.COMPILER_OPTIONS);
@@ -159,24 +112,14 @@ class ConfigUtilsCompilerOptionsTests
 	//--- source-path
 	//since this compiler option supports appending --source-path+=src
 	//the array is merged
-	
+
 	@Test
-	void testSourcePathWithBaseOnly() throws IOException
-	{
+	void testSourcePathWithBaseOnly() throws IOException {
 		String baseValue = "./base/src";
 		ObjectMapper mapper = new ObjectMapper();
-		JsonNode baseConfigData = mapper.readTree(
-			"{" +
-				"\"compilerOptions\": {" +
-					"\"source-path\": [\"" + baseValue + "\"]" +
-				"}" +
-			"}"
-		);
-		JsonNode configData = mapper.readTree(
-			"{" + 
-				"\"compilerOptions\": {}" +
-			"}"
-		);
+		JsonNode baseConfigData = mapper
+				.readTree("{" + "\"compilerOptions\": {" + "\"source-path\": [\"" + baseValue + "\"]" + "}" + "}");
+		JsonNode configData = mapper.readTree("{" + "\"compilerOptions\": {}" + "}");
 		JsonNode result = ConfigUtils.mergeConfigs(configData, baseConfigData);
 		Assertions.assertTrue(result.has(TopLevelFields.COMPILER_OPTIONS));
 		JsonNode compilerOptions = result.get(TopLevelFields.COMPILER_OPTIONS);
@@ -190,26 +133,14 @@ class ConfigUtilsCompilerOptionsTests
 		Assertions.assertEquals(baseValue, resultValue0);
 		Assertions.assertFalse(elements.hasNext());
 	}
-	
+
 	@Test
-	void testSourcePathWithBaseAndEmptyArray() throws IOException
-	{
+	void testSourcePathWithBaseAndEmptyArray() throws IOException {
 		String baseValue = "./base/src";
 		ObjectMapper mapper = new ObjectMapper();
-		JsonNode baseConfigData = mapper.readTree(
-			"{" +
-				"\"compilerOptions\": {" +
-					"\"source-path\": [\"" + baseValue + "\"]" +
-				"}" +
-			"}"
-		);
-		JsonNode configData = mapper.readTree(
-			"{" +
-				"\"compilerOptions\": {" +
-					"\"source-path\": []" +
-				"}" +
-			"}"
-		);
+		JsonNode baseConfigData = mapper
+				.readTree("{" + "\"compilerOptions\": {" + "\"source-path\": [\"" + baseValue + "\"]" + "}" + "}");
+		JsonNode configData = mapper.readTree("{" + "\"compilerOptions\": {" + "\"source-path\": []" + "}" + "}");
 		JsonNode result = ConfigUtils.mergeConfigs(configData, baseConfigData);
 		Assertions.assertTrue(result.has(TopLevelFields.COMPILER_OPTIONS));
 		JsonNode compilerOptions = result.get(TopLevelFields.COMPILER_OPTIONS);
@@ -223,24 +154,14 @@ class ConfigUtilsCompilerOptionsTests
 		Assertions.assertEquals(baseValue, resultValue0);
 		Assertions.assertFalse(elements.hasNext());
 	}
-	
+
 	@Test
-	void testSourcePathWithoutBase() throws IOException
-	{
+	void testSourcePathWithoutBase() throws IOException {
 		String newValue = "./new/src";
 		ObjectMapper mapper = new ObjectMapper();
-		JsonNode baseConfigData = mapper.readTree(
-			"{" +
-				"\"compilerOptions\": {}" +
-			"}"
-		);
-		JsonNode configData = mapper.readTree(
-			"{" + 
-				"\"compilerOptions\": {" +
-					"\"source-path\": [\"" + newValue + "\"]" +
-				"}" +
-			"}"
-		);
+		JsonNode baseConfigData = mapper.readTree("{" + "\"compilerOptions\": {}" + "}");
+		JsonNode configData = mapper
+				.readTree("{" + "\"compilerOptions\": {" + "\"source-path\": [\"" + newValue + "\"]" + "}" + "}");
 		JsonNode result = ConfigUtils.mergeConfigs(configData, baseConfigData);
 		Assertions.assertTrue(result.has(TopLevelFields.COMPILER_OPTIONS));
 		JsonNode compilerOptions = result.get(TopLevelFields.COMPILER_OPTIONS);
@@ -254,26 +175,14 @@ class ConfigUtilsCompilerOptionsTests
 		Assertions.assertEquals(newValue, resultValue0);
 		Assertions.assertFalse(elements.hasNext());
 	}
-	
+
 	@Test
-	void testSourcePathWithEmptyBaseArray() throws IOException
-	{
+	void testSourcePathWithEmptyBaseArray() throws IOException {
 		String newValue = "./new/src";
 		ObjectMapper mapper = new ObjectMapper();
-		JsonNode baseConfigData = mapper.readTree(
-			"{" +
-				"\"compilerOptions\": {" +
-					"\"source-path\": []" +
-				"}" +
-			"}"
-		);
-		JsonNode configData = mapper.readTree(
-			"{" + 
-				"\"compilerOptions\": {" +
-					"\"source-path\": [\"" + newValue + "\"]" +
-				"}" +
-			"}"
-		);
+		JsonNode baseConfigData = mapper.readTree("{" + "\"compilerOptions\": {" + "\"source-path\": []" + "}" + "}");
+		JsonNode configData = mapper
+				.readTree("{" + "\"compilerOptions\": {" + "\"source-path\": [\"" + newValue + "\"]" + "}" + "}");
 		JsonNode result = ConfigUtils.mergeConfigs(configData, baseConfigData);
 		Assertions.assertTrue(result.has(TopLevelFields.COMPILER_OPTIONS));
 		JsonNode compilerOptions = result.get(TopLevelFields.COMPILER_OPTIONS);
@@ -287,27 +196,16 @@ class ConfigUtilsCompilerOptionsTests
 		Assertions.assertEquals(newValue, resultValue0);
 		Assertions.assertFalse(elements.hasNext());
 	}
-	
+
 	@Test
-	void testSourcePathMerge() throws IOException
-	{
+	void testSourcePathMerge() throws IOException {
 		String baseValue = "./base/src";
 		String newValue = "./new/src";
 		ObjectMapper mapper = new ObjectMapper();
-		JsonNode baseConfigData = mapper.readTree(
-			"{" +
-				"\"compilerOptions\": {" +
-					"\"source-path\": [\"" + baseValue + "\"]" +
-				"}" +
-			"}"
-		);
-		JsonNode configData = mapper.readTree(
-			"{" + 
-				"\"compilerOptions\": {" +
-					"\"source-path\": [\"" + newValue + "\"]" +
-				"}" +
-			"}"
-		);
+		JsonNode baseConfigData = mapper
+				.readTree("{" + "\"compilerOptions\": {" + "\"source-path\": [\"" + baseValue + "\"]" + "}" + "}");
+		JsonNode configData = mapper
+				.readTree("{" + "\"compilerOptions\": {" + "\"source-path\": [\"" + newValue + "\"]" + "}" + "}");
 		JsonNode result = ConfigUtils.mergeConfigs(configData, baseConfigData);
 		Assertions.assertTrue(result.has(TopLevelFields.COMPILER_OPTIONS));
 		JsonNode compilerOptions = result.get(TopLevelFields.COMPILER_OPTIONS);
@@ -324,26 +222,15 @@ class ConfigUtilsCompilerOptionsTests
 		Assertions.assertEquals(newValue, resultValue1);
 		Assertions.assertFalse(elements.hasNext());
 	}
-	
+
 	@Test
-	void testSourcePathMergeDuplicates() throws IOException
-	{
+	void testSourcePathMergeDuplicates() throws IOException {
 		String duplicateValue = "./duplicate/src";
 		ObjectMapper mapper = new ObjectMapper();
-		JsonNode baseConfigData = mapper.readTree(
-			"{" +
-				"\"compilerOptions\": {" +
-					"\"source-path\": [\"" + duplicateValue + "\"]" +
-				"}" +
-			"}"
-		);
-		JsonNode configData = mapper.readTree(
-			"{" + 
-				"\"compilerOptions\": {" +
-					"\"source-path\": [\"" + duplicateValue + "\"]" +
-				"}" +
-			"}"
-		);
+		JsonNode baseConfigData = mapper
+				.readTree("{" + "\"compilerOptions\": {" + "\"source-path\": [\"" + duplicateValue + "\"]" + "}" + "}");
+		JsonNode configData = mapper
+				.readTree("{" + "\"compilerOptions\": {" + "\"source-path\": [\"" + duplicateValue + "\"]" + "}" + "}");
 		JsonNode result = ConfigUtils.mergeConfigs(configData, baseConfigData);
 		Assertions.assertTrue(result.has(TopLevelFields.COMPILER_OPTIONS));
 		JsonNode compilerOptions = result.get(TopLevelFields.COMPILER_OPTIONS);
@@ -361,30 +248,15 @@ class ConfigUtilsCompilerOptionsTests
 	//--- define
 	//this compiler option is an array of objects, and a specific key in the
 	//object should not be duplicated
-	
+
 	@Test
-	void testDefineWithBaseOnly() throws IOException
-	{
+	void testDefineWithBaseOnly() throws IOException {
 		String baseName = "CONFIG::BASE";
 		boolean baseValue = false;
 		ObjectMapper mapper = new ObjectMapper();
-		JsonNode baseConfigData = mapper.readTree(
-			"{" +
-				"\"compilerOptions\": {" +
-					"\"define\": [" +
-						"{" +
-							"\"name\": \"" + baseName + "\"," + 
-							"\"value\": \"" + baseValue + "\"" + 
-						"}" +
-					"]" +
-				"}" +
-			"}"
-		);
-		JsonNode configData = mapper.readTree(
-			"{" + 
-				"\"compilerOptions\": {}" +
-			"}"
-		);
+		JsonNode baseConfigData = mapper.readTree("{" + "\"compilerOptions\": {" + "\"define\": [" + "{"
+				+ "\"name\": \"" + baseName + "\"," + "\"value\": \"" + baseValue + "\"" + "}" + "]" + "}" + "}");
+		JsonNode configData = mapper.readTree("{" + "\"compilerOptions\": {}" + "}");
 		JsonNode result = ConfigUtils.mergeConfigs(configData, baseConfigData);
 		Assertions.assertTrue(result.has(TopLevelFields.COMPILER_OPTIONS));
 		JsonNode compilerOptions = result.get(TopLevelFields.COMPILER_OPTIONS);
@@ -403,30 +275,15 @@ class ConfigUtilsCompilerOptionsTests
 		Assertions.assertEquals(baseValue, result0Value);
 		Assertions.assertFalse(elements.hasNext());
 	}
-	
+
 	@Test
-	void testDefineWithoutBase() throws IOException
-	{
+	void testDefineWithoutBase() throws IOException {
 		String newName = "CONFIG::NEW";
 		boolean newValue = true;
 		ObjectMapper mapper = new ObjectMapper();
-		JsonNode baseConfigData = mapper.readTree(
-			"{" +
-				"\"compilerOptions\": {}" +
-			"}"
-		);
-		JsonNode configData = mapper.readTree(
-			"{" + 
-				"\"compilerOptions\": {" +
-					"\"define\": [" +
-						"{" +
-							"\"name\": \"" + newName + "\"," + 
-							"\"value\": \"" + newValue + "\"" + 
-						"}" +
-					"]" +
-				"}" +
-			"}"
-		);
+		JsonNode baseConfigData = mapper.readTree("{" + "\"compilerOptions\": {}" + "}");
+		JsonNode configData = mapper.readTree("{" + "\"compilerOptions\": {" + "\"define\": [" + "{" + "\"name\": \""
+				+ newName + "\"," + "\"value\": \"" + newValue + "\"" + "}" + "]" + "}" + "}");
 		JsonNode result = ConfigUtils.mergeConfigs(configData, baseConfigData);
 		Assertions.assertTrue(result.has(TopLevelFields.COMPILER_OPTIONS));
 		JsonNode compilerOptions = result.get(TopLevelFields.COMPILER_OPTIONS);
@@ -445,39 +302,18 @@ class ConfigUtilsCompilerOptionsTests
 		Assertions.assertEquals(newValue, result0Value);
 		Assertions.assertFalse(elements.hasNext());
 	}
-	
+
 	@Test
-	void testDefineMerge() throws IOException
-	{
+	void testDefineMerge() throws IOException {
 		String baseName = "CONFIG::BASE";
 		boolean baseValue = false;
 		String newName = "CONFIG::NEW";
 		boolean newValue = true;
 		ObjectMapper mapper = new ObjectMapper();
-		JsonNode baseConfigData = mapper.readTree(
-			"{" +
-				"\"compilerOptions\": {" +
-					"\"define\": [" +
-						"{" +
-							"\"name\": \"" + baseName + "\"," + 
-							"\"value\": \"" + baseValue + "\"" + 
-						"}" +
-					"]" +
-				"}" +
-			"}"
-		);
-		JsonNode configData = mapper.readTree(
-			"{" + 
-				"\"compilerOptions\": {" +
-					"\"define\": [" +
-						"{" +
-							"\"name\": \"" + newName + "\"," + 
-							"\"value\": \"" + newValue + "\"" + 
-						"}" +
-					"]" +
-				"}" +
-			"}"
-		);
+		JsonNode baseConfigData = mapper.readTree("{" + "\"compilerOptions\": {" + "\"define\": [" + "{"
+				+ "\"name\": \"" + baseName + "\"," + "\"value\": \"" + baseValue + "\"" + "}" + "]" + "}" + "}");
+		JsonNode configData = mapper.readTree("{" + "\"compilerOptions\": {" + "\"define\": [" + "{" + "\"name\": \""
+				+ newName + "\"," + "\"value\": \"" + newValue + "\"" + "}" + "]" + "}" + "}");
 		JsonNode result = ConfigUtils.mergeConfigs(configData, baseConfigData);
 		Assertions.assertTrue(result.has(TopLevelFields.COMPILER_OPTIONS));
 		JsonNode compilerOptions = result.get(TopLevelFields.COMPILER_OPTIONS);
@@ -504,38 +340,17 @@ class ConfigUtilsCompilerOptionsTests
 		Assertions.assertEquals(newValue, result1Value);
 		Assertions.assertFalse(elements.hasNext());
 	}
-	
+
 	@Test
-	void testDefineMergeDuplicate() throws IOException
-	{
+	void testDefineMergeDuplicate() throws IOException {
 		String duplicateName = "CONFIG::DUPLICATE";
 		boolean baseValue = false;
 		boolean newValue = true;
 		ObjectMapper mapper = new ObjectMapper();
-		JsonNode baseConfigData = mapper.readTree(
-			"{" +
-				"\"compilerOptions\": {" +
-					"\"define\": [" +
-						"{" +
-							"\"name\": \"" + duplicateName + "\"," + 
-							"\"value\": \"" + baseValue + "\"" + 
-						"}" +
-					"]" +
-				"}" +
-			"}"
-		);
-		JsonNode configData = mapper.readTree(
-			"{" + 
-				"\"compilerOptions\": {" +
-					"\"define\": [" +
-						"{" +
-							"\"name\": \"" + duplicateName + "\"," + 
-							"\"value\": \"" + newValue + "\"" + 
-						"}" +
-					"]" +
-				"}" +
-			"}"
-		);
+		JsonNode baseConfigData = mapper.readTree("{" + "\"compilerOptions\": {" + "\"define\": [" + "{"
+				+ "\"name\": \"" + duplicateName + "\"," + "\"value\": \"" + baseValue + "\"" + "}" + "]" + "}" + "}");
+		JsonNode configData = mapper.readTree("{" + "\"compilerOptions\": {" + "\"define\": [" + "{" + "\"name\": \""
+				+ duplicateName + "\"," + "\"value\": \"" + newValue + "\"" + "}" + "]" + "}" + "}");
 		JsonNode result = ConfigUtils.mergeConfigs(configData, baseConfigData);
 		Assertions.assertTrue(result.has(TopLevelFields.COMPILER_OPTIONS));
 		JsonNode compilerOptions = result.get(TopLevelFields.COMPILER_OPTIONS);

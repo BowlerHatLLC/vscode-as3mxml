@@ -18,26 +18,21 @@ package com.as3mxml.vscode.utils;
 import org.apache.royale.compiler.problems.FontEmbeddingNotSupported;
 import org.apache.royale.compiler.problems.ICompilerProblem;
 
-public class CompilerProblemFilter
-{
-	public CompilerProblemFilter()
-	{
+public class CompilerProblemFilter {
+	public CompilerProblemFilter() {
 	}
 
 	public boolean royaleProblems = true;
 
-	public boolean isAllowed(ICompilerProblem problem)
-	{
-        if (!royaleProblems)
-        {
-            //the following errors get special treatment if the framework SDK's
-            //compiler isn't Falcon
+	public boolean isAllowed(ICompilerProblem problem) {
+		if (!royaleProblems) {
+			//the following errors get special treatment if the framework SDK's
+			//compiler isn't Falcon
 
-            if (problem.getClass().equals(FontEmbeddingNotSupported.class))
-            {
-                //ignore this error because the framework SDK can embed fonts
-                return false;
-            }
+			if (problem.getClass().equals(FontEmbeddingNotSupported.class)) {
+				//ignore this error because the framework SDK can embed fonts
+				return false;
+			}
 		}
 		return true;
 	}

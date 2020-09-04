@@ -26,61 +26,41 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-class ConfigUtilsTopLevelTests
-{
+class ConfigUtilsTopLevelTests {
 	//--- copySourcePathAssets
 	//copySourcePathAssets is a normal field that is not a special case
-	
+
 	@Test
-	void testCopySourcePathAssetsWithBaseOnly() throws IOException
-	{
+	void testCopySourcePathAssetsWithBaseOnly() throws IOException {
 		boolean baseValue = false;
 		ObjectMapper mapper = new ObjectMapper();
-		JsonNode baseConfigData = mapper.readTree(
-			"{" +
-				"\"copySourcePathAssets\": " + baseValue +
-			"}"
-		);
+		JsonNode baseConfigData = mapper.readTree("{" + "\"copySourcePathAssets\": " + baseValue + "}");
 		JsonNode configData = mapper.readTree("{}");
 		JsonNode result = ConfigUtils.mergeConfigs(configData, baseConfigData);
 		Assertions.assertTrue(result.has(TopLevelFields.COPY_SOURCE_PATH_ASSETS));
 		boolean resultValue = result.get(TopLevelFields.COPY_SOURCE_PATH_ASSETS).asBoolean();
 		Assertions.assertEquals(baseValue, resultValue);
 	}
-	
+
 	@Test
-	void testCopySourcePathAssetsWithoutBase() throws IOException
-	{
+	void testCopySourcePathAssetsWithoutBase() throws IOException {
 		boolean newValue = true;
 		ObjectMapper mapper = new ObjectMapper();
 		JsonNode baseConfigData = mapper.readTree("{}");
-		JsonNode configData = mapper.readTree(
-			"{" +
-				"\"copySourcePathAssets\": " + newValue +
-			"}"
-		);
+		JsonNode configData = mapper.readTree("{" + "\"copySourcePathAssets\": " + newValue + "}");
 		JsonNode result = ConfigUtils.mergeConfigs(configData, baseConfigData);
 		Assertions.assertTrue(result.has(TopLevelFields.COPY_SOURCE_PATH_ASSETS));
 		boolean resultValue = result.get(TopLevelFields.COPY_SOURCE_PATH_ASSETS).asBoolean();
 		Assertions.assertEquals(newValue, resultValue);
 	}
-	
+
 	@Test
-	void testCopySourcePathAssetsMerge() throws IOException
-	{
+	void testCopySourcePathAssetsMerge() throws IOException {
 		boolean baseValue = false;
 		boolean newValue = true;
 		ObjectMapper mapper = new ObjectMapper();
-		JsonNode baseConfigData = mapper.readTree(
-			"{" +
-				"\"copySourcePathAssets\": " + baseValue +
-			"}"
-		);
-		JsonNode configData = mapper.readTree(
-			"{" +
-				"\"copySourcePathAssets\": " + newValue +
-			"}"
-		);
+		JsonNode baseConfigData = mapper.readTree("{" + "\"copySourcePathAssets\": " + baseValue + "}");
+		JsonNode configData = mapper.readTree("{" + "\"copySourcePathAssets\": " + newValue + "}");
 		JsonNode result = ConfigUtils.mergeConfigs(configData, baseConfigData);
 		Assertions.assertTrue(result.has(TopLevelFields.COPY_SOURCE_PATH_ASSETS));
 		boolean resultValue = result.get(TopLevelFields.COPY_SOURCE_PATH_ASSETS).asBoolean();
@@ -94,17 +74,12 @@ class ConfigUtilsTopLevelTests
 
 	//the files array is not merged because the order elements in the array must
 	//be preserved, unlike other arrays which can be handled more leniently
-	
+
 	@Test
-	void testFilesWithBaseOnly() throws IOException
-	{
+	void testFilesWithBaseOnly() throws IOException {
 		String baseValue = "src/Base.as";
 		ObjectMapper mapper = new ObjectMapper();
-		JsonNode baseConfigData = mapper.readTree(
-			"{" +
-				"\"files\": [\"" + baseValue + "\"]" +
-			"}"
-		);
+		JsonNode baseConfigData = mapper.readTree("{" + "\"files\": [\"" + baseValue + "\"]" + "}");
 		JsonNode configData = mapper.readTree("{}");
 		JsonNode result = ConfigUtils.mergeConfigs(configData, baseConfigData);
 		Assertions.assertTrue(result.has(TopLevelFields.FILES));
@@ -116,18 +91,13 @@ class ConfigUtilsTopLevelTests
 		Assertions.assertEquals(baseValue, resultValue0);
 		Assertions.assertFalse(elements.hasNext());
 	}
-	
+
 	@Test
-	void testFilesWithoutBase() throws IOException
-	{
+	void testFilesWithoutBase() throws IOException {
 		String newValue = "src/New.as";
 		ObjectMapper mapper = new ObjectMapper();
 		JsonNode baseConfigData = mapper.readTree("{}");
-		JsonNode configData = mapper.readTree(
-			"{" +
-				"\"files\": [\"" + newValue + "\"]" +
-			"}"
-		);
+		JsonNode configData = mapper.readTree("{" + "\"files\": [\"" + newValue + "\"]" + "}");
 		JsonNode result = ConfigUtils.mergeConfigs(configData, baseConfigData);
 		Assertions.assertTrue(result.has(TopLevelFields.FILES));
 		JsonNode resultValue = result.get(TopLevelFields.FILES);
@@ -138,23 +108,14 @@ class ConfigUtilsTopLevelTests
 		Assertions.assertEquals(newValue, resultValue0);
 		Assertions.assertFalse(elements.hasNext());
 	}
-	
+
 	@Test
-	void testFilesMerge() throws IOException
-	{
+	void testFilesMerge() throws IOException {
 		String baseValue = "src/Base.as";
 		String newValue = "src/New.as";
 		ObjectMapper mapper = new ObjectMapper();
-		JsonNode baseConfigData = mapper.readTree(
-			"{" +
-				"\"files\": [\"" + baseValue + "\"]" +
-			"}"
-		);
-		JsonNode configData = mapper.readTree(
-			"{" +
-				"\"files\": [\"" + newValue + "\"]" +
-			"}"
-		);
+		JsonNode baseConfigData = mapper.readTree("{" + "\"files\": [\"" + baseValue + "\"]" + "}");
+		JsonNode configData = mapper.readTree("{" + "\"files\": [\"" + newValue + "\"]" + "}");
 		JsonNode result = ConfigUtils.mergeConfigs(configData, baseConfigData);
 		Assertions.assertTrue(result.has(TopLevelFields.FILES));
 		JsonNode resultValue = result.get(TopLevelFields.FILES);
@@ -170,77 +131,51 @@ class ConfigUtilsTopLevelTests
 
 	//application can be a string or an object, and it has special rules for
 	//merging
-	
+
 	@Test
-	void testApplicationStringWithBaseOnly() throws IOException
-	{
+	void testApplicationStringWithBaseOnly() throws IOException {
 		String baseValue = "src/Base-app.xml";
 		ObjectMapper mapper = new ObjectMapper();
-		JsonNode baseConfigData = mapper.readTree(
-			"{" +
-				"\"application\": \"" + baseValue + "\"" +
-			"}"
-		);
+		JsonNode baseConfigData = mapper.readTree("{" + "\"application\": \"" + baseValue + "\"" + "}");
 		JsonNode configData = mapper.readTree("{}");
 		JsonNode result = ConfigUtils.mergeConfigs(configData, baseConfigData);
 		Assertions.assertTrue(result.has(TopLevelFields.APPLICATION));
 		String resultValue = result.get(TopLevelFields.APPLICATION).asText();
 		Assertions.assertEquals(baseValue, resultValue);
 	}
-	
+
 	@Test
-	void testApplicationStringWithoutBase() throws IOException
-	{
+	void testApplicationStringWithoutBase() throws IOException {
 		String newValue = "src/New-app.xml";
 		ObjectMapper mapper = new ObjectMapper();
 		JsonNode baseConfigData = mapper.readTree("{}");
-		JsonNode configData = mapper.readTree(
-			"{" +
-				"\"application\": \"" + newValue + "\"" +
-			"}"
-		);
+		JsonNode configData = mapper.readTree("{" + "\"application\": \"" + newValue + "\"" + "}");
 		JsonNode result = ConfigUtils.mergeConfigs(configData, baseConfigData);
 		Assertions.assertTrue(result.has(TopLevelFields.APPLICATION));
 		String resultValue = result.get(TopLevelFields.APPLICATION).asText();
 		Assertions.assertEquals(newValue, resultValue);
 	}
-	
+
 	@Test
-	void testApplicationStringMerge() throws IOException
-	{
+	void testApplicationStringMerge() throws IOException {
 		String baseValue = "src/Base-app.xml";
 		String newValue = "src/New-app.xml";
 		ObjectMapper mapper = new ObjectMapper();
-		JsonNode baseConfigData = mapper.readTree(
-			"{" +
-				"\"application\": \"" + baseValue + "\"" +
-			"}"
-		);
-		JsonNode configData = mapper.readTree(
-			"{" +
-				"\"application\": \"" + newValue + "\"" +
-			"}"
-		);
+		JsonNode baseConfigData = mapper.readTree("{" + "\"application\": \"" + baseValue + "\"" + "}");
+		JsonNode configData = mapper.readTree("{" + "\"application\": \"" + newValue + "\"" + "}");
 		JsonNode result = ConfigUtils.mergeConfigs(configData, baseConfigData);
 		Assertions.assertTrue(result.has(TopLevelFields.APPLICATION));
 		String resultValue = result.get(TopLevelFields.APPLICATION).asText();
 		Assertions.assertEquals(newValue, resultValue);
 	}
-	
+
 	@Test
-	void testApplicationObjectWithBaseOnly() throws IOException
-	{
+	void testApplicationObjectWithBaseOnly() throws IOException {
 		String baseValue0 = "src/BaseIOS-app.xml";
 		String baseValue1 = "src/BaseAndroid-app.xml";
 		ObjectMapper mapper = new ObjectMapper();
-		JsonNode baseConfigData = mapper.readTree(
-			"{" +
-				"\"application\": {" +
-					"\"ios\": \"" + baseValue0 + "\"," +
-					"\"android\": \"" + baseValue1 + "\"" +
-				"}" +
-			"}"
-		);
+		JsonNode baseConfigData = mapper.readTree("{" + "\"application\": {" + "\"ios\": \"" + baseValue0 + "\","
+				+ "\"android\": \"" + baseValue1 + "\"" + "}" + "}");
 		JsonNode configData = mapper.readTree("{}");
 		JsonNode result = ConfigUtils.mergeConfigs(configData, baseConfigData);
 		Assertions.assertTrue(result.has(TopLevelFields.APPLICATION));
@@ -253,22 +188,15 @@ class ConfigUtilsTopLevelTests
 		String resultValue1 = resultValue.get(AIRPlatform.ANDROID).asText();
 		Assertions.assertEquals(resultValue1, baseValue1);
 	}
-	
+
 	@Test
-	void testApplicationObjectWithoutBase() throws IOException
-	{
+	void testApplicationObjectWithoutBase() throws IOException {
 		String newValue0 = "src/NewIOS-app.xml";
 		String newValue1 = "src/NewAndroid-app.xml";
 		ObjectMapper mapper = new ObjectMapper();
 		JsonNode baseConfigData = mapper.readTree("{}");
-		JsonNode configData = mapper.readTree(
-			"{" +
-				"\"application\": {" +
-					"\"ios\": \"" + newValue0 + "\"," +
-					"\"android\": \"" + newValue1 + "\"" +
-				"}" +
-			"}"
-		);
+		JsonNode configData = mapper.readTree("{" + "\"application\": {" + "\"ios\": \"" + newValue0 + "\","
+				+ "\"android\": \"" + newValue1 + "\"" + "}" + "}");
 		JsonNode result = ConfigUtils.mergeConfigs(configData, baseConfigData);
 		Assertions.assertTrue(result.has(TopLevelFields.APPLICATION));
 		JsonNode resultValue = result.get(TopLevelFields.APPLICATION);
@@ -280,10 +208,9 @@ class ConfigUtilsTopLevelTests
 		String resultValue1 = resultValue.get(AIRPlatform.ANDROID).asText();
 		Assertions.assertEquals(resultValue1, newValue1);
 	}
-	
+
 	@Test
-	void testApplicationObjectMerge() throws IOException
-	{
+	void testApplicationObjectMerge() throws IOException {
 		String baseValue0 = "src/BaseIOS-app.xml";
 		String baseValue1 = "src/BaseAndroid-app.xml";
 		String baseValue2 = "src/BaseWindows-app.xml";
@@ -291,24 +218,10 @@ class ConfigUtilsTopLevelTests
 		String newValue1 = "src/NewAndroid-app.xml";
 		String newValue2 = "src/BaseMac-app.xml";
 		ObjectMapper mapper = new ObjectMapper();
-		JsonNode baseConfigData = mapper.readTree(
-			"{" +
-				"\"application\": {" +
-					"\"windows\": \"" + baseValue2 + "\"," +
-					"\"ios\": \"" + baseValue0 + "\"," +
-					"\"android\": \"" + baseValue1 + "\"" +
-				"}" +
-			"}"
-		);
-		JsonNode configData = mapper.readTree(
-			"{" +
-				"\"application\": {" +
-					"\"mac\": \"" + newValue2 + "\"," +
-					"\"ios\": \"" + newValue0 + "\"," +
-					"\"android\": \"" + newValue1 + "\"" +
-				"}" +
-			"}"
-		);
+		JsonNode baseConfigData = mapper.readTree("{" + "\"application\": {" + "\"windows\": \"" + baseValue2 + "\","
+				+ "\"ios\": \"" + baseValue0 + "\"," + "\"android\": \"" + baseValue1 + "\"" + "}" + "}");
+		JsonNode configData = mapper.readTree("{" + "\"application\": {" + "\"mac\": \"" + newValue2 + "\","
+				+ "\"ios\": \"" + newValue0 + "\"," + "\"android\": \"" + newValue1 + "\"" + "}" + "}");
 		JsonNode result = ConfigUtils.mergeConfigs(configData, baseConfigData);
 		Assertions.assertTrue(result.has(TopLevelFields.APPLICATION));
 		JsonNode resultValue = result.get(TopLevelFields.APPLICATION);
@@ -326,27 +239,16 @@ class ConfigUtilsTopLevelTests
 		String resultValue3 = resultValue.get(AIRPlatform.WINDOWS).asText();
 		Assertions.assertEquals(resultValue3, baseValue2);
 	}
-	
+
 	@Test
-	void testApplicationBaseStringNewObjectMerge() throws IOException
-	{
+	void testApplicationBaseStringNewObjectMerge() throws IOException {
 		String baseValue = "src/Base-app.xml";
 		String newValue0 = "src/NewIOS-app.xml";
 		String newValue1 = "src/NewAndroid-app.xml";
 		ObjectMapper mapper = new ObjectMapper();
-		JsonNode baseConfigData = mapper.readTree(
-			"{" +
-				"\"application\": \"" + baseValue + "\"" +
-			"}"
-		);
-		JsonNode configData = mapper.readTree(
-			"{" +
-				"\"application\": {" +
-					"\"ios\": \"" + newValue0 + "\"," +
-					"\"android\": \"" + newValue1 + "\"" +
-				"}" +
-			"}"
-		);
+		JsonNode baseConfigData = mapper.readTree("{" + "\"application\": \"" + baseValue + "\"" + "}");
+		JsonNode configData = mapper.readTree("{" + "\"application\": {" + "\"ios\": \"" + newValue0 + "\","
+				+ "\"android\": \"" + newValue1 + "\"" + "}" + "}");
 		JsonNode result = ConfigUtils.mergeConfigs(configData, baseConfigData);
 		Assertions.assertTrue(result.has(TopLevelFields.APPLICATION));
 		JsonNode resultValue = result.get(TopLevelFields.APPLICATION);
@@ -370,27 +272,16 @@ class ConfigUtilsTopLevelTests
 		String resultValue5 = resultValue.get(AIRPlatform.AIR).asText();
 		Assertions.assertEquals(resultValue5, baseValue);
 	}
-	
+
 	@Test
-	void testApplicationBaseObjectNewStringMerge() throws IOException
-	{
+	void testApplicationBaseObjectNewStringMerge() throws IOException {
 		String baseValue0 = "src/BaseIOS-app.xml";
 		String baseValue1 = "src/BaseAndroid-app.xml";
 		String newValue = "src/New-app.xml";
 		ObjectMapper mapper = new ObjectMapper();
-		JsonNode baseConfigData = mapper.readTree(
-			"{" +
-				"\"application\": {" +
-					"\"ios\": \"" + baseValue0 + "\"," +
-					"\"android\": \"" + baseValue1 + "\"" +
-				"}" +
-			"}"
-		);
-		JsonNode configData = mapper.readTree(
-			"{" +
-				"\"application\": \"" + newValue + "\"" +
-			"}"
-		);
+		JsonNode baseConfigData = mapper.readTree("{" + "\"application\": {" + "\"ios\": \"" + baseValue0 + "\","
+				+ "\"android\": \"" + baseValue1 + "\"" + "}" + "}");
+		JsonNode configData = mapper.readTree("{" + "\"application\": \"" + newValue + "\"" + "}");
 		JsonNode result = ConfigUtils.mergeConfigs(configData, baseConfigData);
 		Assertions.assertTrue(result.has(TopLevelFields.APPLICATION));
 		String resultValue = result.get(TopLevelFields.APPLICATION).asText();

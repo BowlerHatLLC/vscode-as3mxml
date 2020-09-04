@@ -24,8 +24,7 @@ import com.as3mxml.asconfigc.compiler.IASConfigCCompiler;
 
 import org.apache.commons.cli.CommandLine;
 
-public class ASConfigCOptions
-{
+public class ASConfigCOptions {
 	private static final String OPTION_PROJECT = "p"; //CommandLine uses the short name
 	private static final String OPTION_SDK = "sdk";
 	private static final String OPTION_DEBUG = "debug";
@@ -53,8 +52,8 @@ public class ASConfigCOptions
 	public List<String> jvmargs = null;
 	public boolean printConfig = false;
 
-	public ASConfigCOptions(String project, String sdk, Boolean debug, String air, String storepass, Boolean unpackageANEs, IASConfigCCompiler compiler)
-	{
+	public ASConfigCOptions(String project, String sdk, Boolean debug, String air, String storepass,
+			Boolean unpackageANEs, IASConfigCCompiler compiler) {
 		this.project = project;
 		this.sdk = sdk;
 		this.debug = debug;
@@ -63,68 +62,53 @@ public class ASConfigCOptions
 		this.compiler = compiler;
 	}
 
-	public ASConfigCOptions(CommandLine line)
-	{
-		if(line.hasOption(OPTION_PROJECT))
-		{
+	public ASConfigCOptions(CommandLine line) {
+		if (line.hasOption(OPTION_PROJECT)) {
 			project = line.getOptionValue(OPTION_PROJECT, null);
 		}
-		if(line.hasOption(OPTION_SDK))
-		{
+		if (line.hasOption(OPTION_SDK)) {
 			sdk = line.getOptionValue(OPTION_SDK, null);
 		}
-		if(line.hasOption(OPTION_DEBUG))
-		{
+		if (line.hasOption(OPTION_DEBUG)) {
 			String debugString = line.getOptionValue(OPTION_DEBUG, Boolean.TRUE.toString());
 			debug = debugString.equals(Boolean.TRUE.toString());
 		}
-		if(line.hasOption(OPTION_AIR))
-		{
+		if (line.hasOption(OPTION_AIR)) {
 			air = line.getOptionValue(OPTION_AIR, "air");
 		}
-		if(line.hasOption(OPTION_STOREPASS))
-		{
+		if (line.hasOption(OPTION_STOREPASS)) {
 			storepass = line.getOptionValue(OPTION_STOREPASS, null);
 		}
-		if(line.hasOption(OPTION_UNPACKAGE_ANES))
-		{
+		if (line.hasOption(OPTION_UNPACKAGE_ANES)) {
 			String unpackageString = line.getOptionValue(OPTION_UNPACKAGE_ANES, Boolean.TRUE.toString());
 			unpackageANEs = unpackageString.equals(Boolean.TRUE.toString());
 		}
-		if(line.hasOption(OPTION_CLEAN))
-		{
+		if (line.hasOption(OPTION_CLEAN)) {
 			String cleanString = line.getOptionValue(OPTION_CLEAN, Boolean.TRUE.toString());
 			clean = cleanString.equals(Boolean.TRUE.toString());
 		}
-		if(line.hasOption(OPTION_ANIMATE))
-		{
+		if (line.hasOption(OPTION_ANIMATE)) {
 			animate = line.getOptionValue(OPTION_ANIMATE, null);
 		}
-		if(line.hasOption(OPTION_PUBLISH_ANIMATE))
-		{
+		if (line.hasOption(OPTION_PUBLISH_ANIMATE)) {
 			String publishString = line.getOptionValue(OPTION_PUBLISH_ANIMATE, Boolean.TRUE.toString());
 			publishAnimate = publishString.equals(Boolean.TRUE.toString());
 		}
-		if(line.hasOption(OPTION_VERBOSE))
-		{
+		if (line.hasOption(OPTION_VERBOSE)) {
 			String verboseString = line.getOptionValue(OPTION_VERBOSE, Boolean.FALSE.toString());
 			verbose = verboseString.equals(Boolean.TRUE.toString());
 		}
-		if(line.hasOption(OPTION_JVMARGS))
-		{
+		if (line.hasOption(OPTION_JVMARGS)) {
 			String argsString = line.getOptionValue(OPTION_JVMARGS, null);
-			if(argsString != null)
-			{
-				if(argsString.startsWith("\"") && argsString.endsWith("\""))
-				{
+			if (argsString != null) {
+				if (argsString.startsWith("\"") && argsString.endsWith("\"")) {
 					argsString = argsString.substring(1, argsString.length() - 1);
 				}
 				String[] argsArray = argsString.split(" ");
 				jvmargs = Arrays.stream(argsArray).collect(Collectors.toList());
 			}
 		}
-		if(line.hasOption(OPTION_PRINT_CONFIG))
-		{
+		if (line.hasOption(OPTION_PRINT_CONFIG)) {
 			String printConfigString = line.getOptionValue(OPTION_PRINT_CONFIG, Boolean.FALSE.toString());
 			printConfig = printConfigString.equals(Boolean.TRUE.toString());
 		}

@@ -19,25 +19,20 @@ package com.as3mxml.vscode;
  * Checks that the Java version is capable of running the AS3 & MXML language
  * server.
  */
-public class CheckJavaVersion
-{
+public class CheckJavaVersion {
     public static final int GOOD_VERSION = 0;
     public static final int BAD_VERSION = 100;
 
-    public static void main(String[] args)
-    {
+    public static void main(String[] args) {
         String version = System.getProperty("java.specification.version");
         String[] versionParts = version.split("-")[0].split("\\.");
         int major = Integer.parseInt(versionParts[0]);
-        if (major > 1)
-        {
+        if (major > 1) {
             System.exit(GOOD_VERSION);
         }
-        if (versionParts.length > 1)
-        {
+        if (versionParts.length > 1) {
             int minor = Integer.parseInt(versionParts[1]);
-            if (major == 1 && minor >= 8)
-            {
+            if (major == 1 && minor >= 8) {
                 System.exit(GOOD_VERSION);
             }
         }

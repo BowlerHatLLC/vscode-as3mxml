@@ -24,19 +24,15 @@ import org.apache.royale.compiler.internal.projects.RoyaleProject;
 import org.apache.royale.compiler.internal.workspaces.Workspace;
 import org.apache.royale.compiler.units.ICompilationUnit;
 
-public class LspProject extends RoyaleProject implements ILspProject
-{  
-	public LspProject(Workspace workspace)
-	{
+public class LspProject extends RoyaleProject implements ILspProject {
+	public LspProject(Workspace workspace) {
 		super(workspace);
 	}
 
-	public Set<String> getQNamesOfDependencies(ICompilationUnit from)
-	{
+	public Set<String> getQNamesOfDependencies(ICompilationUnit from) {
 		Set<String> result = new HashSet<>();
 		Set<ICompilationUnit> directDeps = getDirectDependencies(from);
-		for(ICompilationUnit to : directDeps)
-		{
+		for (ICompilationUnit to : directDeps) {
 			Map<String, DependencyTypeSet> depSet = dependencyGraph.getDependencySet(from, to);
 			result.addAll(depSet.keySet());
 		}

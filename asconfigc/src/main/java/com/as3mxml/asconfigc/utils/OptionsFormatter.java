@@ -17,28 +17,22 @@ package com.as3mxml.asconfigc.utils;
 
 import java.util.List;
 
-public class OptionsFormatter
-{
-	public static void setValue(String optionName, String value, List<String> result)
-	{
+public class OptionsFormatter {
+	public static void setValue(String optionName, String value, List<String> result) {
 		result.add("--" + optionName + "=" + value);
 	}
 
-	public static void setBoolean(String optionName, boolean value, List<String> result)
-	{
+	public static void setBoolean(String optionName, boolean value, List<String> result) {
 		result.add("--" + optionName + "=" + Boolean.toString(value));
 	}
 
-	public static void setPathValue(String optionName, String value, List<String> result)
-	{
+	public static void setPathValue(String optionName, String value, List<String> result) {
 		result.add("--" + optionName + "=" + value);
 	}
 
-	public static void setValues(String optionName, List<String> values, List<String> result)
-	{
+	public static void setValues(String optionName, List<String> values, List<String> result) {
 		int size = values.size();
-		if(size == 0)
-		{
+		if (size == 0) {
 			return;
 		}
 		String firstValue = values.get(0);
@@ -46,13 +40,10 @@ public class OptionsFormatter
 		appendValues(optionName, values.subList(1, size), result);
 	}
 
-	public static void setValuesWithCommas(String optionName, List<String> values, List<String> result)
-	{
+	public static void setValuesWithCommas(String optionName, List<String> values, List<String> result) {
 		StringBuilder joined = new StringBuilder();
-		for(int i = 0, size = values.size(); i < size; i++)
-		{
-			if(i > 0)
-			{
+		for (int i = 0, size = values.size(); i < size; i++) {
+			if (i > 0) {
 				joined.append(",");
 			}
 			joined.append(values.get(i));
@@ -60,42 +51,32 @@ public class OptionsFormatter
 		result.add("--" + optionName + "=" + joined.toString());
 	}
 
-	public static void appendValues(String optionName, List<String> values, List<String> result)
-	{
+	public static void appendValues(String optionName, List<String> values, List<String> result) {
 		int size = values.size();
-		if(size == 0)
-		{
+		if (size == 0) {
 			return;
 		}
-		for(int i = 0; i < size; i++)
-		{
+		for (int i = 0; i < size; i++) {
 			String currentValue = values.get(i);
 			result.add("--" + optionName + "+=" + currentValue);
 		}
 	}
 
-	public static void appendPaths(String optionName, List<String> paths, List<String> result)
-	{
+	public static void appendPaths(String optionName, List<String> paths, List<String> result) {
 		int pathsCount = paths.size();
-		for(int i = 0; i < pathsCount; i++)
-		{
+		for (int i = 0; i < pathsCount; i++) {
 			String currentPath = paths.get(i);
 			result.add("--" + optionName + "+=" + currentPath);
 		}
 	}
 
-	public static void setThenAppendPaths(String optionName, List<String> paths, List<String> result)
-	{
+	public static void setThenAppendPaths(String optionName, List<String> paths, List<String> result) {
 		int pathsCount = paths.size();
-		for(int i = 0; i < pathsCount; i++)
-		{
+		for (int i = 0; i < pathsCount; i++) {
 			String currentPath = paths.get(i);
-			if(i == 0)
-			{
+			if (i == 0) {
 				result.add("--" + optionName + "=" + currentPath);
-			}
-			else
-			{
+			} else {
 				result.add("--" + optionName + "+=" + currentPath);
 			}
 		}

@@ -15,8 +15,7 @@ limitations under the License.
 */
 package com.as3mxml.asconfigc.compiler;
 
-public class CompilerOptions
-{
+public class CompilerOptions {
 	public static final String ACCESSIBLE = "accessible";
 	public static final String ADVANCED_TELEMETRY = "advanced-telemetry";
 	public static final String BENCHMARK = "benchmark";

@@ -19,26 +19,23 @@ const OUTPUT_CHANNEL_NAME = "ActionScript & MXML: Quick Compile";
 
 let outputChannel: vscode.OutputChannel = null;
 
-export default function logCompilerShellOutput(message: string, line: boolean = true, clear: boolean = false)
-{
-	if(outputChannel === null)
-	{
-		outputChannel = vscode.window.createOutputChannel(OUTPUT_CHANNEL_NAME);
-	}
-	outputChannel.show();
-	if(clear)
-	{
-		outputChannel.clear();
-	}
-	if(message)
-	{
-		if(line)
-		{
-			outputChannel.appendLine(message);
-		}
-		else
-		{
-			outputChannel.append(message);
-		}
-	}
+export default function logCompilerShellOutput(
+  message: string,
+  line: boolean = true,
+  clear: boolean = false
+) {
+  if (outputChannel === null) {
+    outputChannel = vscode.window.createOutputChannel(OUTPUT_CHANNEL_NAME);
+  }
+  outputChannel.show();
+  if (clear) {
+    outputChannel.clear();
+  }
+  if (message) {
+    if (line) {
+      outputChannel.appendLine(message);
+    } else {
+      outputChannel.append(message);
+    }
+  }
 }

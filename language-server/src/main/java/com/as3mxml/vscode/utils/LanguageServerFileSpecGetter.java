@@ -33,13 +33,11 @@ import org.apache.royale.compiler.workspaces.IWorkspace;
  * If a file is not open, and it's simply coming from the file system, returns a
  * FileSpecification. FileSpecification reads the actual file.
  */
-public class LanguageServerFileSpecGetter implements IFileSpecificationGetter
-{
+public class LanguageServerFileSpecGetter implements IFileSpecificationGetter {
     private static final String PACKAGE_WITHOUT_BRACES = "package ";
     private static final String FILE_EXTENSION_AS = ".as";
 
-    public LanguageServerFileSpecGetter(IWorkspace workspace, FileTracker fileTracker)
-    {
+    public LanguageServerFileSpecGetter(IWorkspace workspace, FileTracker fileTracker) {
         this.workspace = workspace;
         this.fileTracker = fileTracker;
     }
@@ -47,24 +45,19 @@ public class LanguageServerFileSpecGetter implements IFileSpecificationGetter
     private FileTracker fileTracker;
     private IWorkspace workspace;
 
-    public IWorkspace getWorkspace()
-    {
+    public IWorkspace getWorkspace() {
         return workspace;
     }
 
-    public void setWorkspace(IWorkspace value)
-    {
+    public void setWorkspace(IWorkspace value) {
         workspace = value;
     }
 
-    public IFileSpecification getFileSpecification(String filePath)
-    {
+    public IFileSpecification getFileSpecification(String filePath) {
         Path path = Paths.get(filePath);
-        if (fileTracker.isOpen(path))
-        {
+        if (fileTracker.isOpen(path)) {
             String code = fileTracker.getText(path);
-            if (filePath.endsWith(FILE_EXTENSION_AS))
-            {
+            if (filePath.endsWith(FILE_EXTENSION_AS)) {
                 code = fixPackageWithoutBraces(code);
             }
             return new StringFileSpecification(filePath, code);
@@ -76,14 +69,11 @@ public class LanguageServerFileSpecGetter implements IFileSpecificationGetter
      * If the file only contains the package keyword followed by a space, the
      * compiler will return an IFileNode with no children.
      */
-    private String fixPackageWithoutBraces(String code)
-    {
-        if (code.equals(IASKeywordConstants.PACKAGE))
-        {
+    private String fixPackageWithoutBraces(String code) {
+        if (code.equals(IASKeywordConstants.PACKAGE)) {
             return code + " {}";
         }
-        if (code.equals(PACKAGE_WITHOUT_BRACES))
-        {
+        if (code.equals(PACKAGE_WITHOUT_BRACES)) {
             return code + "{}";
         }
         return code;

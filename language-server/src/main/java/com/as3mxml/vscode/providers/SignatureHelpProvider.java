@@ -53,70 +53,60 @@ import org.eclipse.lsp4j.SignatureInformation;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.jsonrpc.CancelChecker;
 
-public class SignatureHelpProvider
-{
-    private static final String FILE_EXTENSION_MXML = ".mxml";
+public class SignatureHelpProvider {
+	private static final String FILE_EXTENSION_MXML = ".mxml";
 
 	private ActionScriptProjectManager actionScriptProjectManager;
 	private FileTracker fileTracker;
 
-	public SignatureHelpProvider(ActionScriptProjectManager actionScriptProjectManager, FileTracker fileTracker)
-	{
+	public SignatureHelpProvider(ActionScriptProjectManager actionScriptProjectManager, FileTracker fileTracker) {
 		this.actionScriptProjectManager = actionScriptProjectManager;
 		this.fileTracker = fileTracker;
 	}
 
-	public SignatureHelp signatureHelp(SignatureHelpParams params, CancelChecker cancelToken)
-	{
+	public SignatureHelp signatureHelp(SignatureHelpParams params, CancelChecker cancelToken) {
 		cancelToken.checkCanceled();
 		TextDocumentIdentifier textDocument = params.getTextDocument();
 		Position position = params.getPosition();
 		Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocument.getUri());
-		if (path == null)
-		{
+		if (path == null) {
 			cancelToken.checkCanceled();
 			return new SignatureHelp(Collections.emptyList(), -1, -1);
 		}
 		ActionScriptProjectData projectData = actionScriptProjectManager.getProjectDataForSourceFile(path);
-		if(projectData == null || projectData.project == null)
-		{
+		if (projectData == null || projectData.project == null) {
 			cancelToken.checkCanceled();
 			return new SignatureHelp(Collections.emptyList(), -1, -1);
 		}
 		ILspProject project = projectData.project;
 
-        IncludeFileData includeFileData = projectData.includedFiles.get(path.toString());
-		int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position, includeFileData);
-		if (currentOffset == -1)
-		{
+		IncludeFileData includeFileData = projectData.includedFiles.get(path.toString());
+		int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position,
+				includeFileData);
+		if (currentOffset == -1) {
 			cancelToken.checkCanceled();
 			return new SignatureHelp(Collections.emptyList(), -1, -1);
 		}
 		IASNode offsetNode = null;
-        boolean isMXML = textDocument.getUri().endsWith(FILE_EXTENSION_MXML);
-        if (isMXML)
-        {
+		boolean isMXML = textDocument.getUri().endsWith(FILE_EXTENSION_MXML);
+		if (isMXML) {
 			MXMLData mxmlData = actionScriptProjectManager.getMXMLDataForPath(path, projectData);
 			IMXMLTagData offsetTag = MXMLDataUtils.getOffsetMXMLTag(mxmlData, currentOffset);
-			if (offsetTag != null)
-			{
-				offsetNode = actionScriptProjectManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path, currentOffset, projectData);
-				if (offsetNode != null)
-				{
+			if (offsetTag != null) {
+				offsetNode = actionScriptProjectManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path,
+						currentOffset, projectData);
+				if (offsetNode != null) {
 					IASNode containingNode = ASTUtils.getContainingNodeIncludingStart(offsetNode, currentOffset);
-					if (containingNode != null)
-					{
+					if (containingNode != null) {
 						offsetNode = containingNode;
 					}
 				}
 			}
 		}
-		if (offsetNode == null)
-		{
+		if (offsetNode == null) {
 			offsetNode = actionScriptProjectManager.getOffsetNode(path, currentOffset, projectData);
 		}
-		if (offsetNode == null)
-		{
+		if (offsetNode == null) {
 			cancelToken.checkCanceled();
 			//we couldn't find a node at the specified location
 			return new SignatureHelp(Collections.emptyList(), -1, -1);
@@ -124,55 +114,45 @@ public class SignatureHelpProvider
 
 		IFunctionCallNode functionCallNode = ASTUtils.getAncestorFunctionCallNode(offsetNode);
 		IFunctionDefinition functionDefinition = null;
-		if (functionCallNode != null)
-		{
+		if (functionCallNode != null) {
 			IExpressionNode nameNode = functionCallNode.getNameNode();
 			IDefinition definition = nameNode.resolve(project);
-			if (definition instanceof IFunctionDefinition)
-			{
+			if (definition instanceof IFunctionDefinition) {
 				functionDefinition = (IFunctionDefinition) definition;
-			}
-			else if (definition instanceof IClassDefinition)
-			{
+			} else if (definition instanceof IClassDefinition) {
 				IClassDefinition classDefinition = (IClassDefinition) definition;
 				functionDefinition = classDefinition.getConstructor();
-			}
-			else if (nameNode instanceof IIdentifierNode)
-			{
+			} else if (nameNode instanceof IIdentifierNode) {
 				//special case for super()
 				IIdentifierNode identifierNode = (IIdentifierNode) nameNode;
-				if (identifierNode.getName().equals(IASKeywordConstants.SUPER))
-				{
+				if (identifierNode.getName().equals(IASKeywordConstants.SUPER)) {
 					ITypeDefinition typeDefinition = nameNode.resolveType(project);
-					if (typeDefinition instanceof IClassDefinition)
-					{
+					if (typeDefinition instanceof IClassDefinition) {
 						IClassDefinition classDefinition = (IClassDefinition) typeDefinition;
 						functionDefinition = classDefinition.getConstructor();
 					}
 				}
 			}
 		}
-		if (functionDefinition != null)
-		{
+		if (functionDefinition != null) {
 			SignatureHelp result = new SignatureHelp();
 			List<SignatureInformation> signatures = new ArrayList<>();
 
 			SignatureInformation signatureInfo = new SignatureInformation();
 			signatureInfo.setLabel(DefinitionTextUtils.functionDefinitionToSignature(functionDefinition, project));
-			String docs = DefinitionDocumentationUtils.getDocumentationForDefinition(functionDefinition, true, project.getWorkspace(), true);
-			if (docs != null)
-			{
+			String docs = DefinitionDocumentationUtils.getDocumentationForDefinition(functionDefinition, true,
+					project.getWorkspace(), true);
+			if (docs != null) {
 				signatureInfo.setDocumentation(new MarkupContent(MarkupKind.MARKDOWN, docs));
 			}
 
 			List<ParameterInformation> parameters = new ArrayList<>();
-			for (IParameterDefinition param : functionDefinition.getParameters())
-			{
+			for (IParameterDefinition param : functionDefinition.getParameters()) {
 				ParameterInformation paramInfo = new ParameterInformation();
 				paramInfo.setLabel(param.getBaseName());
-				String paramDocs = DefinitionDocumentationUtils.getDocumentationForParameter(param, true, project.getWorkspace());
-				if (paramDocs != null)
-				{
+				String paramDocs = DefinitionDocumentationUtils.getDocumentationForParameter(param, true,
+						project.getWorkspace());
+				if (paramDocs != null) {
 					paramInfo.setDocumentation(new MarkupContent(MarkupKind.MARKDOWN, paramDocs));
 				}
 				parameters.add(paramInfo);
@@ -185,28 +165,22 @@ public class SignatureHelpProvider
 			int index = ASTUtils.getFunctionCallNodeArgumentIndex(functionCallNode, offsetNode);
 			IParameterDefinition[] parameterDefs = functionDefinition.getParameters();
 			int paramCount = parameterDefs.length;
-			if (paramCount > 0 && index >= paramCount)
-			{
-				if (index >= paramCount)
-				{
+			if (paramCount > 0 && index >= paramCount) {
+				if (index >= paramCount) {
 					IParameterDefinition lastParam = parameterDefs[paramCount - 1];
-					if (lastParam.isRest())
-					{
+					if (lastParam.isRest()) {
 						//functions with rest parameters may accept any
 						//number of arguments, so continue to make the rest
 						//parameter active
 						index = paramCount - 1;
-					}
-					else
-					{
+					} else {
 						//if there's no rest parameter, and we're beyond the
 						//final parameter, none should be active
 						index = -1;
 					}
 				}
 			}
-			if (index != -1)
-			{
+			if (index != -1) {
 				result.setActiveParameter(index);
 			}
 			cancelToken.checkCanceled();

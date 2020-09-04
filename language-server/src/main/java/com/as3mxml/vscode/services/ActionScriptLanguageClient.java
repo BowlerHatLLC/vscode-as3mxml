@@ -18,8 +18,7 @@ package com.as3mxml.vscode.services;
 import org.eclipse.lsp4j.jsonrpc.services.JsonNotification;
 import org.eclipse.lsp4j.services.LanguageClient;
 
-public interface ActionScriptLanguageClient extends LanguageClient
-{
+public interface ActionScriptLanguageClient extends LanguageClient {
 	@JsonNotification("as3mxml/clearCompilerShellOutput")
 	void clearCompilerShellOutput();
 

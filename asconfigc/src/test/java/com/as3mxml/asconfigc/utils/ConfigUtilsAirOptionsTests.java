@@ -28,28 +28,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-class ConfigUtilsAirOptionsTests
-{
+class ConfigUtilsAirOptionsTests {
 	//--- output
 	//output is a normal field that is not a special case
-	
+
 	@Test
-	void testOutputWithBaseAndEmptyAirOptions() throws IOException
-	{
+	void testOutputWithBaseAndEmptyAirOptions() throws IOException {
 		String baseValue = "bin/Base.air";
 		ObjectMapper mapper = new ObjectMapper();
-		JsonNode baseConfigData = mapper.readTree(
-			"{" +
-				"\"airOptions\": {" +
-					"\"output\": \"" + baseValue + "\"" +
-				"}" +
-			"}"
-		);
-		JsonNode configData = mapper.readTree(
-			"{" +
-				"\"airOptions\": {}" +
-			"}"
-		);
+		JsonNode baseConfigData = mapper
+				.readTree("{" + "\"airOptions\": {" + "\"output\": \"" + baseValue + "\"" + "}" + "}");
+		JsonNode configData = mapper.readTree("{" + "\"airOptions\": {}" + "}");
 		JsonNode result = ConfigUtils.mergeConfigs(configData, baseConfigData);
 		Assertions.assertTrue(result.has(TopLevelFields.AIR_OPTIONS));
 		JsonNode airOptions = result.get(TopLevelFields.AIR_OPTIONS);
@@ -58,19 +47,13 @@ class ConfigUtilsAirOptionsTests
 		String resultValue = airOptions.get(AIROptions.OUTPUT).asText();
 		Assertions.assertEquals(baseValue, resultValue);
 	}
-	
+
 	@Test
-	void testOutputWithBaseOnly() throws IOException
-	{
+	void testOutputWithBaseOnly() throws IOException {
 		String baseValue = "bin/Base.air";
 		ObjectMapper mapper = new ObjectMapper();
-		JsonNode baseConfigData = mapper.readTree(
-			"{" +
-				"\"airOptions\": {" +
-					"\"output\": \"" + baseValue + "\"" +
-				"}" +
-			"}"
-		);
+		JsonNode baseConfigData = mapper
+				.readTree("{" + "\"airOptions\": {" + "\"output\": \"" + baseValue + "\"" + "}" + "}");
 		JsonNode configData = mapper.readTree("{}");
 		JsonNode result = ConfigUtils.mergeConfigs(configData, baseConfigData);
 		Assertions.assertTrue(result.has(TopLevelFields.AIR_OPTIONS));
@@ -80,24 +63,14 @@ class ConfigUtilsAirOptionsTests
 		String resultValue = airOptions.get(AIROptions.OUTPUT).asText();
 		Assertions.assertEquals(baseValue, resultValue);
 	}
-	
+
 	@Test
-	void testOutputWithEmptyBaseAirOptions() throws IOException
-	{
+	void testOutputWithEmptyBaseAirOptions() throws IOException {
 		String newValue = "bin/New.air";
 		ObjectMapper mapper = new ObjectMapper();
-		JsonNode baseConfigData = mapper.readTree(
-			"{" +
-				"\"airOptions\": {}" +
-			"}"
-		);
-		JsonNode configData = mapper.readTree(
-			"{" +
-				"\"airOptions\": {" +
-					"\"output\": \"" + newValue + "\"" +
-				"}" +
-			"}"
-		);
+		JsonNode baseConfigData = mapper.readTree("{" + "\"airOptions\": {}" + "}");
+		JsonNode configData = mapper
+				.readTree("{" + "\"airOptions\": {" + "\"output\": \"" + newValue + "\"" + "}" + "}");
 		JsonNode result = ConfigUtils.mergeConfigs(configData, baseConfigData);
 		Assertions.assertTrue(result.has(TopLevelFields.AIR_OPTIONS));
 		JsonNode airOptions = result.get(TopLevelFields.AIR_OPTIONS);
@@ -106,20 +79,14 @@ class ConfigUtilsAirOptionsTests
 		String resultValue = airOptions.get(AIROptions.OUTPUT).asText();
 		Assertions.assertEquals(newValue, resultValue);
 	}
-	
+
 	@Test
-	void testOutputWithoutBaseAirOptions() throws IOException
-	{
+	void testOutputWithoutBaseAirOptions() throws IOException {
 		String newValue = "bin/New.air";
 		ObjectMapper mapper = new ObjectMapper();
 		JsonNode baseConfigData = mapper.readTree("{}");
-		JsonNode configData = mapper.readTree(
-			"{" +
-				"\"airOptions\": {" +
-					"\"output\": \"" + newValue + "\"" +
-				"}" +
-			"}"
-		);
+		JsonNode configData = mapper
+				.readTree("{" + "\"airOptions\": {" + "\"output\": \"" + newValue + "\"" + "}" + "}");
 		JsonNode result = ConfigUtils.mergeConfigs(configData, baseConfigData);
 		Assertions.assertTrue(result.has(TopLevelFields.AIR_OPTIONS));
 		JsonNode airOptions = result.get(TopLevelFields.AIR_OPTIONS);
@@ -128,27 +95,16 @@ class ConfigUtilsAirOptionsTests
 		String resultValue = airOptions.get(AIROptions.OUTPUT).asText();
 		Assertions.assertEquals(newValue, resultValue);
 	}
-	
+
 	@Test
-	void testOutputMerge() throws IOException
-	{
+	void testOutputMerge() throws IOException {
 		String baseValue = "bin/Base.air";
 		String newValue = "bin/New.air";
 		ObjectMapper mapper = new ObjectMapper();
-		JsonNode baseConfigData = mapper.readTree(
-			"{" +
-				"\"airOptions\": {" +
-					"\"output\": \"" + baseValue + "\"" +
-				"}" +
-			"}"
-		);
-		JsonNode configData = mapper.readTree(
-			"{" +
-				"\"airOptions\": {" +
-					"\"output\": \"" + newValue + "\"" +
-				"}" +
-			"}"
-		);
+		JsonNode baseConfigData = mapper
+				.readTree("{" + "\"airOptions\": {" + "\"output\": \"" + baseValue + "\"" + "}" + "}");
+		JsonNode configData = mapper
+				.readTree("{" + "\"airOptions\": {" + "\"output\": \"" + newValue + "\"" + "}" + "}");
 		JsonNode result = ConfigUtils.mergeConfigs(configData, baseConfigData);
 		Assertions.assertTrue(result.has(TopLevelFields.AIR_OPTIONS));
 		JsonNode airOptions = result.get(TopLevelFields.AIR_OPTIONS);
@@ -161,30 +117,15 @@ class ConfigUtilsAirOptionsTests
 	//--- files
 	//this air option is an array of objects, and a certain key should not
 	//be duplicated
-	
+
 	@Test
-	void testFilesWithBaseOnly() throws IOException
-	{
+	void testFilesWithBaseOnly() throws IOException {
 		String baseFile = "assets/base.png";
 		String basePath = "base.png";
 		ObjectMapper mapper = new ObjectMapper();
-		JsonNode baseConfigData = mapper.readTree(
-			"{" +
-				"\"airOptions\": {" +
-					"\"files\": [" +
-						"{" +
-							"\"file\": \"" + baseFile + "\"," + 
-							"\"path\": \"" + basePath + "\"" + 
-						"}" +
-					"]" +
-				"}" +
-			"}"
-		);
-		JsonNode configData = mapper.readTree(
-			"{" + 
-				"\"airOptions\": {}" +
-			"}"
-		);
+		JsonNode baseConfigData = mapper.readTree("{" + "\"airOptions\": {" + "\"files\": [" + "{" + "\"file\": \""
+				+ baseFile + "\"," + "\"path\": \"" + basePath + "\"" + "}" + "]" + "}" + "}");
+		JsonNode configData = mapper.readTree("{" + "\"airOptions\": {}" + "}");
 		JsonNode result = ConfigUtils.mergeConfigs(configData, baseConfigData);
 		Assertions.assertTrue(result.has(TopLevelFields.AIR_OPTIONS));
 		JsonNode airOptions = result.get(TopLevelFields.AIR_OPTIONS);
@@ -203,30 +144,15 @@ class ConfigUtilsAirOptionsTests
 		Assertions.assertEquals(basePath, result0Path);
 		Assertions.assertFalse(elements.hasNext());
 	}
-	
+
 	@Test
-	void testFilesWithEmptyBaseAirOptions() throws IOException
-	{
+	void testFilesWithEmptyBaseAirOptions() throws IOException {
 		String newFile = "assets/new.png";
 		String newPath = "new.png";
 		ObjectMapper mapper = new ObjectMapper();
-		JsonNode baseConfigData = mapper.readTree(
-			"{" +
-				"\"airOptions\": {}" +
-			"}"
-		);
-		JsonNode configData = mapper.readTree(
-			"{" + 
-				"\"airOptions\": {" +
-					"\"files\": [" +
-						"{" +
-							"\"file\": \"" + newFile + "\"," + 
-							"\"path\": \"" + newPath + "\"" + 
-						"}" +
-					"]" +
-				"}" +
-			"}"
-		);
+		JsonNode baseConfigData = mapper.readTree("{" + "\"airOptions\": {}" + "}");
+		JsonNode configData = mapper.readTree("{" + "\"airOptions\": {" + "\"files\": [" + "{" + "\"file\": \""
+				+ newFile + "\"," + "\"path\": \"" + newPath + "\"" + "}" + "]" + "}" + "}");
 		JsonNode result = ConfigUtils.mergeConfigs(configData, baseConfigData);
 		Assertions.assertTrue(result.has(TopLevelFields.AIR_OPTIONS));
 		JsonNode airOptions = result.get(TopLevelFields.AIR_OPTIONS);
@@ -245,39 +171,18 @@ class ConfigUtilsAirOptionsTests
 		Assertions.assertEquals(newPath, result0Path);
 		Assertions.assertFalse(elements.hasNext());
 	}
-	
+
 	@Test
-	void testFilesMerge() throws IOException
-	{
+	void testFilesMerge() throws IOException {
 		String baseFile = "assets/base.png";
 		String basePath = "base.png";
 		String newFile = "assets/new.png";
 		String newPath = "new.png";
 		ObjectMapper mapper = new ObjectMapper();
-		JsonNode baseConfigData = mapper.readTree(
-			"{" +
-				"\"airOptions\": {" +
-					"\"files\": [" +
-						"{" +
-							"\"file\": \"" + baseFile + "\"," + 
-							"\"path\": \"" + basePath + "\"" + 
-						"}" +
-					"]" +
-				"}" +
-			"}"
-		);
-		JsonNode configData = mapper.readTree(
-			"{" + 
-				"\"airOptions\": {" +
-					"\"files\": [" +
-						"{" +
-							"\"file\": \"" + newFile + "\"," + 
-							"\"path\": \"" + newPath + "\"" + 
-						"}" +
-					"]" +
-				"}" +
-			"}"
-		);
+		JsonNode baseConfigData = mapper.readTree("{" + "\"airOptions\": {" + "\"files\": [" + "{" + "\"file\": \""
+				+ baseFile + "\"," + "\"path\": \"" + basePath + "\"" + "}" + "]" + "}" + "}");
+		JsonNode configData = mapper.readTree("{" + "\"airOptions\": {" + "\"files\": [" + "{" + "\"file\": \""
+				+ newFile + "\"," + "\"path\": \"" + newPath + "\"" + "}" + "]" + "}" + "}");
 		JsonNode result = ConfigUtils.mergeConfigs(configData, baseConfigData);
 		Assertions.assertTrue(result.has(TopLevelFields.AIR_OPTIONS));
 		JsonNode airOptions = result.get(TopLevelFields.AIR_OPTIONS);
@@ -304,38 +209,17 @@ class ConfigUtilsAirOptionsTests
 		Assertions.assertEquals(newPath, result1Value);
 		Assertions.assertFalse(elements.hasNext());
 	}
-	
+
 	@Test
-	void testFilesMergeDuplicate() throws IOException
-	{
+	void testFilesMergeDuplicate() throws IOException {
 		String baseFile = "assets/base.png";
 		String newFile = "assets/new.png";
 		String duplicatePath = "duplicate.png";
 		ObjectMapper mapper = new ObjectMapper();
-		JsonNode baseConfigData = mapper.readTree(
-			"{" +
-				"\"airOptions\": {" +
-					"\"files\": [" +
-						"{" +
-							"\"file\": \"" + baseFile + "\"," + 
-							"\"path\": \"" + duplicatePath + "\"" + 
-						"}" +
-					"]" +
-				"}" +
-			"}"
-		);
-		JsonNode configData = mapper.readTree(
-			"{" + 
-				"\"airOptions\": {" +
-					"\"files\": [" +
-						"{" +
-							"\"file\": \"" + newFile + "\"," + 
-							"\"path\": \"" + duplicatePath + "\"" + 
-						"}" +
-					"]" +
-				"}" +
-			"}"
-		);
+		JsonNode baseConfigData = mapper.readTree("{" + "\"airOptions\": {" + "\"files\": [" + "{" + "\"file\": \""
+				+ baseFile + "\"," + "\"path\": \"" + duplicatePath + "\"" + "}" + "]" + "}" + "}");
+		JsonNode configData = mapper.readTree("{" + "\"airOptions\": {" + "\"files\": [" + "{" + "\"file\": \""
+				+ newFile + "\"," + "\"path\": \"" + duplicatePath + "\"" + "}" + "]" + "}" + "}");
 		JsonNode result = ConfigUtils.mergeConfigs(configData, baseConfigData);
 		Assertions.assertTrue(result.has(TopLevelFields.AIR_OPTIONS));
 		JsonNode airOptions = result.get(TopLevelFields.AIR_OPTIONS);
@@ -358,28 +242,16 @@ class ConfigUtilsAirOptionsTests
 	//--- signingOptions
 	//this air option is a complex object, but it should just replace the
 	//base and not get merged
-	
+
 	@Test
-	void testSigningOptionsWithBaseAndEmptyAirOptions() throws IOException
-	{
+	void testSigningOptionsWithBaseAndEmptyAirOptions() throws IOException {
 		String baseKeystore = "signing/base.p12";
 		String baseStoretype = "pkcs12";
 		ObjectMapper mapper = new ObjectMapper();
-		JsonNode baseConfigData = mapper.readTree(
-			"{" +
-				"\"airOptions\": {" +
-					"\"signingOptions\": {" +
-						"\"keystore\": \"" + baseKeystore + "\"," +
-						"\"storetype\": \"" + baseStoretype + "\"" +
-					"}" +
-				"}" +
-			"}"
-		);
-		JsonNode configData = mapper.readTree(
-			"{" +
-				"\"airOptions\": {}" +
-			"}"
-		);
+		JsonNode baseConfigData = mapper
+				.readTree("{" + "\"airOptions\": {" + "\"signingOptions\": {" + "\"keystore\": \"" + baseKeystore
+						+ "\"," + "\"storetype\": \"" + baseStoretype + "\"" + "}" + "}" + "}");
+		JsonNode configData = mapper.readTree("{" + "\"airOptions\": {}" + "}");
 		JsonNode result = ConfigUtils.mergeConfigs(configData, baseConfigData);
 		Assertions.assertTrue(result.has(TopLevelFields.AIR_OPTIONS));
 		JsonNode airOptions = result.get(TopLevelFields.AIR_OPTIONS);
@@ -399,23 +271,15 @@ class ConfigUtilsAirOptionsTests
 		String resultStoretype = signingOptions.get(AIRSigningOptions.STORETYPE).asText();
 		Assertions.assertEquals(baseStoretype, resultStoretype);
 	}
-	
+
 	@Test
-	void testSigningOptionsWithBaseOnly() throws IOException
-	{
+	void testSigningOptionsWithBaseOnly() throws IOException {
 		String baseKeystore = "signing/base.p12";
 		String baseStoretype = "pkcs12";
 		ObjectMapper mapper = new ObjectMapper();
-		JsonNode baseConfigData = mapper.readTree(
-			"{" +
-				"\"airOptions\": {" +
-					"\"signingOptions\": {" +
-						"\"keystore\": \"" + baseKeystore + "\"," +
-						"\"storetype\": \"" + baseStoretype + "\"" +
-					"}" +
-				"}" +
-			"}"
-		);
+		JsonNode baseConfigData = mapper
+				.readTree("{" + "\"airOptions\": {" + "\"signingOptions\": {" + "\"keystore\": \"" + baseKeystore
+						+ "\"," + "\"storetype\": \"" + baseStoretype + "\"" + "}" + "}" + "}");
 		JsonNode configData = mapper.readTree("{}");
 		JsonNode result = ConfigUtils.mergeConfigs(configData, baseConfigData);
 		Assertions.assertTrue(result.has(TopLevelFields.AIR_OPTIONS));
@@ -436,28 +300,16 @@ class ConfigUtilsAirOptionsTests
 		String resultStoretype = signingOptions.get(AIRSigningOptions.STORETYPE).asText();
 		Assertions.assertEquals(baseStoretype, resultStoretype);
 	}
-	
+
 	@Test
-	void testSigningOptionsWithEmptyBaseAirOptions() throws IOException
-	{
+	void testSigningOptionsWithEmptyBaseAirOptions() throws IOException {
 		String newProviderName = "Apple";
 		String newStoretype = "KeychainStore";
 		ObjectMapper mapper = new ObjectMapper();
-		JsonNode baseConfigData = mapper.readTree(
-			"{" +
-				"\"airOptions\": {}" +
-			"}"
-		);
-		JsonNode configData = mapper.readTree(
-			"{" +
-				"\"airOptions\": {" +
-					"\"signingOptions\": {" +
-						"\"providerName\": \"" + newProviderName + "\"," +
-						"\"storetype\": \"" + newStoretype + "\"" +
-					"}" +
-				"}" +
-			"}"
-		);
+		JsonNode baseConfigData = mapper.readTree("{" + "\"airOptions\": {}" + "}");
+		JsonNode configData = mapper
+				.readTree("{" + "\"airOptions\": {" + "\"signingOptions\": {" + "\"providerName\": \"" + newProviderName
+						+ "\"," + "\"storetype\": \"" + newStoretype + "\"" + "}" + "}" + "}");
 		JsonNode result = ConfigUtils.mergeConfigs(configData, baseConfigData);
 		Assertions.assertTrue(result.has(TopLevelFields.AIR_OPTIONS));
 		JsonNode airOptions = result.get(TopLevelFields.AIR_OPTIONS);
@@ -477,24 +329,16 @@ class ConfigUtilsAirOptionsTests
 		String resultStoretype = signingOptions.get(AIRSigningOptions.STORETYPE).asText();
 		Assertions.assertEquals(newStoretype, resultStoretype);
 	}
-	
+
 	@Test
-	void testSigningOptionsWithoutBaseAirOptions() throws IOException
-	{
+	void testSigningOptionsWithoutBaseAirOptions() throws IOException {
 		String newProviderName = "Apple";
 		String newStoretype = "KeychainStore";
 		ObjectMapper mapper = new ObjectMapper();
 		JsonNode baseConfigData = mapper.readTree("{}");
-		JsonNode configData = mapper.readTree(
-			"{" +
-				"\"airOptions\": {" +
-					"\"signingOptions\": {" +
-						"\"providerName\": \"" + newProviderName + "\"," +
-						"\"storetype\": \"" + newStoretype + "\"" +
-					"}" +
-				"}" +
-			"}"
-		);
+		JsonNode configData = mapper
+				.readTree("{" + "\"airOptions\": {" + "\"signingOptions\": {" + "\"providerName\": \"" + newProviderName
+						+ "\"," + "\"storetype\": \"" + newStoretype + "\"" + "}" + "}" + "}");
 		JsonNode result = ConfigUtils.mergeConfigs(configData, baseConfigData);
 		Assertions.assertTrue(result.has(TopLevelFields.AIR_OPTIONS));
 		JsonNode airOptions = result.get(TopLevelFields.AIR_OPTIONS);
@@ -514,35 +358,20 @@ class ConfigUtilsAirOptionsTests
 		String resultStoretype = signingOptions.get(AIRSigningOptions.STORETYPE).asText();
 		Assertions.assertEquals(newStoretype, resultStoretype);
 	}
-	
+
 	@Test
-	void testSigningOptionsMerge() throws IOException
-	{
+	void testSigningOptionsMerge() throws IOException {
 		String baseKeystore = "signing/base.p12";
 		String baseStoretype = "pkcs12";
 		String newProviderName = "Apple";
 		String newStoretype = "KeychainStore";
 		ObjectMapper mapper = new ObjectMapper();
-		JsonNode baseConfigData = mapper.readTree(
-			"{" +
-				"\"airOptions\": {" +
-					"\"signingOptions\": {" +
-						"\"keystore\": \"" + baseKeystore + "\"," +
-						"\"storetype\": \"" + baseStoretype + "\"" +
-					"}" +
-				"}" +
-			"}"
-		);
-		JsonNode configData = mapper.readTree(
-			"{" +
-				"\"airOptions\": {" +
-					"\"signingOptions\": {" +
-						"\"providerName\": \"" + newProviderName + "\"," +
-						"\"storetype\": \"" + newStoretype + "\"" +
-					"}" +
-				"}" +
-			"}"
-		);
+		JsonNode baseConfigData = mapper
+				.readTree("{" + "\"airOptions\": {" + "\"signingOptions\": {" + "\"keystore\": \"" + baseKeystore
+						+ "\"," + "\"storetype\": \"" + baseStoretype + "\"" + "}" + "}" + "}");
+		JsonNode configData = mapper
+				.readTree("{" + "\"airOptions\": {" + "\"signingOptions\": {" + "\"providerName\": \"" + newProviderName
+						+ "\"," + "\"storetype\": \"" + newStoretype + "\"" + "}" + "}" + "}");
 		JsonNode result = ConfigUtils.mergeConfigs(configData, baseConfigData);
 		Assertions.assertTrue(result.has(TopLevelFields.AIR_OPTIONS));
 		JsonNode airOptions = result.get(TopLevelFields.AIR_OPTIONS);
@@ -563,10 +392,9 @@ class ConfigUtilsAirOptionsTests
 		String resultStoretype = signingOptions.get(AIRSigningOptions.STORETYPE).asText();
 		Assertions.assertEquals(newStoretype, resultStoretype);
 	}
-	
+
 	@Test
-	void testSigningOptionsMergeDebugAndRelease() throws IOException
-	{
+	void testSigningOptionsMergeDebugAndRelease() throws IOException {
 		String baseDebugKeystore = "signing/base-debug.p12";
 		String baseDebugStoretype = "pkcs12";
 		String baseReleaseKeystore = "signing/base-release.p12";
@@ -576,38 +404,14 @@ class ConfigUtilsAirOptionsTests
 		String newReleaseProviderName = "Adobe";
 		String newReleaseStoretype = "KeychainStore";
 		ObjectMapper mapper = new ObjectMapper();
-		JsonNode baseConfigData = mapper.readTree(
-			"{" +
-				"\"airOptions\": {" +
-					"\"signingOptions\": {" +
-						"\"debug\": {" +
-							"\"keystore\": \"" + baseDebugKeystore + "\"," +
-							"\"storetype\": \"" + baseDebugStoretype + "\"" +
-						"}," +
-						"\"release\": {" +
-							"\"keystore\": \"" + baseReleaseKeystore + "\"," +
-							"\"storetype\": \"" + baseReleaseStoretype + "\"" +
-						"}" +
-					"}" +
-				"}" +
-			"}"
-		);
-		JsonNode configData = mapper.readTree(
-			"{" +
-				"\"airOptions\": {" +
-					"\"signingOptions\": {" +
-						"\"debug\": {" +
-							"\"providerName\": \"" + newDebugProviderName + "\"," +
-							"\"storetype\": \"" + newDebugStoretype + "\"" +
-						"}," +
-						"\"release\": {" +
-							"\"providerName\": \"" + newReleaseProviderName + "\"," +
-							"\"storetype\": \"" + newReleaseStoretype + "\"" +
-						"}" +
-					"}" +
-				"}" +
-			"}"
-		);
+		JsonNode baseConfigData = mapper.readTree("{" + "\"airOptions\": {" + "\"signingOptions\": {" + "\"debug\": {"
+				+ "\"keystore\": \"" + baseDebugKeystore + "\"," + "\"storetype\": \"" + baseDebugStoretype + "\""
+				+ "}," + "\"release\": {" + "\"keystore\": \"" + baseReleaseKeystore + "\"," + "\"storetype\": \""
+				+ baseReleaseStoretype + "\"" + "}" + "}" + "}" + "}");
+		JsonNode configData = mapper.readTree("{" + "\"airOptions\": {" + "\"signingOptions\": {" + "\"debug\": {"
+				+ "\"providerName\": \"" + newDebugProviderName + "\"," + "\"storetype\": \"" + newDebugStoretype + "\""
+				+ "}," + "\"release\": {" + "\"providerName\": \"" + newReleaseProviderName + "\","
+				+ "\"storetype\": \"" + newReleaseStoretype + "\"" + "}" + "}" + "}" + "}");
 		JsonNode result = ConfigUtils.mergeConfigs(configData, baseConfigData);
 		Assertions.assertTrue(result.has(TopLevelFields.AIR_OPTIONS));
 		JsonNode airOptions = result.get(TopLevelFields.AIR_OPTIONS);
@@ -631,7 +435,7 @@ class ConfigUtilsAirOptionsTests
 		Assertions.assertTrue(debug.has(AIRSigningOptions.STORETYPE));
 		String resultDebugStoretype = debug.get(AIRSigningOptions.STORETYPE).asText();
 		Assertions.assertEquals(newDebugStoretype, resultDebugStoretype);
-		
+
 		JsonNode release = signingOptions.get(AIRSigningOptions.RELEASE);
 		Assertions.assertTrue(release.isObject());
 
@@ -645,10 +449,9 @@ class ConfigUtilsAirOptionsTests
 		String resultReleaseStoretype = release.get(AIRSigningOptions.STORETYPE).asText();
 		Assertions.assertEquals(newReleaseStoretype, resultReleaseStoretype);
 	}
-	
+
 	@Test
-	void testSigningOptionsMergeWithSingleInBaseAndDebugAndReleaseInOverride() throws IOException
-	{
+	void testSigningOptionsMergeWithSingleInBaseAndDebugAndReleaseInOverride() throws IOException {
 		String baseKeystore = "signing/base-debug.p12";
 		String baseStoretype = "pkcs12";
 		String newDebugProviderName = "Apple";
@@ -656,32 +459,13 @@ class ConfigUtilsAirOptionsTests
 		String newReleaseProviderName = "Adobe";
 		String newReleaseStoretype = "KeychainStore";
 		ObjectMapper mapper = new ObjectMapper();
-		JsonNode baseConfigData = mapper.readTree(
-			"{" +
-				"\"airOptions\": {" +
-					"\"signingOptions\": {" +
-						"\"keystore\": \"" + baseKeystore + "\"," +
-						"\"storetype\": \"" + baseStoretype + "\"" +
-					"}" +
-				"}" +
-			"}"
-		);
-		JsonNode configData = mapper.readTree(
-			"{" +
-				"\"airOptions\": {" +
-					"\"signingOptions\": {" +
-						"\"debug\": {" +
-							"\"providerName\": \"" + newDebugProviderName + "\"," +
-							"\"storetype\": \"" + newDebugStoretype + "\"" +
-						"}," +
-						"\"release\": {" +
-							"\"providerName\": \"" + newReleaseProviderName + "\"," +
-							"\"storetype\": \"" + newReleaseStoretype + "\"" +
-						"}" +
-					"}" +
-				"}" +
-			"}"
-		);
+		JsonNode baseConfigData = mapper
+				.readTree("{" + "\"airOptions\": {" + "\"signingOptions\": {" + "\"keystore\": \"" + baseKeystore
+						+ "\"," + "\"storetype\": \"" + baseStoretype + "\"" + "}" + "}" + "}");
+		JsonNode configData = mapper.readTree("{" + "\"airOptions\": {" + "\"signingOptions\": {" + "\"debug\": {"
+				+ "\"providerName\": \"" + newDebugProviderName + "\"," + "\"storetype\": \"" + newDebugStoretype + "\""
+				+ "}," + "\"release\": {" + "\"providerName\": \"" + newReleaseProviderName + "\","
+				+ "\"storetype\": \"" + newReleaseStoretype + "\"" + "}" + "}" + "}" + "}");
 		JsonNode result = ConfigUtils.mergeConfigs(configData, baseConfigData);
 		Assertions.assertTrue(result.has(TopLevelFields.AIR_OPTIONS));
 		JsonNode airOptions = result.get(TopLevelFields.AIR_OPTIONS);
@@ -705,7 +489,7 @@ class ConfigUtilsAirOptionsTests
 		Assertions.assertTrue(debug.has(AIRSigningOptions.STORETYPE));
 		String resultDebugStoretype = debug.get(AIRSigningOptions.STORETYPE).asText();
 		Assertions.assertEquals(newDebugStoretype, resultDebugStoretype);
-		
+
 		JsonNode release = signingOptions.get(AIRSigningOptions.RELEASE);
 		Assertions.assertTrue(release.isObject());
 
@@ -719,10 +503,9 @@ class ConfigUtilsAirOptionsTests
 		String resultReleaseStoretype = release.get(AIRSigningOptions.STORETYPE).asText();
 		Assertions.assertEquals(newReleaseStoretype, resultReleaseStoretype);
 	}
-	
+
 	@Test
-	void testSigningOptionsMergeDebugAndReleaseInBaseSingleInOverride() throws IOException
-	{
+	void testSigningOptionsMergeDebugAndReleaseInBaseSingleInOverride() throws IOException {
 		String baseDebugKeystore = "signing/base-debug.p12";
 		String baseDebugStoretype = "pkcs12";
 		String baseReleaseKeystore = "signing/base-release.p12";
@@ -730,32 +513,13 @@ class ConfigUtilsAirOptionsTests
 		String newProviderName = "Apple";
 		String newStoretype = "KeychainStore";
 		ObjectMapper mapper = new ObjectMapper();
-		JsonNode baseConfigData = mapper.readTree(
-			"{" +
-				"\"airOptions\": {" +
-					"\"signingOptions\": {" +
-						"\"debug\": {" +
-							"\"keystore\": \"" + baseDebugKeystore + "\"," +
-							"\"storetype\": \"" + baseDebugStoretype + "\"" +
-						"}," +
-						"\"release\": {" +
-							"\"keystore\": \"" + baseReleaseKeystore + "\"," +
-							"\"storetype\": \"" + baseReleaseStoretype + "\"" +
-						"}" +
-					"}" +
-				"}" +
-			"}"
-		);
-		JsonNode configData = mapper.readTree(
-			"{" +
-				"\"airOptions\": {" +
-					"\"signingOptions\": {" +
-						"\"providerName\": \"" + newProviderName + "\"," +
-						"\"storetype\": \"" + newStoretype + "\"" +
-					"}" +
-				"}" +
-			"}"
-		);
+		JsonNode baseConfigData = mapper.readTree("{" + "\"airOptions\": {" + "\"signingOptions\": {" + "\"debug\": {"
+				+ "\"keystore\": \"" + baseDebugKeystore + "\"," + "\"storetype\": \"" + baseDebugStoretype + "\""
+				+ "}," + "\"release\": {" + "\"keystore\": \"" + baseReleaseKeystore + "\"," + "\"storetype\": \""
+				+ baseReleaseStoretype + "\"" + "}" + "}" + "}" + "}");
+		JsonNode configData = mapper
+				.readTree("{" + "\"airOptions\": {" + "\"signingOptions\": {" + "\"providerName\": \"" + newProviderName
+						+ "\"," + "\"storetype\": \"" + newStoretype + "\"" + "}" + "}" + "}");
 		JsonNode result = ConfigUtils.mergeConfigs(configData, baseConfigData);
 		Assertions.assertTrue(result.has(TopLevelFields.AIR_OPTIONS));
 		JsonNode airOptions = result.get(TopLevelFields.AIR_OPTIONS);
@@ -779,28 +543,14 @@ class ConfigUtilsAirOptionsTests
 	}
 
 	//--- output (platform)
-	
+
 	@Test
-	void testOutputPlatformWithBaseAndEmptyPlatform() throws IOException
-	{
+	void testOutputPlatformWithBaseAndEmptyPlatform() throws IOException {
 		String baseValue = "bin/Base.air";
 		ObjectMapper mapper = new ObjectMapper();
 		JsonNode baseConfigData = mapper.readTree(
-			"{" +
-				"\"airOptions\": {" +
-					"\"android\": {" +
-						"\"output\": \"" + baseValue + "\"" +
-					"}" +
-				"}" +
-			"}"
-		);
-		JsonNode configData = mapper.readTree(
-			"{" +
-				"\"airOptions\": {" +
-					"\"android\": {}" +
-				"}" +
-			"}"
-		);
+				"{" + "\"airOptions\": {" + "\"android\": {" + "\"output\": \"" + baseValue + "\"" + "}" + "}" + "}");
+		JsonNode configData = mapper.readTree("{" + "\"airOptions\": {" + "\"android\": {}" + "}" + "}");
 		JsonNode result = ConfigUtils.mergeConfigs(configData, baseConfigData);
 		Assertions.assertTrue(result.has(TopLevelFields.AIR_OPTIONS));
 		JsonNode airOptions = result.get(TopLevelFields.AIR_OPTIONS);
@@ -812,26 +562,14 @@ class ConfigUtilsAirOptionsTests
 		String resultValue = android.get(AIROptions.OUTPUT).asText();
 		Assertions.assertEquals(baseValue, resultValue);
 	}
-	
+
 	@Test
-	void testOutputPlatformWithBaseAndEmptyAirOptions() throws IOException
-	{
+	void testOutputPlatformWithBaseAndEmptyAirOptions() throws IOException {
 		String baseValue = "bin/Base.air";
 		ObjectMapper mapper = new ObjectMapper();
 		JsonNode baseConfigData = mapper.readTree(
-			"{" +
-				"\"airOptions\": {" +
-					"\"android\": {" +
-						"\"output\": \"" + baseValue + "\"" +
-					"}" +
-				"}" +
-			"}"
-		);
-		JsonNode configData = mapper.readTree(
-			"{" +
-				"\"airOptions\": {}" +
-			"}"
-		);
+				"{" + "\"airOptions\": {" + "\"android\": {" + "\"output\": \"" + baseValue + "\"" + "}" + "}" + "}");
+		JsonNode configData = mapper.readTree("{" + "\"airOptions\": {}" + "}");
 		JsonNode result = ConfigUtils.mergeConfigs(configData, baseConfigData);
 		Assertions.assertTrue(result.has(TopLevelFields.AIR_OPTIONS));
 		JsonNode airOptions = result.get(TopLevelFields.AIR_OPTIONS);
@@ -843,21 +581,13 @@ class ConfigUtilsAirOptionsTests
 		String resultValue = android.get(AIROptions.OUTPUT).asText();
 		Assertions.assertEquals(baseValue, resultValue);
 	}
-	
+
 	@Test
-	void testOutputPlatformWithBaseOnly() throws IOException
-	{
+	void testOutputPlatformWithBaseOnly() throws IOException {
 		String baseValue = "bin/Base.air";
 		ObjectMapper mapper = new ObjectMapper();
 		JsonNode baseConfigData = mapper.readTree(
-			"{" +
-				"\"airOptions\": {" +
-					"\"android\": {" +
-						"\"output\": \"" + baseValue + "\"" +
-					"}" +
-				"}" +
-			"}"
-		);
+				"{" + "\"airOptions\": {" + "\"android\": {" + "\"output\": \"" + baseValue + "\"" + "}" + "}" + "}");
 		JsonNode configData = mapper.readTree("{}");
 		JsonNode result = ConfigUtils.mergeConfigs(configData, baseConfigData);
 		Assertions.assertTrue(result.has(TopLevelFields.AIR_OPTIONS));
@@ -870,28 +600,14 @@ class ConfigUtilsAirOptionsTests
 		String resultValue = android.get(AIROptions.OUTPUT).asText();
 		Assertions.assertEquals(baseValue, resultValue);
 	}
-	
+
 	@Test
-	void testOutputPlatformWithEmptyBasePlatform() throws IOException
-	{
+	void testOutputPlatformWithEmptyBasePlatform() throws IOException {
 		String newValue = "bin/New.air";
 		ObjectMapper mapper = new ObjectMapper();
-		JsonNode baseConfigData = mapper.readTree(
-			"{" +
-				"\"airOptions\": {" +
-					"\"android\": {}" +
-				"}" +
-			"}"
-		);
+		JsonNode baseConfigData = mapper.readTree("{" + "\"airOptions\": {" + "\"android\": {}" + "}" + "}");
 		JsonNode configData = mapper.readTree(
-			"{" +
-				"\"airOptions\": {" +
-					"\"android\": {" +
-						"\"output\": \"" + newValue + "\"" +
-					"}" +
-				"}" +
-			"}"
-		);
+				"{" + "\"airOptions\": {" + "\"android\": {" + "\"output\": \"" + newValue + "\"" + "}" + "}" + "}");
 		JsonNode result = ConfigUtils.mergeConfigs(configData, baseConfigData);
 		Assertions.assertTrue(result.has(TopLevelFields.AIR_OPTIONS));
 		JsonNode airOptions = result.get(TopLevelFields.AIR_OPTIONS);
@@ -903,26 +619,14 @@ class ConfigUtilsAirOptionsTests
 		String resultValue = android.get(AIROptions.OUTPUT).asText();
 		Assertions.assertEquals(newValue, resultValue);
 	}
-	
+
 	@Test
-	void testOutputPlatformWithEmptyBaseAirOptions() throws IOException
-	{
+	void testOutputPlatformWithEmptyBaseAirOptions() throws IOException {
 		String newValue = "bin/New.air";
 		ObjectMapper mapper = new ObjectMapper();
-		JsonNode baseConfigData = mapper.readTree(
-			"{" +
-				"\"airOptions\": {}" +
-			"}"
-		);
+		JsonNode baseConfigData = mapper.readTree("{" + "\"airOptions\": {}" + "}");
 		JsonNode configData = mapper.readTree(
-			"{" +
-				"\"airOptions\": {" +
-					"\"android\": {" +
-						"\"output\": \"" + newValue + "\"" +
-					"}" +
-				"}" +
-			"}"
-		);
+				"{" + "\"airOptions\": {" + "\"android\": {" + "\"output\": \"" + newValue + "\"" + "}" + "}" + "}");
 		JsonNode result = ConfigUtils.mergeConfigs(configData, baseConfigData);
 		Assertions.assertTrue(result.has(TopLevelFields.AIR_OPTIONS));
 		JsonNode airOptions = result.get(TopLevelFields.AIR_OPTIONS);
@@ -934,22 +638,14 @@ class ConfigUtilsAirOptionsTests
 		String resultValue = android.get(AIROptions.OUTPUT).asText();
 		Assertions.assertEquals(newValue, resultValue);
 	}
-	
+
 	@Test
-	void testOutputPlatformWithoutBaseAirOptions() throws IOException
-	{
+	void testOutputPlatformWithoutBaseAirOptions() throws IOException {
 		String newValue = "bin/New.air";
 		ObjectMapper mapper = new ObjectMapper();
 		JsonNode baseConfigData = mapper.readTree("{}");
 		JsonNode configData = mapper.readTree(
-			"{" +
-				"\"airOptions\": {" +
-					"\"android\": {" +
-						"\"output\": \"" + newValue + "\"" +
-					"}" +
-				"}" +
-			"}"
-		);
+				"{" + "\"airOptions\": {" + "\"android\": {" + "\"output\": \"" + newValue + "\"" + "}" + "}" + "}");
 		JsonNode result = ConfigUtils.mergeConfigs(configData, baseConfigData);
 		Assertions.assertTrue(result.has(TopLevelFields.AIR_OPTIONS));
 		JsonNode airOptions = result.get(TopLevelFields.AIR_OPTIONS);
@@ -961,31 +657,16 @@ class ConfigUtilsAirOptionsTests
 		String resultValue = android.get(AIROptions.OUTPUT).asText();
 		Assertions.assertEquals(newValue, resultValue);
 	}
-	
+
 	@Test
-	void testOutputPlatformMerge() throws IOException
-	{
+	void testOutputPlatformMerge() throws IOException {
 		String baseValue = "bin/Base.air";
 		String newValue = "bin/New.air";
 		ObjectMapper mapper = new ObjectMapper();
 		JsonNode baseConfigData = mapper.readTree(
-			"{" +
-				"\"airOptions\": {" +
-					"\"android\": {" +
-						"\"output\": \"" + baseValue + "\"" +
-					"}" +
-				"}" +
-			"}"
-		);
+				"{" + "\"airOptions\": {" + "\"android\": {" + "\"output\": \"" + baseValue + "\"" + "}" + "}" + "}");
 		JsonNode configData = mapper.readTree(
-			"{" +
-				"\"airOptions\": {" +
-					"\"android\": {" +
-						"\"output\": \"" + newValue + "\"" +
-					"}" +
-				"}" +
-			"}"
-		);
+				"{" + "\"airOptions\": {" + "\"android\": {" + "\"output\": \"" + newValue + "\"" + "}" + "}" + "}");
 		JsonNode result = ConfigUtils.mergeConfigs(configData, baseConfigData);
 		Assertions.assertTrue(result.has(TopLevelFields.AIR_OPTIONS));
 		JsonNode airOptions = result.get(TopLevelFields.AIR_OPTIONS);
@@ -997,5 +678,5 @@ class ConfigUtilsAirOptionsTests
 		String resultValue = android.get(AIROptions.OUTPUT).asText();
 		Assertions.assertEquals(newValue, resultValue);
 	}
-	
+
 }

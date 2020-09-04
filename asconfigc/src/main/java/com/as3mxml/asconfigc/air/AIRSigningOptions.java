@@ -15,8 +15,7 @@ limitations under the License.
 */
 package com.as3mxml.asconfigc.air;
 
-public class AIRSigningOptions
-{
+public class AIRSigningOptions {
 	public static final String ALIAS = "alias";
 	public static final String STORETYPE = "storetype";
 	public static final String STOREPASS = "storepass";
