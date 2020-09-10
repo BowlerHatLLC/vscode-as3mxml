@@ -44,6 +44,7 @@ import quickCompileAndLaunch from "./commands/quickCompileAndLaunch";
 import migrateSettings from "./utils/migrateSettings";
 import saveSessionPassword from "./commands/saveSessionPassword";
 import normalizeUri from "./utils/normalizeUri";
+import createActionScriptSDKStatusBarItem from "./utils/createActionScriptSDKStatusBarItem";
 
 const INVALID_SDK_ERROR =
   "as3mxml.sdk.editor in settings does not point to a valid SDK. Requires Apache Royale 0.9.7 or newer.";
@@ -135,6 +136,7 @@ function updateSDKStatusBarItem() {
     sdkShortName = findSDKShortName(frameworkSDKHome);
   }
   sdkStatusBarItem.text = sdkShortName;
+  sdkStatusBarItem.tooltip = frameworkSDKHome;
 }
 
 function restartServer() {
@@ -337,13 +339,8 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(sourcePathView);
   }
 
-  sdkStatusBarItem = vscode.window.createStatusBarItem(
-    vscode.StatusBarAlignment.Right
-  );
+  sdkStatusBarItem = createActionScriptSDKStatusBarItem();
   updateSDKStatusBarItem();
-  sdkStatusBarItem.tooltip = "Select ActionScript & MXML SDK";
-  sdkStatusBarItem.command = "as3mxml.selectWorkspaceSDK";
-  sdkStatusBarItem.show();
 
   actionScriptTaskProvider = new ActionScriptTaskProvider(
     context,

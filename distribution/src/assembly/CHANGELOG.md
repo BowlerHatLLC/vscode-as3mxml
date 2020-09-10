@@ -13,6 +13,10 @@
 - Hover: fix formatting of constructor names to look like `ClassName.com.example.ClassName`.
 - Hover: fix missing ASDoc documentation when hovering over symbols in _.mxml_ files.
 
+### Other changes
+
+- General: The ActionScript SDK status bar item is visible only when the active editor contains an _.as_, _.mxml_ or _asconfig.json_ file. This better matches how the TypeScript version status bar item behaves.
+
 ## v1.2.2
 
 ### Fixed Issues
