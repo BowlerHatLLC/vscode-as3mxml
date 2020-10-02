@@ -48,7 +48,6 @@ const ERROR_ASCONFIG_JSON_EXISTS =
   "Cannot migrate Adobe Flash Builder project because configuration file already exists... ";
 const WARNING_CANNOT_FIND_LINKED_RESOURCES =
   "Failed to parse linked resources in Adobe Flash Builder workspace. Result may contain path tokens that must be replaced.";
-const WARNING_MODULE = "Flex modules are not supported. Skipping... ";
 const WARNING_WORKER = "ActionScript workers are not supported. Skipping... ";
 const WARNING_EXTERNAL_THEME =
   "Themes from outside SDK are not supported. Skipping...";
@@ -571,13 +570,25 @@ function migrateActionScriptProperties(
     let modulesElement = findChildElementByName(rootChildren, "modules");
     if (modulesElement) {
       let moduleAppPath = applicationPath;
+      let moduleOutputFolderPath = "";
       if (compilerElement) {
-        moduleAppPath = path.posix.join(
-          compilerElement.attributes.sourceFolderPath,
-          moduleAppPath
-        );
+        let attributes = compilerElement.attributes;
+        if ("sourceFolderPath" in attributes) {
+          moduleAppPath = path.posix.join(
+            attributes.sourceFolderPath,
+            moduleAppPath
+          );
+        }
+        if ("outputFolderPath" in attributes) {
+          moduleOutputFolderPath = attributes.outputFolderPath;
+        }
       }
-      migrateModulesElement(modulesElement, moduleAppPath, result);
+      migrateModulesElement(
+        modulesElement,
+        moduleAppPath,
+        moduleOutputFolderPath,
+        result
+      );
     }
   }
 
@@ -1012,6 +1023,7 @@ function migrateBuildTargetsElement(
 function migrateModulesElement(
   modulesElement: any,
   appPath: string,
+  outputFolderPath: string,
   result: any
 ) {
   let children = modulesElement.children as any[];
@@ -1022,12 +1034,26 @@ function migrateModulesElement(
       child.attributes.application === appPath
     );
   });
-  modules.forEach((module) => {
-    let attributes = module.attributes;
-    let moduleSourcePath =
-      "sourcePath" in attributes ? attributes.sourcePath : "";
-    addWarning(WARNING_MODULE + moduleSourcePath);
-  });
+  var newModules = modules
+    .filter((module) => {
+      let attributes = module.attributes;
+      let application =
+        "application" in attributes ? attributes.application : "";
+      let result = application === appPath;
+      return result;
+    })
+    .map((module) => {
+      let attributes = module.attributes;
+      let file = "sourcePath" in attributes ? attributes.sourcePath : "";
+      let output = "destPath" in attributes ? attributes.destPath : "";
+      output = path.posix.join(outputFolderPath, output);
+      let optimize =
+        "optimize" in attributes ? attributes.optimize === "true" : false;
+      return { file, output, optimize };
+    });
+  if (newModules.length > 0) {
+    result.modules = newModules;
+  }
 }
 
 function migrateWorkersElement(workersElement: any, result: any) {
