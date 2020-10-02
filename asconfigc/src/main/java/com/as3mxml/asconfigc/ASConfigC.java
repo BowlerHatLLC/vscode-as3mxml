@@ -488,18 +488,16 @@ public class ASConfigC {
 				}
 			} else {
 				int size = files.size();
-				for (int i = 0; i < size; i++) {
-					if (i == 0) {
-						//terminate previous options and start default options
-						compilerOptions.add("--");
-					}
-					String file = files.get(i).asText();
-					compilerOptions.add(file);
-				}
 				if (size > 0) {
+					//terminate previous options and start default options
+					compilerOptions.add("--");
 					//mainClass is preferred, but for backwards compatibility,
 					//we need to support setting the entry point with files too
 					mainFile = files.get(size - 1).asText();
+				}
+				for (int i = 0; i < size; i++) {
+					String file = files.get(i).asText();
+					compilerOptions.add(file);
 				}
 			}
 		}
