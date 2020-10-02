@@ -45,6 +45,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -73,6 +75,7 @@ import com.as3mxml.asconfigc.compiler.CompilerOptions;
 import com.as3mxml.asconfigc.compiler.CompilerOptionsParser;
 import com.as3mxml.asconfigc.compiler.ConfigName;
 import com.as3mxml.asconfigc.compiler.JSOutputType;
+import com.as3mxml.asconfigc.compiler.ModuleFields;
 import com.as3mxml.asconfigc.compiler.ProjectType;
 import com.as3mxml.asconfigc.compiler.RoyaleTarget;
 import com.as3mxml.asconfigc.htmlTemplate.HTMLTemplateOptionsParser;
@@ -99,6 +102,7 @@ public class ASConfigC {
 	private static final String FILE_NAME_ANIMATE_ERROR_LOG = "AnimateErrors.log";
 	private static final String FILE_NAME_BIN_JS_DEBUG = "bin/js-debug";
 	private static final String FILE_NAME_BIN_JS_RELEASE = "bin/js-release";
+	private static final Pattern COMPILER_OPTION_OUTPUT_PATTERN = Pattern.compile("^-{1,2}output\\b");
 
 	public static void main(String[] args) {
 		CommandLineParser parser = new DefaultParser();
@@ -231,6 +235,7 @@ public class ASConfigC {
 
 	private ASConfigCOptions options;
 	private List<String> compilerOptions;
+	private List<List<String>> allModuleCompilerOptions;
 	private List<String> airOptions;
 	private JsonNode compilerOptionsJSON;
 	private JsonNode airOptionsJSON;
@@ -351,6 +356,7 @@ public class ASConfigC {
 		clean = options.clean != null && options.clean.equals(true);
 		debugBuild = options.debug != null && options.debug.equals(true);
 		compilerOptions = new ArrayList<>();
+		allModuleCompilerOptions = new ArrayList<>();
 		if (options.debug != null) {
 			OptionsFormatter.setBoolean(CompilerOptions.DEBUG, options.debug, compilerOptions);
 		}
@@ -431,6 +437,46 @@ public class ASConfigC {
 				}
 			}
 		}
+		if (json.has(TopLevelFields.MODULES)) {
+			List<String> templateModuleCompilerOptions = duplicateCompilerOptionsForModule(compilerOptions);
+			JsonNode modulesJSON = json.get(TopLevelFields.MODULES);
+			int size = modulesJSON.size();
+			File linkReportFile = null;
+			if (size > 0) {
+				try {
+					linkReportFile = File.createTempFile("asconfigc-link-report", ".xml");
+				} catch (IOException e) {
+					throw new ASConfigCException("Failed to create link report for modules.");
+				}
+			}
+			linkReportFile.deleteOnExit();
+			for (int i = 0; i < size; i++) {
+				List<String> moduleCompilerOptions = new ArrayList<>(templateModuleCompilerOptions);
+				JsonNode module = modulesJSON.get(i);
+				String output = "";
+				if (module.has(ModuleFields.OUTPUT)) {
+					output = module.get(ModuleFields.OUTPUT).asText();
+				}
+				if (output.length() > 0) {
+					moduleCompilerOptions.add("--" + CompilerOptions.OUTPUT + "=" + output);
+				}
+				boolean optimize = false;
+				if (module.has(ModuleFields.OPTIMIZE)) {
+					optimize = module.get(ModuleFields.OPTIMIZE).asBoolean();
+				}
+				if (optimize) {
+					moduleCompilerOptions
+							.add("--" + CompilerOptions.LOAD_EXTERNS + "+=" + linkReportFile.getAbsolutePath());
+				}
+				String file = module.get(ModuleFields.FILE).asText();
+				moduleCompilerOptions.add("--");
+				moduleCompilerOptions.add(file);
+				allModuleCompilerOptions.add(moduleCompilerOptions);
+			}
+			if (size > 0) {
+				compilerOptions.add("--" + CompilerOptions.LINK_REPORT + "+=" + linkReportFile.getAbsolutePath());
+			}
+		}
 		//parse files before airOptions because the mainFile may be
 		//needed to generate some file paths
 		if (json.has(TopLevelFields.FILES)) {
@@ -501,6 +547,12 @@ public class ASConfigC {
 				}
 			}
 		}
+	}
+
+	private List<String> duplicateCompilerOptionsForModule(List<String> compilerOptions) {
+		return compilerOptions.stream().filter(option -> {
+			return !COMPILER_OPTION_OUTPUT_PATTERN.matcher(option).find();
+		}).collect(Collectors.toList());
 	}
 
 	private void detectConfigRequirements(String configName) {
@@ -918,8 +970,13 @@ public class ASConfigC {
 	}
 
 	private void compileProject() throws ASConfigCException {
-		options.compiler.compile(projectType, compilerOptions, Paths.get(System.getProperty("user.dir")),
-				Paths.get(sdkHome));
+		Path workspacePath = Paths.get(System.getProperty("user.dir"));
+		Path sdkPath = Paths.get(sdkHome);
+		options.compiler.compile(projectType, compilerOptions, workspacePath, sdkPath);
+		for (int i = 0; i < allModuleCompilerOptions.size(); i++) {
+			List<String> moduleCompilerOptions = allModuleCompilerOptions.get(i);
+			options.compiler.compile(projectType, moduleCompilerOptions, workspacePath, sdkPath);
+		}
 	}
 
 	private void copySourcePathAssetToOutputDirectory(String assetPath, String mainFile, List<String> sourcePaths,

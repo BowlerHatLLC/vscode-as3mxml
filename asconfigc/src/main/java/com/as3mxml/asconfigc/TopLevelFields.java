@@ -28,4 +28,5 @@ public class TopLevelFields {
 	public static final String ANIMATE_OPTIONS = "animateOptions";
 	public static final String EXTENDS = "extends";
 	public static final String MAIN_CLASS = "mainClass";
+	public static final String MODULES = "modules";
 }
