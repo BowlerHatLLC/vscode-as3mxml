@@ -42,16 +42,31 @@ public class ImportRange {
 
         IMXMLTagData scriptTagData = MXMLDataUtils.findMXMLScriptTag(tagData);
         if (scriptTagData != null) {
+            IMXMLTextData cdataTextData = null;
+            IMXMLTextData fallbackTextData = null;
             IMXMLUnitData childData = scriptTagData.getFirstChildUnit();
             while (childData != null) {
                 if (childData instanceof IMXMLTextData) {
                     IMXMLTextData textData = (IMXMLTextData) childData;
                     if (textData.getTextType() == IMXMLTextData.TextType.CDATA) {
-                        range.startIndex = textData.getCompilableTextStart();
-                        range.endIndex = textData.getCompilableTextEnd();
+                        cdataTextData = textData;
+                        break;
+                    } else if (fallbackTextData == null) {
+                        if (textData.getTextType() == IMXMLTextData.TextType.TEXT
+                                || textData.getTextType() == IMXMLTextData.TextType.WHITESPACE) {
+                            fallbackTextData = textData;
+                            //don't break, keep searching
+                        }
                     }
                 }
                 childData = childData.getNextSiblingUnit();
+            }
+            if (cdataTextData != null) {
+                range.startIndex = cdataTextData.getCompilableTextStart();
+                range.endIndex = cdataTextData.getCompilableTextEnd();
+            } else if (fallbackTextData != null) {
+                range.startIndex = fallbackTextData.getCompilableTextStart();
+                range.endIndex = fallbackTextData.getCompilableTextEnd();
             }
         } else {
             IMXMLTagData rootTag = tagData.getParent().getRootTag();
