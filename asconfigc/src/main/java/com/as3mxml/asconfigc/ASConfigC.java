@@ -220,6 +220,7 @@ public class ASConfigC {
 		parseConfig(json);
 		if (animateFile != null) {
 			compileAnimateFile();
+			prepareNativeExtensions();
 		} else {
 			validateSDK();
 			cleanProject();
