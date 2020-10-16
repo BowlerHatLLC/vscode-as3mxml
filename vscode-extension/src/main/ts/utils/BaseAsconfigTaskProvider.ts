@@ -21,6 +21,13 @@ import * as fs from "fs";
 const ASCONFIG_JSON = "asconfig.json";
 const FILE_EXTENSION_AS = ".as";
 const FILE_EXTENSION_MXML = ".mxml";
+const CONFIG_AIR = "air";
+const CONFIG_AIRMOBILE = "airmobile";
+const FIELD_CONFIG = "config";
+const FIELD_ANIMATE_OPTIONS = "animateOptions";
+const FIELD_FILE = "file";
+const FIELD_APPLICATION = "application";
+const FIELD_AIR_OPTIONS = "airOptions";
 
 export default class BaseAsconfigTaskProvider {
   constructor(
@@ -168,5 +175,39 @@ export default class BaseAsconfigTaskProvider {
       console.error(`Error reading file: ${jsonPath}. ${error}`);
     }
     return null;
+  }
+
+  protected isAnimate(asconfigJson: any): boolean {
+    if (!(FIELD_ANIMATE_OPTIONS in asconfigJson)) {
+      return false;
+    }
+    let animateOptions = asconfigJson[FIELD_ANIMATE_OPTIONS];
+    return FIELD_FILE in animateOptions;
+  }
+
+  protected isAIRDesktop(asconfigJson: any): boolean {
+    if (FIELD_APPLICATION in asconfigJson) {
+      return true;
+    }
+    if (FIELD_AIR_OPTIONS in asconfigJson) {
+      return true;
+    }
+    if (FIELD_CONFIG in asconfigJson) {
+      let config = asconfigJson[FIELD_CONFIG];
+      if (config === CONFIG_AIR) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  protected isAIRMobile(asconfigJson: any): boolean {
+    if (FIELD_CONFIG in asconfigJson) {
+      let config = asconfigJson[FIELD_CONFIG];
+      if (config === CONFIG_AIRMOBILE) {
+        return true;
+      }
+    }
+    return false;
   }
 }

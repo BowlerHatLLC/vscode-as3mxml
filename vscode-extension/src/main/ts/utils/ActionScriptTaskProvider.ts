@@ -19,14 +19,8 @@ import getFrameworkSDKPathWithFallbacks from "./getFrameworkSDKPathWithFallbacks
 import BaseAsconfigTaskProvider from "./BaseAsconfigTaskProvider";
 
 const ASCONFIG_JSON = "asconfig.json";
-const CONFIG_AIR = "air";
-const CONFIG_AIRMOBILE = "airmobile";
-const FIELD_CONFIG = "config";
-const FIELD_APPLICATION = "application";
 const FIELD_AIR_OPTIONS = "airOptions";
 const FIELD_TARGET = "target";
-const FIELD_ANIMATE_OPTIONS = "animateOptions";
-const FIELD_FILE = "file";
 const PLATFORM_IOS = "ios";
 const PLATFORM_IOS_SIMULATOR = "ios_simulator";
 const PLATFORM_ANDROID = "android";
@@ -584,40 +578,6 @@ export default class ActionScriptTaskProvider
     );
     task.group = vscode.TaskGroup.Build;
     return task;
-  }
-
-  private isAnimate(asconfigJson: any): boolean {
-    if (!(FIELD_ANIMATE_OPTIONS in asconfigJson)) {
-      return false;
-    }
-    let animateOptions = asconfigJson[FIELD_ANIMATE_OPTIONS];
-    return FIELD_FILE in animateOptions;
-  }
-
-  private isAIRDesktop(asconfigJson: any): boolean {
-    if (FIELD_APPLICATION in asconfigJson) {
-      return true;
-    }
-    if (FIELD_AIR_OPTIONS in asconfigJson) {
-      return true;
-    }
-    if (FIELD_CONFIG in asconfigJson) {
-      let config = asconfigJson[FIELD_CONFIG];
-      if (config === CONFIG_AIR) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  private isAIRMobile(asconfigJson: any): boolean {
-    if (FIELD_CONFIG in asconfigJson) {
-      let config = asconfigJson[FIELD_CONFIG];
-      if (config === CONFIG_AIRMOBILE) {
-        return true;
-      }
-    }
-    return false;
   }
 
   private isWindowsOverrideShared(asconfigJson: any): boolean {

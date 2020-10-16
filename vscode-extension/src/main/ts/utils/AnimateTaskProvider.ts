@@ -46,9 +46,11 @@ export default class ActionScriptTaskProvider
     result: vscode.Task[]
   ) {
     let isAnimate = false;
+    let isAIR = false;
     let asconfigJson = this.readASConfigJSON(jsonURI);
     if (asconfigJson !== null) {
       isAnimate = this.isAnimate(asconfigJson);
+      isAIR = this.isAIRDesktop(asconfigJson) || this.isAIRMobile(asconfigJson);
     }
 
     let frameworkSDK = getFrameworkSDKPathWithFallbacks();
@@ -87,7 +89,8 @@ export default class ActionScriptTaskProvider
         command,
         animatePath,
         true,
-        false
+        false,
+        isAIR
       )
     );
     result.push(
@@ -97,6 +100,7 @@ export default class ActionScriptTaskProvider
         workspaceFolder,
         command,
         animatePath,
+        false,
         false,
         false
       )
@@ -109,7 +113,8 @@ export default class ActionScriptTaskProvider
         command,
         animatePath,
         true,
-        true
+        true,
+        false
       )
     );
     result.push(
@@ -120,7 +125,8 @@ export default class ActionScriptTaskProvider
         command,
         animatePath,
         false,
-        true
+        true,
+        false
       )
     );
   }
@@ -132,7 +138,8 @@ export default class ActionScriptTaskProvider
     command: string[],
     animatePath: string,
     debug: boolean,
-    publish: boolean
+    publish: boolean,
+    unpackageANEs: boolean
   ): vscode.Task {
     let asconfig: string = this.getASConfigValue(jsonURI, workspaceFolder.uri);
     let definition: AnimateTaskDefinition = {
@@ -151,6 +158,9 @@ export default class ActionScriptTaskProvider
       options.push("--publish-animate=true");
     } else {
       options.push("--publish-animate=false");
+    }
+    if (unpackageANEs) {
+      options.push("--unpackage-anes=true");
     }
     if (
       vscode.workspace
@@ -176,13 +186,5 @@ export default class ActionScriptTaskProvider
     );
     task.group = vscode.TaskGroup.Build;
     return task;
-  }
-
-  private isAnimate(asconfigJson: any): boolean {
-    if (!(FIELD_ANIMATE_OPTIONS in asconfigJson)) {
-      return false;
-    }
-    let animateOptions = asconfigJson[FIELD_ANIMATE_OPTIONS];
-    return FIELD_FILE in animateOptions;
   }
 }
