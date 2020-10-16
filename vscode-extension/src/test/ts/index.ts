@@ -19,8 +19,7 @@ import * as Mocha from "mocha";
 
 export function run(): Promise<void>
 {
-	const mocha = new Mocha({ ui: "tdd" });
-	mocha.useColors(true);
+	const mocha = new Mocha({ ui: "tdd", color: true });
 	mocha.timeout(7500);
 
 	const testsRoot = path.resolve(__dirname, "..");
