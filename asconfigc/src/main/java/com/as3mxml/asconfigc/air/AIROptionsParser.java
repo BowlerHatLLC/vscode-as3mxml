@@ -262,9 +262,38 @@ public class AIROptionsParser {
 		}
 	}
 
+	private class FolderToAddWithCOption {
+		public FolderToAddWithCOption(File file) {
+			this(file, null);
+		}
+
+		public FolderToAddWithCOption(File file, Path destPath) {
+			this.file = file;
+			this.destPath = destPath;
+		}
+
+		public File file;
+		public Path destPath;
+	}
+
+	private boolean canUseCOptionForFolder(File file, Path destPath) {
+		File currentFile = file;
+		for (int i = destPath.getNameCount() - 1; i >= 0; i--) {
+			if (currentFile == null) {
+				return false;
+			}
+			String currentName = destPath.getName(i).toString();
+			if (!currentFile.getName().equals(currentName)) {
+				return false;
+			}
+			currentFile = file.getParentFile();
+		}
+		return true;
+	}
+
 	private void parseFiles(JsonNode files, List<String> result) {
-		List<File> selfFolders = new ArrayList<>();
-		List<File> rootFolders = new ArrayList<>();
+		List<FolderToAddWithCOption> cOptionFolders = new ArrayList<>();
+		List<File> cOptionRootFolders = new ArrayList<>();
 		for (int i = 0, size = files.size(); i < size; i++) {
 			JsonNode fileNode = files.get(i);
 			String srcFile = null;
@@ -287,18 +316,21 @@ public class AIROptionsParser {
 				if (destPath == null) {
 					//add these folders after everything else because we'll use
 					//the -C option
-					selfFolders.add(fileToAdd);
-					continue;
-				} else if (destPath.equals(fileToAdd.getName())) {
-					//add these folders after everything else because we'll use
-					//the -C option
-					selfFolders.add(fileToAdd);
+					cOptionFolders.add(new FolderToAddWithCOption(fileToAdd));
 					continue;
 				} else if (destPath.equals(".")) {
 					//add these folders after everything else because we'll use
 					//the -C option
-					rootFolders.add(fileToAdd);
+					cOptionRootFolders.add(fileToAdd);
 					continue;
+				} else {
+					Path destPathPath = Paths.get(destPath);
+					if (canUseCOptionForFolder(fileToAdd, destPathPath)) {
+						//add these folders after everything else because we'll use
+						//the -C option
+						cOptionFolders.add(new FolderToAddWithCOption(fileToAdd, destPathPath));
+						continue;
+					}
 				}
 			}
 
@@ -307,19 +339,38 @@ public class AIROptionsParser {
 			}
 			addFile(fileToAdd, destPath, result);
 		}
-		for (File folder : rootFolders) {
+		for (File folder : cOptionRootFolders) {
 			result.add("-C");
 			result.add(folder.getPath());
 			result.add(".");
 		}
-		for (File folder : selfFolders) {
-			String parentPath = folder.getParent();
-			if (parentPath == null) {
-				parentPath = ".";
+		for (FolderToAddWithCOption cOptionFolder : cOptionFolders) {
+			File folder = cOptionFolder.file;
+			Path destPath = cOptionFolder.destPath;
+			if (destPath == null) {
+				String parentPath = folder.getParent();
+				if (parentPath == null) {
+					parentPath = ".";
+				}
+				result.add("-C");
+				result.add(parentPath);
+				result.add(folder.getName());
+			} else {
+				Path baseFolderPath = folder.toPath();
+				for (int i = 0; i < destPath.getNameCount(); i++) {
+					baseFolderPath = baseFolderPath.getParent();
+					if (baseFolderPath == null) {
+						break;
+					}
+				}
+				String baseFolderPathString = ".";
+				if (baseFolderPath != null) {
+					baseFolderPathString = baseFolderPath.toString();
+				}
+				result.add("-C");
+				result.add(baseFolderPathString);
+				result.add(destPath.toString());
 			}
-			result.add("-C");
-			result.add(parentPath);
-			result.add(folder.getName());
 		}
 	}
 
