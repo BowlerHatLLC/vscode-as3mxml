@@ -1,5 +1,18 @@
 # ActionScript & MXML for Visual Studio Code Changelog
 
+## v1.4.0
+
+### New Features
+
+- Build: Support for compiling Apache Flex modules.
+- Project Import: Modules in Adobe Flash Builder projects are now included.
+
+### Fixed Issues
+
+- Build: Further reduce command line options generated when adding folders to an Adobe AIR application. In some cases, it would make the command too long and the build would fail.
+- Build: Add missing action to unpackage Adobe AIR native extensions for debugging when compiling with Adobe Animate.
+- Completion: Fix location of added imports in MXML `<fx:Script>` tags when CDATA is missing.
+
 ## v1.3.0
 
 ### New Features
