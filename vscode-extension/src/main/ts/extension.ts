@@ -71,11 +71,6 @@ let editorSDKHome: string;
 let javaExecutablePath: string;
 let frameworkSDKHome: string;
 let sdkStatusBarItem: vscode.StatusBarItem;
-let sourcePathView: vscode.TreeView<ActionScriptSourcePath> = null;
-let sourcePathDataProvider: ActionScriptSourcePathDataProvider = null;
-let actionScriptTaskProvider: ActionScriptTaskProvider = null;
-let animateTaskProvider: AnimateTaskProvider = null;
-let swcTextDocumentContentProvider: SWCTextDocumentContentProvider = null;
 let pendingQuickCompileAndDebug = false;
 let pendingQuickCompileAndRun = false;
 
@@ -178,193 +173,214 @@ export function activate(context: vscode.ExtensionContext) {
   });
   editorSDKHome = getValidatedEditorSDKConfiguration(javaExecutablePath);
   frameworkSDKHome = getFrameworkSDKPathWithFallbacks();
-  vscode.workspace.onDidChangeConfiguration(onDidChangeConfiguration);
+  savedContext.subscriptions.push(
+    vscode.workspace.onDidChangeConfiguration(onDidChangeConfiguration)
+  );
 
-  vscode.languages.setLanguageConfiguration("actionscript", {
-    //this code is MIT licensed from Microsoft's official TypeScript
-    //extension that's built into VSCode
-    //https://github.com/Microsoft/vscode/blob/9d611d4dfd5a4a101b5201b8c9e21af97f06e7a7/extensions/typescript/src/typescriptMain.ts#L186
-    onEnterRules: [
-      {
-        beforeText: /^\s*\/\*\*(?!\/)([^\*]|\*(?!\/))*$/,
-        afterText: /^\s*\*\/$/,
-        action: {
-          //if you press enter between /** and */ on the same line,
-          //it will insert a * on the next line
-          indentAction: vscode.IndentAction.IndentOutdent,
-          appendText: " * ",
+  savedContext.subscriptions.push(
+    vscode.languages.setLanguageConfiguration("actionscript", {
+      //this code is MIT licensed from Microsoft's official TypeScript
+      //extension that's built into VSCode
+      //https://github.com/Microsoft/vscode/blob/9d611d4dfd5a4a101b5201b8c9e21af97f06e7a7/extensions/typescript/src/typescriptMain.ts#L186
+      onEnterRules: [
+        {
+          beforeText: /^\s*\/\*\*(?!\/)([^\*]|\*(?!\/))*$/,
+          afterText: /^\s*\*\/$/,
+          action: {
+            //if you press enter between /** and */ on the same line,
+            //it will insert a * on the next line
+            indentAction: vscode.IndentAction.IndentOutdent,
+            appendText: " * ",
+          },
         },
-      },
-      {
-        beforeText: /^\s*\/\*\*(?!\/)([^\*]|\*(?!\/))*$/,
-        action: {
-          //if you press enter after /**, when there is no */, it
-          //will insert a * on the next line
-          indentAction: vscode.IndentAction.None,
-          appendText: " * ",
+        {
+          beforeText: /^\s*\/\*\*(?!\/)([^\*]|\*(?!\/))*$/,
+          action: {
+            //if you press enter after /**, when there is no */, it
+            //will insert a * on the next line
+            indentAction: vscode.IndentAction.None,
+            appendText: " * ",
+          },
         },
-      },
-      {
-        beforeText: /^(\t|(\ \ ))*\ \*(\ ([^\*]|\*(?!\/))*)?$/,
-        action: {
-          //if you press enter on a line with *, it will insert
-          //another * on the next line
-          indentAction: vscode.IndentAction.None,
-          appendText: "* ",
+        {
+          beforeText: /^(\t|(\ \ ))*\ \*(\ ([^\*]|\*(?!\/))*)?$/,
+          action: {
+            //if you press enter on a line with *, it will insert
+            //another * on the next line
+            indentAction: vscode.IndentAction.None,
+            appendText: "* ",
+          },
         },
-      },
-      {
-        beforeText: /^(\t|(\ \ ))*\ \*\/\s*$/,
-        action: {
-          //removes the extra space if you press enter after a line
-          //that contains only */
-          indentAction: vscode.IndentAction.None,
-          removeText: 1,
+        {
+          beforeText: /^(\t|(\ \ ))*\ \*\/\s*$/,
+          action: {
+            //removes the extra space if you press enter after a line
+            //that contains only */
+            indentAction: vscode.IndentAction.None,
+            removeText: 1,
+          },
         },
-      },
-      {
-        beforeText: /^(\t|(\ \ ))*\ \*[^/]*\*\/\s*$/,
-        action: {
-          //removes the extra space if you press enter after a line
-          //that starts with * and also has */ at the end
-          indentAction: vscode.IndentAction.None,
-          removeText: 1,
+        {
+          beforeText: /^(\t|(\ \ ))*\ \*[^/]*\*\/\s*$/,
+          action: {
+            //removes the extra space if you press enter after a line
+            //that starts with * and also has */ at the end
+            indentAction: vscode.IndentAction.None,
+            removeText: 1,
+          },
         },
-      },
-    ],
-  });
+      ],
+    })
+  );
 
-  vscode.commands.registerCommand(
-    "as3mxml.selectWorkspaceSDK",
-    selectWorkspaceSDK
+  savedContext.subscriptions.push(
+    vscode.commands.registerCommand(
+      "as3mxml.selectWorkspaceSDK",
+      selectWorkspaceSDK
+    )
   );
-  vscode.commands.registerCommand("as3mxml.restartServer", restartServer);
-  vscode.commands.registerCommand(
-    "as3mxml.logCompilerShellOutput",
-    logCompilerShellOutput
+  savedContext.subscriptions.push(
+    vscode.commands.registerCommand("as3mxml.restartServer", restartServer)
   );
-  vscode.commands.registerCommand(
-    "as3mxml.saveSessionPassword",
-    saveSessionPassword
+  savedContext.subscriptions.push(
+    vscode.commands.registerCommand(
+      "as3mxml.logCompilerShellOutput",
+      logCompilerShellOutput
+    )
   );
-  vscode.commands.registerCommand("as3mxml.importFlashBuilderProject", () => {
-    pickProjectInWorkspace(true, false);
-  });
-  vscode.commands.registerCommand("as3mxml.importFlashDevelopProject", () => {
-    pickProjectInWorkspace(false, true);
-  });
-  vscode.commands.registerCommand("as3mxml.quickCompileAndDebug", () => {
-    vscode.commands.getCommands(true).then((commands) => {
-      if (
-        commands.some((command) => command === "as3mxml.getActiveProjectURIs")
-      ) {
-        vscode.commands
-          .executeCommand("as3mxml.getActiveProjectURIs", true)
-          .then((uris: string[]) => {
-            if (uris.length === 0) {
-              //no projects with asconfig.json files
-              return;
-            }
-            quickCompileAndLaunch(uris, true);
-          });
-      } else if (!savedLanguageClient || !isLanguageClientReady) {
+  savedContext.subscriptions.push(
+    vscode.commands.registerCommand(
+      "as3mxml.saveSessionPassword",
+      saveSessionPassword
+    )
+  );
+  savedContext.subscriptions.push(
+    vscode.commands.registerCommand("as3mxml.importFlashBuilderProject", () => {
+      pickProjectInWorkspace(true, false);
+    })
+  );
+  savedContext.subscriptions.push(
+    vscode.commands.registerCommand("as3mxml.importFlashDevelopProject", () => {
+      pickProjectInWorkspace(false, true);
+    })
+  );
+  savedContext.subscriptions.push(
+    vscode.commands.registerCommand("as3mxml.quickCompileAndDebug", () => {
+      vscode.commands.getCommands(true).then((commands) => {
         if (
-          vscode.workspace.workspaceFolders === undefined ||
-          !vscode.workspace.workspaceFolders.some((workspaceFolder) =>
-            fs.existsSync(
-              path.resolve(workspaceFolder.uri.fsPath, ASCONFIG_JSON)
-            )
-          )
+          commands.some((command) => command === "as3mxml.getActiveProjectURIs")
         ) {
-          //skip the message if there aren't any workspace folders
-          //that contain asconfig.json
-          pendingQuickCompileAndDebug = false;
+          vscode.commands
+            .executeCommand("as3mxml.getActiveProjectURIs", true)
+            .then((uris: string[]) => {
+              if (uris.length === 0) {
+                //no projects with asconfig.json files
+                return;
+              }
+              quickCompileAndLaunch(uris, true);
+            });
+        } else if (!savedLanguageClient || !isLanguageClientReady) {
+          if (
+            vscode.workspace.workspaceFolders === undefined ||
+            !vscode.workspace.workspaceFolders.some((workspaceFolder) =>
+              fs.existsSync(
+                path.resolve(workspaceFolder.uri.fsPath, ASCONFIG_JSON)
+              )
+            )
+          ) {
+            //skip the message if there aren't any workspace folders
+            //that contain asconfig.json
+            pendingQuickCompileAndDebug = false;
+            pendingQuickCompileAndRun = false;
+            return;
+          }
+          pendingQuickCompileAndDebug = true;
           pendingQuickCompileAndRun = false;
+          logCompilerShellOutput(
+            QUICK_COMPILE_AND_DEBUG_INIT_MESSAGE,
+            true,
+            false
+          );
+        }
+      });
+    })
+  );
+  savedContext.subscriptions.push(
+    vscode.commands.registerCommand("as3mxml.quickCompileAndRun", () => {
+      vscode.commands.getCommands(true).then((commands) => {
+        if (
+          commands.some((command) => command === "as3mxml.getActiveProjectURIs")
+        ) {
+          vscode.commands
+            .executeCommand("as3mxml.getActiveProjectURIs", true)
+            .then((uris: string[]) => {
+              if (uris.length === 0) {
+                //no projects with asconfig.json files
+                return;
+              }
+              quickCompileAndLaunch(uris, false);
+            });
+        } else if (!savedLanguageClient || !isLanguageClientReady) {
+          if (
+            vscode.workspace.workspaceFolders === undefined ||
+            !vscode.workspace.workspaceFolders.some((workspaceFolder) =>
+              fs.existsSync(
+                path.resolve(workspaceFolder.uri.fsPath, ASCONFIG_JSON)
+              )
+            )
+          ) {
+            //skip the message if there aren't any workspace folders
+            //that contain asconfig.json
+            pendingQuickCompileAndDebug = false;
+            pendingQuickCompileAndRun = false;
+            return;
+          }
+          pendingQuickCompileAndRun = true;
+          pendingQuickCompileAndDebug = false;
+          logCompilerShellOutput(
+            QUICK_COMPILE_AND_RUN_INIT_MESSAGE,
+            true,
+            false
+          );
           return;
         }
-        pendingQuickCompileAndDebug = true;
-        pendingQuickCompileAndRun = false;
-        logCompilerShellOutput(
-          QUICK_COMPILE_AND_DEBUG_INIT_MESSAGE,
-          true,
-          false
-        );
-      }
-    });
-  });
-  vscode.commands.registerCommand("as3mxml.quickCompileAndRun", () => {
-    vscode.commands.getCommands(true).then((commands) => {
-      if (
-        commands.some((command) => command === "as3mxml.getActiveProjectURIs")
-      ) {
-        vscode.commands
-          .executeCommand("as3mxml.getActiveProjectURIs", true)
-          .then((uris: string[]) => {
-            if (uris.length === 0) {
-              //no projects with asconfig.json files
-              return;
-            }
-            quickCompileAndLaunch(uris, false);
-          });
-      } else if (!savedLanguageClient || !isLanguageClientReady) {
-        if (
-          vscode.workspace.workspaceFolders === undefined ||
-          !vscode.workspace.workspaceFolders.some((workspaceFolder) =>
-            fs.existsSync(
-              path.resolve(workspaceFolder.uri.fsPath, ASCONFIG_JSON)
-            )
-          )
-        ) {
-          //skip the message if there aren't any workspace folders
-          //that contain asconfig.json
-          pendingQuickCompileAndDebug = false;
-          pendingQuickCompileAndRun = false;
-          return;
-        }
-        pendingQuickCompileAndRun = true;
-        pendingQuickCompileAndDebug = false;
-        logCompilerShellOutput(QUICK_COMPILE_AND_RUN_INIT_MESSAGE, true, false);
-        return;
-      }
-    });
-  });
+      });
+    })
+  );
 
   //don't activate these things unless we're in a workspace
   if (vscode.workspace.workspaceFolders !== undefined) {
-    let rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
-    sourcePathDataProvider = new ActionScriptSourcePathDataProvider(rootPath);
-    sourcePathView = vscode.window.createTreeView("actionScriptSourcePaths", {
-      treeDataProvider: sourcePathDataProvider,
-    });
-    context.subscriptions.push(sourcePathView);
+    const rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
+    context.subscriptions.push(
+      vscode.window.createTreeView("actionScriptSourcePaths", {
+        treeDataProvider: new ActionScriptSourcePathDataProvider(rootPath),
+      })
+    );
   }
 
   sdkStatusBarItem = createActionScriptSDKStatusBarItem();
   updateSDKStatusBarItem();
 
-  actionScriptTaskProvider = new ActionScriptTaskProvider(
-    context,
-    javaExecutablePath
+  context.subscriptions.push(
+    vscode.tasks.registerTaskProvider(
+      "actionscript",
+      new ActionScriptTaskProvider(context, javaExecutablePath)
+    )
   );
-  let actionScriptTaskDisposable = vscode.tasks.registerTaskProvider(
-    "actionscript",
-    actionScriptTaskProvider
-  );
-  context.subscriptions.push(actionScriptTaskDisposable);
 
-  animateTaskProvider = new AnimateTaskProvider(context, javaExecutablePath);
-  let animateTaskDisposable = vscode.tasks.registerTaskProvider(
-    "animate",
-    animateTaskProvider
+  context.subscriptions.push(
+    vscode.tasks.registerTaskProvider(
+      "animate",
+      new AnimateTaskProvider(context, javaExecutablePath)
+    )
   );
-  context.subscriptions.push(animateTaskDisposable);
 
-  swcTextDocumentContentProvider = new SWCTextDocumentContentProvider();
-  let swcContentDisposable = vscode.workspace.registerTextDocumentContentProvider(
-    "swc",
-    swcTextDocumentContentProvider
+  context.subscriptions.push(
+    vscode.workspace.registerTextDocumentContentProvider(
+      "swc",
+      new SWCTextDocumentContentProvider()
+    )
   );
-  context.subscriptions.push(swcContentDisposable);
 
   startClient();
 
@@ -534,8 +550,7 @@ function startClient() {
             vscode.window.showErrorMessage(STARTUP_ERROR);
           }
         );
-        let disposable = savedLanguageClient.start();
-        savedContext.subscriptions.push(disposable);
+        savedContext.subscriptions.push(savedLanguageClient.start());
       });
     }
   );
