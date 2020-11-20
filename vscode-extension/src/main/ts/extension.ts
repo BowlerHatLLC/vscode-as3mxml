@@ -350,10 +350,9 @@ export function activate(context: vscode.ExtensionContext) {
 
   //don't activate these things unless we're in a workspace
   if (vscode.workspace.workspaceFolders !== undefined) {
-    const rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
     context.subscriptions.push(
       vscode.window.createTreeView("actionScriptSourcePaths", {
-        treeDataProvider: new ActionScriptSourcePathDataProvider(rootPath),
+        treeDataProvider: new ActionScriptSourcePathDataProvider(),
       })
     );
   }

@@ -18,11 +18,15 @@ import * as json5 from "json5";
 import * as path from "path";
 import * as vscode from "vscode";
 
+const FILE_ASCONFIG_JSON = "asconfig.json";
 const FILE_EXTENSION_AS = ".as";
 const FILE_EXTENSION_MXML = ".mxml";
 
 export class ActionScriptSourcePath extends vscode.TreeItem {
-  constructor(file: vscode.Uri | string) {
+  constructor(
+    file: vscode.Uri | string,
+    workspaceFolder: vscode.WorkspaceFolder
+  ) {
     let contextValue: string = null;
     let command: vscode.Command;
     let collapsibleState = vscode.TreeItemCollapsibleState.None;
@@ -54,19 +58,19 @@ export class ActionScriptSourcePath extends vscode.TreeItem {
     this.resourceUri = uri;
     this.command = command;
     this.contextValue = contextValue;
+    this.workspaceFolder = workspaceFolder;
   }
+
+  workspaceFolder: vscode.WorkspaceFolder;
 }
 
 export default class ActionScriptSourcePathDataProvider
   implements vscode.TreeDataProvider<ActionScriptSourcePath> {
-  private _workspaceRoot: string;
-  private _asconfigPath: string;
   private _onDidChangeTreeData: vscode.EventEmitter<ActionScriptSourcePath | null> = new vscode.EventEmitter<ActionScriptSourcePath | null>();
-  private _rootPaths: ActionScriptSourcePath[];
+  private _rootSourcePaths: ActionScriptSourcePath[];
+  private _rootPathStrings: Set<string>;
 
-  constructor(workspaceRoot: string) {
-    this._workspaceRoot = workspaceRoot;
-    this._asconfigPath = path.join(this._workspaceRoot, "asconfig.json");
+  constructor() {
     let watcher = vscode.workspace.createFileSystemWatcher("**/asconfig.json");
     watcher.onDidChange(this.asconfigFileSystemWatcher_onEvent, this);
     watcher.onDidCreate(this.asconfigFileSystemWatcher_onEvent, this);
@@ -84,88 +88,127 @@ export default class ActionScriptSourcePathDataProvider
   getChildren(
     element?: ActionScriptSourcePath
   ): Thenable<ActionScriptSourcePath[]> {
-    if (!this._workspaceRoot) {
+    if (!element) {
+      if (this._rootSourcePaths.length === 0) {
+        return Promise.resolve([
+          new ActionScriptSourcePath(
+            "No source paths",
+            element.workspaceFolder
+          ),
+        ]);
+      }
+      return Promise.resolve(this._rootSourcePaths);
+    }
+
+    const workspaceFolder = element.workspaceFolder;
+    if (!workspaceFolder) {
       return Promise.resolve([
-        new ActionScriptSourcePath("Open a workspace to see source paths"),
+        new ActionScriptSourcePath(
+          "Open a workspace to see source paths",
+          undefined
+        ),
       ]);
     }
-    if (!fs.existsSync(this._asconfigPath)) {
+
+    let asconfigPath = path.resolve(
+      workspaceFolder.uri.fsPath,
+      FILE_ASCONFIG_JSON
+    );
+    if (!fs.existsSync(asconfigPath)) {
       return Promise.resolve([
-        new ActionScriptSourcePath("No source paths in asconfig.json"),
+        new ActionScriptSourcePath(
+          "No source paths in asconfig.json",
+          workspaceFolder
+        ),
       ]);
     }
-    return new Promise((resolve) => {
-      if (element) {
-        let elementUri = element.resourceUri;
-        let elementPath = elementUri.fsPath;
-        if (!fs.statSync(elementPath).isDirectory()) {
-          return resolve([]);
-        }
-        let files = fs.readdirSync(elementPath);
-        let sourcePaths = [];
-        files.forEach((filePath) => {
-          filePath = path.join(elementPath, filePath);
-          if (fs.statSync(filePath).isDirectory()) {
-            sourcePaths.push(this.pathToSourcePath(filePath));
-          } else {
-            let extension = path.extname(filePath);
-            //don't show files that have different extensions
-            if (
-              extension === FILE_EXTENSION_AS ||
-              extension === FILE_EXTENSION_MXML
-            ) {
-              sourcePaths.push(this.pathToSourcePath(filePath));
-            }
-          }
-        });
-        return resolve(sourcePaths);
+
+    let elementUri = element.resourceUri;
+    let elementPath = elementUri.fsPath;
+    if (!fs.statSync(elementPath).isDirectory()) {
+      return Promise.resolve([]);
+    }
+    let files = fs.readdirSync(elementPath);
+    let sourcePaths = [];
+    files.forEach((filePath) => {
+      filePath = path.join(elementPath, filePath);
+      if (fs.statSync(filePath).isDirectory()) {
+        filePath = path.resolve(workspaceFolder.uri.fsPath, filePath);
+        let fileUri = vscode.Uri.file(filePath);
+        sourcePaths.push(new ActionScriptSourcePath(fileUri, workspaceFolder));
       } else {
-        if (this._rootPaths.length === 0) {
-          return resolve([new ActionScriptSourcePath("No source paths")]);
+        let extension = path.extname(filePath);
+        //don't show files that have different extensions
+        if (
+          extension === FILE_EXTENSION_AS ||
+          extension === FILE_EXTENSION_MXML
+        ) {
+          filePath = path.resolve(workspaceFolder.uri.fsPath, filePath);
+          let fileUri = vscode.Uri.file(filePath);
+          sourcePaths.push(
+            new ActionScriptSourcePath(fileUri, workspaceFolder)
+          );
         }
-        return resolve(this._rootPaths);
       }
     });
-  }
-
-  private pathToSourcePath(pathToResolve: string): ActionScriptSourcePath {
-    let rootPath = path.resolve(this._workspaceRoot, pathToResolve);
-    let uri = vscode.Uri.file(rootPath);
-    return new ActionScriptSourcePath(uri);
+    return Promise.resolve(sourcePaths);
   }
 
   private refreshSourcePaths() {
-    let oldPaths = this._rootPaths;
-    this._rootPaths = [];
-    if (!fs.existsSync(this._asconfigPath)) {
+    this._rootSourcePaths = [];
+    this._rootPathStrings = new Set();
+    if (vscode.workspace.workspaceFolders == undefined) {
       this._onDidChangeTreeData.fire();
       return;
     }
-    try {
-      let contents = fs.readFileSync(this._asconfigPath, "utf8");
-      let result = json5.parse(contents);
-      if ("compilerOptions" in result) {
-        let compilerOptions = result.compilerOptions;
-        if ("source-path" in compilerOptions) {
-          let sourcePath = compilerOptions["source-path"];
-          if (Array.isArray(sourcePath)) {
-            sourcePath.forEach((sourcePath: string) => {
-              let rootPath = this.pathToSourcePath(sourcePath);
-              let name = path.basename(rootPath.resourceUri.fsPath);
-              let extension = path.extname(name);
-              if (extension.length > 0) {
-                //don't show the file extension
-                name = name.substr(0, name.length - extension.length);
-              }
-              rootPath.label = name;
-              this._rootPaths.push(rootPath);
-            });
+    vscode.workspace.workspaceFolders.forEach((workspaceFolder) => {
+      let asconfigPath = path.resolve(
+        workspaceFolder.uri.fsPath,
+        FILE_ASCONFIG_JSON
+      );
+      if (!fs.existsSync(asconfigPath)) {
+        this._onDidChangeTreeData.fire();
+        return;
+      }
+      try {
+        let contents = fs.readFileSync(asconfigPath, "utf8");
+        let result = json5.parse(contents);
+        if ("compilerOptions" in result) {
+          let compilerOptions = result.compilerOptions;
+          if ("source-path" in compilerOptions) {
+            let sourcePath = compilerOptions["source-path"];
+            if (Array.isArray(sourcePath)) {
+              sourcePath.forEach((sourcePath: string) => {
+                let resolvedRootFilePath = path.resolve(
+                  workspaceFolder.uri.fsPath,
+                  sourcePath
+                );
+                if (this._rootPathStrings.has(resolvedRootFilePath)) {
+                  //resolved path already exists
+                  return;
+                }
+                this._rootPathStrings.add(resolvedRootFilePath);
+                let resolvedRootUri = vscode.Uri.file(resolvedRootFilePath);
+                let rootPath = new ActionScriptSourcePath(
+                  resolvedRootUri,
+                  workspaceFolder
+                );
+                let name = path.basename(rootPath.resourceUri.fsPath);
+                let extension = path.extname(name);
+                if (extension.length > 0) {
+                  //don't show the file extension
+                  name = name.substr(0, name.length - extension.length);
+                }
+                rootPath.label = name;
+                this._rootSourcePaths.push(rootPath);
+              });
+            }
           }
         }
+      } catch (error) {
+        //we'll ignore this one
       }
-    } catch (error) {
-      //we'll ignore this one
-    }
+    });
     this.handleDuplicateRootPathNames();
     this._onDidChangeTreeData.fire();
   }
@@ -198,16 +241,16 @@ export default class ActionScriptSourcePathDataProvider
 
   private handleDuplicateRootPathNames() {
     let duplicatePaths: string[] = [];
-    let pathCount = this._rootPaths.length;
+    let pathCount = this._rootSourcePaths.length;
     for (let i = 0; i < pathCount; i++) {
-      let rootPath = this._rootPaths[i];
+      let rootPath = this._rootSourcePaths[i];
       let j = i + 1;
       if (j === pathCount) {
         this.removeDuplicateLabel(duplicatePaths, rootPath);
         break;
       }
       for (; j < pathCount; j++) {
-        let otherRootPath = this._rootPaths[j];
+        let otherRootPath = this._rootSourcePaths[j];
         this.removeDuplicateLabel(duplicatePaths, rootPath, otherRootPath);
       }
     }
