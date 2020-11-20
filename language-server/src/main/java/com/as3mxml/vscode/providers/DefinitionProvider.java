@@ -65,17 +65,23 @@ public class DefinitionProvider {
 
     public Either<List<? extends Location>, List<? extends LocationLink>> definition(DefinitionParams params,
             CancelChecker cancelToken) {
-        cancelToken.checkCanceled();
+        if (cancelToken != null) {
+            cancelToken.checkCanceled();
+        }
         TextDocumentIdentifier textDocument = params.getTextDocument();
         Position position = params.getPosition();
         Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocument.getUri());
         if (path == null) {
-            cancelToken.checkCanceled();
+            if (cancelToken != null) {
+                cancelToken.checkCanceled();
+            }
             return Either.forLeft(Collections.emptyList());
         }
         ActionScriptProjectData projectData = actionScriptProjectManager.getProjectDataForSourceFile(path);
         if (projectData == null || projectData.project == null) {
-            cancelToken.checkCanceled();
+            if (cancelToken != null) {
+                cancelToken.checkCanceled();
+            }
             return Either.forLeft(Collections.emptyList());
         }
 
@@ -83,7 +89,9 @@ public class DefinitionProvider {
         int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position,
                 includeFileData);
         if (currentOffset == -1) {
-            cancelToken.checkCanceled();
+            if (cancelToken != null) {
+                cancelToken.checkCanceled();
+            }
             return Either.forLeft(Collections.emptyList());
         }
         boolean isMXML = textDocument.getUri().endsWith(FILE_EXTENSION_MXML);
@@ -95,21 +103,27 @@ public class DefinitionProvider {
                         currentOffset, projectData);
                 if (embeddedNode != null) {
                     List<? extends Location> result = actionScriptDefinition(embeddedNode, projectData);
-                    cancelToken.checkCanceled();
+                    if (cancelToken != null) {
+                        cancelToken.checkCanceled();
+                    }
                     return Either.forLeft(result);
                 }
                 //if we're inside an <fx:Script> tag, we want ActionScript lookup,
                 //so that's why we call isMXMLTagValidForCompletion()
                 if (MXMLDataUtils.isMXMLCodeIntelligenceAvailableForTag(offsetTag)) {
                     List<? extends Location> result = mxmlDefinition(offsetTag, currentOffset, projectData);
-                    cancelToken.checkCanceled();
+                    if (cancelToken != null) {
+                        cancelToken.checkCanceled();
+                    }
                     return Either.forLeft(result);
                 }
             }
         }
         IASNode offsetNode = actionScriptProjectManager.getOffsetNode(path, currentOffset, projectData);
         List<? extends Location> result = actionScriptDefinition(offsetNode, projectData);
-        cancelToken.checkCanceled();
+        if (cancelToken != null) {
+            cancelToken.checkCanceled();
+        }
         return Either.forLeft(result);
     }
 

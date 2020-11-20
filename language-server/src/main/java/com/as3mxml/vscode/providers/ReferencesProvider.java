@@ -67,18 +67,24 @@ public class ReferencesProvider {
     }
 
     public List<? extends Location> references(ReferenceParams params, CancelChecker cancelToken) {
-        cancelToken.checkCanceled();
+        if (cancelToken != null) {
+            cancelToken.checkCanceled();
+        }
         TextDocumentIdentifier textDocument = params.getTextDocument();
         Position position = params.getPosition();
         Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocument.getUri());
         if (path == null) {
-            cancelToken.checkCanceled();
+            if (cancelToken != null) {
+                cancelToken.checkCanceled();
+            }
             return Collections.emptyList();
         }
         ActionScriptProjectData projectData = actionScriptProjectManager.getProjectDataForSourceFile(path);
         if (projectData == null || projectData.project == null
                 || projectData.equals(actionScriptProjectManager.getFallbackProjectData())) {
-            cancelToken.checkCanceled();
+            if (cancelToken != null) {
+                cancelToken.checkCanceled();
+            }
             return Collections.emptyList();
         }
         ILspProject project = projectData.project;
@@ -87,7 +93,9 @@ public class ReferencesProvider {
         int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position,
                 includeFileData);
         if (currentOffset == -1) {
-            cancelToken.checkCanceled();
+            if (cancelToken != null) {
+                cancelToken.checkCanceled();
+            }
             return Collections.emptyList();
         }
         boolean isMXML = textDocument.getUri().endsWith(FILE_EXTENSION_MXML);
@@ -99,7 +107,9 @@ public class ReferencesProvider {
                         currentOffset, projectData);
                 if (embeddedNode != null) {
                     List<? extends Location> result = actionScriptReferences(embeddedNode, project);
-                    cancelToken.checkCanceled();
+                    if (cancelToken != null) {
+                        cancelToken.checkCanceled();
+                    }
                     return result;
                 }
                 //if we're inside an <fx:Script> tag, we want ActionScript lookup,
@@ -107,14 +117,18 @@ public class ReferencesProvider {
                 if (MXMLDataUtils.isMXMLCodeIntelligenceAvailableForTag(offsetTag)) {
                     ICompilationUnit offsetUnit = CompilerProjectUtils.findCompilationUnit(path, project);
                     List<? extends Location> result = mxmlReferences(offsetTag, currentOffset, offsetUnit, project);
-                    cancelToken.checkCanceled();
+                    if (cancelToken != null) {
+                        cancelToken.checkCanceled();
+                    }
                     return result;
                 }
             }
         }
         IASNode offsetNode = actionScriptProjectManager.getOffsetNode(path, currentOffset, projectData);
         List<? extends Location> result = actionScriptReferences(offsetNode, project);
-        cancelToken.checkCanceled();
+        if (cancelToken != null) {
+            cancelToken.checkCanceled();
+        }
         return result;
     }
 

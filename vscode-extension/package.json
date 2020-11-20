@@ -398,6 +398,11 @@
           "default": null,
           "description": "(Advanced) Specifies extra arguments that the extension will pass to the Java virtual machine when launching the language server. Example: \"-Xmx1024m -noverify\" sets the maximum heap size to 1024 MB and bypasses Java class verification."
         },
+        "as3mxml.languageServer.concurrentRequests": {
+          "type": "boolean",
+          "default": true,
+          "description": "(Advanced) Specifies if requests to the language server will be processed concurrently or in a queue. Disabling concurrency will result in slower code intelligence, but it may be more stable if code intelligence stops working."
+        },
         "as3mxml.asconfigc.jvmargs": {
           "type": "string",
           "default": null,

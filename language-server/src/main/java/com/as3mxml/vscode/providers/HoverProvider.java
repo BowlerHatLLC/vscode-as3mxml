@@ -63,17 +63,23 @@ public class HoverProvider {
     }
 
     public Hover hover(HoverParams params, CancelChecker cancelToken) {
-        cancelToken.checkCanceled();
+        if (cancelToken != null) {
+            cancelToken.checkCanceled();
+        }
         TextDocumentIdentifier textDocument = params.getTextDocument();
         Position position = params.getPosition();
         Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocument.getUri());
         if (path == null) {
-            cancelToken.checkCanceled();
+            if (cancelToken != null) {
+                cancelToken.checkCanceled();
+            }
             return new Hover(Collections.emptyList(), null);
         }
         ActionScriptProjectData projectData = actionScriptProjectManager.getProjectDataForSourceFile(path);
         if (projectData == null || projectData.project == null) {
-            cancelToken.checkCanceled();
+            if (cancelToken != null) {
+                cancelToken.checkCanceled();
+            }
             return new Hover(Collections.emptyList(), null);
         }
 
@@ -81,7 +87,9 @@ public class HoverProvider {
         int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position,
                 includeFileData);
         if (currentOffset == -1) {
-            cancelToken.checkCanceled();
+            if (cancelToken != null) {
+                cancelToken.checkCanceled();
+            }
             return new Hover(Collections.emptyList(), null);
         }
         boolean isMXML = textDocument.getUri().endsWith(FILE_EXTENSION_MXML);
@@ -93,21 +101,27 @@ public class HoverProvider {
                         currentOffset, projectData);
                 if (embeddedNode != null) {
                     Hover result = actionScriptHover(embeddedNode, projectData.project);
-                    cancelToken.checkCanceled();
+                    if (cancelToken != null) {
+                        cancelToken.checkCanceled();
+                    }
                     return result;
                 }
                 //if we're inside an <fx:Script> tag, we want ActionScript hover,
                 //so that's why we call isMXMLTagValidForCompletion()
                 if (MXMLDataUtils.isMXMLCodeIntelligenceAvailableForTag(offsetTag)) {
                     Hover result = mxmlHover(offsetTag, currentOffset, projectData.project);
-                    cancelToken.checkCanceled();
+                    if (cancelToken != null) {
+                        cancelToken.checkCanceled();
+                    }
                     return result;
                 }
             }
         }
         IASNode offsetNode = actionScriptProjectManager.getOffsetNode(path, currentOffset, projectData);
         Hover result = actionScriptHover(offsetNode, projectData.project);
-        cancelToken.checkCanceled();
+        if (cancelToken != null) {
+            cancelToken.checkCanceled();
+        }
         return result;
     }
 

@@ -76,18 +76,24 @@ public class RenameProvider {
     }
 
     public WorkspaceEdit rename(RenameParams params, CancelChecker cancelToken) {
-        cancelToken.checkCanceled();
+        if (cancelToken != null) {
+            cancelToken.checkCanceled();
+        }
         TextDocumentIdentifier textDocument = params.getTextDocument();
         Position position = params.getPosition();
         Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocument.getUri());
         if (path == null) {
-            cancelToken.checkCanceled();
+            if (cancelToken != null) {
+                cancelToken.checkCanceled();
+            }
             return new WorkspaceEdit(new HashMap<>());
         }
         ActionScriptProjectData projectData = actionScriptProjectManager.getProjectDataForSourceFile(path);
         if (projectData == null || projectData.project == null
                 || projectData.equals(actionScriptProjectManager.getFallbackProjectData())) {
-            cancelToken.checkCanceled();
+            if (cancelToken != null) {
+                cancelToken.checkCanceled();
+            }
             return new WorkspaceEdit(new HashMap<>());
         }
         ILspProject project = projectData.project;
@@ -96,7 +102,9 @@ public class RenameProvider {
         int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position,
                 includeFileData);
         if (currentOffset == -1) {
-            cancelToken.checkCanceled();
+            if (cancelToken != null) {
+                cancelToken.checkCanceled();
+            }
             return new WorkspaceEdit(new HashMap<>());
         }
         boolean isMXML = textDocument.getUri().endsWith(FILE_EXTENSION_MXML);
@@ -108,21 +116,27 @@ public class RenameProvider {
                         currentOffset, projectData);
                 if (embeddedNode != null) {
                     WorkspaceEdit result = actionScriptRename(embeddedNode, params.getNewName(), project);
-                    cancelToken.checkCanceled();
+                    if (cancelToken != null) {
+                        cancelToken.checkCanceled();
+                    }
                     return result;
                 }
                 //if we're inside an <fx:Script> tag, we want ActionScript rename,
                 //so that's why we call isMXMLTagValidForCompletion()
                 if (MXMLDataUtils.isMXMLCodeIntelligenceAvailableForTag(offsetTag)) {
                     WorkspaceEdit result = mxmlRename(offsetTag, currentOffset, params.getNewName(), project);
-                    cancelToken.checkCanceled();
+                    if (cancelToken != null) {
+                        cancelToken.checkCanceled();
+                    }
                     return result;
                 }
             }
         }
         IASNode offsetNode = actionScriptProjectManager.getOffsetNode(path, currentOffset, projectData);
         WorkspaceEdit result = actionScriptRename(offsetNode, params.getNewName(), project);
-        cancelToken.checkCanceled();
+        if (cancelToken != null) {
+            cancelToken.checkCanceled();
+        }
         return result;
     }
 

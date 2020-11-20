@@ -76,29 +76,39 @@ public class CodeActionProvider {
     }
 
     public List<Either<Command, CodeAction>> codeAction(CodeActionParams params, CancelChecker cancelToken) {
-        cancelToken.checkCanceled();
+        if (cancelToken != null) {
+            cancelToken.checkCanceled();
+        }
         TextDocumentIdentifier textDocument = params.getTextDocument();
         Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocument.getUri());
         if (path == null) {
-            cancelToken.checkCanceled();
+            if (cancelToken != null) {
+                cancelToken.checkCanceled();
+            }
             return Collections.emptyList();
         }
         //we don't need to create code actions for non-open files
         if (!fileTracker.isOpen(path)) {
-            cancelToken.checkCanceled();
+            if (cancelToken != null) {
+                cancelToken.checkCanceled();
+            }
             return Collections.emptyList();
         }
         ActionScriptProjectData projectData = actionScriptProjectManager.getProjectDataForSourceFile(path);
         if (projectData == null || projectData.project == null
                 || projectData.equals(actionScriptProjectManager.getFallbackProjectData())) {
-            cancelToken.checkCanceled();
+            if (cancelToken != null) {
+                cancelToken.checkCanceled();
+            }
             //the path must be in the workspace or source-path
             return Collections.emptyList();
         }
         ILspProject project = projectData.project;
 
         if (project == null || !SourcePathUtils.isInProjectSourcePath(path, project, projectData.configurator)) {
-            cancelToken.checkCanceled();
+            if (cancelToken != null) {
+                cancelToken.checkCanceled();
+            }
             //the path must be in the workspace or source-path
             return Collections.emptyList();
         }
@@ -117,7 +127,9 @@ public class CodeActionProvider {
                         codeActions);
             }
         }
-        cancelToken.checkCanceled();
+        if (cancelToken != null) {
+            cancelToken.checkCanceled();
+        }
         return codeActions;
     }
 

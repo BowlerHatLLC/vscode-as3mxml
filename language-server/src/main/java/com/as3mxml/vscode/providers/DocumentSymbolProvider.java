@@ -53,23 +53,31 @@ public class DocumentSymbolProvider {
 
     public List<Either<SymbolInformation, DocumentSymbol>> documentSymbol(DocumentSymbolParams params,
             CancelChecker cancelToken) {
-        cancelToken.checkCanceled();
+        if (cancelToken != null) {
+            cancelToken.checkCanceled();
+        }
         TextDocumentIdentifier textDocument = params.getTextDocument();
         Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocument.getUri());
         if (path == null) {
-            cancelToken.checkCanceled();
+            if (cancelToken != null) {
+                cancelToken.checkCanceled();
+            }
             return Collections.emptyList();
         }
         ActionScriptProjectData projectData = actionScriptProjectManager.getProjectDataForSourceFile(path);
         if (projectData == null || projectData.project == null) {
-            cancelToken.checkCanceled();
+            if (cancelToken != null) {
+                cancelToken.checkCanceled();
+            }
             return Collections.emptyList();
         }
         ILspProject project = projectData.project;
 
         ICompilationUnit unit = CompilerProjectUtils.findCompilationUnit(path, project);
         if (unit == null) {
-            cancelToken.checkCanceled();
+            if (cancelToken != null) {
+                cancelToken.checkCanceled();
+            }
             //we couldn't find a compilation unit with the specified path
             return Collections.emptyList();
         }
@@ -78,7 +86,9 @@ public class DocumentSymbolProvider {
         try {
             scopes = unit.getFileScopeRequest().get().getScopes();
         } catch (Exception e) {
-            cancelToken.checkCanceled();
+            if (cancelToken != null) {
+                cancelToken.checkCanceled();
+            }
             return Collections.emptyList();
         }
         List<Either<SymbolInformation, DocumentSymbol>> result = new ArrayList<>();
@@ -100,7 +110,9 @@ public class DocumentSymbolProvider {
                 result.add(Either.forLeft(symbol));
             }
         }
-        cancelToken.checkCanceled();
+        if (cancelToken != null) {
+            cancelToken.checkCanceled();
+        }
         return result;
     }
 

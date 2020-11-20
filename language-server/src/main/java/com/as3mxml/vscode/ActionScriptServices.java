@@ -169,6 +169,7 @@ import org.eclipse.lsp4j.VersionedTextDocumentIdentifier;
 import org.eclipse.lsp4j.WorkspaceEdit;
 import org.eclipse.lsp4j.WorkspaceFolder;
 import org.eclipse.lsp4j.WorkspaceSymbolParams;
+import org.eclipse.lsp4j.jsonrpc.CancelChecker;
 import org.eclipse.lsp4j.jsonrpc.CompletableFutures;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.jsonrpc.services.JsonNotification;
@@ -209,6 +210,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     private Set<URI> notOnSourcePathSet = new HashSet<>();
     private boolean realTimeProblems = true;
     private boolean showFileOutsideSourcePath = true;
+    private boolean concurrentRequests = true;
     private SimpleProjectConfigStrategy fallbackConfig;
     private CompilerShell compilerShell;
     private String jvmargs;
@@ -292,24 +294,31 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
      */
     @Override
     public CompletableFuture<Either<List<CompletionItem>, CompletionList>> completion(CompletionParams params) {
+        if (!concurrentRequests) {
+            return CompletableFuture.completedFuture(completion2(params, null));
+        }
         return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken -> {
             cancelToken.checkCanceled();
-
-            //make sure that the latest changes have been passed to
-            //workspace.fileChanged() before proceeding
-            if (realTimeProblemsChecker != null) {
-                realTimeProblemsChecker.updateNow();
-            }
-
-            compilerWorkspace.startBuilding();
-            try {
-                CompletionProvider provider = new CompletionProvider(actionScriptProjectManager, fileTracker,
-                        completionSupportsSnippets, frameworkSDKIsRoyale);
-                return provider.completion(params, cancelToken);
-            } finally {
-                compilerWorkspace.doneBuilding();
-            }
+            return completion2(params, cancelToken);
         });
+    }
+
+    private Either<List<CompletionItem>, CompletionList> completion2(CompletionParams params,
+            CancelChecker cancelToken) {
+        //make sure that the latest changes have been passed to
+        //workspace.fileChanged() before proceeding
+        if (realTimeProblemsChecker != null) {
+            realTimeProblemsChecker.updateNow();
+        }
+
+        compilerWorkspace.startBuilding();
+        try {
+            CompletionProvider provider = new CompletionProvider(actionScriptProjectManager, fileTracker,
+                    completionSupportsSnippets, frameworkSDKIsRoyale);
+            return provider.completion(params, cancelToken);
+        } finally {
+            compilerWorkspace.doneBuilding();
+        }
     }
 
     /**
@@ -327,23 +336,29 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
      */
     @Override
     public CompletableFuture<Hover> hover(HoverParams params) {
+        if (!concurrentRequests) {
+            return CompletableFuture.completedFuture(hover2(params, null));
+        }
         return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken -> {
             cancelToken.checkCanceled();
-
-            //make sure that the latest changes have been passed to
-            //workspace.fileChanged() before proceeding
-            if (realTimeProblemsChecker != null) {
-                realTimeProblemsChecker.updateNow();
-            }
-
-            compilerWorkspace.startBuilding();
-            try {
-                HoverProvider provider = new HoverProvider(actionScriptProjectManager, fileTracker);
-                return provider.hover(params, cancelToken);
-            } finally {
-                compilerWorkspace.doneBuilding();
-            }
+            return hover2(params, cancelToken);
         });
+    }
+
+    private Hover hover2(HoverParams params, CancelChecker cancelToken) {
+        //make sure that the latest changes have been passed to
+        //workspace.fileChanged() before proceeding
+        if (realTimeProblemsChecker != null) {
+            realTimeProblemsChecker.updateNow();
+        }
+
+        compilerWorkspace.startBuilding();
+        try {
+            HoverProvider provider = new HoverProvider(actionScriptProjectManager, fileTracker);
+            return provider.hover(params, cancelToken);
+        } finally {
+            compilerWorkspace.doneBuilding();
+        }
     }
 
     /**
@@ -354,23 +369,29 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
      */
     @Override
     public CompletableFuture<SignatureHelp> signatureHelp(SignatureHelpParams params) {
+        if (!concurrentRequests) {
+            return CompletableFuture.completedFuture(signatureHelp2(params, null));
+        }
         return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken -> {
             cancelToken.checkCanceled();
-
-            //make sure that the latest changes have been passed to
-            //workspace.fileChanged() before proceeding
-            if (realTimeProblemsChecker != null) {
-                realTimeProblemsChecker.updateNow();
-            }
-
-            compilerWorkspace.startBuilding();
-            try {
-                SignatureHelpProvider provider = new SignatureHelpProvider(actionScriptProjectManager, fileTracker);
-                return provider.signatureHelp(params, cancelToken);
-            } finally {
-                compilerWorkspace.doneBuilding();
-            }
+            return signatureHelp2(params, cancelToken);
         });
+    }
+
+    private SignatureHelp signatureHelp2(SignatureHelpParams params, CancelChecker cancelToken) {
+        //make sure that the latest changes have been passed to
+        //workspace.fileChanged() before proceeding
+        if (realTimeProblemsChecker != null) {
+            realTimeProblemsChecker.updateNow();
+        }
+
+        compilerWorkspace.startBuilding();
+        try {
+            SignatureHelpProvider provider = new SignatureHelpProvider(actionScriptProjectManager, fileTracker);
+            return provider.signatureHelp(params, cancelToken);
+        } finally {
+            compilerWorkspace.doneBuilding();
+        }
     }
 
     /**
@@ -380,23 +401,30 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     @Override
     public CompletableFuture<Either<List<? extends Location>, List<? extends LocationLink>>> definition(
             DefinitionParams params) {
+        if (!concurrentRequests) {
+            return CompletableFuture.completedFuture(definition2(params, null));
+        }
         return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken -> {
             cancelToken.checkCanceled();
-
-            //make sure that the latest changes have been passed to
-            //workspace.fileChanged() before proceeding
-            if (realTimeProblemsChecker != null) {
-                realTimeProblemsChecker.updateNow();
-            }
-
-            compilerWorkspace.startBuilding();
-            try {
-                DefinitionProvider provider = new DefinitionProvider(actionScriptProjectManager, fileTracker);
-                return provider.definition(params, cancelToken);
-            } finally {
-                compilerWorkspace.doneBuilding();
-            }
+            return definition2(params, cancelToken);
         });
+    }
+
+    private Either<List<? extends Location>, List<? extends LocationLink>> definition2(DefinitionParams params,
+            CancelChecker cancelToken) {
+        //make sure that the latest changes have been passed to
+        //workspace.fileChanged() before proceeding
+        if (realTimeProblemsChecker != null) {
+            realTimeProblemsChecker.updateNow();
+        }
+
+        compilerWorkspace.startBuilding();
+        try {
+            DefinitionProvider provider = new DefinitionProvider(actionScriptProjectManager, fileTracker);
+            return provider.definition(params, cancelToken);
+        } finally {
+            compilerWorkspace.doneBuilding();
+        }
     }
 
     /**
@@ -406,23 +434,30 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     @Override
     public CompletableFuture<Either<List<? extends Location>, List<? extends LocationLink>>> typeDefinition(
             TypeDefinitionParams params) {
+        if (!concurrentRequests) {
+            return CompletableFuture.completedFuture(typeDefinition2(params, null));
+        }
         return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken -> {
             cancelToken.checkCanceled();
-
-            //make sure that the latest changes have been passed to
-            //workspace.fileChanged() before proceeding
-            if (realTimeProblemsChecker != null) {
-                realTimeProblemsChecker.updateNow();
-            }
-
-            compilerWorkspace.startBuilding();
-            try {
-                TypeDefinitionProvider provider = new TypeDefinitionProvider(actionScriptProjectManager, fileTracker);
-                return provider.typeDefinition(params, cancelToken);
-            } finally {
-                compilerWorkspace.doneBuilding();
-            }
+            return typeDefinition2(params, cancelToken);
         });
+    }
+
+    private Either<List<? extends Location>, List<? extends LocationLink>> typeDefinition2(TypeDefinitionParams params,
+            CancelChecker cancelToken) {
+        //make sure that the latest changes have been passed to
+        //workspace.fileChanged() before proceeding
+        if (realTimeProblemsChecker != null) {
+            realTimeProblemsChecker.updateNow();
+        }
+
+        compilerWorkspace.startBuilding();
+        try {
+            TypeDefinitionProvider provider = new TypeDefinitionProvider(actionScriptProjectManager, fileTracker);
+            return provider.typeDefinition(params, cancelToken);
+        } finally {
+            compilerWorkspace.doneBuilding();
+        }
     }
 
     /**
@@ -431,23 +466,30 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     @Override
     public CompletableFuture<Either<List<? extends Location>, List<? extends LocationLink>>> implementation(
             ImplementationParams params) {
+        if (!concurrentRequests) {
+            return CompletableFuture.completedFuture(implementation2(params, null));
+        }
         return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken -> {
             cancelToken.checkCanceled();
-
-            //make sure that the latest changes have been passed to
-            //workspace.fileChanged() before proceeding
-            if (realTimeProblemsChecker != null) {
-                realTimeProblemsChecker.updateNow();
-            }
-
-            compilerWorkspace.startBuilding();
-            try {
-                ImplementationProvider provider = new ImplementationProvider(actionScriptProjectManager, fileTracker);
-                return provider.implementation(params, cancelToken);
-            } finally {
-                compilerWorkspace.doneBuilding();
-            }
+            return implementation2(params, cancelToken);
         });
+    }
+
+    private Either<List<? extends Location>, List<? extends LocationLink>> implementation2(ImplementationParams params,
+            CancelChecker cancelToken) {
+        //make sure that the latest changes have been passed to
+        //workspace.fileChanged() before proceeding
+        if (realTimeProblemsChecker != null) {
+            realTimeProblemsChecker.updateNow();
+        }
+
+        compilerWorkspace.startBuilding();
+        try {
+            ImplementationProvider provider = new ImplementationProvider(actionScriptProjectManager, fileTracker);
+            return provider.implementation(params, cancelToken);
+        } finally {
+            compilerWorkspace.doneBuilding();
+        }
     }
 
     /**
@@ -457,23 +499,29 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
      */
     @Override
     public CompletableFuture<List<? extends Location>> references(ReferenceParams params) {
+        if (!concurrentRequests) {
+            return CompletableFuture.completedFuture(references2(params, null));
+        }
         return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken -> {
             cancelToken.checkCanceled();
-
-            //make sure that the latest changes have been passed to
-            //workspace.fileChanged() before proceeding
-            if (realTimeProblemsChecker != null) {
-                realTimeProblemsChecker.updateNow();
-            }
-
-            compilerWorkspace.startBuilding();
-            try {
-                ReferencesProvider provider = new ReferencesProvider(actionScriptProjectManager, fileTracker);
-                return provider.references(params, cancelToken);
-            } finally {
-                compilerWorkspace.doneBuilding();
-            }
+            return references2(params, cancelToken);
         });
+    }
+
+    private List<? extends Location> references2(ReferenceParams params, CancelChecker cancelToken) {
+        //make sure that the latest changes have been passed to
+        //workspace.fileChanged() before proceeding
+        if (realTimeProblemsChecker != null) {
+            realTimeProblemsChecker.updateNow();
+        }
+
+        compilerWorkspace.startBuilding();
+        try {
+            ReferencesProvider provider = new ReferencesProvider(actionScriptProjectManager, fileTracker);
+            return provider.references(params, cancelToken);
+        } finally {
+            compilerWorkspace.doneBuilding();
+        }
     }
 
     /**
@@ -489,23 +537,29 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
      */
     @Override
     public CompletableFuture<List<? extends SymbolInformation>> symbol(WorkspaceSymbolParams params) {
+        if (!concurrentRequests) {
+            return CompletableFuture.completedFuture(symbol2(params, null));
+        }
         return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken -> {
             cancelToken.checkCanceled();
-
-            //make sure that the latest changes have been passed to
-            //workspace.fileChanged() before proceeding
-            if (realTimeProblemsChecker != null) {
-                realTimeProblemsChecker.updateNow();
-            }
-
-            compilerWorkspace.startBuilding();
-            try {
-                WorkspaceSymbolProvider provider = new WorkspaceSymbolProvider(actionScriptProjectManager);
-                return provider.workspaceSymbol(params, cancelToken);
-            } finally {
-                compilerWorkspace.doneBuilding();
-            }
+            return symbol2(params, cancelToken);
         });
+    }
+
+    private List<? extends SymbolInformation> symbol2(WorkspaceSymbolParams params, CancelChecker cancelToken) {
+        //make sure that the latest changes have been passed to
+        //workspace.fileChanged() before proceeding
+        if (realTimeProblemsChecker != null) {
+            realTimeProblemsChecker.updateNow();
+        }
+
+        compilerWorkspace.startBuilding();
+        try {
+            WorkspaceSymbolProvider provider = new WorkspaceSymbolProvider(actionScriptProjectManager);
+            return provider.workspaceSymbol(params, cancelToken);
+        } finally {
+            compilerWorkspace.doneBuilding();
+        }
     }
 
     /**
@@ -515,31 +569,38 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     @Override
     public CompletableFuture<List<Either<SymbolInformation, DocumentSymbol>>> documentSymbol(
             DocumentSymbolParams params) {
+        if (!concurrentRequests) {
+            return CompletableFuture.completedFuture(documentSymbol2(params, null));
+        }
         return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken -> {
             cancelToken.checkCanceled();
-
-            //make sure that the latest changes have been passed to
-            //workspace.fileChanged() before proceeding
-            if (realTimeProblemsChecker != null) {
-                realTimeProblemsChecker.updateNow();
-            }
-
-            compilerWorkspace.startBuilding();
-            try {
-                boolean hierarchicalDocumentSymbolSupport = false;
-                try {
-                    hierarchicalDocumentSymbolSupport = clientCapabilities.getTextDocument().getDocumentSymbol()
-                            .getHierarchicalDocumentSymbolSupport();
-                } catch (NullPointerException e) {
-                    //ignore
-                }
-                DocumentSymbolProvider provider = new DocumentSymbolProvider(actionScriptProjectManager,
-                        hierarchicalDocumentSymbolSupport);
-                return provider.documentSymbol(params, cancelToken);
-            } finally {
-                compilerWorkspace.doneBuilding();
-            }
+            return documentSymbol2(params, cancelToken);
         });
+    }
+
+    private List<Either<SymbolInformation, DocumentSymbol>> documentSymbol2(DocumentSymbolParams params,
+            CancelChecker cancelToken) {
+        //make sure that the latest changes have been passed to
+        //workspace.fileChanged() before proceeding
+        if (realTimeProblemsChecker != null) {
+            realTimeProblemsChecker.updateNow();
+        }
+
+        compilerWorkspace.startBuilding();
+        try {
+            boolean hierarchicalDocumentSymbolSupport = false;
+            try {
+                hierarchicalDocumentSymbolSupport = clientCapabilities.getTextDocument().getDocumentSymbol()
+                        .getHierarchicalDocumentSymbolSupport();
+            } catch (NullPointerException e) {
+                //ignore
+            }
+            DocumentSymbolProvider provider = new DocumentSymbolProvider(actionScriptProjectManager,
+                    hierarchicalDocumentSymbolSupport);
+            return provider.documentSymbol(params, cancelToken);
+        } finally {
+            compilerWorkspace.doneBuilding();
+        }
     }
 
     /**
@@ -547,23 +608,29 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
      */
     @Override
     public CompletableFuture<List<Either<Command, CodeAction>>> codeAction(CodeActionParams params) {
+        if (!concurrentRequests) {
+            return CompletableFuture.completedFuture(codeAction2(params, null));
+        }
         return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken -> {
             cancelToken.checkCanceled();
-
-            //make sure that the latest changes have been passed to
-            //workspace.fileChanged() before proceeding
-            if (realTimeProblemsChecker != null) {
-                realTimeProblemsChecker.updateNow();
-            }
-
-            compilerWorkspace.startBuilding();
-            try {
-                CodeActionProvider provider = new CodeActionProvider(actionScriptProjectManager, fileTracker);
-                return provider.codeAction(params, cancelToken);
-            } finally {
-                compilerWorkspace.doneBuilding();
-            }
+            return codeAction2(params, cancelToken);
         });
+    }
+
+    private List<Either<Command, CodeAction>> codeAction2(CodeActionParams params, CancelChecker cancelToken) {
+        //make sure that the latest changes have been passed to
+        //workspace.fileChanged() before proceeding
+        if (realTimeProblemsChecker != null) {
+            realTimeProblemsChecker.updateNow();
+        }
+
+        compilerWorkspace.startBuilding();
+        try {
+            CodeActionProvider provider = new CodeActionProvider(actionScriptProjectManager, fileTracker);
+            return provider.codeAction(params, cancelToken);
+        } finally {
+            compilerWorkspace.doneBuilding();
+        }
     }
 
     /**
@@ -611,33 +678,39 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
      */
     @Override
     public CompletableFuture<WorkspaceEdit> rename(RenameParams params) {
+        if (!concurrentRequests) {
+            return CompletableFuture.completedFuture(rename2(params, null));
+        }
         return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken -> {
             cancelToken.checkCanceled();
-
-            //make sure that the latest changes have been passed to
-            //workspace.fileChanged() before proceeding
-            if (realTimeProblemsChecker != null) {
-                realTimeProblemsChecker.updateNow();
-            }
-
-            compilerWorkspace.startBuilding();
-            try {
-                RenameProvider provider = new RenameProvider(actionScriptProjectManager, fileTracker);
-                WorkspaceEdit result = provider.rename(params, cancelToken);
-                if (result == null) {
-                    if (languageClient != null) {
-                        MessageParams message = new MessageParams();
-                        message.setType(MessageType.Info);
-                        message.setMessage("You cannot rename this element.");
-                        languageClient.showMessage(message);
-                    }
-                    return new WorkspaceEdit(new HashMap<>());
-                }
-                return result;
-            } finally {
-                compilerWorkspace.doneBuilding();
-            }
+            return rename2(params, cancelToken);
         });
+    }
+
+    private WorkspaceEdit rename2(RenameParams params, CancelChecker cancelToken) {
+        //make sure that the latest changes have been passed to
+        //workspace.fileChanged() before proceeding
+        if (realTimeProblemsChecker != null) {
+            realTimeProblemsChecker.updateNow();
+        }
+
+        compilerWorkspace.startBuilding();
+        try {
+            RenameProvider provider = new RenameProvider(actionScriptProjectManager, fileTracker);
+            WorkspaceEdit result = provider.rename(params, cancelToken);
+            if (result == null) {
+                if (languageClient != null) {
+                    MessageParams message = new MessageParams();
+                    message.setType(MessageType.Info);
+                    message.setMessage("You cannot rename this element.");
+                    languageClient.showMessage(message);
+                }
+                return new WorkspaceEdit(new HashMap<>());
+            }
+            return result;
+        } finally {
+            compilerWorkspace.doneBuilding();
+        }
     }
 
     /**
@@ -650,7 +723,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             return executeQuickCompileCommand(params);
         }
         ExecuteCommandProvider provider = new ExecuteCommandProvider(actionScriptProjectManager, fileTracker,
-                compilerWorkspace, languageClient);
+                compilerWorkspace, languageClient, concurrentRequests);
         return provider.executeCommand(params);
     }
 
@@ -1069,6 +1142,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         this.updateRealTimeProblems(settings);
         this.updateSourcePathWarning(settings);
         this.updateJVMArgs(settings);
+        this.updateConcurrentRequests(settings);
     }
 
     @Override
@@ -2084,6 +2158,25 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             compilerShell.dispose();
             compilerShell = null;
         }
+    }
+
+    private void updateConcurrentRequests(JsonObject settings) {
+        if (!settings.has("as3mxml")) {
+            return;
+        }
+        JsonObject as3mxml = settings.get("as3mxml").getAsJsonObject();
+        if (!as3mxml.has("languageServer")) {
+            return;
+        }
+        JsonObject languageServer = as3mxml.get("languageServer").getAsJsonObject();
+        if (!languageServer.has("concurrentRequests")) {
+            return;
+        }
+        boolean newConcurrentRequests = languageServer.get("concurrentRequests").getAsBoolean();
+        if (concurrentRequests == newConcurrentRequests) {
+            return;
+        }
+        concurrentRequests = newConcurrentRequests;
     }
 
     private CompletableFuture<Object> executeQuickCompileCommand(ExecuteCommandParams params) {

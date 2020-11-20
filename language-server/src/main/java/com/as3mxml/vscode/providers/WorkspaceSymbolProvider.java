@@ -47,7 +47,9 @@ public class WorkspaceSymbolProvider {
 	}
 
 	public List<? extends SymbolInformation> workspaceSymbol(WorkspaceSymbolParams params, CancelChecker cancelToken) {
-		cancelToken.checkCanceled();
+		if (cancelToken != null) {
+			cancelToken.checkCanceled();
+		}
 		Set<String> qualifiedNames = new HashSet<>();
 		List<SymbolInformation> result = new ArrayList<>();
 		String query = params.getQuery();
@@ -117,7 +119,9 @@ public class WorkspaceSymbolProvider {
 				}
 			}
 		}
-		cancelToken.checkCanceled();
+		if (cancelToken != null) {
+			cancelToken.checkCanceled();
+		}
 		return result;
 	}
 

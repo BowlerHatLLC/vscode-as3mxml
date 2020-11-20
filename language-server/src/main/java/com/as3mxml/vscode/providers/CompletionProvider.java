@@ -138,7 +138,9 @@ public class CompletionProvider {
 
     public Either<List<CompletionItem>, CompletionList> completion(CompletionParams params, CancelChecker cancelToken) {
         try {
-            cancelToken.checkCanceled();
+            if (cancelToken != null) {
+                cancelToken.checkCanceled();
+            }
 
             //this shouldn't be necessary, but if we ever forget to do this
             //somewhere, completion results might be missing items.
@@ -151,7 +153,9 @@ public class CompletionProvider {
                 CompletionList result = new CompletionList();
                 result.setIsIncomplete(false);
                 result.setItems(new ArrayList<>());
-                cancelToken.checkCanceled();
+                if (cancelToken != null) {
+                    cancelToken.checkCanceled();
+                }
                 return Either.forRight(result);
             }
             ActionScriptProjectData projectData = actionScriptProjectManager.getProjectDataForSourceFile(path);
@@ -159,7 +163,9 @@ public class CompletionProvider {
                 CompletionList result = new CompletionList();
                 result.setIsIncomplete(false);
                 result.setItems(new ArrayList<>());
-                cancelToken.checkCanceled();
+                if (cancelToken != null) {
+                    cancelToken.checkCanceled();
+                }
                 return Either.forRight(result);
             }
             ILspProject project = projectData.project;
@@ -171,7 +177,9 @@ public class CompletionProvider {
                 CompletionList result = new CompletionList();
                 result.setIsIncomplete(false);
                 result.setItems(new ArrayList<>());
-                cancelToken.checkCanceled();
+                if (cancelToken != null) {
+                    cancelToken.checkCanceled();
+                }
                 return Either.forRight(result);
             }
             boolean isMXML = textDocument.getUri().endsWith(FILE_EXTENSION_MXML);
@@ -184,7 +192,9 @@ public class CompletionProvider {
                     if (embeddedNode != null) {
                         CompletionList result = actionScriptCompletion(embeddedNode, path, position, currentOffset,
                                 projectData);
-                        cancelToken.checkCanceled();
+                        if (cancelToken != null) {
+                            cancelToken.checkCanceled();
+                        }
                         return Either.forRight(result);
                     }
                     //if we're inside an <fx:Script> tag, we want ActionScript completion,
@@ -192,7 +202,9 @@ public class CompletionProvider {
                     if (MXMLDataUtils.isMXMLCodeIntelligenceAvailableForTag(offsetTag)) {
                         ICompilationUnit offsetUnit = CompilerProjectUtils.findCompilationUnit(path, project);
                         CompletionList result = mxmlCompletion(offsetTag, path, currentOffset, offsetUnit, project);
-                        cancelToken.checkCanceled();
+                        if (cancelToken != null) {
+                            cancelToken.checkCanceled();
+                        }
                         return Either.forRight(result);
                     }
                 } else if (mxmlData != null && mxmlData.getRootTag() == null) {
@@ -203,7 +215,9 @@ public class CompletionProvider {
                     result.setItems(new ArrayList<>());
                     autoCompleteDefinitionsForMXML(result, project, offsetUnit, offsetTag, true, includeOpenTagBracket,
                             (char) -1, null, null, null);
-                    cancelToken.checkCanceled();
+                    if (cancelToken != null) {
+                        cancelToken.checkCanceled();
+                    }
                     return Either.forRight(result);
                 }
                 if (offsetTag == null) {
@@ -215,13 +229,17 @@ public class CompletionProvider {
                     CompletionList result = new CompletionList();
                     result.setIsIncomplete(false);
                     result.setItems(new ArrayList<>());
-                    cancelToken.checkCanceled();
+                    if (cancelToken != null) {
+                        cancelToken.checkCanceled();
+                    }
                     return Either.forRight(result);
                 }
             }
             IASNode offsetNode = actionScriptProjectManager.getOffsetNode(path, currentOffset, projectData);
             CompletionList result = actionScriptCompletion(offsetNode, path, position, currentOffset, projectData);
-            cancelToken.checkCanceled();
+            if (cancelToken != null) {
+                cancelToken.checkCanceled();
+            }
             return Either.forRight(result);
         } finally {
             completionTypes.clear();

@@ -65,17 +65,23 @@ public class SignatureHelpProvider {
 	}
 
 	public SignatureHelp signatureHelp(SignatureHelpParams params, CancelChecker cancelToken) {
-		cancelToken.checkCanceled();
+		if (cancelToken != null) {
+			cancelToken.checkCanceled();
+		}
 		TextDocumentIdentifier textDocument = params.getTextDocument();
 		Position position = params.getPosition();
 		Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocument.getUri());
 		if (path == null) {
-			cancelToken.checkCanceled();
+			if (cancelToken != null) {
+				cancelToken.checkCanceled();
+			}
 			return new SignatureHelp(Collections.emptyList(), -1, -1);
 		}
 		ActionScriptProjectData projectData = actionScriptProjectManager.getProjectDataForSourceFile(path);
 		if (projectData == null || projectData.project == null) {
-			cancelToken.checkCanceled();
+			if (cancelToken != null) {
+				cancelToken.checkCanceled();
+			}
 			return new SignatureHelp(Collections.emptyList(), -1, -1);
 		}
 		ILspProject project = projectData.project;
@@ -84,7 +90,9 @@ public class SignatureHelpProvider {
 		int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position,
 				includeFileData);
 		if (currentOffset == -1) {
-			cancelToken.checkCanceled();
+			if (cancelToken != null) {
+				cancelToken.checkCanceled();
+			}
 			return new SignatureHelp(Collections.emptyList(), -1, -1);
 		}
 		IASNode offsetNode = null;
@@ -107,7 +115,9 @@ public class SignatureHelpProvider {
 			offsetNode = actionScriptProjectManager.getOffsetNode(path, currentOffset, projectData);
 		}
 		if (offsetNode == null) {
-			cancelToken.checkCanceled();
+			if (cancelToken != null) {
+				cancelToken.checkCanceled();
+			}
 			//we couldn't find a node at the specified location
 			return new SignatureHelp(Collections.emptyList(), -1, -1);
 		}
@@ -183,10 +193,14 @@ public class SignatureHelpProvider {
 			if (index != -1) {
 				result.setActiveParameter(index);
 			}
-			cancelToken.checkCanceled();
+			if (cancelToken != null) {
+				cancelToken.checkCanceled();
+			}
 			return result;
 		}
-		cancelToken.checkCanceled();
+		if (cancelToken != null) {
+			cancelToken.checkCanceled();
+		}
 		return new SignatureHelp(Collections.emptyList(), -1, -1);
 	}
 }
