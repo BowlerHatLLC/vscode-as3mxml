@@ -23,7 +23,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import com.as3mxml.asconfigc.compiler.ProjectType;
-import com.as3mxml.asconfigc.utils.OptionsUtils;
 import com.as3mxml.vscode.project.ILspProject;
 import com.as3mxml.vscode.project.LspJSProject;
 import com.as3mxml.vscode.project.LspProject;
