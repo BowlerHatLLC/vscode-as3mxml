@@ -1775,8 +1775,15 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             ActionScriptProjectData projectData, boolean releaseStale) {
         Path projectRoot = projectData.projectRoot;
         String defaultsPathString = projectRoot.resolve(SOURCE_DEFAULTS).toString();
-        //the drive letter may not match up, so just do a lowercase check
         Path configPath = projectRoot.resolve(SOURCE_CONFIG);
+        Path projectConfigPath = null;
+        String defaultConfiguratonProblemPath = projectData.config.getDefaultConfigurationProblemPath();
+        if (defaultConfiguratonProblemPath != null) {
+            projectConfigPath = Paths.get(defaultConfiguratonProblemPath);
+            if (!projectConfigPath.isAbsolute()) {
+                projectConfigPath = projectRoot.resolve(projectConfigPath);
+            }
+        }
         Map<URI, PublishDiagnosticsParams> filesMap = new HashMap<>();
         for (ICompilerProblem problem : problemQuery.getFilteredProblems()) {
             String problemSourcePath = problem.getSourcePath();
@@ -1793,7 +1800,9 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                 //or the command line, the best default location to send the
                 //user is probably to the project's config file (like
                 //asconfig.json in Visual Studio Code)
-                problemSourcePath = projectData.config.getDefaultConfigurationProblemPath();
+                if (projectConfigPath != null) {
+                    problemSourcePath = projectConfigPath.toString();
+                }
                 isConfigFile = true;
             }
             if (problemSourcePath == null) {
