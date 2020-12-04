@@ -89,7 +89,19 @@
 		},
 		"additionalOptions":
 		{
-			"type": "string",
+			"anyOf":
+			[
+				{ 
+					"type": "string"
+				},
+				{
+					"type": "array",
+					"items":
+					{
+						"type": "string"
+					}
+				}
+			],
 			"description": "Additional options to send to the compiler, formatted as command line arguments. Useful for testing new options that are not yet supported by the compilerOptions field of asconfig.json."
 		},
 		"htmlTemplate":

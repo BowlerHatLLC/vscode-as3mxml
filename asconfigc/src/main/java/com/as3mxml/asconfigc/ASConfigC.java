@@ -388,11 +388,17 @@ public class ASConfigC {
 			}
 		}
 		if (json.has(TopLevelFields.ADDITIONAL_OPTIONS)) {
-			String additionalOptions = json.get(TopLevelFields.ADDITIONAL_OPTIONS).asText();
-			if (additionalOptions != null) {
-				//split the additionalOptions into separate values so that we can
-				//pass them in as String[], as the compiler expects.
-				compilerOptions.addAll(OptionsUtils.parseAdditionalOptions(additionalOptions));
+			JsonNode jsonAdditionalOptions = json.get(TopLevelFields.ADDITIONAL_OPTIONS);
+			if (jsonAdditionalOptions.isArray()) {
+				jsonAdditionalOptions.elements()
+						.forEachRemaining((jsonOption) -> compilerOptions.add(jsonOption.asText()));
+			} else {
+				String additionalOptions = jsonAdditionalOptions.asText();
+				if (additionalOptions != null) {
+					//split the additionalOptions into separate values so that we can
+					//pass them in as String[], as the compiler expects.
+					compilerOptions.addAll(OptionsUtils.parseAdditionalOptions(additionalOptions));
+				}
 			}
 		}
 		//if js-output-type was not specified, use the default
