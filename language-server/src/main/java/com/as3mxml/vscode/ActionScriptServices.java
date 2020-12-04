@@ -1633,6 +1633,11 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             //it's possible for the configuration to be null when parsing
             //certain values in additionalOptions in asconfig.json
             if (configuration != null) {
+                //the configurator will throw a null reference exception if the
+                //configuration is null
+                configProblems.addAll(configurator.getConfigurationProblems());
+                //add configurator problems before the custom problems below
+                //because configurator problems are probably more important
                 if (projectOptions.type.equals(ProjectType.LIB)) {
                     String output = configuration.getOutput();
                     if (output == null || output.length() == 0) {
@@ -1642,7 +1647,10 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                     }
                 } else //app
                 {
-                    if (configuration.getTargetFile() == null) {
+                    //if there are no existing configurator problems, we need to
+                    //report at least one problem so that the user knows
+                    //something is wrong
+                    if (configProblems.size() == 0 && configuration.getTargetFile() == null) {
                         result = false;
 
                         //fall back to the config file or the workspace folder
@@ -1665,7 +1673,6 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                         }
                     }
                 }
-                configProblems.addAll(configurator.getConfigurationProblems());
             }
             if (!result) {
                 configurator = null;
