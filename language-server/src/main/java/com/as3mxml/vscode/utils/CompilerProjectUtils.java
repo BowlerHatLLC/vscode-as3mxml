@@ -166,15 +166,13 @@ public class CompilerProjectUtils {
         configurator.setToken(TOKEN_CONFIGNAME, projectOptions.config);
         String projectType = projectOptions.type;
         String[] files = projectOptions.files;
-        String additionalOptions = projectOptions.additionalOptions;
+        List<String> additionalOptions = projectOptions.additionalOptions;
         ArrayList<String> combinedOptions = new ArrayList<>();
         if (compilerOptions != null) {
             combinedOptions.addAll(compilerOptions);
         }
         if (additionalOptions != null) {
-            //split the additionalOptions into separate values so that we can
-            //pass them in as String[], as the compiler expects.
-            combinedOptions.addAll(OptionsUtils.parseAdditionalOptions(additionalOptions));
+            combinedOptions.addAll(additionalOptions);
         }
 
         //Github #245: avoid errors from -inline

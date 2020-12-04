@@ -21,6 +21,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -37,6 +38,7 @@ import com.as3mxml.asconfigc.compiler.ProjectType;
 import com.as3mxml.asconfigc.compiler.CompilerOptionsParser.UnknownCompilerOptionException;
 import com.as3mxml.asconfigc.utils.ConfigUtils;
 import com.as3mxml.asconfigc.utils.JsonUtils;
+import com.as3mxml.asconfigc.utils.OptionsUtils;
 import com.as3mxml.vscode.utils.ActionScriptSDKUtils;
 
 import org.apache.commons.io.FileUtils;
@@ -110,7 +112,7 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy {
         }
         String mainClass = null;
         String[] files = new String[0];
-        String additionalOptions = null;
+        List<String> additionalOptions = null;
         List<String> compilerOptions = null;
         List<String> targets = null;
         List<String> sourcePaths = null;
@@ -200,7 +202,22 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy {
             //these options are formatted as if sent in through the command line
             if (json.has(TopLevelFields.ADDITIONAL_OPTIONS)) //optional
             {
-                additionalOptions = json.get(TopLevelFields.ADDITIONAL_OPTIONS).asText();
+                additionalOptions = new ArrayList<>();
+                JsonNode jsonAdditionalOptions = json.get(TopLevelFields.ADDITIONAL_OPTIONS);
+                if (jsonAdditionalOptions.isArray()) {
+                    Iterator<JsonNode> iterator = jsonAdditionalOptions.elements();
+                    while (iterator.hasNext()) {
+                        JsonNode jsonOption = iterator.next();
+                        additionalOptions.add(jsonOption.asText());
+                    }
+                } else {
+                    String additionalOptionsText = jsonAdditionalOptions.asText();
+                    if (additionalOptionsText != null) {
+                        //split the additionalOptions into separate values so that we can
+                        //pass them in as String[], as the compiler expects.
+                        additionalOptions.addAll(OptionsUtils.parseAdditionalOptions(additionalOptionsText));
+                    }
+                }
             }
         } catch (UnknownCompilerOptionException e) {
             //there's a compiler option that the parser doesn't recognize

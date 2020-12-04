@@ -33,7 +33,7 @@ public class ProjectOptions {
      */
     public String[] files;
     public List<String> compilerOptions;
-    public String additionalOptions;
+    public List<String> additionalOptions;
 
     //while the following values are also included in the compiler options,
     //we need them available for other things in the language server
