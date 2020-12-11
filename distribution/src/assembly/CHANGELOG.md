@@ -1,5 +1,18 @@
 # ActionScript & MXML for Visual Studio Code Changelog
 
+## v1.5.0
+
+### New Features
+
+- Build: The `additionalOptions` field in _asconfig.json_ files may optionally be specified as an array of strings, instead of a single string.
+- Settings: A new `as3mxml.languageServer.concurrentRequests` setting may be set to `false` to disable spawning a thread for each request to the ActionScript & MXML code intelligence. This may result in a more stable environment, in some cases.
+- Views: The ActionScript Source Paths view now displays source paths for all open projects (not just the first).
+
+### Fixed Issues
+
+- General: Fixed issue where source files on case-insensitive file systems might not be associated with the correct project, resulting in limited code intelligence.
+- Problems: Fixed issue where some errors were not displayed if certain compiler options were misconfigured.
+
 ## v1.4.0
 
 ### New Features
