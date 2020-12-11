@@ -670,6 +670,13 @@ public class ASTUtils {
         return !ASTUtils.isInActionScriptComment(offsetNode, fileText, currentOffset, minCommentStartIndex);
     }
 
+    public static IASNode getSelfOrAncestorOfType(IASNode node, Class<? extends IASNode> nodeType) {
+        if (nodeType.isInstance(node)) {
+            return node;
+        }
+        return node.getAncestorOfType(nodeType);
+    }
+
     private static void findDisabledConfigConditionBlocks(IASNode node, List<ConfigConditionBlockNode> result) {
         for (int i = 0, count = node.getChildCount(); i < count; i++) {
             IASNode child = node.getChild(i);

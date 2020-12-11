@@ -94,14 +94,14 @@ public class ImportRange {
         }
         range.uri = Paths.get(sourcePath).toUri().toString();
 
-        IPackageNode packageNode = (IPackageNode) offsetNode.getAncestorOfType(IPackageNode.class);
+        IPackageNode packageNode = (IPackageNode) ASTUtils.getSelfOrAncestorOfType(offsetNode, IPackageNode.class);
         if (packageNode != null) {
             //we're inside a package block
             range.endIndex = packageNode.getAbsoluteEnd();
             return range;
         }
 
-        IFileNode fileNode = (IFileNode) offsetNode.getAncestorOfType(IFileNode.class);
+        IFileNode fileNode = (IFileNode) ASTUtils.getSelfOrAncestorOfType(offsetNode, IFileNode.class);
         if (fileNode != null) {
             //we're probably after the package block
             boolean foundPackage = false;
