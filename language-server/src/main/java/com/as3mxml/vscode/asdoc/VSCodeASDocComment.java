@@ -69,7 +69,9 @@ public class VSCodeASDocComment implements IASDocComment {
 			}
 		}
 		//strip start of asdoc coment
-		String line = lines[0].substring(3);
+		String line = lines[0];
+		int lengthToRemove = Math.min(line.length(), 3);
+		line = line.substring(lengthToRemove);
 		appendLine(sb, line, insidePreformatted);
 		for (int i = 1; i < n - 1; i++) {
 			line = lines[i];
