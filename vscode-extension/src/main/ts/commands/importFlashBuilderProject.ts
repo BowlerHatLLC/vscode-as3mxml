@@ -976,7 +976,7 @@ function migrateBuildTargetsElement(
         getApplicationNameFromPath(applicationFileName) + ".air"
       );
     } else {
-      vscode.window.showErrorMessage(
+      addError(
         "Unknown Adobe AIR platform in Adobe Flash Builder project: " +
           platformId
       );
