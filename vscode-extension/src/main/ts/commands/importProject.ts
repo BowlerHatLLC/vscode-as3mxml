@@ -122,9 +122,11 @@ async function importProjectInWorkspaceFolder(
     switch (result.label) {
       case BUTTON_LABEL_FLASH_BUILDER: {
         isFlashDevelop = false;
+        break;
       }
       case BUTTON_LABEL_FLASH_DEVELOP: {
         isFlashBuilder = false;
+        break;
       }
       default: {
         //it's possible for no format to be chosen with showQuickPick()
