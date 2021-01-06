@@ -23,7 +23,8 @@ const FILE_NAME_ASCONFIG_JSON = "asconfig.json";
 
 const MESSAGE_DETECT_PROJECT =
   "Import existing ActionScript & MXML projects from Adobe Flash Builder or FlashDevelop?";
-const MESSAGE_DETECT_PROJECT2 = "Import more Adobe Flash Builder projects?";
+const MESSAGE_DETECT_PROJECT2 =
+  "Import more projects from Adobe Flash Builder or FlashDevelop?";
 const MESSAGE_CHOOSE_PROJECT = "Choose a project to import";
 const MESSAGE_CHOOSE_FORMAT = "Choose the format of the project to import.";
 const ERROR_PROJECT_HAS_ASCONFIG =
