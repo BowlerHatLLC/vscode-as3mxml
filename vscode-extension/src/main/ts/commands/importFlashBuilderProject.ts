@@ -51,6 +51,8 @@ const WARNING_CANNOT_FIND_LINKED_RESOURCES =
 const WARNING_WORKER = "ActionScript workers are not supported. Skipping... ";
 const WARNING_EXTERNAL_THEME =
   "Themes from outside SDK are not supported. Skipping...";
+const WARNING_BLACKBERRY =
+  "The BlackBerry platform is not supported. Skipping... ";
 const CHANNEL_NAME_IMPORTER = "Flash Builder Importer";
 
 interface FlashBuilderSDK {
@@ -921,6 +923,8 @@ function migrateBuildTargetsElement(
     let isIOS = platformId === "com.adobe.flexide.multiplatform.ios.platform";
     let isAndroid =
       platformId === "com.adobe.flexide.multiplatform.android.platform";
+    let isBlackBerry =
+      platformId === "com.qnx.flexide.multiplatform.qnx.platform";
     let isDefault = platformId === "default";
     let buildTargetChildren = buildTarget.children;
     let multiPlatformSettings = findChildElementByName(
@@ -962,6 +966,9 @@ function migrateBuildTargetsElement(
       platformOptions.output = path.posix.join(
         getApplicationNameFromPath(applicationFileName) + ".apk"
       );
+    } else if (isBlackBerry) {
+      addWarning(WARNING_BLACKBERRY);
+      return;
     } else if (isDefault) {
       result.config = "air";
       platformOptions = result.airOptions;
