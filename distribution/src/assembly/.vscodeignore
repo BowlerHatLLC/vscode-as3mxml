@@ -12,3 +12,4 @@ manifest*.mf
 build.xml
 ivy.xml
 ivysettings.xml
+*.js.map

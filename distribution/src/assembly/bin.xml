@@ -103,6 +103,7 @@
       <outputDirectory>.</outputDirectory>
       <includes>
         <include>extension.js</include>
+        <include>extension.js.map</include>
       </includes>
     </fileSet>
   </fileSets>
