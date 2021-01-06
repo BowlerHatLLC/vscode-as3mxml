@@ -75,7 +75,11 @@ async function promptToImportWorkspaceFolders(
     if (value == BUTTON_LABEL_NO_IMPORT) {
       break;
     }
-    let importedFolder = await pickProjectInWorkspaceFolders(workspaceFolders);
+    let importedFolder = await pickProjectInWorkspaceFolders(
+      workspaceFolders,
+      true,
+      true
+    );
     if (!importedFolder) {
       break;
     }
@@ -87,10 +91,16 @@ async function promptToImportWorkspaceFolders(
 }
 
 async function pickProjectInWorkspaceFolders(
-  workspaceFolders: vscode.WorkspaceFolder[]
+  workspaceFolders: vscode.WorkspaceFolder[],
+  allowFlashBuilder: boolean,
+  allowFlashDevelop: boolean
 ) {
   if (workspaceFolders.length === 1) {
-    return await importProjectInWorkspaceFolder(workspaceFolders[0]);
+    return await importProjectInWorkspaceFolder(
+      workspaceFolders[0],
+      allowFlashBuilder,
+      allowFlashDevelop
+    );
   } else {
     let items = workspaceFolders.map((folder) => {
       return { label: folder.name, description: folder.uri.fsPath, folder };
@@ -102,15 +112,23 @@ async function pickProjectInWorkspaceFolders(
       //it's possible for no format to be chosen with showQuickPick()
       return null;
     }
-    return await importProjectInWorkspaceFolder(result.folder);
+    return await importProjectInWorkspaceFolder(
+      result.folder,
+      allowFlashBuilder,
+      allowFlashDevelop
+    );
   }
 }
 
 async function importProjectInWorkspaceFolder(
-  workspaceFolder: vscode.WorkspaceFolder
+  workspaceFolder: vscode.WorkspaceFolder,
+  allowFlashBuilder: boolean,
+  allowFlashDevelop: boolean
 ) {
-  let isFlashBuilder = fbImport.isFlashBuilderProject(workspaceFolder);
-  let isFlashDevelop = fdImport.isFlashDevelopProject(workspaceFolder);
+  let isFlashBuilder =
+    allowFlashBuilder && fbImport.isFlashBuilderProject(workspaceFolder);
+  let isFlashDevelop =
+    allowFlashDevelop && fdImport.isFlashDevelopProject(workspaceFolder);
   if (isFlashBuilder && isFlashDevelop) {
     let result = await vscode.window.showQuickPick(
       [
@@ -158,26 +176,26 @@ function notifyNoProjectsToImport(
 }
 
 export function pickProjectInWorkspace(
-  flashBuilder: boolean,
-  flashDevelop: boolean
+  allowFlashBuilder: boolean,
+  allowFlashDevelop: boolean
 ) {
   let workspaceFolders = vscode.workspace.workspaceFolders;
   if (!workspaceFolders) {
-    notifyNoProjectsToImport(flashBuilder, flashDevelop);
+    notifyNoProjectsToImport(allowFlashBuilder, allowFlashDevelop);
     return;
   }
 
   workspaceFolders = workspaceFolders.filter((folder) => {
-    if (flashBuilder && fbImport.isFlashBuilderProject(folder)) {
+    if (allowFlashBuilder && fbImport.isFlashBuilderProject(folder)) {
       return true;
     }
-    if (flashDevelop && fdImport.isFlashDevelopProject(folder)) {
+    if (allowFlashDevelop && fdImport.isFlashDevelopProject(folder)) {
       return true;
     }
     return false;
   });
   if (workspaceFolders.length === 0) {
-    notifyNoProjectsToImport(flashBuilder, flashDevelop);
+    notifyNoProjectsToImport(allowFlashBuilder, allowFlashDevelop);
     return;
   }
 
@@ -189,7 +207,11 @@ export function pickProjectInWorkspace(
     return;
   }
 
-  pickProjectInWorkspaceFolders(workspaceFolders);
+  pickProjectInWorkspaceFolders(
+    workspaceFolders,
+    allowFlashBuilder,
+    allowFlashDevelop
+  );
 }
 
 function isVSCodeProject(folder: vscode.WorkspaceFolder) {
