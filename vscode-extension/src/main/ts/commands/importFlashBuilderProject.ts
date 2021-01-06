@@ -970,7 +970,10 @@ function migrateBuildTargetsElement(
       addWarning(WARNING_BLACKBERRY);
       return;
     } else if (isDefault) {
-      result.config = "air";
+      //prefer mobile over desktop, if both are present
+      if (result.config !== "airmobile") {
+        result.config = "air";
+      }
       platformOptions = result.airOptions;
       platformOptions.output = path.posix.join(
         getApplicationNameFromPath(applicationFileName) + ".air"
