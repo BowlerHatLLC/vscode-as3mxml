@@ -32,8 +32,12 @@ import org.apache.royale.compiler.definitions.IConstantDefinition;
 import org.apache.royale.compiler.definitions.IDefinition;
 import org.apache.royale.compiler.definitions.IFunctionDefinition;
 import org.apache.royale.compiler.definitions.IGetterDefinition;
+import org.apache.royale.compiler.definitions.IPackageDefinition;
 import org.apache.royale.compiler.definitions.ISetterDefinition;
 import org.apache.royale.compiler.definitions.ITypeDefinition;
+import org.apache.royale.compiler.definitions.IVariableDefinition;
+import org.apache.royale.compiler.definitions.IFunctionDefinition.FunctionClassification;
+import org.apache.royale.compiler.definitions.IVariableDefinition.VariableClassification;
 import org.apache.royale.compiler.definitions.metadata.IMetaTag;
 import org.apache.royale.compiler.internal.tree.as.ConfigConditionBlockNode;
 import org.apache.royale.compiler.internal.tree.as.FileNode;
@@ -225,7 +229,7 @@ public class ASTUtils {
         }
     }
 
-    public static List<IDefinition> findTypesThatMatchName(String nameToFind,
+    public static List<IDefinition> findDefinitionsThatMatchName(String nameToFind,
             Collection<ICompilationUnit> compilationUnits) {
         ArrayList<IDefinition> result = new ArrayList<>();
         for (ICompilationUnit unit : compilationUnits) {
@@ -239,17 +243,39 @@ public class ASTUtils {
                     continue;
                 }
                 for (IDefinition definition : definitions) {
+                    if (definition.isImplicit()) {
+                        continue;
+                    }
                     if (definition instanceof ITypeDefinition) {
-                        ITypeDefinition typeDefinition = (ITypeDefinition) definition;
-                        String baseName = typeDefinition.getBaseName();
-                        if (typeDefinition.getQualifiedName().equals(baseName)) {
-                            //this definition is top-level. no import required.
+                        IDefinition parentDef = definition.getParent();
+                        if (!(parentDef instanceof IPackageDefinition)) {
                             continue;
                         }
-                        if (baseName.equals(nameToFind)) {
-                            result.add(typeDefinition);
+                    } else if (definition instanceof IFunctionDefinition) {
+                        IFunctionDefinition functionDefinition = (IFunctionDefinition) definition;
+                        if (!FunctionClassification.PACKAGE_MEMBER
+                                .equals(functionDefinition.getFunctionClassification())) {
+                            continue;
                         }
+                    } else if (definition instanceof IVariableDefinition) {
+                        IVariableDefinition variableDefinition = (IVariableDefinition) definition;
+                        if (!VariableClassification.PACKAGE_MEMBER
+                                .equals(variableDefinition.getVariableClassification())) {
+                            continue;
+                        }
+                    } else {
+                        //unknown definition type
+                        continue;
                     }
+                    String baseName = definition.getBaseName();
+                    if (!baseName.equals(nameToFind)) {
+                        continue;
+                    }
+                    if (baseName.equals(definition.getQualifiedName())) {
+                        //this definition is top-level. no import required.
+                        continue;
+                    }
+                    result.add(definition);
                 }
             } catch (Exception e) {
                 //safe to ignore
