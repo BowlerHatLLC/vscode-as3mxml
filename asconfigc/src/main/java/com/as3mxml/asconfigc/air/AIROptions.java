@@ -36,6 +36,7 @@ public class AIROptions {
 	//android
 	public static final String AIR_DOWNLOAD_URL = "airDownloadURL";
 	public static final String ARCH = "arch";
+	public static final String RESDIR = "resdir";
 
 	//sub-values
 	public static final String FILES__FILE = "file";

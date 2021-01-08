@@ -201,6 +201,12 @@ public class AIROptionsParser {
 		} else if (options.has(AIROptions.EXTDIR)) {
 			parseExtdir(options.get(AIROptions.EXTDIR), result);
 		}
+		if (overridesOptionForPlatform(options, AIROptions.RESDIR, platform)) {
+			setPathValueWithoutAssignment(AIROptions.RESDIR, options.get(platform).get(AIROptions.RESDIR).asText(),
+					result);
+		} else if (options.has(AIROptions.RESDIR)) {
+			setPathValueWithoutAssignment(AIROptions.RESDIR, options.get(AIROptions.RESDIR).asText(), result);
+		}
 		//FILE_OPTIONS end
 
 		//ANE_OPTIONS begin

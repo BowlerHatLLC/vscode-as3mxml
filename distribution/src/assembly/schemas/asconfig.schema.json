@@ -382,6 +382,11 @@
 						"connect": { "$ref": "#/definitions/airOptionsConnect" },
 						"listen": { "$ref": "#/definitions/airOptionsListen" },
 						"platformsdk": { "$ref": "#/definitions/airOptionsPlatformSDK" },
+						"resdir":
+						{
+							"type": "string",
+							"description": "Optionally specify a folder containing files to include as Android resources."
+						},
 						"signingOptions": { "$ref": "#/definitions/signingOptions" },
 						"target":
 						{

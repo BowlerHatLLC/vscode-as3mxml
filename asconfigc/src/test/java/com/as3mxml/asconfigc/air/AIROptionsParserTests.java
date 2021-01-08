@@ -105,6 +105,20 @@ class AIROptionsParserTests {
 	}
 
 	@Test
+	void testResdir() {
+		String value = "path/to/subpath";
+		ObjectNode options = JsonNodeFactory.instance.objectNode();
+		ObjectNode android = JsonNodeFactory.instance.objectNode();
+		android.set(AIROptions.RESDIR, JsonNodeFactory.instance.textNode(value));
+		options.set(AIRPlatform.ANDROID, android);
+		ArrayList<String> result = new ArrayList<>();
+		parser.parse(AIRPlatform.ANDROID, false, "application.xml", "content.swf", options, result);
+		int optionIndex = result.indexOf("-" + AIROptions.RESDIR);
+		Assertions.assertNotEquals(-1, optionIndex);
+		Assertions.assertEquals(optionIndex + 1, result.indexOf(value));
+	}
+
+	@Test
 	void testEmbedBitcode() {
 		boolean value = true;
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
