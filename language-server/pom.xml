@@ -107,13 +107,13 @@ limitations under the License.
     <dependency>
       <groupId>org.eclipse.lsp4j</groupId>
       <artifactId>org.eclipse.lsp4j</artifactId>
-      <version>0.9.0</version>
+      <version>0.10.0</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>com.networknt</groupId>
       <artifactId>json-schema-validator</artifactId>
-      <version>0.1.19</version>
+      <version>1.0.47</version>
     </dependency>
     <dependency>
       <groupId>org.dom4j</groupId>
