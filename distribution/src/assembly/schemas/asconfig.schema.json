@@ -76,6 +76,7 @@
 						"airOptions": { "$ref": "#/definitions/airOptions" },
 						"animateOptions": { "$ref" : "#/definitions/animateOptions" },
 						"modules": { "$ref": "#/definitions/modules" },
+						"workers": { "$ref": "#/definitions/workers" },
 						"htmlTemplate": { "$ref": "#/definitions/htmlTemplate" },
 						"mainClass": { "$ref": "#/definitions/mainClass" }
 					}
@@ -1002,6 +1003,35 @@
 					"output": {
 						"type": "string",
 						"description": "The path where the generated output of the module should be saved."
+					}
+				},
+				"required":
+				[
+					"file"
+				]
+			}
+		},
+		"workers":
+		{
+			"type": "array",
+			"description": "One or more workers that will be compiled along with the application.",
+			"items":
+			{
+				"type": "object",
+				"description": "A worker compiled with the application.",
+				"additionalProperties": false,
+				"properties": {
+					"file": {
+						"type": "string",
+						"description": "The specified file will be used as the entry point of the worker."
+					},
+					"optimize": {
+						"type": "boolean",
+						"description": "Indicates if the module will be optimized specifically for this project's application, or if it may be loaded by any application."
+					},
+					"output": {
+						"type": "string",
+						"description": "The path where the generated output of the worker should be saved."
 					}
 				},
 				"required":

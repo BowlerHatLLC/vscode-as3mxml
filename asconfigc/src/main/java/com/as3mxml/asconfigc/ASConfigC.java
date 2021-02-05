@@ -78,6 +78,7 @@ import com.as3mxml.asconfigc.compiler.JSOutputType;
 import com.as3mxml.asconfigc.compiler.ModuleFields;
 import com.as3mxml.asconfigc.compiler.ProjectType;
 import com.as3mxml.asconfigc.compiler.RoyaleTarget;
+import com.as3mxml.asconfigc.compiler.WorkerFields;
 import com.as3mxml.asconfigc.htmlTemplate.HTMLTemplateOptionsParser;
 import com.as3mxml.asconfigc.utils.ApacheFlexJSUtils;
 import com.as3mxml.asconfigc.utils.ApacheRoyaleUtils;
@@ -237,6 +238,7 @@ public class ASConfigC {
 	private ASConfigCOptions options;
 	private List<String> compilerOptions;
 	private List<List<String>> allModuleCompilerOptions;
+	private List<List<String>> allWorkerCompilerOptions;
 	private List<String> airOptions;
 	private JsonNode compilerOptionsJSON;
 	private JsonNode airOptionsJSON;
@@ -247,6 +249,7 @@ public class ASConfigC {
 	private String jsOutputType;
 	private String outputPath;
 	private String mainFile;
+	private List<String> workerOutputPaths;
 	private List<String> airDescriptorPaths;
 	private List<String> sourcePaths;
 	private boolean configRequiresRoyale;
@@ -358,6 +361,7 @@ public class ASConfigC {
 		debugBuild = options.debug != null && options.debug.equals(true);
 		compilerOptions = new ArrayList<>();
 		allModuleCompilerOptions = new ArrayList<>();
+		allWorkerCompilerOptions = new ArrayList<>();
 		if (options.debug != null) {
 			OptionsFormatter.setBoolean(CompilerOptions.DEBUG, options.debug, compilerOptions);
 		}
@@ -445,7 +449,7 @@ public class ASConfigC {
 			}
 		}
 		if (json.has(TopLevelFields.MODULES)) {
-			List<String> templateModuleCompilerOptions = duplicateCompilerOptionsForModule(compilerOptions);
+			List<String> templateModuleCompilerOptions = duplicateCompilerOptionsForModuleOrWorker(compilerOptions);
 			JsonNode modulesJSON = json.get(TopLevelFields.MODULES);
 			int size = modulesJSON.size();
 			File linkReportFile = null;
@@ -482,6 +486,27 @@ public class ASConfigC {
 			}
 			if (size > 0) {
 				compilerOptions.add("--" + CompilerOptions.LINK_REPORT + "+=" + linkReportFile.getAbsolutePath());
+			}
+		}
+		if (json.has(TopLevelFields.WORKERS)) {
+			workerOutputPaths = new ArrayList<>();
+			List<String> templateWorkerCompilerOptions = duplicateCompilerOptionsForModuleOrWorker(compilerOptions);
+			JsonNode workersJSON = json.get(TopLevelFields.WORKERS);
+			for (int i = 0, size = workersJSON.size(); i < size; i++) {
+				List<String> workerCompilerOptions = new ArrayList<>(templateWorkerCompilerOptions);
+				JsonNode worker = workersJSON.get(i);
+				String output = "";
+				if (worker.has(WorkerFields.OUTPUT)) {
+					output = worker.get(WorkerFields.OUTPUT).asText();
+				}
+				if (output.length() > 0) {
+					workerOutputPaths.add(output);
+					workerCompilerOptions.add("--" + CompilerOptions.OUTPUT + "=" + output);
+				}
+				String file = worker.get(WorkerFields.FILE).asText();
+				workerCompilerOptions.add("--");
+				workerCompilerOptions.add(file);
+				allWorkerCompilerOptions.add(workerCompilerOptions);
 			}
 		}
 		//parse files before airOptions because the mainFile may be
@@ -554,7 +579,7 @@ public class ASConfigC {
 		}
 	}
 
-	private List<String> duplicateCompilerOptionsForModule(List<String> compilerOptions) {
+	private List<String> duplicateCompilerOptionsForModuleOrWorker(List<String> compilerOptions) {
 		return compilerOptions.stream().filter(option -> {
 			return !COMPILER_OPTION_OUTPUT_PATTERN.matcher(option).find();
 		}).collect(Collectors.toList());
@@ -923,6 +948,20 @@ public class ASConfigC {
 		{
 			deleteOutputDirectory(outputPath);
 		}
+		if (workerOutputPaths != null) {
+			for (String workerOutputPath : workerOutputPaths) {
+				Path workerSWFPath = Paths.get(workerOutputPath);
+				if (Files.exists(workerSWFPath)) {
+					try {
+						Files.delete(workerSWFPath);
+					} catch (IOException e) {
+						throw new ASConfigCException(
+								"Failed to clean project because an I/O exception occurred while deleting file: "
+										+ workerSWFPath.toString());
+					}
+				}
+			}
+		}
 
 		//immediately exits after cleaning
 		System.exit(0);
@@ -977,7 +1016,13 @@ public class ASConfigC {
 	private void compileProject() throws ASConfigCException {
 		Path workspacePath = Paths.get(System.getProperty("user.dir"));
 		Path sdkPath = Paths.get(sdkHome);
+		//compile workers first because they might be embedded in the app
+		for (int i = 0; i < allWorkerCompilerOptions.size(); i++) {
+			List<String> workerCompilerOptions = allWorkerCompilerOptions.get(i);
+			options.compiler.compile(projectType, workerCompilerOptions, workspacePath, sdkPath);
+		}
 		options.compiler.compile(projectType, compilerOptions, workspacePath, sdkPath);
+		//compile modules last because they might be optimized for the app
 		for (int i = 0; i < allModuleCompilerOptions.size(); i++) {
 			List<String> moduleCompilerOptions = allModuleCompilerOptions.get(i);
 			options.compiler.compile(projectType, moduleCompilerOptions, workspacePath, sdkPath);
