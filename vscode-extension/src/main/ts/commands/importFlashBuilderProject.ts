@@ -597,7 +597,26 @@ function migrateActionScriptProperties(
   if (!isFlexLibrary) {
     let workersElement = findChildElementByName(rootChildren, "workers");
     if (workersElement) {
-      migrateWorkersElement(workersElement, result);
+      let workerAppPath = applicationPath;
+      let workerOutputFolderPath = "";
+      if (compilerElement) {
+        let attributes = compilerElement.attributes;
+        if ("sourceFolderPath" in attributes) {
+          workerAppPath = path.posix.join(
+            attributes.sourceFolderPath,
+            workerAppPath
+          );
+        }
+        if ("outputFolderPath" in attributes) {
+          workerOutputFolderPath = attributes.outputFolderPath;
+        }
+      }
+      migrateWorkersElement(
+        workersElement,
+        workerAppPath,
+        workerOutputFolderPath,
+        result
+      );
     }
   }
 
@@ -804,6 +823,20 @@ function findOnSourcePath(thePath: string, folderPath: string, result: any) {
       }
       if (fs.existsSync(absolutePath)) {
         thePath = newPath;
+        return true;
+      }
+      return false;
+    });
+  }
+  return thePath;
+}
+
+function stripSourcePath(thePath: string, result: any) {
+  let sourcePath = result.compilerOptions["source-path"];
+  if (sourcePath) {
+    sourcePath.some((sourcePath) => {
+      if (thePath.startsWith(sourcePath + path.posix.sep)) {
+        thePath = thePath.substr(sourcePath.length + 1);
         return true;
       }
       return false;
@@ -1066,16 +1099,30 @@ function migrateModulesElement(
   }
 }
 
-function migrateWorkersElement(workersElement: any, result: any) {
+function migrateWorkersElement(
+  workersElement: any,
+  appPath: string,
+  outputFolderPath: string,
+  result: any
+) {
   let children = workersElement.children as any[];
   let workers = children.filter((child) => {
     return child.type === "element" && child.name === "worker";
   });
-  workers.forEach((worker) => {
+  var newWorkers = workers.map((worker) => {
     let attributes = worker.attributes;
-    let workerPath = "path" in attributes ? attributes.path : "";
-    addWarning(WARNING_WORKER + workerPath);
+    let file = "path" in attributes ? attributes.path : "";
+    let embed = "embed" in attributes ? attributes.embed === "true" : false;
+    let outputRoot = embed ? "workerswfs" : outputFolderPath;
+    let output = stripSourcePath(file, result);
+    output = output.substr(0, output.length - path.extname(output).length);
+    output += FILE_EXTENSION_SWF;
+    output = path.posix.join(outputRoot, output);
+    return { file, output };
   });
+  if (newWorkers.length > 0) {
+    result.workers = newWorkers;
+  }
 }
 
 function migrateThemeElement(
