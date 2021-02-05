@@ -1006,7 +1006,8 @@ public class ASConfigC {
 				System.out.println("Deleting: " + outputPath);
 			}
 			try {
-				Files.walk(outputPath).sorted(Comparator.reverseOrder()).map(Path::toFile).forEach(File::delete);
+				Files.walk(outputPath).sorted(Comparator.reverseOrder()).filter(path -> !path.equals(outputPath))
+						.map(Path::toFile).forEach(File::delete);
 			} catch (IOException e) {
 				throw new ASConfigCException("Failed to clean project because an I/O exception occurred.");
 			}
