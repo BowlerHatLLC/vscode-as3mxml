@@ -1,5 +1,5 @@
 /*
-Copyright 2016-2020 Bowler Hat LLC
+Copyright 2016-2021 Bowler Hat LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -25,23 +25,18 @@ import org.apache.royale.compiler.internal.projects.RoyaleProjectConfigurator;
 import org.apache.royale.compiler.projects.IASProject;
 import org.apache.royale.compiler.projects.IRoyaleProject;
 
-public class SourcePathUtils
-{
-    public static String getPackageForDirectoryPath(Path directory, IASProject project)
-    {
+public class SourcePathUtils {
+    public static String getPackageForDirectoryPath(Path directory, IASProject project) {
         //find the source path that the parent directory is inside
         //that way we can strip it down to just the package
         String basePath = null;
-        for (File sourcePath : project.getSourcePath())
-        {
-            if (directory.startsWith(sourcePath.toPath()))
-            {
+        for (File sourcePath : project.getSourcePath()) {
+            if (directory.startsWith(sourcePath.toPath())) {
                 basePath = sourcePath.toPath().toString();
                 break;
             }
         }
-        if (basePath == null)
-        {
+        if (basePath == null) {
             //we couldn't find the source path!
             return "";
         }
@@ -51,33 +46,25 @@ public class SourcePathUtils
         expectedPackage = expectedPackage.replaceAll("/", ".");
         //replaces \ in path on Windows
         expectedPackage = expectedPackage.replaceAll("\\\\", ".");
-        if (expectedPackage.startsWith("."))
-        {
+        if (expectedPackage.startsWith(".")) {
             expectedPackage = expectedPackage.substring(1);
         }
         return expectedPackage;
     }
 
-    public static boolean isInProjectSourcePath(Path path, IASProject project, RoyaleProjectConfigurator configurator)
-    {
-		if (project == null)
-		{
-			return false;
-		}
-        for (File sourcePath : project.getSourcePath())
-        {
-			if (path.startsWith(sourcePath.toPath()))
-			{
-				return true;
-			}
+    public static boolean isInProjectSourcePath(Path path, IASProject project, RoyaleProjectConfigurator configurator) {
+        if (project == null) {
+            return false;
         }
-        if (configurator != null)
-        {
+        for (File sourcePath : project.getSourcePath()) {
+            if (path.startsWith(sourcePath.toPath())) {
+                return true;
+            }
+        }
+        if (configurator != null) {
             Configuration configuration = configurator.getConfiguration();
-            for (String includedSource : configuration.getIncludeSources())
-            {
-                if (path.startsWith(Paths.get(includedSource)))
-                {
+            for (String includedSource : configuration.getIncludeSources()) {
+                if (path.startsWith(Paths.get(includedSource))) {
                     return true;
                 }
             }
@@ -85,27 +72,22 @@ public class SourcePathUtils
         return false;
     }
 
-    public static boolean isInProjectLibraryPathOrExternalLibraryPath(Path path, IRoyaleProject project, Configuration configuration)
-    {
-		if (project == null || configuration == null)
-		{
-			return false;
+    public static boolean isInProjectLibraryPathOrExternalLibraryPath(Path path, IRoyaleProject project,
+            Configuration configuration) {
+        if (project == null || configuration == null) {
+            return false;
         }
         List<String> libraryPaths = project.getCompilerLibraryPath(configuration);
-        for (String libraryPath : libraryPaths)
-        {
-			if (path.startsWith(Paths.get(libraryPath)))
-			{
-				return true;
-			}
+        for (String libraryPath : libraryPaths) {
+            if (path.startsWith(Paths.get(libraryPath))) {
+                return true;
+            }
         }
         List<String> externalLibraryPaths = project.getCompilerExternalLibraryPath(configuration);
-        for (String externalLibraryPath : externalLibraryPaths)
-        {
-			if (path.startsWith(Paths.get(externalLibraryPath)))
-			{
-				return true;
-			}
+        for (String externalLibraryPath : externalLibraryPaths) {
+            if (path.startsWith(Paths.get(externalLibraryPath))) {
+                return true;
+            }
         }
         return false;
     }

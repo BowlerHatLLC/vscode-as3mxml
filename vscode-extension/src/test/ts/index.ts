@@ -1,5 +1,5 @@
 /*
-Copyright 2016-2020 Bowler Hat LLC
+Copyright 2016-2021 Bowler Hat LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,44 +17,33 @@ import * as path from "path";
 import * as glob from "glob";
 import * as Mocha from "mocha";
 
-export function run(): Promise<void>
-{
-	const mocha = new Mocha({ ui: "tdd", color: true });
-	mocha.timeout(7500);
+export function run(): Promise<void> {
+  const mocha = new Mocha({ ui: "tdd", color: true });
+  mocha.timeout(7500);
 
-	const testsRoot = path.resolve(__dirname, "..");
+  const testsRoot = path.resolve(__dirname, "..");
 
-	return new Promise((resolve, reject) =>
-	{
-		glob("**/**.test.js", { cwd: testsRoot }, (error, files) =>
-		{
-			if(error)
-			{
-				return reject(error);
-			}
+  return new Promise((resolve, reject) => {
+    glob("**/**.test.js", { cwd: testsRoot }, (error, files) => {
+      if (error) {
+        return reject(error);
+      }
 
-			// Add files to the test suite
-			files.forEach(file => mocha.addFile(path.resolve(testsRoot, file)));
+      // Add files to the test suite
+      files.forEach((file) => mocha.addFile(path.resolve(testsRoot, file)));
 
-			try
-			{
-				// Run the mocha test
-				mocha.run(failures =>
-				{
-					if(failures > 0)
-					{
-						reject(new Error(`${failures} tests failed.`));
-					}
-					else
-					{
-						resolve();
-					}
-				});
-			}
-			catch(err)
-			{
-				reject(err);
-			}
-		});
-	});
+      try {
+        // Run the mocha test
+        mocha.run((failures) => {
+          if (failures > 0) {
+            reject(new Error(`${failures} tests failed.`));
+          } else {
+            resolve();
+          }
+        });
+      } catch (err) {
+        reject(err);
+      }
+    });
+  });
 }

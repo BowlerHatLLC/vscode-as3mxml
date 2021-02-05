@@ -1,5 +1,5 @@
 /*
-Copyright 2016-2020 Bowler Hat LLC
+Copyright 2016-2021 Bowler Hat LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -21,37 +21,30 @@ import org.apache.royale.compiler.mxml.IMXMLData;
 import org.apache.royale.compiler.mxml.IMXMLTagAttributeData;
 import org.apache.royale.compiler.mxml.IMXMLTagData;
 
-public class XmlnsRange
-{
-	public String uri = null;
-	public int startIndex = -1;
-	public int endIndex = -1;
+public class XmlnsRange {
+    public String uri = null;
+    public int startIndex = -1;
+    public int endIndex = -1;
 
-    public static XmlnsRange fromOffsetTag(IMXMLTagData tagData, int currentOffset)
-    {
-		XmlnsRange range = new XmlnsRange();
-		if (tagData == null)
-		{
-			return range;
-		}
+    public static XmlnsRange fromOffsetTag(IMXMLTagData tagData, int currentOffset) {
+        XmlnsRange range = new XmlnsRange();
+        if (tagData == null) {
+            return range;
+        }
 
-		IMXMLData mxmlData = tagData.getParent();
-		
-		IMXMLTagData rootTag = mxmlData.getRootTag();
-        if (rootTag == null)
-        {
+        IMXMLData mxmlData = tagData.getParent();
+
+        IMXMLTagData rootTag = mxmlData.getRootTag();
+        if (rootTag == null) {
             return null;
         }
 
-		int startIndex = -1;
-		int endIndex = -1;
+        int startIndex = -1;
+        int endIndex = -1;
         IMXMLTagAttributeData[] attributeDatas = rootTag.getAttributeDatas();
-        for (IMXMLTagAttributeData attributeData : attributeDatas)
-        {
-            if (!attributeData.getName().startsWith("xmlns"))
-            {
-                if (startIndex == -1)
-                {
+        for (IMXMLTagAttributeData attributeData : attributeDatas) {
+            if (!attributeData.getName().startsWith("xmlns")) {
+                if (startIndex == -1) {
                     startIndex = attributeData.getStart();
                     endIndex = startIndex;
                 }
@@ -59,18 +52,16 @@ public class XmlnsRange
             }
             int start = attributeData.getAbsoluteStart();
             int end = attributeData.getValueEnd() + 1;
-            if (startIndex == -1 || startIndex > start)
-            {
+            if (startIndex == -1 || startIndex > start) {
                 startIndex = start;
             }
-            if (endIndex == -1 || endIndex < end)
-            {
+            if (endIndex == -1 || endIndex < end) {
                 endIndex = end;
             }
-		}
-		range.startIndex = startIndex;
-		range.endIndex = endIndex;
-		range.uri = Paths.get(tagData.getSourcePath()).toUri().toString();
+        }
+        range.startIndex = startIndex;
+        range.endIndex = endIndex;
+        range.uri = Paths.get(tagData.getSourcePath()).toUri().toString();
 
         return range;
     }

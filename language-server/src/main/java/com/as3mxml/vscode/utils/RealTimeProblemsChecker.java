@@ -1,5 +1,5 @@
 /*
-Copyright 2016-2020 Bowler Hat LLC
+Copyright 2016-2021 Bowler Hat LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -41,10 +41,8 @@ import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.services.LanguageClient;
 
-public class RealTimeProblemsChecker implements Runnable
-{
-	public RealTimeProblemsChecker(LanguageClient languageClient, CompilerProblemFilter filter)
-	{
+public class RealTimeProblemsChecker implements Runnable {
+	public RealTimeProblemsChecker(LanguageClient languageClient, CompilerProblemFilter filter) {
 		this.languageClient = languageClient;
 		this.compilerProblemFilter = filter;
 	}
@@ -59,23 +57,20 @@ public class RealTimeProblemsChecker implements Runnable
 	private ActionScriptProjectData projectData;
 	private IFileSpecification fileSpec;
 	private ICompilationUnit compilationUnit;
-	
-	public synchronized IFileSpecification getFileSpecification()
-	{
+
+	public synchronized IFileSpecification getFileSpecification() {
 		return fileSpec;
 	}
 
-	public synchronized void setFileSpecification(IFileSpecification newFileSpec)
-	{
+	public synchronized void setFileSpecification(IFileSpecification newFileSpec) {
 		pendingProjectData = projectData;
 		pendingCompilationUnit = compilationUnit;
 		pendingFileSpec = newFileSpec;
 	}
 
-	public synchronized void setCompilationUnit(ICompilationUnit compilationUnit, IFileSpecification fileSpec, ActionScriptProjectData projectData)
-	{
-		if(this.compilationUnit != null && this.compilationUnit != compilationUnit)
-		{
+	public synchronized void setCompilationUnit(ICompilationUnit compilationUnit, IFileSpecification fileSpec,
+			ActionScriptProjectData projectData) {
+		if (this.compilationUnit != null && this.compilationUnit != compilationUnit) {
 			updateNow();
 			pendingProjectData = projectData;
 			pendingCompilationUnit = compilationUnit;
@@ -94,8 +89,7 @@ public class RealTimeProblemsChecker implements Runnable
 		abcBytesRequest = compilationUnit.getABCBytesRequest();
 	}
 
-	public synchronized void clear()
-	{
+	public synchronized void clear() {
 		projectData = null;
 		compilationUnit = null;
 		fileSpec = null;
@@ -104,37 +98,30 @@ public class RealTimeProblemsChecker implements Runnable
 		pendingFileSpec = null;
 	}
 
-	public synchronized void updateNow()
-	{
+	public synchronized void updateNow() {
 		applyPending();
-		if(compilationUnit == null)
-		{
+		if (compilationUnit == null) {
 			return;
 		}
-		if(syntaxTreeRequest == null)
-		{
+		if (syntaxTreeRequest == null) {
 			syntaxTreeRequest = compilationUnit.getSyntaxTreeRequest();
 		}
-		if(fileScopeRequest == null)
-		{
+		if (fileScopeRequest == null) {
 			fileScopeRequest = compilationUnit.getFileScopeRequest();
 		}
-		if(outgoingDepsRequest == null)
-		{
+		if (outgoingDepsRequest == null) {
 			outgoingDepsRequest = compilationUnit.getOutgoingDependenciesRequest();
 		}
-		if(abcBytesRequest == null)
-		{
+		if (abcBytesRequest == null) {
 			abcBytesRequest = compilationUnit.getABCBytesRequest();
 		}
-		try
-		{
+		try {
 			syntaxTreeRequest.get();
 			fileScopeRequest.get();
 			outgoingDepsRequest.get();
 			abcBytesRequest.get();
+		} catch (InterruptedException e) {
 		}
-		catch(InterruptedException e) {}
 	}
 
 	private IRequest<ISyntaxTreeRequestResult, ICompilationUnit> syntaxTreeRequest;
@@ -142,93 +129,71 @@ public class RealTimeProblemsChecker implements Runnable
 	private IRequest<IOutgoingDependenciesRequestResult, ICompilationUnit> outgoingDepsRequest;
 	private IRequest<IABCBytesRequestResult, ICompilationUnit> abcBytesRequest;
 
-	private synchronized long getWaitTime()
-	{
-		if(compilationUnit != null)
-		{
+	private synchronized long getWaitTime() {
+		if (compilationUnit != null) {
 			return 100;
 		}
 		return 500;
 	}
 
-	public void run()
-	{
-		while (true)
-		{
-			if(Thread.currentThread().isInterrupted())
-			{
+	public void run() {
+		while (true) {
+			if (Thread.currentThread().isInterrupted()) {
 				break;
 			}
 			checkForProblems();
 			long waitTime = getWaitTime();
-			try
-			{
+			try {
 				//wait a short time between checks
 				//it's okay if problems are updated a little slowly
 				Thread.sleep(waitTime);
+			} catch (InterruptedException e) {
 			}
-			catch(InterruptedException e) {}
 		}
 	}
 
-	private synchronized void checkForProblems()
-	{
-		if (compilationUnit == null)
-		{
+	private synchronized void checkForProblems() {
+		if (compilationUnit == null) {
 			return;
 		}
-		if (compilationUnit.getProject() == null)
-		{
+		if (compilationUnit.getProject() == null) {
 			//this compilation unit is no longer valid
 			clear();
 			return;
 		}
-		if (syntaxTreeRequest == null)
-		{
+		if (syntaxTreeRequest == null) {
 			syntaxTreeRequest = compilationUnit.getSyntaxTreeRequest();
 		}
-		if (fileScopeRequest == null)
-		{
+		if (fileScopeRequest == null) {
 			fileScopeRequest = compilationUnit.getFileScopeRequest();
 		}
-		if (outgoingDepsRequest == null)
-		{
+		if (outgoingDepsRequest == null) {
 			outgoingDepsRequest = compilationUnit.getOutgoingDependenciesRequest();
 		}
-		if (abcBytesRequest == null)
-		{
+		if (abcBytesRequest == null) {
 			abcBytesRequest = compilationUnit.getABCBytesRequest();
 		}
-		if(syntaxTreeRequest.isDone()
-				&& fileScopeRequest.isDone()
-				&& outgoingDepsRequest.isDone()
-				&& abcBytesRequest.isDone())
-		{
+		if (syntaxTreeRequest.isDone() && fileScopeRequest.isDone() && outgoingDepsRequest.isDone()
+				&& abcBytesRequest.isDone()) {
 			publishDiagnostics();
 			syntaxTreeRequest = null;
 			fileScopeRequest = null;
 			outgoingDepsRequest = null;
 			abcBytesRequest = null;
-			if(pendingCompilationUnit != null)
-			{
+			if (pendingCompilationUnit != null) {
 				applyPending();
-			}
-			else
-			{
+			} else {
 				clear();
 			}
 		}
 	}
 
-	private synchronized void applyPending()
-	{
-		if(pendingCompilationUnit == null)
-		{
+	private synchronized void applyPending() {
+		if (pendingCompilationUnit == null) {
 			return;
 		}
 
-		if(pendingCompilationUnit == compilationUnit)
-		{
+		if (pendingCompilationUnit == compilationUnit) {
 			IWorkspace workspace = projectData.project.getWorkspace();
 			workspace.fileChanged(pendingFileSpec);
 		}
@@ -246,51 +211,43 @@ public class RealTimeProblemsChecker implements Runnable
 		abcBytesRequest = null;
 	}
 
-	private synchronized void publishDiagnostics()
-	{
-		if(compilationUnit == null)
-		{
+	private synchronized void publishDiagnostics() {
+		if (compilationUnit == null) {
 			return;
 		}
 		ArrayList<Diagnostic> diagnostics = new ArrayList<>();
 		ArrayList<ICompilerProblem> problems = new ArrayList<>();
-        try
-        {
+		try {
 			Collections.addAll(problems, syntaxTreeRequest.get().getProblems());
 			Collections.addAll(problems, fileScopeRequest.get().getProblems());
 			Collections.addAll(problems, outgoingDepsRequest.get().getProblems());
 			ICompilerProblem[] probs = abcBytesRequest.get().getProblems();
-			for (ICompilerProblem prob : probs)
-			{
-				if (!(prob instanceof InternalCompilerProblem2))
-				{
+			for (ICompilerProblem prob : probs) {
+				if (!(prob instanceof InternalCompilerProblem2)) {
 					problems.add(prob);
 				}
 			}
-			
+
 			ILspProject project = projectData.project;
 			Set<String> requiredImports = project.getQNamesOfDependencies(compilationUnit);
 			IASNode ast = syntaxTreeRequest.get().getAST();
 			ASTUtils.findUnusedImportProblems(ast, requiredImports, problems);
 			ASTUtils.findDisabledConfigConditionBlockProblems(ast, problems);
-        }
-        catch (Exception e)
-        {
-            System.err.println("Exception in compiler while checking for problems: " + e);
-            e.printStackTrace(System.err);
+		} catch (Exception e) {
+			System.err.println("Exception in compiler while checking for problems: " + e);
+			e.printStackTrace(System.err);
 
-            Diagnostic diagnostic = LSPUtils.createDiagnosticWithoutRange();
-            diagnostic.setSeverity(DiagnosticSeverity.Error);
-            diagnostic.setMessage("A fatal error occurred while checking a file for problems: " + compilationUnit.getAbsoluteFilename());
+			Diagnostic diagnostic = LSPUtils.createDiagnosticWithoutRange();
+			diagnostic.setSeverity(DiagnosticSeverity.Error);
+			diagnostic.setMessage("A fatal error occurred while checking a file for problems: "
+					+ compilationUnit.getAbsoluteFilename());
 			diagnostics.add(diagnostic);
 		}
 
 		ProblemQuery problemQuery = new ProblemQuery(projectData.configurator.getCompilerProblemSettings());
 		problemQuery.addAll(problems);
-		for (ICompilerProblem problem : problemQuery.getFilteredProblems())
-		{
-			if (compilerProblemFilter != null && !compilerProblemFilter.isAllowed(problem))
-			{
+		for (ICompilerProblem problem : problemQuery.getFilteredProblems()) {
+			if (compilerProblemFilter != null && !compilerProblemFilter.isAllowed(problem)) {
 				continue;
 			}
 			Diagnostic diagnostic = LanguageServerCompilerUtils.getDiagnosticFromCompilerProblem(problem);
@@ -298,8 +255,8 @@ public class RealTimeProblemsChecker implements Runnable
 		}
 
 		URI uri = Paths.get(compilationUnit.getAbsoluteFilename()).toUri();
-        PublishDiagnosticsParams publish = new PublishDiagnosticsParams();
-        publish.setDiagnostics(diagnostics);
+		PublishDiagnosticsParams publish = new PublishDiagnosticsParams();
+		publish.setDiagnostics(diagnostics);
 		publish.setUri(uri.toString());
 		languageClient.publishDiagnostics(publish);
 	}

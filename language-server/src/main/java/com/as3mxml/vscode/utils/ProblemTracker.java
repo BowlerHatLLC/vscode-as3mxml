@@ -1,5 +1,5 @@
 /*
-Copyright 2016-2020 Bowler Hat LLC
+Copyright 2016-2021 Bowler Hat LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -26,49 +26,40 @@ import org.eclipse.lsp4j.services.LanguageClient;
  * Tracks files that have previously had problems so that they can be cleared
  * when the problems are fixed.
  */
-public class ProblemTracker
-{
+public class ProblemTracker {
     private LanguageClient languageClient;
     private HashSet<URI> newFilesWithProblems = new HashSet<>();
     private HashSet<URI> staleFilesWithProblems = new HashSet<>();
 
-    public ProblemTracker()
-    {
+    public ProblemTracker() {
     }
 
-    public LanguageClient getLanguageClient()
-    {
+    public LanguageClient getLanguageClient() {
         return languageClient;
     }
 
-    public void setLanguageClient(LanguageClient value)
-    {
+    public void setLanguageClient(LanguageClient value) {
         languageClient = value;
     }
 
-    public void trackFileWithProblems(URI uri)
-    {
+    public void trackFileWithProblems(URI uri) {
         newFilesWithProblems.add(uri);
         staleFilesWithProblems.remove(uri);
     }
 
-    public void makeStale()
-    {
+    public void makeStale() {
         staleFilesWithProblems.addAll(newFilesWithProblems);
         newFilesWithProblems.clear();
     }
 
-    public void releaseStale()
-    {
+    public void releaseStale() {
         //if any files have been removed, they will still appear in this set, so
         //clear the errors so that they don't persist
-        for (URI uri : staleFilesWithProblems)
-        {
+        for (URI uri : staleFilesWithProblems) {
             PublishDiagnosticsParams publish = new PublishDiagnosticsParams();
             publish.setDiagnostics(new ArrayList<>());
             publish.setUri(uri.toString());
-            if (languageClient != null)
-            {
+            if (languageClient != null) {
                 languageClient.publishDiagnostics(publish);
             }
         }
