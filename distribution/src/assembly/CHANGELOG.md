@@ -1,5 +1,24 @@
 # ActionScript & MXML for Visual Studio Code Changelog
 
+## 1.6.0
+
+### New Features
+
+- Build: Added new `workers` field in _asconfig.json_ to compile worker SWFs with an application project.
+- Build: Added support for `resdir` in `airOptions` section of _asconfig.json_ to support HARMAN's latest SDK.
+- Code Actions: Suggests imports for package-level variables or functions when a symbol is unrecognized (not just classes and interfaces).
+- Import: Workers are now included when importing an Adobe Flash Builder project.
+
+### Fixed Issues
+
+- Build: No longer deletes root output folder when cleaning the project. This change is to more closely match the behavior of other IDEs.
+- Import: Fixed issue where an Adobe Flash Builder project for Adobe AIR might be detected as targeting desktop instead of mobile, in some cases.
+- Import: Fixed issue where an Adobe Flash Builder project could not be successfully imported if the folder also contained a FlashDevelop project.
+
+### Other changes
+
+- Dependencies: eclipse/lsp4j language server updated to v0.10.0.
+
 ## v1.5.0
 
 ### New Features
