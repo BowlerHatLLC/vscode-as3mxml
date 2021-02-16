@@ -287,6 +287,14 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         }
     }
 
+    public List<ActionScriptProjectData> getProjects() {
+        return actionScriptProjectManager.getAllProjectData();
+    }
+
+    public ActionScriptProjectData getFallbackProject() {
+        return actionScriptProjectManager.getFallbackProjectData();
+    }
+
     /**
      * Returns a list of all items to display in the completion list at a
      * specific position in a document. Called automatically by VSCode as the
