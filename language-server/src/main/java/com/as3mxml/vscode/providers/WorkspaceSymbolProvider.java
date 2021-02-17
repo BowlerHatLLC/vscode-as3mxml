@@ -86,6 +86,11 @@ public class WorkspaceSymbolProvider {
 							DefinitionPromise promise = (DefinitionPromise) definition;
 							definition = promise.getActualDefinition();
 						}
+						if (definition == null) {
+							//one reason this could happen is a badly-formed
+							//playerglobal.swc file
+							continue;
+						}
 						if (definition.isImplicit()) {
 							continue;
 						}
