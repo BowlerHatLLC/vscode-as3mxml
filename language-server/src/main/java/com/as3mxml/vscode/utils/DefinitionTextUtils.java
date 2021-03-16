@@ -159,6 +159,10 @@ public class DefinitionTextUtils {
             IInterfaceDefinition interfaceDefinition = (IInterfaceDefinition) definition;
             return interfaceDefinitionToTextDocument(interfaceDefinition, currentProject, definition);
         }
+        if (definition instanceof INamespaceDefinition) {
+            INamespaceDefinition namespaceDefinition = (INamespaceDefinition) definition;
+            return namespaceDefinitionToTextDocument(namespaceDefinition, currentProject, definition);
+        }
         if (definition instanceof IFunctionDefinition) {
             IFunctionDefinition functionDefinition = (IFunctionDefinition) definition;
             IDefinition parentDefinition = functionDefinition.getParent();
@@ -235,6 +239,31 @@ public class DefinitionTextUtils {
         textDocumentBuilder.append(NEW_LINE);
         indent = increaseIndent(indent);
         insertInterfaceDefinitionIntoTextDocument(interfaceDefinition, textDocumentBuilder, indent, currentProject,
+                result, definitionToFind);
+        indent = decreaseIndent(indent);
+        textDocumentBuilder.append("}");
+        result.text = textDocumentBuilder.toString();
+        return result;
+    }
+
+    private static DefinitionAsText namespaceDefinitionToTextDocument(INamespaceDefinition namespaceDefinition,
+            ICompilerProject currentProject, IDefinition definitionToFind) {
+        DefinitionAsText result = new DefinitionAsText();
+        result.path = definitionToGeneratedPath(namespaceDefinition);
+        String indent = "";
+        StringBuilder textDocumentBuilder = new StringBuilder();
+        insertHeaderCommentIntoTextDocument(namespaceDefinition, textDocumentBuilder);
+        textDocumentBuilder.append(IASKeywordConstants.PACKAGE);
+        String packageName = namespaceDefinition.getPackageName();
+        if (packageName != null && packageName.length() > 0) {
+            textDocumentBuilder.append(" ");
+            textDocumentBuilder.append(packageName);
+        }
+        textDocumentBuilder.append(NEW_LINE);
+        textDocumentBuilder.append("{");
+        textDocumentBuilder.append(NEW_LINE);
+        indent = increaseIndent(indent);
+        insertNamespaceDefinitionIntoTextDocument(namespaceDefinition, textDocumentBuilder, indent, currentProject,
                 result, definitionToFind);
         indent = decreaseIndent(indent);
         textDocumentBuilder.append("}");
@@ -417,6 +446,33 @@ public class DefinitionTextUtils {
         indent = decreaseIndent(indent);
         textDocumentBuilder.append(indent);
         textDocumentBuilder.append("}");
+        textDocumentBuilder.append(NEW_LINE);
+    }
+
+    private static void insertNamespaceDefinitionIntoTextDocument(INamespaceDefinition namespaceDefinition,
+            StringBuilder textDocumentBuilder, String indent, ICompilerProject currentProject, DefinitionAsText result,
+            IDefinition definitionToFind) {
+        insertMetaTagsIntoTextDocument(namespaceDefinition, textDocumentBuilder, indent, currentProject, result,
+                definitionToFind);
+
+        textDocumentBuilder.append(indent);
+        if (namespaceDefinition.isPublic()) {
+            textDocumentBuilder.append(IASKeywordConstants.PUBLIC);
+            textDocumentBuilder.append(" ");
+        } else if (namespaceDefinition.isInternal()) {
+            textDocumentBuilder.append(IASKeywordConstants.INTERNAL);
+            textDocumentBuilder.append(" ");
+        }
+        textDocumentBuilder.append(IASKeywordConstants.NAMESPACE);
+        textDocumentBuilder.append(" ");
+        appendDefinitionName(namespaceDefinition, textDocumentBuilder, definitionToFind, result);
+        textDocumentBuilder.append(" ");
+        textDocumentBuilder.append("=");
+        textDocumentBuilder.append(" ");
+        textDocumentBuilder.append("\"");
+        textDocumentBuilder.append(namespaceDefinition.getURI());
+        textDocumentBuilder.append("\"");
+        textDocumentBuilder.append(";");
         textDocumentBuilder.append(NEW_LINE);
     }
 
@@ -743,6 +799,17 @@ public class DefinitionTextUtils {
             detailBuilder.append("\"");
             detailBuilder.append(")");
             detailBuilder.append("]");
+        } else if(definition instanceof INamespaceDefinition) {
+            INamespaceDefinition namespaceDefinition = (INamespaceDefinition) definition;
+            detailBuilder.append(IASKeywordConstants.NAMESPACE);
+            detailBuilder.append(" ");
+            detailBuilder.append(namespaceDefinition.getQualifiedName());
+            detailBuilder.append(" ");
+            detailBuilder.append("=");
+            detailBuilder.append(" ");
+            detailBuilder.append("\"");
+            detailBuilder.append(namespaceDefinition.getURI());
+            detailBuilder.append("\"");
         }
         return detailBuilder.toString();
     }
