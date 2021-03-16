@@ -28,6 +28,10 @@
 		</dict>
 		<dict>
 			<key>include</key>
+			<string>#namespace_declaration</string>
+		</dict>
+		<dict>
+			<key>include</key>
 			<string>#import</string>
 		</dict>
 		<dict>
@@ -256,6 +260,26 @@
 					<string>#object_literal</string>
 				</dict>
 			</array>
+		</dict>
+		<key>namespace_declaration</key>
+		<dict>
+			<key>captures</key>
+			<dict>
+				<key>2</key>
+				<dict>
+					<key>name</key>
+					<string>storage.modifier.actionscript.3</string>
+				</dict>
+				<key>3</key>
+				<dict>
+					<key>name</key>
+					<string>storage.modifier.actionscript.3</string>
+				</dict>
+			</dict>
+			<key>match</key>
+			<string>(?x) ((\w+)\s+)? (namespace) \s+ (?:[A-Za-z0-9_\$]+)</string>
+			<key>name</key>
+			<string>meta.namespace_declaration.actionscript.3</string>
 		</dict>
 		<key>class_declaration</key>
 		<dict>
@@ -908,6 +932,10 @@
 				</dict>
 				<dict>
 					<key>include</key>
+					<string>#namespace_declaration</string>
+				</dict>
+				<dict>
+					<key>include</key>
 					<string>#use_namespace</string>
 				</dict>
 				<dict>
@@ -1158,6 +1186,10 @@
 				<dict>
 					<key>include</key>
 					<string>#interface</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#namespace_declaration</string>
 				</dict>
 			</array>
 		</dict>
