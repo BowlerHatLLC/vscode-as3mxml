@@ -15,9 +15,13 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Set up JDK 1.8
-      uses: actions/setup-java@v1
+    - uses: actions/setup-java@v1
       with:
         java-version: 1.8
     - name: Build with Maven
       run: mvn -B package --file pom.xml
+    - uses: actions/upload-artifact@v2
+      with:
+        name: vscode-as3mxml
+        path: distribution/target/vscode-as3mxml/vscode-as3mxml/vscode-nextgenas-*.vsix
+        if-no-files-found: error
