@@ -158,7 +158,7 @@ export default class ActionScriptSourcePathDataProvider
     this._rootSourcePaths = [];
     this._rootPathStrings = new Set();
     if (vscode.workspace.workspaceFolders == undefined) {
-      this._onDidChangeTreeData.fire();
+      this._onDidChangeTreeData.fire(null);
       return;
     }
     vscode.workspace.workspaceFolders.forEach((workspaceFolder) => {
@@ -167,7 +167,7 @@ export default class ActionScriptSourcePathDataProvider
         FILE_ASCONFIG_JSON
       );
       if (!fs.existsSync(asconfigPath)) {
-        this._onDidChangeTreeData.fire();
+        this._onDidChangeTreeData.fire(null);
         return;
       }
       try {
@@ -210,7 +210,7 @@ export default class ActionScriptSourcePathDataProvider
       }
     });
     this.handleDuplicateRootPathNames();
-    this._onDidChangeTreeData.fire();
+    this._onDidChangeTreeData.fire(null);
   }
 
   private removeDuplicateLabel(
@@ -218,7 +218,7 @@ export default class ActionScriptSourcePathDataProvider
     rootPath: ActionScriptSourcePath,
     otherRootPath?: ActionScriptSourcePath
   ) {
-    let rootPathLabel = rootPath.label;
+    let rootPathLabel = rootPath.label as string;
     let duplicateIndex = duplicatePaths.indexOf(rootPathLabel);
     if (
       duplicateIndex === -1 &&

@@ -31,8 +31,7 @@ limitations under the License.
 
   <properties>
     <npm.executable>npm</npm.executable>
-    <tsc.executable>${project.basedir}/node_modules/.bin/tsc</tsc.executable>
-    <webpack.executable>${project.basedir}/node_modules/.bin/webpack</webpack.executable>
+    <npx.executable>npx</npx.executable>
   </properties>
 
   <build>
@@ -83,8 +82,9 @@ limitations under the License.
             <phase>generate-sources</phase>
             <configuration>
               <workingDirectory>${project.basedir}</workingDirectory>
-              <executable>${webpack.executable}</executable>
+              <executable>${npx.executable}</executable>
               <arguments>
+                <argument>webpack-cli</argument>
                 <argument>--mode</argument>
                 <argument>production</argument>
               </arguments>
@@ -99,8 +99,9 @@ limitations under the License.
             <configuration>
               <skip>${skipTests}</skip>
               <workingDirectory>${project.basedir}/src/test</workingDirectory>
-              <executable>${tsc.executable}</executable>
+              <executable>${npx.executable}</executable>
               <arguments>
+                <argument>tsc</argument>
                 <argument>-p</argument>
                 <argument>.</argument>
               </arguments>
@@ -124,8 +125,7 @@ limitations under the License.
       </activation>
       <properties>
         <npm.executable>npm.cmd</npm.executable>
-        <tsc.executable>${project.basedir}/node_modules/.bin/tsc.cmd</tsc.executable>
-        <webpack.executable>${project.basedir}/node_modules/.bin/webpack.cmd</webpack.executable>
+        <npm.executable>npx.cmd</npm.executable>
       </properties>
     </profile>
   </profiles>

@@ -92,7 +92,7 @@ async function promptToImportWorkspaceFolders(
 }
 
 async function pickProjectInWorkspaceFolders(
-  workspaceFolders: vscode.WorkspaceFolder[],
+  workspaceFolders: readonly vscode.WorkspaceFolder[],
   allowFlashBuilder: boolean,
   allowFlashDevelop: boolean
 ) {

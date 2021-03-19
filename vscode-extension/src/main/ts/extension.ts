@@ -444,7 +444,7 @@ function startClient() {
   vscode.window.withProgress(
     { location: vscode.ProgressLocation.Window },
     (progress) => {
-      return new Promise((resolve, reject) => {
+      return new Promise<void>((resolve, reject) => {
         progress.report({ message: INITIALIZING_MESSAGE });
         let clientOptions: LanguageClientOptions = {
           documentSelector: [

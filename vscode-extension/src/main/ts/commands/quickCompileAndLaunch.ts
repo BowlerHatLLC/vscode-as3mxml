@@ -62,7 +62,7 @@ async function quickCompileAndLaunchURI(uri: string, debug: boolean) {
     { location: vscode.ProgressLocation.Window },
     (progress) => {
       progress.report({ message: QUICK_COMPILE_MESSAGE });
-      return new Promise((resolve, reject) => {
+      return new Promise<void>((resolve, reject) => {
         return vscode.commands
           .executeCommand("workbench.action.debug.stop")
           .then(() => {

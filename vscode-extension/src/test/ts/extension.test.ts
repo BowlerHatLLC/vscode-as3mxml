@@ -56,7 +56,7 @@ function revertAndCloseAllEditors() {
     .executeCommand("workbench.action.revertAndCloseActiveEditor")
     .then(
       () => {
-        return new Promise((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
           setTimeout(() => {
             if (vscode.window.activeTextEditor) {
               resolve(revertAndCloseAllEditors());
