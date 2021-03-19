@@ -383,7 +383,7 @@ export default class ActionScriptTaskProvider
           workspaceFolder,
           command,
           frameworkSDK,
-          true,
+          false,
           PLATFORM_AIR,
           false
         )
@@ -409,7 +409,7 @@ export default class ActionScriptTaskProvider
           workspaceFolder,
           command,
           frameworkSDK,
-          true,
+          false,
           airPlatform,
           false
         )
