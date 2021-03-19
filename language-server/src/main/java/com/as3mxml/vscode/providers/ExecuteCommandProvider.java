@@ -319,7 +319,7 @@ public class ExecuteCommandProvider {
             importsToAdd = new HashSet<>();
             Collection<ICompilationUnit> units = project.getCompilationUnits();
             for (String missingName : missingNames) {
-                List<IDefinition> definitions = ASTUtils.findDefinitionsThatMatchName(missingName, units);
+                List<IDefinition> definitions = ASTUtils.findDefinitionsThatMatchName(missingName, false, units);
                 if (definitions.size() == 1) {
                     //add an import only if exactly one type is found
                     importsToAdd.add(definitions.get(0).getQualifiedName());

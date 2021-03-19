@@ -28,15 +28,17 @@ import com.as3mxml.vscode.compiler.problems.UnusedImportProblem;
 import org.apache.royale.compiler.constants.IASLanguageConstants;
 import org.apache.royale.compiler.constants.IMetaAttributeConstants;
 import org.apache.royale.compiler.definitions.IClassDefinition;
+import org.apache.royale.compiler.definitions.IClassDefinition.ClassClassification;
 import org.apache.royale.compiler.definitions.IConstantDefinition;
 import org.apache.royale.compiler.definitions.IDefinition;
 import org.apache.royale.compiler.definitions.IFunctionDefinition;
+import org.apache.royale.compiler.definitions.IFunctionDefinition.FunctionClassification;
 import org.apache.royale.compiler.definitions.IGetterDefinition;
-import org.apache.royale.compiler.definitions.IPackageDefinition;
+import org.apache.royale.compiler.definitions.IInterfaceDefinition;
+import org.apache.royale.compiler.definitions.IInterfaceDefinition.InterfaceClassification;
 import org.apache.royale.compiler.definitions.ISetterDefinition;
 import org.apache.royale.compiler.definitions.ITypeDefinition;
 import org.apache.royale.compiler.definitions.IVariableDefinition;
-import org.apache.royale.compiler.definitions.IFunctionDefinition.FunctionClassification;
 import org.apache.royale.compiler.definitions.IVariableDefinition.VariableClassification;
 import org.apache.royale.compiler.definitions.metadata.IMetaTag;
 import org.apache.royale.compiler.internal.tree.as.ConfigConditionBlockNode;
@@ -229,9 +231,11 @@ public class ASTUtils {
         }
     }
 
-    public static List<IDefinition> findDefinitionsThatMatchName(String nameToFind,
+    public static List<IDefinition> findDefinitionsThatMatchName(String nameToFind, boolean allowDuplicates,
             Collection<ICompilationUnit> compilationUnits) {
+
         ArrayList<IDefinition> result = new ArrayList<>();
+        Set<String> qualifiedNames = allowDuplicates ? null : new HashSet<>();
         for (ICompilationUnit unit : compilationUnits) {
             if (unit == null) {
                 continue;
@@ -246,9 +250,16 @@ public class ASTUtils {
                     if (definition.isImplicit()) {
                         continue;
                     }
-                    if (definition instanceof ITypeDefinition) {
-                        IDefinition parentDef = definition.getParent();
-                        if (!(parentDef instanceof IPackageDefinition)) {
+                    if (definition instanceof IClassDefinition) {
+                        IClassDefinition classDefinition = (IClassDefinition) definition;
+                        if (!ClassClassification.PACKAGE_MEMBER
+                                .equals(classDefinition.getClassClassification())) {
+                            continue;
+                        }
+                    } else if (definition instanceof IInterfaceDefinition) {
+                        IInterfaceDefinition interfaceDefinition = (IInterfaceDefinition) definition;
+                        if (!InterfaceClassification.PACKAGE_MEMBER
+                                .equals(interfaceDefinition.getInterfaceClassification())) {
                             continue;
                         }
                     } else if (definition instanceof IFunctionDefinition) {
@@ -271,9 +282,16 @@ public class ASTUtils {
                     if (!baseName.equals(nameToFind)) {
                         continue;
                     }
-                    if (baseName.equals(definition.getQualifiedName())) {
+                    String qualifiedName = definition.getQualifiedName();
+                    if (baseName.equals(qualifiedName)) {
                         //this definition is top-level. no import required.
                         continue;
+                    }
+                    if(!allowDuplicates) {
+                        if(qualifiedNames.contains(qualifiedName)) {
+                            continue;
+                        }
+                        qualifiedNames.add(qualifiedName);
                     }
                     result.add(definition);
                 }

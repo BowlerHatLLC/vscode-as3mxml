@@ -613,7 +613,7 @@ public class CodeActionProvider {
         IIdentifierNode identifierNode = (IIdentifierNode) offsetNode;
         String typeString = identifierNode.getName();
 
-        List<IDefinition> definitions = ASTUtils.findDefinitionsThatMatchName(typeString,
+        List<IDefinition> definitions = ASTUtils.findDefinitionsThatMatchName(typeString, false,
                 project.getCompilationUnits());
         for (IDefinition definitionToImport : definitions) {
             WorkspaceEdit edit = CodeActionsUtils.createWorkspaceEditForAddImport(definitionToImport, fileText, uri,
