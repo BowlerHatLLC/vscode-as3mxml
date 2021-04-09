@@ -109,6 +109,7 @@ import org.apache.royale.compiler.units.ICompilationUnit;
 import org.eclipse.lsp4j.Command;
 import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.CompletionItemKind;
+import org.eclipse.lsp4j.CompletionItemTag;
 import org.eclipse.lsp4j.CompletionList;
 import org.eclipse.lsp4j.CompletionParams;
 import org.eclipse.lsp4j.InsertTextFormat;
@@ -1669,9 +1670,14 @@ public class CompletionProvider {
                 item.setAdditionalTextEdits(Collections.singletonList(textEdit));
             }
         }
+
+        List<CompletionItemTag> tags = new ArrayList<>();
         IDeprecationInfo deprecationInfo = definition.getDeprecationInfo();
         if (deprecationInfo != null) {
-            item.setDeprecated(true);
+            tags.add(CompletionItemTag.Deprecated);
+        }
+        if(tags.size() > 0) {
+            item.setTags(tags);
         }
         result.getItems().add(item);
     }
@@ -1768,9 +1774,13 @@ public class CompletionProvider {
                 }
             }
         }
+        List<CompletionItemTag> tags = new ArrayList<>();
         IDeprecationInfo deprecationInfo = definition.getDeprecationInfo();
         if (deprecationInfo != null) {
-            item.setDeprecated(true);
+            tags.add(CompletionItemTag.Deprecated);
+        }
+        if(tags.size() > 0) {
+            item.setTags(tags);
         }
         result.getItems().add(item);
     }

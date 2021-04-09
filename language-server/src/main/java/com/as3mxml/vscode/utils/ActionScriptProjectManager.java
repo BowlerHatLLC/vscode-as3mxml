@@ -58,6 +58,7 @@ import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolInformation;
+import org.eclipse.lsp4j.SymbolTag;
 import org.eclipse.lsp4j.WorkspaceFolder;
 import org.eclipse.lsp4j.services.LanguageClient;
 
@@ -514,9 +515,13 @@ public class ActionScriptProjectManager {
         symbol.setRange(range);
         symbol.setSelectionRange(range);
 
+        List<SymbolTag> tags = new ArrayList<>();
         IDeprecationInfo deprecationInfo = definition.getDeprecationInfo();
         if (deprecationInfo != null) {
-            symbol.setDeprecated(true);
+            tags.add(SymbolTag.Deprecated);
+        }
+        if(tags.size() > 0) {
+            symbol.setTags(tags);
         }
 
         return symbol;
@@ -551,9 +556,13 @@ public class ActionScriptProjectManager {
 
         symbol.setLocation(location);
 
+        List<SymbolTag> tags = new ArrayList<>();
         IDeprecationInfo deprecationInfo = definition.getDeprecationInfo();
         if (deprecationInfo != null) {
-            symbol.setDeprecated(true);
+            tags.add(SymbolTag.Deprecated);
+        }
+        if(tags.size() > 0) {
+            symbol.setTags(tags);
         }
 
         return symbol;
