@@ -1,5 +1,14 @@
 # ActionScript & MXML for Visual Studio Code Changelog
 
+## Next
+
+### Fixed Issues
+
+- Build: Fixed issue where captive runtime and native installer builds were debug instead of release.
+- Code Actions: Fixed missing "Add import" code actions for classes in _.swc_ libraries.
+- Hover: Fixed missing mouse hover text for custom user namespaces.
+- Syntax: Missing syntax coloring for namespace declarations.
+
 ## 1.6.0
 
 ### New Features
