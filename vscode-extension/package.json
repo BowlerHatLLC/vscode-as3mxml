@@ -431,6 +431,16 @@
           "default": null,
           "description": "(Advanced) Specifies the absolute path of the Adobe Animate executable."
         },
+        "as3mxml.codeGeneration.getterSetter.forcePublicFunctions": {
+          "type": "boolean",
+          "default": false,
+          "description": "When generating getters and setters, force the functions to be in the public namespace, instead of the original namespace of the variable"
+        },
+        "as3mxml.codeGeneration.getterSetter.forcePrivateVariable": {
+          "type": "boolean",
+          "default": true,
+          "description": "When generating getters and setters, force the original variable to be in the private namespace, instead of keeping its original namespace"
+        },
         "nextgenas.sdk.framework": {
           "deprecationMessage": "DEPRECATED: Use as3mxml.sdk.framework instead."
         },
