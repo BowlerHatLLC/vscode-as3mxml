@@ -211,6 +211,8 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     private boolean realTimeProblems = true;
     private boolean showFileOutsideSourcePath = true;
     private boolean concurrentRequests = true;
+    private boolean codeGeneration_getterSetter_forcePublicFunctions = false;
+    private boolean codeGeneration_getterSetter_forcePrivateVariable = false;
     private SimpleProjectConfigStrategy fallbackConfig;
     private CompilerShell compilerShell;
     private String jvmargs;
@@ -229,7 +231,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     }
 
     private boolean onAddProject(ActionScriptProjectData projectData) {
-        //let's get the code intelligence up and running!
+        // let's get the code intelligence up and running!
         Path path = getMainCompilationUnitPath(projectData);
         if (path != null) {
             String normalizedPath = FilenameNormalization.normalize(path.toAbsolutePath().toString());
@@ -296,9 +298,9 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     }
 
     /**
-     * Returns a list of all items to display in the completion list at a
-     * specific position in a document. Called automatically by VSCode as the
-     * user types, and may not necessarily be triggered only on "." or ":".
+     * Returns a list of all items to display in the completion list at a specific
+     * position in a document. Called automatically by VSCode as the user types, and
+     * may not necessarily be triggered only on "." or ":".
      */
     @Override
     public CompletableFuture<Either<List<CompletionItem>, CompletionList>> completion(CompletionParams params) {
@@ -313,8 +315,8 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
 
     private Either<List<CompletionItem>, CompletionList> completion2(CompletionParams params,
             CancelChecker cancelToken) {
-        //make sure that the latest changes have been passed to
-        //workspace.fileChanged() before proceeding
+        // make sure that the latest changes have been passed to
+        // workspace.fileChanged() before proceeding
         if (realTimeProblemsChecker != null) {
             realTimeProblemsChecker.updateNow();
         }
@@ -330,8 +332,8 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     }
 
     /**
-     * This function is never called. We resolve completion items immediately
-     * in completion() instead of requiring a separate step.
+     * This function is never called. We resolve completion items immediately in
+     * completion() instead of requiring a separate step.
      */
     @Override
     public CompletableFuture<CompletionItem> resolveCompletionItem(CompletionItem unresolved) {
@@ -354,8 +356,8 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     }
 
     private Hover hover2(HoverParams params, CancelChecker cancelToken) {
-        //make sure that the latest changes have been passed to
-        //workspace.fileChanged() before proceeding
+        // make sure that the latest changes have been passed to
+        // workspace.fileChanged() before proceeding
         if (realTimeProblemsChecker != null) {
             realTimeProblemsChecker.updateNow();
         }
@@ -370,10 +372,9 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     }
 
     /**
-     * Displays a function's parameters, including which one is currently
-     * active. Called automatically by VSCode any time that the user types "(",
-     * so be sure to check that a function call is actually happening at the
-     * current position.
+     * Displays a function's parameters, including which one is currently active.
+     * Called automatically by VSCode any time that the user types "(", so be sure
+     * to check that a function call is actually happening at the current position.
      */
     @Override
     public CompletableFuture<SignatureHelp> signatureHelp(SignatureHelpParams params) {
@@ -387,8 +388,8 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     }
 
     private SignatureHelp signatureHelp2(SignatureHelpParams params, CancelChecker cancelToken) {
-        //make sure that the latest changes have been passed to
-        //workspace.fileChanged() before proceeding
+        // make sure that the latest changes have been passed to
+        // workspace.fileChanged() before proceeding
         if (realTimeProblemsChecker != null) {
             realTimeProblemsChecker.updateNow();
         }
@@ -420,8 +421,8 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
 
     private Either<List<? extends Location>, List<? extends LocationLink>> definition2(DefinitionParams params,
             CancelChecker cancelToken) {
-        //make sure that the latest changes have been passed to
-        //workspace.fileChanged() before proceeding
+        // make sure that the latest changes have been passed to
+        // workspace.fileChanged() before proceeding
         if (realTimeProblemsChecker != null) {
             realTimeProblemsChecker.updateNow();
         }
@@ -436,8 +437,8 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     }
 
     /**
-     * Finds where the type of the definition referenced at the current position
-     * in a text document is defined.
+     * Finds where the type of the definition referenced at the current position in
+     * a text document is defined.
      */
     @Override
     public CompletableFuture<Either<List<? extends Location>, List<? extends LocationLink>>> typeDefinition(
@@ -453,8 +454,8 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
 
     private Either<List<? extends Location>, List<? extends LocationLink>> typeDefinition2(TypeDefinitionParams params,
             CancelChecker cancelToken) {
-        //make sure that the latest changes have been passed to
-        //workspace.fileChanged() before proceeding
+        // make sure that the latest changes have been passed to
+        // workspace.fileChanged() before proceeding
         if (realTimeProblemsChecker != null) {
             realTimeProblemsChecker.updateNow();
         }
@@ -485,8 +486,8 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
 
     private Either<List<? extends Location>, List<? extends LocationLink>> implementation2(ImplementationParams params,
             CancelChecker cancelToken) {
-        //make sure that the latest changes have been passed to
-        //workspace.fileChanged() before proceeding
+        // make sure that the latest changes have been passed to
+        // workspace.fileChanged() before proceeding
         if (realTimeProblemsChecker != null) {
             realTimeProblemsChecker.updateNow();
         }
@@ -501,8 +502,8 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     }
 
     /**
-     * Finds all references of the definition referenced at the current position
-     * in a text document. Does not necessarily get called where a definition is
+     * Finds all references of the definition referenced at the current position in
+     * a text document. Does not necessarily get called where a definition is
      * defined, but may be at one of the references.
      */
     @Override
@@ -517,8 +518,8 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     }
 
     private List<? extends Location> references2(ReferenceParams params, CancelChecker cancelToken) {
-        //make sure that the latest changes have been passed to
-        //workspace.fileChanged() before proceeding
+        // make sure that the latest changes have been passed to
+        // workspace.fileChanged() before proceeding
         if (realTimeProblemsChecker != null) {
             realTimeProblemsChecker.updateNow();
         }
@@ -555,8 +556,8 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     }
 
     private List<? extends SymbolInformation> symbol2(WorkspaceSymbolParams params, CancelChecker cancelToken) {
-        //make sure that the latest changes have been passed to
-        //workspace.fileChanged() before proceeding
+        // make sure that the latest changes have been passed to
+        // workspace.fileChanged() before proceeding
         if (realTimeProblemsChecker != null) {
             realTimeProblemsChecker.updateNow();
         }
@@ -588,8 +589,8 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
 
     private List<Either<SymbolInformation, DocumentSymbol>> documentSymbol2(DocumentSymbolParams params,
             CancelChecker cancelToken) {
-        //make sure that the latest changes have been passed to
-        //workspace.fileChanged() before proceeding
+        // make sure that the latest changes have been passed to
+        // workspace.fileChanged() before proceeding
         if (realTimeProblemsChecker != null) {
             realTimeProblemsChecker.updateNow();
         }
@@ -601,7 +602,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                 hierarchicalDocumentSymbolSupport = clientCapabilities.getTextDocument().getDocumentSymbol()
                         .getHierarchicalDocumentSymbolSupport();
             } catch (NullPointerException e) {
-                //ignore
+                // ignore
             }
             DocumentSymbolProvider provider = new DocumentSymbolProvider(actionScriptProjectManager,
                     hierarchicalDocumentSymbolSupport);
@@ -626,8 +627,8 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     }
 
     private List<Either<Command, CodeAction>> codeAction2(CodeActionParams params, CancelChecker cancelToken) {
-        //make sure that the latest changes have been passed to
-        //workspace.fileChanged() before proceeding
+        // make sure that the latest changes have been passed to
+        // workspace.fileChanged() before proceeding
         if (realTimeProblemsChecker != null) {
             realTimeProblemsChecker.updateNow();
         }
@@ -635,6 +636,8 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         compilerWorkspace.startBuilding();
         try {
             CodeActionProvider provider = new CodeActionProvider(actionScriptProjectManager, fileTracker);
+            provider.codeGeneration_getterSetter_forcePublicFunctions = codeGeneration_getterSetter_forcePublicFunctions;
+            provider.codeGeneration_getterSetter_forcePrivateVariable = codeGeneration_getterSetter_forcePrivateVariable;
             return provider.codeAction(params, cancelToken);
         } finally {
             compilerWorkspace.doneBuilding();
@@ -696,8 +699,8 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     }
 
     private WorkspaceEdit rename2(RenameParams params, CancelChecker cancelToken) {
-        //make sure that the latest changes have been passed to
-        //workspace.fileChanged() before proceeding
+        // make sure that the latest changes have been passed to
+        // workspace.fileChanged() before proceeding
         if (realTimeProblemsChecker != null) {
             realTimeProblemsChecker.updateNow();
         }
@@ -722,8 +725,8 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     }
 
     /**
-     * Called when one of the commands registered in ActionScriptLanguageServer
-     * is executed.
+     * Called when one of the commands registered in ActionScriptLanguageServer is
+     * executed.
      */
     @Override
     public CompletableFuture<Object> executeCommand(ExecuteCommandParams params) {
@@ -736,21 +739,21 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     }
 
     /**
-     * Called whan a file is opened for editing in Visual Studio Code. We store
-     * the file's contents in a String since any changes that have been made to
-     * it may not have been saved yet. This method will not be called again if
-     * the user simply switches to a different tab for another file and then
-     * switched back to this one, without every closing it completely. In
-     * other words, the language server does not usually know which file is
-     * currently visible to the user in VSCode.
+     * Called whan a file is opened for editing in Visual Studio Code. We store the
+     * file's contents in a String since any changes that have been made to it may
+     * not have been saved yet. This method will not be called again if the user
+     * simply switches to a different tab for another file and then switched back to
+     * this one, without every closing it completely. In other words, the language
+     * server does not usually know which file is currently visible to the user in
+     * VSCode.
      */
     @Override
     public void didOpen(DidOpenTextDocumentParams params) {
         TextDocumentItem textDocument = params.getTextDocument();
         String textDocumentUri = textDocument.getUri();
         if (!textDocumentUri.endsWith(FILE_EXTENSION_AS) && !textDocumentUri.endsWith(FILE_EXTENSION_MXML)) {
-            //code intelligence is available only in .as and .mxml files
-            //so we ignore other file extensions
+            // code intelligence is available only in .as and .mxml files
+            // so we ignore other file extensions
             return;
         }
         Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocumentUri);
@@ -758,9 +761,9 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             return;
         }
 
-        //even if it's not in a workspace folder right now, store it just in
-        //case we need it later.
-        //example: if we modify to source-path compiler option
+        // even if it's not in a workspace folder right now, store it just in
+        // case we need it later.
+        // example: if we modify to source-path compiler option
         String text = textDocument.getText();
         fileTracker.openFile(path, text);
 
@@ -776,17 +779,17 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         getProject(projectData);
         ILspProject project = projectData.project;
         if (project == null) {
-            //something went wrong while creating the project
+            // something went wrong while creating the project
             return;
         }
 
-        //notify the workspace that it should read the file from memory
-        //instead of loading from the file system
+        // notify the workspace that it should read the file from memory
+        // instead of loading from the file system
         String normalizedPath = FilenameNormalization.normalize(path.toAbsolutePath().toString());
         IFileSpecification fileSpec = fileTracker.getFileSpecification(normalizedPath);
         compilerWorkspace.fileChanged(fileSpec);
 
-        //if it's an included file, switch to the parent file
+        // if it's an included file, switch to the parent file
         IncludeFileData includeFileData = projectData.includedFiles.get(path.toString());
         if (includeFileData != null) {
             path = Paths.get(includeFileData.parentPath);
@@ -797,16 +800,16 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
 
     /**
      * Called when a change is made to a file open for editing in Visual Studio
-     * Code. Receives incremental changes that need to be applied to the
-     * in-memory String that we store for this file.
+     * Code. Receives incremental changes that need to be applied to the in-memory
+     * String that we store for this file.
      */
     @Override
     public void didChange(DidChangeTextDocumentParams params) {
         VersionedTextDocumentIdentifier textDocument = params.getTextDocument();
         String textDocumentUri = textDocument.getUri();
         if (!textDocumentUri.endsWith(FILE_EXTENSION_AS) && !textDocumentUri.endsWith(FILE_EXTENSION_MXML)) {
-            //code intelligence is available only in .as and .mxml files
-            //so we ignore other file extensions
+            // code intelligence is available only in .as and .mxml files
+            // so we ignore other file extensions
             return;
         }
         Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocumentUri);
@@ -823,17 +826,17 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         getProject(projectData);
         ILspProject project = projectData.project;
         if (project == null) {
-            //something went wrong while creating the project
+            // something went wrong while creating the project
             return;
         }
 
         String normalizedChangedPathAsString = FilenameNormalization.normalize(path.toAbsolutePath().toString());
         IFileSpecification fileSpec = fileTracker.getFileSpecification(normalizedChangedPathAsString);
 
-        //if we're checking a compilation unit for problems in real time, and
-        //the path of this new change is the same, we'll re-check for problems
-        //when its done
-        //this is the fastest way to check for problems while the user is typing
+        // if we're checking a compilation unit for problems in real time, and
+        // the path of this new change is the same, we'll re-check for problems
+        // when its done
+        // this is the fastest way to check for problems while the user is typing
 
         if (realTimeProblems && realTimeProblemsChecker != null) {
             synchronized (realTimeProblemsChecker) {
@@ -848,13 +851,13 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         ICompilationUnit unit = null;
         compilerWorkspace.startBuilding();
         try {
-            //if it's an included file, switch to the parent file
+            // if it's an included file, switch to the parent file
             IncludeFileData includeFileData = projectData.includedFiles.get(path.toString());
             if (includeFileData != null) {
                 path = Paths.get(includeFileData.parentPath);
             }
 
-            //we need the compilation unit at this point
+            // we need the compilation unit at this point
             unit = CompilerProjectUtils.findCompilationUnit(path, project);
         } finally {
             compilerWorkspace.doneBuilding();
@@ -863,9 +866,9 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         compilerWorkspace.fileChanged(fileSpec);
 
         if (unit == null) {
-            //we don't have a compilation unit for this yet, but if we check the
-            //entire project, it should be created (or we'll fall back to simple
-            //syntax checking)
+            // we don't have a compilation unit for this yet, but if we check the
+            // entire project, it should be created (or we'll fall back to simple
+            // syntax checking)
             checkProjectForProblems(projectData);
         } else if (realTimeProblems) {
             if (realTimeProblemsChecker == null) {
@@ -886,17 +889,16 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     }
 
     /**
-     * Called when a file is closed in Visual Studio Code. We should no longer
-     * store the file as a String, and we can load the contents from the file
-     * system.
+     * Called when a file is closed in Visual Studio Code. We should no longer store
+     * the file as a String, and we can load the contents from the file system.
      */
     @Override
     public void didClose(DidCloseTextDocumentParams params) {
         TextDocumentIdentifier textDocument = params.getTextDocument();
         String textDocumentUri = textDocument.getUri();
         if (!textDocumentUri.endsWith(FILE_EXTENSION_AS) && !textDocumentUri.endsWith(FILE_EXTENSION_MXML)) {
-            //code intelligence is available only in .as and .mxml files
-            //so we ignore other file extensions
+            // code intelligence is available only in .as and .mxml files
+            // so we ignore other file extensions
             return;
         }
         Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocumentUri);
@@ -910,9 +912,9 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
 
         ActionScriptProjectData projectData = actionScriptProjectManager.getProjectDataForSourceFile(path);
         if (projectData == null) {
-            //if we can't figure out which workspace the file is in, then clear
-            //the problems completely because we want to display problems only
-            //while it is open
+            // if we can't figure out which workspace the file is in, then clear
+            // the problems completely because we want to display problems only
+            // while it is open
             clearProblems = true;
         } else {
             if (fallbackConfig != null && projectData.equals(actionScriptProjectManager.getFallbackProjectData())) {
@@ -924,17 +926,17 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             ILspProject project = projectData.project;
             URI uri = path.toUri();
             if (project == null) {
-                //if the current project isn't properly configured, we want to
-                //display problems only while a file is open
+                // if the current project isn't properly configured, we want to
+                // display problems only while a file is open
                 clearProblems = true;
             } else if (notOnSourcePathSet.contains(uri)) {
-                //if the file is outside of the project's source path, we want
-                //to display problems only while it is open
+                // if the file is outside of the project's source path, we want
+                // to display problems only while it is open
                 clearProblems = true;
                 notOnSourcePathSet.remove(uri);
             }
 
-            //if it's an included file, switch to the parent file
+            // if it's an included file, switch to the parent file
             IncludeFileData includeFileData = projectData.includedFiles.get(path.toString());
             if (includeFileData != null) {
                 path = Paths.get(includeFileData.parentPath);
@@ -942,14 +944,14 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         }
 
         if (clearProblems) {
-            //immediately clear any diagnostics published for this file
+            // immediately clear any diagnostics published for this file
             clearProblemsForURI(path.toUri());
             return;
         }
 
-        //the contents of the file may have been modified, and then reverted
-        //without saving changes, so re-check for errors with the file system
-        //version of the file
+        // the contents of the file may have been modified, and then reverted
+        // without saving changes, so re-check for errors with the file system
+        // version of the file
         checkProjectForProblems(projectData);
     }
 
@@ -959,16 +961,16 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     @Override
     public void didSave(DidSaveTextDocumentParams params) {
         if (realTimeProblems) {
-            //as long as we're checking on change, we shouldn't need to do
-            //anything on save because we should already have the correct state
+            // as long as we're checking on change, we shouldn't need to do
+            // anything on save because we should already have the correct state
             return;
         }
 
         TextDocumentIdentifier textDocument = params.getTextDocument();
         String textDocumentUri = textDocument.getUri();
         if (!textDocumentUri.endsWith(FILE_EXTENSION_AS) && !textDocumentUri.endsWith(FILE_EXTENSION_MXML)) {
-            //code intelligence is available only in .as and .mxml files
-            //so we ignore other file extensions
+            // code intelligence is available only in .as and .mxml files
+            // so we ignore other file extensions
             return;
         }
         Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocumentUri);
@@ -982,11 +984,11 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         getProject(projectData);
         ILspProject project = projectData.project;
         if (project == null) {
-            //something went wrong while creating the project
+            // something went wrong while creating the project
             return;
         }
 
-        //if it's an included file, switch to the parent file
+        // if it's an included file, switch to the parent file
         IncludeFileData includeFileData = projectData.includedFiles.get(path.toString());
         if (includeFileData != null) {
             path = Paths.get(includeFileData.parentPath);
@@ -996,10 +998,10 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     }
 
     /**
-     * Called when certain files in the workspace are added, removed, or
-     * changed, even if they are not considered open for editing. Also checks if
-     * the project configuration strategy has changed. If it has, checks for
-     * errors on the whole project.
+     * Called when certain files in the workspace are added, removed, or changed,
+     * even if they are not considered open for editing. Also checks if the project
+     * configuration strategy has changed. If it has, checks for errors on the whole
+     * project.
      */
     public void didChangeWatchedFiles(DidChangeWatchedFilesParams params) {
         Set<ActionScriptProjectData> foldersToCheck = new HashSet<>();
@@ -1010,7 +1012,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                 continue;
             }
 
-            //first check if any project's config file has changed
+            // first check if any project's config file has changed
             for (ActionScriptProjectData projectData : actionScriptProjectManager.getAllProjectData()) {
                 IProjectConfigStrategy config = projectData.config;
                 if (changedPath.equals(config.getConfigFilePath())) {
@@ -1019,7 +1021,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                 }
             }
 
-            //then, check if source or library files have changed
+            // then, check if source or library files have changed
             FileChangeType changeType = event.getType();
             String normalizedChangedPathAsString = FilenameNormalization
                     .normalize(changedPath.toAbsolutePath().toString());
@@ -1027,11 +1029,11 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                 List<ActionScriptProjectData> allProjectData = actionScriptProjectManager
                         .getAllProjectDataForSWCFile(changedPath);
                 if (allProjectData.size() > 0) {
-                    //for some reason, simply calling fileAdded(),
-                    //fileRemoved(), or fileChanged() doesn't work properly for
-                    //SWC files.
-                    //changing the project configuration will force the
-                    //change to be detected, so let's do that manually.
+                    // for some reason, simply calling fileAdded(),
+                    // fileRemoved(), or fileChanged() doesn't work properly for
+                    // SWC files.
+                    // changing the project configuration will force the
+                    // change to be detected, so let's do that manually.
                     for (ActionScriptProjectData projectData : allProjectData) {
                         projectData.config.forceChanged();
                     }
@@ -1043,20 +1045,20 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                         .getAllProjectDataForSourceFile(changedPath);
                 if (changeType.equals(FileChangeType.Deleted) ||
 
-                //this is weird, but it's possible for a renamed file to
-                //result in a Changed event, but not a Deleted event
+                // this is weird, but it's possible for a renamed file to
+                // result in a Changed event, but not a Deleted event
                         (changeType.equals(FileChangeType.Changed) && !changedPath.toFile().exists())) {
                     IFileSpecification fileSpec = fileTracker.getFileSpecification(normalizedChangedPathAsString);
                     compilerWorkspace.fileRemoved(fileSpec);
                     clearProblemsForURI(Paths.get(normalizedChangedPathAsString).toUri());
-                    //deleting a file may change errors in other existing files,
-                    //so we need to do a full check
+                    // deleting a file may change errors in other existing files,
+                    // so we need to do a full check
                     foldersToCheck.addAll(allProjectData);
                 } else if (event.getType().equals(FileChangeType.Created)) {
                     IFileSpecification fileSpec = fileTracker.getFileSpecification(normalizedChangedPathAsString);
                     compilerWorkspace.fileAdded(fileSpec);
-                    //creating a file may change errors in other existing files,
-                    //so we need to do a full check
+                    // creating a file may change errors in other existing files,
+                    // so we need to do a full check
                     foldersToCheck.addAll(allProjectData);
                 } else if (changeType.equals(FileChangeType.Changed)) {
                     IFileSpecification fileSpec = fileTracker.getFileSpecification(normalizedChangedPathAsString);
@@ -1083,10 +1085,10 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                     e.printStackTrace(System.err);
                 }
             } else if (changeType.equals(FileChangeType.Deleted)) {
-                //we don't get separate didChangeWatchedFiles notifications for
-                //each .as and .mxml in a directory when the directory is
-                //deleted. with that in mind, we need to manually check if any
-                //compilation units were in the directory that was deleted.
+                // we don't get separate didChangeWatchedFiles notifications for
+                // each .as and .mxml in a directory when the directory is
+                // deleted. with that in mind, we need to manually check if any
+                // compilation units were in the directory that was deleted.
                 String deletedFilePath = normalizedChangedPathAsString + File.separator;
                 Set<String> filesToRemove = new HashSet<>();
 
@@ -1108,13 +1110,13 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                             }
                             String unitFileName = unit.getAbsoluteFilename();
                             if (unitFileName.startsWith(deletedFilePath)) {
-                                //if we call fileRemoved() here, it will change the
-                                //compilationUnits collection and throw an exception
-                                //so just save the paths to be removed after this loop.
+                                // if we call fileRemoved() here, it will change the
+                                // compilationUnits collection and throw an exception
+                                // so just save the paths to be removed after this loop.
                                 filesToRemove.add(unitFileName);
 
-                                //deleting a file may change errors in other existing files,
-                                //so we need to do a full check
+                                // deleting a file may change errors in other existing files,
+                                // so we need to do a full check
                                 foldersToCheck.add(projectData);
 
                                 if (UnitType.SWC_UNIT.equals(unitType)) {
@@ -1151,6 +1153,8 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         this.updateSourcePathWarning(settings);
         this.updateJVMArgs(settings);
         this.updateConcurrentRequests(settings);
+        this.updateCodeGenerationGetterSettersForcePublicFunctions(settings);
+        this.updateCodeGenerationGetterSettersForcePrivateVariable(settings);
     }
 
     @Override
@@ -1165,7 +1169,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
 
     @JsonNotification("$/setTraceNotification")
     public void setTraceNotification(Object params) {
-        //this may be ignored. see: eclipse/lsp4j#22
+        // this may be ignored. see: eclipse/lsp4j#22
     }
 
     public void setInitialized() {
@@ -1174,8 +1178,8 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         }
         initialized = true;
 
-        //this is the first time that we can notify the client about any
-        //diagnostics
+        // this is the first time that we can notify the client about any
+        // diagnostics
         checkForProblemsNow(false);
     }
 
@@ -1208,8 +1212,8 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
 
         oldFrameworkSDKPath = frameworkSDKPath;
 
-        //if the framework SDK doesn't include the Falcon compiler, we can
-        //ignore certain errors from the editor SDK, which includes Falcon.
+        // if the framework SDK doesn't include the Falcon compiler, we can
+        // ignore certain errors from the editor SDK, which includes Falcon.
         Path frameworkPath = Paths.get(frameworkSDKPath);
         Path compilerPath = frameworkPath.resolve("../lib/falcon-mxmlc.jar");
         compilerProblemFilter.royaleProblems = compilerPath.toFile().exists();
@@ -1290,7 +1294,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             dynamicDidChangeWatchedFiles = clientCapabilities.getWorkspace().getDidChangeWatchedFiles()
                     .getDynamicRegistration();
         } catch (NullPointerException e) {
-            //ignore
+            // ignore
         }
         for (File sourcePathFile : project.getSourcePath()) {
             Path sourcePath = sourcePathFile.toPath();
@@ -1300,17 +1304,17 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             }
             boolean shouldWatch = true;
             if (dynamicDidChangeWatchedFiles) {
-                //we need to check if the source path is inside any of the
-                //workspace folders. not just the current one.
+                // we need to check if the source path is inside any of the
+                // workspace folders. not just the current one.
                 for (ActionScriptProjectData otherProjectData : actionScriptProjectManager.getAllProjectData()) {
                     Path otherProjectRoot = otherProjectData.projectRoot;
                     if (sourcePath.startsWith(otherProjectRoot)) {
-                        //if we're already watching for changes in the
-                        //workspace, and we need to avoid so that the compiler
-                        //doesn't get confused by duplicates that might have
-                        //slightly different capitalization because the language
-                        //server protocol and Java file watchers don't
-                        //necessarily match
+                        // if we're already watching for changes in the
+                        // workspace, and we need to avoid so that the compiler
+                        // doesn't get confused by duplicates that might have
+                        // slightly different capitalization because the language
+                        // server protocol and Java file watchers don't
+                        // necessarily match
                         shouldWatch = false;
                         break;
                     }
@@ -1328,17 +1332,17 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             }
             boolean shouldWatch = true;
             if (dynamicDidChangeWatchedFiles) {
-                //we need to check if the source path is inside any of the
-                //workspace folders. not just the current one.
+                // we need to check if the source path is inside any of the
+                // workspace folders. not just the current one.
                 for (ActionScriptProjectData otherProjectData : actionScriptProjectManager.getAllProjectData()) {
                     Path otherProjectRoot = otherProjectData.projectRoot;
                     if (libraryPath.startsWith(otherProjectRoot)) {
-                        //if we're already watching for changes in the
-                        //workspace, and we need to avoid so that the compiler
-                        //doesn't get confused by duplicates that might have
-                        //slightly different capitalization because the language
-                        //server protocol and Java file watchers don't
-                        //necessarily match
+                        // if we're already watching for changes in the
+                        // workspace, and we need to avoid so that the compiler
+                        // doesn't get confused by duplicates that might have
+                        // slightly different capitalization because the language
+                        // server protocol and Java file watchers don't
+                        // necessarily match
                         shouldWatch = false;
                         break;
                     }
@@ -1357,17 +1361,17 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             }
             boolean shouldWatch = true;
             if (dynamicDidChangeWatchedFiles) {
-                //we need to check if the source path is inside any of the
-                //workspace folders. not just the current one.
+                // we need to check if the source path is inside any of the
+                // workspace folders. not just the current one.
                 for (ActionScriptProjectData otherProjectData : actionScriptProjectManager.getAllProjectData()) {
                     Path otherProjectRoot = otherProjectData.projectRoot;
                     if (externalLibraryPath.startsWith(otherProjectRoot)) {
-                        //if we're already watching for changes in the
-                        //workspace, and we need to avoid so that the compiler
-                        //doesn't get confused by duplicates that might have
-                        //slightly different capitalization because the language
-                        //server protocol and Java file watchers don't
-                        //necessarily match
+                        // if we're already watching for changes in the
+                        // workspace, and we need to avoid so that the compiler
+                        // doesn't get confused by duplicates that might have
+                        // slightly different capitalization because the language
+                        // server protocol and Java file watchers don't
+                        // necessarily match
                         shouldWatch = false;
                         break;
                     }
@@ -1391,8 +1395,8 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                 while (true) {
                     WatchKey watchKey = null;
                     try {
-                        //pause the thread while there are no changes pending,
-                        //for better performance
+                        // pause the thread while there are no changes pending,
+                        // for better performance
                         watchKey = sourcePathWatcher.take();
                     } catch (InterruptedException e) {
                         return;
@@ -1410,9 +1414,9 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                                 childPath = path.resolve(childPath);
                                 if (java.nio.file.Files.isDirectory(childPath)) {
                                     if (kind.equals(StandardWatchEventKinds.ENTRY_CREATE)) {
-                                        //if a new directory has been created under
-                                        //an existing that we're already watching,
-                                        //then start watching the new one too.
+                                        // if a new directory has been created under
+                                        // an existing that we're already watching,
+                                        // then start watching the new one too.
                                         watchNewSourceOrLibraryPath(childPath, projectData);
                                     }
                                 }
@@ -1429,13 +1433,13 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                                 projectData.sourceOrLibraryPathWatchKeys.remove(watchKey);
                             }
                         }
-                        //keep handling new changes until we run out
+                        // keep handling new changes until we run out
                         watchKey = sourcePathWatcher.poll();
                     }
                     if (changes.size() > 0) {
-                        //convert to DidChangeWatchedFilesParams and pass
-                        //to didChangeWatchedFiles, as if a notification
-                        //had been sent from the client.
+                        // convert to DidChangeWatchedFilesParams and pass
+                        // to didChangeWatchedFiles, as if a notification
+                        // had been sent from the client.
                         DidChangeWatchedFilesParams params = new DidChangeWatchedFilesParams();
                         params.setChanges(changes);
                         didChangeWatchedFiles(params);
@@ -1450,10 +1454,10 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         IProjectConfigStrategy currentConfig = projectData.config;
         ProjectOptions projectOptions = projectData.options;
         if (!currentConfig.getChanged() && projectOptions != null) {
-            //the options are fully up-to-date
+            // the options are fully up-to-date
             return;
         }
-        //if the configuration changed, start fresh with a whole new project
+        // if the configuration changed, start fresh with a whole new project
         projectData.cleanup();
         if (frameworkSDKIsFallback) {
             projectData.options = null;
@@ -1468,7 +1472,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         }
         Diagnostic diagnostic = LanguageServerCompilerUtils.getDiagnosticFromCompilerProblem(problem);
         if (isConfigFile) {
-            //clear the range because it isn't relevant
+            // clear the range because it isn't relevant
             diagnostic.setRange(new Range(new Position(0, 0), new Position(0, 0)));
         }
         List<Diagnostic> diagnostics = publish.getDiagnostics();
@@ -1507,7 +1511,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                 System.err.println("Failed to parse file (" + path.toString() + "): " + e);
                 e.printStackTrace(System.err);
             }
-            //if an error occurred above, parser will be null
+            // if an error occurred above, parser will be null
             if (parser != null) {
                 problemQuery.addAll(parser.getSyntaxProblems());
             }
@@ -1516,26 +1520,26 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         ProjectOptions projectOptions = projectData.options;
         ICompilerProblem syntaxProblem = null;
         if (reader == null) {
-            //the file does not exist
+            // the file does not exist
             syntaxProblem = new FileNotFoundProblem(path.toString());
         } else if (parser == null && projectOptions == null) {
-            //we couldn't load the project configuration and we couldn't parse
-            //the file. we can't provide any information here.
+            // we couldn't load the project configuration and we couldn't parse
+            // the file. we can't provide any information here.
             syntaxProblem = new SyntaxFallbackProblem(path.toString(),
                     "Failed to load project configuration options. Error checking has been disabled.");
         } else if (parser == null) {
-            //something terrible happened, and this is the best we can do
+            // something terrible happened, and this is the best we can do
             syntaxProblem = new SyntaxFallbackProblem(path.toString(),
                     "A fatal error occurred while checking for simple syntax problems.");
         } else if (projectOptions == null) {
-            //something went wrong while attempting to load and parse the
-            //project configuration, but we could successfully parse the syntax
-            //tree.
+            // something went wrong while attempting to load and parse the
+            // project configuration, but we could successfully parse the syntax
+            // tree.
             syntaxProblem = new SyntaxFallbackProblem(path.toString(),
                     "Failed to load project configuration options. Error checking has been disabled, except for simple syntax problems.");
         } else {
-            //we seem to have loaded the project configuration and we could
-            //parse the file, but something still went wrong.
+            // we seem to have loaded the project configuration and we could
+            // parse the file, but something still went wrong.
             syntaxProblem = new SyntaxFallbackProblem(path.toString(),
                     "A fatal error occurred. Error checking has been disabled, except for simple syntax problems.");
         }
@@ -1580,7 +1584,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                 if (configFilePath != null && configFilePath.toFile().exists()) {
                     problemPath = configFilePath;
                 } else {
-                    //if there's no project file, just grab the first open file
+                    // if there's no project file, just grab the first open file
                     for (Path openFile : fileTracker.getOpenFiles()) {
                         problemPath = openFile;
                         break;
@@ -1596,9 +1600,9 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                 }
             } else if (configFilePath != null && !configFilePath.toFile().exists()
                     && actionScriptProjectManager.hasOpenFilesForProject(projectData)) {
-                //the config file is missing, and there are open files in this
-                //project, so we should add a hint that suggests how to properly
-                //configure the project for the full experience.
+                // the config file is missing, and there are open files in this
+                // project, so we should add a hint that suggests how to properly
+                // configure the project for the full experience.
                 projectData.codeProblemTracker.trackFileWithProblems(configFilePath.toUri());
                 ProblemQuery problemQuery = new ProblemQuery();
                 problemQuery.add(new SyntaxFallbackProblem(configFilePath.toString(),
@@ -1606,15 +1610,15 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                                 + configFilePath.getFileName() + "' to enable all features."));
                 publishDiagnosticsForProblemQuery(problemQuery, projectData.configProblemTracker, projectData, true);
             } else {
-                //if there are existing configuration problems, they should no
-                //longer be considered valid
+                // if there are existing configuration problems, they should no
+                // longer be considered valid
                 publishDiagnosticsForProblemQuery(new ProblemQuery(), projectData.configProblemTracker, projectData,
                         true);
             }
             return null;
         }
         if (project != null) {
-            //clear all old problems because they won't be cleared automatically
+            // clear all old problems because they won't be cleared automatically
             project.getProblems().clear();
             return project;
         }
@@ -1633,19 +1637,19 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
         }
 
-        //this is not wrapped in startIdleState() or startBuilding()
-        //because applyToProject() could trigger both, depending on context!
+        // this is not wrapped in startIdleState() or startBuilding()
+        // because applyToProject() could trigger both, depending on context!
         if (configurator != null) {
             boolean result = configurator.applyToProject(project);
             Configuration configuration = configurator.getConfiguration();
-            //it's possible for the configuration to be null when parsing
-            //certain values in additionalOptions in asconfig.json
+            // it's possible for the configuration to be null when parsing
+            // certain values in additionalOptions in asconfig.json
             if (configuration != null) {
-                //the configurator will throw a null reference exception if the
-                //configuration is null
+                // the configurator will throw a null reference exception if the
+                // configuration is null
                 configProblems.addAll(configurator.getConfigurationProblems());
-                //add configurator problems before the custom problems below
-                //because configurator problems are probably more important
+                // add configurator problems before the custom problems below
+                // because configurator problems are probably more important
                 if (projectOptions.type.equals(ProjectType.LIB)) {
                     String output = configuration.getOutput();
                     if (output == null || output.length() == 0) {
@@ -1653,15 +1657,15 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                         configProblems
                                 .add(new MissingRequirementConfigurationProblem(ICompilerSettingsConstants.OUTPUT_VAR));
                     }
-                } else //app
+                } else // app
                 {
-                    //if there are no existing configurator problems, we need to
-                    //report at least one problem so that the user knows
-                    //something is wrong
+                    // if there are no existing configurator problems, we need to
+                    // report at least one problem so that the user knows
+                    // something is wrong
                     if (configProblems.size() == 0 && configuration.getTargetFile() == null) {
                         result = false;
 
-                        //fall back to the config file or the workspace folder
+                        // fall back to the config file or the workspace folder
                         Path problemPath = projectData.projectRoot;
                         Path configFilePath = projectData.config.getConfigFilePath();
                         if (configFilePath != null) {
@@ -1670,8 +1674,8 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
 
                         String[] files = projectOptions.files;
                         if (files != null && files.length > 0) {
-                            //even if mainClass is set, an entry must be added
-                            //to the files array
+                            // even if mainClass is set, an entry must be added
+                            // to the files array
                             configProblems.add(new LSPFileNotFoundProblem(files[files.length - 1],
                                     problemPath != null ? problemPath.toString() : null));
                         } else {
@@ -1740,8 +1744,8 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     }
 
     private void checkProjectForProblems(ActionScriptProjectData projectData) {
-        //make sure that the latest changes have been passed to
-        //workspace.fileChanged() before proceeding
+        // make sure that the latest changes have been passed to
+        // workspace.fileChanged() before proceeding
         if (realTimeProblemsChecker != null) {
             realTimeProblemsChecker.updateNow();
         }
@@ -1750,9 +1754,9 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         ILspProject project = projectData.project;
         ProjectOptions options = projectData.options;
         if (project == null || options == null) {
-            //since we don't have a project, we don't have compilation units
-            //any existing problems should be considered stale and won't be
-            //updated until the configuration problems are fixed.
+            // since we don't have a project, we don't have compilation units
+            // any existing problems should be considered stale and won't be
+            // updated until the configuration problems are fixed.
             projectData.codeProblemTracker.releaseStale();
             return;
         }
@@ -1760,12 +1764,12 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         ProblemQuery problemQuery = projectDataToProblemQuery(projectData);
         compilerWorkspace.startBuilding();
         try {
-            //start by making sure that all of the project's compilation units
-            //have been created. we'll check them for errors in a later step
+            // start by making sure that all of the project's compilation units
+            // have been created. we'll check them for errors in a later step
             populateCompilationUnits(project);
 
-            //don't check compilation units for problems if the project itself
-            //has problems. the user should fix those first.
+            // don't check compilation units for problems if the project itself
+            // has problems. the user should fix those first.
             Collection<ICompilerProblem> fatalProblems = project.getFatalProblems();
             if (fatalProblems != null) {
                 problemQuery.addAll(fatalProblems);
@@ -1804,17 +1808,17 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             String problemSourcePath = problem.getSourcePath();
             IncludeFileData includedFile = projectData.includedFiles.get(problemSourcePath);
             if (includedFile != null && !includedFile.parentPath.equals(problemSourcePath)) {
-                //skip files that are included in other files
+                // skip files that are included in other files
                 continue;
             }
             boolean isConfigFile = false;
             if (problemSourcePath != null && (CommandLineConfigurator.SOURCE_COMMAND_LINE.equals(problemSourcePath)
                     || defaultsPathString.equals(problemSourcePath) || (problemSourcePath.endsWith(SOURCE_CONFIG)
                             && configPath.equals(Paths.get(problemSourcePath))))) {
-                //for configuration problems that point to defaults, config.as,
-                //or the command line, the best default location to send the
-                //user is probably to the project's config file (like
-                //asconfig.json in Visual Studio Code)
+                // for configuration problems that point to defaults, config.as,
+                // or the command line, the best default location to send the
+                // user is probably to the project's config file (like
+                // asconfig.json in Visual Studio Code)
                 if (projectConfigPath != null) {
                     problemSourcePath = projectConfigPath.toString();
                 }
@@ -1857,20 +1861,20 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         boolean continueCheckingForErrors = true;
         while (continueCheckingForErrors) {
             try {
-                //at this point, we want to build all compilation units,
-                //including the ones that aren't considered reachable yet.
-                //we'll filter out the unreachable units later
+                // at this point, we want to build all compilation units,
+                // including the ones that aren't considered reachable yet.
+                // we'll filter out the unreachable units later
                 for (ICompilationUnit unit : project.getCompilationUnits()) {
                     if (unit == null) {
                         continue;
                     }
                     UnitType unitType = unit.getCompilationUnitType();
                     if (!UnitType.AS_UNIT.equals(unitType) && !UnitType.MXML_UNIT.equals(unitType)) {
-                        //compiled compilation units won't have problems
+                        // compiled compilation units won't have problems
                         continue;
                     }
-                    //reuse the existing list so that we don't allocate a list
-                    //for every compilation unit
+                    // reuse the existing list so that we don't allocate a list
+                    // for every compilation unit
                     problems.clear();
 
                     checkCompilationUnitForAllProblems(unit, project, problems);
@@ -1878,10 +1882,10 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                 }
                 continueCheckingForErrors = false;
             } catch (ConcurrentModificationException e) {
-                //when we finished building one of the compilation
-                //units, more were added to the collection, so we need
-                //to start over because we can't iterate over a modified
-                //collection.
+                // when we finished building one of the compilation
+                // units, more were added to the collection, so we need
+                // to start over because we can't iterate over a modified
+                // collection.
             }
         }
     }
@@ -1889,7 +1893,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     private void checkReachableCompilationUnitsForErrors(ProblemQuery problemQuery,
             ActionScriptProjectData projectData) {
         if (!initialized) {
-            //do this later because we can't publish diagnostics yet
+            // do this later because we can't publish diagnostics yet
             return;
         }
 
@@ -1900,15 +1904,15 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             if (projectData.options.type.equals(ProjectType.LIB)) {
                 Target target = (Target) project.createSWCTarget(project.getTargetSettings(), null);
                 roots.addAll(target.getRootedCompilationUnits().getUnits());
-            } else //app
+            } else // app
             {
                 for (String file : projectData.options.files) {
                     String normalizedFile = FilenameNormalization.normalize(file);
                     Collection<ICompilationUnit> units = project.getCompilationUnits(normalizedFile);
                     if (units.size() == 0) {
-                        //we couldn't find a compilation unit for this file, but
-                        //we should provide some kind of fallback because it's
-                        //one of our root files
+                        // we couldn't find a compilation unit for this file, but
+                        // we should provide some kind of fallback because it's
+                        // one of our root files
                         checkFilePathForSyntaxProblems(Paths.get(normalizedFile), projectData, problemQuery);
                     } else {
                         roots.addAll(units);
@@ -1924,34 +1928,34 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             return;
         }
 
-        //some additional files may be open in an editor, and we'll
-        //want to check those for errors too, even if they aren't
-        //referenced by one of the roots
+        // some additional files may be open in an editor, and we'll
+        // want to check those for errors too, even if they aren't
+        // referenced by one of the roots
         for (Path openFilePath : fileTracker.getOpenFiles()) {
             ActionScriptProjectData openFileProjectData = actionScriptProjectManager
                     .getProjectDataForSourceFile(openFilePath);
             if (!projectData.equals(openFileProjectData)) {
-                //not in this project
+                // not in this project
                 continue;
             }
             ICompilationUnit openUnit = CompilerProjectUtils.findCompilationUnit(openFilePath, project);
             if (openUnit == null) {
-                //if there is no unit for this open file, check for simple
-                //syntax problems instead
+                // if there is no unit for this open file, check for simple
+                // syntax problems instead
                 checkFilePathForSyntaxProblems(openFilePath, projectData, problemQuery);
                 continue;
             }
             roots.add(openUnit);
         }
 
-        //start fresh when checking all compilation units
+        // start fresh when checking all compilation units
         projectData.includedFiles.clear();
 
         List<ICompilerProblem> problems = new ArrayList<>();
         List<ICompilationUnit> reachableUnits = new ArrayList<>();
-        //there shouldn't be any concurrent modification exceptions when looping
-        //over the reachable units, but to be safe, copy all of the compilation
-        //units to a new collection
+        // there shouldn't be any concurrent modification exceptions when looping
+        // over the reachable units, but to be safe, copy all of the compilation
+        // units to a new collection
         reachableUnits.addAll(project.getReachableCompilationUnitsInSWFOrder(roots));
         for (ICompilationUnit unit : reachableUnits) {
             if (unit == null) {
@@ -1960,15 +1964,15 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
 
             UnitType unitType = unit.getCompilationUnitType();
             if (!UnitType.AS_UNIT.equals(unitType) && !UnitType.MXML_UNIT.equals(unitType)) {
-                //compiled compilation units won't have problems
+                // compiled compilation units won't have problems
                 continue;
             }
 
             Path unitPath = Paths.get(unit.getAbsoluteFilename());
             URI unitUri = unitPath.toUri();
             if (notOnSourcePathSet.contains(unitUri)) {
-                //if the file was not on the project's source path, clear out any
-                //errors that might have existed previously
+                // if the file was not on the project's source path, clear out any
+                // errors that might have existed previously
                 notOnSourcePathSet.remove(unitUri);
 
                 PublishDiagnosticsParams publish = new PublishDiagnosticsParams();
@@ -1979,16 +1983,16 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                 }
             }
 
-            //we don't check for errors in the fallback project
+            // we don't check for errors in the fallback project
             if (projectData.equals(actionScriptProjectManager.getFallbackProjectData())) {
-                //normally, we look for included files after checking
-                //for errors, but since we're not checking for errors
-                //do it here instead
+                // normally, we look for included files after checking
+                // for errors, but since we're not checking for errors
+                // do it here instead
                 CompilationUnitUtils.findIncludedFiles(unit, projectData.includedFiles);
 
-                //there's a configuration setting that determines if we
-                //warn the user that a file is outside of the project's
-                //source path
+                // there's a configuration setting that determines if we
+                // warn the user that a file is outside of the project's
+                // source path
                 if (showFileOutsideSourcePath) {
                     notOnSourcePathSet.add(unitUri);
                     if (actionScriptProjectManager.getAllProjectData().size() == 0) {
@@ -2005,19 +2009,19 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                 continue;
             }
 
-            //reuse the existing list so that we don't allocate a list
-            //for every compilation unit
+            // reuse the existing list so that we don't allocate a list
+            // for every compilation unit
             problems.clear();
 
-            //we should have already built, so this will be fast
-            //if we hadn't built, we would not have all of the roots
+            // we should have already built, so this will be fast
+            // if we hadn't built, we would not have all of the roots
             checkCompilationUnitForAllProblems(unit, project, problems);
             problemQuery.addAll(problems);
-            //clear for the next compilation unit
+            // clear for the next compilation unit
             problems.clear();
 
-            //just to be safe, find all of the included files
-            //after we've checked for problems
+            // just to be safe, find all of the included files
+            // after we've checked for problems
             CompilationUnitUtils.findIncludedFiles(unit, projectData.includedFiles);
         }
     }
@@ -2026,12 +2030,12 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             List<ICompilerProblem> problems) {
         try {
             if (initialized) {
-                //if we pass in null, it's designed to ignore certain errors
-                //that don't matter for IDE code intelligence.
+                // if we pass in null, it's designed to ignore certain errors
+                // that don't matter for IDE code intelligence.
                 unit.waitForBuildFinish(problems, null);
 
-                //note: we check for unused imports only for full builds because
-                //it's a little too expensive to do it for real-time problems
+                // note: we check for unused imports only for full builds because
+                // it's a little too expensive to do it for real-time problems
                 IASNode ast = ASTUtils.getCompilationUnitAST(unit);
                 if (ast != null) {
                     Set<String> requiredImports = project.getQNamesOfDependencies(unit);
@@ -2039,9 +2043,9 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                     ASTUtils.findDisabledConfigConditionBlockProblems(ast, problems);
                 }
             } else {
-                //we can't publish diagnostics yet, but we can start the build
-                //process in the background so that it's faster when we're ready
-                //to publish diagnostics after initialization
+                // we can't publish diagnostics yet, but we can start the build
+                // process in the background so that it's faster when we're ready
+                // to publish diagnostics after initialization
                 unit.getSyntaxTreeRequest();
                 unit.getFileScopeRequest();
                 unit.getOutgoingDependenciesRequest();
@@ -2073,26 +2077,26 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             }
         }
         if (frameworkSDK == null && sdk.has("editor")) {
-            //for legacy reasons, we fall back to the editor SDK
+            // for legacy reasons, we fall back to the editor SDK
             JsonElement editorValue = sdk.get("editor");
             if (!editorValue.isJsonNull()) {
                 frameworkSDK = editorValue.getAsString();
             }
         }
         if (frameworkSDK == null) {
-            //keep using the existing framework for now
+            // keep using the existing framework for now
             return;
         }
         String frameworkLib = null;
         Path frameworkLibPath = Paths.get(frameworkSDK).resolve(FRAMEWORKS_RELATIVE_PATH_CHILD).toAbsolutePath()
                 .normalize();
         if (frameworkLibPath.toFile().exists()) {
-            //if the frameworks directory exists, use it!
+            // if the frameworks directory exists, use it!
             frameworkLib = frameworkLibPath.toString();
         } else {
-            //if the frameworks directory doesn't exist, we also
-            //need to check for Apache Royale's unique layout
-            //with the royale-asjs directory
+            // if the frameworks directory doesn't exist, we also
+            // need to check for Apache Royale's unique layout
+            // with the royale-asjs directory
             Path royalePath = Paths.get(frameworkSDK).resolve(ROYALE_ASJS_RELATIVE_PATH_CHILD)
                     .resolve(FRAMEWORKS_RELATIVE_PATH_CHILD).toAbsolutePath().normalize();
             if (royalePath.toFile().exists()) {
@@ -2100,12 +2104,12 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             }
         }
         if (frameworkLib == null) {
-            //keep using the existing framework for now
+            // keep using the existing framework for now
             return;
         }
         String oldFrameworkLib = System.getProperty(PROPERTY_FRAMEWORK_LIB);
         if (oldFrameworkLib.equals(frameworkLib)) {
-            //frameworks library has not changed
+            // frameworks library has not changed
             return;
         }
         System.setProperty(PROPERTY_FRAMEWORK_LIB, frameworkLib);
@@ -2203,6 +2207,52 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         concurrentRequests = newConcurrentRequests;
     }
 
+    private void updateCodeGenerationGetterSettersForcePublicFunctions(JsonObject settings) {
+        if (!settings.has("as3mxml")) {
+            return;
+        }
+        JsonObject as3mxml = settings.get("as3mxml").getAsJsonObject();
+        if (!as3mxml.has("codeGeneration")) {
+            return;
+        }
+        JsonObject codeGeneration = as3mxml.get("codeGeneration").getAsJsonObject();
+        if (!codeGeneration.has("getterSetter")) {
+            return;
+        }
+        JsonObject getterSetter = codeGeneration.get("getterSetter").getAsJsonObject();
+        if (!getterSetter.has("forcePublicFunctions")) {
+            return;
+        }
+        boolean newForcePublicFunctions = getterSetter.get("forcePublicFunctions").getAsBoolean();
+        if (codeGeneration_getterSetter_forcePublicFunctions == newForcePublicFunctions) {
+            return;
+        }
+        codeGeneration_getterSetter_forcePublicFunctions = newForcePublicFunctions;
+    }
+
+    private void updateCodeGenerationGetterSettersForcePrivateVariable(JsonObject settings) {
+        if (!settings.has("as3mxml")) {
+            return;
+        }
+        JsonObject as3mxml = settings.get("as3mxml").getAsJsonObject();
+        if (!as3mxml.has("codeGeneration")) {
+            return;
+        }
+        JsonObject codeGeneration = as3mxml.get("codeGeneration").getAsJsonObject();
+        if (!codeGeneration.has("getterSetter")) {
+            return;
+        }
+        JsonObject getterSetter = codeGeneration.get("getterSetter").getAsJsonObject();
+        if (!getterSetter.has("forcePrivateVariable")) {
+            return;
+        }
+        boolean newForcePrivateVariable = getterSetter.get("forcePrivateVariable").getAsBoolean();
+        if (codeGeneration_getterSetter_forcePrivateVariable == newForcePrivateVariable) {
+            return;
+        }
+        codeGeneration_getterSetter_forcePrivateVariable = newForcePrivateVariable;
+    }
+
     private CompletableFuture<Object> executeQuickCompileCommand(ExecuteCommandParams params) {
         return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken -> {
             List<Object> args = params.getArguments();
@@ -2227,7 +2277,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                     new ASConfigC(options);
                     success = true;
                 } catch (ASConfigCException e) {
-                    //this is a message intended for the user
+                    // this is a message intended for the user
                     languageClient.logCompilerShellOutput("\n" + e.getMessage());
                     success = false;
                 }

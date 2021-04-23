@@ -75,61 +75,65 @@ public class CodeActionsUtils {
     private static final String SPACE = " ";
 
     public static void findGetSetCodeActions(IASNode node, ICompilerProject project, String uri, String fileText,
-            Range range, List<Either<Command, CodeAction>> codeActions) {
+            Range range, boolean forcePublicFunctions, boolean forcePrivateVariable,
+            List<Either<Command, CodeAction>> codeActions) {
         if (node instanceof IInterfaceNode) {
-            //no variables to turn into getters and setters in an interface
+            // no variables to turn into getters and setters in an interface
             return;
         }
         if (node instanceof IFunctionNode) {
-            //no variables to turn into getters and setters in a function
+            // no variables to turn into getters and setters in a function
             return;
         }
         if (node instanceof IVariableNode) {
             IVariableNode variableNode = (IVariableNode) node;
             Range variableRange = LanguageServerCompilerUtils.getRangeFromSourceLocation(variableNode);
             if (!LSPUtils.rangesIntersect(variableRange, range)) {
-                //this one is outside of the range, so ignore it
+                // this one is outside of the range, so ignore it
                 return;
             }
             IExpressionNode expressionNode = variableNode.getNameExpressionNode();
             IDefinition definition = expressionNode.resolve(project);
             if (definition instanceof IVariableDefinition && !(definition instanceof IConstantDefinition)
                     && !(definition instanceof IAccessorDefinition)) {
-                //we want variables, but not constants or accessors
+                // we want variables, but not constants or accessors
                 IVariableDefinition variableDefinition = (IVariableDefinition) definition;
                 if (VariableClassification.CLASS_MEMBER.equals(variableDefinition.getVariableClassification())) {
-                    createCodeActionsForGenerateGetterAndSetter(variableNode, uri, fileText, range, codeActions);
+                    createCodeActionsForGenerateGetterAndSetter(variableNode, uri, fileText, range,
+                            forcePublicFunctions, forcePrivateVariable, codeActions);
                 }
             }
-            //no need to look at its children
+            // no need to look at its children
             return;
         }
         for (int i = 0, childCount = node.getChildCount(); i < childCount; i++) {
             IASNode child = node.getChild(i);
-            findGetSetCodeActions(child, project, uri, fileText, range, codeActions);
+            findGetSetCodeActions(child, project, uri, fileText, range, forcePublicFunctions, forcePrivateVariable,
+                    codeActions);
         }
     }
 
     private static void createCodeActionsForGenerateGetterAndSetter(IVariableNode variableNode, String uri,
-            String fileText, Range codeActionsRange, List<Either<Command, CodeAction>> codeActions) {
-        WorkspaceEdit getSetEdit = createWorkspaceEditForGenerateGetterAndSetter(variableNode, uri, fileText, true,
-                true);
+            String fileText, Range codeActionsRange, boolean forcePublicFunctions, boolean forcePrivateVariable,
+            List<Either<Command, CodeAction>> codeActions) {
+        WorkspaceEdit getSetEdit = createWorkspaceEditForGenerateGetterAndSetter(variableNode, uri, fileText,
+                forcePublicFunctions, forcePrivateVariable, true, true);
         CodeAction getAndSetCodeAction = new CodeAction();
         getAndSetCodeAction.setTitle("Generate 'get' and 'set' accessors");
         getAndSetCodeAction.setEdit(getSetEdit);
         getAndSetCodeAction.setKind(CodeActionKind.RefactorRewrite);
         codeActions.add(Either.forRight(getAndSetCodeAction));
 
-        WorkspaceEdit getterEdit = createWorkspaceEditForGenerateGetterAndSetter(variableNode, uri, fileText, true,
-                false);
+        WorkspaceEdit getterEdit = createWorkspaceEditForGenerateGetterAndSetter(variableNode, uri, fileText,
+                forcePublicFunctions, forcePrivateVariable, true, false);
         CodeAction getterCodeAction = new CodeAction();
         getterCodeAction.setTitle("Generate 'get' accessor (make read-only)");
         getterCodeAction.setEdit(getterEdit);
         getterCodeAction.setKind(CodeActionKind.RefactorRewrite);
         codeActions.add(Either.forRight(getterCodeAction));
 
-        WorkspaceEdit setterEdit = createWorkspaceEditForGenerateGetterAndSetter(variableNode, uri, fileText, false,
-                true);
+        WorkspaceEdit setterEdit = createWorkspaceEditForGenerateGetterAndSetter(variableNode, uri, fileText,
+                forcePublicFunctions, forcePrivateVariable, false, true);
         CodeAction setterCodeAction = new CodeAction();
         setterCodeAction.setTitle("Generate 'set' accessor (make write-only)");
         setterCodeAction.setEdit(setterEdit);
@@ -177,8 +181,8 @@ public class CodeActionsUtils {
         }
         int textLength = fileText.length();
         if (endIndex == -1 || endIndex > textLength) {
-            //it's possible for the end index to be longer than the text
-            //for example, if the package block is incomplete in an .as file
+            // it's possible for the end index to be longer than the text
+            // for example, if the package block is incomplete in an .as file
             endIndex = textLength;
         }
         String indent = "";
@@ -191,39 +195,39 @@ public class CodeActionsUtils {
             importIndex = importMatcher.start();
         }
         Position position = null;
-        if (importIndex != -1) //found existing imports
+        if (importIndex != -1) // found existing imports
         {
             position = LanguageServerCompilerUtils.getPositionFromOffset(new StringReader(fileText), importIndex);
             position.setLine(position.getLine() + 1);
             position.setCharacter(0);
-        } else //no existing imports
+        } else // no existing imports
         {
             if (importRange.needsMXMLScript) {
                 position = LanguageServerCompilerUtils.getPositionFromOffset(new StringReader(fileText),
                         importRange.endIndex);
             } else {
-                //start by looking for the package block
+                // start by looking for the package block
                 Matcher packageMatcher = packagePattern.matcher(fileText);
                 packageMatcher.region(startIndex, endIndex);
-                if (packageMatcher.find()) //found the package
+                if (packageMatcher.find()) // found the package
                 {
                     position = LanguageServerCompilerUtils.getPositionFromOffset(new StringReader(fileText),
                             packageMatcher.end());
                     if (position.getCharacter() > 0) {
-                        //go to the beginning of the line, if we're not there
+                        // go to the beginning of the line, if we're not there
                         position.setCharacter(0);
                     }
                     indent = packageMatcher.group(1);
-                } else //couldn't find the start of a package or existing imports
+                } else // couldn't find the start of a package or existing imports
                 {
                     position = LanguageServerCompilerUtils.getPositionFromOffset(new StringReader(fileText),
                             startIndex);
                     if (position.getCharacter() > 0) {
-                        //go to the next line, if we're not at the start
+                        // go to the next line, if we're not at the start
                         position.setLine(position.getLine() + 1);
                         position.setCharacter(0);
                     }
-                    //try to use the same indent as whatever follows
+                    // try to use the same indent as whatever follows
                     Matcher indentMatcher = indentPattern.matcher(fileText);
                     indentMatcher.region(startIndex, endIndex);
                     if (indentMatcher.find()) {
@@ -231,7 +235,7 @@ public class CodeActionsUtils {
                     }
                 }
             }
-            lineBreaks += "\n"; //add an extra line break
+            lineBreaks += "\n"; // add an extra line break
         }
         return new AddImportData(position, indent, lineBreaks, importRange);
     }
@@ -696,9 +700,10 @@ public class CodeActionsUtils {
     }
 
     public static WorkspaceEdit createWorkspaceEditForGenerateGetterAndSetter(IVariableNode variableNode, String uri,
-            String text, boolean generateGetter, boolean generateSetter) {
-        TextEdit textEdit = createTextEditForGenerateGetterAndSetter(variableNode, text, generateGetter,
-                generateSetter);
+            String text, boolean forcePublicFunctions, boolean forcePrivateVariable, boolean generateGetter,
+            boolean generateSetter) {
+        TextEdit textEdit = createTextEditForGenerateGetterAndSetter(variableNode, text, forcePublicFunctions,
+                forcePrivateVariable, generateGetter, generateSetter);
         if (textEdit == null) {
             return null;
         }
@@ -713,9 +718,12 @@ public class CodeActionsUtils {
     }
 
     public static TextEdit createTextEditForGenerateGetterAndSetter(IVariableNode variableNode, String text,
-            boolean generateGetter, boolean generateSetter) {
+            boolean forcePublicFunctions, boolean forcePrivateVariable, boolean generateGetter,
+            boolean generateSetter) {
         String name = variableNode.getName();
-        String namespace = variableNode.getNamespace();
+        String originalNamespace = variableNode.getNamespace();
+        String variableNamespace = forcePrivateVariable ? IASKeywordConstants.PRIVATE : originalNamespace;
+        String accessorNamespace = forcePublicFunctions ? IASKeywordConstants.PUBLIC : originalNamespace;
         boolean isStatic = variableNode.hasModifier(ASModifier.STATIC);
         String type = variableNode.getVariableType();
 
@@ -724,13 +732,13 @@ public class CodeActionsUtils {
         if (assignedValueNode != null) {
             int startIndex = assignedValueNode.getAbsoluteStart();
             int endIndex = assignedValueNode.getAbsoluteEnd();
-            //if the variables value is assigned by [Embed] metadata, the
-            //assigned value node won't be null, but its start/end will be -1!
+            // if the variables value is assigned by [Embed] metadata, the
+            // assigned value node won't be null, but its start/end will be -1!
             if (startIndex != -1 && endIndex != -1
-            //just to be safe
+            // just to be safe
                     && startIndex < endIndex
-                    //see BowlerHatLLC/vscode-as3mxml#234 for an example where
-                    //the index values could be out of range!
+                    // see BowlerHatLLC/vscode-as3mxml#234 for an example where
+                    // the index values could be out of range!
                     && startIndex <= text.length() && endIndex <= text.length()) {
                 assignedValue = text.substring(startIndex, endIndex);
             }
@@ -739,7 +747,7 @@ public class CodeActionsUtils {
         String indent = ASTUtils.getIndentBeforeNode(variableNode, text);
 
         StringBuilder builder = new StringBuilder();
-        builder.append(IASKeywordConstants.PRIVATE);
+        builder.append(variableNamespace);
         builder.append(" ");
         if (isStatic) {
             builder.append(IASKeywordConstants.STATIC);
@@ -759,7 +767,7 @@ public class CodeActionsUtils {
             builder.append(NEW_LINE);
             builder.append(NEW_LINE);
             builder.append(indent);
-            builder.append(namespace);
+            builder.append(accessorNamespace);
             builder.append(SPACE);
             if (isStatic) {
                 builder.append(IASKeywordConstants.STATIC);
@@ -779,7 +787,7 @@ public class CodeActionsUtils {
             builder.append("{");
             builder.append(NEW_LINE);
             builder.append(indent);
-            builder.append(INDENT); //extra indent
+            builder.append(INDENT); // extra indent
             builder.append(IASKeywordConstants.RETURN);
             builder.append(" _");
             builder.append(name);
@@ -792,7 +800,7 @@ public class CodeActionsUtils {
             builder.append(NEW_LINE);
             builder.append(NEW_LINE);
             builder.append(indent);
-            builder.append(namespace);
+            builder.append(accessorNamespace);
             builder.append(SPACE);
             if (isStatic) {
                 builder.append(IASKeywordConstants.STATIC);
@@ -814,7 +822,7 @@ public class CodeActionsUtils {
             builder.append("{");
             builder.append(NEW_LINE);
             builder.append(indent);
-            builder.append(INDENT); //extra indent
+            builder.append(INDENT); // extra indent
             builder.append("_" + name + " = value;");
             builder.append(NEW_LINE);
             builder.append(indent);
@@ -833,7 +841,7 @@ public class CodeActionsUtils {
         Position startPosition = new Position(startLine, startChar);
         Position endPosition = new Position(endLine, endChar);
 
-        //we may need to adjust the end position to include the semi-colon
+        // we may need to adjust the end position to include the semi-colon
         int offset = LanguageServerCompilerUtils.getOffsetFromPosition(new StringReader(text), endPosition);
         if (offset < text.length() && text.charAt(offset) == ';') {
             endPosition.setCharacter(endChar + 1);
@@ -868,7 +876,7 @@ public class CodeActionsUtils {
         }
         IContainerNode containerNode = (IContainerNode) statementContentsNode;
         if (containerNode.getContainerType().equals(ContainerType.SYNTHESIZED)) {
-            //this should be fixed first
+            // this should be fixed first
             return null;
         }
         if (tryNode.getCatchNodeCount() > 0) {
@@ -948,7 +956,7 @@ public class CodeActionsUtils {
 
         Range resultRange = new Range(startPosition, endPosition);
 
-        //we may need to adjust the end position to include the semi-colon and new line
+        // we may need to adjust the end position to include the semi-colon and new line
         int offset = LanguageServerCompilerUtils.getOffsetFromPosition(new StringReader(text), endPosition);
         if (offset < text.length() && text.charAt(offset) == ';') {
             endPosition.setCharacter(endPosition.getCharacter() + 1);
