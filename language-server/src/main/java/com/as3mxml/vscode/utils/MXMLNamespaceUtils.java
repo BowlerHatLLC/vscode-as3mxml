@@ -46,35 +46,35 @@ public class MXMLNamespaceUtils {
     private static final HashMap<String, String> NAMESPACE_TO_PREFIX = new HashMap<>();
 
     static {
-        //MXML language
+        // MXML language
         NAMESPACE_TO_PREFIX.put(IMXMLLanguageConstants.NAMESPACE_MXML_2009, PREFIX_FX);
         NAMESPACE_TO_PREFIX.put(IMXMLLanguageConstants.NAMESPACE_MXML_2006, PREFIX_MX);
 
-        //Flex
+        // Flex
         NAMESPACE_TO_PREFIX.put(IMXMLLibraryConstants.SPARK, PREFIX_S);
         NAMESPACE_TO_PREFIX.put(IMXMLLibraryConstants.MX, PREFIX_MX);
 
-        //FlexJS
+        // FlexJS
         NAMESPACE_TO_PREFIX.put(IMXMLLibraryConstants.FLEXJS_EXPRESS, PREFIX_JS);
         NAMESPACE_TO_PREFIX.put(IMXMLLibraryConstants.FLEXJS_BASIC, PREFIX_JS);
 
-        //Royale
+        // Royale
         NAMESPACE_TO_PREFIX.put(IMXMLLibraryConstants.ROYALE_EXPRESS, PREFIX_JS);
         NAMESPACE_TO_PREFIX.put(IMXMLLibraryConstants.ROYALE_BASIC, PREFIX_JS);
         NAMESPACE_TO_PREFIX.put(IMXMLLibraryConstants.ROYALE_JEWEL, PREFIX_J);
 
-        //Feathers
+        // Feathers
         NAMESPACE_TO_PREFIX.put(IMXMLLibraryConstants.FEATHERS, PREFIX_F);
     }
 
     private static final Pattern[] PATTERNS = {
-            //Royale/FlexJS library
+            // Royale/FlexJS library
             Pattern.compile("^library:\\/\\/ns\\.apache\\.org\\/(?:flexjs|royale)\\/(\\w+)$"),
 
-            //Flex library
+            // Flex library
             Pattern.compile("^[a-z]+:\\/\\/flex\\.apache\\.org\\/(\\w+)\\/ns$"),
 
-            //Final fallback (extracts domain name)
+            // Final fallback (extracts domain name)
             Pattern.compile("^[a-z]+:\\/\\/(?:\\w+\\.)?(\\w+)\\.\\w+\\/"), };
 
     private static final String PREFIX_LOCAL = "local";
@@ -108,8 +108,8 @@ public class MXMLNamespaceUtils {
             }
         }
 
-        //we'll check if the namespace comes from a known library
-        //with a common prefix
+        // we'll check if the namespace comes from a known library
+        // with a common prefix
         if (NAMESPACE_TO_PREFIX.containsKey(uri)) {
             String prefix = NAMESPACE_TO_PREFIX.get(uri);
 
@@ -119,7 +119,7 @@ public class MXMLNamespaceUtils {
             }
         }
 
-        //try to guess a good prefix based on common formats
+        // try to guess a good prefix based on common formats
         for (Pattern pattern : PATTERNS) {
             Matcher matcher = pattern.matcher(uri);
             if (matcher.find()) {
@@ -140,12 +140,12 @@ public class MXMLNamespaceUtils {
         }
 
         if (prefixMap != null && prefixMap.containsPrefix(prefix)) {
-            //the prefix already exists with a different URI, so we can't
-            //use it for this URI
+            // the prefix already exists with a different URI, so we can't
+            // use it for this URI
             return null;
         }
 
-        //prefixes shouldn't start with a number
+        // prefixes shouldn't start with a number
         if (Character.isDigit(prefix.charAt(0))) {
             return null;
         }
@@ -155,9 +155,9 @@ public class MXMLNamespaceUtils {
 
     private static boolean isPreferredNamespace(String tagNamespace, List<String> tagNamespaces, MXMLData mxmlData) {
         if (tagNamespace.equals(IMXMLLibraryConstants.MX) && tagNamespaces.contains(IMXMLLibraryConstants.SPARK)) {
-            //if we find mx, but spark also exists, we prefer spark
-            //while mx and spark usually have different implementations,
-            //sometimes, the same component class is defined in both namespaces!
+            // if we find mx, but spark also exists, we prefer spark
+            // while mx and spark usually have different implementations,
+            // sometimes, the same component class is defined in both namespaces!
             return false;
         }
         if (tagNamespace.equals(IMXMLLanguageConstants.NAMESPACE_MXML_2006)) {
@@ -166,18 +166,22 @@ public class MXMLNamespaceUtils {
                 String rootLanguageNamespace = rootTag.getMXMLDialect().getLanguageNamespace();
                 if (!rootLanguageNamespace.equals(tagNamespace)) {
                     if (tagNamespaces.contains(IMXMLLibraryConstants.MX)) {
-                        //if we find the mxml 2006 language namepace, but
-                        //we're using a newer language namespace, and the mx
-                        //library also exists, we prefer the library
+                        // if we find the mxml 2006 language namepace, but
+                        // we're using a newer language namespace, and the mx
+                        // library also exists, we prefer the library
                         return false;
                     }
                     if (tagNamespaces.contains(rootLanguageNamespace)) {
-                        //getTagNamesForClass() may sometimes return the
-                        //mxml 2006 namespace, even if that's not what we're
-                        //using in this file.
+                        // getTagNamesForClass() may sometimes return the
+                        // mxml 2006 namespace, even if that's not what we're
+                        // using in this file.
                         return false;
                     }
                 }
+            } else if (tagNamespaces.contains(IMXMLLibraryConstants.MX)) {
+                // if there's no root tag yet, and both the 2006 language
+                // namespace and the mx library exist, we prefer the library
+                return false;
             }
         }
         return true;
@@ -185,25 +189,25 @@ public class MXMLNamespaceUtils {
 
     public static MXMLNamespace getMXMLNamespaceForTypeDefinition(ITypeDefinition definition, MXMLData mxmlData,
             IRoyaleProject currentProject) {
-        //the prefix map may be null, if the file is empty
+        // the prefix map may be null, if the file is empty
         PrefixMap prefixMap = mxmlData.getRootTagPrefixMap();
 
         Collection<XMLName> tagNames = currentProject.getTagNamesForClass(definition.getQualifiedName());
         List<String> xmlNamespaces = new ArrayList<>();
         for (XMLName tagName : tagNames) {
-            //creating a new collection with only the namespace strings for easy
-            //searching for other values
+            // creating a new collection with only the namespace strings for easy
+            // searching for other values
             String tagNamespace = tagName.getXMLNamespace();
             xmlNamespaces.add(tagNamespace);
         }
 
-        //1. try to use an existing xmlns with an uri
+        // 1. try to use an existing xmlns with an uri
         if (prefixMap != null) {
             for (String tagNamespace : xmlNamespaces) {
                 if (!isPreferredNamespace(tagNamespace, xmlNamespaces, mxmlData)) {
-                    //skip namespaces that we'd rather not use in the current
-                    //context. for example, we prefer spark over mx, and this
-                    //class may be defined in both namespaces.
+                    // skip namespaces that we'd rather not use in the current
+                    // context. for example, we prefer spark over mx, and this
+                    // class may be defined in both namespaces.
                     continue;
                 }
                 String[] uriPrefixes = prefixMap.getPrefixesForNamespace(tagNamespace);
@@ -214,7 +218,7 @@ public class MXMLNamespaceUtils {
             }
         }
 
-        //2. try to use an existing xmlns with a package name
+        // 2. try to use an existing xmlns with a package name
         String packageName = definition.getPackageName();
         String packageNamespace = getPackageNameMXMLNamespaceURI(packageName);
         if (prefixMap != null) {
@@ -224,14 +228,14 @@ public class MXMLNamespaceUtils {
             }
         }
 
-        //3. try to create a new xmlns with a prefix and uri
+        // 3. try to create a new xmlns with a prefix and uri
 
-        //special case for the __AS3__ package
+        // special case for the __AS3__ package
         if (packageName != null && packageName.startsWith(UNDERSCORE_UNDERSCORE_AS3_PACKAGE)) {
-            //anything in this package is in the language namespace
+            // anything in this package is in the language namespace
             IMXMLTagData rootTag = mxmlData.getRootTag();
-            //we'll use the file dialect, but if it's not available, this is the
-            //default we should use
+            // we'll use the file dialect, but if it's not available, this is the
+            // default we should use
             String fxNamespace = IMXMLLanguageConstants.NAMESPACE_MXML_2009;
             if (rootTag != null) {
                 fxNamespace = rootTag.getMXMLDialect().getLanguageNamespace();
@@ -242,16 +246,16 @@ public class MXMLNamespaceUtils {
             }
         }
 
-        //we're going to save our best option and keep trying to use it later
-        //if the preferred prefix is already in use
+        // we're going to save our best option and keep trying to use it later
+        // if the preferred prefix is already in use
         String fallbackNamespace = null;
-        //we're searching again through the available namespaces. previously,
-        //we looked for uris that were already used. now we want to find one
-        //that hasn't been used yet
+        // we're searching again through the available namespaces. previously,
+        // we looked for uris that were already used. now we want to find one
+        // that hasn't been used yet
         for (String tagNamespace : xmlNamespaces) {
             if (!isPreferredNamespace(tagNamespace, xmlNamespaces, mxmlData)) {
-                //same as above, we should skip over certain namespaces when
-                //there's a better option available.
+                // same as above, we should skip over certain namespaces when
+                // there's a better option available.
                 continue;
             }
             String[] uriPrefixes = null;
@@ -259,10 +263,10 @@ public class MXMLNamespaceUtils {
                 uriPrefixes = prefixMap.getPrefixesForNamespace(tagNamespace);
             }
             if (uriPrefixes == null || uriPrefixes.length == 0) {
-                //we know this type is in one or more namespaces
-                //let's try to figure out a nice prefix to use.
-                //if we don't find our preferred prefix, we'll still
-                //remember the uri for later.
+                // we know this type is in one or more namespaces
+                // let's try to figure out a nice prefix to use.
+                // if we don't find our preferred prefix, we'll still
+                // remember the uri for later.
                 fallbackNamespace = tagNamespace;
                 MXMLNamespace resultNS = MXMLNamespaceUtils.getNamespaceFromURI(fallbackNamespace, prefixMap);
                 if (resultNS != null) {
@@ -272,20 +276,20 @@ public class MXMLNamespaceUtils {
         }
 
         if (fallbackNamespace != null) {
-            //if we couldn't find a known prefix, use a numbered one
+            // if we couldn't find a known prefix, use a numbered one
             String prefix = getNumberedNamespacePrefix(PREFIX_DEFAULT_NS, prefixMap);
             return new MXMLNamespace(prefix, fallbackNamespace);
         }
 
-        //4. special case: if the package namespace is simply *, try to use
-        //local as the prefix, if it's not already defined. this matches the
-        //behavior of Adobe Flash Builder.
+        // 4. special case: if the package namespace is simply *, try to use
+        // local as the prefix, if it's not already defined. this matches the
+        // behavior of Adobe Flash Builder.
         if (packageNamespace.equals(STAR) && (prefixMap == null || !prefixMap.containsPrefix(PREFIX_LOCAL))) {
             return new MXMLNamespace(PREFIX_LOCAL, packageNamespace);
         }
 
-        //5. try to use the final part of the package name as the prefix, if
-        //it's not already defined.
+        // 5. try to use the final part of the package name as the prefix, if
+        // it's not already defined.
         if (packageName != null && packageName.length() > 0) {
             String[] parts = packageName.split("\\.");
             String finalPart = parts[parts.length - 1];
@@ -294,7 +298,7 @@ public class MXMLNamespaceUtils {
             }
         }
 
-        //6. worst case: create a new xmlns with numbered prefix and package name
+        // 6. worst case: create a new xmlns with numbered prefix and package name
         String prefix = getNumberedNamespacePrefix(PREFIX_DEFAULT_NS, prefixMap);
         return new MXMLNamespace(prefix, packageNamespace);
     }
@@ -307,7 +311,7 @@ public class MXMLNamespaceUtils {
     }
 
     private static String getNumberedNamespacePrefix(String prefixPrefix, PrefixMap prefixMap) {
-        //if all else fails, fall back to a generic namespace
+        // if all else fails, fall back to a generic namespace
         int count = 1;
         String prefix = null;
         do {
