@@ -2,10 +2,15 @@
 
 ## Next
 
+### New Features
+
+- Code Actions: Added new `as3mxml.codeGeneration.getterSetter.forcePublicFunctions` and `as3mxml.codeGeneration.getterSetter.forcePrivateVariable` settings to customize how the generate getter and setter quick fixes behave.
+
 ### Fixed Issues
 
 - Build: Fixed issue where captive runtime and native installer builds were debug instead of release.
 - Code Actions: Fixed missing "Add import" code actions for classes in _.swc_ libraries.
+- Completion: Fixed wrong namespace in Apache Flex projects when adding the root tag with the MX namespace to an _.mxml_ file.
 - Hover: Fixed missing mouse hover text for custom user namespaces.
 - Syntax: Missing syntax coloring for namespace declarations.
 
