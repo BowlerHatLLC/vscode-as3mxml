@@ -1,6 +1,6 @@
 # ActionScript & MXML for Visual Studio Code Changelog
 
-## Next
+## 1.7.0
 
 ### New Features
 
