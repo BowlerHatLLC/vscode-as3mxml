@@ -1,5 +1,11 @@
 # ActionScript & MXML for Visual Studio Code Changelog
 
+## 1.7.1
+
+### Fixed Issues
+
+- Build: Fixed missing Adobe AIR build tasks.
+
 ## 1.7.0
 
 ### New Features
