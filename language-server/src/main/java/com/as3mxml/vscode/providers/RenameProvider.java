@@ -121,8 +121,8 @@ public class RenameProvider {
                     }
                     return result;
                 }
-                //if we're inside an <fx:Script> tag, we want ActionScript rename,
-                //so that's why we call isMXMLTagValidForCompletion()
+                // if we're inside an <fx:Script> tag, we want ActionScript rename,
+                // so that's why we call isMXMLTagValidForCompletion()
                 if (MXMLDataUtils.isMXMLCodeIntelligenceAvailableForTag(offsetTag)) {
                     WorkspaceEdit result = mxmlRename(offsetTag, currentOffset, params.getNewName(), project);
                     if (cancelToken != null) {
@@ -142,7 +142,7 @@ public class RenameProvider {
 
     private WorkspaceEdit actionScriptRename(IASNode offsetNode, String newName, ILspProject project) {
         if (offsetNode == null) {
-            //we couldn't find a node at the specified location
+            // we couldn't find a node at the specified location
             return new WorkspaceEdit(new HashMap<>());
         }
 
@@ -158,7 +158,7 @@ public class RenameProvider {
         }
 
         if (definition == null) {
-            //Cannot rename this element
+            // Cannot rename this element
             return null;
         }
 
@@ -170,33 +170,34 @@ public class RenameProvider {
         IDefinition definition = MXMLDataUtils.getDefinitionForMXMLNameAtOffset(offsetTag, currentOffset, project);
         if (definition != null) {
             if (MXMLDataUtils.isInsideTagPrefix(offsetTag, currentOffset)) {
-                //ignore the tag's prefix
+                // ignore the tag's prefix
                 return new WorkspaceEdit(new HashMap<>());
             }
             WorkspaceEdit result = renameDefinition(definition, newName, project);
             return result;
         }
 
-        //Cannot rename this element
+        // Cannot rename this element
         return null;
     }
 
     private WorkspaceEdit renameDefinition(IDefinition definition, String newName, ILspProject project) {
         if (definition == null) {
-            //Cannot rename this element
+            // Cannot rename this element
             return null;
         }
         WorkspaceEdit result = new WorkspaceEdit();
         List<Either<TextDocumentEdit, ResourceOperation>> documentChanges = new ArrayList<>();
         result.setDocumentChanges(documentChanges);
         if (definition.getContainingFilePath().endsWith(FILE_EXTENSION_SWC)) {
-            //Cannot rename this element
+            // Cannot rename this element
             return null;
         }
         if (definition instanceof IPackageDefinition) {
-            //Cannot rename this element
+            // Cannot rename this element
             return null;
         }
+        boolean isPrivate = definition.isPrivate();
         boolean isLocal = false;
         if (definition instanceof IVariableDefinition) {
             IVariableDefinition variableDef = (IVariableDefinition) definition;
@@ -214,10 +215,10 @@ public class RenameProvider {
             }
             UnitType unitType = unit.getCompilationUnitType();
             if (!UnitType.AS_UNIT.equals(unitType) && !UnitType.MXML_UNIT.equals(unitType)) {
-                //compiled compilation units won't have problems
+                // compiled compilation units won't have problems
                 continue;
             }
-            if (isLocal && !unit.getAbsoluteFilename().equals(definition.getContainingFilePath())) {
+            if ((isLocal || isPrivate) && !unit.getAbsoluteFilename().equals(definition.getContainingFilePath())) {
                 // no need to check this file
                 continue;
             }
@@ -273,9 +274,9 @@ public class RenameProvider {
                 newDefinitionFilePath = originalDefinitionFilePath.getParent().resolve(newBaseName);
             }
 
-            //null is supposed to work for the version, but it doesn't seem to
-            //be serialized properly. Integer.MAX_VALUE seems to work fine, but
-            //it may break in the future...
+            // null is supposed to work for the version, but it doesn't seem to
+            // be serialized properly. Integer.MAX_VALUE seems to work fine, but
+            // it may break in the future...
             VersionedTextDocumentIdentifier versionedIdentifier = new VersionedTextDocumentIdentifier(
                     textDocumentPath.toUri().toString(), Integer.MAX_VALUE);
             TextDocumentEdit textDocumentEdit = new TextDocumentEdit(versionedIdentifier, textEdits);

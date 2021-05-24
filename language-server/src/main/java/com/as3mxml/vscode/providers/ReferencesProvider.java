@@ -112,8 +112,8 @@ public class ReferencesProvider {
                     }
                     return result;
                 }
-                //if we're inside an <fx:Script> tag, we want ActionScript lookup,
-                //so that's why we call isMXMLTagValidForCompletion()
+                // if we're inside an <fx:Script> tag, we want ActionScript lookup,
+                // so that's why we call isMXMLTagValidForCompletion()
                 if (MXMLDataUtils.isMXMLCodeIntelligenceAvailableForTag(offsetTag)) {
                     ICompilationUnit offsetUnit = CompilerProjectUtils.findCompilationUnit(path, project);
                     List<? extends Location> result = mxmlReferences(offsetTag, currentOffset, offsetUnit, project);
@@ -134,7 +134,7 @@ public class ReferencesProvider {
 
     private List<? extends Location> actionScriptReferences(IASNode offsetNode, ILspProject project) {
         if (offsetNode == null) {
-            //we couldn't find a node at the specified location
+            // we couldn't find a node at the specified location
             return Collections.emptyList();
         }
 
@@ -149,8 +149,8 @@ public class ReferencesProvider {
             return result;
         }
 
-        //VSCode may call definition() when there isn't necessarily a
-        //definition referenced at the current position.
+        // VSCode may call definition() when there isn't necessarily a
+        // definition referenced at the current position.
         return Collections.emptyList();
     }
 
@@ -159,7 +159,7 @@ public class ReferencesProvider {
         IDefinition definition = MXMLDataUtils.getDefinitionForMXMLNameAtOffset(offsetTag, currentOffset, project);
         if (definition != null) {
             if (MXMLDataUtils.isInsideTagPrefix(offsetTag, currentOffset)) {
-                //ignore the tag's prefix
+                // ignore the tag's prefix
                 return Collections.emptyList();
             }
             ArrayList<Location> result = new ArrayList<>();
@@ -167,19 +167,19 @@ public class ReferencesProvider {
             return result;
         }
 
-        //finally, check if we're looking for references to a tag's id
+        // finally, check if we're looking for references to a tag's id
         IMXMLTagAttributeData attributeData = MXMLDataUtils.getMXMLTagAttributeWithValueAtOffset(offsetTag,
                 currentOffset);
         if (attributeData == null || !attributeData.getName().equals(IMXMLLanguageConstants.ATTRIBUTE_ID)) {
-            //VSCode may call definition() when there isn't necessarily a
-            //definition referenced at the current position.
+            // VSCode may call definition() when there isn't necessarily a
+            // definition referenced at the current position.
             return Collections.emptyList();
         }
         Collection<IDefinition> definitions = null;
         try {
             definitions = offsetUnit.getFileScopeRequest().get().getExternallyVisibleDefinitions();
         } catch (Exception e) {
-            //safe to ignore
+            // safe to ignore
         }
         if (definitions == null || definitions.size() == 0) {
             return Collections.emptyList();
@@ -192,7 +192,7 @@ public class ReferencesProvider {
             }
         }
         if (classDefinition == null) {
-            //this probably shouldn't happen, but check just to be safe
+            // this probably shouldn't happen, but check just to be safe
             return Collections.emptyList();
         }
         IASScope scope = classDefinition.getContainedScope();
@@ -203,8 +203,8 @@ public class ReferencesProvider {
             }
         }
         if (definition == null) {
-            //VSCode may call definition() when there isn't necessarily a
-            //definition referenced at the current position.
+            // VSCode may call definition() when there isn't necessarily a
+            // definition referenced at the current position.
             return Collections.emptyList();
         }
         ArrayList<Location> result = new ArrayList<>();
@@ -213,6 +213,7 @@ public class ReferencesProvider {
     }
 
     private void referencesForDefinition(IDefinition definition, ILspProject project, List<Location> result) {
+        boolean isPrivate = definition.isPrivate();
         boolean isLocal = false;
         if (definition instanceof IVariableDefinition) {
             IVariableDefinition variableDef = (IVariableDefinition) definition;
@@ -228,10 +229,10 @@ public class ReferencesProvider {
             }
             UnitType unitType = unit.getCompilationUnitType();
             if (!UnitType.AS_UNIT.equals(unitType) && !UnitType.MXML_UNIT.equals(unitType)) {
-                //compiled compilation units won't have problems
+                // compiled compilation units won't have problems
                 continue;
             }
-            if (isLocal && !unit.getAbsoluteFilename().equals(definition.getContainingFilePath())) {
+            if ((isLocal || isPrivate) && !unit.getAbsoluteFilename().equals(definition.getContainingFilePath())) {
                 // no need to check this file
                 continue;
             }
