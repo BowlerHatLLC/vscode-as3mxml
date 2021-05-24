@@ -442,6 +442,21 @@
           "default": true,
           "description": "When generating getters and setters, force the original variable to be in the private namespace, instead of keeping its original namespace"
         },
+        "as3mxml.sources.organizeImports.addMissingImports": {
+          "type": "boolean",
+          "default": true,
+          "description": "When organizing imports, determines if missing imports are added automatically (if there is only one matching symbol)"
+        },
+        "as3mxml.sources.organizeImports.removeUnusedImports": {
+          "type": "boolean",
+          "default": true,
+          "description": "When organizing imports, determines if unused imports are removed or kept"
+        },
+        "as3mxml.sources.organizeImports.insertNewLineBetweenTopLevelPackages": {
+          "type": "boolean",
+          "default": true,
+          "description": "When organizing imports, determines if a new line is inserted between top level packages"
+        },
         "nextgenas.sdk.framework": {
           "deprecationMessage": "DEPRECATED: Use as3mxml.sdk.framework instead."
         },
