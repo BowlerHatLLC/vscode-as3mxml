@@ -36,15 +36,15 @@ public class ImportTextEditUtils {
             .compile("(?m)^package(?: [\\w\\.]+)*\\s*\\{(?:[ \\t]*[\\r\\n]+)+([ \\t]*)");
 
     protected static int organizeImportsFromStartIndex(String text, int startIndex, List<IImportNode> importsToRemove,
-            Set<String> importsToAdd, List<TextEdit> edits) {
+            Set<String> importsToAdd, boolean insertNewLineBetweenTopLevelPackages, List<TextEdit> edits) {
         Matcher importMatcher = organizeImportPattern.matcher(text);
         if (startIndex != -1) {
             importMatcher.region(startIndex, text.length());
         }
-        //use a Set to avoid adding duplicate names
+        // use a Set to avoid adding duplicate names
         Set<String> nameSet = new HashSet<>();
         if (importsToAdd != null && startIndex == 0) {
-            //add our extra imports at the first available opportunity
+            // add our extra imports at the first available opportunity
             nameSet.addAll(importsToAdd);
         }
         String indent = "";
@@ -83,21 +83,21 @@ public class ImportTextEditUtils {
                 nameSet.add(importName);
             }
         }
-        if (nameSet.size() == 0 && importsToRemove.size() == 0) {
-            //nothing to organize
+        if (nameSet.size() == 0 && (importsToRemove == null || importsToRemove.size() == 0)) {
+            // nothing to organize
             return endIndex;
         }
 
         if (startImportsIndex == -1) {
             Matcher packageMatcher = packagePattern.matcher(text);
             packageMatcher.region(0, text.length());
-            if (packageMatcher.find()) //found the package
+            if (packageMatcher.find()) // found the package
             {
                 indent = packageMatcher.group(1);
                 startImportsIndex = packageMatcher.end() - indent.length();
             }
         }
-        //make the Set a List and put them in alphabetical order
+        // make the Set a List and put them in alphabetical order
         List<String> names = new ArrayList<>(nameSet);
         Collections.sort(names);
         StringBuilder result = new StringBuilder();
@@ -108,9 +108,10 @@ public class ImportTextEditUtils {
             String firstPart = parts[0];
             if (previousFirstPart == null) {
                 previousFirstPart = firstPart;
-            } else if (parts.length > 1 && !firstPart.equals(previousFirstPart)) {
-                //add an extra line when the first part of the package name
-                //is different than the previous import
+            } else if (insertNewLineBetweenTopLevelPackages && parts.length > 1
+                    && !firstPart.equals(previousFirstPart)) {
+                // add an extra line when the first part of the package name
+                // is different than the previous import
                 result.append("\n");
                 previousFirstPart = firstPart;
             }
@@ -126,7 +127,7 @@ public class ImportTextEditUtils {
         if (endImportsIndex == -1) {
             endImportsIndex = startImportsIndex;
             if (nameSet.size() > 0) {
-                //we're only adding new imports, so add some extra whitespace
+                // we're only adding new imports, so add some extra whitespace
                 result.append("\n\n");
             }
         }
@@ -140,16 +141,17 @@ public class ImportTextEditUtils {
         return endIndex;
     }
 
-    public static List<TextEdit> organizeImports(String text) {
-        return organizeImports(text, null, null);
+    public static List<TextEdit> organizeImports(String text, boolean insertNewLineBetweenTopLevelPackages) {
+        return organizeImports(text, null, null, insertNewLineBetweenTopLevelPackages);
     }
 
     public static List<TextEdit> organizeImports(String text, List<IImportNode> importsToRemove,
-            Set<String> importsToAdd) {
+            Set<String> importsToAdd, boolean insertNewLineBetweenTopLevelPackages) {
         List<TextEdit> edits = new ArrayList<>();
         int index = 0;
         do {
-            index = organizeImportsFromStartIndex(text, index, importsToRemove, importsToAdd, edits);
+            index = organizeImportsFromStartIndex(text, index, importsToRemove, importsToAdd,
+                    insertNewLineBetweenTopLevelPackages, edits);
         } while (index != -1);
         return edits;
     }

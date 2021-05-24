@@ -213,6 +213,9 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     private boolean concurrentRequests = true;
     private boolean codeGeneration_getterSetter_forcePublicFunctions = false;
     private boolean codeGeneration_getterSetter_forcePrivateVariable = false;
+    private boolean sources_organizeImports_addMissingImports = true;
+    private boolean sources_organizeImports_removeUnusedImports = true;
+    private boolean sources_organizeImports_insertNewLineBetweenTopLevelPackages = true;
     private SimpleProjectConfigStrategy fallbackConfig;
     private CompilerShell compilerShell;
     private String jvmargs;
@@ -735,6 +738,9 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         }
         ExecuteCommandProvider provider = new ExecuteCommandProvider(actionScriptProjectManager, fileTracker,
                 compilerWorkspace, languageClient, concurrentRequests);
+        provider.organizeImports_addMissingImports = sources_organizeImports_addMissingImports;
+        provider.organizeImports_removeUnusedImports = sources_organizeImports_removeUnusedImports;
+        provider.organizeImports_insertNewLineBetweenTopLevelPackages = sources_organizeImports_insertNewLineBetweenTopLevelPackages;
         return provider.executeCommand(params);
     }
 
@@ -1155,6 +1161,9 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         this.updateConcurrentRequests(settings);
         this.updateCodeGenerationGetterSettersForcePublicFunctions(settings);
         this.updateCodeGenerationGetterSettersForcePrivateVariable(settings);
+        this.updateSourcesOrganizeImportsAddMissingImports(settings);
+        this.updateSourcesOrganizeImportsRemoveUnusedImports(settings);
+        this.updateSourcesOrganizeImportsInsertNewLineBetweenTopLevelPackages(settings);
     }
 
     @Override
@@ -2251,6 +2260,76 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             return;
         }
         codeGeneration_getterSetter_forcePrivateVariable = newForcePrivateVariable;
+    }
+
+    private void updateSourcesOrganizeImportsAddMissingImports(JsonObject settings) {
+        if (!settings.has("as3mxml")) {
+            return;
+        }
+        JsonObject as3mxml = settings.get("as3mxml").getAsJsonObject();
+        if (!as3mxml.has("sources")) {
+            return;
+        }
+        JsonObject sources = as3mxml.get("sources").getAsJsonObject();
+        if (!sources.has("organizeImports")) {
+            return;
+        }
+        JsonObject organizeImports = sources.get("organizeImports").getAsJsonObject();
+        if (!organizeImports.has("addMissingImports")) {
+            return;
+        }
+        boolean newAddMissingImports = organizeImports.get("addMissingImports").getAsBoolean();
+        if (sources_organizeImports_addMissingImports == newAddMissingImports) {
+            return;
+        }
+        sources_organizeImports_addMissingImports = newAddMissingImports;
+    }
+
+    private void updateSourcesOrganizeImportsRemoveUnusedImports(JsonObject settings) {
+        if (!settings.has("as3mxml")) {
+            return;
+        }
+        JsonObject as3mxml = settings.get("as3mxml").getAsJsonObject();
+        if (!as3mxml.has("sources")) {
+            return;
+        }
+        JsonObject sources = as3mxml.get("sources").getAsJsonObject();
+        if (!sources.has("organizeImports")) {
+            return;
+        }
+        JsonObject organizeImports = sources.get("organizeImports").getAsJsonObject();
+        if (!organizeImports.has("removeUnusedImports")) {
+            return;
+        }
+        boolean newRemoveUnusedImports = organizeImports.get("removeUnusedImports").getAsBoolean();
+        if (sources_organizeImports_removeUnusedImports == newRemoveUnusedImports) {
+            return;
+        }
+        sources_organizeImports_removeUnusedImports = newRemoveUnusedImports;
+    }
+
+    private void updateSourcesOrganizeImportsInsertNewLineBetweenTopLevelPackages(JsonObject settings) {
+        if (!settings.has("as3mxml")) {
+            return;
+        }
+        JsonObject as3mxml = settings.get("as3mxml").getAsJsonObject();
+        if (!as3mxml.has("sources")) {
+            return;
+        }
+        JsonObject sources = as3mxml.get("sources").getAsJsonObject();
+        if (!sources.has("organizeImports")) {
+            return;
+        }
+        JsonObject organizeImports = sources.get("organizeImports").getAsJsonObject();
+        if (!organizeImports.has("insertNewLineBetweenTopLevelPackages")) {
+            return;
+        }
+        boolean newInsertNewLineBetweenTopLevelPackages = organizeImports.get("insertNewLineBetweenTopLevelPackages")
+                .getAsBoolean();
+        if (sources_organizeImports_insertNewLineBetweenTopLevelPackages == newInsertNewLineBetweenTopLevelPackages) {
+            return;
+        }
+        sources_organizeImports_insertNewLineBetweenTopLevelPackages = newInsertNewLineBetweenTopLevelPackages;
     }
 
     private CompletableFuture<Object> executeQuickCompileCommand(ExecuteCommandParams params) {
