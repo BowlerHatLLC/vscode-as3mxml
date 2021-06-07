@@ -98,7 +98,7 @@ public class ActionScriptProjectManager {
         try {
             projectRoot = projectRoot.toRealPath();
         } catch (IOException e) {
-            //didn't seem to work, for some reason
+            // didn't seem to work, for some reason
         }
         addProject(projectRoot, folder);
     }
@@ -151,7 +151,7 @@ public class ActionScriptProjectManager {
     public ActionScriptProjectData getProjectDataForSourceFile(Path path) {
         checkForMissingProjectsContainingSourceFile(path);
 
-        //first try to find the path in an existing project
+        // first try to find the path in an existing project
         ActionScriptProjectData bestMatch = null;
         ActionScriptProjectData fallback = null;
         for (ActionScriptProjectData projectData : allProjectData) {
@@ -164,20 +164,20 @@ public class ActionScriptProjectManager {
                 continue;
             }
             if (bestMatch != null && bestMatch.projectDepth >= projectData.projectDepth) {
-                //even if it's in the source path, it's not a better match
+                // even if it's in the source path, it's not a better match
                 continue;
             }
             if (SourcePathUtils.isInProjectSourcePath(path, project, projectData.configurator)) {
                 if (path.startsWith(projectRoot)) {
-                    //if the source path is inside the project root folder, then
-                    //the project is a candidate (we'll compare depths later)
+                    // if the source path is inside the project root folder, then
+                    // the project is a candidate (we'll compare depths later)
                     bestMatch = projectData;
                     continue;
                 }
-                //if path is in the source path, but not inside the workspace
-                //folder, save it as possible result for later. in other words,
-                //we always prefer a workspace that contains the file, so we'll
-                //check the other workspaces before using the fallback.
+                // if path is in the source path, but not inside the workspace
+                // folder, save it as possible result for later. in other words,
+                // we always prefer a workspace that contains the file, so we'll
+                // check the other workspaces before using the fallback.
                 if (fallback == null) {
                     fallback = projectData;
                     continue;
@@ -187,17 +187,17 @@ public class ActionScriptProjectManager {
         if (bestMatch != null) {
             return bestMatch;
         }
-        //we found the path in a project's source path, but not inside any the
-        //workspace folders
+        // we found the path in a project's source path, but not inside any the
+        // workspace folders
         if (fallback != null) {
             return fallback;
         }
-        //if none of the existing projects worked, try a folder where a project
-        //hasn't been created yet
+        // if none of the existing projects worked, try a folder where a project
+        // hasn't been created yet
         for (ActionScriptProjectData projectData : allProjectData) {
             ILspProject project = projectData.project;
             if (project != null) {
-                //if there's already a project, there's nothing to create later
+                // if there's already a project, there's nothing to create later
                 continue;
             }
             Path projectRoot = projectData.projectRoot;
@@ -208,7 +208,7 @@ public class ActionScriptProjectManager {
                 return projectData;
             }
         }
-        //a project where "everything else" goes
+        // a project where "everything else" goes
         return fallbackProjectData;
     }
 
@@ -229,13 +229,13 @@ public class ActionScriptProjectManager {
         }
         ILspProject project = projectData.project;
         if (!SourcePathUtils.isInProjectSourcePath(path, project, projectData.configurator)) {
-            //the path must be in the workspace or source-path
+            // the path must be in the workspace or source-path
             return null;
         }
 
         ICompilationUnit unit = CompilerProjectUtils.findCompilationUnit(path, project);
         if (unit == null) {
-            //the path must be in the workspace or source-path
+            // the path must be in the workspace or source-path
             return null;
         }
 
@@ -252,16 +252,16 @@ public class ActionScriptProjectManager {
         ILspProject project = projectData.project;
         IMXMLTagAttributeData attributeData = MXMLDataUtils.getMXMLTagAttributeWithValueAtOffset(tag, currentOffset);
         if (attributeData != null) {
-            //some attributes can have ActionScript completion, such as
-            //events and properties with data binding
+            // some attributes can have ActionScript completion, such as
+            // events and properties with data binding
 
             IDefinition resolvedDefinition = project.resolveXMLNameToDefinition(tag.getXMLName(), tag.getMXMLDialect());
-            //prominic/Moonshine-IDE#/203: don't allow interface definitions because
-            //we cannot resolve specifiers. <fx:Component> resolves to an interface
-            //definition, and it can have an id attribute.
+            // prominic/Moonshine-IDE#/203: don't allow interface definitions because
+            // we cannot resolve specifiers. <fx:Component> resolves to an interface
+            // definition, and it can have an id attribute.
             if (resolvedDefinition == null || !(resolvedDefinition instanceof IClassDefinition)) {
-                //we can't figure out which class the tag represents!
-                //maybe the user hasn't defined the tag's namespace or something
+                // we can't figure out which class the tag represents!
+                // maybe the user hasn't defined the tag's namespace or something
                 return null;
             }
             IClassDefinition tagDefinition = (IClassDefinition) resolvedDefinition;
@@ -271,8 +271,8 @@ public class ActionScriptProjectManager {
                 if (offsetNode instanceof IMXMLClassReferenceNode) {
                     IMXMLClassReferenceNode mxmlNode = (IMXMLClassReferenceNode) offsetNode;
                     IMXMLEventSpecifierNode eventNode = mxmlNode.getEventSpecifierNode(attributeData.getShortName());
-                    //the event node might be null if the MXML document isn't in a
-                    //fully valid state (unclosed tags, for instance)
+                    // the event node might be null if the MXML document isn't in a
+                    // fully valid state (unclosed tags, for instance)
                     if (eventNode != null) {
                         for (IASNode asNode : eventNode.getASNodes()) {
                             IASNode containingNode = ASTUtils.getContainingNodeIncludingStart(asNode, currentOffset);
@@ -298,8 +298,8 @@ public class ActionScriptProjectManager {
                                     IASNode dataBindingChild = dataBinding.getChild(i);
                                     if (dataBindingChild.contains(currentOffset)
                                             && dataBindingChild instanceof IMXMLSingleDataBindingNode) {
-                                        //we'll parse this in a moment, as if it were
-                                        //a direct child of the property specifier
+                                        // we'll parse this in a moment, as if it were
+                                        // a direct child of the property specifier
                                         propertyChild = (IMXMLSingleDataBindingNode) dataBindingChild;
                                         break;
                                     }
@@ -317,7 +317,7 @@ public class ActionScriptProjectManager {
                         }
                     }
                 }
-                //nothing possible for this attribute
+                // nothing possible for this attribute
             }
         }
         return null;
@@ -334,16 +334,16 @@ public class ActionScriptProjectManager {
         }
         ILspProject project = projectData.project;
         if (!SourcePathUtils.isInProjectSourcePath(path, project, projectData.configurator)) {
-            //the path must be in the workspace or source-path
+            // the path must be in the workspace or source-path
             return null;
         }
 
-        //need to ensure that the compilation unit exists, even though we don't
-        //use it directly
+        // need to ensure that the compilation unit exists, even though we don't
+        // use it directly
         ICompilationUnit unit = CompilerProjectUtils.findCompilationUnit(path, project);
         if (unit == null) {
-            //no need to log this case because it can happen for reasons that
-            //should have been logged already
+            // no need to log this case because it can happen for reasons that
+            // should have been logged already
             return null;
         }
         IMXMLDataManager mxmlDataManager = project.getWorkspace().getMXMLDataManager();
@@ -404,18 +404,18 @@ public class ActionScriptProjectManager {
     public Location getLocationFromDefinition(IDefinition definition, ILspProject project) {
         String sourcePath = LanguageServerCompilerUtils.getSourcePathFromDefinition(definition, project);
         if (sourcePath == null) {
-            //we can't find where the source code for this symbol is located
+            // we can't find where the source code for this symbol is located
             return null;
         }
         Location location = null;
         if (sourcePath.endsWith(FILE_EXTENSION_SWC) || sourcePath.endsWith(FILE_EXTENSION_ANE)) {
             DefinitionAsText definitionText = DefinitionTextUtils.definitionToTextDocument(definition, project);
-            //may be null if definitionToTextDocument() doesn't know how
-            //to parse that type of definition
+            // may be null if definitionToTextDocument() doesn't know how
+            // to parse that type of definition
             if (definitionText != null) {
-                //if we get here, we couldn't find a framework source file and
-                //the definition path still ends with .swc
-                //we're going to try our best to display "decompiled" content
+                // if we get here, we couldn't find a framework source file and
+                // the definition path still ends with .swc
+                // we're going to try our best to display "decompiled" content
                 location = definitionText.toLocation();
             }
         }
@@ -435,18 +435,18 @@ public class ActionScriptProjectManager {
     public Range definitionToRange(IDefinition definition, ILspProject project) {
         String sourcePath = LanguageServerCompilerUtils.getSourcePathFromDefinition(definition, project);
         if (sourcePath == null) {
-            //we can't find where the source code for this symbol is located
+            // we can't find where the source code for this symbol is located
             return null;
         }
         Range range = null;
         if (sourcePath.endsWith(FILE_EXTENSION_SWC) || sourcePath.endsWith(FILE_EXTENSION_ANE)) {
             DefinitionAsText definitionText = DefinitionTextUtils.definitionToTextDocument(definition, project);
-            //may be null if definitionToTextDocument() doesn't know how
-            //to parse that type of definition
+            // may be null if definitionToTextDocument() doesn't know how
+            // to parse that type of definition
             if (definitionText != null) {
-                //if we get here, we couldn't find a framework source file and
-                //the definition path still ends with .swc
-                //we're going to try our best to display "decompiled" content
+                // if we get here, we couldn't find a framework source file and
+                // the definition path still ends with .swc
+                // we're going to try our best to display "decompiled" content
                 range = definitionText.toRange();
             }
         }
@@ -454,18 +454,18 @@ public class ActionScriptProjectManager {
             Path definitionPath = Paths.get(sourcePath);
             Position start = new Position();
             Position end = new Position();
-            //getLine() and getColumn() may include things like metadata, so it
-            //makes more sense to jump to where the definition name starts
+            // getLine() and getColumn() may include things like metadata, so it
+            // makes more sense to jump to where the definition name starts
             int line = definition.getNameLine();
             int column = definition.getNameColumn();
             if (line < 0 || column < 0) {
-                //this is not ideal, but MXML variable definitions may not have a
-                //node associated with them, so we need to figure this out from the
-                //offset instead of a pre-calculated line and column -JT
+                // this is not ideal, but MXML variable definitions may not have a
+                // node associated with them, so we need to figure this out from the
+                // offset instead of a pre-calculated line and column -JT
                 Reader definitionReader = fileTracker.getReader(definitionPath);
                 if (definitionReader == null) {
-                    //we might get here if it's from a SWC, but the associated
-                    //source file is missing.
+                    // we might get here if it's from a SWC, but the associated
+                    // source file is missing.
                     return null;
                 } else {
                     try {
@@ -499,13 +499,13 @@ public class ActionScriptProjectManager {
             definitionBaseName = "package " + definitionBaseName;
         }
         if (definitionBaseName.length() == 0) {
-            //vscode expects all items to have a name
+            // vscode expects all items to have a name
             return null;
         }
 
         Range range = definitionToRange(definition, project);
         if (range == null) {
-            //we can't find where the source code for this symbol is located
+            // we can't find where the source code for this symbol is located
             return null;
         }
 
@@ -520,7 +520,7 @@ public class ActionScriptProjectManager {
         if (deprecationInfo != null) {
             tags.add(SymbolTag.Deprecated);
         }
-        if(tags.size() > 0) {
+        if (tags.size() > 0) {
             symbol.setTags(tags);
         }
 
@@ -530,13 +530,13 @@ public class ActionScriptProjectManager {
     public SymbolInformation definitionToSymbolInformation(IDefinition definition, ILspProject project) {
         String definitionBaseName = definition.getBaseName();
         if (definitionBaseName.length() == 0) {
-            //vscode expects all items to have a name
+            // vscode expects all items to have a name
             return null;
         }
 
         Location location = getLocationFromDefinition(definition, project);
         if (location == null) {
-            //we can't find where the source code for this symbol is located
+            // we can't find where the source code for this symbol is located
             return null;
         }
 
@@ -561,7 +561,7 @@ public class ActionScriptProjectManager {
         if (deprecationInfo != null) {
             tags.add(SymbolTag.Deprecated);
         }
-        if(tags.size() > 0) {
+        if (tags.size() > 0) {
             symbol.setTags(tags);
         }
 
@@ -575,19 +575,19 @@ public class ActionScriptProjectManager {
             definitionPath = containingSourceFilePath;
         }
         if (definitionPath == null) {
-            //if the definition is in an MXML file, getSourcePath() may return
-            //null, but getContainingFilePath() will return something
+            // if the definition is in an MXML file, getSourcePath() may return
+            // null, but getContainingFilePath() will return something
             definitionPath = definition.getContainingFilePath();
             if (definitionPath == null) {
-                //if everything is null, there's nothing to do
+                // if everything is null, there's nothing to do
                 return;
             }
-            //however, getContainingFilePath() also works for SWCs
+            // however, getContainingFilePath() also works for SWCs
             if (!definitionPath.endsWith(FILE_EXTENSION_AS) && !definitionPath.endsWith(FILE_EXTENSION_MXML)
                     && (definitionPath.contains(SDK_LIBRARY_PATH_SIGNATURE_UNIX)
                             || definitionPath.contains(SDK_LIBRARY_PATH_SIGNATURE_WINDOWS))) {
-                //if it's a framework SWC, we're going to attempt to resolve
-                //the source file 
+                // if it's a framework SWC, we're going to attempt to resolve
+                // the source file
                 String debugPath = DefinitionUtils.getDefinitionDebugSourceFilePath(definition, projectData.project);
                 if (debugPath != null) {
                     definitionPath = debugPath;
@@ -596,18 +596,18 @@ public class ActionScriptProjectManager {
             if (definitionPath.endsWith(FILE_EXTENSION_SWC) || definitionPath.endsWith(FILE_EXTENSION_ANE)) {
                 DefinitionAsText definitionText = DefinitionTextUtils.definitionToTextDocument(definition,
                         projectData.project);
-                //may be null if definitionToTextDocument() doesn't know how
-                //to parse that type of definition
+                // may be null if definitionToTextDocument() doesn't know how
+                // to parse that type of definition
                 if (definitionText != null) {
-                    //if we get here, we couldn't find a framework source file and
-                    //the definition path still ends with .swc
-                    //we're going to try our best to display "decompiled" content
+                    // if we get here, we couldn't find a framework source file and
+                    // the definition path still ends with .swc
+                    // we're going to try our best to display "decompiled" content
                     result.add(definitionText.toLocation());
                 }
                 return;
             }
             if (!definitionPath.endsWith(FILE_EXTENSION_AS) && !definitionPath.endsWith(FILE_EXTENSION_MXML)) {
-                //if it's anything else, we don't know how to resolve
+                // if it's anything else, we don't know how to resolve
                 return;
             }
         }
@@ -618,18 +618,18 @@ public class ActionScriptProjectManager {
         int nameLine = definition.getNameLine();
         int nameColumn = definition.getNameColumn();
         if (nameLine == -1 || nameColumn == -1) {
-            //getNameLine() and getNameColumn() will both return -1 for a
-            //variable definition created by an MXML tag with an id.
-            //so we need to figure them out from the offset instead.
+            // getNameLine() and getNameColumn() will both return -1 for a
+            // variable definition created by an MXML tag with an id.
+            // so we need to figure them out from the offset instead.
             int nameOffset = definition.getNameStart();
             if (nameOffset == -1) {
-                //we can't find the name, so give up
+                // we can't find the name, so give up
                 return;
             }
 
             Reader reader = fileTracker.getReader(resolvedPath);
             if (reader == null) {
-                //we can't get the code at all
+                // we can't get the code at all
                 return;
             }
 
@@ -645,7 +645,7 @@ public class ActionScriptProjectManager {
             }
         }
         if (nameLine == -1 || nameColumn == -1) {
-            //we can't find the name, so give up
+            // we can't find the name, so give up
             return;
         }
         Position start = new Position();
@@ -696,37 +696,50 @@ public class ActionScriptProjectManager {
             return;
         }
 
-        for (WorkspaceFolder folder : workspaceFolders) {
-            Path workspaceFolderPath = LanguageServerCompilerUtils.getPathFromLanguageServerURI(folder.getUri());
+        Path fallbackProjectRoot = null;
+        WorkspaceFolder fallbackFolder = null;
+        for (ActionScriptProjectData projectData : allProjectData) {
+            if (projectData.config == null) {
+                continue;
+            }
+            if (projectData.folder == null) {
+                continue;
+            }
+            Path workspaceFolderPath = LanguageServerCompilerUtils
+                    .getPathFromLanguageServerURI(projectData.folder.getUri());
             if (workspaceFolderPath == null) {
                 continue;
             }
             if (!path.startsWith(workspaceFolderPath)) {
                 continue;
             }
-            List<ActionScriptProjectData> workspaceProjects = getAllProjectDataForWorkspaceFolder(folder);
+
             Path currentPath = path.getParent();
             do {
                 Path configFilePath = currentPath.resolve(configFileName);
                 if (configFilePath.toFile().exists()) {
-                    ActionScriptProjectData foundProjectData = null;
-                    for (ActionScriptProjectData projectData : workspaceProjects) {
-                        if (projectData.config == null) {
-                            continue;
-                        }
-
-                        if (configFilePath.equals(projectData.config.getConfigFilePath())) {
-                            foundProjectData = projectData;
-                            break;
-                        }
+                    if (configFilePath.equals(projectData.config.getConfigFilePath())) {
+                        // an existing project already contains this file
+                        return;
                     }
-                    if (foundProjectData == null) {
-                        addProject(currentPath, folder);
-                    }
+                    // if we don't find an existing project in this workspace
+                    // root folder, we can add a new project later using these
+                    // current values.
+                    // however, we should check all other existing projects
+                    // first. if there are multiple workspace root folders that
+                    // overlap, the project might be associated with any of them
+                    fallbackProjectRoot = currentPath;
+                    fallbackFolder = projectData.folder;
                 }
                 currentPath = currentPath.getParent();
             } while (currentPath != null && currentPath.startsWith(workspaceFolderPath));
         }
+        // an existing project does not contain this file
+        // do we have a fallback?
+        if (fallbackProjectRoot == null || fallbackFolder == null) {
+            return;
+        }
+        addProject(fallbackProjectRoot, fallbackFolder);
     }
 
     private List<ActionScriptProjectData> getAllProjectDataForWorkspaceFolder(WorkspaceFolder folder) {
