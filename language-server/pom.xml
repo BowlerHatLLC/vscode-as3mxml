@@ -107,13 +107,13 @@ limitations under the License.
     <dependency>
       <groupId>org.eclipse.lsp4j</groupId>
       <artifactId>org.eclipse.lsp4j</artifactId>
-      <version>0.10.0</version>
+      <version>0.12.0</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>com.networknt</groupId>
       <artifactId>json-schema-validator</artifactId>
-      <version>1.0.47</version>
+      <version>1.0.53</version>
     </dependency>
     <dependency>
       <groupId>org.dom4j</groupId>
@@ -123,7 +123,7 @@ limitations under the License.
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-nop</artifactId>
-      <version>1.7.21</version>
+      <version>1.7.30</version>
     </dependency>
     <dependency>
       <groupId>com.as3mxml.vscode</groupId>
@@ -133,7 +133,7 @@ limitations under the License.
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-api</artifactId>
-      <version>5.0.2</version>
+      <version>5.7.2</version>
       <scope>test</scope>
     </dependency>
   </dependencies>

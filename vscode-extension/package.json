@@ -39,19 +39,19 @@
   ],
   "devDependencies": {
     "@rgrove/parse-xml": "^3.0.0",
-    "@types/mocha": "^8.2.1",
-    "@types/node": "^10.17.55",
+    "@types/mocha": "^8.2.2",
+    "@types/node": "^10.17.60",
     "@types/vscode": "^1.37.0",
-    "glob": "^7.1.6",
+    "glob": "^7.1.7",
     "json5": "2.1.0",
-    "mocha": "^8.3.2",
-    "ts-loader": "^8.0.18",
-    "typescript": "^4.2.3",
-    "vsce": "^1.87.0",
+    "mocha": "^8.4.0",
+    "ts-loader": "^9.2.3",
+    "typescript": "^4.3.2",
+    "vsce": "^1.93.0",
     "vscode-jsonrpc": "^6.0.0",
     "vscode-languageclient": "^6.1.4",
-    "webpack": "^5.27.0",
-    "webpack-cli": "^4.5.0"
+    "webpack": "^5.38.1",
+    "webpack-cli": "^4.7.2"
   },
   "activationEvents": [
     "onLanguage:actionscript",

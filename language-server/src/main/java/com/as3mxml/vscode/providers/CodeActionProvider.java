@@ -156,7 +156,7 @@ public class CodeActionProvider {
         boolean handledUnimplementedMethods = false;
         for (Diagnostic diagnostic : diagnostics) {
             String code = null;
-            Either<String, Number> eitherCode = diagnostic.getCode();
+            Either<String, Integer> eitherCode = diagnostic.getCode();
             // I don't know why this can be null
             if (eitherCode == null) {
                 continue;
@@ -173,74 +173,74 @@ public class CodeActionProvider {
                 continue;
             }
             switch (code) {
-            case "1120": // AccessUndefinedPropertyProblem
-            {
-                // see if there's anything we can import
-                createCodeActionsForImport(path, diagnostic, projectData, codeActions);
-                createCodeActionForMissingLocalVariable(path, diagnostic, projectData, codeActions);
-                createCodeActionForMissingField(path, diagnostic, projectData, codeActions);
-                createCodeActionForMissingEventListener(path, diagnostic, projectData, codeActions);
-                break;
-            }
-            case "1046": // UnknownTypeProblem
-            {
-                // see if there's anything we can import
-                createCodeActionsForImport(path, diagnostic, projectData, codeActions);
-                break;
-            }
-            case "1017": // UnknownSuperclassProblem
-            {
-                // see if there's anything we can import
-                createCodeActionsForImport(path, diagnostic, projectData, codeActions);
-                break;
-            }
-            case "1045": // UnknownInterfaceProblem
-            {
-                // see if there's anything we can import
-                createCodeActionsForImport(path, diagnostic, projectData, codeActions);
-                break;
-            }
-            case "1061": // StrictUndefinedMethodProblem
-            {
-                createCodeActionForMissingMethod(path, diagnostic, projectData, codeActions);
-                break;
-            }
-            case "1073": // MissingCatchOrFinallyProblem
-            {
-                createCodeActionForMissingCatchOrFinally(path, diagnostic, projectData, codeActions);
-                break;
-            }
-            case "1119": // AccessUndefinedMemberProblem
-            {
-                createCodeActionForMissingField(path, diagnostic, projectData, codeActions);
-                createCodeActionForMissingEventListener(path, diagnostic, projectData, codeActions);
-                break;
-            }
-            case "1178": // InaccessiblePropertyReferenceProblem
-            {
-                // see if there's anything we can import
-                createCodeActionsForImport(path, diagnostic, projectData, codeActions);
-                break;
-            }
-            case "1180": // CallUndefinedMethodProblem
-            {
-                // see if there's anything we can import
-                createCodeActionsForImport(path, diagnostic, projectData, codeActions);
-                createCodeActionForMissingMethod(path, diagnostic, projectData, codeActions);
-                break;
-            }
-            case "1044": // UnimplementedInterfaceMethodProblem
-            {
-                // only needs to be handled one time
-                if (!handledUnimplementedMethods) {
-                    handledUnimplementedMethods = true;
-                    createCodeActionForUnimplementedMethods(path, diagnostic, projectData, codeActions);
+                case "1120": // AccessUndefinedPropertyProblem
+                {
+                    // see if there's anything we can import
+                    createCodeActionsForImport(path, diagnostic, projectData, codeActions);
+                    createCodeActionForMissingLocalVariable(path, diagnostic, projectData, codeActions);
+                    createCodeActionForMissingField(path, diagnostic, projectData, codeActions);
+                    createCodeActionForMissingEventListener(path, diagnostic, projectData, codeActions);
+                    break;
                 }
-                break;
-            }
-            case "as3mxml-unused-import": {
-                createCodeActionsForUnusedImport(path, diagnostic, projectData, codeActions);
-            }
+                case "1046": // UnknownTypeProblem
+                {
+                    // see if there's anything we can import
+                    createCodeActionsForImport(path, diagnostic, projectData, codeActions);
+                    break;
+                }
+                case "1017": // UnknownSuperclassProblem
+                {
+                    // see if there's anything we can import
+                    createCodeActionsForImport(path, diagnostic, projectData, codeActions);
+                    break;
+                }
+                case "1045": // UnknownInterfaceProblem
+                {
+                    // see if there's anything we can import
+                    createCodeActionsForImport(path, diagnostic, projectData, codeActions);
+                    break;
+                }
+                case "1061": // StrictUndefinedMethodProblem
+                {
+                    createCodeActionForMissingMethod(path, diagnostic, projectData, codeActions);
+                    break;
+                }
+                case "1073": // MissingCatchOrFinallyProblem
+                {
+                    createCodeActionForMissingCatchOrFinally(path, diagnostic, projectData, codeActions);
+                    break;
+                }
+                case "1119": // AccessUndefinedMemberProblem
+                {
+                    createCodeActionForMissingField(path, diagnostic, projectData, codeActions);
+                    createCodeActionForMissingEventListener(path, diagnostic, projectData, codeActions);
+                    break;
+                }
+                case "1178": // InaccessiblePropertyReferenceProblem
+                {
+                    // see if there's anything we can import
+                    createCodeActionsForImport(path, diagnostic, projectData, codeActions);
+                    break;
+                }
+                case "1180": // CallUndefinedMethodProblem
+                {
+                    // see if there's anything we can import
+                    createCodeActionsForImport(path, diagnostic, projectData, codeActions);
+                    createCodeActionForMissingMethod(path, diagnostic, projectData, codeActions);
+                    break;
+                }
+                case "1044": // UnimplementedInterfaceMethodProblem
+                {
+                    // only needs to be handled one time
+                    if (!handledUnimplementedMethods) {
+                        handledUnimplementedMethods = true;
+                        createCodeActionForUnimplementedMethods(path, diagnostic, projectData, codeActions);
+                    }
+                    break;
+                }
+                case "as3mxml-unused-import": {
+                    createCodeActionsForUnusedImport(path, diagnostic, projectData, codeActions);
+                }
             }
         }
     }
