@@ -38,7 +38,7 @@ import {
   LanguageClientOptions,
   Executable,
   ExecutableOptions,
-} from "vscode-languageclient";
+} from "vscode-languageclient/node";
 import logCompilerShellOutput from "./commands/logCompilerShellOutput";
 import quickCompileAndLaunch from "./commands/quickCompileAndLaunch";
 import migrateSettings from "./utils/migrateSettings";
