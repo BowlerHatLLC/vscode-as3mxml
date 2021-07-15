@@ -80,7 +80,7 @@ export function importFlashBuilderProject(
 ) {
   getOutputChannel().clear();
   getOutputChannel().appendLine(MESSAGE_IMPORT_START);
-  getOutputChannel().show();
+  getOutputChannel().show(true);
   let result = importFlashBuilderProjectInternal(workspaceFolder);
   if (result) {
     getOutputChannel().appendLine(MESSAGE_IMPORT_COMPLETE);
@@ -989,9 +989,8 @@ function migrateBuildTargetsElement(
             linkedResources
           );
           platformOptions.signingOptions = platformOptions.signingOptions || {};
-          platformOptions.signingOptions[
-            "provisioning-profile"
-          ] = provisioningFile;
+          platformOptions.signingOptions["provisioning-profile"] =
+            provisioningFile;
         }
       }
     } else if (isAndroid) {

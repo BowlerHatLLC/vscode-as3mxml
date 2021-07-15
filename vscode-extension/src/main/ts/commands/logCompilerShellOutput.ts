@@ -27,7 +27,7 @@ export default function logCompilerShellOutput(
   if (outputChannel === null) {
     outputChannel = vscode.window.createOutputChannel(OUTPUT_CHANNEL_NAME);
   }
-  outputChannel.show();
+  outputChannel.show(true);
   if (clear) {
     outputChannel.clear();
   }

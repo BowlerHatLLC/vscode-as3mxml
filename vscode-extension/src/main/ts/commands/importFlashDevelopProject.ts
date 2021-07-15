@@ -83,7 +83,7 @@ export function importFlashDevelopProject(
 ) {
   getOutputChannel().clear();
   getOutputChannel().appendLine(MESSAGE_IMPORT_START);
-  getOutputChannel().show();
+  getOutputChannel().show(true);
   let result = importFlashDevelopProjectInternal(workspaceFolder);
   if (result) {
     getOutputChannel().appendLine(MESSAGE_IMPORT_COMPLETE);
@@ -329,8 +329,8 @@ function migrateOutputElement(outputElement: any, result: any) {
       result.compilerOptions["default-background-color"] = backgroundColor;
     } else if ("preferredSDK" in attributes) {
       let frameworkSDKConfig = vscode.workspace.getConfiguration("as3mxml");
-      let frameworkSDK = frameworkSDKConfig.inspect("sdk.framework")
-        .workspaceValue;
+      let frameworkSDK =
+        frameworkSDKConfig.inspect("sdk.framework").workspaceValue;
       if (!frameworkSDK) {
         let preferredSDK = attributes.preferredSDK as string;
         let validatedSDKPath = validateFrameworkSDK(preferredSDK);
@@ -389,7 +389,8 @@ function migrateBuildElement(buildElement: any, result: any) {
     //TODO: showInvalidCSS
     //TODO: showDeprecationWarnings
     else if ("showUnusedTypeSelectorWarnings" in attributes) {
-      let showUnusedTypeSelectorWarnings = attributes.showUnusedTypeSelectorWarnings as string;
+      let showUnusedTypeSelectorWarnings =
+        attributes.showUnusedTypeSelectorWarnings as string;
       result.compilerOptions["show-unused-type-selector-warnings"] =
         showUnusedTypeSelectorWarnings === "True";
     } else if ("strict" in attributes) {
@@ -399,7 +400,8 @@ function migrateBuildElement(buildElement: any, result: any) {
       let useNetwork = attributes.useNetwork as string;
       result.compilerOptions["use-network"] = useNetwork === "True";
     } else if ("useResourceBundleMetadata" in attributes) {
-      let useResourceBundleMetadata = attributes.useResourceBundleMetadata as string;
+      let useResourceBundleMetadata =
+        attributes.useResourceBundleMetadata as string;
       result.compilerOptions["use-resource-bundle-metadata"] =
         useResourceBundleMetadata === "True";
     } else if ("warnings" in attributes) {
