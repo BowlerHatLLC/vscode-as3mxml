@@ -34,6 +34,8 @@ public class ImportTextEditUtils {
             .compile("(?m)^([ \\t]*)import ((\\w+\\.)+\\w+(\\.\\*)?);?");
     private static final Pattern packagePattern = Pattern
             .compile("(?m)^package(?: [\\w\\.]+)*\\s*\\{(?:[ \\t]*[\\r\\n]+)+([ \\t]*)");
+    private static final Pattern mxmlScriptPattern = Pattern
+            .compile("(?m)<(?:[a-zA-Z]+:)?Script>\\s*<!\\[CDATA\\[[ \\t]*(\\r?\\n)(?:[ \\t]*[\\r\\n])*([ \\t]*(?![ \\t]))");
 
     protected static int organizeImportsFromStartIndex(String text, int startIndex, List<IImportNode> importsToRemove,
             Set<String> importsToAdd, boolean insertNewLineBetweenTopLevelPackages, List<TextEdit> edits) {
@@ -95,6 +97,15 @@ public class ImportTextEditUtils {
             {
                 indent = packageMatcher.group(1);
                 startImportsIndex = packageMatcher.end() - indent.length();
+            }
+        }
+        if (startImportsIndex == -1) {
+            Matcher mxmlScriptMatcher = mxmlScriptPattern.matcher(text);
+            mxmlScriptMatcher.region(0, text.length());
+            if (mxmlScriptMatcher.find()) // found the package
+            {
+                startImportsIndex = mxmlScriptMatcher.end(1);
+                indent = mxmlScriptMatcher.group(2);
             }
         }
         // make the Set a List and put them in alphabetical order
