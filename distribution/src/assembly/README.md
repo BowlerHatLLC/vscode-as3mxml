@@ -8,25 +8,26 @@ Extension created and maintained by [Josh Tynjala](https://patreon.com/josht). B
 
 - **Syntax Highlighting** for ActionScript, MXML, and JSFL files.
 - **IntelliSense** completion for classes and interfaces, imports, properties, methods, and more.
-- **Signature Help** shows a list of parameters when calling functions.
+- **Signature Help** shows a list of a function's parameters when you call it.
 - **Errors and Warnings** are updated in real time as you type (or on save only, if you prefer).
 - **Hover** over a symbol to see more details such as types, namespaces, documentation, and more.
 - **Go to Definition** with `Ctrl+Click` on any usage of a symbol to open the file where it is defined.
-- **Find All References** for any symbol in the project.
+- **Find All References** for any symbol in the project across all source files.
 - **Rename Symbol** for classes, interfaces, methods, and variables.
-- **Organize Imports** sorts imports alphabetically and removes unused imports.
+- **Organize Imports** sorts imports alphabetically, removes unused imports, and adds missing imports.
 - **Quick Fixes** to add missing imports, generate missing variables or methods, or convert variables to getters/setters.
-- **Outline view** lists all symbols in the current file.
+- **Outline view** lists all symbols from the current file in a tree.
 - **Go to Symbol in Workspace** with `Ctrl+T` and type the name of any symbol in the workspace.
 - **Build Tasks** can compile a project or package an Adobe AIR app with `Ctrl+Shift+B`.
-- **Debug** or **Run** SWF projects in Adobe AIR and Flash Player.
+- **Debug** or **Run** SWF projects in Adobe AIR and Flash Player (using the [Debugger for SWF](https://marketplace.visualstudio.com/items?itemName=bowlerhatllc.vscode-swf-debug) extension).
 - **Debug** or **Run** Apache Royale (formerly known as FlexJS) projects in web browsers and Node.js.
 - **Adobe Animate** integration includes _Test Movie_, _Debug Movie_, and _Publish_.
-- **Import Projects** from Adobe Flash Builder and FlashDevelop.
+- **Import Projects** from Adobe Flash Builder or FlashDevelop.
 
 ## Help and Support
 
 - [Help & Documentation](https://github.com/BowlerHatLLC/vscode-as3mxml/wiki)
+- [Discussions](https://github.com/BowlerHatLLC/vscode-as3mxml/discussions)
 - [Issue Tracker](https://github.com/BowlerHatLLC/vscode-as3mxml/issues)
 - [Official Website](https://as3mxml.com/)
 
@@ -39,7 +40,7 @@ Extension created and maintained by [Josh Tynjala](https://patreon.com/josht). B
 
 Add a file named [_asconfig.json_](https://github.com/BowlerHatLLC/vscode-as3mxml/wiki/asconfig.json) to the root of your project to enable the ActionScript & MXML extension.
 
-A sample _asconfig.json_ file for an Apache Royale project appears below:
+A sample _asconfig.json_ file for an [Apache Royale project](https://github.com/BowlerHatLLC/vscode-as3mxml/wiki/Create-a-new-ActionScript-project-in-Visual-Studio-Code-that-targets-Apache-Royale) appears below:
 
 ```json
 {
@@ -52,7 +53,7 @@ A sample _asconfig.json_ file for an Apache Royale project appears below:
 }
 ```
 
-Here's another sample _asconfig.json_ file for a pure ActionScript project targeting Adobe AIR on mobile:
+Here's another sample _asconfig.json_ file for a pure ActionScript project targeting [Adobe AIR on mobile](https://github.com/BowlerHatLLC/vscode-as3mxml/wiki/Create-a-new-ActionScript-project-in-Visual-Studio-Code-that-targets-Adobe-AIR-for-mobile-platforms):
 
 ```json
 {
@@ -92,4 +93,3 @@ The [ActionScript & MXML language extension for Visual Studio Code](https://mark
 Special thanks to the following sponsors for their generous support:
 
 - [Moonshine IDE](http://moonshine-ide.com/)
-- [Dedoose](https://www.dedoose.com/)
