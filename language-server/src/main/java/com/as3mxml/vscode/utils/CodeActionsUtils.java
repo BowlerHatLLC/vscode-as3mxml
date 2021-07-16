@@ -720,7 +720,21 @@ public class CodeActionsUtils {
     public static TextEdit createTextEditForGenerateGetterAndSetter(IVariableNode variableNode, String text,
             boolean forcePublicFunctions, boolean forcePrivateVariable, boolean generateGetter,
             boolean generateSetter) {
-        String name = variableNode.getName();
+        String originalVariableName = variableNode.getName();
+        String newVariableName = null;
+        String newGetterSetterName = null;
+        if (originalVariableName.startsWith("_") && originalVariableName.length() > 1) {
+            // if the variable already starts with an underscore character (_),
+            // keep the underscore in the variable, and remove it from the
+            // getter/setter name
+            newVariableName = originalVariableName;
+            newGetterSetterName = originalVariableName.substring(1);
+        } else {
+            // if the variable doesn't start with an underscore character, add
+            // one, and use the original variable name for the getter/setter
+            newVariableName = "_" + originalVariableName;
+            newGetterSetterName = originalVariableName;
+        }
         String originalNamespace = variableNode.getNamespace();
         String variableNamespace = forcePrivateVariable ? IASKeywordConstants.PRIVATE : originalNamespace;
         String accessorNamespace = forcePublicFunctions ? IASKeywordConstants.PUBLIC : originalNamespace;
@@ -754,13 +768,15 @@ public class CodeActionsUtils {
             builder.append(" ");
         }
         builder.append(IASKeywordConstants.VAR);
-        builder.append(" _");
-        builder.append(name);
+        builder.append(" ");
+        builder.append(newVariableName);
         if (type != null && type.length() > 0) {
-            builder.append(":" + type);
+            builder.append(":");
+            builder.append(type);
         }
         if (assignedValue != null) {
-            builder.append(" = " + assignedValue);
+            builder.append(" = ");
+            builder.append(assignedValue);
         }
         builder.append(";");
         if (generateGetter) {
@@ -777,10 +793,11 @@ public class CodeActionsUtils {
             builder.append(" ");
             builder.append(IASKeywordConstants.GET);
             builder.append(" ");
-            builder.append(name);
+            builder.append(newGetterSetterName);
             builder.append("()");
             if (type != null && type.length() > 0) {
-                builder.append(":" + type);
+                builder.append(":");
+                builder.append(type);
             }
             builder.append(NEW_LINE);
             builder.append(indent);
@@ -789,8 +806,8 @@ public class CodeActionsUtils {
             builder.append(indent);
             builder.append(INDENT); // extra indent
             builder.append(IASKeywordConstants.RETURN);
-            builder.append(" _");
-            builder.append(name);
+            builder.append(" ");
+            builder.append(newVariableName);
             builder.append(";");
             builder.append(NEW_LINE);
             builder.append(indent);
@@ -810,10 +827,11 @@ public class CodeActionsUtils {
             builder.append(" ");
             builder.append(IASKeywordConstants.SET);
             builder.append(" ");
-            builder.append(name);
+            builder.append(newGetterSetterName);
             builder.append("(value");
             if (type != null && type.length() > 0) {
-                builder.append(":" + type);
+                builder.append(":");
+                builder.append(type);
             }
             builder.append("):");
             builder.append(IASKeywordConstants.VOID);
@@ -823,7 +841,8 @@ public class CodeActionsUtils {
             builder.append(NEW_LINE);
             builder.append(indent);
             builder.append(INDENT); // extra indent
-            builder.append("_" + name + " = value;");
+            builder.append(newVariableName);
+            builder.append(" = value;");
             builder.append(NEW_LINE);
             builder.append(indent);
             builder.append("}");
