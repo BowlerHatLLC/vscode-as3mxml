@@ -56,8 +56,7 @@ public class DefinitionUtils {
 	private static final String SDK_SOURCE_PATH_SIGNATURE_WINDOWS = "\\frameworks\\projects\\";
 
 	/**
-	 * Returns the qualified name of the required type for child elements, or
-	 * null.
+	 * Returns the qualified name of the required type for child elements, or null.
 	 */
 	public static String getMXMLChildElementTypeForDefinition(IDefinition definition, ICompilerProject project) {
 		return getMXMLChildElementTypeForDefinition(definition, project, true);
@@ -98,8 +97,8 @@ public class DefinitionUtils {
 		if (typeDefinition != null) {
 			String qualifiedName = typeDefinition.getQualifiedName();
 			if (qualifiedName.equals(IASLanguageConstants.Array)) {
-				//the wrapping array can be omitted, and since there's no
-				//[ArrayElementType] metadata, default to Object
+				// the wrapping array can be omitted, and since there's no
+				// [ArrayElementType] metadata, default to Object
 				return IASLanguageConstants.Object;
 			}
 			return qualifiedName;
@@ -122,12 +121,12 @@ public class DefinitionUtils {
 			for (String pooledString : pooledStrings.getValues()) {
 				if (pooledString.contains(SDK_SOURCE_PATH_SIGNATURE_UNIX)
 						|| pooledString.contains(SDK_SOURCE_PATH_SIGNATURE_WINDOWS)) {
-					//just go with the first one that we find
+					// just go with the first one that we find
 					return transformDebugFilePath(pooledString);
 				}
 			}
 		} catch (InterruptedException e) {
-			//safe to ignore
+			// safe to ignore
 		}
 		return null;
 	}
@@ -198,6 +197,18 @@ public class DefinitionUtils {
 			}
 		}
 
+		if (definition == null) {
+			IASNode currentNode = parentNode;
+			while (currentNode instanceof IMemberAccessExpressionNode) {
+				IMemberAccessExpressionNode memberAccessNode = (IMemberAccessExpressionNode) currentNode;
+				definition = memberAccessNode.resolve(project);
+				if (definition != null) {
+					break;
+				}
+				currentNode = currentNode.getParent();
+			}
+		}
+
 		return definition;
 	}
 
@@ -240,8 +251,8 @@ public class DefinitionUtils {
 	private static String transformDebugFilePath(String sourceFilePath) {
 		int index = -1;
 		if (System.getProperty("os.name").toLowerCase().startsWith("windows")) {
-			//the debug file path divides directories with ; instead of slash in
-			//a couple of places, but it's easy to fix
+			// the debug file path divides directories with ; instead of slash in
+			// a couple of places, but it's easy to fix
 			sourceFilePath = sourceFilePath.replace(';', '\\');
 			sourceFilePath = sourceFilePath.replace('/', '\\');
 			index = sourceFilePath.indexOf(SDK_SOURCE_PATH_SIGNATURE_WINDOWS);
@@ -257,8 +268,8 @@ public class DefinitionUtils {
 		Path frameworkPath = Paths.get(System.getProperty(PROPERTY_FRAMEWORK_LIB));
 		Path transformedPath = frameworkPath.resolve(newSourceFilePath);
 		if (transformedPath.toFile().exists()) {
-			//only transform the path if the transformed file exists
-			//if it doesn't exist, the original path may be valid
+			// only transform the path if the transformed file exists
+			// if it doesn't exist, the original path may be valid
 			return transformedPath.toFile().getAbsolutePath();
 		}
 		return sourceFilePath;
