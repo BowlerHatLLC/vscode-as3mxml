@@ -15,11 +15,16 @@ limitations under the License.
 */
 package com.as3mxml.vscode.utils;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.royale.compiler.constants.IASKeywordConstants;
 import org.apache.royale.compiler.definitions.IDefinition;
+import org.apache.royale.compiler.definitions.metadata.IDeprecationInfo;
 import org.apache.royale.compiler.projects.ICompilerProject;
 import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.CompletionItemKind;
+import org.eclipse.lsp4j.CompletionItemTag;
 import org.eclipse.lsp4j.InsertTextFormat;
 import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.MarkupKind;
@@ -34,6 +39,15 @@ public class CompletionItemUtils {
                 project.getWorkspace(), false);
         if (docs != null) {
             item.setDocumentation(new MarkupContent(MarkupKind.MARKDOWN, docs));
+        }
+
+        List<CompletionItemTag> tags = new ArrayList<>();
+        IDeprecationInfo deprecationInfo = definition.getDeprecationInfo();
+        if (deprecationInfo != null) {
+            tags.add(CompletionItemTag.Deprecated);
+        }
+        if (tags.size() > 0) {
+            item.setTags(tags);
         }
         return item;
     }

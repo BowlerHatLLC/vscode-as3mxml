@@ -515,11 +515,7 @@ public class ActionScriptProjectManager {
         symbol.setRange(range);
         symbol.setSelectionRange(range);
 
-        List<SymbolTag> tags = new ArrayList<>();
-        IDeprecationInfo deprecationInfo = definition.getDeprecationInfo();
-        if (deprecationInfo != null) {
-            tags.add(SymbolTag.Deprecated);
-        }
+        List<SymbolTag> tags = definitionToSymbolTags(definition);
         if (tags.size() > 0) {
             symbol.setTags(tags);
         }
@@ -556,11 +552,7 @@ public class ActionScriptProjectManager {
 
         symbol.setLocation(location);
 
-        List<SymbolTag> tags = new ArrayList<>();
-        IDeprecationInfo deprecationInfo = definition.getDeprecationInfo();
-        if (deprecationInfo != null) {
-            tags.add(SymbolTag.Deprecated);
-        }
+        List<SymbolTag> tags = definitionToSymbolTags(definition);
         if (tags.size() > 0) {
             symbol.setTags(tags);
         }
@@ -745,5 +737,14 @@ public class ActionScriptProjectManager {
     private List<ActionScriptProjectData> getAllProjectDataForWorkspaceFolder(WorkspaceFolder folder) {
         return allProjectData.stream().filter(projectData -> folder.equals(projectData.folder))
                 .collect(Collectors.toList());
+    }
+
+    private List<SymbolTag> definitionToSymbolTags(IDefinition definition) {
+        List<SymbolTag> tags = new ArrayList<>();
+        IDeprecationInfo deprecationInfo = definition.getDeprecationInfo();
+        if (deprecationInfo != null) {
+            tags.add(SymbolTag.Deprecated);
+        }
+        return tags;
     }
 }

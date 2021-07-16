@@ -1730,15 +1730,6 @@ public class CompletionProvider {
                 item.setAdditionalTextEdits(Collections.singletonList(textEdit));
             }
         }
-
-        List<CompletionItemTag> tags = new ArrayList<>();
-        IDeprecationInfo deprecationInfo = definition.getDeprecationInfo();
-        if (deprecationInfo != null) {
-            tags.add(CompletionItemTag.Deprecated);
-        }
-        if (tags.size() > 0) {
-            item.setTags(tags);
-        }
         result.getItems().add(item);
     }
 
@@ -1834,14 +1825,6 @@ public class CompletionProvider {
                     item.setAdditionalTextEdits(Collections.singletonList(textEdit));
                 }
             }
-        }
-        List<CompletionItemTag> tags = new ArrayList<>();
-        IDeprecationInfo deprecationInfo = definition.getDeprecationInfo();
-        if (deprecationInfo != null) {
-            tags.add(CompletionItemTag.Deprecated);
-        }
-        if (tags.size() > 0) {
-            item.setTags(tags);
         }
         result.getItems().add(item);
     }
