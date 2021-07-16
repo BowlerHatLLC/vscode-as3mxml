@@ -26,9 +26,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import com.as3mxml.vscode.project.ILspProject;
 import com.as3mxml.vscode.project.ActionScriptProjectData;
+import com.as3mxml.vscode.project.ILspProject;
 import com.as3mxml.vscode.utils.ASTUtils;
+import com.as3mxml.vscode.utils.ActionScriptProjectManager;
 import com.as3mxml.vscode.utils.AddImportData;
 import com.as3mxml.vscode.utils.CodeActionsUtils;
 import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
@@ -44,7 +45,6 @@ import com.as3mxml.vscode.utils.MXMLNamespace;
 import com.as3mxml.vscode.utils.MXMLNamespaceUtils;
 import com.as3mxml.vscode.utils.ScopeUtils;
 import com.as3mxml.vscode.utils.SourcePathUtils;
-import com.as3mxml.vscode.utils.ActionScriptProjectManager;
 import com.as3mxml.vscode.utils.XmlnsRange;
 
 import org.apache.royale.compiler.common.ASModifier;
@@ -88,6 +88,7 @@ import org.apache.royale.compiler.scopes.IASScope;
 import org.apache.royale.compiler.tree.ASTNodeID;
 import org.apache.royale.compiler.tree.as.IASNode;
 import org.apache.royale.compiler.tree.as.IBinaryOperatorNode;
+import org.apache.royale.compiler.tree.as.IBlockNode;
 import org.apache.royale.compiler.tree.as.IClassNode;
 import org.apache.royale.compiler.tree.as.IContainerNode;
 import org.apache.royale.compiler.tree.as.IDynamicAccessNode;
@@ -100,6 +101,7 @@ import org.apache.royale.compiler.tree.as.IImportNode;
 import org.apache.royale.compiler.tree.as.IInterfaceNode;
 import org.apache.royale.compiler.tree.as.IKeywordNode;
 import org.apache.royale.compiler.tree.as.IMemberAccessExpressionNode;
+import org.apache.royale.compiler.tree.as.IModifierNode;
 import org.apache.royale.compiler.tree.as.IPackageNode;
 import org.apache.royale.compiler.tree.as.IScopedNode;
 import org.apache.royale.compiler.tree.as.ITypeNode;
@@ -509,6 +511,21 @@ public class CompletionProvider {
         }
 
         // function overrides
+        if(nodeAtPreviousOffset instanceof IModifierNode) {
+            IModifierNode modifierNode = (IModifierNode) nodeAtPreviousOffset;
+            if(ASModifier.OVERRIDE.equals(modifierNode.getModifier())) {
+                autoCompleteFunctionOverrides(modifierNode, project, result);
+                return result;
+            }
+        }
+        if (offsetNode instanceof IScopedNode && offsetNode instanceof IBlockNode && parentNode instanceof IClassNode
+                && nodeAtPreviousOffset instanceof IIdentifierNode) {
+            IIdentifierNode previousIdentifier = (IIdentifierNode) nodeAtPreviousOffset;
+            if (IASKeywordConstants.OVERRIDE.equals(previousIdentifier.getName())) {
+                autoCompleteFunctionOverrides(previousIdentifier, project, result);
+                return result;
+            }
+        }
         if (parentNode != null && parentNode instanceof IFunctionNode && offsetNode instanceof IIdentifierNode) {
             IFunctionNode functionNode = (IFunctionNode) parentNode;
             if (offsetNode == functionNode.getNameExpressionNode()) {
@@ -1012,10 +1029,18 @@ public class CompletionProvider {
         }
     }
 
-    private void autoCompleteFunctionOverrides(IFunctionNode node, ILspProject project, CompletionList result) {
-        String namespace = node.getNamespace();
-        boolean isGetter = node.isGetter();
-        boolean isSetter = node.isSetter();
+    private void autoCompleteFunctionOverrides(IASNode node, ILspProject project, CompletionList result) {
+        boolean needsFunctionKeyword = true;
+        String namespace = null;
+        boolean isGetter = false;
+        boolean isSetter = false;
+        if (node instanceof IFunctionNode) {
+            IFunctionNode functionNode = (IFunctionNode) node;
+            namespace = functionNode.getNamespace();
+            isGetter = functionNode.isGetter();
+            isSetter = functionNode.isSetter();
+            needsFunctionKeyword = false;
+        }
         IClassNode classNode = (IClassNode) node.getAncestorOfType(IClassNode.class);
         if (classNode == null) {
             // this can happen in MXML files
@@ -1048,7 +1073,8 @@ public class CompletionProvider {
             boolean otherIsGetter = functionDefinition instanceof IGetterDefinition;
             boolean otherIsSetter = functionDefinition instanceof ISetterDefinition;
             String otherNamespace = functionDefinition.getNamespaceReference().getBaseName();
-            if (isGetter != otherIsGetter || isSetter != otherIsSetter || !namespace.equals(otherNamespace)) {
+            if ((isGetter && !otherIsGetter) || (isSetter && !otherIsSetter)
+                    || (namespace != null && !namespace.equals(otherNamespace))) {
                 continue;
             }
             String functionName = functionDefinition.getBaseName();
@@ -1056,13 +1082,44 @@ public class CompletionProvider {
                 // vscode expects all items to have a name
                 continue;
             }
-            if (functionNames.contains(functionName)) {
+            StringBuilder functionNameBuilder = new StringBuilder();
+            functionNameBuilder.append(functionName);
+            if(otherIsGetter)
+            {
+                functionNameBuilder.append(" (");
+                functionNameBuilder.append(IASKeywordConstants.GET);
+                functionNameBuilder.append(")");
+            }
+            else if(otherIsSetter)
+            {
+                functionNameBuilder.append(" (");
+                functionNameBuilder.append(IASKeywordConstants.SET);
+                functionNameBuilder.append(")");
+            }
+            String functionNameWithModifier = functionNameBuilder.toString();
+            if (functionNames.contains(functionNameWithModifier)) {
                 // avoid duplicates
                 continue;
             }
-            functionNames.add(functionName);
+            functionNames.add(functionNameWithModifier);
 
             StringBuilder insertText = new StringBuilder();
+            if (namespace == null) {
+                insertText.append(otherNamespace);
+                insertText.append(" ");
+            }
+            if (needsFunctionKeyword) {
+                insertText.append(IASKeywordConstants.FUNCTION);
+                insertText.append(" ");
+            }
+            if (!isGetter && otherIsGetter) {
+                insertText.append(IASKeywordConstants.GET);
+                insertText.append(" ");
+            }
+            if (!isSetter && otherIsSetter) {
+                insertText.append(IASKeywordConstants.SET);
+                insertText.append(" ");
+            }
             insertText.append(functionName);
             insertText.append("(");
             IParameterDefinition[] params = functionDefinition.getParameters();
@@ -1098,6 +1155,9 @@ public class CompletionProvider {
 
             CompletionItem item = CompletionItemUtils.createDefinitionItem(functionDefinition, project);
             item.setInsertText(insertText.toString());
+            if((!isGetter && otherIsGetter) || (!isSetter && otherIsSetter)) {
+                item.setLabel(functionNameWithModifier);
+            }
             resultItems.add(item);
         }
     }
