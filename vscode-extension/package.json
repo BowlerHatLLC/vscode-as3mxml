@@ -458,18 +458,23 @@
           "description": "When organizing imports, determines if a new line is inserted between top level packages"
         },
         "nextgenas.sdk.framework": {
+          "description": "Deprecated. Replaced by as3mxml.sdk.framework.",
           "deprecationMessage": "DEPRECATED: Use as3mxml.sdk.framework instead."
         },
         "nextgenas.sdk.searchPaths": {
+          "description": "Deprecated. Replaced by as3mxml.sdk.searchPaths.",
           "deprecationMessage": "DEPRECATED: Use as3mxml.sdk.searchPaths instead."
         },
         "nextgenas.asconfigc.useBundled": {
+          "description": "Deprecated. Replaced by as3mxml.asconfigc.useBundled.",
           "deprecationMessage": "DEPRECATED: Use as3mxml.asconfigc.useBundled instead."
         },
         "nextgenas.java": {
+          "description": "Deprecated. Replaced by as3mxml.java.path.",
           "deprecationMessage": "DEPRECATED: Use as3mxml.java.path instead."
         },
         "nextgenas.sdk.editor": {
+          "description": "Deprecated. Replaced by as3mxml.sdk.editor.",
           "deprecationMessage": "DEPRECATED: Use as3mxml.sdk.editor instead."
         }
       }
