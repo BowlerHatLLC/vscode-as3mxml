@@ -493,7 +493,7 @@ public class ExecuteCommandProvider {
         List<Object> args = params.getArguments();
         final boolean appsOnly = args.size() > 0 && ((JsonPrimitive) args.get(0)).getAsBoolean();
         List<String> result = actionScriptProjectManager.getAllProjectData().stream()
-                .filter(projectData -> appsOnly ? ProjectType.APP.equals(projectData.options.type) : true)
+                .filter(projectData -> appsOnly ? (projectData.options != null && ProjectType.APP.equals(projectData.options.type)) : true)
                 .map(projectData -> projectData.projectRoot.toUri().toString()).collect(Collectors.toList());
         return CompletableFuture.completedFuture(result);
     }
