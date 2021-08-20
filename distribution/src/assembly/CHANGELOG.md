@@ -1,5 +1,27 @@
 # ActionScript & MXML for Visual Studio Code Changelog
 
+## 1.8.0
+
+### New Features
+
+- Code Generation: Smarter detection of underscore (`_`) characters at the beginning of the original variable. The undercore is added to the backing variable, if missing. It is removed from the getter and setter, if present.
+- Completion: Can now suggest methods to override after only the `override` keyword (previously, you needed to specify both the `override` and `function` keywords and the namespace to get suggestions). Also, lists getters and setters that may be overridden.
+- Settings: New setting `as3mxml.sources.organizeImports.addMissingImports` determines whether missing imports are added when the organize imports command is run.
+- Settings: New setting `as3mxml.sources.organizeImports.removeUnusedImports` determines whether unused imports are removed when the organize imports command is run.
+- Settings: New setting `as3mxml.sources.organizeImports.insertNewLineBetweenTopLevelPackages` determines of an extra new line is added between top-level packages when the organize imports command is run.
+
+### Fixed Issues
+
+- General: Fixed issue where code intelligence could freeze if the same _asconfig.json_ file appeared in multiple workspace root folders.
+- Hover: Fixed resolution of symbols when they are fully-qualified with the package name.
+- Organize Imports: Fixed issue where imports where sometimes moved to the top of an _.mxml_ file instead of remaining at the top of the `<fx:Script>` section.
+- Quick Compile & Run/Debug: Fixed issue where pressing Enter while Ctrl+F searching could fail after running Quick Compile & Run/Debug because the output channel would not release focus.
+
+### Other Changes
+
+- Rename and Find References: Optimized performance by skipping most files in the project when finding/renaming private symbols.
+- Dependencies: eclipse/lsp4j language server updated to v0.12.0.
+
 ## 1.7.1
 
 ### Fixed Issues
