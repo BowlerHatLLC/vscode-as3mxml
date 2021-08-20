@@ -86,7 +86,7 @@ Here's another sample _asconfig.json_ file for a pure ActionScript project targe
 
 ## Support this project
 
-The [ActionScript & MXML language extension for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=bowlerhatllc.vscode-nextgenas) is developed by [Josh Tynjala](http://patreon.com/josht) — thanks to the generous support of developers and small businesses in the community. Folks just like you! By [becoming a patron](https://www.patreon.com/bePatron?c=203199), you can join them in supporting the ongoing development of this project.
+The [ActionScript & MXML language extension for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=bowlerhatllc.vscode-as3mxml) is developed by [Josh Tynjala](http://patreon.com/josht) — thanks to the generous support of developers and small businesses in the community. Folks just like you! By [becoming a patron](https://www.patreon.com/bePatron?c=203199), you can join them in supporting the ongoing development of this project.
 
 [Support Josh Tynjala on Patreon](http://patreon.com/josht)
 

@@ -23,5 +23,5 @@ jobs:
     - uses: actions/upload-artifact@v2
       with:
         name: vscode-as3mxml
-        path: distribution/target/vscode-as3mxml/vscode-as3mxml/vscode-nextgenas-*.vsix
+        path: distribution/target/vscode-as3mxml/vscode-as3mxml/vscode-as3mxml-*.vsix
         if-no-files-found: error

@@ -1,5 +1,5 @@
 {
-  "name": "vscode-nextgenas",
+  "name": "vscode-as3mxml",
   "displayName": "ActionScript & MXML",
   "description": "Language support for ActionScript and MXML",
   "version": "1.8.0",
@@ -34,9 +34,6 @@
   "engines": {
     "vscode": "^1.37.0"
   },
-  "extensionDependencies": [
-    "bowlerhatllc.vscode-swf-debug"
-  ],
   "devDependencies": {
     "@rgrove/parse-xml": "^3.0.0",
     "@types/mocha": "^8.2.2",

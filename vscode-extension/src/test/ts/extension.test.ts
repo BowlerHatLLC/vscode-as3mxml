@@ -17,7 +17,7 @@ import * as assert from "assert";
 import * as path from "path";
 import * as vscode from "vscode";
 
-const EXTENSION_ID = "bowlerhatllc.vscode-nextgenas";
+const EXTENSION_ID = "bowlerhatllc.vscode-as3mxml";
 const COMMAND_ADD_IMPORT = "as3mxml.addImport";
 const COMMAND_ADD_MXML_NAMESPACE = "as3mxml.addMXMLNamespace";
 const COMMAND_ORGANIZE_IMPORTS_IN_URI = "as3mxml.organizeImportsInUri";

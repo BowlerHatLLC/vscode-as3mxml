@@ -71,7 +71,7 @@ async function quickCompileAndLaunchURI(uri: string, debug: boolean) {
               let animatePath = findAnimate();
 
               let extension = vscode.extensions.getExtension(
-                "bowlerhatllc.vscode-nextgenas"
+                "bowlerhatllc.vscode-as3mxml"
               );
               let fileName = debug ? "debug-movie.jsfl" : "test-movie.jsfl";
               let jsflPath = path.resolve(

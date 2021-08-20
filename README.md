@@ -1,6 +1,6 @@
 # ActionScript & MXML extension for Visual Studio Code
 
-This README file is intended for contributors to the extension. If you simply want to install the latest stable version of the extension, please visit the [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=bowlerhatllc.vscode-nextgenas). For help using the extension, visit the [vscode-as3mxml wiki](https://github.com/BowlerHatLLC/vscode-as3mxml/wiki) for detailed instructions.
+This README file is intended for contributors to the extension. If you simply want to install the latest stable version of the extension, please visit the [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=bowlerhatllc.vscode-as3mxml). For help using the extension, visit the [vscode-as3mxml wiki](https://github.com/BowlerHatLLC/vscode-as3mxml/wiki) for detailed instructions.
 
 ## Modules
 
@@ -43,7 +43,7 @@ Note: If the extension cannot find Apache Royale on your system automatically, y
 
 ## Support this project
 
-The [ActionScript & MXML extension for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=bowlerhatllc.vscode-nextgenas) is developed by [Josh Tynjala](http://patreon.com/josht) with the support of community members like you.
+The [ActionScript & MXML extension for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=bowlerhatllc.vscode-as3mxml) is developed by [Josh Tynjala](http://patreon.com/josht) with the support of community members like you.
 
 [Support Josh Tynjala on Patreon](http://patreon.com/josht)
 
