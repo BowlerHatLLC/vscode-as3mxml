@@ -26,8 +26,8 @@ Extension created and maintained by [Josh Tynjala](https://patreon.com/josht). B
 
 ## Help and Support
 
-- [Help & Documentation](https://github.com/BowlerHatLLC/vscode-as3mxml/wiki)
-- [Discussions](https://github.com/BowlerHatLLC/vscode-as3mxml/discussions)
+- [Documentation](https://github.com/BowlerHatLLC/vscode-as3mxml/wiki)
+- [Help & Support Forum](https://github.com/BowlerHatLLC/vscode-as3mxml/discussions)
 - [Issue Tracker](https://github.com/BowlerHatLLC/vscode-as3mxml/issues)
 - [Official Website](https://as3mxml.com/)
 
