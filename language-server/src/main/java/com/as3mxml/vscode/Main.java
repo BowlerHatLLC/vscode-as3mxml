@@ -65,10 +65,10 @@ public class Main {
             boolean lspInspectorTrace = false;
             Launcher<ActionScriptLanguageClient> launcher = null;
             if (lspInspectorTrace) {
-                launcher = Launcher.createLauncher(server, ActionScriptLanguageClient.class, inputStream, outputStream,
+                launcher = Launcher.createLauncher(server, ActionScriptLanguageClient.class, exitOnClose(inputStream), outputStream,
                         true, new PrintWriter(System.err));
             } else {
-                launcher = Launcher.createLauncher(server, ActionScriptLanguageClient.class, inputStream, outputStream);
+                launcher = Launcher.createLauncher(server, ActionScriptLanguageClient.class, exitOnClose(inputStream), outputStream);
             }
 
             server.connect(launcher.getRemoteProxy());
@@ -88,6 +88,23 @@ public class Main {
                 }
             }
         }
+    }
+    
+    private static InputStream exitOnClose(InputStream delegate) {
+      return new InputStream() {
+        @Override
+        public int read() throws IOException {
+          return exitIfNegative(delegate.read());
+        }
+ 
+        int exitIfNegative(int result) {
+          if (result < 0) {
+            System.err.println("Input stream has closed. Exiting...");
+            System.exit(0);
+          }
+          return result;
+        }
+      };
     }
 
     private static class ASConfigProjectConfigStrategyFactory implements IProjectConfigStrategyFactory {
