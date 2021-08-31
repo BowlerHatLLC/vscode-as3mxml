@@ -290,6 +290,10 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             realTimeProblemsFuture.cancel(true);
             realTimeProblemsFuture = null;
         }
+        if (sourcePathWatcherThread != null) {
+            sourcePathWatcherThread.interrupt();
+            sourcePathWatcherThread = null;
+        }
     }
 
     public List<ActionScriptProjectData> getProjects() {
@@ -1402,6 +1406,9 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         sourcePathWatcherThread = new Thread() {
             public void run() {
                 while (true) {
+                    if(Thread.currentThread().isInterrupted()) {
+                        return;
+                    }
                     WatchKey watchKey = null;
                     try {
                         // pause the thread while there are no changes pending,
