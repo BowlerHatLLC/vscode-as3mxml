@@ -70,7 +70,8 @@ public final class VSCodePackageDITAParser implements IPackageDITAParser {
 		}
 
 		final ArrayList<String> entryHrefs = new ArrayList<>();
-		for (Element apiItemRefElement : xmlDoc.getRootElement().elements("apiItemRef")) {
+		for (Object element : xmlDoc.getRootElement().elements("apiItemRef")) {
+			Element apiItemRefElement = (Element) element;
 			Attribute hrefAttribute = apiItemRefElement.attribute("href");
 			if (hrefAttribute != null) {
 				entryHrefs.add(hrefAttribute.getStringValue());
@@ -126,7 +127,8 @@ public final class VSCodePackageDITAParser implements IPackageDITAParser {
 				if ("apiOperation".equals(defName) || "apiConstructor".equals(defName)) {
 					Element apiDefElement = apiDetailElement.element(defName + "Def");
 					if (apiDefElement != null) {
-						for (Element apiParamElement : apiDefElement.elements("apiParam")) {
+						for (Object element : apiDefElement.elements("apiParam")) {
+							Element apiParamElement = (Element) element;
 							Element apiItemNameElement = apiParamElement.element("apiItemName");
 							builder.append("\n * @param ");
 							if (apiItemNameElement == null) {
@@ -188,7 +190,8 @@ public final class VSCodePackageDITAParser implements IPackageDITAParser {
 				}
 				String definitionID = builder.toString();
 
-				for (Element childElement : parentElement.elements(elementName)) {
+				for (Object element : parentElement.elements(elementName)) {
+					Element childElement = (Element) element;
 					Attribute idAttribute = childElement.attribute("id");
 					if (idAttribute != null && idAttribute.getStringValue().equals(definitionID)) {
 						return childElement;
@@ -231,7 +234,8 @@ public final class VSCodePackageDITAParser implements IPackageDITAParser {
 				builder.append(definition.getBaseName());
 				String definitionID = builder.toString();
 
-				for (Element childElement : xmlDoc.getRootElement().elements(elementName)) {
+				for (Object element : xmlDoc.getRootElement().elements(elementName)) {
+					Element childElement = (Element) element;
 					Attribute idAttribute = childElement.attribute("id");
 					if (idAttribute != null && idAttribute.getStringValue().equals(definitionID)) {
 						return childElement;
