@@ -72,7 +72,7 @@ public class Main {
             }
 
             server.connect(launcher.getRemoteProxy());
-            launcher.startListening();
+            launcher.startListening().get();
         } catch (Exception e) {
             System.err.println("ActionScript & MXML language server failed to connect.");
             System.err.println(
