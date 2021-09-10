@@ -1,5 +1,16 @@
 # ActionScript & MXML for Visual Studio Code Changelog
 
+## 1.9.0
+
+### Fixed Issues
+
+- General: Fixed issue that prevented the language server from running with a socket instead of standard input.
+- General: The language server automatically exits as soon as the input stream from the parent process closes. This should help prevent zombie processes from staying open after closing Visual Studio Code.
+
+### Other Changes
+
+- Dependencies: Apache Royale compiler updated to v0.9.8.
+
 ## 1.8.0
 
 ### New Features
