@@ -125,7 +125,7 @@ limitations under the License.
       </activation>
       <properties>
         <npm.executable>npm.cmd</npm.executable>
-        <npm.executable>npx.cmd</npm.executable>
+        <npx.executable>npx.cmd</npx.executable>
       </properties>
     </profile>
   </profiles>
