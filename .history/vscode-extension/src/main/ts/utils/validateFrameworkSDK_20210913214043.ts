@@ -47,11 +47,12 @@ function validatePossibleFrameworkSDK(sdkPath: string): boolean {
   if (!sdkPath) {
     return false;
   }
-
+  
   if(!path.isAbsolute(sdkPath)){
     sdkPath = path.join(vscode.workspace.rootPath,sdkPath)
   }
 
+  console.log("sdkPAth:"+sdkPath);
   //a frameworks directory is required
   let frameworksPath = path.join(sdkPath, "frameworks");
   if (
