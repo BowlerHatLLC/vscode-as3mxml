@@ -16,8 +16,6 @@ limitations under the License.
 import { Console } from "console";
 import * as fs from "fs";
 import * as path from "path";
-import * as vscode from "vscode";
-
 
 /**
  * Checks if the path contains a valid SDK. May return a modified path, in the
@@ -44,14 +42,10 @@ function validatePossibleFrameworkSDK(sdkPath: string): boolean {
   // let orange = vscode.window.createOutputChannel("Orange");
   
 
+  Console.apply("sdk path:"+sdkPath);
   if (!sdkPath) {
     return false;
   }
-
-  if(!path.isAbsolute(sdkPath)){
-    sdkPath = path.join(vscode.workspace.rootPath,sdkPath)
-  }
-
   //a frameworks directory is required
   let frameworksPath = path.join(sdkPath, "frameworks");
   if (
