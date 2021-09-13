@@ -49,5 +49,5 @@ The [ActionScript & MXML extension for Visual Studio Code](https://marketplace.v
 
 Special thanks to the following sponsors for their generous support:
 
-- [Moonshine IDE](http://moonshine-ide.com/)
-- [Dedoose](https://www.dedoose.com/)
+- [Moonshine IDE](https://moonshine-ide.com/)
+- [Jackbox Games](https://jackboxgames.com)

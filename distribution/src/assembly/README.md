@@ -92,4 +92,5 @@ The [ActionScript & MXML language extension for Visual Studio Code](https://mark
 
 Special thanks to the following sponsors for their generous support:
 
-- [Moonshine IDE](http://moonshine-ide.com/)
+- [Moonshine IDE](https://moonshine-ide.com/)
+- [Jackbox Games](https://jackboxgames.com)
