@@ -13,7 +13,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-import { Console } from "console";
 import * as fs from "fs";
 import * as path from "path";
 import * as vscode from "vscode";
@@ -47,7 +46,16 @@ function validatePossibleFrameworkSDK(sdkPath: string): boolean {
   }
 
   if(!path.isAbsolute(sdkPath)){
-    sdkPath = path.join(vscode.workspace.rootPath,sdkPath)
+    if(vscode.workspace.workspaceFile!= undefined){
+      sdkPath = path.join(path.resolve(vscode.workspace.workspaceFile.path,"..",".."),sdkPath);
+    }
+    else{
+      if(vscode.workspace.workspaceFolders != undefined){
+        sdkPath = path.join(vscode.workspace.workspaceFolders[0].uri.path,sdkPath);
+      }else{
+        return false;
+      }
+    }
   }
 
   //a frameworks directory is required
