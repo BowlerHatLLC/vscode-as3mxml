@@ -47,7 +47,7 @@ function validatePossibleFrameworkSDK(sdkPath: string): boolean {
 
   if(!path.isAbsolute(sdkPath)){
     if(vscode.workspace.workspaceFile!= undefined){
-      sdkPath = path.join(path.resolve(vscode.workspace.workspaceFile.path,"..",".."),sdkPath);
+      sdkPath = path.join(path.resolve(vscode.workspace.workspaceFile.path,".."),sdkPath);
     }
     else{
       if(vscode.workspace.workspaceFolders != undefined){
