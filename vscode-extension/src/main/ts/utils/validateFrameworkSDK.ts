@@ -41,9 +41,7 @@ export default function validateFrameworkSDK(sdkPath: string): string {
 }
 
 function validatePossibleFrameworkSDK(sdkPath: string): boolean {
-  // let orange = vscode.window.createOutputChannel("Orange");
   
-
   if (!sdkPath) {
     return false;
   }

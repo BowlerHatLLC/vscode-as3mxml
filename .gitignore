@@ -19,3 +19,4 @@ Thumbs.db
 *.vsix
 npm-debug.log
 .vscode-test/
+.history
