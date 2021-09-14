@@ -47,7 +47,7 @@ function validatePossibleFrameworkSDK(sdkPath: string): boolean {
 
   if(!path.isAbsolute(sdkPath)){
     if(vscode.workspace.workspaceFile!= undefined){
-      sdkPath = path.join(path.basename(path.dirname(vscode.workspace.workspaceFile.path)),sdkPath);
+      sdkPath = path.join(path.dirname(vscode.workspace.workspaceFile.path),sdkPath);
     }
     else{
       if(vscode.workspace.workspaceFolders != undefined){
@@ -57,7 +57,6 @@ function validatePossibleFrameworkSDK(sdkPath: string): boolean {
       }
     }
   }
-
   //a frameworks directory is required
   let frameworksPath = path.join(sdkPath, "frameworks");
   if (
