@@ -135,6 +135,7 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
         serverCapabilities.setImplementationProvider(true);
         serverCapabilities.setDocumentSymbolProvider(true);
         serverCapabilities.setDocumentHighlightProvider(false);
+        serverCapabilities.setDocumentFormattingProvider(true);
         serverCapabilities.setDocumentRangeFormattingProvider(false);
         serverCapabilities.setHoverProvider(true);
         serverCapabilities.setReferencesProvider(true);

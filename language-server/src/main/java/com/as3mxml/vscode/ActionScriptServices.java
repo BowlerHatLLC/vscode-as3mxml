@@ -65,6 +65,7 @@ import com.as3mxml.vscode.providers.CompletionProvider;
 import com.as3mxml.vscode.providers.DefinitionProvider;
 import com.as3mxml.vscode.providers.DocumentSymbolProvider;
 import com.as3mxml.vscode.providers.ExecuteCommandProvider;
+import com.as3mxml.vscode.providers.FormattingProvider;
 import com.as3mxml.vscode.providers.HoverProvider;
 import com.as3mxml.vscode.providers.ImplementationProvider;
 import com.as3mxml.vscode.providers.ReferencesProvider;
@@ -670,7 +671,29 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
      */
     @Override
     public CompletableFuture<List<? extends TextEdit>> formatting(DocumentFormattingParams params) {
-        return CompletableFuture.completedFuture(Collections.emptyList());
+        if (!concurrentRequests) {
+            return CompletableFuture.completedFuture(formatting2(params, null));
+        }
+        return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken -> {
+            cancelToken.checkCanceled();
+            return formatting2(params, cancelToken);
+        });
+    }
+
+    private List<? extends TextEdit> formatting2(DocumentFormattingParams params, CancelChecker cancelToken) {
+        // make sure that the latest changes have been passed to
+        // workspace.fileChanged() before proceeding
+        if (realTimeProblemsChecker != null) {
+            realTimeProblemsChecker.updateNow();
+        }
+
+        compilerWorkspace.startBuilding();
+        try {
+            FormattingProvider provider = new FormattingProvider(fileTracker);
+            return provider.formatting(params, cancelToken);
+        } finally {
+            compilerWorkspace.doneBuilding();
+        }
     }
 
     /**
