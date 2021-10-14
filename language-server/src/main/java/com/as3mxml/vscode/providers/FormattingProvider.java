@@ -17,8 +17,6 @@ import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.jsonrpc.CancelChecker;
 
 public class FormattingProvider {
-    private static final String FILE_EXTENSION_MXML = ".mxml";
-
     private FileTracker fileTracker;
 
     public FormattingProvider(FileTracker fileTracker) {
@@ -31,13 +29,6 @@ public class FormattingProvider {
         }
         TextDocumentIdentifier textDocument = params.getTextDocument();
         FormattingOptions options = params.getOptions();
-        boolean isMXML = textDocument.getUri().endsWith(FILE_EXTENSION_MXML);
-        if (isMXML) {
-            if (cancelToken != null) {
-                cancelToken.checkCanceled();
-            }
-            return Collections.emptyList();
-        }
         Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocument.getUri());
         if (path == null) {
             if (cancelToken != null) {
@@ -55,7 +46,7 @@ public class FormattingProvider {
         FORMATTER formatter = new FORMATTER();
         formatter.insertSpaces = options.isInsertSpaces();
         formatter.tabSize = options.getTabSize();
-        String formattedFileText = formatter.formatText(fileText);
+        String formattedFileText = formatter.formatFileText(path.toString(), fileText);
         if (fileText.equals(formattedFileText)) {
             return Collections.emptyList();
         }
