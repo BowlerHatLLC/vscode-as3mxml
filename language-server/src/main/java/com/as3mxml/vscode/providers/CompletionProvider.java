@@ -1279,7 +1279,7 @@ public class CompletionProvider {
                     if (definition.getBaseName().equals(qualifiedName)) {
                         item.setKind(LanguageServerCompilerUtils.getCompletionItemKindFromDefinition(definition));
                     } else {
-                        item.setKind(CompletionItemKind.Text);
+                        item.setKind(CompletionItemKind.Module);
                     }
                     if (!items.contains(item)) {
                         items.add(item);
