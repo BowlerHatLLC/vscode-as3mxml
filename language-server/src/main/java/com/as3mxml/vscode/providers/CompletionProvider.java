@@ -439,8 +439,11 @@ public class CompletionProvider {
             IExpressionNode nameNode = importNode.getImportNameNode();
             if (offsetNode == nameNode) {
                 String importName = importNode.getImportName();
-                importName = importName.substring(0, position.getCharacter() - nameNode.getColumn());
-                autoCompleteImport(importName, project, result);
+                int endIndex = position.getCharacter() - nameNode.getColumn();
+                if (importName.length() >= endIndex) {
+                    importName = importName.substring(0, endIndex);
+                    autoCompleteImport(importName, project, result);
+                }
                 return result;
             }
         }
@@ -451,8 +454,11 @@ public class CompletionProvider {
                 IExpressionNode nameNode = importNode.getImportNameNode();
                 if (parentNode == nameNode) {
                     String importName = importNode.getImportName();
-                    importName = importName.substring(0, position.getCharacter() - nameNode.getColumn());
-                    autoCompleteImport(importName, project, result);
+                    int endIndex = position.getCharacter() - nameNode.getColumn();
+                    if (importName.length() >= endIndex) {
+                        importName = importName.substring(0, endIndex);
+                        autoCompleteImport(importName, project, result);
+                    }
                     return result;
                 }
             }
@@ -511,9 +517,9 @@ public class CompletionProvider {
         }
 
         // function overrides
-        if(nodeAtPreviousOffset instanceof IModifierNode) {
+        if (nodeAtPreviousOffset instanceof IModifierNode) {
             IModifierNode modifierNode = (IModifierNode) nodeAtPreviousOffset;
-            if(ASModifier.OVERRIDE.equals(modifierNode.getModifier())) {
+            if (ASModifier.OVERRIDE.equals(modifierNode.getModifier())) {
                 autoCompleteFunctionOverrides(modifierNode, project, result);
                 return result;
             }
@@ -1084,14 +1090,11 @@ public class CompletionProvider {
             }
             StringBuilder functionNameBuilder = new StringBuilder();
             functionNameBuilder.append(functionName);
-            if(otherIsGetter)
-            {
+            if (otherIsGetter) {
                 functionNameBuilder.append(" (");
                 functionNameBuilder.append(IASKeywordConstants.GET);
                 functionNameBuilder.append(")");
-            }
-            else if(otherIsSetter)
-            {
+            } else if (otherIsSetter) {
                 functionNameBuilder.append(" (");
                 functionNameBuilder.append(IASKeywordConstants.SET);
                 functionNameBuilder.append(")");
@@ -1155,7 +1158,7 @@ public class CompletionProvider {
 
             CompletionItem item = CompletionItemUtils.createDefinitionItem(functionDefinition, project);
             item.setInsertText(insertText.toString());
-            if((!isGetter && otherIsGetter) || (!isSetter && otherIsSetter)) {
+            if ((!isGetter && otherIsGetter) || (!isSetter && otherIsSetter)) {
                 item.setLabel(functionNameWithModifier);
             }
             resultItems.add(item);
