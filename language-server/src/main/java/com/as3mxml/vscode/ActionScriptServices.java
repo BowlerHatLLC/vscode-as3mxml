@@ -1275,15 +1275,23 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
 
     private void watchNewSourceOrLibraryPath(Path sourceOrLibraryPath, ActionScriptProjectData projectData) {
         try {
-            java.nio.file.Files.walkFileTree(sourceOrLibraryPath, new SimpleFileVisitor<Path>() {
-                @Override
-                public FileVisitResult preVisitDirectory(Path subPath, BasicFileAttributes attrs) throws IOException {
-                    WatchKey watchKey = subPath.register(sourcePathWatcher, StandardWatchEventKinds.ENTRY_CREATE,
-                            StandardWatchEventKinds.ENTRY_DELETE, StandardWatchEventKinds.ENTRY_MODIFY);
-                    projectData.sourceOrLibraryPathWatchKeys.put(watchKey, subPath);
-                    return FileVisitResult.CONTINUE;
-                }
-            });
+            if (sourceOrLibraryPath.toString().endsWith(FILE_EXTENSION_SWC)) {
+                WatchKey watchKey = sourceOrLibraryPath.getParent().register(sourcePathWatcher,
+                        StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_DELETE,
+                        StandardWatchEventKinds.ENTRY_MODIFY);
+                projectData.sourceOrLibraryPathWatchKeys.put(watchKey, sourceOrLibraryPath);
+            } else {
+                java.nio.file.Files.walkFileTree(sourceOrLibraryPath, new SimpleFileVisitor<Path>() {
+                    @Override
+                    public FileVisitResult preVisitDirectory(Path subPath, BasicFileAttributes attrs)
+                            throws IOException {
+                        WatchKey watchKey = subPath.register(sourcePathWatcher, StandardWatchEventKinds.ENTRY_CREATE,
+                                StandardWatchEventKinds.ENTRY_DELETE, StandardWatchEventKinds.ENTRY_MODIFY);
+                        projectData.sourceOrLibraryPathWatchKeys.put(watchKey, subPath);
+                        return FileVisitResult.CONTINUE;
+                    }
+                });
+            }
         } catch (IOException e) {
             System.err.println("Failed to watch source or library path: " + sourceOrLibraryPath.toString());
             e.printStackTrace(System.err);
@@ -1406,7 +1414,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         sourcePathWatcherThread = new Thread() {
             public void run() {
                 while (true) {
-                    if(Thread.currentThread().isInterrupted()) {
+                    if (Thread.currentThread().isInterrupted()) {
                         return;
                     }
                     WatchKey watchKey = null;
@@ -1427,7 +1435,16 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                             for (WatchEvent<?> event : watchKey.pollEvents()) {
                                 WatchEvent.Kind<?> kind = event.kind();
                                 Path childPath = (Path) event.context();
-                                childPath = path.resolve(childPath);
+                                if (path.toString().endsWith(FILE_EXTENSION_SWC)) {
+                                    childPath = path.getParent().resolve(childPath);
+                                    if (!path.equals(childPath)) {
+                                        // we want to watch a specific file, but had
+                                        // to watch the parent directory instead
+                                        continue;
+                                    }
+                                } else {
+                                    childPath = path.resolve(childPath);
+                                }
                                 if (java.nio.file.Files.isDirectory(childPath)) {
                                     if (kind.equals(StandardWatchEventKinds.ENTRY_CREATE)) {
                                         // if a new directory has been created under
