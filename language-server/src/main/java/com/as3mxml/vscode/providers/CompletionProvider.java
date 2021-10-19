@@ -23,6 +23,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -68,7 +69,6 @@ import org.apache.royale.compiler.definitions.ISetterDefinition;
 import org.apache.royale.compiler.definitions.IStyleDefinition;
 import org.apache.royale.compiler.definitions.ITypeDefinition;
 import org.apache.royale.compiler.definitions.IVariableDefinition;
-import org.apache.royale.compiler.definitions.metadata.IDeprecationInfo;
 import org.apache.royale.compiler.definitions.metadata.IMetaTag;
 import org.apache.royale.compiler.definitions.metadata.IMetaTagAttribute;
 import org.apache.royale.compiler.filespecs.IFileSpecification;
@@ -111,7 +111,6 @@ import org.apache.royale.compiler.units.ICompilationUnit;
 import org.eclipse.lsp4j.Command;
 import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.CompletionItemKind;
-import org.eclipse.lsp4j.CompletionItemTag;
 import org.eclipse.lsp4j.CompletionList;
 import org.eclipse.lsp4j.CompletionParams;
 import org.eclipse.lsp4j.InsertTextFormat;
@@ -520,7 +519,7 @@ public class CompletionProvider {
         if (nodeAtPreviousOffset instanceof IModifierNode) {
             IModifierNode modifierNode = (IModifierNode) nodeAtPreviousOffset;
             if (ASModifier.OVERRIDE.equals(modifierNode.getModifier())) {
-                autoCompleteFunctionOverrides(modifierNode, project, result);
+                autoCompleteFunctionOverrides(modifierNode, addImportData, project, result);
                 return result;
             }
         }
@@ -528,7 +527,7 @@ public class CompletionProvider {
                 && nodeAtPreviousOffset instanceof IIdentifierNode) {
             IIdentifierNode previousIdentifier = (IIdentifierNode) nodeAtPreviousOffset;
             if (IASKeywordConstants.OVERRIDE.equals(previousIdentifier.getName())) {
-                autoCompleteFunctionOverrides(previousIdentifier, project, result);
+                autoCompleteFunctionOverrides(previousIdentifier, addImportData, project, result);
                 return result;
             }
         }
@@ -538,7 +537,7 @@ public class CompletionProvider {
                 if (functionNode.hasModifier(ASModifier.OVERRIDE)
                         && functionNode.getParametersContainerNode().getAbsoluteStart() == -1
                         && functionNode.getReturnTypeNode() == null) {
-                    autoCompleteFunctionOverrides(functionNode, project, result);
+                    autoCompleteFunctionOverrides(functionNode, addImportData, project, result);
                     return result;
                 }
             }
@@ -553,7 +552,7 @@ public class CompletionProvider {
                 if (functionNode.hasModifier(ASModifier.OVERRIDE)
                         && functionNode.getParametersContainerNode().getAbsoluteStart() == -1
                         && functionNode.getReturnTypeNode() == null) {
-                    autoCompleteFunctionOverrides(functionNode, project, result);
+                    autoCompleteFunctionOverrides(functionNode, addImportData, project, result);
                     return result;
                 }
             }
@@ -1035,7 +1034,8 @@ public class CompletionProvider {
         }
     }
 
-    private void autoCompleteFunctionOverrides(IASNode node, ILspProject project, CompletionList result) {
+    private void autoCompleteFunctionOverrides(IASNode node, AddImportData addImportData, ILspProject project,
+            CompletionList result) {
         boolean needsFunctionKeyword = true;
         String namespace = null;
         boolean isGetter = false;
@@ -1106,6 +1106,8 @@ public class CompletionProvider {
             }
             functionNames.add(functionNameWithModifier);
 
+            Set<String> importedQualifiedNames = new HashSet<>();
+            List<TextEdit> additionalTextEdits = new ArrayList<>();
             StringBuilder insertText = new StringBuilder();
             if (namespace == null) {
                 insertText.append(otherNamespace);
@@ -1135,10 +1137,21 @@ public class CompletionProvider {
                     insertText.append(IASLanguageConstants.REST);
                 }
                 insertText.append(param.getBaseName());
-                String paramType = param.getTypeAsDisplayString();
-                if (paramType.length() != 0) {
+                ITypeDefinition paramTypeDefinition = param.resolveType(project);
+                if (paramTypeDefinition != null) {
                     insertText.append(":");
-                    insertText.append(paramType);
+                    insertText.append(paramTypeDefinition.getBaseName());
+
+                    String paramQualifiedName = paramTypeDefinition.getQualifiedName();
+                    if (!importedQualifiedNames.contains(paramQualifiedName)
+                            && ASTUtils.needsImport(node, paramQualifiedName)) {
+                        importedQualifiedNames.add(paramQualifiedName);
+                        TextEdit textEdit = CodeActionsUtils.createTextEditForAddImport(paramTypeDefinition,
+                                addImportData);
+                        if (textEdit != null) {
+                            additionalTextEdits.add(textEdit);
+                        }
+                    }
                 }
                 if (param.hasDefaultValue()) {
                     insertText.append(" = ");
@@ -1150,16 +1163,31 @@ public class CompletionProvider {
                 }
             }
             insertText.append(")");
-            String returnType = functionDefinition.getReturnTypeAsDisplayString();
-            if (returnType.length() != 0) {
+
+            ITypeDefinition returnTypeDefinition = functionDefinition.resolveReturnType(project);
+            if (returnTypeDefinition != null) {
                 insertText.append(":");
-                insertText.append(returnType);
+                insertText.append(returnTypeDefinition.getBaseName());
+
+                String returnQualifiedName = returnTypeDefinition.getQualifiedName();
+                if (!importedQualifiedNames.contains(returnQualifiedName)
+                        && ASTUtils.needsImport(node, returnQualifiedName)) {
+                    importedQualifiedNames.add(returnQualifiedName);
+                    TextEdit textEdit = CodeActionsUtils.createTextEditForAddImport(returnTypeDefinition,
+                            addImportData);
+                    if (textEdit != null) {
+                        additionalTextEdits.add(textEdit);
+                    }
+                }
             }
 
             CompletionItem item = CompletionItemUtils.createDefinitionItem(functionDefinition, project);
             item.setInsertText(insertText.toString());
             if ((!isGetter && otherIsGetter) || (!isSetter && otherIsSetter)) {
                 item.setLabel(functionNameWithModifier);
+            }
+            if (additionalTextEdits.size() > 0) {
+                item.setAdditionalTextEdits(additionalTextEdits);
             }
             resultItems.add(item);
         }
