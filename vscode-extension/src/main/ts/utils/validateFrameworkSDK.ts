@@ -17,7 +17,6 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vscode from "vscode";
 
-
 /**
  * Checks if the path contains a valid SDK. May return a modified path, in the
  * case of an Apache Royale SDK where the real SDK appears in royale-asjs.
@@ -40,23 +39,28 @@ export default function validateFrameworkSDK(sdkPath: string): string {
 }
 
 function validatePossibleFrameworkSDK(sdkPath: string): boolean {
-  
   if (!sdkPath) {
     return false;
   }
 
-  if(!path.isAbsolute(sdkPath)){
-    if(vscode.workspace.workspaceFile!= undefined){
-      sdkPath = path.join(path.dirname(vscode.workspace.workspaceFile.path),sdkPath);
-    }
-    else{
-      if(vscode.workspace.workspaceFolders != undefined){
-        sdkPath = path.join(vscode.workspace.workspaceFolders[0].uri.path,sdkPath);
-      }else{
+  if (!path.isAbsolute(sdkPath)) {
+    if (vscode.workspace.workspaceFile !== undefined) {
+      sdkPath = path.join(
+        path.dirname(vscode.workspace.workspaceFile.path),
+        sdkPath
+      );
+    } else {
+      if (vscode.workspace.workspaceFolders !== undefined) {
+        sdkPath = path.join(
+          vscode.workspace.workspaceFolders[0].uri.path,
+          sdkPath
+        );
+      } else {
         return false;
       }
     }
   }
+
   //a frameworks directory is required
   let frameworksPath = path.join(sdkPath, "frameworks");
   if (
