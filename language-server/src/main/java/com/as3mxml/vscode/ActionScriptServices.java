@@ -200,6 +200,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     private Thread sourcePathWatcherThread;
     private ClientCapabilities clientCapabilities;
     private boolean completionSupportsSnippets = false;
+    private boolean completionSupportsSimpleSnippets = false;
     private FileTracker fileTracker;
     private CompilerProblemFilter compilerProblemFilter = new CompilerProblemFilter();
     private boolean initialized = false;
@@ -259,19 +260,19 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     }
 
     public void setClientCapabilities(ClientCapabilities value) {
-        completionSupportsSnippets = false;
-
         clientCapabilities = value;
-        TextDocumentClientCapabilities textDocument = clientCapabilities.getTextDocument();
-        if (textDocument != null) {
-            CompletionCapabilities completion = textDocument.getCompletion();
-            if (completion != null) {
-                CompletionItemCapabilities completionItem = completion.getCompletionItem();
-                if (completionItem != null) {
-                    completionSupportsSnippets = completionItem.getSnippetSupport();
-                }
-            }
+
+        completionSupportsSnippets = false;
+        try {
+            completionSupportsSnippets = clientCapabilities.getTextDocument().getCompletion().getCompletionItem()
+                    .getSnippetSupport();
+        } catch (NullPointerException e) {
+            // ignore
         }
+    }
+
+    public void setClientSupportsSimpleSnippets(boolean supportsSimpleSnippets) {
+        completionSupportsSimpleSnippets = supportsSimpleSnippets;
     }
 
     public void setLanguageClient(ActionScriptLanguageClient value) {
@@ -331,7 +332,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         compilerWorkspace.startBuilding();
         try {
             CompletionProvider provider = new CompletionProvider(actionScriptProjectManager, fileTracker,
-                    completionSupportsSnippets, frameworkSDKIsRoyale);
+                    completionSupportsSnippets, completionSupportsSimpleSnippets, frameworkSDKIsRoyale);
             return provider.completion(params, cancelToken);
         } finally {
             compilerWorkspace.doneBuilding();

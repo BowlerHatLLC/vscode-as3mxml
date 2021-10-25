@@ -127,14 +127,17 @@ public class CompletionProvider {
     private ActionScriptProjectManager actionScriptProjectManager;
     private FileTracker fileTracker;
     private boolean completionSupportsSnippets;
+    private boolean completionSupportsSimpleSnippets;
     private boolean frameworkSDKIsRoyale;
     private List<String> completionTypes = new ArrayList<>();
 
     public CompletionProvider(ActionScriptProjectManager actionScriptProjectManager, FileTracker fileTracker,
-            boolean completionSupportsSnippets, boolean frameworkSDKIsRoyale) {
+            boolean completionSupportsSnippets, boolean completionSupportsSimpleSnippets,
+            boolean frameworkSDKIsRoyale) {
         this.actionScriptProjectManager = actionScriptProjectManager;
         this.fileTracker = fileTracker;
         this.completionSupportsSnippets = completionSupportsSnippets;
+        this.completionSupportsSimpleSnippets = completionSupportsSimpleSnippets;
         this.frameworkSDKIsRoyale = frameworkSDKIsRoyale;
     }
 
@@ -1247,7 +1250,7 @@ public class CompletionProvider {
         unitFile = unitFile.getParentFile();
         String expectedPackage = SourcePathUtils.getPackageForDirectoryPath(unitFile.toPath(), project);
         CompletionItem packageItem = CompletionItemUtils.createPackageBlockItem(expectedPackage,
-                completionSupportsSnippets);
+                completionSupportsSnippets || completionSupportsSimpleSnippets);
         result.getItems().add(packageItem);
     }
 
@@ -1323,7 +1326,7 @@ public class CompletionProvider {
         CompletionItem item = new CompletionItem();
         item.setKind(CompletionItemKind.Keyword);
         item.setLabel("fx:" + tagName);
-        if (completionSupportsSnippets) {
+        if (completionSupportsSnippets || completionSupportsSimpleSnippets) {
             item.setInsertTextFormat(InsertTextFormat.Snippet);
         }
         item.setFilterText(tagName);
@@ -1340,7 +1343,7 @@ public class CompletionProvider {
         builder.append(">");
         builder.append("\n");
         builder.append("\t");
-        if (completionSupportsSnippets) {
+        if (completionSupportsSnippets || completionSupportsSimpleSnippets) {
             builder.append("$0");
         }
         builder.append("\n");
@@ -1361,7 +1364,7 @@ public class CompletionProvider {
         CompletionItem item = new CompletionItem();
         item.setKind(CompletionItemKind.Keyword);
         item.setLabel("fx:" + IMXMLLanguageConstants.SCRIPT);
-        if (completionSupportsSnippets) {
+        if (completionSupportsSnippets || completionSupportsSimpleSnippets) {
             item.setInsertTextFormat(InsertTextFormat.Snippet);
         }
         item.setFilterText(IMXMLLanguageConstants.SCRIPT);
@@ -1381,7 +1384,7 @@ public class CompletionProvider {
         builder.append(IMXMLCoreConstants.cDataStart);
         builder.append("\n");
         builder.append("\t\t");
-        if (completionSupportsSnippets) {
+        if (completionSupportsSnippets || completionSupportsSimpleSnippets) {
             builder.append("$0");
         }
         builder.append("\n");
@@ -1445,7 +1448,7 @@ public class CompletionProvider {
         CompletionItem includeInItem = new CompletionItem();
         includeInItem.setKind(CompletionItemKind.Keyword);
         includeInItem.setLabel(IMXMLLanguageConstants.ATTRIBUTE_INCLUDE_IN);
-        if (completionSupportsSnippets && nextChar != '=') {
+        if ((completionSupportsSnippets || completionSupportsSimpleSnippets) && nextChar != '=') {
             includeInItem.setInsertTextFormat(InsertTextFormat.Snippet);
             includeInItem.setInsertText(IMXMLLanguageConstants.ATTRIBUTE_INCLUDE_IN + "=\"$0\"");
         }
@@ -1454,7 +1457,7 @@ public class CompletionProvider {
         CompletionItem excludeFromItem = new CompletionItem();
         excludeFromItem.setKind(CompletionItemKind.Keyword);
         excludeFromItem.setLabel(IMXMLLanguageConstants.ATTRIBUTE_EXCLUDE_FROM);
-        if (completionSupportsSnippets && nextChar != '=') {
+        if ((completionSupportsSnippets || completionSupportsSimpleSnippets) && nextChar != '=') {
             excludeFromItem.setInsertTextFormat(InsertTextFormat.Snippet);
             excludeFromItem.setInsertText(IMXMLLanguageConstants.ATTRIBUTE_EXCLUDE_FROM + "=\"$0\"");
         }
@@ -1468,7 +1471,7 @@ public class CompletionProvider {
             CompletionItem idItem = new CompletionItem();
             idItem.setKind(CompletionItemKind.Keyword);
             idItem.setLabel(IMXMLLanguageConstants.ATTRIBUTE_ID);
-            if (completionSupportsSnippets && nextChar != '=') {
+            if ((completionSupportsSnippets || completionSupportsSimpleSnippets) && nextChar != '=') {
                 idItem.setInsertTextFormat(InsertTextFormat.Snippet);
                 idItem.setInsertText(IMXMLLanguageConstants.ATTRIBUTE_ID + "=\"$0\"");
             }
@@ -1482,7 +1485,7 @@ public class CompletionProvider {
                 CompletionItem localIdItem = new CompletionItem();
                 localIdItem.setKind(CompletionItemKind.Keyword);
                 localIdItem.setLabel(IMXMLLanguageConstants.ATTRIBUTE_LOCAL_ID);
-                if (completionSupportsSnippets && nextChar != '=') {
+                if ((completionSupportsSnippets || completionSupportsSimpleSnippets) && nextChar != '=') {
                     localIdItem.setInsertTextFormat(InsertTextFormat.Snippet);
                     localIdItem.setInsertText(IMXMLLanguageConstants.ATTRIBUTE_LOCAL_ID + "=\"$0\"");
                 }
@@ -1607,7 +1610,8 @@ public class CompletionProvider {
                     continue;
                 }
                 CompletionItem item = CompletionItemUtils.createDefinitionItem(eventDefinition, project);
-                if (isAttribute && completionSupportsSnippets && nextChar != '=') {
+                if (isAttribute && (completionSupportsSnippets || completionSupportsSimpleSnippets)
+                        && nextChar != '=') {
                     item.setInsertTextFormat(InsertTextFormat.Snippet);
                     item.setInsertText(eventName + "=\"$0\"");
                 } else if (!isAttribute) {
@@ -1620,7 +1624,7 @@ public class CompletionProvider {
                         builder.append(IMXMLCoreConstants.colon);
                     }
                     builder.append(eventName);
-                    if (completionSupportsSnippets) {
+                    if (completionSupportsSnippets || completionSupportsSimpleSnippets) {
                         item.setInsertTextFormat(InsertTextFormat.Snippet);
                         builder.append(">");
                         builder.append("$0");
@@ -1679,7 +1683,8 @@ public class CompletionProvider {
                     break;
                 }
                 CompletionItem item = CompletionItemUtils.createDefinitionItem(styleDefinition, project);
-                if (isAttribute && completionSupportsSnippets && nextChar != '=') {
+                if (isAttribute && (completionSupportsSnippets || completionSupportsSimpleSnippets)
+                        && nextChar != '=') {
                     item.setInsertTextFormat(InsertTextFormat.Snippet);
                     item.setInsertText(styleName + "=\"$0\"");
                 } else if (!isAttribute) {
@@ -1692,7 +1697,7 @@ public class CompletionProvider {
                         builder.append(IMXMLCoreConstants.colon);
                     }
                     builder.append(styleName);
-                    if (completionSupportsSnippets) {
+                    if (completionSupportsSnippets || completionSupportsSimpleSnippets) {
                         item.setInsertTextFormat(InsertTextFormat.Snippet);
                         builder.append(">");
                         builder.append("$0");
@@ -1743,7 +1748,7 @@ public class CompletionProvider {
         }
         CompletionItem item = CompletionItemUtils.createDefinitionItem(definition, project);
         if (definition instanceof IFunctionDefinition && !(definition instanceof IAccessorDefinition) && nextChar != '('
-                && completionSupportsSnippets) {
+                && (completionSupportsSnippets || completionSupportsSimpleSnippets)) {
             IFunctionDefinition functionDefinition = (IFunctionDefinition) definition;
             if (functionDefinition.getParameters().length == 0) {
                 item.setInsertText(definition.getBaseName() + "()");
@@ -1783,7 +1788,7 @@ public class CompletionProvider {
             return;
         }
         CompletionItem item = CompletionItemUtils.createDefinitionItem(definition, project);
-        if (isAttribute && completionSupportsSnippets && nextChar != '=') {
+        if (isAttribute && (completionSupportsSnippets || completionSupportsSimpleSnippets) && nextChar != '=') {
             item.setInsertTextFormat(InsertTextFormat.Snippet);
             item.setInsertText(definitionBaseName + "=\"$0\"");
         } else if (!isAttribute) {
@@ -1826,7 +1831,7 @@ public class CompletionProvider {
                 insertTextBuilder.append("=\"");
                 insertTextBuilder.append(uri);
                 insertTextBuilder.append("\">\n\t");
-                if (completionSupportsSnippets) {
+                if (completionSupportsSnippets || completionSupportsSimpleSnippets) {
                     item.setInsertTextFormat(InsertTextFormat.Snippet);
                     insertTextBuilder.append("$0");
                 }
@@ -1836,7 +1841,8 @@ public class CompletionProvider {
                 insertTextBuilder.append(definitionBaseName);
                 insertTextBuilder.append(">");
             }
-            if (completionSupportsSnippets && !(definition instanceof ITypeDefinition)) {
+            if ((completionSupportsSnippets || completionSupportsSimpleSnippets)
+                    && !(definition instanceof ITypeDefinition)) {
                 item.setInsertTextFormat(InsertTextFormat.Snippet);
                 insertTextBuilder.append(">");
                 insertTextBuilder.append("$0");

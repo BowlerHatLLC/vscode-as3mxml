@@ -27,6 +27,7 @@ import com.as3mxml.vscode.commands.ICommandConstants;
 import com.as3mxml.vscode.project.IProjectConfigStrategyFactory;
 import com.as3mxml.vscode.services.ActionScriptLanguageClient;
 import com.google.common.collect.Lists;
+import com.google.gson.JsonObject;
 
 import org.apache.royale.compiler.tree.as.IASNode;
 import org.eclipse.lsp4j.CodeActionKind;
@@ -66,8 +67,8 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
     protected ActionScriptLanguageClient languageClient;
 
     public ActionScriptLanguageServer(IProjectConfigStrategyFactory factory) {
-        //the royalelib system property may be configured in the command line
-        //options, but if it isn't, use the framework included with Royale
+        // the royalelib system property may be configured in the command line
+        // options, but if it isn't, use the framework included with Royale
         if (System.getProperty(PROPERTY_FRAMEWORK_LIB) == null) {
             String frameworksPath = findFrameworksPath();
             if (frameworksPath == null) {
@@ -85,24 +86,37 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
 
     /**
      * Tells Visual Studio Code about the language server's capabilities.
+     * 
+     * Optional initialization options:
+     * 
+     * - supportsSimpleSnippets: The client offers partial support for snippets,
+     * such as $0
      */
     @Override
     public CompletableFuture<InitializeResult> initialize(InitializeParams params) {
         actionScriptServices.setClientCapabilities(params.getCapabilities());
         actionScriptServices.setLanguageClient(languageClient);
-        //setting everything above must happen before adding workspace folders
+        // setting everything above must happen before adding workspace folders
         List<WorkspaceFolder> folders = params.getWorkspaceFolders();
         if (folders != null) {
             for (WorkspaceFolder folder : params.getWorkspaceFolders()) {
                 actionScriptServices.addWorkspaceFolder(folder);
             }
         } else if (params.getRootUri() != null) {
-            //some clients don't support workspace folders, but if they pass in
-            //a root URI, we can treat it like a workspace folder
+            // some clients don't support workspace folders, but if they pass in
+            // a root URI, we can treat it like a workspace folder
             WorkspaceFolder folder = new WorkspaceFolder();
             folder.setUri(params.getRootUri());
             actionScriptServices.addWorkspaceFolder(folder);
         }
+        boolean supportsSimpleSnippets = false;
+        if (params.getInitializationOptions() != null) {
+            JsonObject initializationOptions = (JsonObject) params.getInitializationOptions();
+            if (initializationOptions.has("supportsSimpleSnippets")) {
+                supportsSimpleSnippets = initializationOptions.get("supportsSimpleSnippets").getAsBoolean();
+            }
+        }
+        actionScriptServices.setClientSupportsSimpleSnippets(supportsSimpleSnippets);
 
         InitializeResult result = new InitializeResult();
 
@@ -158,12 +172,12 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
             canRegisterDidChangeWatchedFiles = actionScriptServices.getClientCapabilities().getWorkspace()
                     .getDidChangeWatchedFiles().getDynamicRegistration();
         } catch (NullPointerException e) {
-            canRegisterDidChangeWatchedFiles = false;
+            // ignore
         }
         if (canRegisterDidChangeWatchedFiles) {
             List<FileSystemWatcher> watchers = new ArrayList<>();
-            //ideally, we'd only check .as, .mxml, asconfig.json, and directories
-            //but there's no way to target directories without *
+            // ideally, we'd only check .as, .mxml, asconfig.json, and directories
+            // but there's no way to target directories without *
             watchers.add(new FileSystemWatcher("**/*"));
 
             String id = "as3mxml-language-server-" + Math.random();
@@ -176,9 +190,9 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
             languageClient.registerCapability(registrationParams);
         }
 
-        //we can't notify the client about problems until we receive this
-        //initialized notification. this is the first time that we'll start
-        //checking for errors.
+        // we can't notify the client about problems until we receive this
+        // initialized notification. this is the first time that we'll start
+        // checking for errors.
         actionScriptServices.setInitialized();
     }
 
@@ -204,8 +218,8 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
     }
 
     /**
-     * Requests from Visual Studio Code that are at the document level. Things
-     * like API completion, function signature help, find references.
+     * Requests from Visual Studio Code that are at the document level. Things like
+     * API completion, function signature help, find references.
      */
     @Override
     public TextDocumentService getTextDocumentService() {
@@ -228,9 +242,9 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
     }
 
     /**
-     * Using a Java class from the Apache Royale compiler, we can check where
-     * its JAR file is located on the file system, and then we can find the
-     * frameworks directory.
+     * Using a Java class from the Apache Royale compiler, we can check where its
+     * JAR file is located on the file system, and then we can find the frameworks
+     * directory.
      */
     private String findFrameworksPath() {
         try {
