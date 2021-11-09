@@ -11,16 +11,14 @@ Extension created and maintained by [Josh Tynjala](https://patreon.com/josht). B
 - **Signature Help** shows a list of a function's parameters when you call it.
 - **Errors and Warnings** are updated in real time as you type (or on save only, if you prefer).
 - **Hover** over a symbol to see more details such as types, namespaces, documentation, and more.
-- **Go to Definition** with `Ctrl+Click` on any usage of a symbol to open the file where it is defined.
+- **Go to Definition** with `Ctrl+Click` on any usage of a symbol to open the file where it is defined. Can be used to see the public API of classes from compiled _.swc_ libraries too.
 - **Find All References** for any symbol in the project across all source files.
 - **Rename Symbol** for classes, interfaces, methods, and variables.
 - **Organize Imports** sorts imports alphabetically, removes unused imports, and adds missing imports.
 - **Quick Fixes** to add missing imports, generate missing variables or methods, or convert variables to getters/setters.
-- **Outline view** lists all symbols from the current file in a tree.
-- **Go to Symbol in Workspace** with `Ctrl+T` and type the name of any symbol in the workspace.
+- **Outline view** lists all symbols from the current file in a hierarchical tree.
+- **Go to Symbol in Workspace** with `Ctrl+T` and type the name of any symbol to search for it in the workspace.
 - **Build Tasks** can compile a project or package an Adobe AIR app with `Ctrl+Shift+B`.
-- **Debug** or **Run** SWF projects in Adobe AIR and Flash Player (using the [Debugger for SWF](https://marketplace.visualstudio.com/items?itemName=bowlerhatllc.vscode-swf-debug) extension).
-- **Debug** or **Run** Apache Royale (formerly known as FlexJS) projects in web browsers and Node.js.
 - **Adobe Animate** integration includes _Test Movie_, _Debug Movie_, and _Publish_.
 - **Import Projects** from Adobe Flash Builder or FlashDevelop.
 
@@ -28,7 +26,7 @@ Extension created and maintained by [Josh Tynjala](https://patreon.com/josht). B
 
 - [Documentation](https://github.com/BowlerHatLLC/vscode-as3mxml/wiki)
 - [Help & Support Forum](https://github.com/BowlerHatLLC/vscode-as3mxml/discussions)
-- [Issue Tracker](https://github.com/BowlerHatLLC/vscode-as3mxml/issues)
+- [Bug Reports and Feature Requests](https://github.com/BowlerHatLLC/vscode-as3mxml/issues)
 - [Official Website](https://as3mxml.com/)
 
 ## Minimum Requirements
@@ -83,6 +81,12 @@ Here's another sample _asconfig.json_ file for a pure ActionScript project targe
   }
 }
 ```
+
+## Debug and Run
+
+Debug and run SWF projects in Adobe AIR or Flash Player by installing the separate [Debugger for SWF](https://marketplace.visualstudio.com/items?itemName=bowlerhatllc.vscode-swf-debug) extension.
+
+Debug and run Apache Royale with Visual Studio Code's built-in support for debugging JavaScript (or install the appropriate extension for debugging in your chosen web browser). Enable the `source-map` compiler option in your _asconfig.json_ file so that oyu may add breakpoints and step through your original _.as_ or _.mxml_ class files.
 
 ## Support this project
 
