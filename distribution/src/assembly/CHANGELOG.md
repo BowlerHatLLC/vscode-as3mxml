@@ -1,5 +1,17 @@
 # ActionScript & MXML for Visual Studio Code Changelog
 
+## 1.10.0
+
+### New Features
+
+- General: SDK path is no longer required to be absolute. It may be specified relative to the workspace root folder, or relative to the _.code-workspace_ file, for multi-root workspaces.
+- Imports: When completing an override of a function, types of parameters and return are now automatically imported, if possible.
+
+### Fixed Issues
+
+- Completion: Fixed intermittent string range exception when completing imports.
+- General: Fixed watching of individual _.swc_ files in `library-path` or `external-library-path`, and not only directories of _.swc_ files.
+
 ## 1.9.0
 
 ### Fixed Issues
