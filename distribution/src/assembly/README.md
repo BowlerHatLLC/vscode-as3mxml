@@ -86,7 +86,7 @@ Here's another sample _asconfig.json_ file for a pure ActionScript project targe
 
 Debug and run SWF projects in Adobe AIR or Flash Player by installing the separate [Debugger for SWF](https://marketplace.visualstudio.com/items?itemName=bowlerhatllc.vscode-swf-debug) extension.
 
-Debug and run Apache Royale with Visual Studio Code's built-in support for debugging JavaScript (or install the appropriate extension for debugging in your chosen web browser). Enable the `source-map` compiler option in your _asconfig.json_ file so that oyu may add breakpoints and step through your original _.as_ or _.mxml_ class files.
+Debug and run Apache Royale with Visual Studio Code's built-in support for debugging JavaScript (or install the appropriate extension for debugging in your chosen web browser). Enable the `source-map` compiler option in your _asconfig.json_ file so that you may add breakpoints and step through your original _.as_ or _.mxml_ class files.
 
 ## Support this project
 
