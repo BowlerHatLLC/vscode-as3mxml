@@ -83,16 +83,16 @@ public class CompilerShell implements IASConfigCCompiler {
 
         boolean isFCSH = !isRoyale && !isAIR;
         if (isFCSH) {
-            //fcsh has a bug when run in Java 1.8 or newer that causes
-            //exceptions to be thrown after multiple builds.
-            //we can force a fresh build and still gain partial performance
-            //improvement from keeping the compiler process loaded in memory.
+            // fcsh has a bug when run in Java 8 or newer that causes
+            // exceptions to be thrown after multiple builds.
+            // we can force a fresh build and still gain partial performance
+            // improvement from keeping the compiler process loaded in memory.
             compileID = null;
         }
         boolean sdkChanged = previousSDKPath != null && !previousSDKPath.equals(sdkPath);
         if (sdkChanged) {
-            //we need to start a different compiler shell process with the new
-            //SDK, so the old compileID is no longer valid
+            // we need to start a different compiler shell process with the new
+            // SDK, so the old compileID is no longer valid
             compileID = null;
         }
         previousSDKPath = sdkPath;
@@ -102,16 +102,16 @@ public class CompilerShell implements IASConfigCCompiler {
         boolean compileIDChanged = oldCompileID != null && compileID == null;
         if (process != null && (compileIDChanged || sdkChanged)) {
             if (sdkChanged) {
-                //we need to start a different compiler shell process with the
-                //new SDK
+                // we need to start a different compiler shell process with the
+                // new SDK
                 quit();
             } else if (isFCSH) {
-                //we don't need to restart. we only need to clear.
+                // we don't need to restart. we only need to clear.
                 String clearCommand = getClearCommand(oldCompileID);
                 executeCommandAndWaitForPrompt(clearCommand);
             } else {
-                //if we have a new command, start with a fresh instance of the
-                //compiler shell.
+                // if we have a new command, start with a fresh instance of the
+                // compiler shell.
                 quit();
             }
         }
@@ -131,8 +131,8 @@ public class CompilerShell implements IASConfigCCompiler {
     }
 
     private void quit() throws ASConfigCException {
-        //we don't need to wait for the prompt because we'll just wait
-        //for the process to end.
+        // we don't need to wait for the prompt because we'll just wait
+        // for the process to end.
         executeCommand(COMMAND_QUIT);
         try {
             Process oldProcess = process;
@@ -179,8 +179,8 @@ public class CompilerShell implements IASConfigCCompiler {
                 builder.append("*");
                 builder.append(File.pathSeparator);
             } else if (isAIR) {
-                //we can't use * here because it might load a newer version of Guava
-                //which will result in strange errors
+                // we can't use * here because it might load a newer version of Guava
+                // which will result in strange errors
                 builder.append(sdkPath.resolve("lib/compiler.jar").toString());
                 builder.append(File.pathSeparator);
             }
@@ -199,8 +199,8 @@ public class CompilerShell implements IASConfigCCompiler {
             options.add("-Dapple.awt.UIElement=true");
         }
         if (isRoyale) {
-            //Royale requires this so that it doesn't changing the encoding of
-            //UTF-8 characters and display ???? instead
+            // Royale requires this so that it doesn't changing the encoding of
+            // UTF-8 characters and display ???? instead
             options.add("-Dfile.encoding=UTF8");
         }
         options.add("-Dsun.io.useCanonCaches=false");
@@ -216,7 +216,7 @@ public class CompilerShell implements IASConfigCCompiler {
             } else if (isAIR) {
                 options.add(CLASS_ASCSH);
             }
-        } else //fcsh
+        } else // fcsh
         {
             options.add("-jar");
             options.add(compilerShellPath.toAbsolutePath().toString());
@@ -295,13 +295,13 @@ public class CompilerShell implements IASConfigCCompiler {
                 }
                 waitingForError = errorStream.available() > 0;
 
-                //we need to check inputStream.available() here every time
-                //because if we just go straight to read, it may freeze while
-                //the errorStream still has data.
+                // we need to check inputStream.available() here every time
+                // because if we just go straight to read, it may freeze while
+                // the errorStream still has data.
                 if (waitingForInput && inputStream.available() > 0) {
                     char next = (char) inputStream.read();
                     currentInput += next;
-                    //fcsh: Assigned 1 as the compile target id
+                    // fcsh: Assigned 1 as the compile target id
                     if (currentInput.startsWith(ASSIGNED_ID_PREFIX) && currentInput.endsWith(ASSIGNED_ID_SUFFIX)) {
                         compileID = currentInput.substring(ASSIGNED_ID_PREFIX.length(),
                                 currentInput.length() - ASSIGNED_ID_SUFFIX.length());
@@ -340,8 +340,8 @@ public class CompilerShell implements IASConfigCCompiler {
     private String getCommand(String projectType, List<String> compilerOptions) {
         String command = getNewCommand(projectType, compilerOptions);
         if (!command.equals(previousCommand)) {
-            //the compiler options have changed,
-            //so we can't use the old ID anymore
+            // the compiler options have changed,
+            // so we can't use the old ID anymore
             compileID = null;
             previousCommand = command;
         } else if (compileID != null) {
