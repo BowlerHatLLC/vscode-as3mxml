@@ -55,13 +55,25 @@ public class CompilerOptionsParser {
 					OptionsFormatter.setBoolean(key, options.get(key).asBoolean(), result);
 					break;
 				}
+				case CompilerOptions.ALLOW_ABSTRACT_CLASSES: {
+					OptionsFormatter.setBoolean(key, options.get(key).asBoolean(), result);
+					break;
+				}
+				case CompilerOptions.ALLOW_IMPORT_ALIASES: {
+					OptionsFormatter.setBoolean(key, options.get(key).asBoolean(), result);
+					break;
+				}
+				case CompilerOptions.ALLOW_PRIVATE_CONSTRUCTORS: {
+					OptionsFormatter.setBoolean(key, options.get(key).asBoolean(), result);
+					break;
+				}
 				case CompilerOptions.BENCHMARK: {
 					OptionsFormatter.setBoolean(key, options.get(key).asBoolean(), result);
 					break;
 				}
 				case CompilerOptions.DEBUG: {
 					if (debugBuild == null) {
-						//don't set -debug if it's been overridden
+						// don't set -debug if it's been overridden
 						OptionsFormatter.setBoolean(key, options.get(key).asBoolean(), result);
 					}
 					break;
@@ -103,6 +115,18 @@ public class CompilerOptionsParser {
 					OptionsFormatter.setPathValue(key, options.get(key).asText(), result);
 					break;
 				}
+				case CompilerOptions.EXPORT_PUBLIC_SYMBOLS: {
+					OptionsFormatter.setBoolean(key, options.get(key).asBoolean(), result);
+					break;
+				}
+				case CompilerOptions.EXPORT_PROTECTED_SYMBOLS: {
+					OptionsFormatter.setBoolean(key, options.get(key).asBoolean(), result);
+					break;
+				}
+				case CompilerOptions.EXPORT_INTERNAL_SYMBOLS: {
+					OptionsFormatter.setBoolean(key, options.get(key).asBoolean(), result);
+					break;
+				}
 				case CompilerOptions.EXTERNAL_LIBRARY_PATH: {
 					List<String> values = JsonUtils.jsonNodeToListOfStrings(options.get(key));
 					OptionsFormatter.appendPaths(key, values, result);
@@ -140,12 +164,20 @@ public class CompilerOptionsParser {
 					OptionsFormatter.appendPaths(key, values, result);
 					break;
 				}
+				case CompilerOptions.INLINE_CONSTANTS: {
+					OptionsFormatter.setBoolean(key, options.get(key).asBoolean(), result);
+					break;
+				}
 				case CompilerOptions.JS_COMPILER_OPTION: {
 					List<String> values = JsonUtils.jsonNodeToListOfStrings(options.get(key));
 					appendJSCompilerOptions(key, values, result);
 					break;
 				}
 				case CompilerOptions.JS_DEFAULT_INITIALIZERS: {
+					OptionsFormatter.setBoolean(key, options.get(key).asBoolean(), result);
+					break;
+				}
+				case CompilerOptions.JS_DYNAMIC_ACCESS_UNKNOWN_MEMBERS: {
 					OptionsFormatter.setBoolean(key, options.get(key).asBoolean(), result);
 					break;
 				}
@@ -245,6 +277,10 @@ public class CompilerOptionsParser {
 					OptionsFormatter.setBoolean(key, options.get(key).asBoolean(), result);
 					break;
 				}
+				case CompilerOptions.SOURCE_MAP_SOURCE_ROOT: {
+					OptionsFormatter.setValue(key, options.get(key).asText(), result);
+					break;
+				}
 				case CompilerOptions.SOURCE_PATH: {
 					List<String> values = JsonUtils.jsonNodeToListOfStrings(options.get(key));
 					OptionsFormatter.appendPaths(key, values, result);
@@ -255,6 +291,10 @@ public class CompilerOptionsParser {
 					break;
 				}
 				case CompilerOptions.STRICT: {
+					OptionsFormatter.setBoolean(key, options.get(key).asBoolean(), result);
+					break;
+				}
+				case CompilerOptions.STRICT_IDENTIFIER_NAMES: {
 					OptionsFormatter.setBoolean(key, options.get(key).asBoolean(), result);
 					break;
 				}

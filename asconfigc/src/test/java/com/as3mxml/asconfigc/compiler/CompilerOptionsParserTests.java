@@ -71,6 +71,54 @@ class CompilerOptionsParserTests {
 	}
 
 	@Test
+	void testAllowAbstractClasses() {
+		boolean value = true;
+		ObjectNode options = JsonNodeFactory.instance.objectNode();
+		options.set(CompilerOptions.ALLOW_ABSTRACT_CLASSES, JsonNodeFactory.instance.booleanNode(value));
+		ArrayList<String> result = new ArrayList<>();
+		try {
+			parser.parse(options, null, result);
+		} catch (UnknownCompilerOptionException e) {
+		}
+		Assertions.assertEquals(1, result.size(), "CompilerOptionsParser.parse() created incorrect number of options.");
+		Assertions.assertEquals("--" + CompilerOptions.ALLOW_ABSTRACT_CLASSES + "=" + Boolean.toString(value),
+				result.get(0),
+				"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
+	}
+
+	@Test
+	void testAllowImportAliases() {
+		boolean value = true;
+		ObjectNode options = JsonNodeFactory.instance.objectNode();
+		options.set(CompilerOptions.ALLOW_IMPORT_ALIASES, JsonNodeFactory.instance.booleanNode(value));
+		ArrayList<String> result = new ArrayList<>();
+		try {
+			parser.parse(options, null, result);
+		} catch (UnknownCompilerOptionException e) {
+		}
+		Assertions.assertEquals(1, result.size(), "CompilerOptionsParser.parse() created incorrect number of options.");
+		Assertions.assertEquals("--" + CompilerOptions.ALLOW_IMPORT_ALIASES + "=" + Boolean.toString(value),
+				result.get(0),
+				"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
+	}
+
+	@Test
+	void testAllowPrivateConstructors() {
+		boolean value = true;
+		ObjectNode options = JsonNodeFactory.instance.objectNode();
+		options.set(CompilerOptions.ALLOW_PRIVATE_CONSTRUCTORS, JsonNodeFactory.instance.booleanNode(value));
+		ArrayList<String> result = new ArrayList<>();
+		try {
+			parser.parse(options, null, result);
+		} catch (UnknownCompilerOptionException e) {
+		}
+		Assertions.assertEquals(1, result.size(), "CompilerOptionsParser.parse() created incorrect number of options.");
+		Assertions.assertEquals("--" + CompilerOptions.ALLOW_PRIVATE_CONSTRUCTORS + "=" + Boolean.toString(value),
+				result.get(0),
+				"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
+	}
+
+	@Test
 	void testBenchmark() {
 		boolean value = true;
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
@@ -361,6 +409,54 @@ class CompilerOptionsParserTests {
 	}
 
 	@Test
+	void testExportPublicSymbols() {
+		boolean value = true;
+		ObjectNode options = JsonNodeFactory.instance.objectNode();
+		options.set(CompilerOptions.EXPORT_PUBLIC_SYMBOLS, JsonNodeFactory.instance.booleanNode(value));
+		ArrayList<String> result = new ArrayList<>();
+		try {
+			parser.parse(options, null, result);
+		} catch (UnknownCompilerOptionException e) {
+		}
+		Assertions.assertEquals(1, result.size(), "CompilerOptionsParser.parse() created incorrect number of options.");
+		Assertions.assertEquals("--" + CompilerOptions.EXPORT_PUBLIC_SYMBOLS + "=" + Boolean.toString(value),
+				result.get(0),
+				"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
+	}
+
+	@Test
+	void testExportProtectedSymbols() {
+		boolean value = true;
+		ObjectNode options = JsonNodeFactory.instance.objectNode();
+		options.set(CompilerOptions.EXPORT_PROTECTED_SYMBOLS, JsonNodeFactory.instance.booleanNode(value));
+		ArrayList<String> result = new ArrayList<>();
+		try {
+			parser.parse(options, null, result);
+		} catch (UnknownCompilerOptionException e) {
+		}
+		Assertions.assertEquals(1, result.size(), "CompilerOptionsParser.parse() created incorrect number of options.");
+		Assertions.assertEquals("--" + CompilerOptions.EXPORT_PROTECTED_SYMBOLS + "=" + Boolean.toString(value),
+				result.get(0),
+				"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
+	}
+
+	@Test
+	void testExportInternalSymbols() {
+		boolean value = true;
+		ObjectNode options = JsonNodeFactory.instance.objectNode();
+		options.set(CompilerOptions.EXPORT_INTERNAL_SYMBOLS, JsonNodeFactory.instance.booleanNode(value));
+		ArrayList<String> result = new ArrayList<>();
+		try {
+			parser.parse(options, null, result);
+		} catch (UnknownCompilerOptionException e) {
+		}
+		Assertions.assertEquals(1, result.size(), "CompilerOptionsParser.parse() created incorrect number of options.");
+		Assertions.assertEquals("--" + CompilerOptions.EXPORT_INTERNAL_SYMBOLS + "=" + Boolean.toString(value),
+				result.get(0),
+				"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
+	}
+
+	@Test
 	void testExternalLibraryPath() {
 		String value1 = "external/library/path1";
 		String value2 = "external/library/path2 with spaces";
@@ -524,6 +620,22 @@ class CompilerOptionsParserTests {
 	}
 
 	@Test
+	void testInlineConstants() {
+		boolean value = true;
+		ObjectNode options = JsonNodeFactory.instance.objectNode();
+		options.set(CompilerOptions.INLINE_CONSTANTS, JsonNodeFactory.instance.booleanNode(value));
+		ArrayList<String> result = new ArrayList<>();
+		try {
+			parser.parse(options, null, result);
+		} catch (UnknownCompilerOptionException e) {
+		}
+		Assertions.assertEquals(1, result.size(), "CompilerOptionsParser.parse() created incorrect number of options.");
+		Assertions.assertEquals("--" + CompilerOptions.INLINE_CONSTANTS + "=" + Boolean.toString(value),
+				result.get(0),
+				"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
+	}
+
+	@Test
 	void testIncludeSources() {
 		String value1 = "/absolute/path";
 		String value2 = "./relative/path";
@@ -578,6 +690,23 @@ class CompilerOptionsParserTests {
 		Assertions.assertEquals("--" + CompilerOptions.JS_COMPILER_OPTION + "+=\"" + value1 + "\"", result.get(0),
 				"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
 		Assertions.assertEquals("--" + CompilerOptions.JS_COMPILER_OPTION + "+=\"" + value2 + "\"", result.get(1),
+				"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
+	}
+
+	@Test
+	void testJSDynamicAccessUnknownMembers() {
+		boolean value = true;
+		ObjectNode options = JsonNodeFactory.instance.objectNode();
+		options.set(CompilerOptions.JS_DYNAMIC_ACCESS_UNKNOWN_MEMBERS, JsonNodeFactory.instance.booleanNode(value));
+		ArrayList<String> result = new ArrayList<>();
+		try {
+			parser.parse(options, null, result);
+		} catch (UnknownCompilerOptionException e) {
+		}
+		Assertions.assertEquals(1, result.size(), "CompilerOptionsParser.parse() created incorrect number of options.");
+		Assertions.assertEquals(
+				"--" + CompilerOptions.JS_DYNAMIC_ACCESS_UNKNOWN_MEMBERS + "=" + Boolean.toString(value),
+				result.get(0),
 				"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
 	}
 
@@ -1039,6 +1168,21 @@ class CompilerOptionsParserTests {
 	}
 
 	@Test
+	void testSourceMapSourceRoot() {
+		String value = "http://www.example.com/app/";
+		ObjectNode options = JsonNodeFactory.instance.objectNode();
+		options.set(CompilerOptions.SOURCE_MAP_SOURCE_ROOT, JsonNodeFactory.instance.textNode(value));
+		ArrayList<String> result = new ArrayList<>();
+		try {
+			parser.parse(options, null, result);
+		} catch (UnknownCompilerOptionException e) {
+		}
+		Assertions.assertEquals(1, result.size(), "CompilerOptionsParser.parse() created incorrect number of options.");
+		Assertions.assertEquals("--" + CompilerOptions.SOURCE_MAP_SOURCE_ROOT + "=" + value, result.get(0),
+				"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
+	}
+
+	@Test
 	void testSourcePath() {
 		String value1 = "source/path1";
 		String value2 = "source/path2 with spaces";
@@ -1095,6 +1239,22 @@ class CompilerOptionsParserTests {
 		}
 		Assertions.assertEquals(1, result.size(), "CompilerOptionsParser.parse() created incorrect number of options.");
 		Assertions.assertEquals("--" + CompilerOptions.STRICT + "=" + Boolean.toString(value), result.get(0),
+				"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
+	}
+
+	@Test
+	void testStrictIdentifierNames() {
+		boolean value = true;
+		ObjectNode options = JsonNodeFactory.instance.objectNode();
+		options.set(CompilerOptions.STRICT_IDENTIFIER_NAMES, JsonNodeFactory.instance.booleanNode(value));
+		ArrayList<String> result = new ArrayList<>();
+		try {
+			parser.parse(options, null, result);
+		} catch (UnknownCompilerOptionException e) {
+		}
+		Assertions.assertEquals(1, result.size(), "CompilerOptionsParser.parse() created incorrect number of options.");
+		Assertions.assertEquals("--" + CompilerOptions.STRICT_IDENTIFIER_NAMES + "=" + Boolean.toString(value),
+				result.get(0),
 				"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
 	}
 

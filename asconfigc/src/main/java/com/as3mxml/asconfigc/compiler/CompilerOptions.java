@@ -59,12 +59,20 @@ public class CompilerOptions {
 	public static final String VERBOSE_STACKTRACES = "verbose-stacktraces";
 	public static final String WARNINGS = "warnings";
 
-	//royale options
+	// royale options
+	public static final String ALLOW_ABSTRACT_CLASSES = "allow-abstract-classes";
+	public static final String ALLOW_IMPORT_ALIASES = "allow-import-aliases";
+	public static final String ALLOW_PRIVATE_CONSTRUCTORS = "allow-private-constructors";
+	public static final String EXPORT_PUBLIC_SYMBOLS = "export-public-symbols";
+	public static final String EXPORT_PROTECTED_SYMBOLS = "export-protected-symbols";
+	public static final String EXPORT_INTERNAL_SYMBOLS = "export-internal-symbols";
 	public static final String HTML_OUTPUT_FILENAME = "html-output-filename";
 	public static final String HTML_TEMPLATE = "html-template";
+	public static final String INLINE_CONSTANTS = "inline-constants";
 	public static final String JS_COMPILER_OPTION = "js-compiler-option";
 	public static final String JS_DEFAULT_INITIALIZERS = "js-default-initializers";
 	public static final String JS_DEFINE = "js-define";
+	public static final String JS_DYNAMIC_ACCESS_UNKNOWN_MEMBERS = "js-dynamic-access-unknown-members";
 	public static final String JS_EXTERNAL_LIBRARY_PATH = "js-external-library-path";
 	public static final String JS_LIBRARY_PATH = "js-library-path";
 	public static final String JS_LOAD_CONFIG = "js-load-config";
@@ -72,18 +80,20 @@ public class CompilerOptions {
 	public static final String JS_OUTPUT_TYPE = "js-output-type";
 	public static final String REMOVE_CIRCULARS = "remove-circulars";
 	public static final String SOURCE_MAP = "source-map";
+	public static final String SOURCE_MAP_SOURCE_ROOT = "source-map-source-root";
+	public static final String STRICT_IDENTIFIER_NAMES = "strict-identifier-names";
 	public static final String SWF_EXTERNAL_LIBRARY_PATH = "swf-external-library-path";
 	public static final String SWF_LIBRARY_PATH = "swf-library-path";
 	public static final String TARGETS = "targets";
 	public static final String WARN_PUBLIC_VARS = "warn-public-vars";
 
-	//library options
+	// library options
 	public static final String INCLUDE_CLASSES = "include-classes";
 	public static final String INCLUDE_FILE = "include-file";
 	public static final String INCLUDE_NAMESPACES = "include-namespaces";
 	public static final String INCLUDE_SOURCES = "include-sources";
 
-	//sub-values
+	// sub-values
 	public static final String DEFAULT_SIZE__WIDTH = "width";
 	public static final String DEFAULT_SIZE__HEIGHT = "height";
 	public static final String DEFINE__NAME = "name";

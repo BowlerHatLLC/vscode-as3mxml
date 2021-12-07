@@ -383,6 +383,18 @@
           "type": "boolean",
           "description": "In a SWF project, enables advanced telemetry for Adobe Scout. The default value is false."
         },
+        "allow-abstract-classes": {
+          "type": "boolean",
+          "description": "(Apache Royale only) Enables or disables the abstract keyword for classes and methods."
+        },
+        "allow-import-aliases": {
+          "type": "boolean",
+          "description": "(Apache Royale only) Enables or disables alias syntax for ActionScript imports."
+        },
+        "allow-private-constructors": {
+          "type": "boolean",
+          "description": "(Apache Royale only) Enables or disables the ability to set constructors to private in ActionScript."
+        },
         "benchmark": {
           "type": "boolean",
           "description": "Prints detailed compile times to the standard output. The default value is true."
@@ -475,6 +487,18 @@
           "type": "string",
           "description": "Combines all configuration options and saves them to the specified file."
         },
+        "export-public-symbols": {
+          "type": "boolean",
+          "description": "(Advanced, Apache Royale only) Determines if public symbols are exported by Closure compiler in the generated JavaScript"
+        },
+        "export-protected-symbols": {
+          "type": "boolean",
+          "description": "(Advanced, Apache Royale only) Determines if protected symbols are exported by Closure compiler in the generated JavaScript"
+        },
+        "export-internal-symbols": {
+          "type": "boolean",
+          "description": "(Advanced, Apache Royale only) Determines if internal symbols are exported by Closure compiler in the generated JavaScript"
+        },
         "external-library-path": {
           "type": "array",
           "description": "Specifies a list of SWC files, or directories containing SWC files, to exclude from linking in the generated output. This option provides compile-time link checking for external components that are dynamically linked.",
@@ -551,6 +575,10 @@
             "type": "string"
           }
         },
+        "inline-constants": {
+          "type": "boolean",
+          "description": "(Apache Royale only) Determines of primitive (String, Boolean, Number, int, uint) constant values are inlined in the generated JavaScript. The default value is false."
+        },
         "js-compiler-option": {
           "type": "array",
           "description": "(Apache Royale only) Aasses additional options to the Closure Compiler for a release build.",
@@ -561,6 +589,10 @@
         "js-default-initializers": {
           "type": "boolean",
           "description": "(Apache Royale only) Enables or disables initialization of primitive (Number, Boolean, etc.) variables with default values in the generated JavaScript."
+        },
+        "js-dynamic-access-unknown-members": {
+          "type": "boolean",
+          "description": "(Apache Royale only) Determines if member access of unrecognized symbols is replaced with dynamic bracket access in the generated JavaScript. Prevents dynamic member names from being minified in release builds."
         },
         "js-output": {
           "type": "string",
@@ -686,6 +718,10 @@
           "type": "boolean",
           "description": "(Apache Royale only) Emits source maps in the debug build for each ActionScript and MXML file. The default value is false."
         },
+        "source-map-source-root": {
+          "type": "string",
+          "description": "(Apache Royale only) The source root to use when emitting source maps."
+        },
         "source-path": {
           "type": "array",
           "description": "Adds directories or files to the source path. The compiler searches directories in the source path for MXML, AS, or CSS source files that are used in your applications and includes those that are required at compile time.",
@@ -700,6 +736,10 @@
         "strict": {
           "type": "boolean",
           "description": "Performs compile-time type checking on assignments and options supplied to method calls. The default value is true."
+        },
+        "strict-identifier-names": {
+          "type": "boolean",
+          "description": "(Apache Royale only) Enables or disables strict name validation for identifiers in ActionScript. The default value is false."
         },
         "swf-version": {
           "type": "number",
