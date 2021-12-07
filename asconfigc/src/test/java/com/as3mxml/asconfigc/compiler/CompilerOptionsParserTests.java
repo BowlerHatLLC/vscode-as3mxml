@@ -234,13 +234,13 @@ class CompilerOptionsParserTests {
 		String value3 = "./defaults/css/path3";
 
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
-		ArrayNode externalLibraryPath = JsonNodeFactory.instance.arrayNode();
+		ArrayNode paths = JsonNodeFactory.instance.arrayNode();
 
-		externalLibraryPath.add(JsonNodeFactory.instance.textNode(value1));
-		externalLibraryPath.add(JsonNodeFactory.instance.textNode(value2));
-		externalLibraryPath.add(JsonNodeFactory.instance.textNode(value3));
+		paths.add(JsonNodeFactory.instance.textNode(value1));
+		paths.add(JsonNodeFactory.instance.textNode(value2));
+		paths.add(JsonNodeFactory.instance.textNode(value3));
 
-		options.set(CompilerOptions.DEFAULTS_CSS_FILES, externalLibraryPath);
+		options.set(CompilerOptions.DEFAULTS_CSS_FILES, paths);
 
 		ArrayList<String> result = new ArrayList<>();
 		try {
@@ -405,6 +405,35 @@ class CompilerOptionsParserTests {
 		}
 		Assertions.assertEquals(1, result.size(), "CompilerOptionsParser.parse() created incorrect number of options.");
 		Assertions.assertEquals("--" + CompilerOptions.DUMP_CONFIG + "=" + value, result.get(0),
+				"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
+	}
+
+	@Test
+	void testExcludeDefaultsCssFiles() {
+		String value1 = "defaults/css/path1";
+		String value2 = "defaults/css/path2 with spaces";
+		String value3 = "./defaults/css/path3";
+
+		ObjectNode options = JsonNodeFactory.instance.objectNode();
+		ArrayNode paths = JsonNodeFactory.instance.arrayNode();
+
+		paths.add(JsonNodeFactory.instance.textNode(value1));
+		paths.add(JsonNodeFactory.instance.textNode(value2));
+		paths.add(JsonNodeFactory.instance.textNode(value3));
+
+		options.set(CompilerOptions.EXCLUDE_DEFAULTS_CSS_FILES, paths);
+
+		ArrayList<String> result = new ArrayList<>();
+		try {
+			parser.parse(options, null, result);
+		} catch (UnknownCompilerOptionException e) {
+		}
+		Assertions.assertEquals(3, result.size(), "CompilerOptionsParser.parse() created incorrect number of options.");
+		Assertions.assertEquals("--" + CompilerOptions.EXCLUDE_DEFAULTS_CSS_FILES + "+=" + value1, result.get(0),
+				"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
+		Assertions.assertEquals("--" + CompilerOptions.EXCLUDE_DEFAULTS_CSS_FILES + "+=" + value2, result.get(1),
+				"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
+		Assertions.assertEquals("--" + CompilerOptions.EXCLUDE_DEFAULTS_CSS_FILES + "+=" + value3, result.get(2),
 				"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
 	}
 
@@ -694,6 +723,23 @@ class CompilerOptionsParserTests {
 	}
 
 	@Test
+	void testJSComplexImplicitCoercions() {
+		boolean value = true;
+		ObjectNode options = JsonNodeFactory.instance.objectNode();
+		options.set(CompilerOptions.JS_COMPLEX_IMPLICIT_COERCIONS, JsonNodeFactory.instance.booleanNode(value));
+		ArrayList<String> result = new ArrayList<>();
+		try {
+			parser.parse(options, null, result);
+		} catch (UnknownCompilerOptionException e) {
+		}
+		Assertions.assertEquals(1, result.size(), "CompilerOptionsParser.parse() created incorrect number of options.");
+		Assertions.assertEquals(
+				"--" + CompilerOptions.JS_COMPLEX_IMPLICIT_COERCIONS + "=" + Boolean.toString(value),
+				result.get(0),
+				"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
+	}
+
+	@Test
 	void testJSDynamicAccessUnknownMembers() {
 		boolean value = true;
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
@@ -706,6 +752,40 @@ class CompilerOptionsParserTests {
 		Assertions.assertEquals(1, result.size(), "CompilerOptionsParser.parse() created incorrect number of options.");
 		Assertions.assertEquals(
 				"--" + CompilerOptions.JS_DYNAMIC_ACCESS_UNKNOWN_MEMBERS + "=" + Boolean.toString(value),
+				result.get(0),
+				"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
+	}
+
+	@Test
+	void testJSVectorEmulationClass() {
+		String value = "com.example.Vector";
+		ObjectNode options = JsonNodeFactory.instance.objectNode();
+		options.set(CompilerOptions.JS_VECTOR_EMULATION_CLASS, JsonNodeFactory.instance.textNode(value));
+		ArrayList<String> result = new ArrayList<>();
+		try {
+			parser.parse(options, null, result);
+		} catch (UnknownCompilerOptionException e) {
+		}
+		Assertions.assertEquals(1, result.size(), "CompilerOptionsParser.parse() created incorrect number of options.");
+		Assertions.assertEquals(
+				"--" + CompilerOptions.JS_VECTOR_EMULATION_CLASS + "=" + value,
+				result.get(0),
+				"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
+	}
+
+	@Test
+	void testJSVectorIndexChecks() {
+		boolean value = true;
+		ObjectNode options = JsonNodeFactory.instance.objectNode();
+		options.set(CompilerOptions.JS_VECTOR_INDEX_CHECKS, JsonNodeFactory.instance.booleanNode(value));
+		ArrayList<String> result = new ArrayList<>();
+		try {
+			parser.parse(options, null, result);
+		} catch (UnknownCompilerOptionException e) {
+		}
+		Assertions.assertEquals(1, result.size(), "CompilerOptionsParser.parse() created incorrect number of options.");
+		Assertions.assertEquals(
+				"--" + CompilerOptions.JS_VECTOR_INDEX_CHECKS + "=" + Boolean.toString(value),
 				result.get(0),
 				"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
 	}
@@ -795,6 +875,30 @@ class CompilerOptionsParserTests {
 		}
 		Assertions.assertEquals(1, result.size(), "CompilerOptionsParser.parse() created incorrect number of options.");
 		Assertions.assertEquals("--" + CompilerOptions.JS_OUTPUT + "=" + value, result.get(0),
+				"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
+	}
+
+	@Test
+	void testJSOutputOptimization() {
+		String value1 = "skipAsCoercions";
+		String value2 = "skipFunctionCoercions";
+
+		ObjectNode options = JsonNodeFactory.instance.objectNode();
+		ArrayNode jsOutputOptimization = JsonNodeFactory.instance.arrayNode();
+
+		jsOutputOptimization.add(JsonNodeFactory.instance.textNode(value1));
+		jsOutputOptimization.add(JsonNodeFactory.instance.textNode(value2));
+
+		options.set(CompilerOptions.JS_OUTPUT_OPTIMIZATION, jsOutputOptimization);
+		ArrayList<String> result = new ArrayList<>();
+		try {
+			parser.parse(options, null, result);
+		} catch (UnknownCompilerOptionException e) {
+		}
+		Assertions.assertEquals(2, result.size(), "CompilerOptionsParser.parse() created incorrect number of options.");
+		Assertions.assertEquals("--" + CompilerOptions.JS_OUTPUT_OPTIMIZATION + "=" + value1, result.get(0),
+				"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
+		Assertions.assertEquals("--" + CompilerOptions.JS_OUTPUT_OPTIMIZATION + "+=" + value2, result.get(1),
 				"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
 	}
 

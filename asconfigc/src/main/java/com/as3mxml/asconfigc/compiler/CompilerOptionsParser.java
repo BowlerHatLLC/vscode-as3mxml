@@ -115,6 +115,11 @@ public class CompilerOptionsParser {
 					OptionsFormatter.setPathValue(key, options.get(key).asText(), result);
 					break;
 				}
+				case CompilerOptions.EXCLUDE_DEFAULTS_CSS_FILES: {
+					List<String> values = JsonUtils.jsonNodeToListOfStrings(options.get(key));
+					OptionsFormatter.appendPaths(key, values, result);
+					break;
+				}
 				case CompilerOptions.EXPORT_PUBLIC_SYMBOLS: {
 					OptionsFormatter.setBoolean(key, options.get(key).asBoolean(), result);
 					break;
@@ -173,6 +178,10 @@ public class CompilerOptionsParser {
 					appendJSCompilerOptions(key, values, result);
 					break;
 				}
+				case CompilerOptions.JS_COMPLEX_IMPLICIT_COERCIONS: {
+					OptionsFormatter.setBoolean(key, options.get(key).asBoolean(), result);
+					break;
+				}
 				case CompilerOptions.JS_DEFAULT_INITIALIZERS: {
 					OptionsFormatter.setBoolean(key, options.get(key).asBoolean(), result);
 					break;
@@ -195,8 +204,21 @@ public class CompilerOptionsParser {
 					OptionsFormatter.setPathValue(key, options.get(key).asText(), result);
 					break;
 				}
+				case CompilerOptions.JS_OUTPUT_OPTIMIZATION: {
+					List<String> values = JsonUtils.jsonNodeToListOfStrings(options.get(key));
+					OptionsFormatter.setValues(key, values, result);
+					break;
+				}
 				case CompilerOptions.JS_OUTPUT_TYPE: {
 					OptionsFormatter.setValue(key, options.get(key).asText(), result);
+					break;
+				}
+				case CompilerOptions.JS_VECTOR_EMULATION_CLASS: {
+					OptionsFormatter.setValue(key, options.get(key).asText(), result);
+					break;
+				}
+				case CompilerOptions.JS_VECTOR_INDEX_CHECKS: {
+					OptionsFormatter.setBoolean(key, options.get(key).asBoolean(), result);
 					break;
 				}
 				case CompilerOptions.KEEP_ALL_TYPE_SELECTORS: {

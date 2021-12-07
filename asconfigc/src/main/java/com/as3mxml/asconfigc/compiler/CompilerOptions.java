@@ -63,6 +63,7 @@ public class CompilerOptions {
 	public static final String ALLOW_ABSTRACT_CLASSES = "allow-abstract-classes";
 	public static final String ALLOW_IMPORT_ALIASES = "allow-import-aliases";
 	public static final String ALLOW_PRIVATE_CONSTRUCTORS = "allow-private-constructors";
+	public static final String EXCLUDE_DEFAULTS_CSS_FILES = "exclude-defaults-css-files";
 	public static final String EXPORT_PUBLIC_SYMBOLS = "export-public-symbols";
 	public static final String EXPORT_PROTECTED_SYMBOLS = "export-protected-symbols";
 	public static final String EXPORT_INTERNAL_SYMBOLS = "export-internal-symbols";
@@ -70,6 +71,7 @@ public class CompilerOptions {
 	public static final String HTML_TEMPLATE = "html-template";
 	public static final String INLINE_CONSTANTS = "inline-constants";
 	public static final String JS_COMPILER_OPTION = "js-compiler-option";
+	public static final String JS_COMPLEX_IMPLICIT_COERCIONS = "js-complex-implicit-coercions";
 	public static final String JS_DEFAULT_INITIALIZERS = "js-default-initializers";
 	public static final String JS_DEFINE = "js-define";
 	public static final String JS_DYNAMIC_ACCESS_UNKNOWN_MEMBERS = "js-dynamic-access-unknown-members";
@@ -77,7 +79,10 @@ public class CompilerOptions {
 	public static final String JS_LIBRARY_PATH = "js-library-path";
 	public static final String JS_LOAD_CONFIG = "js-load-config";
 	public static final String JS_OUTPUT = "js-output";
+	public static final String JS_OUTPUT_OPTIMIZATION = "js-output-optimization";
 	public static final String JS_OUTPUT_TYPE = "js-output-type";
+	public static final String JS_VECTOR_EMULATION_CLASS = "js-vector-emulation-class";
+	public static final String JS_VECTOR_INDEX_CHECKS = "js-vector-index-checks";
 	public static final String PREVENT_RENAME_PUBLIC_SYMBOLS = "prevent-rename-public-symbols";
 	public static final String PREVENT_RENAME_PUBLIC_STATIC_METHODS = "prevent-rename-public-static-methods";
 	public static final String PREVENT_RENAME_PUBLIC_INSTANCE_METHODS = "prevent-rename-public-instance-methods";

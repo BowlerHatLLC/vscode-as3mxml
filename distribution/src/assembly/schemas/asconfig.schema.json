@@ -487,6 +487,13 @@
           "type": "string",
           "description": "Combines all configuration options and saves them to the specified file."
         },
+        "exclude-defaults-css-files": {
+          "type": "array",
+          "description": "(Apache Royale only) Excludes CSS files from the output.",
+          "items": {
+            "type": "string"
+          }
+        },
         "export-public-symbols": {
           "type": "boolean",
           "description": "(Advanced, Apache Royale only) Determines if public symbols are exported by Closure compiler in the generated JavaScript"
@@ -581,10 +588,14 @@
         },
         "js-compiler-option": {
           "type": "array",
-          "description": "(Apache Royale only) Aasses additional options to the Closure Compiler for a release build.",
+          "description": "(Apache Royale only) Passes additional options to the Closure Compiler for a release build.",
           "items": {
             "type": "string"
           }
+        },
+        "js-complex-implicit-coercions": {
+          "type": "boolean",
+          "description": "(Apache Royale only) Enables or disables implicit coercions of complex types."
         },
         "js-default-initializers": {
           "type": "boolean",
@@ -597,6 +608,21 @@
         "js-output": {
           "type": "string",
           "description": "(Apache Royale only) The path where the generated JavaScript output should be saved."
+        },
+        "js-output-optimization": {
+          "type": "array",
+          "description": "(Advanced, Apache Royale only) Advanced options for optimizing the generated JavaScript.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "js-vector-emulation-class": {
+          "type": "string",
+          "description": "(Apache Royale only) An optional custom implementation of the Vector type."
+        },
+        "js-vector-index-checks": {
+          "type": "boolean",
+          "description": "(Apache Royale only) Enables or disables index range checking for the Vector type."
         },
         "keep-all-type-selectors": {
           "type": "boolean",
