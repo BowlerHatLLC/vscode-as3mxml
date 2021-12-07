@@ -702,6 +702,90 @@
           "type": "string",
           "description": "In a Flex project, specify a download progress bar for your application. The value must be the name of a class that implements the IPreloaderDisplay interface."
         },
+        "prevent-rename-public-symbols": {
+          "type": "boolean",
+          "description": "(Advanced, Apache Royale only) Determines if Closure compiler is prevented from renaming public symbols in the generated JavaScript"
+        },
+        "prevent-rename-public-static-methods": {
+          "type": "boolean",
+          "description": "(Advanced, Apache Royale only) Determines if Closure compiler is prevented from renaming public static methods in the generated JavaScript"
+        },
+        "prevent-rename-public-instance-methods": {
+          "type": "boolean",
+          "description": "(Advanced, Apache Royale only) Determines if Closure compiler is prevented from renaming public instance methods in the generated JavaScript"
+        },
+        "prevent-rename-public-static-variables": {
+          "type": "boolean",
+          "description": "(Advanced, Apache Royale only) Determines if Closure compiler is prevented from renaming public static variables in the generated JavaScript"
+        },
+        "prevent-rename-public-instance-variables": {
+          "type": "boolean",
+          "description": "(Advanced, Apache Royale only) Determines if Closure compiler is prevented from renaming public instance variables in the generated JavaScript"
+        },
+        "prevent-rename-public-static-accessors": {
+          "type": "boolean",
+          "description": "(Advanced, Apache Royale only) Determines if Closure compiler is prevented from renaming public static accessors (getters and setters) in the generated JavaScript"
+        },
+        "prevent-rename-public-instance-accessors": {
+          "type": "boolean",
+          "description": "(Advanced, Apache Royale only) Determines if Closure compiler is prevented from renaming public instance accessors (getters and setters) in the generated JavaScript"
+        },
+        "prevent-rename-protected-symbols": {
+          "type": "boolean",
+          "description": "(Advanced, Apache Royale only) Determines if Closure compiler is prevented from renaming protected symbols in the generated JavaScript"
+        },
+        "prevent-rename-protected-static-methods": {
+          "type": "boolean",
+          "description": "(Advanced, Apache Royale only) Determines if Closure compiler is prevented from renaming protected static methods in the generated JavaScript"
+        },
+        "prevent-rename-protected-instance-methods": {
+          "type": "boolean",
+          "description": "(Advanced, Apache Royale only) Determines if Closure compiler is prevented from renaming protected instance methods in the generated JavaScript"
+        },
+        "prevent-rename-protected-static-variables": {
+          "type": "boolean",
+          "description": "(Advanced, Apache Royale only) Determines if Closure compiler is prevented from renaming protected static variables in the generated JavaScript"
+        },
+        "prevent-rename-protected-instance-variables": {
+          "type": "boolean",
+          "description": "(Advanced, Apache Royale only) Determines if Closure compiler is prevented from renaming protected instance variables in the generated JavaScript"
+        },
+        "prevent-rename-protected-static-accessors": {
+          "type": "boolean",
+          "description": "(Advanced, Apache Royale only) Determines if Closure compiler is prevented from renaming protected static accessors (getters and setters) in the generated JavaScript"
+        },
+        "prevent-rename-protected-instance-accessors": {
+          "type": "boolean",
+          "description": "(Advanced, Apache Royale only) Determines if Closure compiler is prevented from renaming protected instance accessors (getters and setters) in the generated JavaScript"
+        },
+        "prevent-rename-internal-symbols": {
+          "type": "boolean",
+          "description": "(Advanced, Apache Royale only) Determines if Closure compiler is prevented from renaming internal symbols in the generated JavaScript"
+        },
+        "prevent-rename-internal-static-methods": {
+          "type": "boolean",
+          "description": "(Advanced, Apache Royale only) Determines if Closure compiler is prevented from renaming internal static methods in the generated JavaScript"
+        },
+        "prevent-rename-internal-instance-methods": {
+          "type": "boolean",
+          "description": "(Advanced, Apache Royale only) Determines if Closure compiler is prevented from renaming internal instance methods in the generated JavaScript"
+        },
+        "prevent-rename-internal-static-variables": {
+          "type": "boolean",
+          "description": "(Advanced, Apache Royale only) Determines if Closure compiler is prevented from renaming internal static variables in the generated JavaScript"
+        },
+        "prevent-rename-internal-instance-variables": {
+          "type": "boolean",
+          "description": "(Advanced, Apache Royale only) Determines if Closure compiler is prevented from renaming internal instance variables in the generated JavaScript"
+        },
+        "prevent-rename-internal-static-accessors": {
+          "type": "boolean",
+          "description": "(Advanced, Apache Royale only) Determines if Closure compiler is prevented from renaming internal static accessors (getters and setters) in the generated JavaScript"
+        },
+        "prevent-rename-internal-instance-accessors": {
+          "type": "boolean",
+          "description": "(Advanced, Apache Royale only) Determines if Closure compiler is prevented from renaming internal instance accessors (getters and setters) in the generated JavaScript"
+        },
         "remove-circulars": {
           "type": "boolean",
           "description": "(Apache Royale only) Removes circular references from the generated JavaScript code for a release build."

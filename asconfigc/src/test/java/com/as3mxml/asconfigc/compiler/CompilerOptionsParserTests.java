@@ -1107,6 +1107,377 @@ class CompilerOptionsParserTests {
 	}
 
 	@Test
+	void testPreventRenamePublicSymbols() {
+		boolean value = true;
+		ObjectNode options = JsonNodeFactory.instance.objectNode();
+		options.set(CompilerOptions.PREVENT_RENAME_PUBLIC_SYMBOLS, JsonNodeFactory.instance.booleanNode(value));
+		ArrayList<String> result = new ArrayList<>();
+		try {
+			parser.parse(options, null, result);
+		} catch (UnknownCompilerOptionException e) {
+		}
+		Assertions.assertEquals(1, result.size(), "CompilerOptionsParser.parse() created incorrect number of options.");
+		Assertions.assertEquals("--" + CompilerOptions.PREVENT_RENAME_PUBLIC_SYMBOLS + "=" + Boolean.toString(value),
+				result.get(0),
+				"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
+	}
+
+	@Test
+	void testPreventRenamePublicStaticMethods() {
+		boolean value = true;
+		ObjectNode options = JsonNodeFactory.instance.objectNode();
+		options.set(CompilerOptions.PREVENT_RENAME_PUBLIC_STATIC_METHODS, JsonNodeFactory.instance.booleanNode(value));
+		ArrayList<String> result = new ArrayList<>();
+		try {
+			parser.parse(options, null, result);
+		} catch (UnknownCompilerOptionException e) {
+		}
+		Assertions.assertEquals(1, result.size(), "CompilerOptionsParser.parse() created incorrect number of options.");
+		Assertions.assertEquals(
+				"--" + CompilerOptions.PREVENT_RENAME_PUBLIC_STATIC_METHODS + "=" + Boolean.toString(value),
+				result.get(0),
+				"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
+	}
+
+	@Test
+	void testPreventRenamePublicInstanceMethods() {
+		boolean value = true;
+		ObjectNode options = JsonNodeFactory.instance.objectNode();
+		options.set(CompilerOptions.PREVENT_RENAME_PUBLIC_INSTANCE_METHODS,
+				JsonNodeFactory.instance.booleanNode(value));
+		ArrayList<String> result = new ArrayList<>();
+		try {
+			parser.parse(options, null, result);
+		} catch (UnknownCompilerOptionException e) {
+		}
+		Assertions.assertEquals(1, result.size(), "CompilerOptionsParser.parse() created incorrect number of options.");
+		Assertions.assertEquals(
+				"--" + CompilerOptions.PREVENT_RENAME_PUBLIC_INSTANCE_METHODS + "=" + Boolean.toString(value),
+				result.get(0),
+				"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
+	}
+
+	@Test
+	void testPreventRenamePublicStaticVariables() {
+		boolean value = true;
+		ObjectNode options = JsonNodeFactory.instance.objectNode();
+		options.set(CompilerOptions.PREVENT_RENAME_PUBLIC_STATIC_VARIABLES,
+				JsonNodeFactory.instance.booleanNode(value));
+		ArrayList<String> result = new ArrayList<>();
+		try {
+			parser.parse(options, null, result);
+		} catch (UnknownCompilerOptionException e) {
+		}
+		Assertions.assertEquals(1, result.size(), "CompilerOptionsParser.parse() created incorrect number of options.");
+		Assertions.assertEquals(
+				"--" + CompilerOptions.PREVENT_RENAME_PUBLIC_STATIC_VARIABLES + "=" + Boolean.toString(value),
+				result.get(0),
+				"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
+	}
+
+	@Test
+	void testPreventRenamePublicInstanceVariables() {
+		boolean value = true;
+		ObjectNode options = JsonNodeFactory.instance.objectNode();
+		options.set(CompilerOptions.PREVENT_RENAME_PUBLIC_INSTANCE_VARIABLES,
+				JsonNodeFactory.instance.booleanNode(value));
+		ArrayList<String> result = new ArrayList<>();
+		try {
+			parser.parse(options, null, result);
+		} catch (UnknownCompilerOptionException e) {
+		}
+		Assertions.assertEquals(1, result.size(), "CompilerOptionsParser.parse() created incorrect number of options.");
+		Assertions.assertEquals(
+				"--" + CompilerOptions.PREVENT_RENAME_PUBLIC_INSTANCE_VARIABLES + "=" + Boolean.toString(value),
+				result.get(0),
+				"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
+	}
+
+	@Test
+	void testPreventRenamePublicStaticAccessors() {
+		boolean value = true;
+		ObjectNode options = JsonNodeFactory.instance.objectNode();
+		options.set(CompilerOptions.PREVENT_RENAME_PUBLIC_STATIC_ACCESSORS,
+				JsonNodeFactory.instance.booleanNode(value));
+		ArrayList<String> result = new ArrayList<>();
+		try {
+			parser.parse(options, null, result);
+		} catch (UnknownCompilerOptionException e) {
+		}
+		Assertions.assertEquals(1, result.size(), "CompilerOptionsParser.parse() created incorrect number of options.");
+		Assertions.assertEquals(
+				"--" + CompilerOptions.PREVENT_RENAME_PUBLIC_STATIC_ACCESSORS + "=" + Boolean.toString(value),
+				result.get(0),
+				"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
+	}
+
+	@Test
+	void testPreventRenamePublicInstanceAccessors() {
+		boolean value = true;
+		ObjectNode options = JsonNodeFactory.instance.objectNode();
+		options.set(CompilerOptions.PREVENT_RENAME_PUBLIC_INSTANCE_ACCESSORS,
+				JsonNodeFactory.instance.booleanNode(value));
+		ArrayList<String> result = new ArrayList<>();
+		try {
+			parser.parse(options, null, result);
+		} catch (UnknownCompilerOptionException e) {
+		}
+		Assertions.assertEquals(1, result.size(), "CompilerOptionsParser.parse() created incorrect number of options.");
+		Assertions.assertEquals(
+				"--" + CompilerOptions.PREVENT_RENAME_PUBLIC_INSTANCE_ACCESSORS + "=" + Boolean.toString(value),
+				result.get(0),
+				"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
+	}
+
+	@Test
+	void testPreventRenameProtectedSymbols() {
+		boolean value = true;
+		ObjectNode options = JsonNodeFactory.instance.objectNode();
+		options.set(CompilerOptions.PREVENT_RENAME_PROTECTED_SYMBOLS, JsonNodeFactory.instance.booleanNode(value));
+		ArrayList<String> result = new ArrayList<>();
+		try {
+			parser.parse(options, null, result);
+		} catch (UnknownCompilerOptionException e) {
+		}
+		Assertions.assertEquals(1, result.size(), "CompilerOptionsParser.parse() created incorrect number of options.");
+		Assertions.assertEquals("--" + CompilerOptions.PREVENT_RENAME_PROTECTED_SYMBOLS + "=" + Boolean.toString(value),
+				result.get(0),
+				"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
+	}
+
+	@Test
+	void testPreventRenameProtectedStaticMethods() {
+		boolean value = true;
+		ObjectNode options = JsonNodeFactory.instance.objectNode();
+		options.set(CompilerOptions.PREVENT_RENAME_PROTECTED_STATIC_METHODS,
+				JsonNodeFactory.instance.booleanNode(value));
+		ArrayList<String> result = new ArrayList<>();
+		try {
+			parser.parse(options, null, result);
+		} catch (UnknownCompilerOptionException e) {
+		}
+		Assertions.assertEquals(1, result.size(), "CompilerOptionsParser.parse() created incorrect number of options.");
+		Assertions.assertEquals(
+				"--" + CompilerOptions.PREVENT_RENAME_PROTECTED_STATIC_METHODS + "=" + Boolean.toString(value),
+				result.get(0),
+				"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
+	}
+
+	@Test
+	void testPreventRenameProtectedInstanceMethods() {
+		boolean value = true;
+		ObjectNode options = JsonNodeFactory.instance.objectNode();
+		options.set(CompilerOptions.PREVENT_RENAME_PROTECTED_INSTANCE_METHODS,
+				JsonNodeFactory.instance.booleanNode(value));
+		ArrayList<String> result = new ArrayList<>();
+		try {
+			parser.parse(options, null, result);
+		} catch (UnknownCompilerOptionException e) {
+		}
+		Assertions.assertEquals(1, result.size(), "CompilerOptionsParser.parse() created incorrect number of options.");
+		Assertions.assertEquals(
+				"--" + CompilerOptions.PREVENT_RENAME_PROTECTED_INSTANCE_METHODS + "=" + Boolean.toString(value),
+				result.get(0),
+				"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
+	}
+
+	@Test
+	void testPreventRenameProtectedStaticVariables() {
+		boolean value = true;
+		ObjectNode options = JsonNodeFactory.instance.objectNode();
+		options.set(CompilerOptions.PREVENT_RENAME_PROTECTED_STATIC_VARIABLES,
+				JsonNodeFactory.instance.booleanNode(value));
+		ArrayList<String> result = new ArrayList<>();
+		try {
+			parser.parse(options, null, result);
+		} catch (UnknownCompilerOptionException e) {
+		}
+		Assertions.assertEquals(1, result.size(), "CompilerOptionsParser.parse() created incorrect number of options.");
+		Assertions.assertEquals(
+				"--" + CompilerOptions.PREVENT_RENAME_PROTECTED_STATIC_VARIABLES + "=" + Boolean.toString(value),
+				result.get(0),
+				"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
+	}
+
+	@Test
+	void testPreventRenameProtectedInstanceVariables() {
+		boolean value = true;
+		ObjectNode options = JsonNodeFactory.instance.objectNode();
+		options.set(CompilerOptions.PREVENT_RENAME_PROTECTED_INSTANCE_VARIABLES,
+				JsonNodeFactory.instance.booleanNode(value));
+		ArrayList<String> result = new ArrayList<>();
+		try {
+			parser.parse(options, null, result);
+		} catch (UnknownCompilerOptionException e) {
+		}
+		Assertions.assertEquals(1, result.size(), "CompilerOptionsParser.parse() created incorrect number of options.");
+		Assertions.assertEquals(
+				"--" + CompilerOptions.PREVENT_RENAME_PROTECTED_INSTANCE_VARIABLES + "=" + Boolean.toString(value),
+				result.get(0),
+				"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
+	}
+
+	@Test
+	void testPreventRenameProtectedStaticAccessors() {
+		boolean value = true;
+		ObjectNode options = JsonNodeFactory.instance.objectNode();
+		options.set(CompilerOptions.PREVENT_RENAME_PROTECTED_STATIC_ACCESSORS,
+				JsonNodeFactory.instance.booleanNode(value));
+		ArrayList<String> result = new ArrayList<>();
+		try {
+			parser.parse(options, null, result);
+		} catch (UnknownCompilerOptionException e) {
+		}
+		Assertions.assertEquals(1, result.size(), "CompilerOptionsParser.parse() created incorrect number of options.");
+		Assertions.assertEquals(
+				"--" + CompilerOptions.PREVENT_RENAME_PROTECTED_STATIC_ACCESSORS + "=" + Boolean.toString(value),
+				result.get(0),
+				"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
+	}
+
+	@Test
+	void testPreventRenameProtectedInstanceAccessors() {
+		boolean value = true;
+		ObjectNode options = JsonNodeFactory.instance.objectNode();
+		options.set(CompilerOptions.PREVENT_RENAME_PROTECTED_INSTANCE_ACCESSORS,
+				JsonNodeFactory.instance.booleanNode(value));
+		ArrayList<String> result = new ArrayList<>();
+		try {
+			parser.parse(options, null, result);
+		} catch (UnknownCompilerOptionException e) {
+		}
+		Assertions.assertEquals(1, result.size(), "CompilerOptionsParser.parse() created incorrect number of options.");
+		Assertions.assertEquals(
+				"--" + CompilerOptions.PREVENT_RENAME_PROTECTED_INSTANCE_ACCESSORS + "=" + Boolean.toString(value),
+				result.get(0),
+				"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
+	}
+
+	@Test
+	void testPreventRenameInternalSymbols() {
+		boolean value = true;
+		ObjectNode options = JsonNodeFactory.instance.objectNode();
+		options.set(CompilerOptions.PREVENT_RENAME_INTERNAL_SYMBOLS, JsonNodeFactory.instance.booleanNode(value));
+		ArrayList<String> result = new ArrayList<>();
+		try {
+			parser.parse(options, null, result);
+		} catch (UnknownCompilerOptionException e) {
+		}
+		Assertions.assertEquals(1, result.size(), "CompilerOptionsParser.parse() created incorrect number of options.");
+		Assertions.assertEquals("--" + CompilerOptions.PREVENT_RENAME_INTERNAL_SYMBOLS + "=" + Boolean.toString(value),
+				result.get(0),
+				"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
+	}
+
+	@Test
+	void testPreventRenameInternalStaticMethods() {
+		boolean value = true;
+		ObjectNode options = JsonNodeFactory.instance.objectNode();
+		options.set(CompilerOptions.PREVENT_RENAME_INTERNAL_STATIC_METHODS,
+				JsonNodeFactory.instance.booleanNode(value));
+		ArrayList<String> result = new ArrayList<>();
+		try {
+			parser.parse(options, null, result);
+		} catch (UnknownCompilerOptionException e) {
+		}
+		Assertions.assertEquals(1, result.size(), "CompilerOptionsParser.parse() created incorrect number of options.");
+		Assertions.assertEquals(
+				"--" + CompilerOptions.PREVENT_RENAME_INTERNAL_STATIC_METHODS + "=" + Boolean.toString(value),
+				result.get(0),
+				"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
+	}
+
+	@Test
+	void testPreventRenameInternalInstanceMethods() {
+		boolean value = true;
+		ObjectNode options = JsonNodeFactory.instance.objectNode();
+		options.set(CompilerOptions.PREVENT_RENAME_INTERNAL_INSTANCE_METHODS,
+				JsonNodeFactory.instance.booleanNode(value));
+		ArrayList<String> result = new ArrayList<>();
+		try {
+			parser.parse(options, null, result);
+		} catch (UnknownCompilerOptionException e) {
+		}
+		Assertions.assertEquals(1, result.size(), "CompilerOptionsParser.parse() created incorrect number of options.");
+		Assertions.assertEquals(
+				"--" + CompilerOptions.PREVENT_RENAME_INTERNAL_INSTANCE_METHODS + "=" + Boolean.toString(value),
+				result.get(0),
+				"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
+	}
+
+	@Test
+	void testPreventRenameInternalStaticVariables() {
+		boolean value = true;
+		ObjectNode options = JsonNodeFactory.instance.objectNode();
+		options.set(CompilerOptions.PREVENT_RENAME_INTERNAL_STATIC_VARIABLES,
+				JsonNodeFactory.instance.booleanNode(value));
+		ArrayList<String> result = new ArrayList<>();
+		try {
+			parser.parse(options, null, result);
+		} catch (UnknownCompilerOptionException e) {
+		}
+		Assertions.assertEquals(1, result.size(), "CompilerOptionsParser.parse() created incorrect number of options.");
+		Assertions.assertEquals(
+				"--" + CompilerOptions.PREVENT_RENAME_INTERNAL_STATIC_VARIABLES + "=" + Boolean.toString(value),
+				result.get(0),
+				"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
+	}
+
+	@Test
+	void testPreventRenameInternalInstanceVariables() {
+		boolean value = true;
+		ObjectNode options = JsonNodeFactory.instance.objectNode();
+		options.set(CompilerOptions.PREVENT_RENAME_INTERNAL_INSTANCE_VARIABLES,
+				JsonNodeFactory.instance.booleanNode(value));
+		ArrayList<String> result = new ArrayList<>();
+		try {
+			parser.parse(options, null, result);
+		} catch (UnknownCompilerOptionException e) {
+		}
+		Assertions.assertEquals(1, result.size(), "CompilerOptionsParser.parse() created incorrect number of options.");
+		Assertions.assertEquals(
+				"--" + CompilerOptions.PREVENT_RENAME_INTERNAL_INSTANCE_VARIABLES + "=" + Boolean.toString(value),
+				result.get(0),
+				"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
+	}
+
+	@Test
+	void testPreventRenameInternalStaticAccessors() {
+		boolean value = true;
+		ObjectNode options = JsonNodeFactory.instance.objectNode();
+		options.set(CompilerOptions.PREVENT_RENAME_INTERNAL_STATIC_ACCESSORS,
+				JsonNodeFactory.instance.booleanNode(value));
+		ArrayList<String> result = new ArrayList<>();
+		try {
+			parser.parse(options, null, result);
+		} catch (UnknownCompilerOptionException e) {
+		}
+		Assertions.assertEquals(1, result.size(), "CompilerOptionsParser.parse() created incorrect number of options.");
+		Assertions.assertEquals(
+				"--" + CompilerOptions.PREVENT_RENAME_INTERNAL_STATIC_ACCESSORS + "=" + Boolean.toString(value),
+				result.get(0),
+				"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
+	}
+
+	@Test
+	void testPreventRenameInternalInstanceAccessors() {
+		boolean value = true;
+		ObjectNode options = JsonNodeFactory.instance.objectNode();
+		options.set(CompilerOptions.PREVENT_RENAME_INTERNAL_INSTANCE_ACCESSORS,
+				JsonNodeFactory.instance.booleanNode(value));
+		ArrayList<String> result = new ArrayList<>();
+		try {
+			parser.parse(options, null, result);
+		} catch (UnknownCompilerOptionException e) {
+		}
+		Assertions.assertEquals(1, result.size(), "CompilerOptionsParser.parse() created incorrect number of options.");
+		Assertions.assertEquals(
+				"--" + CompilerOptions.PREVENT_RENAME_INTERNAL_INSTANCE_ACCESSORS + "=" + Boolean.toString(value),
+				result.get(0),
+				"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
+	}
+
+	@Test
 	void testRemoveCirculars() {
 		boolean value = true;
 		ObjectNode options = JsonNodeFactory.instance.objectNode();
