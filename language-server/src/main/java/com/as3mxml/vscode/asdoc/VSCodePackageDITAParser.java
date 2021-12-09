@@ -38,10 +38,12 @@ import org.apache.royale.compiler.definitions.IDefinition;
 import org.apache.royale.compiler.definitions.IEventDefinition;
 import org.apache.royale.compiler.definitions.IFunctionDefinition;
 import org.apache.royale.compiler.definitions.IMetadataDefinition;
+import org.apache.royale.compiler.definitions.INamespaceDefinition;
 import org.apache.royale.compiler.definitions.IPackageDefinition;
 import org.apache.royale.compiler.definitions.IStyleDefinition;
 import org.apache.royale.compiler.definitions.ITypeDefinition;
 import org.apache.royale.compiler.definitions.IVariableDefinition;
+import org.apache.royale.compiler.definitions.references.INamespaceReference;
 import org.apache.royale.compiler.workspaces.IWorkspace;
 import org.apache.royale.swc.ISWC;
 import org.apache.royale.swc.dita.IDITAEntry;
@@ -235,6 +237,13 @@ public final class VSCodePackageDITAParser implements IPackageDITAParser {
 					builder.append(":");
 				}
 				builder.append(typeDef.getBaseName());
+				INamespaceReference nsRef = definition.getNamespaceReference();
+				if (nsRef != null && nsRef instanceof INamespaceDefinition) {
+					INamespaceDefinition nsDef = (INamespaceDefinition) nsRef;
+					if ("http://adobe.com/AS3/2006/builtin".equals(nsDef.getURI())) {
+						builder.append(":AS3");
+					}
+				}
 				builder.append(":");
 				builder.append(definition.getBaseName());
 				if (definition instanceof IAccessorDefinition) {
