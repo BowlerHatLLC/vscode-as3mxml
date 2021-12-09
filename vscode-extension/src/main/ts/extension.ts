@@ -89,39 +89,42 @@ function getValidatedEditorSDKConfiguration(
 }
 
 function onDidChangeConfiguration(event: vscode.ConfigurationChangeEvent) {
-  let javaSettingsPath = vscode.workspace
-    .getConfiguration("as3mxml")
-    .get("java.path") as string;
-  let newJavaExecutablePath = findJava(javaSettingsPath, (javaPath) => {
-    return validateJava(savedContext.extensionPath, javaPath);
-  });
-  let newEditorSDKHome = getValidatedEditorSDKConfiguration(
-    newJavaExecutablePath
-  );
-  let newFrameworkSDKHome = getFrameworkSDKPathWithFallbacks();
-  let explicitFrameworkSetting = vscode.workspace
-    .getConfiguration("as3mxml")
-    .get("sdk.framework") as string;
-  let frameworkChanged = frameworkSDKHome != newFrameworkSDKHome;
-  let restarting = false;
+  let needsSDKUpdate = false;
+  let needsRestart = false;
   if (
     event.affectsConfiguration("as3mxml.java.path") ||
     event.affectsConfiguration("as3mxml.sdk.editor") ||
-    event.affectsConfiguration("as3mxml.languageServer.jvmargs") ||
-    (frameworkChanged && !explicitFrameworkSetting)
+    event.affectsConfiguration("as3mxml.languageServer.jvmargs")
   ) {
     //we're going to try to kill the language server and then restart
     //it with the new settings
-    restarting = true;
-    restartServer();
+    const javaSettingsPath = vscode.workspace
+      .getConfiguration("as3mxml")
+      .get("java.path") as string;
+    javaExecutablePath = findJava(javaSettingsPath, (javaPath) => {
+      return validateJava(savedContext.extensionPath, javaPath);
+    });
+    editorSDKHome = getValidatedEditorSDKConfiguration(javaExecutablePath);
+    needsSDKUpdate = true;
+    needsRestart = true;
   }
-  if (editorSDKHome != newEditorSDKHome || frameworkChanged) {
-    editorSDKHome = newEditorSDKHome;
-    frameworkSDKHome = newFrameworkSDKHome;
-    updateSDKStatusBarItem();
-    if (!savedLanguageClient && !restarting && frameworkChanged) {
-      restartServer();
+
+  if (needsSDKUpdate || event.affectsConfiguration("as3mxml.sdk.framework")) {
+    frameworkSDKHome = getFrameworkSDKPathWithFallbacks();
+    if (!frameworkSDKHome) {
+      let explicitFrameworkSetting = vscode.workspace
+        .getConfiguration("as3mxml")
+        .get("sdk.framework") as string;
+      needsRestart = !explicitFrameworkSetting;
     }
+    needsSDKUpdate = true;
+  }
+
+  if (needsSDKUpdate) {
+    updateSDKStatusBarItem();
+  }
+  if (needsRestart) {
+    restartServer();
   }
 }
 
