@@ -35,6 +35,8 @@ import org.apache.royale.swc.dita.IDITAList;
 
 public class DefinitionDocumentationUtils {
     private static final String ASDOC_TAG_PARAM = "param";
+    private static final String SDK_LIBRARY_PATH_SIGNATURE_UNIX = "/frameworks/libs/";
+    private static final String SDK_LIBRARY_PATH_SIGNATURE_WINDOWS = "\\frameworks\\libs\\";
 
     public static String getDocumentationForDefinition(IDefinition definition, boolean useMarkdown,
             IWorkspace workspace, boolean allowDITA) {
@@ -86,28 +88,49 @@ public class DefinitionDocumentationUtils {
         String definitionFilePath = documentableDefinition.getContainingFilePath();
         if (allowDITA && comment == null && definitionFilePath != null && definitionFilePath.endsWith(".swc")) {
             IDITAList ditaList = null;
-            String fileName = new File(definitionFilePath).getName();
-            if (fileName.contains("playerglobal") || fileName.contains("airglobal")) {
-                try {
-                    File jarPath = new File(DefinitionDocumentationUtils.class.getProtectionDomain().getCodeSource()
-                            .getLocation().toURI());
-                    File packageDitaFile = new File(jarPath.getParentFile().getParentFile(),
-                            "playerglobal_docs/packages.dita");
-                    FileInputStream packageDitaStream = new FileInputStream(packageDitaFile);
-                    ditaList = workspace.getASDocDelegate().getPackageDitaParser().parse(definitionFilePath,
-                            packageDitaStream);
-                    try {
-                        packageDitaStream.close();
-                    } catch (IOException e) {
-                    }
-                } catch (URISyntaxException e) {
-                    return null;
-                } catch (FileNotFoundException e) {
-                    return null;
-                }
-            } else {
-                ISWC swc = workspace.getSWCManager().get(new File(definitionFilePath));
+            File swcFile = new File(definitionFilePath);
+            if (swcFile.exists()) {
+                // first try to find the asdoc in the .swc
+                ISWC swc = workspace.getSWCManager().get(swcFile);
+                String fileName = swcFile.getName();
                 ditaList = swc.getDITAList();
+
+                // next, if it's a SDK/framework liberary, check for an
+                // associated resource bundle .swc
+                if (ditaList == null && (definitionFilePath.contains(SDK_LIBRARY_PATH_SIGNATURE_UNIX)
+                        || definitionFilePath.contains(SDK_LIBRARY_PATH_SIGNATURE_WINDOWS))) {
+                    String rbName = fileName.substring(0, fileName.length() - 4) + "_rb.swc";
+                    File frameworksDir = swcFile.getParentFile();
+                    while (!frameworksDir.getName().equals("frameworks")) {
+                        frameworksDir = frameworksDir.getParentFile();
+                    }
+                    File rbSwcFile = new File(frameworksDir, "locale/en_US/" + rbName);
+                    if (rbSwcFile.exists()) {
+                        ISWC rbSwc = workspace.getSWCManager().get(rbSwcFile);
+                        ditaList = rbSwc.getDITAList();
+                    }
+                }
+                // finally, fall back to the bundled documentation for
+                // playerglobal or airglobal, if the filename matches
+                if (ditaList == null && (fileName.contains("playerglobal") || fileName.contains("airglobal"))) {
+                    try {
+                        File jarPath = new File(DefinitionDocumentationUtils.class.getProtectionDomain().getCodeSource()
+                                .getLocation().toURI());
+                        File packageDitaFile = new File(jarPath.getParentFile().getParentFile(),
+                                "playerglobal_docs/packages.dita");
+                        FileInputStream packageDitaStream = new FileInputStream(packageDitaFile);
+                        ditaList = workspace.getASDocDelegate().getPackageDitaParser().parse(definitionFilePath,
+                                packageDitaStream);
+                        try {
+                            packageDitaStream.close();
+                        } catch (IOException e) {
+                        }
+                    } catch (URISyntaxException e) {
+                        return null;
+                    } catch (FileNotFoundException e) {
+                        return null;
+                    }
+                }
             }
             if (ditaList == null) {
                 return null;
