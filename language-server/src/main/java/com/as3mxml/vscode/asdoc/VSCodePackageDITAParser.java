@@ -39,6 +39,7 @@ import org.apache.royale.compiler.definitions.IEventDefinition;
 import org.apache.royale.compiler.definitions.IFunctionDefinition;
 import org.apache.royale.compiler.definitions.IMetadataDefinition;
 import org.apache.royale.compiler.definitions.IPackageDefinition;
+import org.apache.royale.compiler.definitions.IStyleDefinition;
 import org.apache.royale.compiler.definitions.ITypeDefinition;
 import org.apache.royale.compiler.definitions.IVariableDefinition;
 import org.apache.royale.compiler.workspaces.IWorkspace;
@@ -120,15 +121,24 @@ public final class VSCodePackageDITAParser implements IPackageDITAParser {
 					return null;
 				}
 				String defName = defElement.getName();
-				Element apiDetailElement = defElement.element(defName + "Detail");
-				if (apiDetailElement == null) {
-					return null;
+				String description = null;
+				if (definition instanceof IStyleDefinition) {
+					Element descriptionElement = defElement.element("description");
+					if (descriptionElement == null) {
+						return null;
+					}
+					description = descriptionElement.asXML();
+				} else {
+					Element apiDetailElement = defElement.element(defName + "Detail");
+					if (apiDetailElement == null) {
+						return null;
+					}
+					Element apiDescElement = apiDetailElement.element("apiDesc");
+					if (apiDescElement == null) {
+						return null;
+					}
+					description = apiDescElement.asXML();
 				}
-				Element apiDescElement = apiDetailElement.element("apiDesc");
-				if (apiDescElement == null) {
-					return null;
-				}
-				String description = apiDescElement.asXML();
 				StringBuilder builder = new StringBuilder();
 				builder.append("/**");
 				BufferedReader reader = new BufferedReader(new StringReader(description));
@@ -138,33 +148,36 @@ public final class VSCodePackageDITAParser implements IPackageDITAParser {
 					builder.append(line);
 				}
 				if ("apiOperation".equals(defName) || "apiConstructor".equals(defName)) {
-					Element apiDefElement = apiDetailElement.element(defName + "Def");
-					if (apiDefElement != null) {
-						for (Object element : apiDefElement.elements("apiParam")) {
-							Element apiParamElement = (Element) element;
-							Element apiItemNameElement = apiParamElement.element("apiItemName");
-							builder.append("\n * @param ");
-							if (apiItemNameElement == null) {
-								builder.append("_");
-							} else {
-								builder.append(apiItemNameElement.getStringValue());
-								Element paramApiDescElement = apiParamElement.element("apiDesc");
-								if (paramApiDescElement != null) {
-									String paramDescription = paramApiDescElement.getStringValue();
-									paramDescription = paramDescription.replaceAll("\n", " ");
-									builder.append(" ");
-									builder.append(paramDescription);
+					Element apiDetailElement = defElement.element(defName + "Detail");
+					if (apiDetailElement != null) {
+						Element apiDefElement = apiDetailElement.element(defName + "Def");
+						if (apiDefElement != null) {
+							for (Object element : apiDefElement.elements("apiParam")) {
+								Element apiParamElement = (Element) element;
+								Element apiItemNameElement = apiParamElement.element("apiItemName");
+								builder.append("\n * @param ");
+								if (apiItemNameElement == null) {
+									builder.append("_");
+								} else {
+									builder.append(apiItemNameElement.getStringValue());
+									Element paramApiDescElement = apiParamElement.element("apiDesc");
+									if (paramApiDescElement != null) {
+										String paramDescription = paramApiDescElement.getStringValue();
+										paramDescription = paramDescription.replaceAll("\n", " ");
+										builder.append(" ");
+										builder.append(paramDescription);
+									}
 								}
 							}
-						}
-						Element apiReturnElement = apiDefElement.element("apiReturn");
-						if (apiReturnElement != null) {
-							Element returnApiDescElement = apiReturnElement.element("apiDesc");
-							if (returnApiDescElement != null) {
-								String returnDescription = returnApiDescElement.getStringValue();
-								returnDescription = returnDescription.replaceAll("\n", " ");
-								builder.append("\n * @return ");
-								builder.append(returnDescription);
+							Element apiReturnElement = apiDefElement.element("apiReturn");
+							if (apiReturnElement != null) {
+								Element returnApiDescElement = apiReturnElement.element("apiDesc");
+								if (returnApiDescElement != null) {
+									String returnDescription = returnApiDescElement.getStringValue();
+									returnDescription = returnDescription.replaceAll("\n", " ");
+									builder.append("\n * @return ");
+									builder.append(returnDescription);
+								}
 							}
 						}
 					}
@@ -182,9 +195,34 @@ public final class VSCodePackageDITAParser implements IPackageDITAParser {
 					String eventName = definition.getBaseName();
 					for (Object adobeApiEventElement : parentElement.elements("adobeApiEvent")) {
 						Element childElement = (Element) adobeApiEventElement;
-						for (Object apiNameElementObject : childElement.elements("apiName")) {
-							Element apiNameElement = (Element) apiNameElementObject;
+						Element apiNameElement = childElement.element("apiName");
+						if (apiNameElement != null) {
 							if (eventName.equals(apiNameElement.getText())) {
+								return childElement;
+							}
+						}
+					}
+					return null;
+				}
+				if (definition instanceof IStyleDefinition) {
+					String styleName = definition.getBaseName();
+					Element prologElement = parentElement.element("prolog");
+					if (prologElement == null) {
+						return null;
+					}
+					Element asMetadataElement = prologElement.element("asMetadata");
+					if (asMetadataElement == null) {
+						return null;
+					}
+					Element stylesElement = asMetadataElement.element("styles");
+					if (stylesElement == null) {
+						return null;
+					}
+					for (Object styleElement : stylesElement.elements("style")) {
+						Element childElement = (Element) styleElement;
+						Attribute nameAttribute = childElement.attribute("name");
+						if (nameAttribute != null) {
+							if (nameAttribute.getStringValue().equals(styleName)) {
 								return childElement;
 							}
 						}
