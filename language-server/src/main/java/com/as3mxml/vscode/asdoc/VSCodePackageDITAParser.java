@@ -51,7 +51,8 @@ import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 
 /**
- * A custom implementation of IPackageDITAParser for the AS3 & MXML language server.
+ * A custom implementation of IPackageDITAParser for the AS3 & MXML language
+ * server.
  */
 public final class VSCodePackageDITAParser implements IPackageDITAParser {
 	private IWorkspace workspace;
@@ -189,12 +190,21 @@ public final class VSCodePackageDITAParser implements IPackageDITAParser {
 					}
 				}
 				String definitionID = builder.toString();
+				String altDefinitionID = null;
+				if (definition instanceof IAccessorDefinition) {
+					altDefinitionID = definitionID.substring(0, definitionID.length() - 4) + ":set";
+				}
 
 				for (Object element : parentElement.elements(elementName)) {
 					Element childElement = (Element) element;
 					Attribute idAttribute = childElement.attribute("id");
-					if (idAttribute != null && idAttribute.getStringValue().equals(definitionID)) {
-						return childElement;
+					if (idAttribute != null) {
+						if (idAttribute.getStringValue().equals(definitionID)) {
+							return childElement;
+						}
+						if (altDefinitionID != null && idAttribute.getStringValue().equals(altDefinitionID)) {
+							return childElement;
+						}
 					}
 				}
 				return null;
