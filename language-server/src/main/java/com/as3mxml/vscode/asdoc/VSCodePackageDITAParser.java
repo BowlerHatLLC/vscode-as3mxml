@@ -35,7 +35,9 @@ import org.apache.royale.compiler.asdoc.IASDocComment;
 import org.apache.royale.compiler.asdoc.IPackageDITAParser;
 import org.apache.royale.compiler.definitions.IAccessorDefinition;
 import org.apache.royale.compiler.definitions.IDefinition;
+import org.apache.royale.compiler.definitions.IEventDefinition;
 import org.apache.royale.compiler.definitions.IFunctionDefinition;
+import org.apache.royale.compiler.definitions.IMetadataDefinition;
 import org.apache.royale.compiler.definitions.IPackageDefinition;
 import org.apache.royale.compiler.definitions.ITypeDefinition;
 import org.apache.royale.compiler.definitions.IVariableDefinition;
@@ -98,11 +100,21 @@ public final class VSCodePackageDITAParser implements IPackageDITAParser {
 			@Override
 			public IASDocComment getComment(IDefinition definition) throws Exception {
 				Element defElement = null;
-				IDefinition parentDef = definition.getParent();
-				if (parentDef instanceof IPackageDefinition || parentDef == null) {
-					defElement = getDefinitionDITAFromPackageDITA(definition);
-				} else if (parentDef instanceof ITypeDefinition) {
-					defElement = getDefinitionDITAFromTypeDITA(definition);
+				if (definition instanceof IMetadataDefinition) {
+					IMetadataDefinition metadataDefinition = (IMetadataDefinition) definition;
+					IDefinition decoratedDefinition = metadataDefinition.getDecoratedDefinition();
+					if (decoratedDefinition instanceof ITypeDefinition) {
+						ITypeDefinition typeDefinition = (ITypeDefinition) decoratedDefinition;
+						defElement = getDefinitionDITAFromParentTypeDef(definition, typeDefinition);
+					}
+				} else {
+					IDefinition parentDef = definition.getParent();
+					if (parentDef instanceof IPackageDefinition || parentDef == null) {
+						defElement = getDefinitionDITAFromPackageDITA(definition);
+					} else if (parentDef instanceof ITypeDefinition) {
+						ITypeDefinition parentDefinition = (ITypeDefinition) parentDef;
+						defElement = getDefinitionDITAFromParentTypeDef(definition, parentDefinition);
+					}
 				}
 				if (defElement == null) {
 					return null;
@@ -161,10 +173,22 @@ public final class VSCodePackageDITAParser implements IPackageDITAParser {
 				return new VSCodeASDocComment(builder.toString());
 			}
 
-			private Element getDefinitionDITAFromTypeDITA(IDefinition definition) {
-				ITypeDefinition typeDef = (ITypeDefinition) definition.getParent();
+			private Element getDefinitionDITAFromParentTypeDef(IDefinition definition, ITypeDefinition typeDef) {
 				Element parentElement = getDefinitionDITAFromPackageDITA(typeDef);
 				if (parentElement == null) {
+					return null;
+				}
+				if (definition instanceof IEventDefinition) {
+					String eventName = definition.getBaseName();
+					for (Object adobeApiEventElement : parentElement.elements("adobeApiEvent")) {
+						Element childElement = (Element) adobeApiEventElement;
+						for (Object apiNameElementObject : childElement.elements("apiName")) {
+							Element apiNameElement = (Element) apiNameElementObject;
+							if (eventName.equals(apiNameElement.getText())) {
+								return childElement;
+							}
+						}
+					}
 					return null;
 				}
 				StringBuilder builder = new StringBuilder();
@@ -189,6 +213,10 @@ public final class VSCodePackageDITAParser implements IPackageDITAParser {
 						elementName = "apiOperation";
 					}
 				}
+				if (elementName == null) {
+					return null;
+				}
+
 				String definitionID = builder.toString();
 				String altDefinitionID = null;
 				if (definition instanceof IAccessorDefinition) {
@@ -208,7 +236,6 @@ public final class VSCodePackageDITAParser implements IPackageDITAParser {
 					}
 				}
 				return null;
-
 			}
 
 			private Element getDefinitionDITAFromPackageDITA(IDefinition definition) {
