@@ -1040,9 +1040,11 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                 List<ActionScriptProjectData> allProjectData = actionScriptProjectManager
                         .getAllProjectDataForSWCFile(changedPath);
                 if (allProjectData.size() > 0) {
+                    IFileSpecification fileSpec = fileTracker.getFileSpecification(normalizedChangedPathAsString);
+                    compilerWorkspace.fileChanged(fileSpec);
                     // for some reason, simply calling fileAdded(),
-                    // fileRemoved(), or fileChanged() doesn't work properly for
-                    // SWC files.
+                    // fileRemoved(), or fileChanged() doesn't always work
+                    // properly for SWC files.
                     // changing the project configuration will force the
                     // change to be detected, so let's do that manually.
                     for (ActionScriptProjectData projectData : allProjectData) {
