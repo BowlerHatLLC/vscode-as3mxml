@@ -37,6 +37,7 @@ import org.apache.royale.compiler.definitions.IAccessorDefinition;
 import org.apache.royale.compiler.definitions.IDefinition;
 import org.apache.royale.compiler.definitions.IEventDefinition;
 import org.apache.royale.compiler.definitions.IFunctionDefinition;
+import org.apache.royale.compiler.definitions.IInterfaceDefinition;
 import org.apache.royale.compiler.definitions.IMetadataDefinition;
 import org.apache.royale.compiler.definitions.INamespaceDefinition;
 import org.apache.royale.compiler.definitions.IPackageDefinition;
@@ -237,11 +238,18 @@ public final class VSCodePackageDITAParser implements IPackageDITAParser {
 					builder.append(":");
 				}
 				builder.append(typeDef.getBaseName());
-				INamespaceReference nsRef = definition.getNamespaceReference();
-				if (nsRef != null && nsRef instanceof INamespaceDefinition) {
-					INamespaceDefinition nsDef = (INamespaceDefinition) nsRef;
-					if ("http://adobe.com/AS3/2006/builtin".equals(nsDef.getURI())) {
-						builder.append(":AS3");
+				if (typeDef instanceof IInterfaceDefinition) {
+					builder.append(":");
+					builder.append(typeDef.getPackageName());
+					builder.append(":");
+					builder.append(typeDef.getBaseName());
+				} else {
+					INamespaceReference nsRef = definition.getNamespaceReference();
+					if (nsRef != null && nsRef instanceof INamespaceDefinition) {
+						INamespaceDefinition nsDef = (INamespaceDefinition) nsRef;
+						if ("http://adobe.com/AS3/2006/builtin".equals(nsDef.getURI())) {
+							builder.append(":AS3");
+						}
 					}
 				}
 				builder.append(":");
