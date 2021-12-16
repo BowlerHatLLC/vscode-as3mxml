@@ -144,8 +144,8 @@ public class RealTimeProblemsChecker implements Runnable {
 			checkForProblems();
 			long waitTime = getWaitTime();
 			try {
-				//wait a short time between checks
-				//it's okay if problems are updated a little slowly
+				// wait a short time between checks
+				// it's okay if problems are updated a little slowly
 				Thread.sleep(waitTime);
 			} catch (InterruptedException e) {
 			}
@@ -157,7 +157,7 @@ public class RealTimeProblemsChecker implements Runnable {
 			return;
 		}
 		if (compilationUnit.getProject() == null) {
-			//this compilation unit is no longer valid
+			// this compilation unit is no longer valid
 			clear();
 			return;
 		}
@@ -229,9 +229,10 @@ public class RealTimeProblemsChecker implements Runnable {
 			}
 
 			ILspProject project = projectData.project;
+			String qualifiedName = CompilationUnitUtils.getPrimaryQualifiedName(compilationUnit);
 			Set<String> requiredImports = project.getQNamesOfDependencies(compilationUnit);
 			IASNode ast = syntaxTreeRequest.get().getAST();
-			ASTUtils.findUnusedImportProblems(ast, requiredImports, problems);
+			ASTUtils.findUnusedImportProblems(ast, qualifiedName, requiredImports, problems);
 			ASTUtils.findDisabledConfigConditionBlockProblems(ast, problems);
 		} catch (Exception e) {
 			System.err.println("Exception in compiler while checking for problems: " + e);

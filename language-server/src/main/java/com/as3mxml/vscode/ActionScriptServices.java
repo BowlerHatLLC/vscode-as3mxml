@@ -54,12 +54,12 @@ import com.as3mxml.vscode.commands.ICommandConstants;
 import com.as3mxml.vscode.compiler.CompilerShell;
 import com.as3mxml.vscode.compiler.problems.LSPFileNotFoundProblem;
 import com.as3mxml.vscode.compiler.problems.SyntaxFallbackProblem;
+import com.as3mxml.vscode.project.ActionScriptProjectData;
 import com.as3mxml.vscode.project.ILspProject;
 import com.as3mxml.vscode.project.IProjectConfigStrategy;
 import com.as3mxml.vscode.project.IProjectConfigStrategyFactory;
 import com.as3mxml.vscode.project.ProjectOptions;
 import com.as3mxml.vscode.project.SimpleProjectConfigStrategy;
-import com.as3mxml.vscode.project.ActionScriptProjectData;
 import com.as3mxml.vscode.providers.CodeActionProvider;
 import com.as3mxml.vscode.providers.CompletionProvider;
 import com.as3mxml.vscode.providers.DefinitionProvider;
@@ -74,6 +74,7 @@ import com.as3mxml.vscode.providers.TypeDefinitionProvider;
 import com.as3mxml.vscode.providers.WorkspaceSymbolProvider;
 import com.as3mxml.vscode.services.ActionScriptLanguageClient;
 import com.as3mxml.vscode.utils.ASTUtils;
+import com.as3mxml.vscode.utils.ActionScriptProjectManager;
 import com.as3mxml.vscode.utils.ActionScriptSDKUtils;
 import com.as3mxml.vscode.utils.CompilationUnitUtils;
 import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
@@ -83,7 +84,6 @@ import com.as3mxml.vscode.utils.FileTracker;
 import com.as3mxml.vscode.utils.LanguageServerCompilerUtils;
 import com.as3mxml.vscode.utils.ProblemTracker;
 import com.as3mxml.vscode.utils.RealTimeProblemsChecker;
-import com.as3mxml.vscode.utils.ActionScriptProjectManager;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
@@ -121,9 +121,7 @@ import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.CodeLensParams;
 import org.eclipse.lsp4j.Command;
-import org.eclipse.lsp4j.CompletionCapabilities;
 import org.eclipse.lsp4j.CompletionItem;
-import org.eclipse.lsp4j.CompletionItemCapabilities;
 import org.eclipse.lsp4j.CompletionList;
 import org.eclipse.lsp4j.CompletionParams;
 import org.eclipse.lsp4j.DefinitionParams;
@@ -160,7 +158,6 @@ import org.eclipse.lsp4j.RenameParams;
 import org.eclipse.lsp4j.SignatureHelp;
 import org.eclipse.lsp4j.SignatureHelpParams;
 import org.eclipse.lsp4j.SymbolInformation;
-import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.TextDocumentItem;
 import org.eclipse.lsp4j.TextEdit;
@@ -2074,8 +2071,9 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                 // it's a little too expensive to do it for real-time problems
                 IASNode ast = ASTUtils.getCompilationUnitAST(unit);
                 if (ast != null) {
+                    String qualifiedName = CompilationUnitUtils.getPrimaryQualifiedName(unit);
                     Set<String> requiredImports = project.getQNamesOfDependencies(unit);
-                    ASTUtils.findUnusedImportProblems(ast, requiredImports, problems);
+                    ASTUtils.findUnusedImportProblems(ast, qualifiedName, requiredImports, problems);
                     ASTUtils.findDisabledConfigConditionBlockProblems(ast, problems);
                 }
             } else {

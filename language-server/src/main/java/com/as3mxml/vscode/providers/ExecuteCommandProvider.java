@@ -35,6 +35,7 @@ import com.as3mxml.vscode.project.ActionScriptProjectData;
 import com.as3mxml.vscode.services.ActionScriptLanguageClient;
 import com.as3mxml.vscode.utils.ASTUtils;
 import com.as3mxml.vscode.utils.CodeActionsUtils;
+import com.as3mxml.vscode.utils.CompilationUnitUtils;
 import com.as3mxml.vscode.utils.CompilerProjectUtils;
 import com.as3mxml.vscode.utils.FileTracker;
 import com.as3mxml.vscode.utils.ImportRange;
@@ -319,8 +320,9 @@ public class ExecuteCommandProvider {
                 missingNames = ASTUtils.findUnresolvedIdentifiersToImport(ast, project);
             }
             if (organizeImports_removeUnusedImports) {
+                String qualifiedName = CompilationUnitUtils.getPrimaryQualifiedName(unit);
                 Set<String> requiredImports = project.getQNamesOfDependencies(unit);
-                importsToRemove = ASTUtils.findImportNodesToRemove(ast, requiredImports);
+                importsToRemove = ASTUtils.findImportNodesToRemove(ast, qualifiedName, requiredImports);
             }
         }
         if (missingNames != null) {
@@ -493,7 +495,9 @@ public class ExecuteCommandProvider {
         List<Object> args = params.getArguments();
         final boolean appsOnly = args.size() > 0 && ((JsonPrimitive) args.get(0)).getAsBoolean();
         List<String> result = actionScriptProjectManager.getAllProjectData().stream()
-                .filter(projectData -> appsOnly ? (projectData.options != null && ProjectType.APP.equals(projectData.options.type)) : true)
+                .filter(projectData -> appsOnly
+                        ? (projectData.options != null && ProjectType.APP.equals(projectData.options.type))
+                        : true)
                 .map(projectData -> projectData.projectRoot.toUri().toString()).collect(Collectors.toList());
         return CompletableFuture.completedFuture(result);
     }
