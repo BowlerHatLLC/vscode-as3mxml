@@ -954,6 +954,20 @@ public class ASConfigC {
 		{
 			deleteOutputDirectory(outputPath);
 		}
+		if (moduleOutputPaths != null) {
+			for (String moduleOutputPath : moduleOutputPaths) {
+				Path moduleSWFPath = Paths.get(moduleOutputPath);
+				if (Files.exists(moduleSWFPath)) {
+					try {
+						Files.delete(moduleSWFPath);
+					} catch (IOException e) {
+						throw new ASConfigCException(
+								"Failed to clean project because an I/O exception occurred while deleting file: "
+										+ moduleSWFPath.toString());
+					}
+				}
+			}
+		}
 		if (workerOutputPaths != null) {
 			for (String workerOutputPath : workerOutputPaths) {
 				Path workerSWFPath = Paths.get(workerOutputPath);
