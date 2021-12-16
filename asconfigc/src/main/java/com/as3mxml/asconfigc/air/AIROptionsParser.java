@@ -29,22 +29,22 @@ public class AIROptionsParser {
 	}
 
 	public void parse(String platform, boolean debug, String applicationDescriptorPath, String applicationContentPath,
-			JsonNode options, List<String> result) {
+			List<String> modulePaths, List<String> workerPaths, JsonNode options, List<String> result) {
 		result.add("-" + AIROptions.PACKAGE);
 
-		//AIR_SIGNING_OPTIONS begin
-		//these are *desktop* signing options only
-		//mobile signing options must be specified later!
+		// AIR_SIGNING_OPTIONS begin
+		// these are *desktop* signing options only
+		// mobile signing options must be specified later!
 		if (platform.equals(AIRPlatform.AIR) || platform.equals(AIRPlatform.WINDOWS)
 				|| platform.equals(AIRPlatform.MAC)) {
 			if (options.has(AIROptions.SIGNING_OPTIONS)
 					&& !overridesOptionForPlatform(options, AIROptions.SIGNING_OPTIONS, platform)) {
 				parseSigningOptions(options.get(AIROptions.SIGNING_OPTIONS), debug, result);
 			} else if (overridesOptionForPlatform(options, AIROptions.SIGNING_OPTIONS, platform)) {
-				//desktop captive runtime
+				// desktop captive runtime
 				parseSigningOptions(options.get(platform).get(AIROptions.SIGNING_OPTIONS), debug, result);
 			} else if (!options.has(AIROptions.SIGNING_OPTIONS)) {
-				//desktop shared runtime, but signing options overridden for windows or mac
+				// desktop shared runtime, but signing options overridden for windows or mac
 				if (System.getProperty("os.name").toLowerCase().startsWith("mac")
 						&& overridesOptionForPlatform(options, AIROptions.SIGNING_OPTIONS, AIRPlatform.MAC)) {
 					parseSigningOptions(options.get(AIRPlatform.MAC).get(AIROptions.SIGNING_OPTIONS), debug, result);
@@ -55,7 +55,7 @@ public class AIROptionsParser {
 				}
 			}
 		}
-		//AIR_SIGNING_OPTIONS end
+		// AIR_SIGNING_OPTIONS end
 
 		if (overridesOptionForPlatform(options, AIROptions.TARGET, platform)) {
 			setValueWithoutAssignment(AIROptions.TARGET, options.get(platform).get(AIROptions.TARGET).asText(), result);
@@ -88,31 +88,31 @@ public class AIROptionsParser {
 					break;
 				}
 				case AIRPlatform.WINDOWS: {
-					//captive runtime
+					// captive runtime
 					setValueWithoutAssignment(AIROptions.TARGET, AIRTarget.BUNDLE, result);
 					break;
 				}
 				case AIRPlatform.MAC: {
-					//captive runtime
+					// captive runtime
 					setValueWithoutAssignment(AIROptions.TARGET, AIRTarget.BUNDLE, result);
 					break;
 				}
 				default: {
-					//shared runtime
+					// shared runtime
 					setValueWithoutAssignment(AIROptions.TARGET, AIRTarget.AIR, result);
 					break;
 				}
 			}
 		}
 
-		//DEBUGGER_CONNECTION_OPTIONS begin
+		// DEBUGGER_CONNECTION_OPTIONS begin
 		if (debug && (platform.equals(AIRPlatform.ANDROID) || platform.equals(AIRPlatform.IOS)
 				|| platform.equals(AIRPlatform.IOS_SIMULATOR))) {
 			parseDebugOptions(options, platform, result);
 		}
-		//DEBUGGER_CONNECTION_OPTIONS end
+		// DEBUGGER_CONNECTION_OPTIONS end
 
-		//iOS options begin
+		// iOS options begin
 		if (overridesOptionForPlatform(options, AIROptions.SAMPLER, platform)) {
 			result.add("-" + AIROptions.SAMPLER);
 		}
@@ -124,9 +124,9 @@ public class AIROptionsParser {
 			setBooleanValueWithoutAssignment(AIROptions.EMBED_BITCODE,
 					options.get(platform).get(AIROptions.EMBED_BITCODE).asBoolean(), result);
 		}
-		//iOS options end
+		// iOS options end
 
-		//Android options begin
+		// Android options begin
 		if (overridesOptionForPlatform(options, AIROptions.AIR_DOWNLOAD_URL, platform)) {
 			setValueWithoutAssignment(AIROptions.AIR_DOWNLOAD_URL,
 					options.get(platform).get(AIROptions.AIR_DOWNLOAD_URL).asText(), result);
@@ -134,11 +134,11 @@ public class AIROptionsParser {
 		if (overridesOptionForPlatform(options, AIROptions.ARCH, platform)) {
 			setValueWithoutAssignment(AIROptions.ARCH, options.get(platform).get(AIROptions.ARCH).asText(), result);
 		}
-		//Android options end
+		// Android options end
 
-		//NATIVE_SIGNING_OPTIONS begin
-		//these are *mobile* signing options only
-		//desktop signing options were already handled earlier
+		// NATIVE_SIGNING_OPTIONS begin
+		// these are *mobile* signing options only
+		// desktop signing options were already handled earlier
 		if (platform.equals(AIRPlatform.ANDROID) || platform.equals(AIRPlatform.IOS)
 				|| platform.equals(AIRPlatform.IOS_SIMULATOR)) {
 			if (overridesOptionForPlatform(options, AIROptions.SIGNING_OPTIONS, platform)) {
@@ -147,7 +147,7 @@ public class AIROptionsParser {
 				parseSigningOptions(options.get(AIROptions.SIGNING_OPTIONS), debug, result);
 			}
 		}
-		//NATIVE_SIGNING_OPTIONS end
+		// NATIVE_SIGNING_OPTIONS end
 
 		if (overridesOptionForPlatform(options, AIROptions.OUTPUT, platform)) {
 			String outputPath = options.get(platform).get(AIROptions.OUTPUT).asText();
@@ -156,14 +156,14 @@ public class AIROptionsParser {
 			String outputPath = options.get(AIROptions.OUTPUT).asText();
 			result.add(outputPath);
 		} else {
-			//output is not defined, so generate an appropriate file name based
-			//on the content's file name
+			// output is not defined, so generate an appropriate file name based
+			// on the content's file name
 			Path applicationContentFilePath = Paths.get(applicationContentPath);
 			String fileName = applicationContentFilePath.getFileName().toString();
 			int index = fileName.lastIndexOf(".");
 			if (index != -1) {
-				//remove the file extension, if it exists
-				//adt will automatically add an extension, if necessary
+				// remove the file extension, if it exists
+				// adt will automatically add an extension, if necessary
 				fileName = fileName.substring(0, index);
 			} else {
 				throw new Error("Cannot find Adobe AIR application output path.");
@@ -179,21 +179,22 @@ public class AIROptionsParser {
 					options.get(platform).get(AIROptions.PLATFORMSDK).asText(), result);
 		}
 
-		//FILE_OPTIONS begin
+		// FILE_OPTIONS begin
 		if (overridesOptionForPlatform(options, AIROptions.FILES, platform)) {
 			parseFiles(options.get(platform).get(AIROptions.FILES), result);
 		} else if (options.has(AIROptions.FILES)) {
 			parseFiles(options.get(AIROptions.FILES), result);
 		}
-		Path applicationContentFilePath = Paths.get(applicationContentPath);
-		if (!applicationContentPath.equals(applicationContentFilePath.getFileName().toString())) {
-			result.add("-C");
-			String dirname = applicationContentFilePath.getParent().toString();
-			result.add(dirname);
-			String basename = applicationContentFilePath.getFileName().toString();
-			result.add(basename);
-		} else {
-			result.add(applicationContentPath);
+		appendSWFPath(applicationContentPath, result);
+		if (modulePaths != null) {
+			for (String modulePath : modulePaths) {
+				appendSWFPath(modulePath, result);
+			}
+		}
+		if (workerPaths != null) {
+			for (String workerPath : workerPaths) {
+				appendSWFPath(workerPath, result);
+			}
 		}
 
 		if (overridesOptionForPlatform(options, AIROptions.EXTDIR, platform)) {
@@ -207,10 +208,10 @@ public class AIROptionsParser {
 		} else if (options.has(AIROptions.RESDIR)) {
 			setPathValueWithoutAssignment(AIROptions.RESDIR, options.get(AIROptions.RESDIR).asText(), result);
 		}
-		//FILE_OPTIONS end
+		// FILE_OPTIONS end
 
-		//ANE_OPTIONS begin
-		//ANE_OPTIONS end
+		// ANE_OPTIONS begin
+		// ANE_OPTIONS end
 
 		Iterator<String> fieldNames = options.fieldNames();
 		while (fieldNames.hasNext()) {
@@ -245,7 +246,7 @@ public class AIROptionsParser {
 
 	/**
 	 * @private
-	 * Determines if an option is also specified for a specific platform.
+	 *          Determines if an option is also specified for a specific platform.
 	 */
 	private boolean overridesOptionForPlatform(JsonNode globalOptions, String optionName, String platform) {
 		return globalOptions.has(platform) && globalOptions.get(platform).has(optionName);
@@ -259,6 +260,19 @@ public class AIROptionsParser {
 	private void setBooleanValueWithoutAssignment(String optionName, boolean value, List<String> result) {
 		result.add("-" + optionName);
 		result.add(value ? "yes" : "no");
+	}
+
+	private void appendSWFPath(String swfPath, List<String> result) {
+		Path swfFilePath = Paths.get(swfPath);
+		if (!swfPath.equals(swfFilePath.getFileName().toString())) {
+			result.add("-C");
+			String dirname = swfFilePath.getParent().toString();
+			result.add(dirname);
+			String basename = swfFilePath.getFileName().toString();
+			result.add(basename);
+		} else {
+			result.add(swfPath);
+		}
 	}
 
 	private void parseExtdir(JsonNode extdir, List<String> result) {
@@ -316,24 +330,24 @@ public class AIROptionsParser {
 				absoluteFileToAdd = new File(System.getProperty("user.dir"), srcFile);
 			}
 
-			//for some reason, isDirectory() may not work properly when we check
-			//a file with a relative path
+			// for some reason, isDirectory() may not work properly when we check
+			// a file with a relative path
 			if (absoluteFileToAdd.isDirectory()) {
 				if (destPath == null) {
-					//add these folders after everything else because we'll use
-					//the -C option
+					// add these folders after everything else because we'll use
+					// the -C option
 					cOptionFolders.add(new FolderToAddWithCOption(fileToAdd));
 					continue;
 				} else if (destPath.equals(".")) {
-					//add these folders after everything else because we'll use
-					//the -C option
+					// add these folders after everything else because we'll use
+					// the -C option
 					cOptionRootFolders.add(fileToAdd);
 					continue;
 				} else {
 					Path destPathPath = Paths.get(destPath);
 					if (canUseCOptionForFolder(fileToAdd, destPathPath)) {
-						//add these folders after everything else because we'll use
-						//the -C option
+						// add these folders after everything else because we'll use
+						// the -C option
 						cOptionFolders.add(new FolderToAddWithCOption(fileToAdd, destPathPath));
 						continue;
 					}
@@ -385,12 +399,12 @@ public class AIROptionsParser {
 		if (!absoluteSrcFile.isAbsolute()) {
 			absoluteSrcFile = new File(System.getProperty("user.dir"), srcFile.getPath());
 		}
-		//for some reason, isDirectory() may not work properly when we check
-		//a file with a relative path
+		// for some reason, isDirectory() may not work properly when we check
+		// a file with a relative path
 		if (absoluteSrcFile.isDirectory()) {
-			//Adobe's documentation for adt says that the -e option can
-			//accept a directory, but it only seems to work with files, so
-			//we read the directory contents to add the files individually
+			// Adobe's documentation for adt says that the -e option can
+			// accept a directory, but it only seems to work with files, so
+			// we read the directory contents to add the files individually
 			File[] files = srcFile.listFiles();
 			for (int i = 0, length = files.length; i < length; i++) {
 				File file = files[i];
@@ -435,8 +449,8 @@ public class AIROptionsParser {
 			}
 		}
 		if (useDefault) {
-			//if both connect and listen options are omitted, use the
-			//connect as the default with no host name.
+			// if both connect and listen options are omitted, use the
+			// connect as the default with no host name.
 			result.add("-" + AIROptions.CONNECT);
 		}
 	}

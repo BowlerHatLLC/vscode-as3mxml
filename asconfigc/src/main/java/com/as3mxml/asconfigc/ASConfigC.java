@@ -210,7 +210,7 @@ public class ASConfigC {
 		this.options = options;
 		File configFile = findConfigurationFile(options.project);
 
-		//the current working directory must be where asconfig.json is located
+		// the current working directory must be where asconfig.json is located
 		System.setProperty("user.dir", configFile.getParent());
 
 		JsonNode json = loadConfigFromFile(configFile);
@@ -249,6 +249,7 @@ public class ASConfigC {
 	private String jsOutputType;
 	private String outputPath;
 	private String mainFile;
+	private List<String> moduleOutputPaths;
 	private List<String> workerOutputPaths;
 	private List<String> airDescriptorPaths;
 	private List<String> sourcePaths;
@@ -292,7 +293,7 @@ public class ASConfigC {
 			JsonSchemaFactory factory = JsonSchemaFactory.getInstance();
 			schema = factory.getSchema(schemaInputStream);
 		} catch (Exception e) {
-			//this exception is unexpected, so it should be reported
+			// this exception is unexpected, so it should be reported
 			throw new ASConfigCException("Failed to load asconfig.json schema: " + e);
 		}
 		return loadConfigFromFileWithSchema(configFile, schema);
@@ -309,7 +310,7 @@ public class ASConfigC {
 			}
 			String contents = new String(Files.readAllBytes(configFile.toPath()));
 			ObjectMapper mapper = new ObjectMapper();
-			//VSCode allows comments, so we should too
+			// VSCode allows comments, so we should too
 			mapper.configure(JsonParser.Feature.ALLOW_COMMENTS, true);
 			mapper.configure(JsonParser.Feature.ALLOW_TRAILING_COMMA, true);
 			json = mapper.readTree(contents);
@@ -332,7 +333,7 @@ public class ASConfigC {
 				json = ConfigUtils.mergeConfigs(json, otherJson);
 			}
 		} catch (JsonProcessingException e) {
-			//this exception is expected sometimes if the JSON is invalid
+			// this exception is expected sometimes if the JSON is invalid
 			JsonLocation location = e.getLocation();
 			throw new ASConfigCException(
 					"Invalid configuration in file " + configFile.getName() + ":\n" + e.getOriginalMessage() + " (line "
@@ -399,14 +400,14 @@ public class ASConfigC {
 			} else {
 				String additionalOptions = jsonAdditionalOptions.asText();
 				if (additionalOptions != null) {
-					//split the additionalOptions into separate values so that we can
-					//pass them in as String[], as the compiler expects.
+					// split the additionalOptions into separate values so that we can
+					// pass them in as String[], as the compiler expects.
 					compilerOptions.addAll(OptionsUtils.parseAdditionalOptions(additionalOptions));
 				}
 			}
 		}
-		//if js-output-type was not specified, use the default
-		//swf projects won't have a js-output-type
+		// if js-output-type was not specified, use the default
+		// swf projects won't have a js-output-type
 		if (jsOutputType != null) {
 			compilerOptions.add("--" + CompilerOptions.JS_OUTPUT_TYPE + "=" + jsOutputType);
 		}
@@ -415,20 +416,20 @@ public class ASConfigC {
 			airDescriptorPaths = new ArrayList<String>();
 			JsonNode application = json.get(TopLevelFields.APPLICATION);
 			if (application.isTextual()) {
-				//if it's a string, just use it as is for all platforms
+				// if it's a string, just use it as is for all platforms
 				String airDescriptorPath = application.asText();
 				airDescriptorPaths.add(airDescriptorPath);
 			} else if (options.air != null) {
-				//if it's an object, and we're packaging an AIR app, we need to
-				//grab the descriptor for the platform we're targeting
-				//we can ignore the rest
+				// if it's an object, and we're packaging an AIR app, we need to
+				// grab the descriptor for the platform we're targeting
+				// we can ignore the rest
 				if (application.has(options.air)) {
 					String airDescriptorPath = application.get(options.air).asText();
 					airDescriptorPaths.add(airDescriptorPath);
 				}
 			} else {
-				//if it's an object, and we're compiling and not packaging an
-				//AIR app, we need to use all of the descriptors
+				// if it's an object, and we're compiling and not packaging an
+				// AIR app, we need to use all of the descriptors
 				Iterator<String> fieldNames = application.fieldNames();
 				while (fieldNames.hasNext()) {
 					String fieldName = fieldNames.next();
@@ -462,11 +463,13 @@ public class ASConfigC {
 			}
 			linkReportFile.deleteOnExit();
 			for (int i = 0; i < size; i++) {
+				moduleOutputPaths = new ArrayList<>();
 				List<String> moduleCompilerOptions = new ArrayList<>(templateModuleCompilerOptions);
 				JsonNode module = modulesJSON.get(i);
 				String output = "";
 				if (module.has(ModuleFields.OUTPUT)) {
 					output = module.get(ModuleFields.OUTPUT).asText();
+					moduleOutputPaths.add(output);
 				}
 				if (output.length() > 0) {
 					moduleCompilerOptions.add("--" + CompilerOptions.OUTPUT + "=" + output);
@@ -509,8 +512,8 @@ public class ASConfigC {
 				allWorkerCompilerOptions.add(workerCompilerOptions);
 			}
 		}
-		//parse files before airOptions because the mainFile may be
-		//needed to generate some file paths
+		// parse files before airOptions because the mainFile may be
+		// needed to generate some file paths
 		if (json.has(TopLevelFields.FILES)) {
 			JsonNode files = json.get(TopLevelFields.FILES);
 			if (projectType.equals(ProjectType.LIB)) {
@@ -521,10 +524,10 @@ public class ASConfigC {
 			} else {
 				int size = files.size();
 				if (size > 0) {
-					//terminate previous options and start default options
+					// terminate previous options and start default options
 					compilerOptions.add("--");
-					//mainClass is preferred, but for backwards compatibility,
-					//we need to support setting the entry point with files too
+					// mainClass is preferred, but for backwards compatibility,
+					// we need to support setting the entry point with files too
 					mainFile = files.get(size - 1).asText();
 				}
 				for (int i = 0; i < size; i++) {
@@ -533,9 +536,9 @@ public class ASConfigC {
 				}
 			}
 		}
-		//mainClass must be parsed after files
+		// mainClass must be parsed after files
 		if (ProjectType.APP.equals(projectType) && json.has(TopLevelFields.MAIN_CLASS)) {
-			//if set already, clear it because we're going to replace it
+			// if set already, clear it because we're going to replace it
 			boolean hadMainFile = mainFile != null;
 			String mainClass = json.get(TopLevelFields.MAIN_CLASS).asText();
 			mainFile = ConfigUtils.resolveMainClass(mainClass, sourcePaths);
@@ -543,7 +546,7 @@ public class ASConfigC {
 				throw new ASConfigCException("Main class not found in source paths: " + mainClass);
 			}
 			if (!hadMainFile) {
-				//terminate previous options and start default options
+				// terminate previous options and start default options
 				compilerOptions.add("--");
 			}
 			compilerOptions.add(mainFile);
@@ -559,8 +562,8 @@ public class ASConfigC {
 		if (json.has(TopLevelFields.HTML_TEMPLATE)) {
 			htmlTemplate = json.get(TopLevelFields.HTML_TEMPLATE).asText();
 
-			//the HTML template needs to be parsed after files and outputPath have
-			//both been parsed
+			// the HTML template needs to be parsed after files and outputPath have
+			// both been parsed
 			JsonNode compilerOptionsJson = null;
 			if (json.has(TopLevelFields.COMPILER_OPTIONS)) {
 				compilerOptionsJson = json.get(TopLevelFields.COMPILER_OPTIONS);
@@ -598,7 +601,7 @@ public class ASConfigC {
 				break;
 			}
 			case ConfigName.ROYALE: {
-				//this option is not supported by FlexJS
+				// this option is not supported by FlexJS
 				configRequiresRoyale = true;
 				break;
 			}
@@ -703,8 +706,8 @@ public class ASConfigC {
 		if (pathToWatch == null) {
 			throw new ASConfigCException("Failed to locate Adobe Animate logs.");
 		}
-		//macOS seems to require these files to be manually deleted to detect
-		//the appropriate create event
+		// macOS seems to require these files to be manually deleted to detect
+		// the appropriate create event
 		if (Files.exists(pathToWatch)) {
 			try {
 				Files.walk(pathToWatch).sorted(Comparator.reverseOrder()).map(Path::toFile).forEach(File::delete);
@@ -729,15 +732,15 @@ public class ASConfigC {
 		}
 		try {
 			try {
-				//file system changes are detected very, very slowly on macOS
-				//without high sensitivity
+				// file system changes are detected very, very slowly on macOS
+				// without high sensitivity
 				Class<?> c = Class.forName("com.sun.nio.file.SensitivityWatchEventModifier");
 				Field f = c.getField("HIGH");
 				Modifier modifier = (Modifier) f.get(c);
 				pathToWatch.register(animateWatcher, new WatchEvent.Kind[] { StandardWatchEventKinds.ENTRY_CREATE },
 						modifier);
 			} catch (Exception e) {
-				//fall back to the slow version
+				// fall back to the slow version
 				pathToWatch.register(animateWatcher, StandardWatchEventKinds.ENTRY_CREATE);
 			}
 		} catch (IOException e) {
@@ -752,8 +755,8 @@ public class ASConfigC {
 		while (true) {
 			WatchKey watchKey = null;
 			try {
-				//pause the thread while there are no changes pending,
-				//for better performance
+				// pause the thread while there are no changes pending,
+				// for better performance
 				watchKey = animateWatcher.take();
 			} catch (InterruptedException e) {
 				return;
@@ -766,13 +769,13 @@ public class ASConfigC {
 						hasErrors = true;
 					} else if (publishLogPath.equals(childPath) && kind.equals(StandardWatchEventKinds.ENTRY_CREATE)) {
 						if (hasErrors) {
-							//switch to full path
+							// switch to full path
 							errorLogPath = pathToWatch.resolve(errorLogPath);
 							String contents = null;
 							try {
 								contents = new String(Files.readAllBytes(errorLogPath));
 								if (contents.startsWith("ï»¿")) {
-									//remove byte order mark
+									// remove byte order mark
 									contents = contents.substring(3);
 								}
 							} catch (IOException e) {
@@ -781,21 +784,21 @@ public class ASConfigC {
 								throw new ASConfigCException("Failed to read Adobe Animate error log: " + errorLogPath
 										+ "\n" + stackTrace.toString());
 							}
-							//print the errors/warnings to the console
+							// print the errors/warnings to the console
 							System.err.println(contents);
 							if (contents.contains("**Error** ")) {
-								//compiler errors
+								// compiler errors
 								throw new ASConfigCException(1);
 							}
 						}
-						//publish has completed, so we don't need to watch for
-						//any more changes
+						// publish has completed, so we don't need to watch for
+						// any more changes
 						return;
 					}
 				}
 				watchKey.reset();
 
-				//keep handling new changes until we run out
+				// keep handling new changes until we run out
 				watchKey = animateWatcher.poll();
 			}
 		}
@@ -821,12 +824,13 @@ public class ASConfigC {
 			e.printStackTrace(new PrintWriter(stackTrace));
 			throw new ASConfigCException("Error: Failed to parse compiler options.\n" + stackTrace.toString());
 		}
-		//make sure that we require Royale (or FlexJS) depending on which options are specified
+		// make sure that we require Royale (or FlexJS) depending on which options are
+		// specified
 		if (compilerOptionsJson.has(CompilerOptions.JS_OUTPUT_TYPE)) {
-			//this option was used in FlexJS 0.7, but it was replaced with
-			//targets in FlexJS 0.8.
+			// this option was used in FlexJS 0.7, but it was replaced with
+			// targets in FlexJS 0.8.
 			configRequiresFlexJS = true;
-			//if it is set explicitly, then clear the default
+			// if it is set explicitly, then clear the default
 			jsOutputType = null;
 		}
 		if (compilerOptionsJson.has(CompilerOptions.TARGETS)) {
@@ -836,7 +840,7 @@ public class ASConfigC {
 				String targetAsText = target.asText();
 				if (targetAsText.equals(RoyaleTarget.JS_ROYALE)
 						|| targetAsText.equals(RoyaleTarget.JS_ROYALE_CORDOVA)) {
-					//these targets definitely don't work with FlexJS
+					// these targets definitely don't work with FlexJS
 					configRequiresRoyale = true;
 					foundRoyaleTarget = true;
 				}
@@ -845,15 +849,15 @@ public class ASConfigC {
 				}
 			}
 			if (!foundRoyaleTarget) {
-				//remaining targets are supported by both Royale and FlexJS
+				// remaining targets are supported by both Royale and FlexJS
 				configRequiresRoyaleOrFlexJS = true;
 			}
-			//if targets is set explicitly, then we're using a newer SDK
-			//that doesn't need js-output-type
+			// if targets is set explicitly, then we're using a newer SDK
+			// that doesn't need js-output-type
 			jsOutputType = null;
 		}
 		if (compilerOptionsJson.has(CompilerOptions.SOURCE_MAP)) {
-			//source-map compiler option is supported by both Royale and FlexJS
+			// source-map compiler option is supported by both Royale and FlexJS
 			configRequiresRoyaleOrFlexJS = true;
 		}
 	}
@@ -872,6 +876,8 @@ public class ASConfigC {
 					ProjectUtils.findAIRDescriptorOutputPath(mainFile, airDescriptorPath, outputPath, !outputIsJS,
 							debugBuild),
 					ProjectUtils.findApplicationContentOutputPath(mainFile, outputPath, !outputIsJS, debugBuild),
+					moduleOutputPaths,
+					workerOutputPaths,
 					airOptionsJson, airOptions);
 		} catch (Exception e) {
 			StringWriter stackTrace = new StringWriter();
@@ -944,7 +950,7 @@ public class ASConfigC {
 			deleteOutputDirectory(debugOutputPath);
 			Path releaseOutputPath = outputPath.resolve(FILE_NAME_BIN_JS_RELEASE);
 			deleteOutputDirectory(releaseOutputPath);
-		} else //swf
+		} else // swf
 		{
 			deleteOutputDirectory(outputPath);
 		}
@@ -963,7 +969,7 @@ public class ASConfigC {
 			}
 		}
 
-		//immediately exits after cleaning
+		// immediately exits after cleaning
 		System.exit(0);
 	}
 
@@ -976,14 +982,14 @@ public class ASConfigC {
 
 		List<String> sourcePathsCopy = new ArrayList<>();
 		if (sourcePaths != null) {
-			//we don't want to modify the original list, so copy the items over
+			// we don't want to modify the original list, so copy the items over
 			sourcePathsCopy.addAll(sourcePaths);
 		}
 		if (mainFile != null) {
-			//the parent directory of the main file is automatically added as a
-			//source path by the compiler
+			// the parent directory of the main file is automatically added as a
+			// source path by the compiler
 			Path mainFileParent = Paths.get(mainFile).getParent();
-			//may be null if the path is already root
+			// may be null if the path is already root
 			if (mainFileParent != null) {
 				sourcePathsCopy.add(mainFileParent.toString());
 			}
@@ -992,7 +998,7 @@ public class ASConfigC {
 			String sourcePath = sourcePathsCopy.get(i);
 			Path path = Paths.get(sourcePath);
 			if (!path.isAbsolute()) {
-				//force all source paths into absolute paths
+				// force all source paths into absolute paths
 				path = Paths.get(System.getProperty("user.dir"), sourcePath);
 			}
 			if (path.startsWith(outputPath) || outputPath.startsWith(path)) {
@@ -1017,13 +1023,13 @@ public class ASConfigC {
 	private void compileProject() throws ASConfigCException {
 		Path workspacePath = Paths.get(System.getProperty("user.dir"));
 		Path sdkPath = Paths.get(sdkHome);
-		//compile workers first because they might be embedded in the app
+		// compile workers first because they might be embedded in the app
 		for (int i = 0; i < allWorkerCompilerOptions.size(); i++) {
 			List<String> workerCompilerOptions = allWorkerCompilerOptions.get(i);
 			options.compiler.compile(projectType, workerCompilerOptions, workspacePath, sdkPath);
 		}
 		options.compiler.compile(projectType, compilerOptions, workspacePath, sdkPath);
-		//compile modules last because they might be optimized for the app
+		// compile modules last because they might be optimized for the app
 		for (int i = 0; i < allModuleCompilerOptions.size(); i++) {
 			List<String> moduleCompilerOptions = allModuleCompilerOptions.get(i);
 			options.compiler.compile(projectType, moduleCompilerOptions, workspacePath, sdkPath);
@@ -1077,7 +1083,7 @@ public class ASConfigC {
 					copySourcePathAssetToOutputDirectory(assetPath, mainFile, sourcePaths,
 							outputDirectoryJSRelease.getAbsolutePath());
 				}
-			} else //swf
+			} else // swf
 			{
 				copySourcePathAssetToOutputDirectory(assetPath, mainFile, sourcePaths, outputDirectory);
 			}
@@ -1086,7 +1092,7 @@ public class ASConfigC {
 
 	private void copyHTMLTemplate() throws ASConfigCException {
 		if (htmlTemplate == null) {
-			//nothing to copy if this field is omitted
+			// nothing to copy if this field is omitted
 			return;
 		}
 
@@ -1129,11 +1135,11 @@ public class ASConfigC {
 						if (beforeExtension.equals("index")) {
 							if (mainFile != null) {
 								Path mainFilePath = Paths.get(mainFile);
-								//strip any directory names from the beginning
+								// strip any directory names from the beginning
 								String mainFileName = mainFilePath.getFileName().toString();
 								int mainFileExtensionIndex = mainFileName.indexOf(".");
 								if (mainFileExtensionIndex != -1) {
-									//exclude the file extension
+									// exclude the file extension
 									beforeExtension = mainFileName.substring(0, mainFileExtensionIndex);
 								}
 							}
@@ -1156,20 +1162,20 @@ public class ASConfigC {
 
 	private void prepareNativeExtensions() throws ASConfigCException {
 		if (options.air != null) {
-			//don't copy anything when packaging an app. these files are used
-			//for debug builds that run in the AIR simulator only.
+			// don't copy anything when packaging an app. these files are used
+			// for debug builds that run in the AIR simulator only.
 			return;
 		}
 		if (!options.unpackageANEs) {
-			//don't copy anything if it's not requested.
+			// don't copy anything if it's not requested.
 			return;
 		}
 		if (!debugBuild) {
-			//don't copy anything when it's a release build.
+			// don't copy anything when it's a release build.
 			return;
 		}
 		if (compilerOptionsJSON == null) {
-			//the compilerOptions field is not defined, so there's nothing to copy
+			// the compilerOptions field is not defined, so there's nothing to copy
 			return;
 		}
 
@@ -1220,8 +1226,8 @@ public class ASConfigC {
 
 	private void unpackANE(File aneFile) throws ASConfigCException {
 		if (aneFile.isDirectory()) {
-			//this is either an ANE that's already unpacked
-			//...or something else entirely
+			// this is either an ANE that's already unpacked
+			// ...or something else entirely
 			return;
 		}
 		if (options.verbose) {
@@ -1287,10 +1293,10 @@ public class ASConfigC {
 		try {
 			Files.copy(srcPath, destPath, StandardCopyOption.REPLACE_EXISTING);
 		} catch (IOException e) {
-			//if the destination file is not writable, make it writable and try
-			//again one more time.
-			//do this check AFTER failure because it's slow to check whether
-			//every file exists and is writable
+			// if the destination file is not writable, make it writable and try
+			// again one more time.
+			// do this check AFTER failure because it's slow to check whether
+			// every file exists and is writable
 			if (retry && Files.exists(destPath) && !Files.isWritable(destPath)) {
 				destPath.toFile().setWritable(true);
 				copyAsset(srcPath, destPath, false);
@@ -1303,16 +1309,16 @@ public class ASConfigC {
 
 	private void copyAIRFiles() throws ASConfigCException {
 		if (options.air != null) {
-			//don't copy anything when packaging an app. these files are used
-			//for debug builds only.
+			// don't copy anything when packaging an app. these files are used
+			// for debug builds only.
 			return;
 		}
 		if (airOptionsJSON == null) {
-			//the airOptions field is not defined, so there's nothing to copy
+			// the airOptions field is not defined, so there's nothing to copy
 			return;
 		}
 		if (!airOptionsJSON.has(AIROptions.FILES)) {
-			//the files field is not defined, so there's nothing to copy
+			// the files field is not defined, so there's nothing to copy
 			return;
 		}
 
@@ -1326,7 +1332,7 @@ public class ASConfigC {
 		JsonNode filesJSON = airOptionsJSON.get(AIROptions.FILES);
 		for (int i = 0, size = filesJSON.size(); i < size; i++) {
 			JsonNode fileJSON = filesJSON.get(i);
-			if (fileJSON.isTextual()) //just a string
+			if (fileJSON.isTextual()) // just a string
 			{
 				String filePath = fileJSON.asText();
 				File srcFile = new File(filePath);
@@ -1339,12 +1345,12 @@ public class ASConfigC {
 						File destFileJSRelease = new File(outputDirectoryJSRelease, srcFile.getName());
 						createParentAndCopyAsset(srcFile.toPath(), destFileJSRelease.toPath());
 					}
-				} else //swf
+				} else // swf
 				{
 					File destFile = new File(outputDirectory, srcFile.getName());
 					createParentAndCopyAsset(srcFile.toPath(), destFile.toPath());
 				}
-			} else //JSON object
+			} else // JSON object
 			{
 				String srcFilePath = fileJSON.get(AIROptions.FILES__FILE).asText();
 				File srcFile = new File(srcFilePath);
@@ -1389,13 +1395,13 @@ public class ASConfigC {
 										.resolve(relativeAssetPath);
 								createParentAndCopyAsset(assetPathPath, jsReleaseAssetOutputPath);
 							}
-						} else //swf
+						} else // swf
 						{
 							Path assetOutputPath = destFile.toPath().resolve(relativeAssetPath);
 							createParentAndCopyAsset(assetPathPath, assetOutputPath);
 						}
 					}
-				} else //not a directory
+				} else // not a directory
 				{
 					if (outputIsJS) {
 						File outputDirectoryJSDebug = new File(outputDirectory, FILE_NAME_BIN_JS_DEBUG);
@@ -1406,7 +1412,7 @@ public class ASConfigC {
 							File destFileJSRelease = new File(outputDirectoryJSRelease, destFilePath);
 							createParentAndCopyAsset(srcFile.toPath(), destFileJSRelease.toPath());
 						}
-					} else //swf
+					} else // swf
 					{
 						createParentAndCopyAsset(srcFile.toPath(), destFile.toPath());
 					}
@@ -1480,7 +1486,7 @@ public class ASConfigC {
 				}
 				descriptorContents = ProjectUtils.populateAdobeAIRDescriptorTemplate(descriptorContents, appID);
 
-				//clear this so that the name is based on the project name
+				// clear this so that the name is based on the project name
 				airDescriptorPath = null;
 			}
 			descriptorContents = ProjectUtils.populateAdobeAIRDescriptorContent(descriptorContents, contentValue);
@@ -1494,7 +1500,7 @@ public class ASConfigC {
 					copyAIRDescriptor(releaseDescriptorOutputPath, descriptorContents);
 				}
 
-			} else //swf
+			} else // swf
 			{
 				String descriptorOutputPath = ProjectUtils.findAIRDescriptorOutputPath(mainFile, airDescriptorPath,
 						outputPath, true, debugBuild);
@@ -1522,15 +1528,15 @@ public class ASConfigC {
 			throw new ASConfigCException("AIR ADT not found in SDK. Expected: " + Paths.get(sdkHome, "lib", "adt.jar"));
 		}
 
-		//if the certificate password isn't already specified, ask for it and add it
+		// if the certificate password isn't already specified, ask for it and add it
 		int passwordIndex = airOptions.indexOf("-" + AIRSigningOptions.STOREPASS);
 		if (passwordIndex == -1) {
 			int keystoreIndex = airOptions.indexOf("-" + AIRSigningOptions.KEYSTORE);
 			if (keystoreIndex != -1) {
 				String storepass = options.storepass;
 				if (storepass == null) {
-					//ask for password if keystore is specified in airOptions,
-					//but storepass is not passed to asconfigc
+					// ask for password if keystore is specified in airOptions,
+					// but storepass is not passed to asconfigc
 					Console console = System.console();
 					char[] password = console.readPassword("Adobe AIR code signing password: ");
 					storepass = new String(password);
