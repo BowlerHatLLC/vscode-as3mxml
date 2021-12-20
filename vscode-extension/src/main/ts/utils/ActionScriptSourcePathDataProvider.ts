@@ -25,7 +25,7 @@ const FILE_EXTENSION_MXML = ".mxml";
 export class ActionScriptSourcePath extends vscode.TreeItem {
   constructor(
     file: vscode.Uri | string,
-    workspaceFolder: vscode.WorkspaceFolder
+    workspaceFolder: vscode.WorkspaceFolder | null
   ) {
     let contextValue: string = null;
     let command: vscode.Command;
@@ -61,12 +61,14 @@ export class ActionScriptSourcePath extends vscode.TreeItem {
     this.workspaceFolder = workspaceFolder;
   }
 
-  workspaceFolder: vscode.WorkspaceFolder;
+  workspaceFolder: vscode.WorkspaceFolder | null;
 }
 
 export default class ActionScriptSourcePathDataProvider
-  implements vscode.TreeDataProvider<ActionScriptSourcePath> {
-  private _onDidChangeTreeData: vscode.EventEmitter<ActionScriptSourcePath | null> = new vscode.EventEmitter<ActionScriptSourcePath | null>();
+  implements vscode.TreeDataProvider<ActionScriptSourcePath>
+{
+  private _onDidChangeTreeData: vscode.EventEmitter<ActionScriptSourcePath | null> =
+    new vscode.EventEmitter<ActionScriptSourcePath | null>();
   private _rootSourcePaths: ActionScriptSourcePath[];
   private _rootPathStrings: Set<string>;
 
@@ -78,8 +80,8 @@ export default class ActionScriptSourcePathDataProvider
     this.refreshSourcePaths();
   }
 
-  readonly onDidChangeTreeData: vscode.Event<ActionScriptSourcePath | null> = this
-    ._onDidChangeTreeData.event;
+  readonly onDidChangeTreeData: vscode.Event<ActionScriptSourcePath | null> =
+    this._onDidChangeTreeData.event;
 
   getTreeItem(element: ActionScriptSourcePath): vscode.TreeItem {
     return element;
@@ -91,10 +93,7 @@ export default class ActionScriptSourcePathDataProvider
     if (!element) {
       if (this._rootSourcePaths.length === 0) {
         return Promise.resolve([
-          new ActionScriptSourcePath(
-            "No source paths",
-            element.workspaceFolder
-          ),
+          new ActionScriptSourcePath("No source paths", null),
         ]);
       }
       return Promise.resolve(this._rootSourcePaths);
