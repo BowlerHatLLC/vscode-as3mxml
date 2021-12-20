@@ -30,18 +30,18 @@ export class ActionScriptSourcePath extends vscode.TreeItem {
     let contextValue: string = null;
     let command: vscode.Command;
     let collapsibleState = vscode.TreeItemCollapsibleState.None;
-    let uri: vscode.Uri = undefined;
+    let resourceUri: vscode.Uri = undefined;
     let label: string = undefined;
     if (typeof file === "string") {
       label = file;
     } //uri
     else {
-      uri = file;
-      if (fs.statSync(uri.fsPath).isDirectory()) {
+      resourceUri = file;
+      if (fs.statSync(resourceUri.fsPath).isDirectory()) {
         collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
         contextValue = "folder";
       } else {
-        let extname = path.extname(uri.fsPath);
+        let extname = path.extname(resourceUri.fsPath);
         if (extname === FILE_EXTENSION_AS) {
           contextValue = "actionscript";
         } else if (extname === FILE_EXTENSION_MXML) {
@@ -50,12 +50,12 @@ export class ActionScriptSourcePath extends vscode.TreeItem {
         command = {
           title: "Open File",
           command: "vscode.open",
-          arguments: [uri],
+          arguments: [resourceUri],
         };
       }
     }
     super(label, collapsibleState);
-    this.resourceUri = uri;
+    this.resourceUri = resourceUri;
     this.command = command;
     this.contextValue = contextValue;
     this.workspaceFolder = workspaceFolder;
