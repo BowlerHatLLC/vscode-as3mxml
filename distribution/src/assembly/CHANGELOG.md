@@ -1,5 +1,26 @@
 # ActionScript & MXML for Visual Studio Code Changelog
 
+## 1.11.0
+
+### New Features
+
+Build: Added a number of new compiler options for Apache Royale to the `compilerOptions` section of _asconfig.json_, meaning that many advanced options no longer need to be added to `additionalOptions`.
+Hover: Documentation is now detected in SDKs that store it in resource bundle _.swc_ files separately from the _.swc_ files containing compiled code. More documentation from the Adobe and Apache Flex SDKs should now be shown in hover, completion, and signature help.
+
+### Fixed Issues
+
+Build: Fixed issue where module and worker _.swf_ files were not automatically included in Adobe AIR bundles.
+Build: Fixed issue where cleaning the project sometimes would not clean module _.swf_ files.
+General: Fixed an issue with detection of changes to _.swc_ library files that caused the workspace to continue using stale APIs.
+Settings: Fixed validation of relative framework SDK paths on Windows.
+Settings: Fixed issue where changing certain settings sometimes failed to restart the language server.
+Hover: Fixed missing asdoc documentation for members of interfaces.
+Hover: Fixed missing asdoc documentation for APIs in the public-like `AS3` namespace.
+Hover: Fixed missing asdoc documentation for `[Style]` and `[Event]` metadata in _.swc_ libraries.
+Hover: Fixed missing asdoc documentation for accessors when the asdoc comment was added to the setter instead of the getter.
+Imports: Fixed issue where a class outside of the package block had an import for the class inside the package block, and it was incorrectly removed when organizing imports.
+Views: Fixed exception in ActionScript Source Paths view when the project has no source paths yet.
+
 ## 1.10.0
 
 ### New Features
