@@ -2382,13 +2382,13 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                     success = true;
                 } catch (ASConfigCException e) {
                     // this is a message intended for the user
-                    languageClient.logCompilerShellOutput("\n" + e.getMessage());
+                    languageClient.logCompilerShellOutput("\n" + e.getMessage() + "\n");
                     success = false;
                 }
             } catch (Exception e) {
                 ByteArrayOutputStream buffer = new ByteArrayOutputStream();
                 e.printStackTrace(new PrintStream(buffer));
-                languageClient.logCompilerShellOutput("Exception in compiler shell: " + buffer.toString());
+                languageClient.logCompilerShellOutput("Exception in compiler shell: " + buffer.toString() + "\n");
             }
             return success;
         });

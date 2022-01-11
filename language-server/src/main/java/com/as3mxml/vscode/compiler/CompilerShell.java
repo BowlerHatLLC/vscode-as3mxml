@@ -38,6 +38,7 @@ public class CompilerShell implements IASConfigCCompiler {
     private static final String ERROR_COMPILER_SHELL_WRITE = "Quick Compile failed. Error writing to compiler shell.";
     private static final String ERROR_COMPILER_SHELL_READ = "Quick Compile failed. Error reading from compiler shell.";
     private static final String ERROR_COMPILER_ERRORS_FOUND = "Quick Compile failed. Errors in compiler output.";
+    private static final String ERROR_COMPILER_ACTIVE = "Quick compile failed because the compiler has not yet completed a previous task.";
     private static final String COMMAND_COMPILE = "compile";
     private static final String COMMAND_CLEAR = "clear";
     private static final String COMMAND_QUIT = "quit\n";
@@ -64,6 +65,7 @@ public class CompilerShell implements IASConfigCCompiler {
     private boolean isRoyale = false;
     private boolean isAIR = false;
     private List<String> jvmargs = null;
+    private boolean active = false;
 
     public CompilerShell(ActionScriptLanguageClient languageClient, List<String> jvmargs) throws URISyntaxException {
         this.languageClient = languageClient;
@@ -76,6 +78,10 @@ public class CompilerShell implements IASConfigCCompiler {
 
     public void compile(String projectType, List<String> compilerOptions, Path workspaceRoot, Path sdkPath)
             throws ASConfigCException {
+        if (active) {
+            throw new ASConfigCException(ERROR_COMPILER_ACTIVE);
+        }
+        active = true;
         isRoyale = ActionScriptSDKUtils.isRoyaleSDK(sdkPath);
         isAIR = ActionScriptSDKUtils.isAIRSDK(sdkPath);
 
@@ -117,6 +123,7 @@ public class CompilerShell implements IASConfigCCompiler {
         }
         startProcess(sdkPath, workspaceRoot);
         executeCommandAndWaitForPrompt(command, true);
+        active = false;
     }
 
     public void dispose() {
