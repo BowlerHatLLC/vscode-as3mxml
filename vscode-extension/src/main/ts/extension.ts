@@ -47,7 +47,7 @@ import normalizeUri from "./utils/normalizeUri";
 import createActionScriptSDKStatusBarItem from "./utils/createActionScriptSDKStatusBarItem";
 
 const INVALID_SDK_ERROR =
-  "as3mxml.sdk.editor in settings does not point to a valid SDK. Requires Apache Royale 0.9.7 or newer.";
+  "as3mxml.sdk.editor in settings does not point to a valid SDK. Requires Apache Royale 0.9.8 or newer.";
 const INVALID_JAVA_ERROR =
   "as3mxml.java.path in settings does not point to a valid executable. It cannot be a directory, and Java 8 or newer is required.";
 const MISSING_JAVA_ERROR =
