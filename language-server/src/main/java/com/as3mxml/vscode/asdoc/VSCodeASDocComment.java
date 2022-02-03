@@ -187,6 +187,7 @@ public class VSCodeASDocComment implements IASDocComment {
 			line = line.replaceAll("(?i)</?(code|codeph)>", "`");
 			line = line.replaceAll("(?i)<hr ?\\/>", "\n\n---\n\n");
 		}
+		line = line.replaceAll("(?i)<li>\\s*", "\n\n- ");
 		line = line.replaceAll("(?i)<(p|ul|ol|dl|li|dt|table|tr|div|blockquote)>\\s*", "\n\n");
 		line = line.replaceAll("(?i)\\s*<\\/(p|ul|ol|dl|li|dt|table|tr|div|blockquote)>", "\n\n");
 
