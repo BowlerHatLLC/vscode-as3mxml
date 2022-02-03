@@ -24,6 +24,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.royale.compiler.asdoc.IASDocComment;
 import org.apache.royale.compiler.asdoc.IASDocTag;
@@ -43,6 +45,7 @@ public class VSCodeASDocComment implements IASDocComment {
 	private String description = null;
 	private Map<String, List<IASDocTag>> tagMap = new HashMap<String, List<IASDocTag>>();
 	private boolean insidePreformatted = false;
+	private String preformattedPrefix = null;
 	private boolean usingMarkdown = false;
 
 	@Override
@@ -158,28 +161,35 @@ public class VSCodeASDocComment implements IASDocComment {
 	}
 
 	private String reformatLine(String line, boolean useMarkdown) {
-		if (!insidePreformatted) {
-			line = line.trim();
-		}
 		// remove all attributes (including namespaced)
 		line = line.replaceAll("<(\\w+)(?:\\s+\\w+(?::\\w+)?=(\"|\')[^\"\']*\\2)*\\s*(\\/{0,1})>", "<$1$3>");
-		int beforeLength = line.length();
-		if (useMarkdown) {
-			line = line.replaceAll("(?i)<(pre|listing|codeblock)>", "\n\n```\n");
-		} else {
-			line = line.replaceAll("(?i)<(pre|listing|codeblock)>", "\n\n");
-		}
-		if (line.length() < beforeLength) {
+		Matcher beginPreformatMatcher = Pattern.compile("(?i)(^\\s*)?<(pre|listing|codeblock)>").matcher(line);
+		if (beginPreformatMatcher.find()) {
 			insidePreformatted = true;
+			preformattedPrefix = beginPreformatMatcher.group(1);
+			if (useMarkdown) {
+				line = beginPreformatMatcher.replaceAll("\n\n```\n");
+			} else {
+				line = beginPreformatMatcher.replaceAll("\n\n");
+			}
 		}
-		beforeLength = line.length();
-		if (useMarkdown) {
-			line = line.replaceAll("(?i)</(pre|listing|codeblock)>", "\n```\n");
-		} else {
-			line = line.replaceAll("(?i)</(pre|listing|codeblock)>", "");
-		}
-		if (line.length() < beforeLength) {
+		Matcher endPreformatMatcher = Pattern
+				.compile("(?i)</(pre|listing|codeblock)>")
+				.matcher(line);
+		if (endPreformatMatcher.find()) {
 			insidePreformatted = false;
+			if (useMarkdown) {
+				line = endPreformatMatcher.replaceAll("\n```\n");
+			} else {
+				line = endPreformatMatcher.replaceAll("\n\n");
+			}
+		}
+		if (insidePreformatted) {
+			if (preformattedPrefix != null && preformattedPrefix.length() > 0 && line.startsWith(preformattedPrefix)) {
+				line = line.substring(preformattedPrefix.length());
+			}
+		} else {
+			line = line.trim();
 		}
 		if (useMarkdown) {
 			line = line.replaceAll("(?i)</?(em|i)>", "_");
