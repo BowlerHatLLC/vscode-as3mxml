@@ -62,13 +62,13 @@ public class VSCodeASDocComment implements IASDocComment {
 		StringBuilder sb = new StringBuilder();
 		int n = lines.length;
 		if (n == 1) {
-			//strip end of asdoc comment
+			// strip end of asdoc comment
 			int c = lines[0].indexOf("*/");
 			if (c != -1) {
 				lines[0] = lines[0].substring(0, c);
 			}
 		}
-		//strip start of asdoc coment
+		// strip start of asdoc coment
 		String line = lines[0];
 		int lengthToRemove = Math.min(line.length(), 3);
 		line = line.substring(lengthToRemove);
@@ -78,11 +78,11 @@ public class VSCodeASDocComment implements IASDocComment {
 			int star = line.indexOf("*");
 			int at = line.indexOf("@");
 			if (at == -1) {
-				if (star > -1) //line starts with a *
+				if (star > -1) // line starts with a *
 				{
 					appendLine(sb, line.substring(star + 1), insidePreformatted);
 				}
-			} else //tag
+			} else // tag
 			{
 				int after = line.indexOf(" ", at + 1);
 				if (after == -1) {
@@ -145,8 +145,8 @@ public class VSCodeASDocComment implements IASDocComment {
 		if (addNewLine) {
 			sb.append("\n");
 		} else if (sb.charAt(sb.length() - 1) != '\n') {
-			//if we don't currently end with a new line, add an extra
-			//space before the next line is appended
+			// if we don't currently end with a new line, add an extra
+			// space before the next line is appended
 			sb.append(" ");
 		}
 	}
@@ -159,41 +159,41 @@ public class VSCodeASDocComment implements IASDocComment {
 		if (!insidePreformatted) {
 			line = line.trim();
 		}
-		//remove all attributes (including namespaced)
+		// remove all attributes (including namespaced)
 		line = line.replaceAll("<(\\w+)(?:\\s+\\w+(?::\\w+)?=(\"|\')[^\"\']*\\2)*\\s*(\\/{0,1})>", "<$1$3>");
 		int beforeLength = line.length();
 		if (useMarkdown) {
-			line = line.replaceAll("<(pre|listing|codeblock)>", "\n\n```\n");
+			line = line.replaceAll("(?i)<(pre|listing|codeblock)>", "\n\n```\n");
 		} else {
-			line = line.replaceAll("<(pre|listing|codeblock)>", "\n\n");
+			line = line.replaceAll("(?i)<(pre|listing|codeblock)>", "\n\n");
 		}
 		if (line.length() < beforeLength) {
 			insidePreformatted = true;
 		}
 		beforeLength = line.length();
 		if (useMarkdown) {
-			line = line.replaceAll("</(pre|listing|codeblock)>", "\n```\n");
+			line = line.replaceAll("(?i)</(pre|listing|codeblock)>", "\n```\n");
 		} else {
-			line = line.replaceAll("</(pre|listing|codeblock)>", "");
+			line = line.replaceAll("(?i)</(pre|listing|codeblock)>", "");
 		}
 		if (line.length() < beforeLength) {
 			insidePreformatted = false;
 		}
 		if (useMarkdown) {
-			line = line.replaceAll("</?(em|i)>", "_");
-			line = line.replaceAll("</?(strong|b)>", "**");
-			line = line.replaceAll("</?(code|codeph)>", "`");
-			line = line.replaceAll("<hr ?\\/>", "\n\n---\n\n");
+			line = line.replaceAll("(?i)</?(em|i)>", "_");
+			line = line.replaceAll("(?i)</?(strong|b)>", "**");
+			line = line.replaceAll("(?i)</?(code|codeph)>", "`");
+			line = line.replaceAll("(?i)<hr ?\\/>", "\n\n---\n\n");
 		}
-		line = line.replaceAll("<(p|ul|ol|dl|li|dt|table|tr|div|blockquote)>", "\n\n");
+		line = line.replaceAll("(?i)<(p|ul|ol|dl|li|dt|table|tr|div|blockquote)>", "\n\n");
 
-		//note: we allow <br/>, but not <br> because asdoc expects XHTML
+		// note: we allow <br/>, but not <br> because asdoc expects XHTML
 		if (useMarkdown) {
-			//to add a line break to markdown, there needs to be at least two
-			//spaces at the end of the line
-			line = line.replaceAll("<br ?\\/>\\s*", "  \n");
+			// to add a line break to markdown, there needs to be at least two
+			// spaces at the end of the line
+			line = line.replaceAll("(?i)<br ?\\/>\\s*", "  \n");
 		} else {
-			line = line.replaceAll("<br ?\\/>\\s*", "\n");
+			line = line.replaceAll("(?i)<br ?\\/>\\s*", "\n");
 		}
 		line = line.replaceAll("<\\/{0,1}\\w+\\/{0,1}>", "");
 		return line;
