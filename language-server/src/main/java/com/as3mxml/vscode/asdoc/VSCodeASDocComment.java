@@ -61,7 +61,7 @@ public class VSCodeASDocComment implements IASDocComment {
 	public void compile(boolean useMarkdown) {
 		usingMarkdown = useMarkdown;
 		insidePreformatted = false;
-		String[] lines = token.split("\n");
+		String[] lines = token.split("\r?\n");
 		StringBuilder sb = new StringBuilder();
 		int n = lines.length;
 		if (n == 1) {
