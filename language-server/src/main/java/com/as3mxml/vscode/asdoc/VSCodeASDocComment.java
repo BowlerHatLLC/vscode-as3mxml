@@ -210,6 +210,13 @@ public class VSCodeASDocComment implements IASDocComment {
 			line = line.replaceAll("(?i)<br ?\\/>\\s*", "\n");
 		}
 		line = line.replaceAll("<\\/{0,1}\\w+\\/{0,1}>", "");
+
+		if (!useMarkdown || insidePreformatted) {
+			line = line.replaceAll("(?i)&amp;", "&");
+			line = line.replaceAll("(?i)&gt;", ">");
+			line = line.replaceAll("(?i)&lt;", "<");
+			line = line.replaceAll("(?i)&quot;", "\"");
+		}
 		return line;
 	}
 
