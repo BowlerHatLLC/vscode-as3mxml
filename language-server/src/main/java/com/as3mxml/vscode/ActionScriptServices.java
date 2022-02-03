@@ -1480,6 +1480,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                 }
             }
         };
+        sourcePathWatcherThread.setDaemon(true);
         sourcePathWatcherThread.start();
     }
 
