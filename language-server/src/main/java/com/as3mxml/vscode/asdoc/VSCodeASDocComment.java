@@ -100,6 +100,8 @@ public class VSCodeASDocComment implements IASDocComment {
 			}
 		}
 		description = sb.toString().trim();
+		// don't allow more than two consecutive line breaks
+		description = description.replaceAll("\\n{3,}", "\n\n");
 	}
 
 	@Override
@@ -185,7 +187,8 @@ public class VSCodeASDocComment implements IASDocComment {
 			line = line.replaceAll("(?i)</?(code|codeph)>", "`");
 			line = line.replaceAll("(?i)<hr ?\\/>", "\n\n---\n\n");
 		}
-		line = line.replaceAll("(?i)<(p|ul|ol|dl|li|dt|table|tr|div|blockquote)>", "\n\n");
+		line = line.replaceAll("(?i)<(p|ul|ol|dl|li|dt|table|tr|div|blockquote)>\\s*", "\n\n");
+		line = line.replaceAll("(?i)\\s*<\\/(p|ul|ol|dl|li|dt|table|tr|div|blockquote)>", "\n\n");
 
 		// note: we allow <br/>, but not <br> because asdoc expects XHTML
 		if (useMarkdown) {
