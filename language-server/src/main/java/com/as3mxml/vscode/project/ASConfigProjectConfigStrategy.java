@@ -31,6 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.networknt.schema.JsonSchema;
 import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.ValidationMessage;
+import com.networknt.schema.SpecVersion.VersionFlag;
 import com.as3mxml.asconfigc.TopLevelFields;
 import com.as3mxml.asconfigc.compiler.CompilerOptions;
 import com.as3mxml.asconfigc.compiler.CompilerOptionsParser;
@@ -118,10 +119,10 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy {
         List<String> sourcePaths = null;
         JsonSchema schema = null;
         try (InputStream schemaInputStream = getClass().getResourceAsStream("/schemas/asconfig.schema.json")) {
-            JsonSchemaFactory factory = JsonSchemaFactory.getInstance();
+            JsonSchemaFactory factory = JsonSchemaFactory.getInstance(VersionFlag.V4);
             schema = factory.getSchema(schemaInputStream);
         } catch (Exception e) {
-            //this exception is unexpected, so it should be reported
+            // this exception is unexpected, so it should be reported
             System.err.println("Failed to load asconfig.json schema: " + e);
             e.printStackTrace(System.err);
             return null;
@@ -130,30 +131,30 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy {
         try {
             String contents = FileUtils.readFileToString(asconfigFile);
             ObjectMapper mapper = new ObjectMapper();
-            //VSCode allows comments, so we should too
+            // VSCode allows comments, so we should too
             mapper.configure(JsonParser.Feature.ALLOW_COMMENTS, true);
             mapper.configure(JsonParser.Feature.ALLOW_TRAILING_COMMA, true);
             json = mapper.readTree(contents);
             Set<ValidationMessage> errors = schema.validate(json);
             if (!errors.isEmpty()) {
-                //don't print anything to the console. the editor will validate
-                //and display any errors, if necessary.
+                // don't print anything to the console. the editor will validate
+                // and display any errors, if necessary.
                 return null;
             }
         } catch (Exception e) {
-            //this exception is expected sometimes if the JSON is invalid
+            // this exception is expected sometimes if the JSON is invalid
             return null;
         }
         try {
-            if (json.has(TopLevelFields.TYPE)) //optional, defaults to "app"
+            if (json.has(TopLevelFields.TYPE)) // optional, defaults to "app"
             {
                 projectType = json.get(TopLevelFields.TYPE).asText();
             }
-            if (json.has(TopLevelFields.CONFIG)) //optional, defaults to "flex"
+            if (json.has(TopLevelFields.CONFIG)) // optional, defaults to "flex"
             {
                 config = json.get(TopLevelFields.CONFIG).asText();
             }
-            if (json.has(TopLevelFields.FILES)) //optional
+            if (json.has(TopLevelFields.FILES)) // optional
             {
                 JsonNode jsonFiles = json.get(TopLevelFields.FILES);
                 int fileCount = jsonFiles.size();
@@ -164,17 +165,17 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy {
                     files[i] = filePath.toString();
                 }
             }
-            if (json.has(TopLevelFields.COMPILER_OPTIONS)) //optional
+            if (json.has(TopLevelFields.COMPILER_OPTIONS)) // optional
             {
                 compilerOptions = new ArrayList<>();
                 JsonNode jsonCompilerOptions = json.get(TopLevelFields.COMPILER_OPTIONS);
                 CompilerOptionsParser parser = new CompilerOptionsParser();
                 parser.parse(jsonCompilerOptions, null, compilerOptions);
 
-                //while the following compiler options will be included in the
-                //result above, we need to parse them separately because the
-                //language server needs to check their specific values for
-                //certain behaviors.
+                // while the following compiler options will be included in the
+                // result above, we need to parse them separately because the
+                // language server needs to check their specific values for
+                // certain behaviors.
                 if (jsonCompilerOptions.has(CompilerOptions.TARGETS)) {
                     targets = new ArrayList<>();
                     JsonNode jsonTargets = jsonCompilerOptions.get(CompilerOptions.TARGETS);
@@ -183,7 +184,7 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy {
                         targets.add(target);
                     }
                 }
-                //we use this to resolve the mainClass
+                // we use this to resolve the mainClass
                 if (jsonCompilerOptions.has(CompilerOptions.SOURCE_PATH)) {
                     JsonNode sourcePath = jsonCompilerOptions.get(CompilerOptions.SOURCE_PATH);
                     sourcePaths = JsonUtils.jsonNodeToListOfStrings(sourcePath);
@@ -199,8 +200,8 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy {
                     files[files.length - 1] = mainClassPath.toString();
                 }
             }
-            //these options are formatted as if sent in through the command line
-            if (json.has(TopLevelFields.ADDITIONAL_OPTIONS)) //optional
+            // these options are formatted as if sent in through the command line
+            if (json.has(TopLevelFields.ADDITIONAL_OPTIONS)) // optional
             {
                 additionalOptions = new ArrayList<>();
                 JsonNode jsonAdditionalOptions = json.get(TopLevelFields.ADDITIONAL_OPTIONS);
@@ -213,23 +214,23 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy {
                 } else {
                     String additionalOptionsText = jsonAdditionalOptions.asText();
                     if (additionalOptionsText != null) {
-                        //split the additionalOptions into separate values so that we can
-                        //pass them in as String[], as the compiler expects.
+                        // split the additionalOptions into separate values so that we can
+                        // pass them in as String[], as the compiler expects.
                         additionalOptions.addAll(OptionsUtils.parseAdditionalOptions(additionalOptionsText));
                     }
                 }
             }
         } catch (UnknownCompilerOptionException e) {
-            //there's a compiler option that the parser doesn't recognize
+            // there's a compiler option that the parser doesn't recognize
             return null;
         } catch (Exception e) {
-            //this exception is unexpected, so it should be reported
+            // this exception is unexpected, so it should be reported
             System.err.println("Failed to parse asconfig.json: " + e);
             e.printStackTrace(System.err);
             return null;
         }
-        //in a library project, the files field will be treated the same as the
-        //include-sources compiler option
+        // in a library project, the files field will be treated the same as the
+        // include-sources compiler option
         if (projectType.equals(ProjectType.LIB) && files != null) {
             for (int i = 0, count = files.length; i < count; i++) {
                 String filePath = files[i];

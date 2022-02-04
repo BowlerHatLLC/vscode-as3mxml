@@ -67,6 +67,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.networknt.schema.JsonSchema;
 import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.ValidationMessage;
+import com.networknt.schema.SpecVersion.VersionFlag;
 import com.as3mxml.asconfigc.air.AIROptions;
 import com.as3mxml.asconfigc.air.AIROptionsParser;
 import com.as3mxml.asconfigc.air.AIRSigningOptions;
@@ -290,7 +291,7 @@ public class ASConfigC {
 	private JsonNode loadConfigFromFile(File configFile) throws ASConfigCException {
 		JsonSchema schema = null;
 		try (InputStream schemaInputStream = getClass().getResourceAsStream("/schemas/asconfig.schema.json")) {
-			JsonSchemaFactory factory = JsonSchemaFactory.getInstance();
+			JsonSchemaFactory factory = JsonSchemaFactory.getInstance(VersionFlag.V4);
 			schema = factory.getSchema(schemaInputStream);
 		} catch (Exception e) {
 			// this exception is unexpected, so it should be reported
