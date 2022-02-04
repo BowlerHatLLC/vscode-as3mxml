@@ -72,12 +72,14 @@ interface ActionScriptTaskDefinition extends vscode.TaskDefinition {
 
 export default class ActionScriptTaskProvider
   extends BaseAsconfigTaskProvider
-  implements vscode.TaskProvider {
+  implements vscode.TaskProvider
+{
   protected provideTasksForASConfigJSON(
     jsonURI: vscode.Uri,
     workspaceFolder: vscode.WorkspaceFolder,
     result: vscode.Task[]
   ) {
+    let isLibrary = false;
     let isAnimate = false;
     let isAIRMobile = false;
     let isAIRDesktop = false;
@@ -94,6 +96,7 @@ export default class ActionScriptTaskProvider
     let isMacOverrideShared = false;
     let asconfigJson = this.readASConfigJSON(jsonURI);
     if (asconfigJson !== null) {
+      isLibrary = this.isLibrary(asconfigJson);
       isAnimate = this.isAnimate(asconfigJson);
       isAIRMobile = this.isAIRMobile(asconfigJson);
       if (!isAIRMobile) {
@@ -104,19 +107,16 @@ export default class ActionScriptTaskProvider
         isRootTargetEmpty = this.isRootTargetEmpty(asconfigJson);
         isRootTargetShared = this.isRootTargetShared(asconfigJson);
         isRootTargetBundle = this.isRootTargetBundle(asconfigJson);
-        isRootTargetNativeInstaller = this.isRootTargetNativeInstaller(
-          asconfigJson
-        );
+        isRootTargetNativeInstaller =
+          this.isRootTargetNativeInstaller(asconfigJson);
         isWindowsOverrideShared = this.isWindowsOverrideShared(asconfigJson);
         isMacOverrideShared = this.isMacOverrideShared(asconfigJson);
         isWindowsOverrideBundle = this.isWindowsOverrideBundle(asconfigJson);
         isMacOverrideBundle = this.isMacOverrideBundle(asconfigJson);
-        isWindowsOverrideNativeInstaller = this.isWindowsOverrideNativeInstaller(
-          asconfigJson
-        );
-        isMacOverrideNativeInstaller = this.isMacOverrideNativeInstaller(
-          asconfigJson
-        );
+        isWindowsOverrideNativeInstaller =
+          this.isWindowsOverrideNativeInstaller(asconfigJson);
+        isMacOverrideNativeInstaller =
+          this.isMacOverrideNativeInstaller(asconfigJson);
       }
     }
 
@@ -169,281 +169,283 @@ export default class ActionScriptTaskProvider
       )
     );
 
-    //package mobile AIR application
-    if (isAIRMobile) {
-      result.push(
-        this.getTask(
-          `${TASK_NAME_PACKAGE_IOS_DEBUG} - ${taskNameSuffix}`,
-          jsonURI,
-          workspaceFolder,
-          command,
-          frameworkSDK,
-          true,
-          PLATFORM_IOS,
-          false
-        )
-      );
-      result.push(
-        this.getTask(
-          `${TASK_NAME_PACKAGE_IOS_RELEASE} - ${taskNameSuffix}`,
-          jsonURI,
-          workspaceFolder,
-          command,
-          frameworkSDK,
-          false,
-          PLATFORM_IOS,
-          false
-        )
-      );
-      result.push(
-        this.getTask(
-          `${TASK_NAME_PACKAGE_IOS_SIMULATOR_DEBUG} - ${taskNameSuffix}`,
-          jsonURI,
-          workspaceFolder,
-          command,
-          frameworkSDK,
-          true,
-          PLATFORM_IOS_SIMULATOR,
-          false
-        )
-      );
-      result.push(
-        this.getTask(
-          `${TASK_NAME_PACKAGE_IOS_SIMULATOR_RELEASE} - ${taskNameSuffix}`,
-          jsonURI,
-          workspaceFolder,
-          command,
-          frameworkSDK,
-          false,
-          PLATFORM_IOS_SIMULATOR,
-          false
-        )
-      );
-      result.push(
-        this.getTask(
-          `${TASK_NAME_PACKAGE_ANDROID_DEBUG} - ${taskNameSuffix}`,
-          jsonURI,
-          workspaceFolder,
-          command,
-          frameworkSDK,
-          true,
-          PLATFORM_ANDROID,
-          false
-        )
-      );
-      result.push(
-        this.getTask(
-          `${TASK_NAME_PACKAGE_ANDROID_RELEASE} - ${taskNameSuffix}`,
-          jsonURI,
-          workspaceFolder,
-          command,
-          frameworkSDK,
-          false,
-          PLATFORM_ANDROID,
-          false
-        )
-      );
-    }
-
-    //desktop platform targets are a little trickier because some can only
-    //be built on certain platforms. windows can't package for mac, and mac
-    //can't package for windows, for instance.
-
-    //if the windows or mac section exists, we need to check its target
-    //to determine what to display in the list of tasks.
-
-    //captive runtime
-    if (isWindowsOverrideBundle) {
-      result.push(
-        this.getTask(
-          `${TASK_NAME_PACKAGE_WINDOWS_CAPTIVE} - ${taskNameSuffix}`,
-          jsonURI,
-          workspaceFolder,
-          command,
-          frameworkSDK,
-          false,
-          PLATFORM_WINDOWS,
-          false
-        )
-      );
-    } else if (isMacOverrideBundle) {
-      result.push(
-        this.getTask(
-          `${TASK_NAME_PACKAGE_MAC_CAPTIVE} - ${taskNameSuffix}`,
-          jsonURI,
-          workspaceFolder,
-          command,
-          frameworkSDK,
-          false,
-          PLATFORM_MAC,
-          false
-        )
-      );
-    }
-    //shared runtime with platform overrides
-    else if (isWindowsOverrideShared) {
-      result.push(
-        this.getTask(
-          `${TASK_NAME_PACKAGE_WINDOWS_SHARED_DEBUG} - ${taskNameSuffix}`,
-          jsonURI,
-          workspaceFolder,
-          command,
-          frameworkSDK,
-          true,
-          PLATFORM_WINDOWS,
-          false
-        )
-      );
-      result.push(
-        this.getTask(
-          `${TASK_NAME_PACKAGE_WINDOWS_SHARED_RELEASE} - ${taskNameSuffix}`,
-          jsonURI,
-          workspaceFolder,
-          command,
-          frameworkSDK,
-          false,
-          PLATFORM_WINDOWS,
-          false
-        )
-      );
-    } else if (isMacOverrideShared) {
-      result.push(
-        this.getTask(
-          `${TASK_NAME_PACKAGE_MAC_SHARED_DEBUG} - ${taskNameSuffix}`,
-          jsonURI,
-          workspaceFolder,
-          command,
-          frameworkSDK,
-          false,
-          PLATFORM_MAC,
-          false
-        )
-      );
-      result.push(
-        this.getTask(
-          `${TASK_NAME_PACKAGE_MAC_SHARED_RELEASE} - ${taskNameSuffix}`,
-          jsonURI,
-          workspaceFolder,
-          command,
-          frameworkSDK,
-          true,
-          PLATFORM_MAC,
-          false
-        )
-      );
-    }
-    //native installers
-    else if (isWindowsOverrideNativeInstaller) {
-      result.push(
-        this.getTask(
-          `${TASK_NAME_PACKAGE_WINDOWS_NATIVE} - ${taskNameSuffix}`,
-          jsonURI,
-          workspaceFolder,
-          command,
-          frameworkSDK,
-          false,
-          PLATFORM_WINDOWS,
-          false
-        )
-      );
-    } else if (isMacOverrideNativeInstaller) {
-      result.push(
-        this.getTask(
-          `${TASK_NAME_PACKAGE_MAC_NATIVE} - ${taskNameSuffix}`,
-          jsonURI,
-          workspaceFolder,
-          command,
-          frameworkSDK,
-          false,
-          PLATFORM_MAC,
-          false
-        )
-      );
-    }
-
-    //--- root target in airOptions
-
-    //the root target is used if it hasn't been overridden for the current
-    //desktop platform. if it is overridden, it should be skipped to avoid
-    //duplicate items in the list.
-    const isWindows = process.platform === "win32";
-
-    if (
-      isRootTargetNativeInstaller &&
-      ((isWindows && !isWindowsOverrideNativeInstaller) ||
-        (!isWindows && !isMacOverrideNativeInstaller))
-    ) {
-      let taskName = isWindows
-        ? TASK_NAME_PACKAGE_WINDOWS_NATIVE
-        : TASK_NAME_PACKAGE_MAC_NATIVE;
-      result.push(
-        this.getTask(
-          `${taskName} - ${taskNameSuffix}`,
-          jsonURI,
-          workspaceFolder,
-          command,
-          frameworkSDK,
-          false,
-          PLATFORM_AIR,
-          false
-        )
-      );
-    }
-    if (
-      (isRootTargetBundle || isRootTargetEmpty) &&
-      ((isWindows && !isWindowsOverrideBundle) ||
-        (!isWindows && !isMacOverrideBundle))
-    ) {
-      let taskName = isWindows
-        ? TASK_NAME_PACKAGE_WINDOWS_CAPTIVE
-        : TASK_NAME_PACKAGE_MAC_CAPTIVE;
-      let airPlatform = PLATFORM_AIR;
-      if (isRootTargetEmpty) {
-        //this forces bundle
-        airPlatform = isWindows ? PLATFORM_WINDOWS : PLATFORM_MAC;
+    if (!isLibrary) {
+      //package mobile AIR application
+      if (isAIRMobile) {
+        result.push(
+          this.getTask(
+            `${TASK_NAME_PACKAGE_IOS_DEBUG} - ${taskNameSuffix}`,
+            jsonURI,
+            workspaceFolder,
+            command,
+            frameworkSDK,
+            true,
+            PLATFORM_IOS,
+            false
+          )
+        );
+        result.push(
+          this.getTask(
+            `${TASK_NAME_PACKAGE_IOS_RELEASE} - ${taskNameSuffix}`,
+            jsonURI,
+            workspaceFolder,
+            command,
+            frameworkSDK,
+            false,
+            PLATFORM_IOS,
+            false
+          )
+        );
+        result.push(
+          this.getTask(
+            `${TASK_NAME_PACKAGE_IOS_SIMULATOR_DEBUG} - ${taskNameSuffix}`,
+            jsonURI,
+            workspaceFolder,
+            command,
+            frameworkSDK,
+            true,
+            PLATFORM_IOS_SIMULATOR,
+            false
+          )
+        );
+        result.push(
+          this.getTask(
+            `${TASK_NAME_PACKAGE_IOS_SIMULATOR_RELEASE} - ${taskNameSuffix}`,
+            jsonURI,
+            workspaceFolder,
+            command,
+            frameworkSDK,
+            false,
+            PLATFORM_IOS_SIMULATOR,
+            false
+          )
+        );
+        result.push(
+          this.getTask(
+            `${TASK_NAME_PACKAGE_ANDROID_DEBUG} - ${taskNameSuffix}`,
+            jsonURI,
+            workspaceFolder,
+            command,
+            frameworkSDK,
+            true,
+            PLATFORM_ANDROID,
+            false
+          )
+        );
+        result.push(
+          this.getTask(
+            `${TASK_NAME_PACKAGE_ANDROID_RELEASE} - ${taskNameSuffix}`,
+            jsonURI,
+            workspaceFolder,
+            command,
+            frameworkSDK,
+            false,
+            PLATFORM_ANDROID,
+            false
+          )
+        );
       }
-      result.push(
-        this.getTask(
-          `${taskName} - ${taskNameSuffix}`,
-          jsonURI,
-          workspaceFolder,
-          command,
-          frameworkSDK,
-          false,
-          airPlatform,
-          false
-        )
-      );
-    }
-    if (
-      (isRootTargetShared || isRootTargetEmpty) &&
-      ((isWindows && !isWindowsOverrideShared) ||
-        (!isWindows && !isMacOverrideShared))
-    ) {
-      result.push(
-        this.getTask(
-          `${TASK_NAME_PACKAGE_DESKTOP_SHARED_DEBUG} - ${taskNameSuffix}`,
-          jsonURI,
-          workspaceFolder,
-          command,
-          frameworkSDK,
-          true,
-          PLATFORM_AIR,
-          false
-        )
-      );
-      result.push(
-        this.getTask(
-          `${TASK_NAME_PACKAGE_DESKTOP_SHARED_RELEASE} - ${taskNameSuffix}`,
-          jsonURI,
-          workspaceFolder,
-          command,
-          frameworkSDK,
-          false,
-          PLATFORM_AIR,
-          false
-        )
-      );
+
+      //desktop platform targets are a little trickier because some can only
+      //be built on certain platforms. windows can't package for mac, and mac
+      //can't package for windows, for instance.
+
+      //if the windows or mac section exists, we need to check its target
+      //to determine what to display in the list of tasks.
+
+      //captive runtime
+      if (isWindowsOverrideBundle) {
+        result.push(
+          this.getTask(
+            `${TASK_NAME_PACKAGE_WINDOWS_CAPTIVE} - ${taskNameSuffix}`,
+            jsonURI,
+            workspaceFolder,
+            command,
+            frameworkSDK,
+            false,
+            PLATFORM_WINDOWS,
+            false
+          )
+        );
+      } else if (isMacOverrideBundle) {
+        result.push(
+          this.getTask(
+            `${TASK_NAME_PACKAGE_MAC_CAPTIVE} - ${taskNameSuffix}`,
+            jsonURI,
+            workspaceFolder,
+            command,
+            frameworkSDK,
+            false,
+            PLATFORM_MAC,
+            false
+          )
+        );
+      }
+      //shared runtime with platform overrides
+      else if (isWindowsOverrideShared) {
+        result.push(
+          this.getTask(
+            `${TASK_NAME_PACKAGE_WINDOWS_SHARED_DEBUG} - ${taskNameSuffix}`,
+            jsonURI,
+            workspaceFolder,
+            command,
+            frameworkSDK,
+            true,
+            PLATFORM_WINDOWS,
+            false
+          )
+        );
+        result.push(
+          this.getTask(
+            `${TASK_NAME_PACKAGE_WINDOWS_SHARED_RELEASE} - ${taskNameSuffix}`,
+            jsonURI,
+            workspaceFolder,
+            command,
+            frameworkSDK,
+            false,
+            PLATFORM_WINDOWS,
+            false
+          )
+        );
+      } else if (isMacOverrideShared) {
+        result.push(
+          this.getTask(
+            `${TASK_NAME_PACKAGE_MAC_SHARED_DEBUG} - ${taskNameSuffix}`,
+            jsonURI,
+            workspaceFolder,
+            command,
+            frameworkSDK,
+            false,
+            PLATFORM_MAC,
+            false
+          )
+        );
+        result.push(
+          this.getTask(
+            `${TASK_NAME_PACKAGE_MAC_SHARED_RELEASE} - ${taskNameSuffix}`,
+            jsonURI,
+            workspaceFolder,
+            command,
+            frameworkSDK,
+            true,
+            PLATFORM_MAC,
+            false
+          )
+        );
+      }
+      //native installers
+      else if (isWindowsOverrideNativeInstaller) {
+        result.push(
+          this.getTask(
+            `${TASK_NAME_PACKAGE_WINDOWS_NATIVE} - ${taskNameSuffix}`,
+            jsonURI,
+            workspaceFolder,
+            command,
+            frameworkSDK,
+            false,
+            PLATFORM_WINDOWS,
+            false
+          )
+        );
+      } else if (isMacOverrideNativeInstaller) {
+        result.push(
+          this.getTask(
+            `${TASK_NAME_PACKAGE_MAC_NATIVE} - ${taskNameSuffix}`,
+            jsonURI,
+            workspaceFolder,
+            command,
+            frameworkSDK,
+            false,
+            PLATFORM_MAC,
+            false
+          )
+        );
+      }
+
+      //--- root target in airOptions
+
+      //the root target is used if it hasn't been overridden for the current
+      //desktop platform. if it is overridden, it should be skipped to avoid
+      //duplicate items in the list.
+      const isWindows = process.platform === "win32";
+
+      if (
+        isRootTargetNativeInstaller &&
+        ((isWindows && !isWindowsOverrideNativeInstaller) ||
+          (!isWindows && !isMacOverrideNativeInstaller))
+      ) {
+        let taskName = isWindows
+          ? TASK_NAME_PACKAGE_WINDOWS_NATIVE
+          : TASK_NAME_PACKAGE_MAC_NATIVE;
+        result.push(
+          this.getTask(
+            `${taskName} - ${taskNameSuffix}`,
+            jsonURI,
+            workspaceFolder,
+            command,
+            frameworkSDK,
+            false,
+            PLATFORM_AIR,
+            false
+          )
+        );
+      }
+      if (
+        (isRootTargetBundle || isRootTargetEmpty) &&
+        ((isWindows && !isWindowsOverrideBundle) ||
+          (!isWindows && !isMacOverrideBundle))
+      ) {
+        let taskName = isWindows
+          ? TASK_NAME_PACKAGE_WINDOWS_CAPTIVE
+          : TASK_NAME_PACKAGE_MAC_CAPTIVE;
+        let airPlatform = PLATFORM_AIR;
+        if (isRootTargetEmpty) {
+          //this forces bundle
+          airPlatform = isWindows ? PLATFORM_WINDOWS : PLATFORM_MAC;
+        }
+        result.push(
+          this.getTask(
+            `${taskName} - ${taskNameSuffix}`,
+            jsonURI,
+            workspaceFolder,
+            command,
+            frameworkSDK,
+            false,
+            airPlatform,
+            false
+          )
+        );
+      }
+      if (
+        (isRootTargetShared || isRootTargetEmpty) &&
+        ((isWindows && !isWindowsOverrideShared) ||
+          (!isWindows && !isMacOverrideShared))
+      ) {
+        result.push(
+          this.getTask(
+            `${TASK_NAME_PACKAGE_DESKTOP_SHARED_DEBUG} - ${taskNameSuffix}`,
+            jsonURI,
+            workspaceFolder,
+            command,
+            frameworkSDK,
+            true,
+            PLATFORM_AIR,
+            false
+          )
+        );
+        result.push(
+          this.getTask(
+            `${TASK_NAME_PACKAGE_DESKTOP_SHARED_RELEASE} - ${taskNameSuffix}`,
+            jsonURI,
+            workspaceFolder,
+            command,
+            frameworkSDK,
+            false,
+            PLATFORM_AIR,
+            false
+          )
+        );
+      }
     }
   }
 

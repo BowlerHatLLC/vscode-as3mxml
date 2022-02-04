@@ -28,6 +28,8 @@ const FIELD_ANIMATE_OPTIONS = "animateOptions";
 const FIELD_FILE = "file";
 const FIELD_APPLICATION = "application";
 const FIELD_AIR_OPTIONS = "airOptions";
+const FIELD_TYPE = "type";
+const TYPE_LIB = "lib";
 
 export default class BaseAsconfigTaskProvider {
   constructor(
@@ -175,6 +177,14 @@ export default class BaseAsconfigTaskProvider {
       console.error(`Error reading file: ${jsonPath}. ${error}`);
     }
     return null;
+  }
+
+  protected isLibrary(asconfigJson: any): boolean {
+    if (!(FIELD_TYPE in asconfigJson)) {
+      return false;
+    }
+    let type = asconfigJson[FIELD_TYPE];
+    return type === TYPE_LIB;
   }
 
   protected isAnimate(asconfigJson: any): boolean {
