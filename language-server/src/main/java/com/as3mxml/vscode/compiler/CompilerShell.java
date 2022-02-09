@@ -81,49 +81,52 @@ public class CompilerShell implements IASConfigCCompiler {
         if (active) {
             throw new ASConfigCException(ERROR_COMPILER_ACTIVE);
         }
-        active = true;
-        isRoyale = ActionScriptSDKUtils.isRoyaleSDK(sdkPath);
-        isAIR = ActionScriptSDKUtils.isAIRSDK(sdkPath);
+        try {
+            active = true;
+            isRoyale = ActionScriptSDKUtils.isRoyaleSDK(sdkPath);
+            isAIR = ActionScriptSDKUtils.isAIRSDK(sdkPath);
 
-        String oldCompileID = compileID;
+            String oldCompileID = compileID;
 
-        boolean isFCSH = !isRoyale && !isAIR;
-        if (isFCSH) {
-            // fcsh has a bug when run in Java 8 or newer that causes
-            // exceptions to be thrown after multiple builds.
-            // we can force a fresh build and still gain partial performance
-            // improvement from keeping the compiler process loaded in memory.
-            compileID = null;
-        }
-        boolean sdkChanged = previousSDKPath != null && !previousSDKPath.equals(sdkPath);
-        if (sdkChanged) {
-            // we need to start a different compiler shell process with the new
-            // SDK, so the old compileID is no longer valid
-            compileID = null;
-        }
-        previousSDKPath = sdkPath;
-
-        String command = getCommand(projectType, compilerOptions);
-
-        boolean compileIDChanged = oldCompileID != null && compileID == null;
-        if (process != null && (compileIDChanged || sdkChanged)) {
-            if (sdkChanged) {
-                // we need to start a different compiler shell process with the
-                // new SDK
-                quit();
-            } else if (isFCSH) {
-                // we don't need to restart. we only need to clear.
-                String clearCommand = getClearCommand(oldCompileID);
-                executeCommandAndWaitForPrompt(clearCommand);
-            } else {
-                // if we have a new command, start with a fresh instance of the
-                // compiler shell.
-                quit();
+            boolean isFCSH = !isRoyale && !isAIR;
+            if (isFCSH) {
+                // fcsh has a bug when run in Java 8 or newer that causes
+                // exceptions to be thrown after multiple builds.
+                // we can force a fresh build and still gain partial performance
+                // improvement from keeping the compiler process loaded in memory.
+                compileID = null;
             }
+            boolean sdkChanged = previousSDKPath != null && !previousSDKPath.equals(sdkPath);
+            if (sdkChanged) {
+                // we need to start a different compiler shell process with the new
+                // SDK, so the old compileID is no longer valid
+                compileID = null;
+            }
+            previousSDKPath = sdkPath;
+
+            String command = getCommand(projectType, compilerOptions);
+
+            boolean compileIDChanged = oldCompileID != null && compileID == null;
+            if (process != null && (compileIDChanged || sdkChanged)) {
+                if (sdkChanged) {
+                    // we need to start a different compiler shell process with the
+                    // new SDK
+                    quit();
+                } else if (isFCSH) {
+                    // we don't need to restart. we only need to clear.
+                    String clearCommand = getClearCommand(oldCompileID);
+                    executeCommandAndWaitForPrompt(clearCommand);
+                } else {
+                    // if we have a new command, start with a fresh instance of the
+                    // compiler shell.
+                    quit();
+                }
+            }
+            startProcess(sdkPath, workspaceRoot);
+            executeCommandAndWaitForPrompt(command, true);
+        } finally {
+            active = false;
         }
-        startProcess(sdkPath, workspaceRoot);
-        executeCommandAndWaitForPrompt(command, true);
-        active = false;
     }
 
     public void dispose() {
