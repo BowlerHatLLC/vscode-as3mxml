@@ -215,6 +215,20 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     private boolean sources_organizeImports_addMissingImports = true;
     private boolean sources_organizeImports_removeUnusedImports = true;
     private boolean sources_organizeImports_insertNewLineBetweenTopLevelPackages = true;
+    public boolean format_enable = true;
+    public String format_semicolons = null;
+    public Boolean format_placeOpenBraceOnNewLine = null;
+    public Integer format_maxPreserveNewLines = null;
+    public Boolean format_mxmlAlignAttributes = null;
+    public Boolean format_mxmlInsertNewLineBetweenAttributes = null;
+    public Boolean format_insertSpaceAtStartOfLineComment = null;
+    public Boolean format_insertSpaceBeforeAndAfterBinaryOperators = null;
+    public Boolean format_insertSpaceAfterSemicolonInForStatements = null;
+    public Boolean format_insertSpaceAfterKeywordsInControlFlowStatements = null;
+    public Boolean format_insertSpaceAfterFunctionKeywordForAnonymousFunctions = null;
+    public Boolean format_insertSpaceBetweenMetadataAttributes = null;
+    public Boolean format_insertSpaceAfterCommaDelimiter = null;
+    public Boolean format_collapseEmptyBlocks = null;
     private SimpleProjectConfigStrategy fallbackConfig;
     private CompilerShell compilerShell;
     private String jvmargs;
@@ -681,6 +695,10 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     }
 
     private List<? extends TextEdit> formatting2(DocumentFormattingParams params, CancelChecker cancelToken) {
+        if (!format_enable) {
+            return Collections.emptyList();
+        }
+
         // make sure that the latest changes have been passed to
         // workspace.fileChanged() before proceeding
         if (realTimeProblemsChecker != null) {
@@ -690,6 +708,19 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         compilerWorkspace.startBuilding();
         try {
             FormattingProvider provider = new FormattingProvider(fileTracker);
+            provider.semicolons = format_semicolons;
+            provider.placeOpenBraceOnNewLine = format_placeOpenBraceOnNewLine;
+            provider.maxPreserveNewLines = format_maxPreserveNewLines;
+            provider.mxmlAlignAttributes = format_mxmlAlignAttributes;
+            provider.mxmlInsertNewLineBetweenAttributes = format_mxmlInsertNewLineBetweenAttributes;
+            provider.insertSpaceAtStartOfLineComment = format_insertSpaceAtStartOfLineComment;
+            provider.insertSpaceBeforeAndAfterBinaryOperators = format_insertSpaceBeforeAndAfterBinaryOperators;
+            provider.insertSpaceAfterSemicolonInForStatements = format_insertSpaceAfterSemicolonInForStatements;
+            provider.insertSpaceAfterKeywordsInControlFlowStatements = format_insertSpaceAfterKeywordsInControlFlowStatements;
+            provider.insertSpaceAfterFunctionKeywordForAnonymousFunctions = format_insertSpaceAfterFunctionKeywordForAnonymousFunctions;
+            provider.insertSpaceBetweenMetadataAttributes = format_insertSpaceBetweenMetadataAttributes;
+            provider.insertSpaceAfterCommaDelimiter = format_insertSpaceAfterCommaDelimiter;
+            provider.collapseEmptyBlocks = format_collapseEmptyBlocks;
             return provider.formatting(params, cancelToken);
         } finally {
             compilerWorkspace.doneBuilding();
@@ -1191,6 +1222,20 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         this.updateSourcesOrganizeImportsAddMissingImports(settings);
         this.updateSourcesOrganizeImportsRemoveUnusedImports(settings);
         this.updateSourcesOrganizeImportsInsertNewLineBetweenTopLevelPackages(settings);
+        this.updateFormatEnable(settings);
+        this.updateFormatSemicolons(settings);
+        this.updateFormatPlaceOpenBraceOnNewLine(settings);
+        this.updateFormatMaxPreserveNewLines(settings);
+        this.updateFormatMxmlAlignAttributes(settings);
+        this.updateFormatMxmlInsertNewLineBetweenAttributes(settings);
+        this.updateFormatInsertSpaceAtStartOfLineComment(settings);
+        this.updateFormatInsertSpaceBeforeAndAfterBinaryOperators(settings);
+        this.updateFormatInsertSpaceAfterSemicolonInForStatements(settings);
+        this.updateFormatInsertSpaceAfterKeywordsInControlFlowStatements(settings);
+        this.updateFormatInsertSpaceAfterFunctionKeywordForAnonymousFunctions(settings);
+        this.updateFormatInsertSpaceBetweenMetadataAttributes(settings);
+        this.updateFormatInsertSpaceAfterCommaDelimiter(settings);
+        this.updateFormatCollapseEmptyBlocks(settings);
     }
 
     @Override
@@ -2379,6 +2424,322 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             return;
         }
         sources_organizeImports_insertNewLineBetweenTopLevelPackages = newInsertNewLineBetweenTopLevelPackages;
+    }
+
+    private void updateFormatEnable(JsonObject settings) {
+        if (!settings.has("as3mxml")) {
+            return;
+        }
+        JsonObject as3mxml = settings.get("as3mxml").getAsJsonObject();
+        if (!as3mxml.has("format")) {
+            return;
+        }
+        JsonObject format = as3mxml.get("format").getAsJsonObject();
+        if (!format.has("enable")) {
+            return;
+        }
+        boolean newFormatEnable = format.get("enable").getAsBoolean();
+        if (format_enable == newFormatEnable) {
+            return;
+        }
+        format_enable = newFormatEnable;
+    }
+
+    private void updateFormatPlaceOpenBraceOnNewLine(JsonObject settings) {
+        if (!settings.has("as3mxml")) {
+            return;
+        }
+        JsonObject as3mxml = settings.get("as3mxml").getAsJsonObject();
+        if (!as3mxml.has("format")) {
+            return;
+        }
+        JsonObject format = as3mxml.get("format").getAsJsonObject();
+        if (!format.has("placeOpenBraceOnNewLine")) {
+            return;
+        }
+        Boolean newPlaceOpenBraceOnNewLine = null;
+        if (!format.get("placeOpenBraceOnNewLine").isJsonNull()) {
+            newPlaceOpenBraceOnNewLine = format.get("placeOpenBraceOnNewLine").getAsBoolean();
+        }
+        if (format_placeOpenBraceOnNewLine == newPlaceOpenBraceOnNewLine) {
+            return;
+        }
+        format_placeOpenBraceOnNewLine = newPlaceOpenBraceOnNewLine;
+    }
+
+    private void updateFormatSemicolons(JsonObject settings) {
+        if (!settings.has("as3mxml")) {
+            return;
+        }
+        JsonObject as3mxml = settings.get("as3mxml").getAsJsonObject();
+        if (!as3mxml.has("format")) {
+            return;
+        }
+        JsonObject format = as3mxml.get("format").getAsJsonObject();
+        if (!format.has("semicolons")) {
+            return;
+        }
+        String newFormatSemicolons = format.get("semicolons").getAsString();
+        if (format_semicolons == newFormatSemicolons) {
+            return;
+        }
+        format_semicolons = newFormatSemicolons;
+    }
+
+    private void updateFormatMaxPreserveNewLines(JsonObject settings) {
+        if (!settings.has("as3mxml")) {
+            return;
+        }
+        JsonObject as3mxml = settings.get("as3mxml").getAsJsonObject();
+        if (!as3mxml.has("format")) {
+            return;
+        }
+        JsonObject format = as3mxml.get("format").getAsJsonObject();
+        if (!format.has("maxPreserveNewLines")) {
+            return;
+        }
+        Integer newMaxPreserveNewLines = null;
+        if (!format.get("maxPreserveNewLines").isJsonNull()) {
+            newMaxPreserveNewLines = format.get("maxPreserveNewLines").getAsInt();
+        }
+        if (format_maxPreserveNewLines == newMaxPreserveNewLines) {
+            return;
+        }
+        format_maxPreserveNewLines = newMaxPreserveNewLines;
+    }
+
+    private void updateFormatMxmlAlignAttributes(JsonObject settings) {
+        if (!settings.has("as3mxml")) {
+            return;
+        }
+        JsonObject as3mxml = settings.get("as3mxml").getAsJsonObject();
+        if (!as3mxml.has("format")) {
+            return;
+        }
+        JsonObject format = as3mxml.get("format").getAsJsonObject();
+        if (!format.has("mxmlAlignAttributes")) {
+            return;
+        }
+        Boolean newFormatMxmlAlignAttributes = null;
+        if (!format.get("mxmlAlignAttributes").isJsonNull()) {
+            newFormatMxmlAlignAttributes = format.get("mxmlAlignAttributes").getAsBoolean();
+        }
+        if (format_mxmlAlignAttributes == newFormatMxmlAlignAttributes) {
+            return;
+        }
+        format_mxmlAlignAttributes = newFormatMxmlAlignAttributes;
+    }
+
+    private void updateFormatMxmlInsertNewLineBetweenAttributes(JsonObject settings) {
+        if (!settings.has("as3mxml")) {
+            return;
+        }
+        JsonObject as3mxml = settings.get("as3mxml").getAsJsonObject();
+        if (!as3mxml.has("format")) {
+            return;
+        }
+        JsonObject format = as3mxml.get("format").getAsJsonObject();
+        if (!format.has("mxmlInsertNewLineBetweenAttributes")) {
+            return;
+        }
+        Boolean newFormatMxmlInsertNewLineBetweenAttributes = null;
+        if (!format.get("mxmlInsertNewLineBetweenAttributes").isJsonNull()) {
+            newFormatMxmlInsertNewLineBetweenAttributes = format.get("mxmlInsertNewLineBetweenAttributes")
+                    .getAsBoolean();
+        }
+        if (format_mxmlInsertNewLineBetweenAttributes == newFormatMxmlInsertNewLineBetweenAttributes) {
+            return;
+        }
+        format_mxmlInsertNewLineBetweenAttributes = newFormatMxmlInsertNewLineBetweenAttributes;
+    }
+
+    private void updateFormatInsertSpaceAtStartOfLineComment(JsonObject settings) {
+        if (!settings.has("as3mxml")) {
+            return;
+        }
+        JsonObject as3mxml = settings.get("as3mxml").getAsJsonObject();
+        if (!as3mxml.has("format")) {
+            return;
+        }
+        JsonObject format = as3mxml.get("format").getAsJsonObject();
+        if (!format.has("insertSpaceAtStartOfLineComment")) {
+            return;
+        }
+        Boolean newFormatInsertSpaceAtStartOfLineComment = null;
+        if (!format.get("insertSpaceAtStartOfLineComment").isJsonNull()) {
+            newFormatInsertSpaceAtStartOfLineComment = format.get("insertSpaceAtStartOfLineComment")
+                    .getAsBoolean();
+        }
+        if (format_insertSpaceAtStartOfLineComment == newFormatInsertSpaceAtStartOfLineComment) {
+            return;
+        }
+        format_insertSpaceAtStartOfLineComment = newFormatInsertSpaceAtStartOfLineComment;
+    }
+
+    private void updateFormatInsertSpaceBeforeAndAfterBinaryOperators(JsonObject settings) {
+        if (!settings.has("as3mxml")) {
+            return;
+        }
+        JsonObject as3mxml = settings.get("as3mxml").getAsJsonObject();
+        if (!as3mxml.has("format")) {
+            return;
+        }
+        JsonObject format = as3mxml.get("format").getAsJsonObject();
+        if (!format.has("insertSpaceBeforeAndAfterBinaryOperators")) {
+            return;
+        }
+        Boolean newFormatInsertSpaceBeforeAndAfterBinaryOperators = null;
+        if (!format.get("insertSpaceBeforeAndAfterBinaryOperators").isJsonNull()) {
+            newFormatInsertSpaceBeforeAndAfterBinaryOperators = format.get("insertSpaceBeforeAndAfterBinaryOperators")
+                    .getAsBoolean();
+        }
+        if (format_insertSpaceBeforeAndAfterBinaryOperators == newFormatInsertSpaceBeforeAndAfterBinaryOperators) {
+            return;
+        }
+        format_insertSpaceBeforeAndAfterBinaryOperators = newFormatInsertSpaceBeforeAndAfterBinaryOperators;
+    }
+
+    private void updateFormatInsertSpaceAfterSemicolonInForStatements(JsonObject settings) {
+        if (!settings.has("as3mxml")) {
+            return;
+        }
+        JsonObject as3mxml = settings.get("as3mxml").getAsJsonObject();
+        if (!as3mxml.has("format")) {
+            return;
+        }
+        JsonObject format = as3mxml.get("format").getAsJsonObject();
+        if (!format.has("insertSpaceAfterSemicolonInForStatements")) {
+            return;
+        }
+        Boolean newFormatInsertSpaceAfterSemicolonInForStatements = null;
+        if (!format.get("insertSpaceAfterSemicolonInForStatements").isJsonNull()) {
+            newFormatInsertSpaceAfterSemicolonInForStatements = format.get("insertSpaceAfterSemicolonInForStatements")
+                    .getAsBoolean();
+        }
+        if (format_insertSpaceAfterSemicolonInForStatements == newFormatInsertSpaceAfterSemicolonInForStatements) {
+            return;
+        }
+        format_insertSpaceAfterSemicolonInForStatements = newFormatInsertSpaceAfterSemicolonInForStatements;
+    }
+
+    private void updateFormatInsertSpaceAfterKeywordsInControlFlowStatements(JsonObject settings) {
+        if (!settings.has("as3mxml")) {
+            return;
+        }
+        JsonObject as3mxml = settings.get("as3mxml").getAsJsonObject();
+        if (!as3mxml.has("format")) {
+            return;
+        }
+        JsonObject format = as3mxml.get("format").getAsJsonObject();
+        if (!format.has("insertSpaceAfterKeywordsInControlFlowStatements")) {
+            return;
+        }
+        Boolean newFormatInsertSpaceAfterKeywordsInControlFlowStatements = null;
+        if (!format.get("insertSpaceAfterKeywordsInControlFlowStatements").isJsonNull()) {
+            newFormatInsertSpaceAfterKeywordsInControlFlowStatements = format
+                    .get("insertSpaceAfterKeywordsInControlFlowStatements")
+                    .getAsBoolean();
+        }
+        if (format_insertSpaceAfterKeywordsInControlFlowStatements == newFormatInsertSpaceAfterKeywordsInControlFlowStatements) {
+            return;
+        }
+        format_insertSpaceAfterKeywordsInControlFlowStatements = newFormatInsertSpaceAfterKeywordsInControlFlowStatements;
+    }
+
+    private void updateFormatInsertSpaceAfterFunctionKeywordForAnonymousFunctions(JsonObject settings) {
+        if (!settings.has("as3mxml")) {
+            return;
+        }
+        JsonObject as3mxml = settings.get("as3mxml").getAsJsonObject();
+        if (!as3mxml.has("format")) {
+            return;
+        }
+        JsonObject format = as3mxml.get("format").getAsJsonObject();
+        if (!format.has("insertSpaceAfterFunctionKeywordForAnonymousFunctions")) {
+            return;
+        }
+        Boolean newFormatInsertSpaceAfterFunctionKeywordForAnonymousFunctions = null;
+        if (!format.get("insertSpaceAfterFunctionKeywordForAnonymousFunctions").isJsonNull()) {
+            newFormatInsertSpaceAfterFunctionKeywordForAnonymousFunctions = format
+                    .get("insertSpaceAfterFunctionKeywordForAnonymousFunctions")
+                    .getAsBoolean();
+        }
+        if (format_insertSpaceAfterFunctionKeywordForAnonymousFunctions == newFormatInsertSpaceAfterFunctionKeywordForAnonymousFunctions) {
+            return;
+        }
+        format_insertSpaceAfterFunctionKeywordForAnonymousFunctions = newFormatInsertSpaceAfterFunctionKeywordForAnonymousFunctions;
+    }
+
+    private void updateFormatInsertSpaceBetweenMetadataAttributes(JsonObject settings) {
+        if (!settings.has("as3mxml")) {
+            return;
+        }
+        JsonObject as3mxml = settings.get("as3mxml").getAsJsonObject();
+        if (!as3mxml.has("format")) {
+            return;
+        }
+        JsonObject format = as3mxml.get("format").getAsJsonObject();
+        if (!format.has("insertSpaceBetweenMetadataAttributes")) {
+            return;
+        }
+        Boolean newFormatInsertSpaceBetweenMetadataAttributes = null;
+        if (!format.get("insertSpaceBetweenMetadataAttributes").isJsonNull()) {
+            newFormatInsertSpaceBetweenMetadataAttributes = format
+                    .get("insertSpaceBetweenMetadataAttributes")
+                    .getAsBoolean();
+        }
+        if (format_insertSpaceBetweenMetadataAttributes == newFormatInsertSpaceBetweenMetadataAttributes) {
+            return;
+        }
+        format_insertSpaceBetweenMetadataAttributes = newFormatInsertSpaceBetweenMetadataAttributes;
+    }
+
+    private void updateFormatInsertSpaceAfterCommaDelimiter(JsonObject settings) {
+        if (!settings.has("as3mxml")) {
+            return;
+        }
+        JsonObject as3mxml = settings.get("as3mxml").getAsJsonObject();
+        if (!as3mxml.has("format")) {
+            return;
+        }
+        JsonObject format = as3mxml.get("format").getAsJsonObject();
+        if (!format.has("insertSpaceAfterCommaDelimiter")) {
+            return;
+        }
+        Boolean newFormatInsertSpaceAfterCommaDelimiter = null;
+        if (!format.get("insertSpaceAfterCommaDelimiter").isJsonNull()) {
+            newFormatInsertSpaceAfterCommaDelimiter = format
+                    .get("insertSpaceAfterCommaDelimiter")
+                    .getAsBoolean();
+        }
+        if (format_insertSpaceAfterCommaDelimiter == newFormatInsertSpaceAfterCommaDelimiter) {
+            return;
+        }
+        format_insertSpaceAfterCommaDelimiter = newFormatInsertSpaceAfterCommaDelimiter;
+    }
+
+    private void updateFormatCollapseEmptyBlocks(JsonObject settings) {
+        if (!settings.has("as3mxml")) {
+            return;
+        }
+        JsonObject as3mxml = settings.get("as3mxml").getAsJsonObject();
+        if (!as3mxml.has("format")) {
+            return;
+        }
+        JsonObject format = as3mxml.get("format").getAsJsonObject();
+        if (!format.has("collapseEmptyBlocks")) {
+            return;
+        }
+        Boolean newFormatCollapseEmptyBlocks = null;
+        if (!format.get("collapseEmptyBlocks").isJsonNull()) {
+            newFormatCollapseEmptyBlocks = format
+                    .get("collapseEmptyBlocks")
+                    .getAsBoolean();
+        }
+        if (format_collapseEmptyBlocks == newFormatCollapseEmptyBlocks) {
+            return;
+        }
+        format_collapseEmptyBlocks = newFormatCollapseEmptyBlocks;
     }
 
     private CompletableFuture<Object> executeQuickCompileCommand(ExecuteCommandParams params) {

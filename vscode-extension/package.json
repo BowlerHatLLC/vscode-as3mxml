@@ -454,6 +454,81 @@
           "default": true,
           "description": "When organizing imports, determines if a new line is inserted between top level packages"
         },
+        "as3mxml.format.enable": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable or disable the ActionScript and MXML formatter"
+        },
+        "as3mxml.format.collapseEmptyBlocks": {
+          "type": "boolean",
+          "default": false,
+          "description": "Defines collapse behavior for empty blocks"
+        },
+        "as3mxml.format.insertSpaceAfterCommaDelimiter": {
+          "type": "boolean",
+          "default": true,
+          "description": "Defines space handling after comma delimter"
+        },
+        "as3mxml.format.insertSpaceBetweenMetadataAttributes": {
+          "type": "boolean",
+          "default": true,
+          "description": "Defines space handling after metadata attributes"
+        },
+        "as3mxml.format.insertSpaceAfterFunctionKeywordForAnonymousFunctions": {
+          "type": "boolean",
+          "default": false,
+          "description": "Defines space handling for anonymous functions"
+        },
+        "as3mxml.format.insertSpaceAfterKeywordsInControlFlowStatements": {
+          "type": "boolean",
+          "default": true,
+          "description": "Defines space handling for control flow statements"
+        },
+        "as3mxml.format.insertSpaceAfterSemicolonInForStatements": {
+          "type": "boolean",
+          "default": true,
+          "description": "Defines space handling for semicolons in for statements"
+        },
+        "as3mxml.format.insertSpaceBeforeAndAfterBinaryOperators": {
+          "type": "boolean",
+          "default": true,
+          "description": "Defines space handling for semicolons binary operators"
+        },
+        "as3mxml.format.insertSpaceAtStartOfLineComment": {
+          "type": "boolean",
+          "default": true,
+          "description": "Defines space handling for line comments"
+        },
+        "as3mxml.format.mxmlInsertNewLineBetweenAttributes": {
+          "type": "boolean",
+          "default": false,
+          "description": "Defines new line handling for MXML attributes"
+        },
+        "as3mxml.format.mxmlAlignAttributes": {
+          "type": "boolean",
+          "default": false,
+          "description": "Defines alignment handling for MXML attributes"
+        },
+        "as3mxml.format.maxPreserveNewLines": {
+          "type": "integer",
+          "default": 2,
+          "description": "Defines the maximum number of empty new lines between non-empty lines"
+        },
+        "as3mxml.format.placeOpenBraceOnNewLine": {
+          "type": "boolean",
+          "default": true,
+          "description": "Defines new line handling for open braces"
+        },
+        "as3mxml.format.semicolons": {
+          "type": "string",
+          "enum": [
+            "ignore",
+            "insert",
+            "remove"
+          ],
+          "default": "insert",
+          "description": "Defines automatic semicolon insertion behavior"
+        },
         "nextgenas.sdk.framework": {
           "description": "Deprecated. Replaced by as3mxml.sdk.framework.",
           "deprecationMessage": "DEPRECATED: Use as3mxml.sdk.framework instead."
