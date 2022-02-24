@@ -144,6 +144,11 @@ public class ASConfigC {
 		cleanOption.setArgName("true OR false");
 		cleanOption.setOptionalArg(true);
 		options.addOption(cleanOption);
+		Option watchOption = new Option(null, "watch", true,
+				"Watch for file system changes and rebuild if detected (Royale only).");
+		watchOption.setArgName("true OR false");
+		watchOption.setOptionalArg(true);
+		options.addOption(watchOption);
 		Option animateOption = new Option(null, "animate", true, "Specify the path to Adobe Animate.");
 		animateOption.setArgName("FILE");
 		animateOption.setOptionalArg(true);
@@ -244,6 +249,7 @@ public class ASConfigC {
 	private JsonNode airOptionsJSON;
 	private String projectType;
 	private boolean clean;
+	private boolean watch;
 	private boolean debugBuild;
 	private boolean copySourcePathAssets;
 	private String jsOutputType;
@@ -361,7 +367,16 @@ public class ASConfigC {
 			System.out.println("Parsing configuration file...");
 		}
 		clean = options.clean != null && options.clean.equals(true);
-		debugBuild = options.debug != null && options.debug.equals(true);
+		watch = options.watch != null && options.watch.equals(true);
+		if (watch) {
+			debugBuild = true;
+			configRequiresRoyale = true;
+			if (options.debug != null && !options.debug.equals(true)) {
+				throw new ASConfigCException("Watch requires debug to be true");
+			}
+		} else {
+			debugBuild = options.debug != null && options.debug.equals(true);
+		}
 		compilerOptions = new ArrayList<>();
 		allModuleCompilerOptions = new ArrayList<>();
 		allWorkerCompilerOptions = new ArrayList<>();
@@ -415,6 +430,9 @@ public class ASConfigC {
 		// swf projects won't have a js-output-type
 		if (jsOutputType != null) {
 			compilerOptions.add("--" + CompilerOptions.JS_OUTPUT_TYPE + "=" + jsOutputType);
+		}
+		if (watch) {
+			compilerOptions.add("--watch");
 		}
 		if (json.has(TopLevelFields.APPLICATION)) {
 			configRequiresAIR = true;
