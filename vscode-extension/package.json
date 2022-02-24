@@ -333,6 +333,10 @@
           "clean": {
             "type": "boolean",
             "description": "Indicates if the output folder should be cleaned"
+          },
+          "watch": {
+            "type": "boolean",
+            "description": "Indicates if the compiler should watch for file changes (Royale only)"
           }
         }
       },

@@ -17,6 +17,7 @@ import * as path from "path";
 import * as vscode from "vscode";
 import getFrameworkSDKPathWithFallbacks from "./getFrameworkSDKPathWithFallbacks";
 import BaseAsconfigTaskProvider from "./BaseAsconfigTaskProvider";
+import validateRoyale from "./validateRoyale";
 
 const ASCONFIG_JSON = "asconfig.json";
 const FIELD_AIR_OPTIONS = "airOptions";
@@ -38,6 +39,7 @@ const TASK_SOURCE_AIR = "Adobe AIR";
 const TASK_NAME_COMPILE_DEBUG = "compile debug";
 const TASK_NAME_COMPILE_RELEASE = "compile release";
 const TASK_NAME_CLEAN = "clean";
+const TASK_NAME_WATCH = "watch";
 const TASK_NAME_PACKAGE_IOS_DEBUG = "package iOS debug";
 const TASK_NAME_PACKAGE_IOS_RELEASE = "package iOS release";
 const TASK_NAME_PACKAGE_IOS_SIMULATOR_DEBUG = "package iOS simulator debug";
@@ -71,6 +73,7 @@ interface ActionScriptTaskDefinition extends vscode.TaskDefinition {
   air?: string;
   asconfig?: string;
   clean?: boolean;
+  watch?: boolean;
 }
 
 export default class ActionScriptTaskProvider
@@ -171,6 +174,18 @@ export default class ActionScriptTaskProvider
         frameworkSDK
       )
     );
+
+    if (validateRoyale(frameworkSDK, "0.9.9")) {
+      result.push(
+        this.getWatchTask(
+          `${TASK_NAME_WATCH} - ${taskNameSuffix}`,
+          jsonURI,
+          workspaceFolder,
+          command,
+          frameworkSDK
+        )
+      );
+    }
 
     if (!isLibrary) {
       //package mobile AIR application
@@ -598,6 +613,56 @@ export default class ActionScriptTaskProvider
         .get("asconfigc.verboseOutput")
     ) {
       options.push("--verbose=true");
+    }
+    if (command.length > 1) {
+      options.unshift(...command.slice(1));
+    }
+    let execution = new vscode.ProcessExecution(command[0], options);
+    let task = new vscode.Task(
+      definition,
+      workspaceFolder,
+      description,
+      "ActionScript",
+      execution,
+      MATCHER
+    );
+    task.group = vscode.TaskGroup.Build;
+    return task;
+  }
+
+  private getWatchTask(
+    description: string,
+    jsonURI: vscode.Uri,
+    workspaceFolder: vscode.WorkspaceFolder,
+    command: string[],
+    sdk: string
+  ): vscode.Task {
+    let asconfig: string = undefined;
+    if (jsonURI) {
+      let rootJSON = path.resolve(workspaceFolder.uri.fsPath, ASCONFIG_JSON);
+      if (rootJSON !== jsonURI.fsPath) {
+        //the asconfig field should remain empty if it's the root
+        //asconfig.json in the workspace.
+        //this is different than TypeScript because we didn't originally
+        //create tasks for additional asconfig files in the workspace, and
+        //we don't want to break old tasks.json files that already existed
+        //before this feature was added.
+        //ideally, we'd be able to use resolveTask() to populate the
+        //asconfig field, but that function never seems to be called.
+        asconfig = jsonURI
+          .toString()
+          .substr(workspaceFolder.uri.toString().length + 1);
+      }
+    }
+    let definition: ActionScriptTaskDefinition = {
+      type: TASK_TYPE_ACTIONSCRIPT,
+      asconfig,
+      debug: true,
+      watch: true,
+    };
+    let options = ["--sdk", sdk, "--debug=true", "--watch=true"];
+    if (jsonURI) {
+      options.push("--project", jsonURI.fsPath);
     }
     if (command.length > 1) {
       options.unshift(...command.slice(1));
