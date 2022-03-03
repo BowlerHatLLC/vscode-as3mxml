@@ -1,5 +1,18 @@
 # ActionScript & MXML for Visual Studio Code Changelog
 
+## 1.11.1
+
+### Fixed Issues
+
+Build: Fixed issue where multiple Quick Compile & Debug/Run commands could be run simultaneously. Now, you must wait for one to complete before starting a new one.
+Build: Fixed issue where Adobe AIR packaging tasks were incorrectly provided for _.swc_ library projects.
+Documentation: Fixed failure to remove uppercase HTML tags from rendered text.
+Documentation: Fixed line breaks missing between some block-level elements.
+Documentation: Fixed missing formatting for list items.
+Documentation: Fixed display of HTML entities in code blocks.
+General: Fixed wrong Apache Royale version number in error message about invalid `as3mxml.sdk.editor` values.
+General: The thread to watch source paths is a daemon to avoid it blocking the language server from exiting.
+
 ## 1.11.0
 
 ### New Features
