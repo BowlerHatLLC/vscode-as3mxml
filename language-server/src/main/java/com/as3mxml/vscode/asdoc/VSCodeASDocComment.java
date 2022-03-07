@@ -36,6 +36,7 @@ public class VSCodeASDocComment implements IASDocComment {
 	private static final Pattern beginPreformatPattern = Pattern.compile("(?i)(^\\s*)?<(pre|listing|codeblock)>");
 	private static final Pattern endPreformatPattern = Pattern.compile("(?i)</(pre|listing|codeblock)>");
 	private static final Pattern markdownInlineCodePattern = Pattern.compile("`(.*?)`");
+	private static final Pattern asdocTagPattern = Pattern.compile("^\\s*\\*\\s+@\\w+");
 
 	public VSCodeASDocComment(Token t) {
 		token = t.getText();
@@ -82,15 +83,15 @@ public class VSCodeASDocComment implements IASDocComment {
 		appendLine(sb, line, insidePreformatted);
 		for (int i = 1; i < n - 1; i++) {
 			line = lines[i];
-			int star = line.indexOf("*");
-			int at = line.indexOf("@");
-			if (at == -1) {
-				if (star > -1) // line starts with a *
+			if (!asdocTagPattern.matcher(line).find()) {
+				int star = line.indexOf("*");
+				if (star != -1) // line starts with a *
 				{
 					appendLine(sb, line.substring(star + 1), insidePreformatted);
 				}
 			} else // tag
 			{
+				int at = line.indexOf("@");
 				int after = line.indexOf(" ", at + 1);
 				if (after == -1) {
 					tagMap.put(line.substring(at + 1), null);
