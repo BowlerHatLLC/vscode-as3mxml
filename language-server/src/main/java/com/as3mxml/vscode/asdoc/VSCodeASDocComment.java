@@ -238,7 +238,7 @@ public class VSCodeASDocComment implements IASDocComment {
 				}
 			}
 		}
-		if (!useMarkdown || insidePreformatted) {
+		if (!useMarkdown || lineStartsWithPreformatted) {
 			line = line.replaceAll("(?i)&amp;", "&");
 			line = line.replaceAll("(?i)&gt;", ">");
 			line = line.replaceAll("(?i)&lt;", "<");
