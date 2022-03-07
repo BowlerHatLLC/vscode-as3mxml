@@ -198,8 +198,10 @@ public class VSCodeASDocComment implements IASDocComment {
 			line = line.replaceAll("(?i)<hr ?\\/>", "\n\n---\n\n");
 		}
 		line = line.replaceAll("(?i)<li>\\s*", "\n\n- ");
-		line = line.replaceAll("(?i)<(p|ul|ol|dl|li|dt|table|tr|div|blockquote)>\\s*", "\n\n");
-		line = line.replaceAll("(?i)\\s*<\\/(p|ul|ol|dl|li|dt|table|tr|div|blockquote)>", "\n\n");
+		line = line.replaceAll("(?i)<(p|ul|ol|dl|li|dt|table|tr|adobetable|row|div|blockquote)>\\s*", "\n\n");
+		line = line.replaceAll("(?i)\\s*<\\/(p|ul|ol|dl|li|dt|table|tr|adobetable|row|div|blockquote)>", "\n\n");
+		// ensure that there's at least one space between table row entries
+		line = line.replaceAll("(?i)<\\/entry><entry>", " ");
 
 		// note: we allow <br/>, but not <br> because asdoc expects XHTML
 		if (useMarkdown) {
