@@ -33,6 +33,10 @@ import org.apache.royale.compiler.asdoc.IASDocTag;
 import antlr.Token;
 
 public class VSCodeASDocComment implements IASDocComment {
+	private static final Pattern beginPreformatPattern = Pattern.compile("(?i)(^\\s*)?<(pre|listing|codeblock)>");
+	private static final Pattern endPreformatPattern = Pattern.compile("(?i)</(pre|listing|codeblock)>");
+	private static final Pattern markdownInlineCodePattern = Pattern.compile("`(.*?)`");
+
 	public VSCodeASDocComment(Token t) {
 		token = t.getText();
 	}
@@ -163,7 +167,7 @@ public class VSCodeASDocComment implements IASDocComment {
 	private String reformatLine(String line, boolean useMarkdown) {
 		// remove all attributes (including namespaced)
 		line = line.replaceAll("<(\\w+)(?:\\s+\\w+(?::\\w+)?=(\"|\')[^\"\']*\\2)*\\s*(\\/{0,1})>", "<$1$3>");
-		Matcher beginPreformatMatcher = Pattern.compile("(?i)(^\\s*)?<(pre|listing|codeblock)>").matcher(line);
+		Matcher beginPreformatMatcher = beginPreformatPattern.matcher(line);
 		boolean lineStartsWithPreformatted = insidePreformatted;
 		if (beginPreformatMatcher.find()) {
 			insidePreformatted = true;
@@ -175,9 +179,7 @@ public class VSCodeASDocComment implements IASDocComment {
 				line = beginPreformatMatcher.replaceAll("\n\n");
 			}
 		}
-		Matcher endPreformatMatcher = Pattern
-				.compile("(?i)</(pre|listing|codeblock)>")
-				.matcher(line);
+		Matcher endPreformatMatcher = endPreformatPattern.matcher(line);
 		if (endPreformatMatcher.find()) {
 			insidePreformatted = false;
 			if (useMarkdown) {
@@ -219,9 +221,7 @@ public class VSCodeASDocComment implements IASDocComment {
 		if (useMarkdown) {
 			int startIndex = 0;
 			while (true) {
-				Matcher codeMatcher = Pattern
-						.compile("`(.*?)`")
-						.matcher(line).region(startIndex, line.length());
+				Matcher codeMatcher = markdownInlineCodePattern.matcher(line).region(startIndex, line.length());
 				if (codeMatcher.find()) {
 					startIndex = codeMatcher.end();
 					String codeText = codeMatcher.group(1);
