@@ -213,8 +213,31 @@ public class VSCodeASDocComment implements IASDocComment {
 		} else {
 			line = line.replaceAll("(?i)<br ?\\/>\\s*", "\n");
 		}
+		// remove all remaining tags
 		line = line.replaceAll("<\\/{0,1}\\w+\\/{0,1}>", "");
 
+		if (useMarkdown) {
+			int startIndex = 0;
+			while (true) {
+				Matcher codeMatcher = Pattern
+						.compile("`(.*?)`")
+						.matcher(line).region(startIndex, line.length());
+				if (codeMatcher.find()) {
+					startIndex = codeMatcher.end();
+					String codeText = codeMatcher.group(1);
+					codeText = codeText.replaceAll("(?i)&amp;", "&");
+					codeText = codeText.replaceAll("(?i)&gt;", ">");
+					codeText = codeText.replaceAll("(?i)&lt;", "<");
+					codeText = codeText.replaceAll("(?i)&quot;", "\"");
+					line = line.substring(0, codeMatcher.start()) + "`" + codeText + "`" + line.substring(startIndex);
+					if (startIndex >= line.length()) {
+						break;
+					}
+				} else {
+					break;
+				}
+			}
+		}
 		if (!useMarkdown || insidePreformatted) {
 			line = line.replaceAll("(?i)&amp;", "&");
 			line = line.replaceAll("(?i)&gt;", ">");
