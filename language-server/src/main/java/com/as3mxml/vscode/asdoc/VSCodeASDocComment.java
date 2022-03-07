@@ -164,8 +164,10 @@ public class VSCodeASDocComment implements IASDocComment {
 		// remove all attributes (including namespaced)
 		line = line.replaceAll("<(\\w+)(?:\\s+\\w+(?::\\w+)?=(\"|\')[^\"\']*\\2)*\\s*(\\/{0,1})>", "<$1$3>");
 		Matcher beginPreformatMatcher = Pattern.compile("(?i)(^\\s*)?<(pre|listing|codeblock)>").matcher(line);
+		boolean lineStartsWithPreformatted = insidePreformatted;
 		if (beginPreformatMatcher.find()) {
 			insidePreformatted = true;
+			lineStartsWithPreformatted = beginPreformatMatcher.start() == 0;
 			preformattedPrefix = beginPreformatMatcher.group(1);
 			if (useMarkdown) {
 				line = beginPreformatMatcher.replaceAll("\n\n```\n");
@@ -184,7 +186,7 @@ public class VSCodeASDocComment implements IASDocComment {
 				line = endPreformatMatcher.replaceAll("\n\n");
 			}
 		}
-		if (insidePreformatted) {
+		if (lineStartsWithPreformatted) {
 			if (preformattedPrefix != null && preformattedPrefix.length() > 0 && line.startsWith(preformattedPrefix)) {
 				line = line.substring(preformattedPrefix.length());
 			}
