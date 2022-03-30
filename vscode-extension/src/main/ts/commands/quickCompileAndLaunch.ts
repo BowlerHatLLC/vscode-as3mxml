@@ -17,7 +17,7 @@ import * as vscode from "vscode";
 import * as child_process from "child_process";
 import * as fs from "fs";
 import * as path from "path";
-import * as json5 from "json5";
+import json5 from "json5/dist/index.mjs";
 import findAnimate from "../utils/findAnimate";
 
 const QUICK_COMPILE_MESSAGE = "Building ActionScript & MXML project...";
@@ -30,16 +30,14 @@ export default function quickCompileAndLaunch(uris: string[], debug: boolean) {
   } else if (uris.length === 1) {
     quickCompileAndLaunchURI(uris[0], debug);
   } else {
-    let items = uris.map(
-      (uri): vscode.QuickPickItem => {
-        let vscodeUri = vscode.Uri.parse(uri);
-        return {
-          label: path.basename(vscodeUri.fsPath),
-          description: vscodeUri.fsPath,
-          uri: uri,
-        } as any;
-      }
-    );
+    let items = uris.map((uri): vscode.QuickPickItem => {
+      let vscodeUri = vscode.Uri.parse(uri);
+      return {
+        label: path.basename(vscodeUri.fsPath),
+        description: vscodeUri.fsPath,
+        uri: uri,
+      } as any;
+    });
     vscode.window.showQuickPick(items).then((result) => {
       if (!("uri" in result)) {
         return;

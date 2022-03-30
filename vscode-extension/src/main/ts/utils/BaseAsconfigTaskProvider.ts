@@ -14,9 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 import * as vscode from "vscode";
-import * as json5 from "json5";
 import * as path from "path";
 import * as fs from "fs";
+import json5 from "json5/dist/index.mjs";
 
 const ASCONFIG_JSON = "asconfig.json";
 const FILE_EXTENSION_AS = ".as";
