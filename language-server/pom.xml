@@ -89,19 +89,19 @@ limitations under the License.
     <dependency>
       <groupId>org.apache.royale.compiler</groupId>
       <artifactId>compiler</artifactId>
-      <version>0.9.9-SNAPSHOT</version>
+      <version>0.9.9</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.royale.compiler</groupId>
       <artifactId>compiler-jx</artifactId>
-      <version>0.9.9-SNAPSHOT</version>
+      <version>0.9.9</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.royale.compiler</groupId>
       <artifactId>formatter</artifactId>
-      <version>0.9.9-SNAPSHOT</version>
+      <version>0.9.9</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
