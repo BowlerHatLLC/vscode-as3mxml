@@ -86,7 +86,7 @@ public class ProjectUtils {
 				mainFileParentPath = Paths.get(System.getProperty("user.dir"));
 			}
 			if (!isSWF) {
-				//Royale treats these directory structures as a special case
+				// Royale treats these directory structures as a special case
 				String mainFileParentPathAsString = mainFileParentPath.toString();
 				if (mainFileParentPathAsString.endsWith("/src") || mainFileParentPathAsString.endsWith("\\src")) {
 					mainFileParentPath = mainFileParentPath.resolve("../");
@@ -125,7 +125,7 @@ public class ProjectUtils {
 				return System.getProperty("user.dir");
 			}
 			if (!isSWF) {
-				//Royale treats these directory structures as a special case
+				// Royale treats these directory structures as a special case
 				String mainFileParentPathAsString = mainFileParentPath.toString();
 				if (mainFileParentPathAsString.endsWith("/src") || mainFileParentPathAsString.endsWith("\\src")) {
 					mainFileParentPath = mainFileParentPath.resolve("../");
@@ -176,7 +176,7 @@ public class ProjectUtils {
 			if (mainFile == null) {
 				return null;
 			}
-			//replace .as or .mxml with .swf
+			// replace .as or .mxml with .swf
 			Path mainFilePath = Paths.get(mainFile);
 			String fileName = mainFilePath.getFileName().toString();
 			String extension = "";
@@ -191,7 +191,7 @@ public class ProjectUtils {
 
 	public static String findApplicationContent(String mainFile, String outputPath, boolean isSWF) {
 		if (!isSWF) {
-			//An Adobe AIR app for Royale will load an HTML file as its main content
+			// An Adobe AIR app for Royale will load an HTML file as its main content
 			return "index.html";
 		}
 		return findOutputFileName(mainFile, outputPath);
@@ -208,7 +208,7 @@ public class ProjectUtils {
 		for (String jarName : jarNames) {
 			if (isSWF) {
 				jarPath = Paths.get(sdkPath, "lib", jarName);
-			} else //js
+			} else // js
 			{
 				jarPath = Paths.get(sdkPath, "js", "lib", jarName);
 			}
@@ -236,12 +236,12 @@ public class ProjectUtils {
 		Set<String> result = new HashSet<>();
 		List<String> sourcePathsCopy = new ArrayList<>();
 		if (sourcePaths != null) {
-			//we don't want to modify the original list, so copy the items over
+			// we don't want to modify the original list, so copy the items over
 			sourcePathsCopy.addAll(sourcePaths);
 		}
 		if (mainFile != null) {
-			//the parent directory of the main file is automatically added as a
-			//source path by the compiler
+			// the parent directory of the main file is automatically added as a
+			// source path by the compiler
 			Path mainFileParent = Paths.get(mainFile).getParent();
 			sourcePathsCopy.add(mainFileParent.toString());
 		}
@@ -249,14 +249,14 @@ public class ProjectUtils {
 			String sourcePath = sourcePathsCopy.get(i);
 			Path path = Paths.get(sourcePath);
 			if (!path.isAbsolute()) {
-				//force all source paths into absolute paths
+				// force all source paths into absolute paths
 				path = Paths.get(System.getProperty("user.dir"), sourcePath);
 				sourcePathsCopy.set(i, path.toString());
 			}
 		}
 		if (sourcePathsCopy.contains(outputDirectory)) {
-			//assets in source path will not be copied because the output
-			//directory is a source path
+			// assets in source path will not be copied because the output
+			// directory is a source path
 			return result;
 		}
 		if (excludes != null) {
@@ -264,7 +264,7 @@ public class ProjectUtils {
 				String exclude = excludes.get(i);
 				Path path = Paths.get(exclude);
 				if (!path.isAbsolute()) {
-					//force all excludes into absolute paths
+					// force all excludes into absolute paths
 					path = Paths.get(System.getProperty("user.dir"), exclude);
 					excludes.set(i, path.toString());
 				}
@@ -275,7 +275,7 @@ public class ProjectUtils {
 			File file = new File(sourcePath);
 			File[] listedFiles = file.listFiles();
 			if (listedFiles == null) {
-				//this file is invalid for some reason
+				// this file is invalid for some reason
 				throw new IOException("Invalid source path: " + sourcePath);
 			}
 			for (File innerFile : file.listFiles()) {
@@ -306,12 +306,12 @@ public class ProjectUtils {
 			String outputDirectory) throws IOException {
 		List<String> sourcePathsCopy = new ArrayList<>();
 		if (sourcePaths != null) {
-			//we don't want to modify the original list, so copy the items over
+			// we don't want to modify the original list, so copy the items over
 			sourcePathsCopy.addAll(sourcePaths);
 		}
 		if (mainFile != null) {
-			//the parent directory of the main file is automatically added as a
-			//source path by the compiler
+			// the parent directory of the main file is automatically added as a
+			// source path by the compiler
 			Path mainFileParent = Paths.get(mainFile).getParent();
 			sourcePathsCopy.add(mainFileParent.toString());
 		}
@@ -338,13 +338,16 @@ public class ProjectUtils {
 	}
 
 	public static String populateAdobeAIRDescriptorTemplate(String descriptor, String id) {
-		//these fields are required
-		descriptor = descriptor.replaceFirst("<id>.*?<\\/id>", "<id>" + id + "</id>");
-		return descriptor.replaceFirst("<filename>.*?<\\/filename>", "<filename>" + id + "</filename>");
+		// these fields are required
+		// (?!\s*-->) ignores lines that are commented out
+		descriptor = descriptor.replaceFirst("<id>.*?<\\/id>(?!\\s*-->)", "<id>" + id + "</id>");
+		return descriptor.replaceFirst("<filename>.*?<\\/filename>(?!\\s*-->)", "<filename>" + id + "</filename>");
 	}
 
 	public static String populateAdobeAIRDescriptorContent(String descriptor, String contentValue) {
-		return descriptor.replaceFirst("<content>.*?<\\/content>", "<content>" + contentValue + "</content>");
+		// (?!\s*-->) ignores lines that are commented out
+		return descriptor.replaceFirst("<content>.*?<\\/content>(?!\\s*-->)",
+				"<content>" + contentValue + "</content>");
 	}
 
 	public static String populateHTMLTemplateFile(String contents, Map<String, String> templateOptions) {
