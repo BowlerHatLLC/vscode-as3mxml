@@ -226,12 +226,12 @@ public class ASConfigC {
 		} else {
 			validateSDK();
 			cleanProject();
-			compileProject();
 			copySourcePathAssets();
 			copyHTMLTemplate();
 			processAdobeAIRDescriptors();
 			copyAIRFiles();
 			prepareNativeExtensions();
+			compileProject();
 			packageAIR();
 		}
 	}
