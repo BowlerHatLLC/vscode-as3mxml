@@ -566,6 +566,13 @@ export default class ActionScriptTaskProvider
     if (jsonURI) {
       options.push("--project", jsonURI.fsPath);
     }
+    if (
+      vscode.workspace
+        .getConfiguration("as3mxml")
+        .get("asconfigc.verboseOutput")
+    ) {
+      options.push("--verbose=true");
+    }
     if (command.length > 1) {
       options.unshift(...command.slice(1));
     }
