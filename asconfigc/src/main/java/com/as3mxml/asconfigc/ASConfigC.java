@@ -248,7 +248,9 @@ public class ASConfigC {
 	private boolean debugBuild;
 	private boolean copySourcePathAssets;
 	private String jsOutputType;
-	private String outputPath;
+	private String swfOutputPath;
+	private String jsOutputPath = ".";
+	private String outputPathForTarget;
 	private String mainFile;
 	private List<String> moduleOutputPaths;
 	private List<String> workerOutputPaths;
@@ -390,7 +392,10 @@ public class ASConfigC {
 				sourcePaths = JsonUtils.jsonNodeToListOfStrings(sourcePath);
 			}
 			if (compilerOptionsJSON.has(CompilerOptions.OUTPUT)) {
-				outputPath = compilerOptionsJSON.get(CompilerOptions.OUTPUT).asText();
+				swfOutputPath = compilerOptionsJSON.get(CompilerOptions.OUTPUT).asText();
+			}
+			if (compilerOptionsJSON.has(CompilerOptions.JS_OUTPUT)) {
+				jsOutputPath = compilerOptionsJSON.get(CompilerOptions.JS_OUTPUT).asText();
 			}
 		}
 		if (json.has(TopLevelFields.ADDITIONAL_OPTIONS)) {
@@ -647,7 +652,7 @@ public class ASConfigC {
 			Path tempPath = tempFile.toPath();
 			String contents = new String(Files.readAllBytes(jsflPath));
 			Path resolvedOutputPath = null;
-			if (outputPath == null) {
+			if (swfOutputPath == null) {
 				resolvedOutputPath = Paths.get(animateFile);
 				if (!resolvedOutputPath.isAbsolute()) {
 					resolvedOutputPath = Paths.get(System.getProperty("user.dir")).resolve(resolvedOutputPath);
@@ -659,7 +664,7 @@ public class ASConfigC {
 				}
 				resolvedOutputPath = resolvedOutputPath.getParent().resolve(fileName);
 			} else {
-				resolvedOutputPath = Paths.get(ProjectUtils.findOutputPath(mainFile, outputPath, true));
+				resolvedOutputPath = Paths.get(ProjectUtils.findOutputPath(mainFile, swfOutputPath, true));
 			}
 			Path parentPath = resolvedOutputPath.getParent();
 			if (!Files.exists(parentPath) && !parentPath.toFile().mkdirs()) {
@@ -808,7 +813,7 @@ public class ASConfigC {
 	private void readHTMLTemplateOptions(JsonNode compilerOptionsJson) throws ASConfigCException {
 		HTMLTemplateOptionsParser parser = new HTMLTemplateOptionsParser();
 		try {
-			htmlTemplateOptions = parser.parse(compilerOptionsJson, mainFile, outputPath);
+			htmlTemplateOptions = parser.parse(compilerOptionsJson, mainFile, swfOutputPath);
 		} catch (Exception e) {
 			StringWriter stackTrace = new StringWriter();
 			e.printStackTrace(new PrintWriter(stackTrace));
@@ -874,9 +879,10 @@ public class ASConfigC {
 		AIROptionsParser parser = new AIROptionsParser();
 		try {
 			parser.parse(options.air, debugBuild,
-					ProjectUtils.findAIRDescriptorOutputPath(mainFile, airDescriptorPath, outputPath, !outputIsJS,
+					ProjectUtils.findAIRDescriptorOutputPath(mainFile, airDescriptorPath,
+							swfOutputPath, !outputIsJS, debugBuild),
+					ProjectUtils.findApplicationContentOutputPath(mainFile, swfOutputPath, !outputIsJS,
 							debugBuild),
-					ProjectUtils.findApplicationContentOutputPath(mainFile, outputPath, !outputIsJS, debugBuild),
 					moduleOutputPaths,
 					workerOutputPaths,
 					airOptionsJson, airOptions);
@@ -931,6 +937,7 @@ public class ASConfigC {
 							+ sdkHome);
 		}
 		outputIsJS = (sdkIsRoyale || sdkIsFlexJS) && !isSWFTargetOnly;
+		outputPathForTarget = outputIsJS ? jsOutputPath : swfOutputPath;
 		if (options.verbose) {
 			System.out.println("SDK: " + sdkHomePath);
 		}
@@ -944,7 +951,7 @@ public class ASConfigC {
 		if (options.verbose) {
 			System.out.println("Cleaning project...");
 		}
-		String outputDirectory = ProjectUtils.findOutputDirectory(mainFile, outputPath, !outputIsJS);
+		String outputDirectory = ProjectUtils.findOutputDirectory(mainFile, outputPathForTarget, !outputIsJS);
 		Path outputPath = Paths.get(outputDirectory);
 		if (outputIsJS) {
 			Path debugOutputPath = outputPath.resolve(FILE_NAME_BIN_JS_DEBUG);
@@ -1070,7 +1077,7 @@ public class ASConfigC {
 		if (sourcePaths != null) {
 			pathsToSearch.addAll(sourcePaths);
 		}
-		String outputDirectory = ProjectUtils.findOutputDirectory(mainFile, outputPath, !outputIsJS);
+		String outputDirectory = ProjectUtils.findOutputDirectory(mainFile, outputPathForTarget, !outputIsJS);
 		ArrayList<String> excludes = new ArrayList<>();
 		if (airDescriptorPaths != null) {
 			excludes.addAll(airDescriptorPaths);
@@ -1123,7 +1130,7 @@ public class ASConfigC {
 			throw new ASConfigCException("htmlTemplate path must be a directory. Invalid path: " + htmlTemplate);
 		}
 
-		String outputDirectoryPath = ProjectUtils.findOutputDirectory(mainFile, outputPath, !outputIsJS);
+		String outputDirectoryPath = ProjectUtils.findOutputDirectory(mainFile, outputPathForTarget, !outputIsJS);
 		File outputDirectory = new File(outputDirectoryPath);
 		copyHTMLTemplateDirectory(templateDirectory, outputDirectory);
 	}
@@ -1248,7 +1255,7 @@ public class ASConfigC {
 		if (options.verbose) {
 			System.out.println("Unpacking: " + aneFile.getAbsolutePath());
 		}
-		String outputDirectoryPath = ProjectUtils.findOutputDirectory(mainFile, outputPath, !outputIsJS);
+		String outputDirectoryPath = ProjectUtils.findOutputDirectory(mainFile, outputPathForTarget, !outputIsJS);
 		File outputDirectory = new File(outputDirectoryPath);
 		File unpackedAneDirectory = new File(outputDirectory, FILE_NAME_UNPACKAGED_ANES);
 		File currentAneDirectory = new File(unpackedAneDirectory, aneFile.getName());
@@ -1341,7 +1348,7 @@ public class ASConfigC {
 			System.out.println("Copying Adobe AIR application files...");
 		}
 
-		String outputDirectoryPath = ProjectUtils.findOutputDirectory(mainFile, outputPath, !outputIsJS);
+		String outputDirectoryPath = ProjectUtils.findOutputDirectory(mainFile, outputPathForTarget, !outputIsJS);
 		File outputDirectory = new File(outputDirectoryPath);
 
 		JsonNode filesJSON = airOptionsJSON.get(AIROptions.FILES);
@@ -1468,8 +1475,7 @@ public class ASConfigC {
 				System.out.println("Using template fallback: " + templatePath);
 			}
 		}
-		String outputDirectory = ProjectUtils.findOutputDirectory(mainFile, outputPath, !outputIsJS);
-		String contentValue = ProjectUtils.findApplicationContent(mainFile, outputPath, !outputIsJS);
+		String contentValue = ProjectUtils.findApplicationContent(mainFile, swfOutputPath, !outputIsJS);
 		if (contentValue == null) {
 			throw new ASConfigCException("Failed to find initial window content for Adobe AIR application.");
 		}
@@ -1492,7 +1498,7 @@ public class ASConfigC {
 						"Failed to read Adobe AIR application descriptor at path: " + resolvedDescriptorPath);
 			}
 			if (populateTemplate) {
-				String appID = ProjectUtils.generateApplicationID(mainFile, outputPath);
+				String appID = ProjectUtils.generateApplicationID(mainFile, swfOutputPath);
 				if (appID == null) {
 					throw new ASConfigCException("Failed to generate application ID for Adobe AIR.");
 				}
@@ -1507,19 +1513,19 @@ public class ASConfigC {
 			descriptorContents = ProjectUtils.populateAdobeAIRDescriptorContent(descriptorContents, contentValue);
 			if (outputIsJS) {
 				String debugDescriptorOutputPath = ProjectUtils.findAIRDescriptorOutputPath(mainFile, airDescriptorPath,
-						outputDirectory, false, true);
+						outputPathForTarget, false, true);
 				copyAIRDescriptor(debugDescriptorOutputPath, descriptorContents);
 				if (!debugBuild) {
 					String releaseDescriptorOutputPath = ProjectUtils.findAIRDescriptorOutputPath(mainFile,
-							airDescriptorPath, outputDirectory, false, false);
+							airDescriptorPath, outputPathForTarget, false, false);
 					copyAIRDescriptor(releaseDescriptorOutputPath, descriptorContents);
 				}
 
 			} else // swf
 			{
 				String descriptorOutputPath = ProjectUtils.findAIRDescriptorOutputPath(mainFile, airDescriptorPath,
-						outputPath, true, debugBuild);
-				if (outputPath == null && mainFile != null) {
+						swfOutputPath, true, debugBuild);
+				if (swfOutputPath == null && mainFile != null) {
 					if (Paths.get(descriptorOutputPath).toFile().exists()) {
 						throw new ASConfigCException("Failed to copy Adobe AIR application descriptor template.");
 					}
