@@ -495,6 +495,9 @@ function startClient() {
             "-Droyalelib=" + path.join(frameworkSDKHome, "frameworks")
           );
         }
+        if (process.platform === "darwin") {
+          args.unshift("-Dapple.awt.UIElement=true");
+        }
         let jvmargsString = vscode.workspace
           .getConfiguration("as3mxml")
           .get("languageServer.jvmargs") as string;
