@@ -1163,6 +1163,9 @@ public class ASConfigC {
 					String extension = fileName.substring(extensionIndex);
 					String templateExtension = ".template" + extension;
 					if (fileName.endsWith(templateExtension)) {
+						if (options.verbose) {
+							System.out.println("Copying template asset: " + file.getAbsolutePath());
+						}
 						String beforeExtension = fileName.substring(0, fileName.length() - templateExtension.length());
 						if (beforeExtension.equals("index")) {
 							if (mainFile != null) {
