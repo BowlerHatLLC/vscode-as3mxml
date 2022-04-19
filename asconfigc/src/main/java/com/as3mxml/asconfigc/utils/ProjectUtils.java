@@ -73,8 +73,8 @@ public class ProjectUtils {
 	}
 
 	public static String findOutputPath(String mainFile, String outputValue, boolean isSWF) {
-		if (outputValue == null) {
-			if (mainFile == null) {
+		if (outputValue == null || outputValue.length() == 0) {
+			if (mainFile == null || mainFile.length() == 0) {
 				return Paths.get(System.getProperty("user.dir")).toString();
 			}
 			Path mainFilePath = Paths.get(mainFile);
@@ -102,7 +102,7 @@ public class ProjectUtils {
 					return null;
 				}
 			}
-			return mainFileParentPath.resolve(findOutputFileName(mainFile, outputValue)).toString();
+			return mainFileParentPath.resolve(findSWFOutputFileName(mainFile, outputValue)).toString();
 		}
 		Path outputPath = Paths.get(outputValue);
 		if (!outputPath.isAbsolute()) {
@@ -112,8 +112,8 @@ public class ProjectUtils {
 	}
 
 	public static String findOutputDirectory(String mainFile, String outputValue, boolean isSWF) {
-		if (outputValue == null) {
-			if (mainFile == null) {
+		if (outputValue == null || outputValue.length() == 0) {
+			if (mainFile == null || mainFile.length() == 0) {
 				return System.getProperty("user.dir");
 			}
 			Path mainFilePath = Paths.get(mainFile);
@@ -155,14 +155,23 @@ public class ProjectUtils {
 	}
 
 	public static String generateApplicationID(String mainFile, String outputPath) {
-		if (outputPath == null && mainFile == null) {
-			return null;
-		}
 		String fileName = null;
-		if (outputPath == null) {
+		if (mainFile != null && mainFile.length() > 0) {
 			fileName = Paths.get(mainFile).getFileName().toString();
-		} else {
-			fileName = Paths.get(outputPath).getFileName().toString();
+		}
+		if (fileName == null && outputPath != null && outputPath.length() > 0) {
+			File outputFile = Paths.get(outputPath).toFile();
+			if (outputFile.isDirectory()) {
+				try {
+					// make sure that the path doesn't end with . or ..
+					outputFile = outputFile.getCanonicalFile();
+				} catch (IOException e) {
+				}
+			}
+			fileName = outputFile.getName();
+		}
+		if (fileName == null || fileName.length() == 0) {
+			return null;
 		}
 		int extensionIndex = fileName.indexOf('.');
 		if (extensionIndex == -1) {
@@ -171,9 +180,9 @@ public class ProjectUtils {
 		return fileName.substring(0, extensionIndex);
 	}
 
-	public static String findOutputFileName(String mainFile, String outputPath) {
-		if (outputPath == null) {
-			if (mainFile == null) {
+	public static String findSWFOutputFileName(String mainFile, String outputPath) {
+		if (outputPath == null || outputPath.length() == 0) {
+			if (mainFile == null || mainFile.length() == 0) {
 				return null;
 			}
 			// replace .as or .mxml with .swf
@@ -194,7 +203,7 @@ public class ProjectUtils {
 			// An Adobe AIR app for Royale will load an HTML file as its main content
 			return "index.html";
 		}
-		return findOutputFileName(mainFile, outputPath);
+		return findSWFOutputFileName(mainFile, outputPath);
 	}
 
 	public static Path findCompilerJarPath(String projectType, String sdkPath, boolean isSWF) {

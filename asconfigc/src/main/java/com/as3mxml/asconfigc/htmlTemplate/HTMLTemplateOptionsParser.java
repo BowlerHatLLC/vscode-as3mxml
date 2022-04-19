@@ -59,19 +59,19 @@ public class HTMLTemplateOptionsParser {
 				result.put(HTMLTemplateOptions.VERSION_REVISION, "0");
 			}
 		} else {
-			//TODO: get the default target-player value from the SDK
+			// TODO: get the default target-player value from the SDK
 			result.put(HTMLTemplateOptions.VERSION_MAJOR, "9");
 			result.put(HTMLTemplateOptions.VERSION_MINOR, "0");
 			result.put(HTMLTemplateOptions.VERSION_REVISION, "124");
 		}
-		String outputFileName = ProjectUtils.findOutputFileName(mainFile, outputPath);
-		if (outputFileName != null) {
-			int extensionIndex = outputFileName.indexOf(".");
-			String swfName = outputFileName.substring(0, extensionIndex);
+		String swfOutputFileName = ProjectUtils.findSWFOutputFileName(mainFile, outputPath);
+		if (swfOutputFileName != null) {
+			int extensionIndex = swfOutputFileName.indexOf(".");
+			String swfName = swfOutputFileName.substring(0, extensionIndex);
 			result.put(HTMLTemplateOptions.SWF, swfName);
 			if (mainFile != null) {
 				Path mainFilePath = Paths.get(mainFile);
-				//remove any directory names from the beginning
+				// remove any directory names from the beginning
 				String mainFileName = mainFilePath.getFileName().toString();
 				extensionIndex = mainFileName.indexOf(".");
 				result.put(HTMLTemplateOptions.APPLICATION, mainFileName.substring(0, extensionIndex));
@@ -83,7 +83,7 @@ public class HTMLTemplateOptionsParser {
 		}
 		result.put(HTMLTemplateOptions.EXPRESS_INSTALL_SWF, "playerProductInstall.swf");
 		result.put(HTMLTemplateOptions.USE_BROWSER_HISTORY, "--");
-		//TODO: get the title token value from the main MXML application
+		// TODO: get the title token value from the main MXML application
 		result.put(HTMLTemplateOptions.TITLE, "");
 		return result;
 	}

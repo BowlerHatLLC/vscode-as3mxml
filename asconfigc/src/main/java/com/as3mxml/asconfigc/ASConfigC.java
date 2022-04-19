@@ -813,7 +813,7 @@ public class ASConfigC {
 	private void readHTMLTemplateOptions(JsonNode compilerOptionsJson) throws ASConfigCException {
 		HTMLTemplateOptionsParser parser = new HTMLTemplateOptionsParser();
 		try {
-			htmlTemplateOptions = parser.parse(compilerOptionsJson, mainFile, swfOutputPath);
+			htmlTemplateOptions = parser.parse(compilerOptionsJson, mainFile, outputPathForTarget);
 		} catch (Exception e) {
 			StringWriter stackTrace = new StringWriter();
 			e.printStackTrace(new PrintWriter(stackTrace));
@@ -880,8 +880,8 @@ public class ASConfigC {
 		try {
 			parser.parse(options.air, debugBuild,
 					ProjectUtils.findAIRDescriptorOutputPath(mainFile, airDescriptorPath,
-							swfOutputPath, !outputIsJS, debugBuild),
-					ProjectUtils.findApplicationContentOutputPath(mainFile, swfOutputPath, !outputIsJS,
+							outputPathForTarget, !outputIsJS, debugBuild),
+					ProjectUtils.findApplicationContentOutputPath(mainFile, outputPathForTarget, !outputIsJS,
 							debugBuild),
 					moduleOutputPaths,
 					workerOutputPaths,
@@ -1485,7 +1485,7 @@ public class ASConfigC {
 				System.out.println("Using template fallback: " + templatePath);
 			}
 		}
-		String contentValue = ProjectUtils.findApplicationContent(mainFile, swfOutputPath, !outputIsJS);
+		String contentValue = ProjectUtils.findApplicationContent(mainFile, outputPathForTarget, !outputIsJS);
 		if (contentValue == null) {
 			throw new ASConfigCException("Failed to find initial window content for Adobe AIR application.");
 		}
@@ -1508,7 +1508,7 @@ public class ASConfigC {
 						"Failed to read Adobe AIR application descriptor at path: " + resolvedDescriptorPath);
 			}
 			if (populateTemplate) {
-				String appID = ProjectUtils.generateApplicationID(mainFile, swfOutputPath);
+				String appID = ProjectUtils.generateApplicationID(mainFile, outputPathForTarget);
 				if (appID == null) {
 					throw new ASConfigCException("Failed to generate application ID for Adobe AIR.");
 				}
@@ -1534,8 +1534,9 @@ public class ASConfigC {
 			} else // swf
 			{
 				String descriptorOutputPath = ProjectUtils.findAIRDescriptorOutputPath(mainFile, airDescriptorPath,
-						swfOutputPath, true, debugBuild);
-				if (swfOutputPath == null && mainFile != null) {
+						outputPathForTarget, true, debugBuild);
+				if ((outputPathForTarget == null || outputPathForTarget.length() == 0)
+						&& (mainFile != null && mainFile.length() > 0)) {
 					if (Paths.get(descriptorOutputPath).toFile().exists()) {
 						throw new ASConfigCException("Failed to copy Adobe AIR application descriptor template.");
 					}
