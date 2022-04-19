@@ -33,11 +33,11 @@ public class ProjectUtils {
 	private static final String JAR_NAME_ADT = "adt.jar";
 
 	public static String findAIRDescriptorOutputPath(String mainFile, String airDescriptor, String outputPath,
-			boolean isSWF, boolean debugBuild) {
+			String projectPath, boolean isSWF, boolean debugBuild) {
 		String outputDir = ProjectUtils.findOutputDirectory(mainFile, outputPath, isSWF);
 		String fileName = null;
 		if (airDescriptor == null) {
-			fileName = generateApplicationID(mainFile, outputPath) + "-app.xml";
+			fileName = generateApplicationID(mainFile, outputPath, projectPath) + "-app.xml";
 		} else {
 			fileName = Paths.get(airDescriptor).getFileName().toString();
 		}
@@ -154,21 +154,29 @@ public class ProjectUtils {
 		return outputValueParentPath.toString();
 	}
 
-	public static String generateApplicationID(String mainFile, String outputPath) {
+	public static String generateApplicationID(String mainFile, String outputPath, String projectPath) {
 		String fileName = null;
 		if (mainFile != null && mainFile.length() > 0) {
 			fileName = Paths.get(mainFile).getFileName().toString();
 		}
 		if (fileName == null && outputPath != null && outputPath.length() > 0) {
 			File outputFile = Paths.get(outputPath).toFile();
-			if (outputFile.isDirectory()) {
+			if (outputFile.getName().endsWith(".swf")) {
+				// use the .swf file name, if it exists
+				fileName = outputFile.getName();
+			}
+		}
+		if (fileName == null && projectPath != null && projectPath.length() > 0) {
+			File projectDir = Paths.get(projectPath).toFile();
+			if (projectDir.isDirectory()) {
 				try {
-					// make sure that the path doesn't end with . or ..
-					outputFile = outputFile.getCanonicalFile();
+					// get the real name, if the path ends with . or ..
+					projectDir = projectDir.getCanonicalFile();
+					fileName = projectDir.getName();
 				} catch (IOException e) {
+					fileName = null;
 				}
 			}
-			fileName = outputFile.getName();
 		}
 		if (fileName == null || fileName.length() == 0) {
 			return null;

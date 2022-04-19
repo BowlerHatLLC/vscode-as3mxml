@@ -880,7 +880,7 @@ public class ASConfigC {
 		try {
 			parser.parse(options.air, debugBuild,
 					ProjectUtils.findAIRDescriptorOutputPath(mainFile, airDescriptorPath,
-							outputPathForTarget, !outputIsJS, debugBuild),
+							outputPathForTarget, System.getProperty("user.dir"), !outputIsJS, debugBuild),
 					ProjectUtils.findApplicationContentOutputPath(mainFile, outputPathForTarget, !outputIsJS,
 							debugBuild),
 					moduleOutputPaths,
@@ -1511,7 +1511,8 @@ public class ASConfigC {
 						"Failed to read Adobe AIR application descriptor at path: " + resolvedDescriptorPath);
 			}
 			if (populateTemplate) {
-				String appID = ProjectUtils.generateApplicationID(mainFile, outputPathForTarget);
+				String appID = ProjectUtils.generateApplicationID(mainFile, outputPathForTarget,
+						System.getProperty("user.dir"));
 				if (appID == null) {
 					throw new ASConfigCException("Failed to generate application ID for Adobe AIR.");
 				}
@@ -1526,18 +1527,18 @@ public class ASConfigC {
 			descriptorContents = ProjectUtils.populateAdobeAIRDescriptorContent(descriptorContents, contentValue);
 			if (outputIsJS) {
 				String debugDescriptorOutputPath = ProjectUtils.findAIRDescriptorOutputPath(mainFile, airDescriptorPath,
-						outputPathForTarget, false, true);
+						outputPathForTarget, System.getProperty("user.dir"), false, true);
 				copyAIRDescriptor(debugDescriptorOutputPath, descriptorContents);
 				if (!debugBuild) {
 					String releaseDescriptorOutputPath = ProjectUtils.findAIRDescriptorOutputPath(mainFile,
-							airDescriptorPath, outputPathForTarget, false, false);
+							airDescriptorPath, outputPathForTarget, System.getProperty("user.dir"), false, false);
 					copyAIRDescriptor(releaseDescriptorOutputPath, descriptorContents);
 				}
 
 			} else // swf
 			{
 				String descriptorOutputPath = ProjectUtils.findAIRDescriptorOutputPath(mainFile, airDescriptorPath,
-						outputPathForTarget, true, debugBuild);
+						outputPathForTarget, System.getProperty("user.dir"), true, debugBuild);
 				if ((outputPathForTarget == null || outputPathForTarget.length() == 0)
 						&& (mainFile != null && mainFile.length() > 0)) {
 					if (Paths.get(descriptorOutputPath).toFile().exists()) {
