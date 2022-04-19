@@ -1131,8 +1131,18 @@ public class ASConfigC {
 		}
 
 		String outputDirectoryPath = ProjectUtils.findOutputDirectory(mainFile, outputPathForTarget, !outputIsJS);
-		File outputDirectory = new File(outputDirectoryPath);
-		copyHTMLTemplateDirectory(templateDirectory, outputDirectory);
+		if (outputIsJS) {
+			File outputDirectoryJSDebug = new File(outputDirectoryPath, FILE_NAME_BIN_JS_DEBUG);
+			copyHTMLTemplateDirectory(templateDirectory, outputDirectoryJSDebug);
+			if (!debugBuild) {
+				File outputDirectoryJSRelease = new File(outputDirectoryPath, FILE_NAME_BIN_JS_RELEASE);
+				copyHTMLTemplateDirectory(templateDirectory, outputDirectoryJSRelease);
+			}
+		} else // swf
+		{
+			File outputDirectory = new File(outputDirectoryPath);
+			copyHTMLTemplateDirectory(templateDirectory, outputDirectory);
+		}
 	}
 
 	private void copyHTMLTemplateDirectory(File inputDirectory, File outputDirectory) throws ASConfigCException {
