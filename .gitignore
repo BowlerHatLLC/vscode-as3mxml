@@ -18,3 +18,4 @@ Thumbs.db
 *.iml
 *.vsix
 npm-debug.log
+*.javaproj
