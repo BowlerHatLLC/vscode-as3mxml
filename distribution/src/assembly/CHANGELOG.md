@@ -1,5 +1,29 @@
 # ActionScript & MXML for Visual Studio Code Changelog
 
+## 1.12.0
+
+### New Features
+
+- Formatting: ActionScript and MXML code files may be formatted with Visual Studio Code's standard _Format Document_ command. Includes a variety of new settings to configure the code formatting style for these languages.
+
+### Fixed Issues
+
+- Build: Fixed issue where `as3mxml.asconfigc.verboseOutput` was incorrectly ignored when running ActionScript clean task.
+- Build: Fixed issue where replacing values in the Adobe AIR application descriptor XML could fail if elements were duplicated and the first one was commented out.
+- Build: Fixed issues where the `htmlTemplate` files and the Adobe AIR application descriptor file were incorrectly copied to the SWF output directory instead of the JavaScript output directory when targeting JavaScript with Apache Royale.
+- Build: Fixed issue where cleaning a project incorrectly deleted files in the SWF output directory instead of the JavaScript output directories when targeting JavaScript with Apache Royale.
+- Build: Added a final fallback of using the project directory name when the Adobe AIR application ID needs to be generated.
+- Build: Copies asset files before compiling, instead of after, to create a better developer experience with Apache Royale compiler's new upcoming file watcher feature.
+- Documentation: Fixed issue where @ character outside of ASDoc tag was sometimes incorrectly recognized as an ASDoc tag.
+- Documentation: Fixed rendering of HTML entities inside text formatted as code.
+- Documentation: Improved formatting of tables.
+- Documentation: Improved formatting of code blocks on a single line.
+- General: Fix Java icon appearing in macOS dock when launching language server.
+
+### Other Changes
+
+- Dependencies: Apache Royale compiler updated to v0.9.9.
+
 ## 1.11.1
 
 ### Fixed Issues
