@@ -224,7 +224,6 @@ public class ASConfigC {
 			compileAnimateFile();
 			prepareNativeExtensions();
 		} else {
-			validateSDK();
 			cleanProject();
 			copySourcePathAssets();
 			copyHTMLTemplate();
@@ -557,6 +556,19 @@ public class ASConfigC {
 			}
 			compilerOptions.add(mainFile);
 		}
+		if (json.has(TopLevelFields.ANIMATE_OPTIONS)) {
+			JsonNode animateOptions = json.get(TopLevelFields.ANIMATE_OPTIONS);
+			if (animateOptions.has(AnimateOptions.FILE)) {
+				animateFile = animateOptions.get(AnimateOptions.FILE).asText();
+				Path animateFilePath = Paths.get(animateFile);
+				if (!animateFilePath.isAbsolute()) {
+					animateFile = Paths.get(System.getProperty("user.dir")).resolve(animateFile).toString();
+				}
+			}
+		}
+		// before parsing AIR options, we need to figure out where the output
+		// directory is, based on the SDK type and compiler options
+		validateSDK();
 		if (json.has(TopLevelFields.AIR_OPTIONS)) {
 			configRequiresAIR = true;
 			airOptionsJSON = json.get(TopLevelFields.AIR_OPTIONS);
@@ -575,16 +587,6 @@ public class ASConfigC {
 				compilerOptionsJson = json.get(TopLevelFields.COMPILER_OPTIONS);
 			}
 			readHTMLTemplateOptions(compilerOptionsJson);
-		}
-		if (json.has(TopLevelFields.ANIMATE_OPTIONS)) {
-			JsonNode animateOptions = json.get(TopLevelFields.ANIMATE_OPTIONS);
-			if (animateOptions.has(AnimateOptions.FILE)) {
-				animateFile = animateOptions.get(AnimateOptions.FILE).asText();
-				Path animateFilePath = Paths.get(animateFile);
-				if (!animateFilePath.isAbsolute()) {
-					animateFile = Paths.get(System.getProperty("user.dir")).resolve(animateFile).toString();
-				}
-			}
 		}
 	}
 
@@ -894,6 +896,9 @@ public class ASConfigC {
 	}
 
 	private void validateSDK() throws ASConfigCException {
+		if (animateFile != null) {
+			return;
+		}
 		sdkHome = options.sdk;
 		if (sdkHome == null) {
 			sdkHome = ApacheRoyaleUtils.findSDK();
