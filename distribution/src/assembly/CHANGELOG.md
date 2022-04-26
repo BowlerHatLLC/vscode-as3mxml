@@ -1,5 +1,11 @@
 # ActionScript & MXML for Visual Studio Code Changelog
 
+## 1.12.1
+
+### Fixed Issues
+
+- Build: Fixed issue where the wrong paths for the Adobe AIR application descriptor and the initial window contents were passed to ADT when packaging an Adobe AIR app.
+
 ## 1.12.0
 
 ### New Features
