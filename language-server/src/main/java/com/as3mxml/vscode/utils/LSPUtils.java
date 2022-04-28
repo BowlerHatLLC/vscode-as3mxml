@@ -15,6 +15,8 @@ limitations under the License.
 */
 package com.as3mxml.vscode.utils;
 
+import java.util.Comparator;
+
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
@@ -24,6 +26,13 @@ import org.eclipse.lsp4j.Range;
  * compiler types.
  */
 public class LSPUtils {
+	private static final Comparator<Position> POSITION_COMPARATOR = (Position p1, Position p2) -> {
+		if (p1.getLine() != p2.getLine()) {
+			return p1.getLine() - p2.getLine();
+		}
+		return p1.getCharacter() - p2.getCharacter();
+	};
+
 	public static boolean rangesIntersect(Range r1, Range r2) {
 		if (r1 == null || r2 == null) {
 			return false;
@@ -55,6 +64,11 @@ public class LSPUtils {
 			return false;
 		}
 		return true;
+	}
+
+	public static boolean rangeContains(Range range, Position position) {
+		return POSITION_COMPARATOR.compare(position, range.getStart()) >= 0
+				&& POSITION_COMPARATOR.compare(position, range.getEnd()) <= 0;
 	}
 
 	public static Diagnostic createDiagnosticWithoutRange() {
