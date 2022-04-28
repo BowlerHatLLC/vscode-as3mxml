@@ -29,24 +29,31 @@ import java.util.regex.Pattern;
 
 import org.apache.royale.compiler.asdoc.IASDocComment;
 import org.apache.royale.compiler.asdoc.IASDocTag;
+import org.apache.royale.compiler.common.ISourceLocation;
+import org.apache.royale.compiler.common.SourceLocation;
 
 import antlr.Token;
 
-public class VSCodeASDocComment implements IASDocComment {
+public class VSCodeASDocComment extends SourceLocation implements IASDocComment {
 	private static final Pattern beginPreformatPattern = Pattern.compile("(?i)(^\\s*)?<(pre|listing|codeblock)>");
 	private static final Pattern endPreformatPattern = Pattern.compile("(?i)</(pre|listing|codeblock)>");
 	private static final Pattern markdownInlineCodePattern = Pattern.compile("`(.*?)`");
 	private static final Pattern asdocTagPattern = Pattern.compile("^\\s*\\*\\s+@\\w+");
 
 	public VSCodeASDocComment(Token t) {
-		token = t.getText();
+		super((ISourceLocation) t);
+		token = t;
+		tokenText = token.getText();
 	}
 
 	public VSCodeASDocComment(String t) {
-		token = t;
+		super();
+		token = null;
+		tokenText = t;
 	}
 
-	private String token;
+	private Token token;
+	private String tokenText;
 	private String description = null;
 	private Map<String, List<IASDocTag>> tagMap = new HashMap<String, List<IASDocTag>>();
 	private boolean insidePreformatted = false;
@@ -54,8 +61,33 @@ public class VSCodeASDocComment implements IASDocComment {
 	private boolean usingMarkdown = false;
 
 	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		String text = tokenText;
+		text = text.replaceAll("\n", "\\\\n");
+		text = text.replaceAll("\r", "\\\\r");
+		text = text.replaceAll("\t", "\\\\t");
+		sb.append('|');
+		sb.append(text);
+		sb.append('|');
+		sb.append(' ');
+		sb.append(getLineColumnString());
+		sb.append(getOffsetsString());
+		sb.append(getSourcePathString());
+		return sb.toString();
+	}
+
+	@Override
 	public String getDescription() {
 		return description;
+	}
+
+	public Token getToken() {
+		return token;
+	}
+
+	public String getTokenText() {
+		return tokenText;
 	}
 
 	@Override
@@ -64,9 +96,12 @@ public class VSCodeASDocComment implements IASDocComment {
 	}
 
 	public void compile(boolean useMarkdown) {
+		tagMap.clear();
+		description = null;
 		usingMarkdown = useMarkdown;
 		insidePreformatted = false;
-		String[] lines = token.split("\r?\n");
+		preformattedPrefix = null;
+		String[] lines = tokenText.split("\r?\n");
 		StringBuilder sb = new StringBuilder();
 		int n = lines.length;
 		if (n == 1) {
@@ -94,16 +129,27 @@ public class VSCodeASDocComment implements IASDocComment {
 				int at = line.indexOf("@");
 				int after = line.indexOf(" ", at + 1);
 				if (after == -1) {
-					tagMap.put(line.substring(at + 1), null);
+					after = line.length();
+				}
+				String tagName = line.substring(at + 1, after);
+				List<IASDocTag> tags = tagMap.get(tagName);
+				if (tags == null) {
+					tags = new ArrayList<IASDocTag>();
+					tagMap.put(tagName, tags);
+				}
+				String tagDescription = "";
+				if (after < line.length() - 1) {
+					tagDescription = reformatLine(line.substring(after + 1), false);
+				}
+				if (token instanceof ISourceLocation) {
+					ISourceLocation tokenLocation = (ISourceLocation) token;
+					tags.add(new VSCodeASDocTag(tagName, tagDescription,
+							tokenLocation.getSourcePath(),
+							-1, -1,
+							tokenLocation.getLine() + i, at, tokenLocation.getLine() + i,
+							line.length()));
 				} else {
-					String tagName = line.substring(at + 1, after);
-					List<IASDocTag> tags = tagMap.get(tagName);
-					if (tags == null) {
-						tags = new ArrayList<IASDocTag>();
-						tagMap.put(tagName, tags);
-					}
-					String tagDescription = reformatLine(line.substring(after + 1), false);
-					tags.add(new ASDocTag(tagName, tagDescription));
+					tags.add(new VSCodeASDocTag(tagName, tagDescription));
 				}
 			}
 		}
@@ -248,8 +294,14 @@ public class VSCodeASDocComment implements IASDocComment {
 		return line;
 	}
 
-	class ASDocTag implements IASDocTag {
-		public ASDocTag(String name, String description) {
+	public class VSCodeASDocTag extends SourceLocation implements IASDocTag {
+		public VSCodeASDocTag(String name, String description) {
+			this(name, description, null, -1, -1, -1, -1, -1, -1);
+		}
+
+		public VSCodeASDocTag(String name, String description, String sourcePath, int start, int end,
+				int line, int column, int endLine, int endColumn) {
+			super(sourcePath, start, end, line, column, endLine, endColumn);
 			this.name = name;
 			this.description = description;
 		}
