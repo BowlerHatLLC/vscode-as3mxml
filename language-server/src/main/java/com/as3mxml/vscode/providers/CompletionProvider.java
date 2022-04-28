@@ -254,7 +254,6 @@ public class CompletionProvider {
             ISourceLocation offsetSourceLocation = actionScriptProjectManager
                     .getOffsetSourceLocation(path,
                             currentOffset, projectData);
-
             if (offsetSourceLocation instanceof VSCodeASDocComment) {
                 VSCodeASDocComment docComment = (VSCodeASDocComment) offsetSourceLocation;
                 CompletionList result = asdocCompletion(docComment, path, position, currentOffset, projectData);
@@ -1074,9 +1073,11 @@ public class CompletionProvider {
                 autoCompleteASDocTag(tag, needsAt, result);
             }
         }
-        for (String tag : IRoyaleASDocTagConstants.TAGS) {
-            if (partialTagName.length() == 0 || tag.startsWith(partialTagName)) {
-                autoCompleteASDocTag(tag, needsAt, result);
+        if (frameworkSDKIsRoyale) {
+            for (String tag : IRoyaleASDocTagConstants.TAGS) {
+                if (partialTagName.length() == 0 || tag.startsWith(partialTagName)) {
+                    autoCompleteASDocTag(tag, needsAt, result);
+                }
             }
         }
     }
