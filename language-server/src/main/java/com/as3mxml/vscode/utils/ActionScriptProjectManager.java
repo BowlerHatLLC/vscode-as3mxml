@@ -32,6 +32,8 @@ import com.as3mxml.vscode.project.IProjectConfigStrategyFactory;
 import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
 import com.as3mxml.vscode.utils.DefinitionTextUtils.DefinitionAsText;
 
+import org.apache.royale.compiler.asdoc.IASDocComment;
+import org.apache.royale.compiler.common.ISourceLocation;
 import org.apache.royale.compiler.config.Configuration;
 import org.apache.royale.compiler.definitions.IClassDefinition;
 import org.apache.royale.compiler.definitions.IDefinition;
@@ -245,6 +247,32 @@ public class ActionScriptProjectManager {
         }
 
         return ASTUtils.getContainingNodeIncludingStart(ast, currentOffset);
+    }
+
+    public ISourceLocation getOffsetSourceLocation(Path path, int currentOffset,
+            ActionScriptProjectData projectData) {
+        IncludeFileData includeFileData = projectData.includedFiles.get(path.toString());
+        if (includeFileData != null) {
+            path = Paths.get(includeFileData.parentPath);
+        }
+        ILspProject project = projectData.project;
+        if (!SourcePathUtils.isInProjectSourcePath(path, project, projectData.configurator)) {
+            // the path must be in the workspace or source-path
+            return null;
+        }
+
+        ICompilationUnit unit = CompilerProjectUtils.findCompilationUnit(path, project);
+        if (unit == null) {
+            // the path must be in the workspace or source-path
+            return null;
+        }
+
+        IASNode ast = ASTUtils.getCompilationUnitAST(unit);
+        if (ast == null) {
+            return null;
+        }
+
+        return ASTUtils.getContainingNodeOrDocCommentIncludingStart(ast, currentOffset);
     }
 
     public IASNode getEmbeddedActionScriptNodeInMXMLTag(IMXMLTagData tag, Path path, int currentOffset,

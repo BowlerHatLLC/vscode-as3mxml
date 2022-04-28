@@ -25,6 +25,8 @@ import java.util.Set;
 import com.as3mxml.vscode.compiler.problems.DisabledConfigConditionBlockProblem;
 import com.as3mxml.vscode.compiler.problems.UnusedImportProblem;
 
+import org.apache.royale.compiler.asdoc.IASDocComment;
+import org.apache.royale.compiler.common.ISourceLocation;
 import org.apache.royale.compiler.constants.IASLanguageConstants;
 import org.apache.royale.compiler.constants.IMetaAttributeConstants;
 import org.apache.royale.compiler.definitions.IClassDefinition;
@@ -68,6 +70,8 @@ import org.apache.royale.compiler.tree.as.IVariableNode;
 import org.apache.royale.compiler.tree.mxml.IMXMLSpecifierNode;
 import org.apache.royale.compiler.units.ICompilationUnit;
 
+import org.apache.royale.compiler.tree.as.IDocumentableDefinitionNode;
+
 public class ASTUtils {
     private static final String DOT_STAR = ".*";
     private static final String UNDERSCORE_UNDERSCORE_AS3_PACKAGE = "__AS3__.";
@@ -104,7 +108,7 @@ public class ASTUtils {
         return ast;
     }
 
-    public static boolean containsWithStart(IASNode node, int offset) {
+    public static boolean containsWithStart(ISourceLocation node, int offset) {
         return offset >= node.getAbsoluteStart() && offset <= node.getAbsoluteEnd();
     }
 
@@ -159,6 +163,44 @@ public class ASTUtils {
                 continue;
             }
             IASNode result = getContainingNodeIncludingStart(child, offset);
+            if (result != null) {
+                return result;
+            }
+        }
+        return node;
+    }
+
+    public static ISourceLocation getContainingNodeOrDocCommentIncludingStart(IASNode node, int offset) {
+        if (node instanceof IDocumentableDefinitionNode) {
+            IDocumentableDefinitionNode docNode = (IDocumentableDefinitionNode) node;
+            IASDocComment docComment = docNode.getASDocComment();
+            if (docComment instanceof ISourceLocation) {
+                ISourceLocation docCommentWithLocation = (ISourceLocation) docComment;
+                if (containsWithStart(docCommentWithLocation, offset)) {
+                    return docCommentWithLocation;
+                }
+            }
+        }
+        if (!containsWithStart(node, offset)) {
+            return null;
+        }
+        for (int i = 0, count = node.getChildCount(); i < count; i++) {
+            IASNode child = node.getChild(i);
+            if (child.getAbsoluteStart() == -1) {
+                // the Royale compiler has a quirk where a node can have an
+                // unknown offset, but its children have known offsets. this is
+                // where we work around that...
+                for (int j = 0, innerCount = child.getChildCount(); j < innerCount; j++) {
+                    IASNode innerChild = child.getChild(j);
+                    ISourceLocation result = getContainingNodeOrDocCommentIncludingStart(innerChild,
+                            offset);
+                    if (result != null) {
+                        return result;
+                    }
+                }
+                continue;
+            }
+            ISourceLocation result = getContainingNodeOrDocCommentIncludingStart(child, offset);
             if (result != null) {
                 return result;
             }

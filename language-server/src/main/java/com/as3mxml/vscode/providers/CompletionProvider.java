@@ -26,7 +26,13 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import com.as3mxml.vscode.asdoc.IASDocTagConstants;
+import com.as3mxml.vscode.asdoc.IRoyaleASDocTagConstants;
+import com.as3mxml.vscode.asdoc.VSCodeASDocComment;
+import com.as3mxml.vscode.asdoc.VSCodeASDocComment.VSCodeASDocTag;
 import com.as3mxml.vscode.project.ActionScriptProjectData;
 import com.as3mxml.vscode.project.ILspProject;
 import com.as3mxml.vscode.utils.ASTUtils;
@@ -48,7 +54,10 @@ import com.as3mxml.vscode.utils.ScopeUtils;
 import com.as3mxml.vscode.utils.SourcePathUtils;
 import com.as3mxml.vscode.utils.XmlnsRange;
 
+import org.apache.royale.compiler.asdoc.IASDocComment;
+import org.apache.royale.compiler.asdoc.IASDocTag;
 import org.apache.royale.compiler.common.ASModifier;
+import org.apache.royale.compiler.common.ISourceLocation;
 import org.apache.royale.compiler.common.PrefixMap;
 import org.apache.royale.compiler.common.XMLName;
 import org.apache.royale.compiler.constants.IASKeywordConstants;
@@ -74,6 +83,7 @@ import org.apache.royale.compiler.definitions.metadata.IMetaTagAttribute;
 import org.apache.royale.compiler.filespecs.IFileSpecification;
 import org.apache.royale.compiler.internal.mxml.MXMLData;
 import org.apache.royale.compiler.internal.mxml.MXMLTagData;
+import org.apache.royale.compiler.internal.parsing.as.ASDocToken;
 import org.apache.royale.compiler.internal.projects.CompilerProject;
 import org.apache.royale.compiler.internal.scopes.ASProjectScope.DefinitionPromise;
 import org.apache.royale.compiler.internal.scopes.ASScope;
@@ -123,6 +133,7 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either;
 public class CompletionProvider {
     private static final String FILE_EXTENSION_MXML = ".mxml";
     private static final String VECTOR_HIDDEN_PREFIX = "Vector$";
+    private static final Pattern asdocTagAllowedPattern = Pattern.compile("^\\s*(\\*)\\s*(@.*)?$");
 
     private ActionScriptProjectManager actionScriptProjectManager;
     private FileTracker fileTracker;
@@ -240,7 +251,24 @@ public class CompletionProvider {
                     return Either.forRight(result);
                 }
             }
-            IASNode offsetNode = actionScriptProjectManager.getOffsetNode(path, currentOffset, projectData);
+            ISourceLocation offsetSourceLocation = actionScriptProjectManager
+                    .getOffsetSourceLocation(path,
+                            currentOffset, projectData);
+
+            if (offsetSourceLocation instanceof VSCodeASDocComment) {
+                VSCodeASDocComment docComment = (VSCodeASDocComment) offsetSourceLocation;
+                CompletionList result = asdocCompletion(docComment, path, position, currentOffset, projectData);
+                if (cancelToken != null) {
+                    cancelToken.checkCanceled();
+                }
+                return Either.forRight(result);
+            }
+            if (!(offsetSourceLocation instanceof IASNode)) {
+                // we don't recognize what type this is, so don't try to treat
+                // it as an IASNode
+                offsetSourceLocation = null;
+            }
+            IASNode offsetNode = (IASNode) offsetSourceLocation;
             CompletionList result = actionScriptCompletion(offsetNode, path, position, currentOffset, projectData);
             if (cancelToken != null) {
                 cancelToken.checkCanceled();
@@ -828,6 +856,72 @@ public class CompletionProvider {
         return result;
     }
 
+    private CompletionList asdocCompletion(VSCodeASDocComment docComment, Path path, Position position,
+            int currentOffset,
+            ActionScriptProjectData projectData) {
+        docComment.compile(false);
+        VSCodeASDocTag offsetTag = null;
+        for (String tagName : docComment.getTags().keySet()) {
+            for (IASDocTag tag : docComment.getTags().get(tagName)) {
+                if (!(tag instanceof VSCodeASDocTag)) {
+                    continue;
+                }
+                VSCodeASDocTag docTag = (VSCodeASDocTag) tag;
+                if (position.getLine() == docTag.getLine()
+                        && position.getLine() == docTag.getEndLine()
+                        && position.getCharacter() > docTag.getColumn()
+                        && position.getCharacter() <= docTag.getEndColumn()) {
+                    offsetTag = docTag;
+                    break;
+                }
+            }
+            if (offsetTag != null) {
+                break;
+            }
+        }
+        CompletionList result = new CompletionList();
+        result.setIsIncomplete(false);
+        result.setItems(new ArrayList<>());
+        if (offsetTag == null) {
+            int lineIndex = position.getLine() - docComment.getLine();
+            String[] lines = docComment.getTokenText().split("\r?\n");
+            if (lineIndex >= 0 && lineIndex < lines.length) {
+                String line = lines[lineIndex];
+                Matcher matcher = asdocTagAllowedPattern.matcher(line);
+                // if there's no offset asdoc tag on the current line, then
+                // check if the line contains any content that would prevent one
+                // from being added. if the position is correct, include all
+                // asdoc tags.
+                if (matcher.matches()) {
+                    String atGroup = matcher.group(2);
+                    boolean hasAt = atGroup != null && atGroup.length() != 0;
+                    if ((hasAt && position.getCharacter() == (matcher.start(2) + 1))
+                            || (!hasAt && position.getCharacter() >= matcher.end(1))) {
+                        autoCompleteASDocTags("", !hasAt, result);
+                    }
+                }
+            }
+        } else {
+            int lineIndex = offsetTag.getLine() - docComment.getLine();
+            String[] lines = docComment.getTokenText().split("\r?\n");
+            if (lineIndex >= 0 && lineIndex < lines.length) {
+                String line = lines[lineIndex];
+                int tagStartIndex = line.indexOf('@');
+                if (tagStartIndex != -1) {
+                    int tagNameEndIndex = line.indexOf(' ', tagStartIndex + 1);
+                    if (tagNameEndIndex == -1) {
+                        tagNameEndIndex = line.length();
+                    }
+                    if (position.getCharacter() > tagStartIndex && position.getCharacter() <= tagNameEndIndex) {
+                        String partialTagName = line.substring(tagStartIndex + 1, position.getCharacter());
+                        autoCompleteASDocTags(partialTagName, false, result);
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
     private void autoCompleteKeywords(IScopedNode node, CompletionList result) {
         boolean isInFunction = false;
         boolean isInClass = false;
@@ -972,6 +1066,31 @@ public class CompletionProvider {
         item.setKind(CompletionItemKind.Keyword);
         item.setLabel(keyword);
         result.getItems().add(item);
+    }
+
+    private void autoCompleteASDocTags(String partialTagName, boolean needsAt, CompletionList result) {
+        for (String tag : IASDocTagConstants.TAGS) {
+            if (partialTagName.length() == 0 || tag.startsWith(partialTagName)) {
+                autoCompleteASDocTag(tag, needsAt, result);
+            }
+        }
+        for (String tag : IRoyaleASDocTagConstants.TAGS) {
+            if (partialTagName.length() == 0 || tag.startsWith(partialTagName)) {
+                autoCompleteASDocTag(tag, needsAt, result);
+            }
+        }
+    }
+
+    private void autoCompleteASDocTag(String tag, boolean needsAt, CompletionList result) {
+        CompletionItem tagNameItem = new CompletionItem();
+        // display the full close tag
+        tagNameItem.setLabel("@" + tag);
+        tagNameItem.setKind(CompletionItemKind.Property);
+        if (!needsAt) {
+            tagNameItem.setInsertText(tag);
+        }
+        tagNameItem.setFilterText(tag);
+        result.getItems().add(tagNameItem);
     }
 
     private void autoCompleteTypes(IASNode withNode, AddImportData addImportData, ILspProject project,
