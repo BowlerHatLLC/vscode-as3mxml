@@ -107,11 +107,12 @@ public class DefinitionProvider {
                 IASNode embeddedNode = actionScriptProjectManager.getEmbeddedActionScriptNodeInMXMLTag(offsetTag, path,
                         currentOffset, projectData);
                 if (embeddedNode != null) {
-                    List<? extends Location> result = actionScriptDefinition(embeddedNode, projectData);
+                    Either<List<? extends Location>, List<? extends LocationLink>> result = actionScriptDefinition(
+                            embeddedNode, projectData);
                     if (cancelToken != null) {
                         cancelToken.checkCanceled();
                     }
-                    return Either.forLeft(result);
+                    return result;
                 }
                 // if we're inside an <fx:Script> tag, we want ActionScript lookup,
                 // so that's why we call isMXMLTagValidForCompletion()
@@ -141,24 +142,30 @@ public class DefinitionProvider {
             offsetSourceLocation = null;
         }
         IASNode offsetNode = (IASNode) offsetSourceLocation;
-        List<? extends Location> result = actionScriptDefinition(offsetNode, projectData);
+        Either<List<? extends Location>, List<? extends LocationLink>> result = actionScriptDefinition(offsetNode,
+                projectData);
         if (cancelToken != null) {
             cancelToken.checkCanceled();
         }
-        return Either.forLeft(result);
+        return result;
     }
 
-    private List<? extends Location> actionScriptDefinition(IASNode offsetNode, ActionScriptProjectData projectData) {
+    private Either<List<? extends Location>, List<? extends LocationLink>> actionScriptDefinition(IASNode offsetNode,
+            ActionScriptProjectData projectData) {
         if (offsetNode == null) {
             // we couldn't find a node at the specified location
-            return Collections.emptyList();
+            return Either.forLeft(Collections.emptyList());
         }
 
         IDefinition definition = null;
+        Range sourceRange = null;
 
         if (offsetNode instanceof IIdentifierNode) {
             IIdentifierNode identifierNode = (IIdentifierNode) offsetNode;
-            definition = DefinitionUtils.resolveWithExtras(identifierNode, projectData.project);
+            sourceRange = new Range();
+            sourceRange.setStart(new Position(offsetNode.getLine(), offsetNode.getColumn()));
+            sourceRange.setEnd(new Position(offsetNode.getEndLine(), offsetNode.getEndColumn()));
+            definition = DefinitionUtils.resolveWithExtras(identifierNode, projectData.project, sourceRange);
         }
 
         if (definition == null && offsetNode instanceof ILanguageIdentifierNode) {
@@ -189,7 +196,7 @@ public class DefinitionProvider {
         if (definition == null) {
             // VSCode may call definition() when there isn't necessarily a
             // definition referenced at the current position.
-            return Collections.emptyList();
+            return Either.forLeft(Collections.emptyList());
         }
 
         IASNode parentNode = offsetNode.getParent();
@@ -206,9 +213,17 @@ public class DefinitionProvider {
             }
         }
 
-        List<Location> result = new ArrayList<>();
-        actionScriptProjectManager.resolveDefinition(definition, projectData, result);
-        return result;
+        List<Location> locations = new ArrayList<>();
+        actionScriptProjectManager.resolveDefinition(definition, projectData, locations);
+        if (sourceRange == null) {
+            return Either.forLeft(locations);
+        }
+        final Range originSelectionRange = sourceRange;
+        List<LocationLink> result = locations.stream().map(
+                location -> new LocationLink(location.getUri(), location.getRange(), location.getRange(),
+                        originSelectionRange))
+                .collect(Collectors.toList());
+        return Either.forRight(result);
     }
 
     private List<? extends Location> mxmlDefinition(IMXMLTagData offsetTag, int currentOffset,

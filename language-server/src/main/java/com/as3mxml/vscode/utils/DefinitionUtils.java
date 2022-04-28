@@ -55,6 +55,8 @@ import org.apache.royale.compiler.tree.as.IExpressionNode;
 import org.apache.royale.compiler.tree.as.IIdentifierNode;
 import org.apache.royale.compiler.tree.as.IMemberAccessExpressionNode;
 import org.apache.royale.compiler.units.ICompilationUnit;
+import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.Range;
 
 public class DefinitionUtils {
 	private static final String PROPERTY_FRAMEWORK_LIB = "royalelib";
@@ -176,6 +178,11 @@ public class DefinitionUtils {
 	}
 
 	public static IDefinition resolveWithExtras(IIdentifierNode identifierNode, ILspProject project) {
+		return resolveWithExtras(identifierNode, project, null);
+	}
+
+	public static IDefinition resolveWithExtras(IIdentifierNode identifierNode, ILspProject project,
+			Range sourceRange) {
 		IDefinition definition = identifierNode.resolve(project);
 		if (definition != null) {
 			return definition;
@@ -210,6 +217,11 @@ public class DefinitionUtils {
 				IMemberAccessExpressionNode memberAccessNode = (IMemberAccessExpressionNode) currentNode;
 				definition = memberAccessNode.resolve(project);
 				if (definition != null) {
+					if (sourceRange != null) {
+						sourceRange.setStart(new Position(memberAccessNode.getLine(), memberAccessNode.getColumn()));
+						sourceRange
+								.setEnd(new Position(memberAccessNode.getEndLine(), memberAccessNode.getEndColumn()));
+					}
 					break;
 				}
 				currentNode = currentNode.getParent();

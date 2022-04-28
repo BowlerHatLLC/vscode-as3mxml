@@ -153,12 +153,17 @@ public class HoverProvider {
             return new Hover(Collections.emptyList(), null);
         }
 
+        Range sourceRange = null;
+
         // INamespaceDecorationNode extends IIdentifierNode, but we don't want
         // any hover information for it.
         if (definition == null && offsetNode instanceof IIdentifierNode
                 && !(offsetNode instanceof INamespaceDecorationNode)) {
             IIdentifierNode identifierNode = (IIdentifierNode) offsetNode;
-            definition = DefinitionUtils.resolveWithExtras(identifierNode, project);
+            sourceRange = new Range();
+            sourceRange.setStart(new Position(offsetNode.getLine(), offsetNode.getColumn()));
+            sourceRange.setEnd(new Position(offsetNode.getEndLine(), offsetNode.getEndColumn()));
+            definition = DefinitionUtils.resolveWithExtras(identifierNode, project, sourceRange);
         }
 
         if (definition == null && offsetNode instanceof ILanguageIdentifierNode) {
@@ -205,6 +210,9 @@ public class HoverProvider {
         }
 
         Hover result = new Hover();
+        if (sourceRange != null) {
+            result.setRange(sourceRange);
+        }
         String detail = DefinitionTextUtils.definitionToDetail(definition, project);
         detail = codeBlock(MARKED_STRING_LANGUAGE_ACTIONSCRIPT, detail);
         String docs = DefinitionDocumentationUtils.getDocumentationForDefinition(definition, true,
