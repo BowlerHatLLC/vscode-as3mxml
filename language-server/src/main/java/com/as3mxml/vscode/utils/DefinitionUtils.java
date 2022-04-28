@@ -17,6 +17,7 @@ package com.as3mxml.vscode.utils;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -29,13 +30,19 @@ import org.apache.royale.compiler.constants.IASLanguageConstants;
 import org.apache.royale.compiler.constants.IMetaAttributeConstants;
 import org.apache.royale.compiler.definitions.IAppliedVectorDefinition;
 import org.apache.royale.compiler.definitions.IClassDefinition;
+import org.apache.royale.compiler.definitions.IClassDefinition.ClassClassification;
 import org.apache.royale.compiler.definitions.IClassDefinition.IClassIterator;
 import org.apache.royale.compiler.definitions.IDefinition;
+import org.apache.royale.compiler.definitions.IFunctionDefinition;
+import org.apache.royale.compiler.definitions.IFunctionDefinition.FunctionClassification;
 import org.apache.royale.compiler.definitions.IGetterDefinition;
 import org.apache.royale.compiler.definitions.IInterfaceDefinition;
+import org.apache.royale.compiler.definitions.IInterfaceDefinition.InterfaceClassification;
 import org.apache.royale.compiler.definitions.INamespaceDefinition;
 import org.apache.royale.compiler.definitions.ISetterDefinition;
 import org.apache.royale.compiler.definitions.ITypeDefinition;
+import org.apache.royale.compiler.definitions.IVariableDefinition;
+import org.apache.royale.compiler.definitions.IVariableDefinition.VariableClassification;
 import org.apache.royale.compiler.definitions.metadata.IMetaTag;
 import org.apache.royale.compiler.internal.projects.CompilerProject;
 import org.apache.royale.compiler.internal.scopes.ASProjectScope;
@@ -246,6 +253,62 @@ public class DefinitionUtils {
 		}
 
 		return definition;
+	}
+
+	public static IDefinition getDefinitionByName(String qualifiedName, Collection<ICompilationUnit> compilationUnits) {
+		for (ICompilationUnit unit : compilationUnits) {
+			if (unit == null) {
+				continue;
+			}
+			try {
+				Collection<IDefinition> definitions = unit.getFileScopeRequest().get()
+						.getExternallyVisibleDefinitions();
+				if (definitions == null) {
+					continue;
+				}
+				for (IDefinition definition : definitions) {
+					if (definition.isImplicit()) {
+						continue;
+					}
+					if (definition instanceof IClassDefinition) {
+						IClassDefinition classDefinition = (IClassDefinition) definition;
+						if (!ClassClassification.PACKAGE_MEMBER
+								.equals(classDefinition.getClassClassification())) {
+							continue;
+						}
+					} else if (definition instanceof IInterfaceDefinition) {
+						IInterfaceDefinition interfaceDefinition = (IInterfaceDefinition) definition;
+						if (!InterfaceClassification.PACKAGE_MEMBER
+								.equals(interfaceDefinition.getInterfaceClassification())) {
+							continue;
+						}
+					} else if (definition instanceof IFunctionDefinition) {
+						IFunctionDefinition functionDefinition = (IFunctionDefinition) definition;
+						if (!FunctionClassification.PACKAGE_MEMBER
+								.equals(functionDefinition.getFunctionClassification())) {
+							continue;
+						}
+					} else if (definition instanceof IVariableDefinition) {
+						IVariableDefinition variableDefinition = (IVariableDefinition) definition;
+						if (!VariableClassification.PACKAGE_MEMBER
+								.equals(variableDefinition.getVariableClassification())) {
+							continue;
+						}
+					} else {
+						// unknown definition type
+						continue;
+					}
+					if (!qualifiedName.equals(definition.getQualifiedName())) {
+						// this definition is top-level. no import required.
+						continue;
+					}
+					return definition;
+				}
+			} catch (Exception e) {
+				// safe to ignore
+			}
+		}
+		return null;
 	}
 
 	private static String transformDebugFilePath(String sourceFilePath) {

@@ -126,8 +126,11 @@ public class VSCodeASDocComment extends SourceLocation implements IASDocComment 
 				}
 			} else // tag
 			{
-				int at = line.indexOf("@");
-				int after = line.indexOf(" ", at + 1);
+				int at = line.indexOf('@');
+				int after = line.indexOf(' ', at + 1);
+				if (after == -1) {
+					after = line.indexOf('\t', at + 1);
+				}
 				if (after == -1) {
 					after = line.length();
 				}
