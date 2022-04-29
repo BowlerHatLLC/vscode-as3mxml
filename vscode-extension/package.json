@@ -462,42 +462,42 @@
         "as3mxml.format.collapseEmptyBlocks": {
           "type": "boolean",
           "default": false,
-          "description": "Defines collapse behavior for empty blocks"
+          "description": "Defines collapse behavior for empty {} blocks"
         },
         "as3mxml.format.insertSpaceAfterCommaDelimiter": {
           "type": "boolean",
           "default": true,
-          "description": "Defines space handling after comma delimeter"
+          "description": "Defines space handling after comma delimiter in arrays and object literals"
         },
         "as3mxml.format.insertSpaceBetweenMetadataAttributes": {
           "type": "boolean",
           "default": true,
-          "description": "Defines space handling after metadata attributes"
+          "description": "Defines space handling after the comma between metadata attributes"
         },
         "as3mxml.format.insertSpaceAfterFunctionKeywordForAnonymousFunctions": {
           "type": "boolean",
           "default": false,
-          "description": "Defines space handling for anonymous functions"
+          "description": "Defines space handling between the function keyword and the opening parenthesis of anonymous functions"
         },
         "as3mxml.format.insertSpaceAfterKeywordsInControlFlowStatements": {
           "type": "boolean",
           "default": true,
-          "description": "Defines space handling for control flow statements"
+          "description": "Defines space handling between control flow keywords (like if, for, and while) and the opening parenthesis"
         },
         "as3mxml.format.insertSpaceAfterSemicolonInForStatements": {
           "type": "boolean",
           "default": true,
-          "description": "Defines space handling for semicolons in for statements"
+          "description": "Defines space handling for semicolons inside the parentheses of for loop statements"
         },
         "as3mxml.format.insertSpaceBeforeAndAfterBinaryOperators": {
           "type": "boolean",
           "default": true,
-          "description": "Defines space handling for semicolons binary operators"
+          "description": "Defines space handling on the left and right sides of binary operators"
         },
         "as3mxml.format.insertSpaceAtStartOfLineComment": {
           "type": "boolean",
           "default": true,
-          "description": "Defines space handling for line comments"
+          "description": "Defines space handling before the text of line comments"
         },
         "as3mxml.format.mxmlInsertNewLineBetweenAttributes": {
           "type": "boolean",
@@ -517,7 +517,7 @@
         "as3mxml.format.placeOpenBraceOnNewLine": {
           "type": "boolean",
           "default": true,
-          "description": "Defines new line handling for open braces"
+          "description": "Defines new line handling for open { braces"
         },
         "as3mxml.format.semicolons": {
           "type": "string",
