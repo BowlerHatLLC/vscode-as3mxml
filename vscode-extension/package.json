@@ -467,7 +467,7 @@
         "as3mxml.format.insertSpaceAfterCommaDelimiter": {
           "type": "boolean",
           "default": true,
-          "description": "Defines space handling after comma delimter"
+          "description": "Defines space handling after comma delimeter"
         },
         "as3mxml.format.insertSpaceBetweenMetadataAttributes": {
           "type": "boolean",
