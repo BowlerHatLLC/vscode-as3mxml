@@ -31,7 +31,7 @@ function stripAfterNextSpace(
   prefix: string,
   replacementPrefix?: string
 ): string {
-  //stop after the next space, which should be the version number
+  //stop after the next space, which should include the SDK version number
   let index = sdkName.indexOf(" ", prefix.length);
   if (replacementPrefix) {
     if (index === -1) {
@@ -52,9 +52,11 @@ export default function findSDKShortName(sdkPath: string): string {
   if (sdkName === null) {
     return null;
   }
-  if (sdkName.startsWith(AIR) || sdkName.startsWith(FLEX)) {
-    //it's already short enough
-    return sdkName;
+  if (sdkName.startsWith(FLEX)) {
+    return stripAfterNextSpace(sdkName, FLEX);
+  }
+  if (sdkName.startsWith(AIR)) {
+    return stripAfterNextSpace(sdkName, AIR);
   }
   if (sdkName.startsWith(FEATHERS_SDK)) {
     return stripAfterNextSpace(sdkName, FEATHERS_SDK, FEATHERS);
