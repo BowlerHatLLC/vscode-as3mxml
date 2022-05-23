@@ -1744,12 +1744,8 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         if (configurator != null) {
             boolean result = configurator.applyToProject(project);
             Configuration configuration = configurator.getConfiguration();
-            // it's possible for the configuration to be null when parsing
-            // certain values in additionalOptions in asconfig.json
+            configProblems.addAll(configurator.getConfigurationProblems());
             if (configuration != null) {
-                // the configurator will throw a null reference exception if the
-                // configuration is null
-                configProblems.addAll(configurator.getConfigurationProblems());
                 // add configurator problems before the custom problems below
                 // because configurator problems are probably more important
                 if (projectOptions.type.equals(ProjectType.LIB)) {
