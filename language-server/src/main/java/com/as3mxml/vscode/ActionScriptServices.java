@@ -1869,7 +1869,8 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             // don't check compilation units for problems if the project itself
             // has problems. the user should fix those first.
             Collection<ICompilerProblem> fatalProblems = project.getFatalProblems();
-            if (fatalProblems != null) {
+            boolean hasFatalProblems = fatalProblems != null && fatalProblems.size() > 0;
+            if (hasFatalProblems) {
                 problemQuery.addAll(fatalProblems);
             }
 
@@ -1879,7 +1880,13 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             project.collectProblems(collectedProblems);
             problemQuery.addAll(collectedProblems);
 
-            if (!problemQuery.hasErrors()) {
+            // continue only if there aren't fatal problems. previously, we
+            // didn't continue if there were **any** errors returned by
+            // problemQuery.hasErrors(), but there may be non-fatal errors that
+            // won't cause issues. for example, classes that are open in an
+            // editor, but not in a source path, will have an error because the
+            // package will not match anything. however, that's not fatal.
+            if (!hasFatalProblems) {
                 checkReachableCompilationUnitsForErrors(problemQuery, projectData);
             }
         } finally {
