@@ -529,6 +529,17 @@
           "default": "insert",
           "description": "Defines automatic semicolon insertion behavior"
         },
+        "actionscript.trace.server": {
+          "type": "string",
+          "enum": [
+            "off",
+            "messages",
+            "verbose"
+          ],
+          "default": "off",
+          "description": "(Advanced) Logs the communication between Visual Studio Code and the ActionScript & MXML language server",
+          "scope": "window"
+        },
         "nextgenas.sdk.framework": {
           "description": "Deprecated. Replaced by as3mxml.sdk.framework.",
           "deprecationMessage": "DEPRECATED: Use as3mxml.sdk.framework instead."
