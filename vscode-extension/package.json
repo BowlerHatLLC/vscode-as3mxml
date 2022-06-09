@@ -13,6 +13,9 @@
     "url": "https://github.com/BowlerHatLLC/vscode-as3mxml/issues"
   },
   "qna": "https://github.com/BowlerHatLLC/vscode-as3mxml/discussions",
+  "sponsor": {
+    "url": "https://patreon.com/josht"
+  },
   "license": "Apache-2.0",
   "private": true,
   "categories": [
