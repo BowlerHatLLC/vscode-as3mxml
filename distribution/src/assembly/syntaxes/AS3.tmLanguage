@@ -864,7 +864,7 @@
 		<key>method</key>
 		<dict>
 			<key>begin</key>
-			<string>(?x) (^|\s+) ((\w+)\s+)? ((\w+)\s+)? ((\w+)\s+)? (\w+) (?=\s+\bfunction\b)</string>
+			<string>(?x) (^|\s+) ((\w+)\s+)? ((\w+)\s+)? ((\w+)\s+)? ((\w+)\s+)? (?=\bfunction\b)</string>
 			<key>beginCaptures</key>
 			<dict>
 				<key>3</key>
