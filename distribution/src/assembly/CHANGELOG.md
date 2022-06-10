@@ -1,5 +1,20 @@
 # ActionScript & MXML for Visual Studio Code Changelog
 
+## 1.13.0
+
+### New Features
+
+- Completion: In ASDoc comments, tags such as `@param`, `@return`, and `@see` are now suggested.
+- Definition: ASDoc `@see`, `@throws` and `@copy` tags referencing symbols (like classes, interfaces, properties, and methods) now work with Ctrl+Click to Go To Definition.
+- Hover: ASDoc `@see`, `@throws` and `@copy` tags referencing symbols now display more details about the symbol on mouse hover.
+- Settings: (Advanced) Added `actionscript.trace.server` setting to display (for debugging purposes) the messages passed between Visual Studio Code and the ActionScript & MXML language server.
+
+### Fixed Issues
+
+- General: Improved detection of SDK "short names" to display in the status bar. Some long SDK descriptions were not being stripped of less relevant information.
+- Problems: Fixed issue where some configuration errors and warnings were not reported in the Problems view, and you could see them only when compiling the project.
+- Problems: Fixed issue where non-fatal errors could sometimes block error checking in other files.
+
 ## 1.12.1
 
 ### Fixed Issues
