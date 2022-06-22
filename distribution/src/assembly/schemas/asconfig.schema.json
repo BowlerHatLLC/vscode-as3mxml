@@ -167,7 +167,7 @@
     "airOptionsAllTargets": {
       "type": "string",
       "description": "The package target for Adobe AIR applications.",
-      "pattern": "^(air|bundle|native|ipa-app-store|ipa-ad-hoc|ipa-debug|ipa-test|ipa-debug-interpreter|ipa-test-interpreter|ipa-debug-interpreter-simulator|ipa-test-interpreter-simulator|apk-captive-runtime|apk|apk-debug|apk-profile|aab)$"
+      "pattern": "^(air|bundle|native|ipa-app-store|ipa-ad-hoc|ipa-debug|ipa-test|ipa-debug-interpreter|ipa-test-interpreter|ipa-debug-interpreter-simulator|ipa-test-interpreter-simulator|apk-captive-runtime|apk|apk-debug|apk-profile|apk-emulator|aab|aab-debug|android-studio|android-studio-debug)$"
     },
     "airOptionsDesktopTargets": {
       "type": "string",
