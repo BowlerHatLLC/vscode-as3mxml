@@ -25,6 +25,7 @@ import com.as3mxml.vscode.utils.LanguageServerCompilerUtils;
 import com.as3mxml.vscode.utils.ProblemTracker;
 
 import org.apache.royale.compiler.internal.projects.RoyaleProjectConfigurator;
+import org.apache.royale.compiler.workspaces.IWorkspace;
 import org.eclipse.lsp4j.WorkspaceFolder;
 
 public class ActionScriptProjectData {
@@ -50,7 +51,7 @@ public class ActionScriptProjectData {
 	public IProjectConfigStrategy config;
 	public ProjectOptions options;
 	public ILspProject project;
-	//needed for ProblemQuery filtering
+	// needed for ProblemQuery filtering
 	public RoyaleProjectConfigurator configurator;
 	public Map<WatchKey, Path> sourceOrLibraryPathWatchKeys = new HashMap<>();
 	public ProblemTracker codeProblemTracker = new ProblemTracker();
@@ -58,9 +59,21 @@ public class ActionScriptProjectData {
 	public Map<String, IncludeFileData> includedFiles = new HashMap<>();
 
 	public void cleanup() {
-		if (project != null) {
-			project.delete();
-			project = null;
+		ILspProject currentProject = project;
+		if (currentProject != null) {
+			IWorkspace workspace = project.getWorkspace();
+			workspace.startIdleState();
+			try {
+				if (!currentProject.equals(project)) {
+					// the project instance changed in another thread before
+					// startIdleState() returned. we don't need to continue.
+					return;
+				}
+				project = null;
+				currentProject.delete();
+			} finally {
+				workspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
+			}
 		}
 
 		for (WatchKey watchKey : sourceOrLibraryPathWatchKeys.keySet()) {
