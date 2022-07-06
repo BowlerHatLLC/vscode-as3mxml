@@ -1862,6 +1862,11 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         ProblemQuery problemQuery = projectDataToProblemQuery(projectData);
         compilerWorkspace.startBuilding();
         try {
+            if (!project.equals(projectData.project)) {
+                // the project instance changed in another thread before
+                // startBuilding() returned. let that thread handle the rest.
+                return;
+            }
             // start by making sure that all of the project's compilation units
             // have been created. we'll check them for errors in a later step
             populateCompilationUnits(project);
