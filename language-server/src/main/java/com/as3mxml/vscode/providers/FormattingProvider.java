@@ -104,9 +104,19 @@ public class FormattingProvider {
         if (fileText.equals(formattedFileText)) {
             return Collections.emptyList();
         }
-        String[] lines = fileText.split("\n");
-        String lastLine = lines[lines.length - 1];
-        Range range = new Range(new Position(0, 0), new Position(lines.length - 1, lastLine.length()));
+        int lastNewLineIndex = -1;
+        int lastLineIndex = 0;
+        int lastLineLength = 0;
+        while (true) {
+            int index = fileText.indexOf('\n', lastNewLineIndex + 1);
+            if (index == -1) {
+                lastLineLength = fileText.length() - (lastNewLineIndex + 1);
+                break;
+            }
+            lastNewLineIndex = index;
+            lastLineIndex++;
+        }
+        Range range = new Range(new Position(0, 0), new Position(lastLineIndex, lastLineLength));
         return Collections.singletonList(new TextEdit(range, formattedFileText));
     }
 }
