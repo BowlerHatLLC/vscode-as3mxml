@@ -269,6 +269,12 @@ export function activate(context: vscode.ExtensionContext) {
   );
   savedContext.subscriptions.push(
     vscode.commands.registerCommand("as3mxml.quickCompileAndDebug", () => {
+      let enabled = vscode.workspace
+        .getConfiguration("as3mxml")
+        .get("quickCompile.enabled") as boolean;
+      if (!enabled) {
+        return;
+      }
       vscode.commands.getCommands(true).then((commands) => {
         if (
           commands.some((command) => command === "as3mxml.getActiveProjectURIs")
@@ -310,6 +316,12 @@ export function activate(context: vscode.ExtensionContext) {
   );
   savedContext.subscriptions.push(
     vscode.commands.registerCommand("as3mxml.quickCompileAndRun", () => {
+      let enabled = vscode.workspace
+        .getConfiguration("as3mxml")
+        .get("quickCompile.enabled") as boolean;
+      if (!enabled) {
+        return;
+      }
       vscode.commands.getCommands(true).then((commands) => {
         if (
           commands.some((command) => command === "as3mxml.getActiveProjectURIs")

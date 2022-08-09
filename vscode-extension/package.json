@@ -393,6 +393,11 @@
           "default": false,
           "description": "(Advanced) Specifies whether asconfigc will display verbose output during builds."
         },
+        "as3mxml.quickCompile.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Specifies if the experimental quick compile commands are enabled or not."
+        },
         "as3mxml.languageServer.jvmargs": {
           "type": "string",
           "default": null,

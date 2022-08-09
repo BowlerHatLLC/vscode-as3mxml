@@ -1213,6 +1213,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         }
         JsonObject settings = (JsonObject) params.getSettings();
         this.updateSDK(settings);
+        this.updateQuickCompileEnabled(settings);
         this.updateRealTimeProblems(settings);
         this.updateSourcePathWarning(settings);
         this.updateJVMArgs(settings);
@@ -2168,6 +2169,28 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
 
             InternalCompilerProblem problem = new InternalCompilerProblem(e);
             problems.add(problem);
+        }
+    }
+
+    private void updateQuickCompileEnabled(JsonObject settings) {
+        if (!settings.has("as3mxml")) {
+            return;
+        }
+        JsonObject as3mxml = settings.get("as3mxml").getAsJsonObject();
+        if (!as3mxml.has("quickCompile")) {
+            return;
+        }
+        JsonObject quickCompile = as3mxml.get("quickCompile").getAsJsonObject();
+        if (!quickCompile.has("enabled")) {
+            return;
+        }
+        boolean newEnabled = quickCompile.get("enabled").getAsBoolean();
+        if (newEnabled) {
+            return;
+        }
+        if (compilerShell != null) {
+            compilerShell.dispose();
+            compilerShell = null;
         }
     }
 
