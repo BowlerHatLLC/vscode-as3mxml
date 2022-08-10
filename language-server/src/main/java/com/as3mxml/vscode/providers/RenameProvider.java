@@ -18,6 +18,7 @@ package com.as3mxml.vscode.providers;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 
@@ -30,6 +31,7 @@ import com.as3mxml.vscode.utils.FileTracker;
 import com.as3mxml.vscode.utils.LanguageServerCompilerUtils;
 import com.as3mxml.vscode.utils.MXMLDataUtils;
 import com.as3mxml.vscode.utils.ActionScriptProjectManager;
+import com.as3mxml.vscode.utils.CompilerProjectUtils;
 import com.google.common.io.Files;
 
 import org.apache.royale.compiler.common.ISourceLocation;
@@ -43,6 +45,8 @@ import org.apache.royale.compiler.definitions.IVariableDefinition.VariableClassi
 import org.apache.royale.compiler.internal.mxml.MXMLData;
 import org.apache.royale.compiler.internal.scopes.ASProjectScope.DefinitionPromise;
 import org.apache.royale.compiler.mxml.IMXMLDataManager;
+import org.apache.royale.compiler.mxml.IMXMLLanguageConstants;
+import org.apache.royale.compiler.mxml.IMXMLTagAttributeData;
 import org.apache.royale.compiler.mxml.IMXMLTagData;
 import org.apache.royale.compiler.scopes.IASScope;
 import org.apache.royale.compiler.tree.as.IASNode;
@@ -125,7 +129,9 @@ public class RenameProvider {
                 // if we're inside an <fx:Script> tag, we want ActionScript rename,
                 // so that's why we call isMXMLTagValidForCompletion()
                 if (MXMLDataUtils.isMXMLCodeIntelligenceAvailableForTag(offsetTag)) {
-                    WorkspaceEdit result = mxmlRename(offsetTag, currentOffset, params.getNewName(), project);
+                    ICompilationUnit offsetUnit = CompilerProjectUtils.findCompilationUnit(path, project);
+                    WorkspaceEdit result = mxmlRename(offsetTag, currentOffset, params.getNewName(), offsetUnit,
+                            project);
                     if (cancelToken != null) {
                         cancelToken.checkCanceled();
                     }
@@ -167,19 +173,58 @@ public class RenameProvider {
         return result;
     }
 
-    private WorkspaceEdit mxmlRename(IMXMLTagData offsetTag, int currentOffset, String newName, ILspProject project) {
+    private WorkspaceEdit mxmlRename(IMXMLTagData offsetTag, int currentOffset, String newName,
+            ICompilationUnit offsetUnit, ILspProject project) {
         IDefinition definition = MXMLDataUtils.getDefinitionForMXMLNameAtOffset(offsetTag, currentOffset, project);
         if (definition != null) {
             if (MXMLDataUtils.isInsideTagPrefix(offsetTag, currentOffset)) {
                 // ignore the tag's prefix
                 return new WorkspaceEdit(new HashMap<>());
             }
-            WorkspaceEdit result = renameDefinition(definition, newName, project);
-            return result;
+            return renameDefinition(definition, newName, project);
         }
 
-        // Cannot rename this element
-        return null;
+        // finally, check if we're looking for references to a tag's id
+        IMXMLTagAttributeData attributeData = MXMLDataUtils.getMXMLTagAttributeWithValueAtOffset(offsetTag,
+                currentOffset);
+        if (attributeData == null || !attributeData.getName().equals(IMXMLLanguageConstants.ATTRIBUTE_ID)) {
+            // VSCode may call references() when there isn't necessarily a
+            // definition referenced at the current position.
+            return new WorkspaceEdit(new HashMap<>());
+        }
+        Collection<IDefinition> definitions = null;
+        try {
+            definitions = offsetUnit.getFileScopeRequest().get().getExternallyVisibleDefinitions();
+        } catch (Exception e) {
+            // safe to ignore
+        }
+        if (definitions == null || definitions.size() == 0) {
+            return new WorkspaceEdit(new HashMap<>());
+        }
+        IClassDefinition classDefinition = null;
+        for (IDefinition currentDefinition : definitions) {
+            if (currentDefinition instanceof IClassDefinition) {
+                classDefinition = (IClassDefinition) currentDefinition;
+                break;
+            }
+        }
+        if (classDefinition == null) {
+            // this probably shouldn't happen, but check just to be safe
+            return new WorkspaceEdit(new HashMap<>());
+        }
+        IASScope scope = classDefinition.getContainedScope();
+        for (IDefinition currentDefinition : scope.getAllLocalDefinitions()) {
+            if (currentDefinition.getBaseName().equals(attributeData.getRawValue())) {
+                definition = currentDefinition;
+                break;
+            }
+        }
+        if (definition == null) {
+            // VSCode may call references() when there isn't necessarily a
+            // definition referenced at the current position.
+            return new WorkspaceEdit(new HashMap<>());
+        }
+        return renameDefinition(definition, newName, project);
     }
 
     private WorkspaceEdit renameDefinition(IDefinition definition, String newName, ILspProject project) {
