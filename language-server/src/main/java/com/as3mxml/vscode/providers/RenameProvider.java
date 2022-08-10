@@ -41,6 +41,7 @@ import org.apache.royale.compiler.definitions.IVariableDefinition;
 import org.apache.royale.compiler.definitions.IFunctionDefinition.FunctionClassification;
 import org.apache.royale.compiler.definitions.IVariableDefinition.VariableClassification;
 import org.apache.royale.compiler.internal.mxml.MXMLData;
+import org.apache.royale.compiler.internal.scopes.ASProjectScope.DefinitionPromise;
 import org.apache.royale.compiler.mxml.IMXMLDataManager;
 import org.apache.royale.compiler.mxml.IMXMLTagData;
 import org.apache.royale.compiler.scopes.IASScope;
@@ -229,8 +230,19 @@ public class RenameProvider {
                         .get(fileTracker.getFileSpecification(unit.getAbsoluteFilename()));
                 IMXMLTagData rootTag = mxmlData.getRootTag();
                 if (rootTag != null) {
+                    IDefinition rootTagDefinition = null;
+                    List<IDefinition> definitions = unit.getDefinitionPromises();
+                    if (definitions.size() > 0) {
+                        rootTagDefinition = definitions.get(0);
+                        if (rootTagDefinition instanceof DefinitionPromise) {
+                            DefinitionPromise definitionPromise = (DefinitionPromise) rootTagDefinition;
+                            rootTagDefinition = definitionPromise.getActualDefinition();
+                        }
+                    }
+                    boolean includeIDs = definition instanceof IVariableDefinition && rootTagDefinition != null
+                            && rootTagDefinition.equals(definition.getParent());
                     ArrayList<ISourceLocation> units = new ArrayList<>();
-                    MXMLDataUtils.findMXMLUnits(mxmlData.getRootTag(), definition, project, units);
+                    MXMLDataUtils.findMXMLUnits(mxmlData.getRootTag(), definition, includeIDs, project, units);
                     for (ISourceLocation otherUnit : units) {
                         TextEdit textEdit = new TextEdit();
                         textEdit.setNewText(newName);

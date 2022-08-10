@@ -22,6 +22,7 @@ import com.as3mxml.vscode.project.ILspProject;
 
 import org.apache.royale.compiler.common.ISourceLocation;
 import org.apache.royale.compiler.common.PrefixMap;
+import org.apache.royale.compiler.common.SourceLocation;
 import org.apache.royale.compiler.common.XMLName;
 import org.apache.royale.compiler.definitions.IClassDefinition;
 import org.apache.royale.compiler.definitions.IDefinition;
@@ -40,13 +41,13 @@ public class MXMLDataUtils {
             IMXMLLanguageConstants.UINT };
 
     public static boolean isInsideTagPrefix(IMXMLTagData tag, int offset) {
-        //next, check that we're after the prefix
-        //one extra for bracket
+        // next, check that we're after the prefix
+        // one extra for bracket
         int maxOffset = tag.getAbsoluteStart() + 1;
         String prefix = tag.getPrefix();
         int prefixLength = prefix.length();
         if (prefixLength > 0) {
-            //one extra for colon
+            // one extra for colon
             maxOffset += prefixLength + 1;
         }
         return offset > tag.getAbsoluteStart() && offset < maxOffset;
@@ -119,16 +120,16 @@ public class MXMLDataUtils {
 
     private static XMLName getXMLNameForTagWithFallback(IMXMLTagData tag) {
         XMLName xmlName = tag.getXMLName();
-        //if the XML isn't valid, it's possible that the namespace for this tag
-        //wasn't properly resolved. however, if we find the tag's prefix on the
-        //root tag, we may be able to find the namespace manually
+        // if the XML isn't valid, it's possible that the namespace for this tag
+        // wasn't properly resolved. however, if we find the tag's prefix on the
+        // root tag, we may be able to find the namespace manually
         if (xmlName.getXMLNamespace().length() == 0) {
             IMXMLData parent = tag.getParent();
             if (parent != null) {
                 IMXMLTagData rootTag = parent.getRootTag();
                 if (rootTag != null) {
                     PrefixMap prefixMap = rootTag.getPrefixMap();
-                    //prefixMap may be null if there are no prefixes
+                    // prefixMap may be null if there are no prefixes
                     if (prefixMap != null && prefixMap.containsPrefix(tag.getPrefix())) {
                         String ns = prefixMap.getNamespaceForPrefix(tag.getPrefix());
                         return new XMLName(ns, xmlName.getName());
@@ -222,18 +223,18 @@ public class MXMLDataUtils {
 
     public static boolean isMXMLCodeIntelligenceAvailableForTag(IMXMLTagData tag) {
         if (tag.getXMLName().equals(tag.getMXMLDialect().resolveScript())) {
-            //not available inside an <fx:Script> tag that isn't self-closing
+            // not available inside an <fx:Script> tag that isn't self-closing
             return tag.isEmptyTag();
         }
         return true;
     }
 
     public static IMXMLTagData findMXMLScriptTag(IMXMLTagData tagData) {
-        //quick check
+        // quick check
         if (tagData.getXMLName().equals(tagData.getMXMLDialect().resolveScript())) {
             return tagData;
         }
-        //go to the root tag
+        // go to the root tag
         while (tagData.getParentTag() != null) {
             tagData = tagData.getParentTag();
         }
@@ -256,7 +257,7 @@ public class MXMLDataUtils {
     }
 
     public static IMXMLTagData[] findMXMLScriptTags(IMXMLTagData tagData) {
-        //go to the root tag
+        // go to the root tag
         while (tagData.getParentTag() != null) {
             tagData = tagData.getParentTag();
         }
@@ -292,7 +293,8 @@ public class MXMLDataUtils {
         return null;
     }
 
-    public static void findMXMLUnits(IMXMLTagData tagData, IDefinition definition, ILspProject project,
+    public static void findMXMLUnits(IMXMLTagData tagData, IDefinition definition, boolean includeIDs,
+            ILspProject project,
             List<ISourceLocation> result) {
         IDefinition tagDefinition = project.resolveXMLNameToDefinition(tagData.getXMLName(), tagData.getMXMLDialect());
         if (tagDefinition != null && definition == tagDefinition) {
@@ -302,20 +304,37 @@ public class MXMLDataUtils {
             IClassDefinition classDefinition = (IClassDefinition) tagDefinition;
             IMXMLTagAttributeData[] attributes = tagData.getAttributeDatas();
             for (IMXMLTagAttributeData attributeData : attributes) {
-                IDefinition attributeDefinition = project.resolveSpecifier(classDefinition,
-                        attributeData.getShortName());
-                if (attributeDefinition != null && definition == attributeDefinition) {
-                    result.add(attributeData);
+                if (attributeData.getName().equals(IMXMLLanguageConstants.ATTRIBUTE_ID)) {
+                    if (includeIDs) {
+                        String idValue = attributeData.getRawValue();
+                        if (definition.getBaseName().equals(idValue)) {
+                            SourceLocation valueSourceLocation = new SourceLocation(
+                                    attributeData.getSourcePath(),
+                                    attributeData.getValueStart(),
+                                    attributeData.getValueEnd(),
+                                    attributeData.getValueLine(),
+                                    attributeData.getValueColumn());
+                            valueSourceLocation.setEndLine(attributeData.getValueLine());
+                            valueSourceLocation.setEndColumn(attributeData.getValueColumn() + idValue.length());
+                            result.add(valueSourceLocation);
+                        }
+                    }
+                } else {
+                    IDefinition attributeDefinition = project.resolveSpecifier(classDefinition,
+                            attributeData.getShortName());
+                    if (attributeDefinition != null && definition == attributeDefinition) {
+                        result.add(attributeData);
+                    }
                 }
             }
         }
         IMXMLTagData childTag = tagData.getFirstChild(true);
         while (childTag != null) {
             if (childTag.isCloseTag()) {
-                //only open tags matter
+                // only open tags matter
                 continue;
             }
-            findMXMLUnits(childTag, definition, project, result);
+            findMXMLUnits(childTag, definition, includeIDs, project, result);
             childTag = childTag.getNextSibling(true);
         }
     }
