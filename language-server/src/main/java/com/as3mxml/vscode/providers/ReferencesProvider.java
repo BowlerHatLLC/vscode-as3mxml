@@ -150,7 +150,7 @@ public class ReferencesProvider {
             return result;
         }
 
-        // VSCode may call definition() when there isn't necessarily a
+        // VSCode may call references() when there isn't necessarily a
         // definition referenced at the current position.
         return Collections.emptyList();
     }
@@ -172,7 +172,7 @@ public class ReferencesProvider {
         IMXMLTagAttributeData attributeData = MXMLDataUtils.getMXMLTagAttributeWithValueAtOffset(offsetTag,
                 currentOffset);
         if (attributeData == null || !attributeData.getName().equals(IMXMLLanguageConstants.ATTRIBUTE_ID)) {
-            // VSCode may call definition() when there isn't necessarily a
+            // VSCode may call references() when there isn't necessarily a
             // definition referenced at the current position.
             return Collections.emptyList();
         }
@@ -204,7 +204,7 @@ public class ReferencesProvider {
             }
         }
         if (definition == null) {
-            // VSCode may call definition() when there isn't necessarily a
+            // VSCode may call references() when there isn't necessarily a
             // definition referenced at the current position.
             return Collections.emptyList();
         }

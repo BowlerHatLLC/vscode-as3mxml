@@ -116,7 +116,7 @@ public class ImplementationProvider {
 
     private List<? extends Location> actionScriptImplementation(IASNode offsetNode, ILspProject project) {
         if (offsetNode == null) {
-            //we couldn't find a node at the specified location
+            // we couldn't find a node at the specified location
             return Collections.emptyList();
         }
 
@@ -131,8 +131,8 @@ public class ImplementationProvider {
         }
 
         if (interfaceDefinition == null) {
-            //VSCode may call typeDefinition() when there isn't necessarily a
-            //type definition referenced at the current position.
+            // VSCode may call implementation() when there isn't necessarily a
+            // type definition referenced at the current position.
             return Collections.emptyList();
         }
 
@@ -149,7 +149,7 @@ public class ImplementationProvider {
             try {
                 definitions = unit.getFileScopeRequest().get().getExternallyVisibleDefinitions();
             } catch (Exception e) {
-                //safe to ignore
+                // safe to ignore
                 continue;
             }
 

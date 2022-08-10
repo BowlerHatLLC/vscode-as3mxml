@@ -97,8 +97,8 @@ public class TypeDefinitionProvider {
 					}
 					return Either.forLeft(result);
 				}
-				//if we're inside an <fx:Script> tag, we want ActionScript lookup,
-				//so that's why we call isMXMLTagValidForCompletion()
+				// if we're inside an <fx:Script> tag, we want ActionScript lookup,
+				// so that's why we call isMXMLTagValidForCompletion()
 				if (MXMLDataUtils.isMXMLCodeIntelligenceAvailableForTag(offsetTag)) {
 					List<? extends Location> result = mxmlTypeDefinition(offsetTag, currentOffset, projectData);
 					if (cancelToken != null) {
@@ -119,7 +119,7 @@ public class TypeDefinitionProvider {
 	private List<? extends Location> actionScriptTypeDefinition(IASNode offsetNode,
 			ActionScriptProjectData projectData) {
 		if (offsetNode == null) {
-			//we couldn't find a node at the specified location
+			// we couldn't find a node at the specified location
 			return Collections.emptyList();
 		}
 
@@ -131,8 +131,8 @@ public class TypeDefinitionProvider {
 		}
 
 		if (definition == null) {
-			//VSCode may call typeDefinition() when there isn't necessarily a
-			//type definition referenced at the current position.
+			// VSCode may call typeDefinition() when there isn't necessarily a
+			// type definition referenced at the current position.
 			return Collections.emptyList();
 		}
 		List<Location> result = new ArrayList<>();
@@ -145,13 +145,13 @@ public class TypeDefinitionProvider {
 		IDefinition definition = MXMLDataUtils.getTypeDefinitionForMXMLNameAtOffset(offsetTag, currentOffset,
 				projectData.project);
 		if (definition == null) {
-			//VSCode may call definition() when there isn't necessarily a
-			//definition referenced at the current position.
+			// VSCode may call typeDefinition() when there isn't necessarily a
+			// definition referenced at the current position.
 			return Collections.emptyList();
 		}
 
 		if (MXMLDataUtils.isInsideTagPrefix(offsetTag, currentOffset)) {
-			//ignore the tag's prefix
+			// ignore the tag's prefix
 			return Collections.emptyList();
 		}
 
