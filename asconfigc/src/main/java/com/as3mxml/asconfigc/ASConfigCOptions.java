@@ -25,7 +25,7 @@ import com.as3mxml.asconfigc.compiler.IASConfigCCompiler;
 import org.apache.commons.cli.CommandLine;
 
 public class ASConfigCOptions {
-	private static final String OPTION_PROJECT = "p"; //CommandLine uses the short name
+	private static final String OPTION_PROJECT = "p"; // CommandLine uses the short name
 	private static final String OPTION_SDK = "sdk";
 	private static final String OPTION_DEBUG = "debug";
 	private static final String OPTION_AIR = "air";

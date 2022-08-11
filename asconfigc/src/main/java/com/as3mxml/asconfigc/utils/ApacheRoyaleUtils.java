@@ -90,8 +90,8 @@ public class ApacheRoyaleUtils {
 		if (envPath != null) {
 			String[] paths = envPath.split(File.pathSeparator);
 			for (String currentPath : paths) {
-				//first check if this directory contains the NPM version for
-				//Windows
+				// first check if this directory contains the NPM version for
+				// Windows
 				File file = new File(currentPath, ASJSC + ".cmd");
 				if (file.exists() && !file.isDirectory()) {
 					Path npmPath = Paths.get(currentPath, NODE_MODULES, NPM_ORG_ROYALE, NPM_PACKAGE_ROYALE_JS);
@@ -107,14 +107,14 @@ public class ApacheRoyaleUtils {
 				}
 				file = new File(currentPath, ASJSC);
 				if (file.exists() && !file.isDirectory()) {
-					//this may a symbolic link rather than the actual file,
-					//such as when Apache Royale is installed with NPM on
-					//Mac, so get the real path.
+					// this may a symbolic link rather than the actual file,
+					// such as when Apache Royale is installed with NPM on
+					// Mac, so get the real path.
 					Path sdkPath = file.toPath();
 					try {
 						sdkPath = sdkPath.toRealPath();
 					} catch (IOException e) {
-						//didn't seem to work, for some reason
+						// didn't seem to work, for some reason
 						return null;
 					}
 					sdkPath = sdkPath.getParent().getParent().getParent();

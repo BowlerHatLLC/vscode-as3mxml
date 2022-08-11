@@ -28,17 +28,17 @@ public class AIROptions {
 	public static final String CONNECT = "connect";
 	public static final String LISTEN = "listen";
 
-	//ios
+	// ios
 	public static final String SAMPLER = "sampler";
 	public static final String HIDE_ANE_LIB_SYMBOLS = "hideAneLibSymbols";
 	public static final String EMBED_BITCODE = "embedBitcode";
 
-	//android
+	// android
 	public static final String AIR_DOWNLOAD_URL = "airDownloadURL";
 	public static final String ARCH = "arch";
 	public static final String RESDIR = "resdir";
 
-	//sub-values
+	// sub-values
 	public static final String FILES__FILE = "file";
 	public static final String FILES__PATH = "path";
 }

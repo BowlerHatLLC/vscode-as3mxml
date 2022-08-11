@@ -20,7 +20,7 @@ import java.util.List;
 
 /**
  * Defines constants for all top-level fields of an asconfig.json file, and
- * stores the parsed values for those fields. 
+ * stores the parsed values for those fields.
  */
 public class ProjectOptions {
     public String type;
@@ -35,8 +35,8 @@ public class ProjectOptions {
     public List<String> compilerOptions;
     public List<String> additionalOptions;
 
-    //while the following values are also included in the compiler options,
-    //we need them available for other things in the language server
+    // while the following values are also included in the compiler options,
+    // we need them available for other things in the language server
     public List<String> targets;
 
     public boolean equals(ProjectOptions other) {

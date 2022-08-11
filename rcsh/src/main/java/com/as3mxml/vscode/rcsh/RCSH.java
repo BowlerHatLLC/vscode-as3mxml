@@ -90,8 +90,8 @@ public class RCSH {
                 if (compiler instanceof MXMLJSC) {
                     MXMLJSC mxmlc = (MXMLJSC) compiler;
                     startCapture();
-                    //this is actually a static method, but ascsh calls it as
-                    //non-static, for some reason -JT
+                    // this is actually a static method, but ascsh calls it as
+                    // non-static, for some reason -JT
                     exitCode = mxmlc.staticMainNoExit(args);
                     stopCapture();
                 } else if (compiler instanceof COMPJSC) {

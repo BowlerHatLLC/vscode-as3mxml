@@ -78,7 +78,7 @@ public class FileTracker {
         }
         Reader reader = null;
         if (sourceByPath.containsKey(path)) {
-            //if the file is open, use the edited code
+            // if the file is open, use the edited code
             String code = sourceByPath.get(path);
             reader = new StringReader(code);
         } else {
@@ -86,11 +86,11 @@ public class FileTracker {
             if (!file.exists()) {
                 return null;
             }
-            //if the file is not open, read it from the file system
+            // if the file is not open, read it from the file system
             try {
                 reader = new FileReader(file);
             } catch (FileNotFoundException e) {
-                //do nothing
+                // do nothing
             }
         }
         return reader;

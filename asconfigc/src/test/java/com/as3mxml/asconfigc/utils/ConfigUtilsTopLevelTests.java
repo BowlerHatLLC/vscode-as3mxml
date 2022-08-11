@@ -27,8 +27,8 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 class ConfigUtilsTopLevelTests {
-	//--- copySourcePathAssets
-	//copySourcePathAssets is a normal field that is not a special case
+	// --- copySourcePathAssets
+	// copySourcePathAssets is a normal field that is not a special case
 
 	@Test
 	void testCopySourcePathAssetsWithBaseOnly() throws IOException {
@@ -67,13 +67,13 @@ class ConfigUtilsTopLevelTests {
 		Assertions.assertEquals(newValue, resultValue);
 	}
 
-	//--- files
+	// --- files
 
-	//files is an array, but unlike other arrays, it does not get merged,
-	//so it should be tested as a special case
+	// files is an array, but unlike other arrays, it does not get merged,
+	// so it should be tested as a special case
 
-	//the files array is not merged because the order elements in the array must
-	//be preserved, unlike other arrays which can be handled more leniently
+	// the files array is not merged because the order elements in the array must
+	// be preserved, unlike other arrays which can be handled more leniently
 
 	@Test
 	void testFilesWithBaseOnly() throws IOException {
@@ -127,10 +127,10 @@ class ConfigUtilsTopLevelTests {
 		Assertions.assertFalse(elements.hasNext());
 	}
 
-	//--- application
+	// --- application
 
-	//application can be a string or an object, and it has special rules for
-	//merging
+	// application can be a string or an object, and it has special rules for
+	// merging
 
 	@Test
 	void testApplicationStringWithBaseOnly() throws IOException {

@@ -78,7 +78,7 @@ public class DocumentSymbolProvider {
             if (cancelToken != null) {
                 cancelToken.checkCanceled();
             }
-            //we couldn't find a compilation unit with the specified path
+            // we couldn't find a compilation unit with the specified path
             return Collections.emptyList();
         }
 
@@ -100,7 +100,7 @@ public class DocumentSymbolProvider {
             for (DocumentSymbol symbol : symbols) {
                 result.add(Either.forRight(symbol));
             }
-        } else //fallback to non-hierarchical
+        } else // fallback to non-hierarchical
         {
             List<SymbolInformation> symbols = new ArrayList<>();
             for (IASScope scope : scopes) {

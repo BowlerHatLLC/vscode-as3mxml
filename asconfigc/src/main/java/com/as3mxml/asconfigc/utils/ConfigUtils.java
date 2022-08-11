@@ -54,7 +54,7 @@ public class ConfigUtils {
 				}
 			}
 		}
-		//as a final fallback, try in the current working directory
+		// as a final fallback, try in the current working directory
 		Path mainClassPath = Paths.get(mainClassBasePath + FILE_EXTENSION_AS);
 		if (mainClassPath.toFile().exists()) {
 			return mainClassPath.toString();
@@ -84,7 +84,7 @@ public class ConfigUtils {
 
 		allFieldNames.forEach(fieldName -> {
 			if (TopLevelFields.EXTENDS.equals(fieldName)) {
-				//safe to skip
+				// safe to skip
 				return;
 			}
 			boolean hasField = configData.has(fieldName);
@@ -301,11 +301,11 @@ public class ConfigUtils {
 		boolean hasDebug = signingOptions.has(AIRSigningOptions.DEBUG);
 		boolean hasRelease = signingOptions.has(AIRSigningOptions.RELEASE);
 		if (!hasDebug && !hasRelease) {
-			//nothing to merge. fully overrides the base
+			// nothing to merge. fully overrides the base
 			return signingOptions;
 		}
 		if (hasDebug && hasRelease) {
-			//fully overrides the base
+			// fully overrides the base
 			return signingOptions;
 		}
 
@@ -319,7 +319,7 @@ public class ConfigUtils {
 			result.set(AIRSigningOptions.DEBUG, signingOptions.get(AIRSigningOptions.DEBUG));
 		} else if (baseHasDebug) {
 			result.set(AIRSigningOptions.DEBUG, baseSigningOptions.get(AIRSigningOptions.DEBUG));
-		} else if (!baseHasRelease) //neither debug nor release
+		} else if (!baseHasRelease) // neither debug nor release
 		{
 			result.set(AIRSigningOptions.DEBUG, baseSigningOptions);
 		}
@@ -328,7 +328,7 @@ public class ConfigUtils {
 			result.set(AIRSigningOptions.RELEASE, signingOptions.get(AIRSigningOptions.RELEASE));
 		} else if (baseHasRelease) {
 			result.set(AIRSigningOptions.RELEASE, baseSigningOptions.get(AIRSigningOptions.RELEASE));
-		} else if (!baseHasDebug) //neither debug nor release
+		} else if (!baseHasDebug) // neither debug nor release
 		{
 			result.set(AIRSigningOptions.RELEASE, baseSigningOptions);
 		}

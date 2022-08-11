@@ -60,7 +60,7 @@ public class DefinitionTextUtils {
     private static final String FILE_EXTENSION_AS = ".as";
     private static final String PATH_PREFIX_GENERATED = "generated/";
     public static final Comparator<IDefinition> DEFINITION_COMPARATOR = (IDefinition def1, IDefinition def2) -> {
-        //static first
+        // static first
         boolean static1 = def1.isStatic();
         boolean static2 = def2.isStatic();
         if (static1 && !static2) {
@@ -99,7 +99,7 @@ public class DefinitionTextUtils {
             return 1;
         }
 
-        //accessors second to last
+        // accessors second to last
         boolean acc1 = def1 instanceof IAccessorDefinition;
         boolean acc2 = def2 instanceof IAccessorDefinition;
         if (acc1 && !acc2) {
@@ -369,7 +369,7 @@ public class DefinitionTextUtils {
         Collection<IDefinition> definitionSet = classDefinition.getContainedScope().getAllLocalDefinitions();
         definitionSet.stream().filter(childDefinition -> {
             if (childDefinition.isOverride() || childDefinition.isPrivate()) {
-                //skip overrides and private
+                // skip overrides and private
                 return false;
             }
             return childDefinition instanceof IAccessorDefinition || childDefinition instanceof IFunctionDefinition
@@ -428,7 +428,7 @@ public class DefinitionTextUtils {
         Collection<IDefinition> definitionSet = interfaceDefinition.getContainedScope().getAllLocalDefinitions();
         definitionSet.stream().filter(childDefinition -> {
             if (childDefinition.isOverride() || childDefinition.isPrivate() || childDefinition.isInternal()) {
-                //skip overrides, private, and internal
+                // skip overrides, private, and internal
                 return false;
             }
             return childDefinition instanceof IAccessorDefinition || childDefinition instanceof IFunctionDefinition;
@@ -590,8 +590,8 @@ public class DefinitionTextUtils {
                 String tagName = metaTag.getTagName();
                 if (IMetaAttributeConstants.ATTRIBUTE_GOTODEFINITIONHELP.equals(tagName)
                         || IMetaAttributeConstants.ATTRIBUTE_GOTODEFINITION_CTOR_HELP.equals(tagName)) {
-                    //skip these because they add way too much noise and aren't
-                    //meant to be seen
+                    // skip these because they add way too much noise and aren't
+                    // meant to be seen
                     continue;
                 }
                 textDocumentBuilder.append(indent);
@@ -661,8 +661,8 @@ public class DefinitionTextUtils {
             detailBuilder.append(IASKeywordConstants.CLASS);
             detailBuilder.append(" ");
             if (classDefinition.getPackageName().startsWith(UNDERSCORE_UNDERSCORE_AS3_PACKAGE)) {
-                //classes like __AS3__.vec.Vector should not include the
-                //package name
+                // classes like __AS3__.vec.Vector should not include the
+                // package name
                 detailBuilder.append(classDefinition.getBaseName());
             } else {
                 detailBuilder.append(classDefinition.getQualifiedName());
@@ -698,8 +698,8 @@ public class DefinitionTextUtils {
             IVariableDefinition variableDefinition = (IVariableDefinition) definition;
             IDefinition parentDefinition = variableDefinition.getParent();
             if (parentDefinition instanceof ITypeDefinition) {
-                //an IAccessorDefinition actually extends both
-                //IVariableDefinition and IFunctionDefinition 
+                // an IAccessorDefinition actually extends both
+                // IVariableDefinition and IFunctionDefinition
                 if (variableDefinition instanceof IAccessorDefinition) {
                     detailBuilder.append("(property) ");
                 } else if (variableDefinition instanceof IConstantDefinition) {
@@ -746,9 +746,9 @@ public class DefinitionTextUtils {
             if (parentDefinition instanceof ITypeDefinition) {
                 if (functionDefinition.isConstructor()) {
                     detailBuilder.append("(constructor) ");
-                    //don't append the parent definition before the constructor,
-                    //like we do with methods, because the constructor name
-                    //already includes the full package
+                    // don't append the parent definition before the constructor,
+                    // like we do with methods, because the constructor name
+                    // already includes the full package
                 } else {
                     detailBuilder.append("(method) ");
                     detailBuilder.append(parentDefinition.getBaseName());
@@ -799,7 +799,7 @@ public class DefinitionTextUtils {
             detailBuilder.append("\"");
             detailBuilder.append(")");
             detailBuilder.append("]");
-        } else if(definition instanceof INamespaceDefinition) {
+        } else if (definition instanceof INamespaceDefinition) {
             INamespaceDefinition namespaceDefinition = (INamespaceDefinition) definition;
             detailBuilder.append(IASKeywordConstants.NAMESPACE);
             detailBuilder.append(" ");
@@ -854,15 +854,15 @@ public class DefinitionTextUtils {
                     labelBuilder.append("\"");
                 } else if (defaultValue != null) {
                     if (defaultValue.getClass() == Object.class) {
-                        //for some reason, null is some strange random object
+                        // for some reason, null is some strange random object
                         labelBuilder.append(IASLanguageConstants.NULL);
                     } else {
-                        //numeric values and everything else should be okay
+                        // numeric values and everything else should be okay
                         labelBuilder.append(defaultValue);
                     }
                 } else {
-                    //I don't know how this might happen, but this is probably
-                    //a safe fallback value
+                    // I don't know how this might happen, but this is probably
+                    // a safe fallback value
                     labelBuilder.append(IASLanguageConstants.NULL);
                 }
             }
@@ -916,7 +916,7 @@ public class DefinitionTextUtils {
                 break;
             }
             default: {
-                //not ideal, but I can't figure out how to find the name
+                // not ideal, but I can't figure out how to find the name
                 textDocumentBuilder.append("/* ");
                 textDocumentBuilder.append(ns.getURI());
                 textDocumentBuilder.append(" */ ");
@@ -925,15 +925,15 @@ public class DefinitionTextUtils {
     }
 
     private static String definitionToGeneratedPath(IDefinition definition) {
-        //we add a fake directory as a prefix here because VSCode won't display
-        //the file name if it isn't in a directory
+        // we add a fake directory as a prefix here because VSCode won't display
+        // the file name if it isn't in a directory
         return PATH_PREFIX_GENERATED + definition.getQualifiedName().replaceAll("\\.", "/") + FILE_EXTENSION_AS;
     }
 
     private static String getTypeAsDisplayString(IDefinition definition) {
         String typeAsDisplayString = definition.getTypeAsDisplayString();
         if (typeAsDisplayString.length() == 0) {
-            //returns an empty string if there is no type reference
+            // returns an empty string if there is no type reference
             return IASLanguageConstants.ANY_TYPE;
         }
         return typeAsDisplayString;

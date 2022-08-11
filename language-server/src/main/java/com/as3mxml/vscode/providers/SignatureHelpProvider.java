@@ -118,7 +118,7 @@ public class SignatureHelpProvider {
 			if (cancelToken != null) {
 				cancelToken.checkCanceled();
 			}
-			//we couldn't find a node at the specified location
+			// we couldn't find a node at the specified location
 			return new SignatureHelp(Collections.emptyList(), -1, -1);
 		}
 
@@ -133,7 +133,7 @@ public class SignatureHelpProvider {
 				IClassDefinition classDefinition = (IClassDefinition) definition;
 				functionDefinition = classDefinition.getConstructor();
 			} else if (nameNode instanceof IIdentifierNode) {
-				//special case for super()
+				// special case for super()
 				IIdentifierNode identifierNode = (IIdentifierNode) nameNode;
 				if (identifierNode.getName().equals(IASKeywordConstants.SUPER)) {
 					ITypeDefinition typeDefinition = nameNode.resolveType(project);
@@ -179,13 +179,13 @@ public class SignatureHelpProvider {
 				if (index >= paramCount) {
 					IParameterDefinition lastParam = parameterDefs[paramCount - 1];
 					if (lastParam.isRest()) {
-						//functions with rest parameters may accept any
-						//number of arguments, so continue to make the rest
-						//parameter active
+						// functions with rest parameters may accept any
+						// number of arguments, so continue to make the rest
+						// parameter active
 						index = paramCount - 1;
 					} else {
-						//if there's no rest parameter, and we're beyond the
-						//final parameter, none should be active
+						// if there's no rest parameter, and we're beyond the
+						// final parameter, none should be active
 						index = -1;
 					}
 				}

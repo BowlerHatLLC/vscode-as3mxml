@@ -55,7 +55,7 @@ public class ImportRange {
                         if (textData.getTextType() == IMXMLTextData.TextType.TEXT
                                 || textData.getTextType() == IMXMLTextData.TextType.WHITESPACE) {
                             fallbackTextData = textData;
-                            //don't break, keep searching
+                            // don't break, keep searching
                         }
                     }
                 }
@@ -96,25 +96,25 @@ public class ImportRange {
 
         IPackageNode packageNode = (IPackageNode) ASTUtils.getSelfOrAncestorOfType(offsetNode, IPackageNode.class);
         if (packageNode != null) {
-            //we're inside a package block
+            // we're inside a package block
             range.endIndex = packageNode.getAbsoluteEnd();
             return range;
         }
 
         IFileNode fileNode = (IFileNode) ASTUtils.getSelfOrAncestorOfType(offsetNode, IFileNode.class);
         if (fileNode != null) {
-            //we're probably after the package block
+            // we're probably after the package block
             boolean foundPackage = false;
             for (int i = 0; i < fileNode.getChildCount(); i++) {
                 IASNode childNode = fileNode.getChild(i);
                 if (foundPackage) {
-                    //this is the node following the package
+                    // this is the node following the package
                     range.startIndex = childNode.getAbsoluteStart();
                     break;
                 }
                 if (childNode instanceof IPackageNode) {
-                    //use the start of the the next node after the
-                    //package as the place where the import can be added
+                    // use the start of the the next node after the
+                    // package as the place where the import can be added
                     foundPackage = true;
                 }
             }

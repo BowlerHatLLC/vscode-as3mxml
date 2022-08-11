@@ -80,15 +80,15 @@ public class WorkspaceSymbolProvider {
 					List<IDefinition> definitions = unit.getDefinitionPromises();
 					for (IDefinition definition : definitions) {
 						if (definition instanceof DefinitionPromise) {
-							//we won't be able to detect what type of definition
-							//this is without getting the actual definition from the
-							//promise.
+							// we won't be able to detect what type of definition
+							// this is without getting the actual definition from the
+							// promise.
 							DefinitionPromise promise = (DefinitionPromise) definition;
 							definition = promise.getActualDefinition();
 						}
 						if (definition == null) {
-							//one reason this could happen is a badly-formed
-							//playerglobal.swc file
+							// one reason this could happen is a badly-formed
+							// playerglobal.swc file
 							continue;
 						}
 						if (definition.isImplicit()) {
@@ -99,9 +99,9 @@ public class WorkspaceSymbolProvider {
 						}
 						String qualifiedName = definition.getQualifiedName();
 						if (qualifiedNames.contains(qualifiedName)) {
-							//we've already added this symbol
-							//this can happen when there are multiple root
-							//folders in the workspace
+							// we've already added this symbol
+							// this can happen when there are multiple root
+							// folders in the workspace
 							continue;
 						}
 						SymbolInformation symbol = actionScriptProjectManager.definitionToSymbolInformation(definition,
@@ -141,8 +141,8 @@ public class WorkspaceSymbolProvider {
 			} else if (definition instanceof ITypeDefinition) {
 				String qualifiedName = definition.getQualifiedName();
 				if (foundTypes.contains(qualifiedName)) {
-					//skip types that we've already encountered because we don't
-					//want duplicates in the result
+					// skip types that we've already encountered because we don't
+					// want duplicates in the result
 					continue;
 				}
 				foundTypes.add(qualifiedName);

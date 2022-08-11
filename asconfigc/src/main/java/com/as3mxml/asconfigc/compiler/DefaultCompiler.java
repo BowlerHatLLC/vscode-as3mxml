@@ -43,7 +43,7 @@ public class DefaultCompiler implements IASConfigCCompiler {
 		if (verbose) {
 			if (ProjectType.LIB.equals(projectType)) {
 				System.out.println("Compiling library...");
-			} else //app
+			} else // app
 			{
 				System.out.println("Compiling application...");
 			}
@@ -55,18 +55,18 @@ public class DefaultCompiler implements IASConfigCCompiler {
 		}
 		Path frameworkPath = sdkPath.resolve("frameworks");
 		if (sdkIsRoyale) {
-			//royale is a special case that has renamed many of the common
-			//configuration options for the compiler
+			// royale is a special case that has renamed many of the common
+			// configuration options for the compiler
 			compilerOptions.add(0, "+royalelib=" + frameworkPath.toString());
 			compilerOptions.add(0, jarPath.toString());
 			compilerOptions.add(0, "-jar");
 			compilerOptions.add(0, "-Droyalelib=" + frameworkPath.toString());
 			compilerOptions.add(0, "-Droyalecompiler=" + sdkPath.toString());
-			//Royale requires this so that it doesn't changing the encoding of
-			//UTF-8 characters and display ???? instead
+			// Royale requires this so that it doesn't changing the encoding of
+			// UTF-8 characters and display ???? instead
 			compilerOptions.add(0, "-Dfile.encoding=UTF8");
 		} else {
-			//other SDKs all use the same options
+			// other SDKs all use the same options
 			compilerOptions.add(0, "+flexlib=" + frameworkPath.toString());
 			compilerOptions.add(0, jarPath.toString());
 			compilerOptions.add(0, "-jar");

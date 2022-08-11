@@ -30,9 +30,10 @@ public class UnusedImportProblem extends CompilerProblem {
 	public static final String DIAGNOSTIC_CODE = "as3mxml-unused-import";
 
 	public UnusedImportProblem(IImportNode site) {
-		//TODO: change this to the full import node when royale-compiler range gets fixed
-		//this is a hack because royale-compiler does not return the correct
-		//range for import nodes.
+		// TODO: change this to the full import node when royale-compiler range gets
+		// fixed
+		// this is a hack because royale-compiler does not return the correct
+		// range for import nodes.
 		super(getSite(site));
 		importName = site.getImportName();
 	}

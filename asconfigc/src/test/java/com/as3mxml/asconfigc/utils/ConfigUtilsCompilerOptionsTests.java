@@ -27,8 +27,8 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 class ConfigUtilsCompilerOptionsTests {
-	//--- warnings
-	//warnings is a normal field that is not a special case
+	// --- warnings
+	// warnings is a normal field that is not a special case
 
 	@Test
 	void testWarningsWithBaseAndEmptyCompilerOptions() throws IOException {
@@ -109,9 +109,9 @@ class ConfigUtilsCompilerOptionsTests {
 		Assertions.assertEquals(newValue, resultValue);
 	}
 
-	//--- source-path
-	//since this compiler option supports appending --source-path+=src
-	//the array is merged
+	// --- source-path
+	// since this compiler option supports appending --source-path+=src
+	// the array is merged
 
 	@Test
 	void testSourcePathWithBaseOnly() throws IOException {
@@ -245,9 +245,9 @@ class ConfigUtilsCompilerOptionsTests {
 		Assertions.assertFalse(elements.hasNext());
 	}
 
-	//--- define
-	//this compiler option is an array of objects, and a specific key in the
-	//object should not be duplicated
+	// --- define
+	// this compiler option is an array of objects, and a specific key in the
+	// object should not be duplicated
 
 	@Test
 	void testDefineWithBaseOnly() throws IOException {

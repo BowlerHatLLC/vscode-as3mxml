@@ -27,8 +27,8 @@ import org.apache.royale.compiler.projects.IRoyaleProject;
 
 public class SourcePathUtils {
     public static String getPackageForDirectoryPath(Path directory, IASProject project) {
-        //find the source path that the parent directory is inside
-        //that way we can strip it down to just the package
+        // find the source path that the parent directory is inside
+        // that way we can strip it down to just the package
         String basePath = null;
         for (File sourcePath : project.getSourcePath()) {
             if (directory.startsWith(sourcePath.toPath())) {
@@ -37,14 +37,14 @@ public class SourcePathUtils {
             }
         }
         if (basePath == null) {
-            //we couldn't find the source path!
+            // we couldn't find the source path!
             return "";
         }
 
         String expectedPackage = directory.toString().substring(basePath.length());
-        //replace / in path on Unix
+        // replace / in path on Unix
         expectedPackage = expectedPackage.replaceAll("/", ".");
-        //replaces \ in path on Windows
+        // replaces \ in path on Windows
         expectedPackage = expectedPackage.replaceAll("\\\\", ".");
         if (expectedPackage.startsWith(".")) {
             expectedPackage = expectedPackage.substring(1);

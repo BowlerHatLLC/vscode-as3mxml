@@ -33,7 +33,7 @@ public class CheckRoyaleVersion {
     public static void main(String[] args) {
         try {
             String sdkVersion = IASNode.class.getPackage().getImplementationVersion();
-            //remove -SNAPSHOT, if present. then, split on the "." character.
+            // remove -SNAPSHOT, if present. then, split on the "." character.
             String[] versionParts = sdkVersion.split("-")[0].split("\\.");
             int major = 0;
             int minor = 0;
@@ -44,20 +44,20 @@ public class CheckRoyaleVersion {
                 revision = Integer.parseInt(versionParts[2]);
             }
             if (major > MIN_MAJOR) {
-                //major version is valid
+                // major version is valid
                 System.exit(GOOD_VERSION);
             } else if (major == MIN_MAJOR) {
                 if (minor > MIN_MINOR) {
-                    //minor version is valid
+                    // minor version is valid
                     System.exit(GOOD_VERSION);
                 } else if (minor == MIN_MINOR) {
                     if (revision >= MIN_REVISION) {
-                        //revision is valid
+                        // revision is valid
                         System.exit(GOOD_VERSION);
                     }
                 }
             }
-            //version is too old!
+            // version is too old!
             System.exit(BAD_VERSION);
         } catch (Exception e) {
             System.exit(EXCEPTION_VERSION);

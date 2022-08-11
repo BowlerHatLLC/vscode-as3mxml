@@ -29,8 +29,8 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 class ConfigUtilsAirOptionsTests {
-	//--- output
-	//output is a normal field that is not a special case
+	// --- output
+	// output is a normal field that is not a special case
 
 	@Test
 	void testOutputWithBaseAndEmptyAirOptions() throws IOException {
@@ -114,9 +114,9 @@ class ConfigUtilsAirOptionsTests {
 		Assertions.assertEquals(newValue, resultValue);
 	}
 
-	//--- files
-	//this air option is an array of objects, and a certain key should not
-	//be duplicated
+	// --- files
+	// this air option is an array of objects, and a certain key should not
+	// be duplicated
 
 	@Test
 	void testFilesWithBaseOnly() throws IOException {
@@ -239,9 +239,9 @@ class ConfigUtilsAirOptionsTests {
 		Assertions.assertFalse(elements.hasNext());
 	}
 
-	//--- signingOptions
-	//this air option is a complex object, but it should just replace the
-	//base and not get merged
+	// --- signingOptions
+	// this air option is a complex object, but it should just replace the
+	// base and not get merged
 
 	@Test
 	void testSigningOptionsWithBaseAndEmptyAirOptions() throws IOException {
@@ -542,7 +542,7 @@ class ConfigUtilsAirOptionsTests {
 		Assertions.assertEquals(newStoretype, resultStoretype);
 	}
 
-	//--- output (platform)
+	// --- output (platform)
 
 	@Test
 	void testOutputPlatformWithBaseAndEmptyPlatform() throws IOException {
