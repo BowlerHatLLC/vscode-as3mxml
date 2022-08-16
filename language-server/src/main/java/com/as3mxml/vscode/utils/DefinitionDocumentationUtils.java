@@ -29,12 +29,16 @@ import org.apache.royale.compiler.definitions.IDefinition;
 import org.apache.royale.compiler.definitions.IDocumentableDefinition;
 import org.apache.royale.compiler.definitions.IFunctionDefinition;
 import org.apache.royale.compiler.definitions.IParameterDefinition;
+import org.apache.royale.compiler.definitions.IVariableDefinition;
 import org.apache.royale.compiler.workspaces.IWorkspace;
 import org.apache.royale.swc.ISWC;
 import org.apache.royale.swc.dita.IDITAList;
 
 public class DefinitionDocumentationUtils {
     private static final String ASDOC_TAG_PARAM = "param";
+    private static final String ASDOC_TAG_RETURN = "return";
+    private static final String ASDOC_TAG_THROWS = "throws";
+    private static final String ASDOC_TAG_DEFAULT = "default";
     private static final String SDK_LIBRARY_PATH_SIGNATURE_UNIX = "/frameworks/libs/";
     private static final String SDK_LIBRARY_PATH_SIGNATURE_WINDOWS = "\\frameworks\\libs\\";
 
@@ -52,6 +56,119 @@ public class DefinitionDocumentationUtils {
         String description = comment.getDescription();
         if (description == null) {
             return null;
+        }
+        if (documentableDefinition instanceof IVariableDefinition) {
+            if (comment.hasTag(ASDOC_TAG_DEFAULT)) {
+                StringBuilder descriptionBuilder = new StringBuilder(description);
+                for (IASDocTag defaultTag : comment.getTagsByName(ASDOC_TAG_DEFAULT)) {
+                    descriptionBuilder.append("\n\n");
+                    if (useMarkdown) {
+                        descriptionBuilder.append("_");
+                    }
+                    descriptionBuilder.append("@default");
+                    if (useMarkdown) {
+                        descriptionBuilder.append("_");
+                    }
+                    descriptionBuilder.append(" ");
+                    if (useMarkdown) {
+                        descriptionBuilder.append("`");
+                    }
+                    descriptionBuilder.append(defaultTag.getDescription());
+                    if (useMarkdown) {
+                        descriptionBuilder.append("`");
+                    }
+                }
+                description = descriptionBuilder.toString();
+            }
+        }
+        if (documentableDefinition instanceof IFunctionDefinition) {
+            if (comment.hasTag(ASDOC_TAG_PARAM)) {
+                StringBuilder descriptionBuilder = new StringBuilder(description);
+                for (IASDocTag paramTag : comment.getTagsByName(ASDOC_TAG_PARAM)) {
+                    descriptionBuilder.append("\n\n");
+                    if (useMarkdown) {
+                        descriptionBuilder.append("_");
+                    }
+                    descriptionBuilder.append("@param");
+                    if (useMarkdown) {
+                        descriptionBuilder.append("_");
+                    }
+                    descriptionBuilder.append(" ");
+                    String paramTagDescription = paramTag.getDescription();
+                    String paramName = paramTagDescription;
+                    String paramDescription = null;
+                    int spaceIndex = paramName.indexOf(' ');
+                    if (spaceIndex > 0) {
+                        paramDescription = paramName.substring(spaceIndex + 1);
+                        paramName = paramName.substring(0, spaceIndex);
+                    }
+                    if (useMarkdown) {
+                        descriptionBuilder.append("`");
+                    }
+                    descriptionBuilder.append(paramName);
+                    if (useMarkdown) {
+                        descriptionBuilder.append("`");
+                    }
+                    if (paramDescription != null) {
+                        descriptionBuilder.append(" ");
+                        descriptionBuilder.append(paramDescription);
+                    }
+                }
+                description = descriptionBuilder.toString();
+            }
+            if (comment.hasTag(ASDOC_TAG_RETURN)) {
+                StringBuilder descriptionBuilder = new StringBuilder(description);
+                for (IASDocTag returnTag : comment.getTagsByName(ASDOC_TAG_RETURN)) {
+                    descriptionBuilder.append("\n\n");
+                    if (useMarkdown) {
+                        descriptionBuilder.append("_");
+                    }
+                    descriptionBuilder.append("@return");
+                    if (useMarkdown) {
+                        descriptionBuilder.append("_");
+                    }
+                    descriptionBuilder.append(" ");
+                    descriptionBuilder.append(returnTag.getDescription());
+                }
+                description = descriptionBuilder.toString();
+            }
+        }
+        if (documentableDefinition instanceof IVariableDefinition
+                || documentableDefinition instanceof IFunctionDefinition) {
+            if (comment.hasTag(ASDOC_TAG_THROWS)) {
+                StringBuilder descriptionBuilder = new StringBuilder(description);
+                for (IASDocTag throwsTag : comment.getTagsByName(ASDOC_TAG_THROWS)) {
+                    descriptionBuilder.append("\n\n");
+                    if (useMarkdown) {
+                        descriptionBuilder.append("_");
+                    }
+                    descriptionBuilder.append("@throws");
+                    if (useMarkdown) {
+                        descriptionBuilder.append("_");
+                    }
+                    descriptionBuilder.append(" ");
+                    String throwsTagDescription = throwsTag.getDescription();
+                    String throwsName = throwsTagDescription;
+                    String throwsDescription = null;
+                    int spaceIndex = throwsName.indexOf(' ');
+                    if (spaceIndex > 0) {
+                        throwsDescription = throwsName.substring(spaceIndex + 1);
+                        throwsName = throwsName.substring(0, spaceIndex);
+                    }
+                    if (useMarkdown) {
+                        descriptionBuilder.append("`");
+                    }
+                    descriptionBuilder.append(throwsName);
+                    if (useMarkdown) {
+                        descriptionBuilder.append("`");
+                    }
+                    if (throwsDescription != null) {
+                        descriptionBuilder.append(" ");
+                        descriptionBuilder.append(throwsDescription);
+                    }
+                }
+                description = descriptionBuilder.toString();
+            }
         }
         return description;
     }
