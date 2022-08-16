@@ -150,6 +150,31 @@ public final class VSCodePackageDITAParser implements IPackageDITAParser {
 					builder.append("\n * ");
 					builder.append(line);
 				}
+				if ("apiValue".equals(defName) || "apiOperation".equals(defName) || "apiConstructor".equals(defName)) {
+					Element apiDetailElement = defElement.element(defName + "Detail");
+					if (apiDetailElement != null) {
+						Element apiDefElement = apiDetailElement.element(defName + "Def");
+						if (apiDefElement != null) {
+							for (Object element : apiDefElement.elements("apiException")) {
+								Element apiExceptionElement = (Element) element;
+								Element apiItemNameElement = apiExceptionElement.element("apiItemName");
+								builder.append("\n * @throws ");
+								if (apiItemNameElement == null) {
+									builder.append("_");
+								} else {
+									builder.append(apiItemNameElement.getStringValue());
+									Element paramApiDescElement = apiExceptionElement.element("apiDesc");
+									if (paramApiDescElement != null) {
+										String paramDescription = paramApiDescElement.getStringValue();
+										paramDescription = paramDescription.replaceAll("\n", " ");
+										builder.append(" ");
+										builder.append(paramDescription);
+									}
+								}
+							}
+						}
+					}
+				}
 				if ("apiOperation".equals(defName) || "apiConstructor".equals(defName)) {
 					Element apiDetailElement = defElement.element(defName + "Detail");
 					if (apiDetailElement != null) {
