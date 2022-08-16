@@ -115,6 +115,7 @@ public class VSCodeASDocComment extends SourceLocation implements IASDocComment 
 		String line = lines[0];
 		int lengthToRemove = Math.min(line.length(), 3);
 		line = line.substring(lengthToRemove);
+		VSCodeASDocTag lastTag = null;
 		appendLine(sb, line, insidePreformatted);
 		for (int i = 1; i < n - 1; i++) {
 			line = lines[i];
@@ -122,7 +123,13 @@ public class VSCodeASDocComment extends SourceLocation implements IASDocComment 
 				int star = line.indexOf("*");
 				if (star != -1) // line starts with a *
 				{
-					appendLine(sb, line.substring(star + 1), insidePreformatted);
+					if (lastTag != null) {
+						StringBuilder tagDescriptionBuilder = new StringBuilder(lastTag.description);
+						appendTagLine(tagDescriptionBuilder, line.substring(star + 1));
+						lastTag.description = tagDescriptionBuilder.toString();
+					} else {
+						appendLine(sb, line.substring(star + 1), insidePreformatted);
+					}
 				}
 			} else // tag
 			{
@@ -140,20 +147,23 @@ public class VSCodeASDocComment extends SourceLocation implements IASDocComment 
 					tags = new ArrayList<IASDocTag>();
 					tagMap.put(tagName, tags);
 				}
-				String tagDescription = "";
+				StringBuilder tagDescriptionBuilder = new StringBuilder();
 				if (after < line.length() - 1) {
-					tagDescription = reformatLine(line.substring(after + 1), false);
+					appendTagLine(tagDescriptionBuilder, line.substring(after + 1));
 				}
+				VSCodeASDocTag newTag = null;
 				if (token instanceof ISourceLocation) {
 					ISourceLocation tokenLocation = (ISourceLocation) token;
-					tags.add(new VSCodeASDocTag(tagName, tagDescription,
+					newTag = new VSCodeASDocTag(tagName, tagDescriptionBuilder.toString(),
 							tokenLocation.getSourcePath(),
 							-1, -1,
 							tokenLocation.getLine() + i, at, tokenLocation.getLine() + i,
-							line.length()));
+							line.length());
 				} else {
-					tags.add(new VSCodeASDocTag(tagName, tagDescription));
+					newTag = new VSCodeASDocTag(tagName, tagDescriptionBuilder.toString());
 				}
+				tags.add(newTag);
+				lastTag = newTag;
 			}
 		}
 		description = sb.toString().trim();
@@ -193,6 +203,19 @@ public class VSCodeASDocComment extends SourceLocation implements IASDocComment 
 
 	@Override
 	public void paste(IASDocComment source) {
+	}
+
+	private void appendTagLine(StringBuilder sb, String line) {
+		line = reformatLine(line);
+		if (line.length() == 0) {
+			return;
+		}
+		sb.append(line);
+		if (sb.charAt(sb.length() - 1) != ' ') {
+			// if we don't currently end with a space, add an extra
+			// space before the next line is appended
+			sb.append(" ");
+		}
 	}
 
 	private void appendLine(StringBuilder sb, String line, boolean addNewLine) {
