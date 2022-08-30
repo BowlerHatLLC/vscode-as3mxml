@@ -1,6 +1,6 @@
 {
   "title": "JSON schema for the ActionScript configuration file",
-  "$schema": "https://json-schema.org/draft-04/schema#",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "anyOf": [
     {

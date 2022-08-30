@@ -119,7 +119,7 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy {
         List<String> sourcePaths = null;
         JsonSchema schema = null;
         try (InputStream schemaInputStream = getClass().getResourceAsStream("/schemas/asconfig.schema.json")) {
-            JsonSchemaFactory factory = JsonSchemaFactory.getInstance(VersionFlag.V4);
+            JsonSchemaFactory factory = JsonSchemaFactory.getInstance(VersionFlag.V7);
             schema = factory.getSchema(schemaInputStream);
         } catch (Exception e) {
             // this exception is unexpected, so it should be reported
