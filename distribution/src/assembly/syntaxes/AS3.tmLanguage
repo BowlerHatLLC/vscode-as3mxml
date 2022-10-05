@@ -467,7 +467,7 @@
 		<key>control_keywords</key>
 		<dict>
 			<key>match</key>
-			<string>\b(if|else|do|while|for|each|continue|return|switch|case|default|break|try|catch|finally|throw)\b</string>
+			<string>\b(if|else|do|while|for|each|continue|return|switch|case|default|break|try|catch|finally|throw|with)\b</string>
 			<key>name</key>
 			<string>keyword.control.actionscript.3</string>
 		</dict>
