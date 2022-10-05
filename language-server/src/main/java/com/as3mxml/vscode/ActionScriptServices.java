@@ -215,7 +215,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     private boolean sources_organizeImports_addMissingImports = true;
     private boolean sources_organizeImports_removeUnusedImports = true;
     private boolean sources_organizeImports_insertNewLineBetweenTopLevelPackages = true;
-    public boolean format_enable = true;
+    public boolean format_enabled = true;
     public String format_semicolons = null;
     public Boolean format_placeOpenBraceOnNewLine = null;
     public Integer format_maxPreserveNewLines = null;
@@ -695,7 +695,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     }
 
     private List<? extends TextEdit> formatting2(DocumentFormattingParams params, CancelChecker cancelToken) {
-        if (!format_enable) {
+        if (!format_enabled) {
             return Collections.emptyList();
         }
 
@@ -2466,14 +2466,14 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             return;
         }
         JsonObject format = as3mxml.get("format").getAsJsonObject();
-        if (!format.has("enable")) {
+        if (!format.has("enabled")) {
             return;
         }
-        boolean newFormatEnable = format.get("enable").getAsBoolean();
-        if (format_enable == newFormatEnable) {
+        boolean newFormatEnabled = format.get("enabled").getAsBoolean();
+        if (format_enabled == newFormatEnabled) {
             return;
         }
-        format_enable = newFormatEnable;
+        format_enabled = newFormatEnabled;
     }
 
     private void updateFormatPlaceOpenBraceOnNewLine(JsonObject settings) {

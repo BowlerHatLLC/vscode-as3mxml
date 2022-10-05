@@ -453,7 +453,7 @@
           "default": true,
           "description": "When organizing imports, determines if a new line is inserted between top level packages"
         },
-        "as3mxml.format.enable": {
+        "as3mxml.format.enabled": {
           "type": "boolean",
           "default": true,
           "description": "Enable or disable the ActionScript and MXML formatter"
