@@ -145,6 +145,9 @@ public class CompilationUnitUtils {
 		} catch (InterruptedException e) {
 			return;
 		}
+		if (offsetLookup == null) {
+			return;
+		}
 
 		IMXMLTagData rootTag = mxmlData.getRootTag();
 		if (rootTag == null) {

@@ -339,7 +339,7 @@ public class RenameProvider {
             TextDocumentEdit textDocumentEdit = new TextDocumentEdit(versionedIdentifier, textEdits);
             documentChanges.add(Either.forLeft(textDocumentEdit));
         }
-        if (newDefinitionFilePath != null) {
+        if (originalDefinitionFilePath != null && newDefinitionFilePath != null) {
             RenameFile renameFile = new RenameFile();
             renameFile.setOldUri(originalDefinitionFilePath.toUri().toString());
             renameFile.setNewUri(newDefinitionFilePath.toUri().toString());
