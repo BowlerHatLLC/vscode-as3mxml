@@ -1,14 +1,18 @@
 package com.as3mxml.vscode.providers;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import com.as3mxml.vscode.utils.FileTracker;
-import com.as3mxml.vscode.utils.LanguageServerCompilerUtils;
-
-import org.apache.royale.formatter.FORMATTER;
-import org.apache.royale.formatter.config.Semicolons;
+import org.apache.royale.compiler.config.ConfigurationPathResolver;
+import org.apache.royale.compiler.problems.ICompilerProblem;
+import org.apache.royale.formatter.ASTokenFormatter;
+import org.apache.royale.formatter.FormatterSettings;
+import org.apache.royale.formatter.FormatterUtils;
+import org.apache.royale.formatter.MXMLTokenFormatter;
+import org.apache.royale.formatter.config.Configuration;
+import org.apache.royale.formatter.config.Configurator;
 import org.eclipse.lsp4j.DocumentFormattingParams;
 import org.eclipse.lsp4j.FormattingOptions;
 import org.eclipse.lsp4j.Position;
@@ -17,22 +21,15 @@ import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.jsonrpc.CancelChecker;
 
-public class FormattingProvider {
-    private FileTracker fileTracker;
+import com.as3mxml.vscode.formatter.VSCodeFormatterConfiguration;
+import com.as3mxml.vscode.utils.FileTracker;
+import com.as3mxml.vscode.utils.LanguageServerCompilerUtils;
 
-    public String semicolons = null;
-    public Boolean placeOpenBraceOnNewLine = null;
-    public Integer maxPreserveNewLines = null;
-    public Boolean mxmlAlignAttributes = null;
-    public Boolean mxmlInsertNewLineBetweenAttributes = null;
-    public Boolean insertSpaceAtStartOfLineComment = null;
-    public Boolean insertSpaceBeforeAndAfterBinaryOperators = null;
-    public Boolean insertSpaceAfterSemicolonInForStatements = null;
-    public Boolean insertSpaceAfterKeywordsInControlFlowStatements = null;
-    public Boolean insertSpaceAfterFunctionKeywordForAnonymousFunctions = null;
-    public Boolean insertSpaceBetweenMetadataAttributes = null;
-    public Boolean insertSpaceAfterCommaDelimiter = null;
-    public Boolean collapseEmptyBlocks = null;
+public class FormattingProvider {
+    private static final String FILE_EXTENSION_AS = ".as";
+    private static final String FILE_EXTENSION_MXML = ".mxml";
+
+    private FileTracker fileTracker;
 
     public FormattingProvider(FileTracker fileTracker) {
         this.fileTracker = fileTracker;
@@ -58,49 +55,25 @@ public class FormattingProvider {
             }
             return Collections.emptyList();
         }
-        FORMATTER formatter = new FORMATTER();
-        formatter.insertSpaces = options.isInsertSpaces();
-        formatter.tabSize = options.getTabSize();
-        if (semicolons != null) {
-            formatter.semicolons = Semicolons.valueOf(semicolons.toUpperCase());
+        VSCodeFormatterConfiguration.insertSpaces = options.isInsertSpaces();
+        VSCodeFormatterConfiguration.tabSize = options.getTabSize();
+        VSCodeFormatterConfiguration.insertFinalNewLine = options.isInsertFinalNewline();
+        Configurator configurator = new Configurator(VSCodeFormatterConfiguration.class);
+        ConfigurationPathResolver resolver = new ConfigurationPathResolver(System.getProperty("user.dir"));
+        configurator.setConfigurationPathResolver(resolver);
+        configurator.setConfiguration(new String[0], "files");
+        Configuration configuration = configurator.getConfiguration();
+        FormatterSettings settings = FormatterUtils.configurationToFormatterSettings(configuration);
+        String formattedFileText = fileText;
+        if (path.toString().endsWith(FILE_EXTENSION_MXML)) {
+            MXMLTokenFormatter formatter = new MXMLTokenFormatter(settings);
+            List<ICompilerProblem> problems = new ArrayList<>();
+            formattedFileText = formatter.format(path.toString(), fileText, problems);
+        } else if (path.toString().endsWith(FILE_EXTENSION_AS)) {
+            ASTokenFormatter formatter = new ASTokenFormatter(settings);
+            List<ICompilerProblem> problems = new ArrayList<>();
+            formattedFileText = formatter.format(path.toString(), fileText, problems);
         }
-        if (placeOpenBraceOnNewLine != null) {
-            formatter.placeOpenBraceOnNewLine = placeOpenBraceOnNewLine;
-        }
-        if (maxPreserveNewLines != null) {
-            formatter.maxPreserveNewLines = maxPreserveNewLines;
-        }
-        if (mxmlAlignAttributes != null) {
-            formatter.mxmlAlignAttributes = mxmlAlignAttributes;
-        }
-        if (mxmlInsertNewLineBetweenAttributes != null) {
-            formatter.mxmlInsertNewLineBetweenAttributes = mxmlInsertNewLineBetweenAttributes;
-        }
-        if (insertSpaceAtStartOfLineComment != null) {
-            formatter.insertSpaceAtStartOfLineComment = insertSpaceAtStartOfLineComment;
-        }
-        if (insertSpaceBeforeAndAfterBinaryOperators != null) {
-            formatter.insertSpaceBeforeAndAfterBinaryOperators = insertSpaceBeforeAndAfterBinaryOperators;
-        }
-        if (insertSpaceAfterSemicolonInForStatements != null) {
-            formatter.insertSpaceAfterSemicolonInForStatements = insertSpaceAfterSemicolonInForStatements;
-        }
-        if (insertSpaceAfterKeywordsInControlFlowStatements != null) {
-            formatter.insertSpaceAfterKeywordsInControlFlowStatements = insertSpaceAfterKeywordsInControlFlowStatements;
-        }
-        if (insertSpaceAfterFunctionKeywordForAnonymousFunctions != null) {
-            formatter.insertSpaceAfterFunctionKeywordForAnonymousFunctions = insertSpaceAfterFunctionKeywordForAnonymousFunctions;
-        }
-        if (insertSpaceBetweenMetadataAttributes != null) {
-            formatter.insertSpaceBetweenMetadataAttributes = insertSpaceBetweenMetadataAttributes;
-        }
-        if (insertSpaceAfterCommaDelimiter != null) {
-            formatter.insertSpaceAfterCommaDelimiter = insertSpaceAfterCommaDelimiter;
-        }
-        if (collapseEmptyBlocks != null) {
-            formatter.collapseEmptyBlocks = collapseEmptyBlocks;
-        }
-        String formattedFileText = formatter.formatFileText(path.toString(), fileText);
         if (fileText.equals(formattedFileText)) {
             return Collections.emptyList();
         }

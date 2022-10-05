@@ -141,6 +141,7 @@ import com.as3mxml.vscode.commands.ICommandConstants;
 import com.as3mxml.vscode.compiler.CompilerShell;
 import com.as3mxml.vscode.compiler.problems.LSPFileNotFoundProblem;
 import com.as3mxml.vscode.compiler.problems.SyntaxFallbackProblem;
+import com.as3mxml.vscode.formatter.VSCodeFormatterConfiguration;
 import com.as3mxml.vscode.project.ActionScriptProjectData;
 import com.as3mxml.vscode.project.ILspProject;
 import com.as3mxml.vscode.project.IProjectConfigStrategy;
@@ -219,19 +220,6 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     private boolean sources_organizeImports_removeUnusedImports = true;
     private boolean sources_organizeImports_insertNewLineBetweenTopLevelPackages = true;
     public boolean format_enabled = true;
-    public String format_semicolons = null;
-    public Boolean format_placeOpenBraceOnNewLine = null;
-    public Integer format_maxPreserveNewLines = null;
-    public Boolean format_mxmlAlignAttributes = null;
-    public Boolean format_mxmlInsertNewLineBetweenAttributes = null;
-    public Boolean format_insertSpaceAtStartOfLineComment = null;
-    public Boolean format_insertSpaceBeforeAndAfterBinaryOperators = null;
-    public Boolean format_insertSpaceAfterSemicolonInForStatements = null;
-    public Boolean format_insertSpaceAfterKeywordsInControlFlowStatements = null;
-    public Boolean format_insertSpaceAfterFunctionKeywordForAnonymousFunctions = null;
-    public Boolean format_insertSpaceBetweenMetadataAttributes = null;
-    public Boolean format_insertSpaceAfterCommaDelimiter = null;
-    public Boolean format_collapseEmptyBlocks = null;
     private SimpleProjectConfigStrategy fallbackConfig;
     private CompilerShell compilerShell;
     private String jvmargs;
@@ -748,19 +736,6 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         compilerWorkspace.startBuilding();
         try {
             FormattingProvider provider = new FormattingProvider(fileTracker);
-            provider.semicolons = format_semicolons;
-            provider.placeOpenBraceOnNewLine = format_placeOpenBraceOnNewLine;
-            provider.maxPreserveNewLines = format_maxPreserveNewLines;
-            provider.mxmlAlignAttributes = format_mxmlAlignAttributes;
-            provider.mxmlInsertNewLineBetweenAttributes = format_mxmlInsertNewLineBetweenAttributes;
-            provider.insertSpaceAtStartOfLineComment = format_insertSpaceAtStartOfLineComment;
-            provider.insertSpaceBeforeAndAfterBinaryOperators = format_insertSpaceBeforeAndAfterBinaryOperators;
-            provider.insertSpaceAfterSemicolonInForStatements = format_insertSpaceAfterSemicolonInForStatements;
-            provider.insertSpaceAfterKeywordsInControlFlowStatements = format_insertSpaceAfterKeywordsInControlFlowStatements;
-            provider.insertSpaceAfterFunctionKeywordForAnonymousFunctions = format_insertSpaceAfterFunctionKeywordForAnonymousFunctions;
-            provider.insertSpaceBetweenMetadataAttributes = format_insertSpaceBetweenMetadataAttributes;
-            provider.insertSpaceAfterCommaDelimiter = format_insertSpaceAfterCommaDelimiter;
-            provider.collapseEmptyBlocks = format_collapseEmptyBlocks;
             return provider.formatting(params, cancelToken);
         } finally {
             compilerWorkspace.doneBuilding();
@@ -2532,10 +2507,10 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         if (!format.get("placeOpenBraceOnNewLine").isJsonNull()) {
             newPlaceOpenBraceOnNewLine = format.get("placeOpenBraceOnNewLine").getAsBoolean();
         }
-        if (format_placeOpenBraceOnNewLine == newPlaceOpenBraceOnNewLine) {
+        if (VSCodeFormatterConfiguration.placeOpenBraceOnNewLine == newPlaceOpenBraceOnNewLine) {
             return;
         }
-        format_placeOpenBraceOnNewLine = newPlaceOpenBraceOnNewLine;
+        VSCodeFormatterConfiguration.placeOpenBraceOnNewLine = newPlaceOpenBraceOnNewLine;
     }
 
     private void updateFormatSemicolons(JsonObject settings) {
@@ -2550,11 +2525,14 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         if (!format.has("semicolons")) {
             return;
         }
-        String newFormatSemicolons = format.get("semicolons").getAsString();
-        if (format_semicolons == newFormatSemicolons) {
+        String newFormatSemicolons = null;
+        if (!format.get("semicolons").isJsonNull()) {
+            newFormatSemicolons = format.get("semicolons").getAsString();
+        }
+        if (VSCodeFormatterConfiguration.semicolons == newFormatSemicolons) {
             return;
         }
-        format_semicolons = newFormatSemicolons;
+        VSCodeFormatterConfiguration.semicolons = newFormatSemicolons;
     }
 
     private void updateFormatMaxPreserveNewLines(JsonObject settings) {
@@ -2573,10 +2551,10 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         if (!format.get("maxPreserveNewLines").isJsonNull()) {
             newMaxPreserveNewLines = format.get("maxPreserveNewLines").getAsInt();
         }
-        if (format_maxPreserveNewLines == newMaxPreserveNewLines) {
+        if (VSCodeFormatterConfiguration.maxPreserveNewLines == newMaxPreserveNewLines) {
             return;
         }
-        format_maxPreserveNewLines = newMaxPreserveNewLines;
+        VSCodeFormatterConfiguration.maxPreserveNewLines = newMaxPreserveNewLines;
     }
 
     private void updateFormatMxmlAlignAttributes(JsonObject settings) {
@@ -2595,10 +2573,10 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         if (!format.get("mxmlAlignAttributes").isJsonNull()) {
             newFormatMxmlAlignAttributes = format.get("mxmlAlignAttributes").getAsBoolean();
         }
-        if (format_mxmlAlignAttributes == newFormatMxmlAlignAttributes) {
+        if (VSCodeFormatterConfiguration.mxmlAlignAttributes == newFormatMxmlAlignAttributes) {
             return;
         }
-        format_mxmlAlignAttributes = newFormatMxmlAlignAttributes;
+        VSCodeFormatterConfiguration.mxmlAlignAttributes = newFormatMxmlAlignAttributes;
     }
 
     private void updateFormatMxmlInsertNewLineBetweenAttributes(JsonObject settings) {
@@ -2618,10 +2596,13 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             newFormatMxmlInsertNewLineBetweenAttributes = format.get("mxmlInsertNewLineBetweenAttributes")
                     .getAsBoolean();
         }
-        if (format_mxmlInsertNewLineBetweenAttributes == newFormatMxmlInsertNewLineBetweenAttributes) {
+        if (VSCodeFormatterConfiguration.mxmlInsertNewLineBetweenAttributes == newFormatMxmlInsertNewLineBetweenAttributes) {
             return;
         }
-        format_mxmlInsertNewLineBetweenAttributes = newFormatMxmlInsertNewLineBetweenAttributes;
+        VSCodeFormatterConfiguration.mxmlInsertNewLineBetweenAttributes = newFormatMxmlInsertNewLineBetweenAttributes;
+        System.err
+                .println("*** set mxmlInsertNewLineBetweenAttributes: "
+                        + VSCodeFormatterConfiguration.mxmlInsertNewLineBetweenAttributes);
     }
 
     private void updateFormatInsertSpaceAtStartOfLineComment(JsonObject settings) {
@@ -2641,10 +2622,10 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             newFormatInsertSpaceAtStartOfLineComment = format.get("insertSpaceAtStartOfLineComment")
                     .getAsBoolean();
         }
-        if (format_insertSpaceAtStartOfLineComment == newFormatInsertSpaceAtStartOfLineComment) {
+        if (VSCodeFormatterConfiguration.insertSpaceAtStartOfLineComment == newFormatInsertSpaceAtStartOfLineComment) {
             return;
         }
-        format_insertSpaceAtStartOfLineComment = newFormatInsertSpaceAtStartOfLineComment;
+        VSCodeFormatterConfiguration.insertSpaceAtStartOfLineComment = newFormatInsertSpaceAtStartOfLineComment;
     }
 
     private void updateFormatInsertSpaceBeforeAndAfterBinaryOperators(JsonObject settings) {
@@ -2664,10 +2645,10 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             newFormatInsertSpaceBeforeAndAfterBinaryOperators = format.get("insertSpaceBeforeAndAfterBinaryOperators")
                     .getAsBoolean();
         }
-        if (format_insertSpaceBeforeAndAfterBinaryOperators == newFormatInsertSpaceBeforeAndAfterBinaryOperators) {
+        if (VSCodeFormatterConfiguration.insertSpaceBeforeAndAfterBinaryOperators == newFormatInsertSpaceBeforeAndAfterBinaryOperators) {
             return;
         }
-        format_insertSpaceBeforeAndAfterBinaryOperators = newFormatInsertSpaceBeforeAndAfterBinaryOperators;
+        VSCodeFormatterConfiguration.insertSpaceBeforeAndAfterBinaryOperators = newFormatInsertSpaceBeforeAndAfterBinaryOperators;
     }
 
     private void updateFormatInsertSpaceAfterSemicolonInForStatements(JsonObject settings) {
@@ -2687,10 +2668,10 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             newFormatInsertSpaceAfterSemicolonInForStatements = format.get("insertSpaceAfterSemicolonInForStatements")
                     .getAsBoolean();
         }
-        if (format_insertSpaceAfterSemicolonInForStatements == newFormatInsertSpaceAfterSemicolonInForStatements) {
+        if (VSCodeFormatterConfiguration.insertSpaceAfterSemicolonInForStatements == newFormatInsertSpaceAfterSemicolonInForStatements) {
             return;
         }
-        format_insertSpaceAfterSemicolonInForStatements = newFormatInsertSpaceAfterSemicolonInForStatements;
+        VSCodeFormatterConfiguration.insertSpaceAfterSemicolonInForStatements = newFormatInsertSpaceAfterSemicolonInForStatements;
     }
 
     private void updateFormatInsertSpaceAfterKeywordsInControlFlowStatements(JsonObject settings) {
@@ -2711,10 +2692,10 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                     .get("insertSpaceAfterKeywordsInControlFlowStatements")
                     .getAsBoolean();
         }
-        if (format_insertSpaceAfterKeywordsInControlFlowStatements == newFormatInsertSpaceAfterKeywordsInControlFlowStatements) {
+        if (VSCodeFormatterConfiguration.insertSpaceAfterKeywordsInControlFlowStatements == newFormatInsertSpaceAfterKeywordsInControlFlowStatements) {
             return;
         }
-        format_insertSpaceAfterKeywordsInControlFlowStatements = newFormatInsertSpaceAfterKeywordsInControlFlowStatements;
+        VSCodeFormatterConfiguration.insertSpaceAfterKeywordsInControlFlowStatements = newFormatInsertSpaceAfterKeywordsInControlFlowStatements;
     }
 
     private void updateFormatInsertSpaceAfterFunctionKeywordForAnonymousFunctions(JsonObject settings) {
@@ -2735,10 +2716,10 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                     .get("insertSpaceAfterFunctionKeywordForAnonymousFunctions")
                     .getAsBoolean();
         }
-        if (format_insertSpaceAfterFunctionKeywordForAnonymousFunctions == newFormatInsertSpaceAfterFunctionKeywordForAnonymousFunctions) {
+        if (VSCodeFormatterConfiguration.insertSpaceAfterFunctionKeywordForAnonymousFunctions == newFormatInsertSpaceAfterFunctionKeywordForAnonymousFunctions) {
             return;
         }
-        format_insertSpaceAfterFunctionKeywordForAnonymousFunctions = newFormatInsertSpaceAfterFunctionKeywordForAnonymousFunctions;
+        VSCodeFormatterConfiguration.insertSpaceAfterFunctionKeywordForAnonymousFunctions = newFormatInsertSpaceAfterFunctionKeywordForAnonymousFunctions;
     }
 
     private void updateFormatInsertSpaceBetweenMetadataAttributes(JsonObject settings) {
@@ -2759,10 +2740,10 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                     .get("insertSpaceBetweenMetadataAttributes")
                     .getAsBoolean();
         }
-        if (format_insertSpaceBetweenMetadataAttributes == newFormatInsertSpaceBetweenMetadataAttributes) {
+        if (VSCodeFormatterConfiguration.insertSpaceBetweenMetadataAttributes == newFormatInsertSpaceBetweenMetadataAttributes) {
             return;
         }
-        format_insertSpaceBetweenMetadataAttributes = newFormatInsertSpaceBetweenMetadataAttributes;
+        VSCodeFormatterConfiguration.insertSpaceBetweenMetadataAttributes = newFormatInsertSpaceBetweenMetadataAttributes;
     }
 
     private void updateFormatInsertSpaceAfterCommaDelimiter(JsonObject settings) {
@@ -2783,10 +2764,10 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                     .get("insertSpaceAfterCommaDelimiter")
                     .getAsBoolean();
         }
-        if (format_insertSpaceAfterCommaDelimiter == newFormatInsertSpaceAfterCommaDelimiter) {
+        if (VSCodeFormatterConfiguration.insertSpaceAfterCommaDelimiter == newFormatInsertSpaceAfterCommaDelimiter) {
             return;
         }
-        format_insertSpaceAfterCommaDelimiter = newFormatInsertSpaceAfterCommaDelimiter;
+        VSCodeFormatterConfiguration.insertSpaceAfterCommaDelimiter = newFormatInsertSpaceAfterCommaDelimiter;
     }
 
     private void updateFormatCollapseEmptyBlocks(JsonObject settings) {
@@ -2807,10 +2788,10 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                     .get("collapseEmptyBlocks")
                     .getAsBoolean();
         }
-        if (format_collapseEmptyBlocks == newFormatCollapseEmptyBlocks) {
+        if (VSCodeFormatterConfiguration.collapseEmptyBlocks == newFormatCollapseEmptyBlocks) {
             return;
         }
-        format_collapseEmptyBlocks = newFormatCollapseEmptyBlocks;
+        VSCodeFormatterConfiguration.collapseEmptyBlocks = newFormatCollapseEmptyBlocks;
     }
 
     private CompletableFuture<Object> executeQuickCompileCommand(ExecuteCommandParams params) {
