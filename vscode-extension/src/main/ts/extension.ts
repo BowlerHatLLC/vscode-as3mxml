@@ -41,7 +41,6 @@ import {
 } from "vscode-languageclient/node";
 import logCompilerShellOutput from "./commands/logCompilerShellOutput";
 import quickCompileAndLaunch from "./commands/quickCompileAndLaunch";
-import migrateSettings from "./utils/migrateSettings";
 import saveSessionPassword from "./commands/saveSessionPassword";
 import normalizeUri from "./utils/normalizeUri";
 import createActionScriptSDKStatusBarItem from "./utils/createActionScriptSDKStatusBarItem";
@@ -166,7 +165,6 @@ function restartServer() {
 
 export function activate(context: vscode.ExtensionContext) {
   savedContext = context;
-  migrateSettings();
   checkForProjectsToImport();
   let javaSettingsPath = vscode.workspace
     .getConfiguration("as3mxml")

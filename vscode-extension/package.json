@@ -173,8 +173,7 @@
           "AS3",
           "as3",
           "AS",
-          "as",
-          "nextgenas"
+          "as"
         ],
         "configuration": "./actionscript.configuration.json"
       },
@@ -232,14 +231,6 @@
       }
     ],
     "problemMatchers": [
-      {
-        "name": "nextgenas_nomatch",
-        "label": "No Problem Matcher (Deprecated: Use empty array instead)",
-        "applyTo": "allDocuments",
-        "pattern": {
-          "regexp": "^$"
-        }
-      },
       {
         "name": "royale",
         "label": "Apache Royale",
@@ -547,26 +538,6 @@
           "default": "off",
           "description": "(Advanced) Logs the communication between Visual Studio Code and the ActionScript & MXML language server",
           "scope": "window"
-        },
-        "nextgenas.sdk.framework": {
-          "description": "Deprecated. Replaced by as3mxml.sdk.framework.",
-          "deprecationMessage": "DEPRECATED: Use as3mxml.sdk.framework instead."
-        },
-        "nextgenas.sdk.searchPaths": {
-          "description": "Deprecated. Replaced by as3mxml.sdk.searchPaths.",
-          "deprecationMessage": "DEPRECATED: Use as3mxml.sdk.searchPaths instead."
-        },
-        "nextgenas.asconfigc.useBundled": {
-          "description": "Deprecated. Replaced by as3mxml.asconfigc.useBundled.",
-          "deprecationMessage": "DEPRECATED: Use as3mxml.asconfigc.useBundled instead."
-        },
-        "nextgenas.java": {
-          "description": "Deprecated. Replaced by as3mxml.java.path.",
-          "deprecationMessage": "DEPRECATED: Use as3mxml.java.path instead."
-        },
-        "nextgenas.sdk.editor": {
-          "description": "Deprecated. Replaced by as3mxml.sdk.editor.",
-          "deprecationMessage": "DEPRECATED: Use as3mxml.sdk.editor instead."
         }
       }
     },
