@@ -600,6 +600,11 @@
           "default": null,
           "description": "Defines automatic semicolon insertion behavior"
         },
+        "as3mxml.lint.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable or disable the ActionScript and MXML linter"
+        },
         "actionscript.trace.server": {
           "type": "string",
           "enum": [

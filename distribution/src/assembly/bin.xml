@@ -85,6 +85,7 @@
         <include>commons-*.jar</include>
         <include>compiler-*.jar</include>
         <include>formatter-*.jar</include>
+        <include>linter-*.jar</include>
         <include>antlr-*.jar</include>
         <include>guava-*.jar</include>
         <include>jburg-*.jar</include>

@@ -105,6 +105,12 @@ limitations under the License.
       <scope>provided</scope>
     </dependency>
     <dependency>
+      <groupId>org.apache.royale.compiler</groupId>
+      <artifactId>linter</artifactId>
+      <version>0.9.10</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
       <groupId>org.antlr</groupId>
       <artifactId>antlr-complete</artifactId>
       <version>3.5.2</version>

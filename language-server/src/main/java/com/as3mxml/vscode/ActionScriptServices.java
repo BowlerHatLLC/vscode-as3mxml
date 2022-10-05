@@ -156,6 +156,7 @@ import com.as3mxml.vscode.providers.ExecuteCommandProvider;
 import com.as3mxml.vscode.providers.FormattingProvider;
 import com.as3mxml.vscode.providers.HoverProvider;
 import com.as3mxml.vscode.providers.ImplementationProvider;
+import com.as3mxml.vscode.providers.LintingProvider;
 import com.as3mxml.vscode.providers.ReferencesProvider;
 import com.as3mxml.vscode.providers.RenameProvider;
 import com.as3mxml.vscode.providers.SignatureHelpProvider;
@@ -192,6 +193,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     private static final String FRAMEWORKS_RELATIVE_PATH_CHILD = "./frameworks";
     private static final String SOURCE_DEFAULTS = "defaults";
     private static final String SOURCE_CONFIG = "config.as";
+    private static final String FILE_NAME_ASLINT_CONFIG_XML = "aslint-config.xml";
 
     private ActionScriptLanguageClient languageClient;
     private String oldFrameworkSDKPath;
@@ -219,7 +221,9 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     private boolean sources_organizeImports_addMissingImports = true;
     private boolean sources_organizeImports_removeUnusedImports = true;
     private boolean sources_organizeImports_insertNewLineBetweenTopLevelPackages = true;
-    public boolean format_enabled = true;
+    private boolean format_enabled = true;
+    private boolean lint_enabled = false;
+
     private SimpleProjectConfigStrategy fallbackConfig;
     private CompilerShell compilerShell;
     private String jvmargs;
@@ -1098,6 +1102,16 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                 }
             }
 
+            // if linting is enabled, checek for problems if aslint-config.xml
+            // is changed
+            if (lint_enabled && FILE_NAME_ASLINT_CONFIG_XML.equals(changedPath.getFileName().toString())) {
+                ActionScriptProjectData projectData = actionScriptProjectManager
+                        .getProjectDataForLinterConfigFile(changedPath);
+                if (projectData != null) {
+                    foldersToCheck.add(projectData);
+                }
+            }
+
             // then, check if source or library files have changed
             FileChangeType changeType = event.getType();
             String normalizedChangedPathAsString = FilenameNormalization
@@ -1252,6 +1266,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         this.updateFormatInsertSpaceBetweenMetadataAttributes(settings);
         this.updateFormatInsertSpaceAfterCommaDelimiter(settings);
         this.updateFormatCollapseEmptyBlocks(settings);
+        this.updateLintEnabled(settings);
     }
 
     @Override
@@ -2169,6 +2184,10 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                     ASTUtils.findUnusedImportProblems(ast, qualifiedName, requiredImports, problems);
                     ASTUtils.findDisabledConfigConditionBlockProblems(ast, problems);
                 }
+                if (lint_enabled) {
+                    LintingProvider lintingProvider = new LintingProvider(fileTracker);
+                    lintingProvider.linting(Paths.get(unit.getAbsoluteFilename()), problems);
+                }
             } else {
                 // we can't publish diagnostics yet, but we can start the build
                 // process in the background so that it's faster when we're ready
@@ -2792,6 +2811,26 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             return;
         }
         VSCodeFormatterConfiguration.collapseEmptyBlocks = newFormatCollapseEmptyBlocks;
+    }
+
+    private void updateLintEnabled(JsonObject settings) {
+        if (!settings.has("as3mxml")) {
+            return;
+        }
+        JsonObject as3mxml = settings.get("as3mxml").getAsJsonObject();
+        if (!as3mxml.has("lint")) {
+            return;
+        }
+        JsonObject lint = as3mxml.get("lint").getAsJsonObject();
+        if (!lint.has("enabled")) {
+            return;
+        }
+        boolean newLintEnabled = lint.get("enabled").getAsBoolean();
+        if (lint_enabled == newLintEnabled) {
+            return;
+        }
+        lint_enabled = newLintEnabled;
+        checkForProblemsNow(true);
     }
 
     private CompletableFuture<Object> executeQuickCompileCommand(ExecuteCommandParams params) {

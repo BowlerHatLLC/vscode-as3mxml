@@ -154,6 +154,23 @@ public class ActionScriptProjectManager {
         return fallbackProjectData;
     }
 
+    public ActionScriptProjectData getProjectDataForLinterConfigFile(Path path) {
+        for (ActionScriptProjectData projectData : allProjectData) {
+            ILspProject project = projectData.project;
+            if (project == null) {
+                continue;
+            }
+            Path projectRoot = projectData.projectRoot;
+            if (projectRoot == null) {
+                continue;
+            }
+            if (projectRoot.equals(path.getParent())) {
+                return projectData;
+            }
+        }
+        return null;
+    }
+
     public ActionScriptProjectData getProjectDataForSourceFile(Path path) {
         checkForMissingProjectsContainingSourceFile(path);
 

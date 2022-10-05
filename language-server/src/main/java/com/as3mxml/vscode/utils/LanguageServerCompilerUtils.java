@@ -47,6 +47,7 @@ import org.apache.royale.compiler.internal.parsing.as.OffsetCue;
 import org.apache.royale.compiler.problems.CompilerProblemSeverity;
 import org.apache.royale.compiler.problems.DeprecatedAPIProblem;
 import org.apache.royale.compiler.problems.ICompilerProblem;
+import org.apache.royale.linter.problems.ILinterProblem;
 import org.apache.royale.compiler.projects.ICompilerProject;
 import org.eclipse.lsp4j.CompletionItemKind;
 import org.eclipse.lsp4j.Diagnostic;
@@ -369,6 +370,10 @@ public class LanguageServerCompilerUtils {
 
         DiagnosticSeverity severity = LanguageServerCompilerUtils.getDiagnosticSeverityFromCompilerProblem(problem);
         diagnostic.setSeverity(severity);
+
+        if (problem instanceof ILinterProblem) {
+            diagnostic.setSource("aslint");
+        }
 
         if (problem instanceof DisabledConfigConditionBlockProblem) {
             diagnostic.setTags(Collections.singletonList(DiagnosticTag.Unnecessary));
