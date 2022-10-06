@@ -220,6 +220,23 @@ public class HoverProvider {
         if (docs != null) {
             detail += "\n\n---\n\n" + docs;
         }
+        if (definition instanceof IFunctionDefinition) {
+            IFunctionDefinition functionDefinition = (IFunctionDefinition) definition;
+            if (functionDefinition.isConstructor()) {
+                IDefinition parentDefinition = functionDefinition.getParent();
+                if (parentDefinition != null) {
+                    String parentDetail = DefinitionTextUtils.definitionToDetail(parentDefinition, project);
+                    parentDetail = codeBlock(MARKED_STRING_LANGUAGE_ACTIONSCRIPT, parentDetail);
+                    detail += "\n\n---\n\n" + parentDetail;
+                    String parentDocs = DefinitionDocumentationUtils.getDocumentationForDefinition(parentDefinition,
+                            true,
+                            project.getWorkspace(), true);
+                    if (parentDocs != null) {
+                        detail += "\n\n---\n\n" + parentDocs;
+                    }
+                }
+            }
+        }
         result.setContents(new MarkupContent(MarkupKind.MARKDOWN, detail));
         return result;
     }
