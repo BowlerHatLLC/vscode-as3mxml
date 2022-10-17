@@ -38,7 +38,7 @@
     "vscode": "^1.60.0"
   },
   "devDependencies": {
-    "@rgrove/parse-xml": "^4.0.0",
+    "@rgrove/parse-xml": "^4.0.1",
     "@types/mocha": "^10.0.0",
     "@types/node": "^14.18.32",
     "@types/vscode": "^1.60.0",

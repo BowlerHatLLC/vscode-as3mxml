@@ -182,7 +182,7 @@ function findSDKs(workspaceFolder: vscode.WorkspaceFolder): FlashBuilderSDK[] {
     sdkPrefsText = sdkPrefsText.replace(/\\(.)/g, (match, p1) => {
       return p1;
     });
-    sdksElement = parseXml(sdkPrefsText, undefined);
+    sdksElement = parseXml(sdkPrefsText);
   } catch (error) {
     return [];
   }
@@ -254,7 +254,7 @@ function importFlashBuilderProjectInternal(
   }
   let actionScriptProperties = null;
   try {
-    let parsedXML = parseXml(actionScriptPropertiesText, undefined);
+    let parsedXML = parseXml(actionScriptPropertiesText);
     actionScriptProperties = parsedXML.children[0];
   } catch (error) {
     addError(ERROR_XML_PARSE + actionScriptPropertiesPath);
@@ -418,7 +418,7 @@ function createProjectFiles(
       }
       let flexLibProperties = null;
       try {
-        let parsedXML = parseXml(flexLibPropertiesText, undefined);
+        let parsedXML = parseXml(flexLibPropertiesText);
         flexLibProperties = parsedXML.children[0];
       } catch (error) {
         addError(ERROR_PROJECT_PARSE);

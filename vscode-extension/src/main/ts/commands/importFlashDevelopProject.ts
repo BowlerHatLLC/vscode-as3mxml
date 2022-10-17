@@ -114,7 +114,7 @@ function importFlashDevelopProjectInternal(
   }
   let project = null;
   try {
-    let parsedXML = parseXml(projectText, undefined);
+    let parsedXML = parseXml(projectText);
     project = parsedXML.children[0];
   } catch (error) {
     addError(ERROR_XML_PARSE + projectFilePath);
