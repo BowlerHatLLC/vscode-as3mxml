@@ -16,7 +16,7 @@ limitations under the License.
 import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
-import parseXML = require("@rgrove/parse-xml");
+import { parseXml } from "@rgrove/parse-xml";
 import validateFrameworkSDK from "../utils/validateFrameworkSDK";
 
 const FILE_ASCONFIG_JSON = "asconfig.json";
@@ -182,7 +182,7 @@ function findSDKs(workspaceFolder: vscode.WorkspaceFolder): FlashBuilderSDK[] {
     sdkPrefsText = sdkPrefsText.replace(/\\(.)/g, (match, p1) => {
       return p1;
     });
-    sdksElement = parseXML(sdkPrefsText);
+    sdksElement = parseXml(sdkPrefsText, undefined);
   } catch (error) {
     return [];
   }
@@ -254,7 +254,7 @@ function importFlashBuilderProjectInternal(
   }
   let actionScriptProperties = null;
   try {
-    let parsedXML = parseXML(actionScriptPropertiesText);
+    let parsedXML = parseXml(actionScriptPropertiesText, undefined);
     actionScriptProperties = parsedXML.children[0];
   } catch (error) {
     addError(ERROR_XML_PARSE + actionScriptPropertiesPath);
@@ -418,7 +418,7 @@ function createProjectFiles(
       }
       let flexLibProperties = null;
       try {
-        let parsedXML = parseXML(flexLibPropertiesText);
+        let parsedXML = parseXml(flexLibPropertiesText, undefined);
         flexLibProperties = parsedXML.children[0];
       } catch (error) {
         addError(ERROR_PROJECT_PARSE);

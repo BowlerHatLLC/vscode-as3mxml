@@ -1,5 +1,11 @@
 # ActionScript & MXML for Visual Studio Code Changelog
 
+## 1.14.1
+
+### Other Changes
+
+- Upgraded some dependencies that were preventing a release from being published.
+
 ## 1.14.0
 
 ### New Features

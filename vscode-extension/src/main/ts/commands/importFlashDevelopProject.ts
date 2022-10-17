@@ -16,7 +16,7 @@ limitations under the License.
 import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
-import parseXML = require("@rgrove/parse-xml");
+import { parseXml } from "@rgrove/parse-xml";
 import validateFrameworkSDK from "../utils/validateFrameworkSDK";
 
 const FILE_EXTENSION_AS3PROJ = ".as3proj";
@@ -114,7 +114,7 @@ function importFlashDevelopProjectInternal(
   }
   let project = null;
   try {
-    let parsedXML = parseXML(projectText);
+    let parsedXML = parseXml(projectText, undefined);
     project = parsedXML.children[0];
   } catch (error) {
     addError(ERROR_XML_PARSE + projectFilePath);
