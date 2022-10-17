@@ -1,5 +1,28 @@
 # ActionScript & MXML for Visual Studio Code Changelog
 
+## 1.14.0
+
+### New Features
+
+- Build: Added `aab-debug`, `android-studio`, `android-studio-debug`, and `apk-emulator` as supported targets for Adobe AIR packaging.
+- Hover: Display `@param`, `@return`, `@throws`, and `@default` in documentation.
+- Hover: Documentation for AS3 constructors now also appends documentation for the class at the end.
+- Settings: Added `as3mxml.quickCompile.enabled` property, which may be set to `false` to disable the experimental quick compile and run/debug commands.
+
+### Fixed Issues
+
+- Build: Prevent multiple simultaneous experimental quick compile and run/debug builds. Only one should be active at a time.
+- Format: Fixed issue where extra new lines were sometimes incorrectly added at the end of a file.
+- General: Thread safety fixes when cleaning up a project and recreating it.
+- Hover: Fixed multiline descriptions of `@param` and other ASDoc tags.
+- Rename: Fixed rename symbol and find references failing to detect MXML `id` attributes.
+- Settings: Fixed incorrectly named `as3mxml.format.enable` setting which should have been `as3mxml.format.enabled`.
+- Syntax: Added missing color for `with` keyword.
+
+### Other Changes
+
+- Settings: Removed old deprecated `nextgenas` settings that were replaced with `as3mxml` settings.
+
 ## 1.13.0
 
 ### New Features
