@@ -29,6 +29,7 @@ import org.apache.royale.compiler.definitions.IAccessorDefinition;
 import org.apache.royale.compiler.definitions.IClassDefinition;
 import org.apache.royale.compiler.definitions.IConstantDefinition;
 import org.apache.royale.compiler.definitions.IDefinition;
+import org.apache.royale.compiler.definitions.IDocumentableDefinition;
 import org.apache.royale.compiler.definitions.IEventDefinition;
 import org.apache.royale.compiler.definitions.IFunctionDefinition;
 import org.apache.royale.compiler.definitions.IGetterDefinition;
@@ -324,6 +325,8 @@ public class DefinitionTextUtils {
     private static void insertClassDefinitionIntoTextDocument(IClassDefinition classDefinition,
             StringBuilder textDocumentBuilder, String indent, ICompilerProject currentProject, DefinitionAsText result,
             IDefinition definitionToFind) {
+        insertASDocIntoTextDocument(classDefinition, textDocumentBuilder, currentProject, indent);
+            
         insertMetaTagsIntoTextDocument(classDefinition, textDocumentBuilder, indent, currentProject, result,
                 definitionToFind);
 
@@ -398,6 +401,8 @@ public class DefinitionTextUtils {
     private static void insertInterfaceDefinitionIntoTextDocument(IInterfaceDefinition interfaceDefinition,
             StringBuilder textDocumentBuilder, String indent, ICompilerProject currentProject, DefinitionAsText result,
             IDefinition definitionToFind) {
+        insertASDocIntoTextDocument(interfaceDefinition, textDocumentBuilder, currentProject, indent);
+
         insertMetaTagsIntoTextDocument(interfaceDefinition, textDocumentBuilder, indent, currentProject, result,
                 definitionToFind);
 
@@ -452,6 +457,8 @@ public class DefinitionTextUtils {
     private static void insertNamespaceDefinitionIntoTextDocument(INamespaceDefinition namespaceDefinition,
             StringBuilder textDocumentBuilder, String indent, ICompilerProject currentProject, DefinitionAsText result,
             IDefinition definitionToFind) {
+        insertASDocIntoTextDocument(namespaceDefinition, textDocumentBuilder, currentProject, indent);
+
         insertMetaTagsIntoTextDocument(namespaceDefinition, textDocumentBuilder, indent, currentProject, result,
                 definitionToFind);
 
@@ -479,6 +486,8 @@ public class DefinitionTextUtils {
     private static void insertFunctionDefinitionIntoTextDocument(IFunctionDefinition functionDefinition,
             StringBuilder textDocumentBuilder, String indent, ICompilerProject currentProject, DefinitionAsText result,
             IDefinition definitionToFind) {
+        insertASDocIntoTextDocument(functionDefinition, textDocumentBuilder, currentProject, indent);
+
         insertMetaTagsIntoTextDocument(functionDefinition, textDocumentBuilder, indent, currentProject, result,
                 definitionToFind);
 
@@ -533,6 +542,8 @@ public class DefinitionTextUtils {
     private static void insertVariableDefinitionIntoTextDocument(IVariableDefinition variableDefinition,
             StringBuilder textDocumentBuilder, String indent, ICompilerProject currentProject, DefinitionAsText result,
             IDefinition definitionToFind) {
+        insertASDocIntoTextDocument(variableDefinition, textDocumentBuilder, currentProject, indent);
+
         insertMetaTagsIntoTextDocument(variableDefinition, textDocumentBuilder, indent, currentProject, result,
                 definitionToFind);
 
@@ -948,5 +959,19 @@ public class DefinitionTextUtils {
             return indent;
         }
         return indent.substring(1);
+    }
+
+    private static void insertASDocIntoTextDocument(IDocumentableDefinition def, StringBuilder textDocumentBuilder, ICompilerProject currentProject, String indent)
+    {
+        String comment = DefinitionDocumentationUtils.getDocumentationForDefinition(def, false, currentProject.getWorkspace(), true);
+        if (comment != null)
+        {
+            textDocumentBuilder.append(indent).append("/**\n");
+            for (String line : comment.split(NEW_LINE))
+            {
+                textDocumentBuilder.append(indent).append(" * ").append(line).append(NEW_LINE);
+            }
+            textDocumentBuilder.append(indent).append(" */\n");
+        }
     }
 }
