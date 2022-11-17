@@ -22,16 +22,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.as3mxml.vscode.asdoc.VSCodeASDocComment;
-import com.as3mxml.vscode.project.ActionScriptProjectData;
-import com.as3mxml.vscode.utils.ASDocUtils;
-import com.as3mxml.vscode.utils.ActionScriptProjectManager;
-import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
-import com.as3mxml.vscode.utils.DefinitionUtils;
-import com.as3mxml.vscode.utils.FileTracker;
-import com.as3mxml.vscode.utils.LanguageServerCompilerUtils;
-import com.as3mxml.vscode.utils.MXMLDataUtils;
-
 import org.apache.royale.compiler.common.ISourceLocation;
 import org.apache.royale.compiler.common.XMLName;
 import org.apache.royale.compiler.definitions.IClassDefinition;
@@ -45,8 +35,10 @@ import org.apache.royale.compiler.tree.as.IASNode;
 import org.apache.royale.compiler.tree.as.IClassNode;
 import org.apache.royale.compiler.tree.as.IExpressionNode;
 import org.apache.royale.compiler.tree.as.IFunctionCallNode;
+import org.apache.royale.compiler.tree.as.IFunctionNode;
 import org.apache.royale.compiler.tree.as.IIdentifierNode;
 import org.apache.royale.compiler.tree.as.ILanguageIdentifierNode;
+import org.apache.royale.compiler.tree.as.IReturnNode;
 import org.apache.royale.compiler.units.ICompilationUnit;
 import org.eclipse.lsp4j.DefinitionParams;
 import org.eclipse.lsp4j.Location;
@@ -56,6 +48,16 @@ import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.jsonrpc.CancelChecker;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
+
+import com.as3mxml.vscode.asdoc.VSCodeASDocComment;
+import com.as3mxml.vscode.project.ActionScriptProjectData;
+import com.as3mxml.vscode.utils.ASDocUtils;
+import com.as3mxml.vscode.utils.ActionScriptProjectManager;
+import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
+import com.as3mxml.vscode.utils.DefinitionUtils;
+import com.as3mxml.vscode.utils.FileTracker;
+import com.as3mxml.vscode.utils.LanguageServerCompilerUtils;
+import com.as3mxml.vscode.utils.MXMLDataUtils;
 
 public class DefinitionProvider {
     private static final String FILE_EXTENSION_MXML = ".mxml";
@@ -160,7 +162,16 @@ public class DefinitionProvider {
         IDefinition definition = null;
         Range sourceRange = null;
 
-        if (offsetNode instanceof IIdentifierNode) {
+        if (definition == null && offsetNode instanceof IReturnNode) {
+            IReturnNode returnNode = (IReturnNode) offsetNode;
+            IFunctionNode functionNode = (IFunctionNode) returnNode.getAncestorOfType(IFunctionNode.class);
+            if (functionNode == null) {
+                return Either.forLeft(Collections.emptyList());
+            }
+            definition = functionNode.getDefinition();
+        }
+
+        if (definition == null && offsetNode instanceof IIdentifierNode) {
             IIdentifierNode identifierNode = (IIdentifierNode) offsetNode;
             sourceRange = new Range();
             sourceRange.setStart(new Position(offsetNode.getLine(), offsetNode.getColumn()));
