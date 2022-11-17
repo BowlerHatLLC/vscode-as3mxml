@@ -679,7 +679,7 @@ public class ASTUtils {
             startComment = -1;
         }
         if (startComment != -1) {
-            if (startComment > offsetNode.getAbsoluteStart()) {
+            if (offsetNode != null && startComment > offsetNode.getAbsoluteStart()) {
                 IASNode commentNode = getContainingNodeIncludingStart(offsetNode, startComment + 1);
                 if (offsetNode.equals(commentNode)
                         && !isInSingleLineComment(code, startComment, minCommentStartIndex)) {
@@ -687,7 +687,7 @@ public class ASTUtils {
                     if (endComment == -1) {
                         endComment = code.length();
                     }
-                    if (endComment < offsetNode.getAbsoluteEnd()) {
+                    if (endComment < offsetNode.getAbsoluteEnd() && endComment >= currentOffset) {
                         commentNode = getContainingNodeIncludingStart(offsetNode, endComment + 1);
                         if (offsetNode.equals(commentNode)
                                 && !isInSingleLineComment(code, endComment, minCommentStartIndex)) {
