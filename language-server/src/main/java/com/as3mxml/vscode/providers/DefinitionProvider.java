@@ -171,7 +171,8 @@ public class DefinitionProvider {
             definition = functionNode.getDefinition();
         }
 
-        if (definition == null && offsetNode instanceof IIdentifierNode) {
+        if (definition == null && offsetNode instanceof IIdentifierNode
+                && !(offsetNode instanceof ILanguageIdentifierNode)) {
             IIdentifierNode identifierNode = (IIdentifierNode) offsetNode;
             sourceRange = new Range();
             sourceRange.setStart(new Position(offsetNode.getLine(), offsetNode.getColumn()));

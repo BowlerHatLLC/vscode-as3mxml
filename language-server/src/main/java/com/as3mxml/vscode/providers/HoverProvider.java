@@ -158,6 +158,7 @@ public class HoverProvider {
         // INamespaceDecorationNode extends IIdentifierNode, but we don't want
         // any hover information for it.
         if (definition == null && offsetNode instanceof IIdentifierNode
+                && !(offsetNode instanceof ILanguageIdentifierNode)
                 && !(offsetNode instanceof INamespaceDecorationNode)) {
             IIdentifierNode identifierNode = (IIdentifierNode) offsetNode;
             sourceRange = new Range();
