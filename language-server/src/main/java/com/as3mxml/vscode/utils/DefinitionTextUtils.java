@@ -975,12 +975,28 @@ public class DefinitionTextUtils {
         String comment = DefinitionDocumentationUtils.getDocumentationForDefinition(def, false, currentProject.getWorkspace(), true);
         if (comment != null)
         {
-            textDocumentBuilder.append(indent).append("/**\n");
+            textDocumentBuilder.append(indent).append("/**");
             for (String line : comment.split(NEW_LINE))
             {
-                textDocumentBuilder.append(indent).append(" * ").append(line).append(NEW_LINE);
+                // length of indent plus 3 for the " * "
+                final int baseWidth = indent.length() + 3;
+                int currentWidth = 80;
+                for (String word : line.trim().split(" ", -1))
+                {
+                    // 1 extra for space
+                    if (currentWidth + 1 + word.length() < 80)
+                    {
+                        textDocumentBuilder.append(" ").append(word);
+                        currentWidth += 1 + word.length();
+                    }
+                    else
+                    {
+                        textDocumentBuilder.append(NEW_LINE).append(indent).append(" * ").append(word);
+                        currentWidth = baseWidth + word.length();
+                    }
+                }
             }
-            textDocumentBuilder.append(indent).append(" */\n");
+            textDocumentBuilder.append(NEW_LINE).append(indent).append(" */\n");
         }
     }
 }
