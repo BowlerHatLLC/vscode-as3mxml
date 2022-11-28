@@ -16,10 +16,33 @@ limitations under the License.
 package com.as3mxml.asconfigc.utils;
 
 import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class OptionsFormatter {
+	private static String expandEnvironmentVariable(String value)
+	{
+		Map<String, String> envMap = System.getenv();
+		String pattern = "(\\$\\{|%)([A-Za-z0-9]+)(\\}|%)";
+		Pattern expr = Pattern.compile(pattern);
+		Matcher matcher = expr.matcher(value);
+		while (matcher.find()) {
+			String envValue = envMap.get(matcher.group(2));
+			if (envValue == null) {
+				envValue = "";
+			} else {
+				envValue = envValue.replace("\\", "\\\\");
+			}
+			Pattern subexpr = Pattern.compile(Pattern.quote(matcher.group(0)));
+			value = subexpr.matcher(value).replaceAll(envValue);
+		}
+
+		return value;
+	}
+
 	public static void setValue(String optionName, String value, List<String> result) {
-		result.add("--" + optionName + "=" + value);
+		result.add("--" + optionName + "=" + expandEnvironmentVariable(value));
 	}
 
 	public static void setBoolean(String optionName, boolean value, List<String> result) {
@@ -27,7 +50,7 @@ public class OptionsFormatter {
 	}
 
 	public static void setPathValue(String optionName, String value, List<String> result) {
-		result.add("--" + optionName + "=" + value);
+		result.add("--" + optionName + "=" + expandEnvironmentVariable(value));
 	}
 
 	public static void setValues(String optionName, List<String> values, List<String> result) {
@@ -36,7 +59,7 @@ public class OptionsFormatter {
 			return;
 		}
 		String firstValue = values.get(0);
-		result.add("--" + optionName + "=" + firstValue);
+		result.add("--" + optionName + "=" + expandEnvironmentVariable(firstValue));
 		appendValues(optionName, values.subList(1, size), result);
 	}
 
@@ -46,7 +69,7 @@ public class OptionsFormatter {
 			if (i > 0) {
 				joined.append(",");
 			}
-			joined.append(values.get(i));
+			joined.append(expandEnvironmentVariable(values.get(i)));
 		}
 		result.add("--" + optionName + "=" + joined.toString());
 	}
@@ -58,7 +81,7 @@ public class OptionsFormatter {
 		}
 		for (int i = 0; i < size; i++) {
 			String currentValue = values.get(i);
-			result.add("--" + optionName + "+=" + currentValue);
+			result.add("--" + optionName + "+=" + expandEnvironmentVariable(currentValue));
 		}
 	}
 
@@ -66,7 +89,7 @@ public class OptionsFormatter {
 		int pathsCount = paths.size();
 		for (int i = 0; i < pathsCount; i++) {
 			String currentPath = paths.get(i);
-			result.add("--" + optionName + "+=" + currentPath);
+			result.add("--" + optionName + "+=" + expandEnvironmentVariable(currentPath));
 		}
 	}
 
@@ -75,9 +98,9 @@ public class OptionsFormatter {
 		for (int i = 0; i < pathsCount; i++) {
 			String currentPath = paths.get(i);
 			if (i == 0) {
-				result.add("--" + optionName + "=" + currentPath);
+				result.add("--" + optionName + "=" + expandEnvironmentVariable(currentPath));
 			} else {
-				result.add("--" + optionName + "+=" + currentPath);
+				result.add("--" + optionName + "+=" + expandEnvironmentVariable(currentPath));
 			}
 		}
 	}
