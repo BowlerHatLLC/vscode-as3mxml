@@ -40,11 +40,18 @@ public class ConfigUtils {
 	private static final String FILE_EXTENSION_MXML = ".mxml";
 
 	public static String resolveMainClass(String mainClass, List<String> sourcePaths) {
+		return resolveMainClass(mainClass, sourcePaths, null);
+	}
+
+	public static String resolveMainClass(String mainClass, List<String> sourcePaths, String rootWorkspacePath) {
 		String mainClassBasePath = mainClass.replace(".", File.separator);
 		if (sourcePaths != null) {
 			for (String sourcePath : sourcePaths) {
 				Path sourcePathPath = Paths.get(sourcePath);
 				Path mainClassPath = sourcePathPath.resolve(mainClassBasePath + FILE_EXTENSION_AS);
+				if (!mainClassPath.isAbsolute() && rootWorkspacePath != null) {
+					mainClassPath = Paths.get(rootWorkspacePath).resolve(mainClassPath);
+				}
 				if (mainClassPath.toFile().exists()) {
 					return mainClassPath.toString();
 				}

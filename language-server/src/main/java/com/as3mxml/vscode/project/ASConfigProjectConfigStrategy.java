@@ -192,7 +192,7 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy {
             }
             if (projectType.equals(ProjectType.APP) && json.has(TopLevelFields.MAIN_CLASS)) {
                 mainClass = json.get(TopLevelFields.MAIN_CLASS).asText();
-                String resolvedMainClass = ConfigUtils.resolveMainClass(mainClass, sourcePaths);
+                String resolvedMainClass = ConfigUtils.resolveMainClass(mainClass, sourcePaths, projectRoot.toString());
                 if (resolvedMainClass != null) {
                     Path mainClassPath = Paths.get(resolvedMainClass);
                     mainClassPath = projectRoot.resolve(resolvedMainClass);
