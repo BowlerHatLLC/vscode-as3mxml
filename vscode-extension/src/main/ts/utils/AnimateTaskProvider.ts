@@ -19,6 +19,7 @@ import * as vscode from "vscode";
 import getFrameworkSDKPathWithFallbacks from "./getFrameworkSDKPathWithFallbacks";
 import findAnimate from "./findAnimate";
 import BaseAsconfigTaskProvider from "./BaseAsconfigTaskProvider";
+import getExtraCompilerTokens from "./getExtraCompilerTokens";
 
 const FIELD_ANIMATE_OPTIONS = "animateOptions";
 const FIELD_FILE = "file";
@@ -174,6 +175,11 @@ export default class ActionScriptTaskProvider
     }
     if (command.length > 1) {
       options.unshift(...command.slice(1));
+    }
+    let tokens = getExtraCompilerTokens();
+    if (tokens && tokens.length != 0)
+    {
+      options = options.concat(tokens);
     }
     let execution = new vscode.ProcessExecution(command[0], options);
     let task = new vscode.Task(

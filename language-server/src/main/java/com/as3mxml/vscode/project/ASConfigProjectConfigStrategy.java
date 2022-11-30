@@ -58,6 +58,7 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy {
     private Path projectPath;
     private Path asconfigPath;
     private boolean changed = true;
+    private List<String> tokens = null;
 
     public ASConfigProjectConfigStrategy(Path projectPath, WorkspaceFolder workspaceFolder) {
         this.projectPath = projectPath;
@@ -245,6 +246,11 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy {
         options.compilerOptions = compilerOptions;
         options.additionalOptions = additionalOptions;
         options.targets = targets;
+        options.additionalTokens = tokens;
         return options;
+    }
+
+    public void setTokens(List<String> tokens) {
+        this.tokens = tokens;
     }
 }
