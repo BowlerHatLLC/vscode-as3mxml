@@ -16,11 +16,12 @@ limitations under the License.
 package com.as3mxml.vscode.project;
 
 import java.nio.file.Path;
+import java.util.List;
 
 import org.eclipse.lsp4j.WorkspaceFolder;
 
 /**
- * Loads the configuration for a project. 
+ * Loads the configuration for a project.
  */
 public interface IProjectConfigStrategy {
     /**
@@ -58,4 +59,9 @@ public interface IProjectConfigStrategy {
      * Returns the project configuration options.
      */
     ProjectOptions getOptions();
+
+    /**
+     * Sets extra tokens that get added to ProjectOptions
+     */
+    void setTokens(List<String> tokens);
 }

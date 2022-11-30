@@ -54,6 +54,7 @@ public class ASConfigCOptions {
 	public boolean verbose = false;
 	public List<String> jvmargs = null;
 	public boolean printConfig = false;
+	public List<String> tokens = null;
 
 	public ASConfigCOptions(String project, String sdk, Boolean debug, String air, String storepass,
 			Boolean unpackageANEs, IASConfigCCompiler compiler) {
@@ -131,6 +132,11 @@ public class ASConfigCOptions {
 			String printConfigString = line.getOptionValue(OPTION_PRINT_CONFIG, Boolean.FALSE.toString());
 			printConfig = printConfigString.equals(Boolean.TRUE.toString());
 		}
-		compiler = new DefaultCompiler(verbose, jvmargs);
+		if (line.getArgList().size() != 0) {
+			tokens = line.getArgList().stream().filter((v) -> {
+				return v.startsWith("+");
+			}).collect(Collectors.toList());
+		}
+		compiler = new DefaultCompiler(verbose, jvmargs, tokens);
 	}
 }

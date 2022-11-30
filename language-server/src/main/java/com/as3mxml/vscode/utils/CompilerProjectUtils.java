@@ -21,6 +21,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.as3mxml.asconfigc.compiler.ProjectType;
 import com.as3mxml.vscode.project.ILspProject;
@@ -150,7 +151,8 @@ public class CompilerProjectUtils {
         boolean frameworkSDKContainsSparkTheme = sparkPath.toFile().exists();
 
         List<String> compilerOptions = projectOptions.compilerOptions;
-        RoyaleProjectConfigurator configurator = null;
+        List<String> extraTokens = projectOptions.additionalTokens;
+        final RoyaleProjectConfigurator configurator;
         if (project instanceof RoyaleJSProject || frameworkSDKIsRoyale) {
             configurator = new VSCodeProjectConfigurator(JSGoogConfiguration.class);
         } else // swf only
@@ -168,6 +170,15 @@ public class CompilerProjectUtils {
         String[] files = projectOptions.files;
         List<String> additionalOptions = projectOptions.additionalOptions;
         ArrayList<String> combinedOptions = new ArrayList<>();
+        if (extraTokens != null) {
+            // ["+a=b", "+c=d"] -> (a,b), (c,d)
+            extraTokens.stream().forEach(token -> {
+                String[] parts = token.split("=");
+                String name = parts[0].substring(1);
+                String value = Arrays.stream(parts).skip(1).collect(Collectors.joining());
+                configurator.setToken(name, value);
+            });
+        }
         if (compilerOptions != null) {
             combinedOptions.addAll(compilerOptions);
         }
