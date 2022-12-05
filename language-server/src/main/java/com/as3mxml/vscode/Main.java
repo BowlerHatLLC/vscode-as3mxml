@@ -18,6 +18,7 @@ package com.as3mxml.vscode;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.nio.file.Path;
@@ -51,8 +52,14 @@ public class Main {
         String port = System.getProperty(SYSTEM_PROPERTY_PORT);
         Socket socket = null;
         try {
+            PrintStream originalSysOut = System.out;
+            if (port == null) {
+                // redirect System.out to System.err because we need to keep
+                // System.out from receiving anything that isn't an LSP message
+                System.setOut(new PrintStream(System.err));
+            }
             InputStream inputStream = System.in;
-            OutputStream outputStream = System.out;
+            OutputStream outputStream = originalSysOut;
             if (port != null) {
                 socket = new Socket(SOCKET_HOST, Integer.parseInt(port));
                 inputStream = socket.getInputStream();
