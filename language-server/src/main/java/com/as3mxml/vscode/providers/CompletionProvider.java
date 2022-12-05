@@ -1874,6 +1874,7 @@ public class CompletionProvider {
                 item.setInsertTextFormat(InsertTextFormat.Snippet);
                 item.setInsertText(definition.getBaseName() + "($0)");
                 Command showParamsCommand = new Command();
+                showParamsCommand.setTitle("Parameters");
                 showParamsCommand.setCommand("editor.action.triggerParameterHints");
                 item.setCommand(showParamsCommand);
             }
