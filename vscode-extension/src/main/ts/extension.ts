@@ -515,6 +515,9 @@ function startClient() {
           let jvmargs = jvmargsString.split(" ");
           args.unshift(...jvmargs);
         }
+        // if JDK 11 or newer is ever required, it's probably a good idea to
+        // add the following option:
+        // args.unshift("-Xlog:all=warning:stderr")
         let primaryWorkspaceFolder: vscode.WorkspaceFolder = null;
         if (vscode.workspace.workspaceFolders !== undefined) {
           primaryWorkspaceFolder = vscode.workspace.workspaceFolders[0];
