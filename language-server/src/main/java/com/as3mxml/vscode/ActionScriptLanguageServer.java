@@ -47,6 +47,7 @@ import org.eclipse.lsp4j.TextDocumentSyncKind;
 import org.eclipse.lsp4j.WorkspaceFolder;
 import org.eclipse.lsp4j.WorkspaceFoldersOptions;
 import org.eclipse.lsp4j.WorkspaceServerCapabilities;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.LanguageClientAware;
 import org.eclipse.lsp4j.services.LanguageServer;
@@ -179,7 +180,7 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
             List<FileSystemWatcher> watchers = new ArrayList<>();
             // ideally, we'd only check .as, .mxml, asconfig.json, and directories
             // but there's no way to target directories without *
-            watchers.add(new FileSystemWatcher("**/*"));
+            watchers.add(new FileSystemWatcher(Either.forLeft("**/*")));
 
             String id = "as3mxml-language-server-" + Math.random();
             DidChangeWatchedFilesRegistrationOptions options = new DidChangeWatchedFilesRegistrationOptions(watchers);

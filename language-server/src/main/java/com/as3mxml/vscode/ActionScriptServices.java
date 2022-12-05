@@ -166,6 +166,7 @@ import org.eclipse.lsp4j.TypeDefinitionParams;
 import org.eclipse.lsp4j.VersionedTextDocumentIdentifier;
 import org.eclipse.lsp4j.WorkspaceEdit;
 import org.eclipse.lsp4j.WorkspaceFolder;
+import org.eclipse.lsp4j.WorkspaceSymbol;
 import org.eclipse.lsp4j.WorkspaceSymbolParams;
 import org.eclipse.lsp4j.jsonrpc.CancelChecker;
 import org.eclipse.lsp4j.jsonrpc.CompletableFutures;
@@ -565,7 +566,8 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
      * Searches by name for a symbol in the workspace.
      */
     @Override
-    public CompletableFuture<List<? extends SymbolInformation>> symbol(WorkspaceSymbolParams params) {
+    public CompletableFuture<Either<List<? extends SymbolInformation>, List<? extends WorkspaceSymbol>>> symbol(
+            WorkspaceSymbolParams params) {
         if (!concurrentRequests) {
             return CompletableFuture.completedFuture(symbol2(params, null));
         }
@@ -575,7 +577,8 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         });
     }
 
-    private List<? extends SymbolInformation> symbol2(WorkspaceSymbolParams params, CancelChecker cancelToken) {
+    private Either<List<? extends SymbolInformation>, List<? extends WorkspaceSymbol>> symbol2(
+            WorkspaceSymbolParams params, CancelChecker cancelToken) {
         // make sure that the latest changes have been passed to
         // workspace.fileChanged() before proceeding
         if (realTimeProblemsChecker != null) {

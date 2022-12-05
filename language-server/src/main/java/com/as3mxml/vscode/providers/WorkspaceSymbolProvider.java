@@ -36,8 +36,10 @@ import org.apache.royale.compiler.scopes.IASScope;
 import org.apache.royale.compiler.units.ICompilationUnit;
 import org.apache.royale.compiler.units.ICompilationUnit.UnitType;
 import org.eclipse.lsp4j.SymbolInformation;
+import org.eclipse.lsp4j.WorkspaceSymbol;
 import org.eclipse.lsp4j.WorkspaceSymbolParams;
 import org.eclipse.lsp4j.jsonrpc.CancelChecker;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
 
 public class WorkspaceSymbolProvider {
 	private ActionScriptProjectManager actionScriptProjectManager;
@@ -46,7 +48,8 @@ public class WorkspaceSymbolProvider {
 		this.actionScriptProjectManager = actionScriptProjectManager;
 	}
 
-	public List<? extends SymbolInformation> workspaceSymbol(WorkspaceSymbolParams params, CancelChecker cancelToken) {
+	public Either<List<? extends SymbolInformation>, List<? extends WorkspaceSymbol>> workspaceSymbol(
+			WorkspaceSymbolParams params, CancelChecker cancelToken) {
 		if (cancelToken != null) {
 			cancelToken.checkCanceled();
 		}
@@ -116,7 +119,7 @@ public class WorkspaceSymbolProvider {
 					try {
 						scopes = unit.getFileScopeRequest().get().getScopes();
 					} catch (Exception e) {
-						return Collections.emptyList();
+						return Either.forRight(Collections.emptyList());
 					}
 					for (IASScope scope : scopes) {
 						querySymbolsInScope(queries, scope, qualifiedNames, project, result);
@@ -127,7 +130,7 @@ public class WorkspaceSymbolProvider {
 		if (cancelToken != null) {
 			cancelToken.checkCanceled();
 		}
-		return result;
+		return Either.forLeft(result);
 	}
 
 	private void querySymbolsInScope(List<String> queries, IASScope scope, Set<String> foundTypes, ILspProject project,
