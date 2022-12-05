@@ -458,7 +458,7 @@ function startClient() {
   vscode.window.withProgress(
     { location: vscode.ProgressLocation.Window },
     (progress) => {
-      return new Promise<void>((resolve, reject) => {
+      return new Promise<void>(async (resolve, reject) => {
         progress.report({ message: INITIALIZING_MESSAGE });
         let clientOptions: LanguageClientOptions = {
           documentSelector: [
@@ -540,36 +540,36 @@ function startClient() {
           executable,
           clientOptions
         );
-        savedLanguageClient.onReady().then(
-          () => {
-            resolve();
-            isLanguageClientReady = true;
-            savedLanguageClient.onNotification(
-              "as3mxml/logCompilerShellOutput",
-              (notification: string) => {
-                logCompilerShellOutput(notification, false, false);
-              }
-            );
-            savedLanguageClient.onNotification(
-              "as3mxml/clearCompilerShellOutput",
-              () => {
-                logCompilerShellOutput(null, false, true);
-              }
-            );
-            if (pendingQuickCompileAndDebug) {
-              vscode.commands.executeCommand("as3mxml.quickCompileAndDebug");
-            } else if (pendingQuickCompileAndRun) {
-              vscode.commands.executeCommand("as3mxml.quickCompileAndRun");
-            }
-            pendingQuickCompileAndDebug = false;
-            pendingQuickCompileAndRun = false;
-          },
-          (reason) => {
-            resolve();
-            vscode.window.showErrorMessage(STARTUP_ERROR);
+
+        try {
+          await savedLanguageClient.start();
+        } catch (e) {
+          resolve();
+          vscode.window.showErrorMessage(STARTUP_ERROR);
+          return;
+        }
+
+        resolve();
+        isLanguageClientReady = true;
+        savedLanguageClient.onNotification(
+          "as3mxml/logCompilerShellOutput",
+          (notification: string) => {
+            logCompilerShellOutput(notification, false, false);
           }
         );
-        savedContext.subscriptions.push(savedLanguageClient.start());
+        savedLanguageClient.onNotification(
+          "as3mxml/clearCompilerShellOutput",
+          () => {
+            logCompilerShellOutput(null, false, true);
+          }
+        );
+        if (pendingQuickCompileAndDebug) {
+          vscode.commands.executeCommand("as3mxml.quickCompileAndDebug");
+        } else if (pendingQuickCompileAndRun) {
+          vscode.commands.executeCommand("as3mxml.quickCompileAndRun");
+        }
+        pendingQuickCompileAndDebug = false;
+        pendingQuickCompileAndRun = false;
       });
     }
   );

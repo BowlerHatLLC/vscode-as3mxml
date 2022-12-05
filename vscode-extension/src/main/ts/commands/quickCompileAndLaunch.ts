@@ -44,7 +44,7 @@ export default function quickCompileAndLaunch(uris: string[], debug: boolean) {
       if (!("uri" in result)) {
         return;
       }
-      quickCompileAndLaunchURI(result["uri"], debug);
+      quickCompileAndLaunchURI(result["uri"] as string, debug);
     });
   }
 }
