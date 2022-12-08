@@ -218,6 +218,7 @@ public class ASTUtils {
             // things in this package don't need to be imported
             return false;
         }
+        String packageImportName = qualifiedName.substring(0, packageEndIndex) + ".*";
         IASNode node = offsetNode;
         while (node != null) {
             if (node instanceof IPackageNode) {
@@ -235,7 +236,8 @@ public class ASTUtils {
                 IASNode child = node.getChild(i);
                 if (child instanceof IImportNode) {
                     IImportNode importNode = (IImportNode) child;
-                    if (qualifiedName.equals(importNode.getImportName())) {
+                    String importNodeName = importNode.getImportName();
+                    if (qualifiedName.equals(importNodeName) || packageImportName.equals(importNodeName)) {
                         return false;
                     }
                 }
