@@ -1449,29 +1449,34 @@ public class CompletionProvider {
         }
         item.setFilterText(tagName);
         item.setSortText(tagName);
-        StringBuilder builder = new StringBuilder();
+        StringBuilder insertTextBuilder = new StringBuilder();
         if (includeOpenTagBracket) {
-            builder.append("<");
+            insertTextBuilder.append("<");
         }
         if (includeOpenTagPrefix) {
-            builder.append(prefix);
-            builder.append(IMXMLCoreConstants.colon);
+            insertTextBuilder.append(prefix);
+            insertTextBuilder.append(IMXMLCoreConstants.colon);
         }
-        builder.append(tagName);
-        builder.append(">");
-        builder.append("\n");
-        builder.append("\t");
+        String escapedTagName = tagName;
         if (completionSupportsSnippets || completionSupportsSimpleSnippets) {
-            builder.append("$0");
+            escapedTagName = tagName.replaceAll("\\$",
+                    Matcher.quoteReplacement("\\$"));
         }
-        builder.append("\n");
-        builder.append("<");
-        builder.append(IMXMLCoreConstants.slash);
-        builder.append(prefix);
-        builder.append(IMXMLCoreConstants.colon);
-        builder.append(tagName);
-        builder.append(">");
-        item.setInsertText(builder.toString());
+        insertTextBuilder.append(escapedTagName);
+        insertTextBuilder.append(">");
+        insertTextBuilder.append("\n");
+        insertTextBuilder.append("\t");
+        if (completionSupportsSnippets || completionSupportsSimpleSnippets) {
+            insertTextBuilder.append("$0");
+        }
+        insertTextBuilder.append("\n");
+        insertTextBuilder.append("<");
+        insertTextBuilder.append(IMXMLCoreConstants.slash);
+        insertTextBuilder.append(prefix);
+        insertTextBuilder.append(IMXMLCoreConstants.colon);
+        insertTextBuilder.append(escapedTagName);
+        insertTextBuilder.append(">");
+        item.setInsertText(insertTextBuilder.toString());
         items.add(item);
     }
 
@@ -1487,35 +1492,35 @@ public class CompletionProvider {
         }
         item.setFilterText(IMXMLLanguageConstants.SCRIPT);
         item.setSortText(IMXMLLanguageConstants.SCRIPT);
-        StringBuilder builder = new StringBuilder();
+        StringBuilder insertTextBuilder = new StringBuilder();
         if (includeOpenTagBracket) {
-            builder.append("<");
+            insertTextBuilder.append("<");
         }
         if (includeOpenTagPrefix) {
-            builder.append(prefix);
-            builder.append(IMXMLCoreConstants.colon);
+            insertTextBuilder.append(prefix);
+            insertTextBuilder.append(IMXMLCoreConstants.colon);
         }
-        builder.append(IMXMLLanguageConstants.SCRIPT);
-        builder.append(">");
-        builder.append("\n");
-        builder.append("\t");
-        builder.append(IMXMLCoreConstants.cDataStart);
-        builder.append("\n");
-        builder.append("\t\t");
+        insertTextBuilder.append(IMXMLLanguageConstants.SCRIPT);
+        insertTextBuilder.append(">");
+        insertTextBuilder.append("\n");
+        insertTextBuilder.append("\t");
+        insertTextBuilder.append(IMXMLCoreConstants.cDataStart);
+        insertTextBuilder.append("\n");
+        insertTextBuilder.append("\t\t");
         if (completionSupportsSnippets || completionSupportsSimpleSnippets) {
-            builder.append("$0");
+            insertTextBuilder.append("$0");
         }
-        builder.append("\n");
-        builder.append("\t");
-        builder.append(IMXMLCoreConstants.cDataEnd);
-        builder.append("\n");
-        builder.append("<");
-        builder.append(IMXMLCoreConstants.slash);
-        builder.append(prefix);
-        builder.append(IMXMLCoreConstants.colon);
-        builder.append(IMXMLLanguageConstants.SCRIPT);
-        builder.append(">");
-        item.setInsertText(builder.toString());
+        insertTextBuilder.append("\n");
+        insertTextBuilder.append("\t");
+        insertTextBuilder.append(IMXMLCoreConstants.cDataEnd);
+        insertTextBuilder.append("\n");
+        insertTextBuilder.append("<");
+        insertTextBuilder.append(IMXMLCoreConstants.slash);
+        insertTextBuilder.append(prefix);
+        insertTextBuilder.append(IMXMLCoreConstants.colon);
+        insertTextBuilder.append(IMXMLLanguageConstants.SCRIPT);
+        insertTextBuilder.append(">");
+        item.setInsertText(insertTextBuilder.toString());
         items.add(item);
 
         addMXMLLanguageTagToAutoComplete(IMXMLLanguageConstants.BINDING, prefix, includeOpenTagBracket,
@@ -1727,34 +1732,39 @@ public class CompletionProvider {
                 if (eventDefinition == null) {
                     continue;
                 }
+                String escapedEventName = eventName;
+                if (completionSupportsSnippets || completionSupportsSimpleSnippets) {
+                    escapedEventName = eventName.replaceAll("\\$",
+                            Matcher.quoteReplacement("\\$"));
+                }
                 CompletionItem item = CompletionItemUtils.createDefinitionItem(eventDefinition, project);
                 if (isAttribute && (completionSupportsSnippets || completionSupportsSimpleSnippets)
                         && nextChar != '=') {
                     item.setInsertTextFormat(InsertTextFormat.Snippet);
-                    item.setInsertText(eventName + "=\"$0\"");
+                    item.setInsertText(escapedEventName + "=\"$0\"");
                 } else if (!isAttribute) {
-                    StringBuilder builder = new StringBuilder();
+                    StringBuilder insertTextBuilder = new StringBuilder();
                     if (includeOpenTagBracket) {
-                        builder.append("<");
+                        insertTextBuilder.append("<");
                     }
                     if (includeOpenTagPrefix && prefix != null && prefix.length() > 0) {
-                        builder.append(prefix);
-                        builder.append(IMXMLCoreConstants.colon);
+                        insertTextBuilder.append(prefix);
+                        insertTextBuilder.append(IMXMLCoreConstants.colon);
                     }
-                    builder.append(eventName);
+                    insertTextBuilder.append(escapedEventName);
                     if (completionSupportsSnippets || completionSupportsSimpleSnippets) {
                         item.setInsertTextFormat(InsertTextFormat.Snippet);
-                        builder.append(">");
-                        builder.append("$0");
-                        builder.append("</");
+                        insertTextBuilder.append(">");
+                        insertTextBuilder.append("$0");
+                        insertTextBuilder.append("</");
                         if (prefix != null && prefix.length() > 0) {
-                            builder.append(prefix);
-                            builder.append(IMXMLCoreConstants.colon);
+                            insertTextBuilder.append(prefix);
+                            insertTextBuilder.append(IMXMLCoreConstants.colon);
                         }
-                        builder.append(eventName);
-                        builder.append(">");
+                        insertTextBuilder.append(escapedEventName);
+                        insertTextBuilder.append(">");
                     }
-                    item.setInsertText(builder.toString());
+                    item.setInsertText(insertTextBuilder.toString());
                 }
                 result.getItems().add(item);
             }
@@ -1800,34 +1810,40 @@ public class CompletionProvider {
                 if (foundExisting) {
                     break;
                 }
+
+                String escapedStyleName = styleName;
+                if (completionSupportsSnippets || completionSupportsSimpleSnippets) {
+                    escapedStyleName = styleName.replaceAll("\\$",
+                            Matcher.quoteReplacement("\\$"));
+                }
                 CompletionItem item = CompletionItemUtils.createDefinitionItem(styleDefinition, project);
                 if (isAttribute && (completionSupportsSnippets || completionSupportsSimpleSnippets)
                         && nextChar != '=') {
                     item.setInsertTextFormat(InsertTextFormat.Snippet);
-                    item.setInsertText(styleName + "=\"$0\"");
+                    item.setInsertText(escapedStyleName + "=\"$0\"");
                 } else if (!isAttribute) {
-                    StringBuilder builder = new StringBuilder();
+                    StringBuilder insertTextBuilder = new StringBuilder();
                     if (includeOpenTagBracket) {
-                        builder.append("<");
+                        insertTextBuilder.append("<");
                     }
                     if (includeOpenTagPrefix && prefix != null && prefix.length() > 0) {
-                        builder.append(prefix);
-                        builder.append(IMXMLCoreConstants.colon);
+                        insertTextBuilder.append(prefix);
+                        insertTextBuilder.append(IMXMLCoreConstants.colon);
                     }
-                    builder.append(styleName);
+                    insertTextBuilder.append(escapedStyleName);
                     if (completionSupportsSnippets || completionSupportsSimpleSnippets) {
                         item.setInsertTextFormat(InsertTextFormat.Snippet);
-                        builder.append(">");
-                        builder.append("$0");
-                        builder.append("</");
+                        insertTextBuilder.append(">");
+                        insertTextBuilder.append("$0");
+                        insertTextBuilder.append("</");
                         if (prefix != null && prefix.length() > 0) {
-                            builder.append(prefix);
-                            builder.append(IMXMLCoreConstants.colon);
+                            insertTextBuilder.append(prefix);
+                            insertTextBuilder.append(IMXMLCoreConstants.colon);
                         }
-                        builder.append(styleName);
-                        builder.append(">");
+                        insertTextBuilder.append(escapedStyleName);
+                        insertTextBuilder.append(">");
                     }
-                    item.setInsertText(builder.toString());
+                    item.setInsertText(insertTextBuilder.toString());
                 }
                 items.add(item);
             }
@@ -1868,11 +1884,14 @@ public class CompletionProvider {
         if (definition instanceof IFunctionDefinition && !(definition instanceof IAccessorDefinition) && nextChar != '('
                 && (completionSupportsSnippets || completionSupportsSimpleSnippets)) {
             IFunctionDefinition functionDefinition = (IFunctionDefinition) definition;
+            String functionName = definition.getBaseName();
             if (functionDefinition.getParameters().length == 0) {
-                item.setInsertText(definition.getBaseName() + "()");
+                item.setInsertText(functionName + "()");
             } else {
                 item.setInsertTextFormat(InsertTextFormat.Snippet);
-                item.setInsertText(definition.getBaseName() + "($0)");
+                String escapedFunctionName = functionName.replaceAll("\\$",
+                        Matcher.quoteReplacement("\\$"));
+                item.setInsertText(escapedFunctionName + "($0)");
                 Command showParamsCommand = new Command();
                 showParamsCommand.setTitle("Parameters");
                 showParamsCommand.setCommand("editor.action.triggerParameterHints");
@@ -1907,9 +1926,14 @@ public class CompletionProvider {
             return;
         }
         CompletionItem item = CompletionItemUtils.createDefinitionItem(definition, project);
+        String escapedDefinitionBaseName = definitionBaseName;
+        if (completionSupportsSnippets || completionSupportsSimpleSnippets) {
+            escapedDefinitionBaseName = definitionBaseName.replaceAll("\\$",
+                    Matcher.quoteReplacement("\\$"));
+        }
         if (isAttribute && (completionSupportsSnippets || completionSupportsSimpleSnippets) && nextChar != '=') {
             item.setInsertTextFormat(InsertTextFormat.Snippet);
-            item.setInsertText(definitionBaseName + "=\"$0\"");
+            item.setInsertText(escapedDefinitionBaseName + "=\"$0\"");
         } else if (!isAttribute) {
             if (definition instanceof ITypeDefinition && includeOpenTagPrefix && prefix != null
                     && prefix.length() > 0) {
@@ -1929,7 +1953,7 @@ public class CompletionProvider {
                 insertTextBuilder.append(prefix);
                 insertTextBuilder.append(IMXMLCoreConstants.colon);
             }
-            insertTextBuilder.append(definitionBaseName);
+            insertTextBuilder.append(escapedDefinitionBaseName);
             if (definition instanceof ITypeDefinition && prefix != null && prefix.length() > 0
                     && (offsetTag == null || offsetTag.equals(offsetTag.getParent().getRootTag()))
                     && xmlnsPosition == null) {
@@ -1957,7 +1981,7 @@ public class CompletionProvider {
                 insertTextBuilder.append("\n</");
                 insertTextBuilder.append(prefix);
                 insertTextBuilder.append(IMXMLCoreConstants.colon);
-                insertTextBuilder.append(definitionBaseName);
+                insertTextBuilder.append(escapedDefinitionBaseName);
                 insertTextBuilder.append(">");
             }
             if ((completionSupportsSnippets || completionSupportsSimpleSnippets)
@@ -1970,7 +1994,7 @@ public class CompletionProvider {
                     insertTextBuilder.append(prefix);
                     insertTextBuilder.append(IMXMLCoreConstants.colon);
                 }
-                insertTextBuilder.append(definitionBaseName);
+                insertTextBuilder.append(escapedDefinitionBaseName);
                 insertTextBuilder.append(">");
             }
             item.setInsertText(insertTextBuilder.toString());
