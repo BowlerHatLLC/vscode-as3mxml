@@ -22,7 +22,7 @@ limitations under the License.
   <parent>
     <groupId>com.as3mxml.vscode</groupId>
     <artifactId>vscode-as3mxml</artifactId>
-    <version>1.15.0-SNAPSHOT</version>
+    <version>1.15.0</version>
   </parent>
 
   <groupId>com.as3mxml.vscode</groupId>

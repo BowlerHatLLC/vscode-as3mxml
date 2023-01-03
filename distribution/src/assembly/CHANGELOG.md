@@ -1,5 +1,25 @@
 # ActionScript & MXML for Visual Studio Code Changelog
 
+## 1.15.0
+
+### New Features
+
+- Definition: Ctrl+Click on `return` keyword will go to the function declaration that it is contained within.
+
+### Fixed Issues
+
+- Completion: Fixed omitted identifier names that start with `$`.
+- Completion: Fixed import for symbol being incorrectly added if package it is from was already imported with `.*`.
+- Definition: Fixed `this` and `super` resolution sometimes failing.
+- General: Fix "A target file must be specified" in a multi-root workspace when using `mainClass` in _asconfig.json_.
+- General: Fix an intermittent failure to detect the bounds of certain multi-line comments.
+- Language Server: Fix crash when stdout is written to by the compiler or other dependencies. Redirects stdout to stderr.
+- Quick Compile: If commands are disabled, don't override the keybindings for Ctrl+Enter and Ctrl+Shift+Enter.
+
+### Other Changes
+
+- Dependencies: eclipse/lsp4j language server updated to v0.19.0.
+
 ## 1.14.1
 
 ### Other Changes
