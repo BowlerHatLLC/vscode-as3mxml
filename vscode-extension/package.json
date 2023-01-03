@@ -123,12 +123,14 @@
       {
         "key": "ctrl+enter",
         "mac": "cmd+enter",
-        "command": "as3mxml.quickCompileAndRun"
+        "command": "as3mxml.quickCompileAndRun",
+        "when": "config.as3mxml.quickCompile.enabled"
       },
       {
         "key": "ctrl+shift+enter",
         "mac": "cmd+shift+enter",
-        "command": "as3mxml.quickCompileAndDebug"
+        "command": "as3mxml.quickCompileAndDebug",
+        "when": "config.as3mxml.quickCompile.enabled"
       }
     ],
     "menus": {
