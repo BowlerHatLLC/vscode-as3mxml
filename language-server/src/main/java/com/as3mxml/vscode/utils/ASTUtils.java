@@ -622,16 +622,23 @@ public class ASTUtils {
         return containingPackageName;
     }
 
-    public static int getFunctionCallNodeArgumentIndex(IFunctionCallNode functionCallNode, IASNode offsetNode) {
+    public static int getFunctionCallNodeArgumentIndex(IFunctionCallNode functionCallNode, IASNode offsetNode,
+            String fileText, int offset) {
         if (offsetNode == functionCallNode.getArgumentsNode() && offsetNode.getChildCount() == 0) {
             // there are no arguments yet
             return 0;
         }
-        int indexToFind = offsetNode.getAbsoluteEnd();
         IExpressionNode[] argumentNodes = functionCallNode.getArgumentNodes();
-        for (int i = argumentNodes.length - 1; i >= 0; i--) {
+        int lastIndex = argumentNodes.length - 1;
+        for (int i = lastIndex; i >= 0; i--) {
             IExpressionNode argumentNode = argumentNodes[i];
-            if (indexToFind >= argumentNode.getAbsoluteStart()) {
+            if (offset >= argumentNode.getAbsoluteStart()) {
+                if (offset > argumentNode.getAbsoluteEnd()) {
+                    int nextCommaIndex = fileText.indexOf(',', argumentNode.getAbsoluteEnd());
+                    if (offset > nextCommaIndex && i < lastIndex) {
+                        return i + 1;
+                    }
+                }
                 return i;
             }
         }

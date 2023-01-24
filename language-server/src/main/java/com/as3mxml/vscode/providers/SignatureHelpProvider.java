@@ -172,7 +172,9 @@ public class SignatureHelpProvider {
 			result.setSignatures(signatures);
 			result.setActiveSignature(0);
 
-			int index = ASTUtils.getFunctionCallNodeArgumentIndex(functionCallNode, offsetNode);
+			String fileText = fileTracker.getText(path);
+			int index = ASTUtils.getFunctionCallNodeArgumentIndex(functionCallNode, offsetNode, fileText,
+					currentOffset);
 			IParameterDefinition[] parameterDefs = functionDefinition.getParameters();
 			int paramCount = parameterDefs.length;
 			if (paramCount > 0 && index >= paramCount) {
