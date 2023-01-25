@@ -1280,6 +1280,10 @@ public class CompletionProvider {
                     String valueAsString = DefinitionTextUtils.valueToString(defaultValue);
                     if (valueAsString != null) {
                         insertText.append(valueAsString);
+                    } else {
+                        // I don't know how this might happen, but this is probably
+                        // a safe fallback value
+                        insertText.append(IASLanguageConstants.NULL);
                     }
                 }
             }
