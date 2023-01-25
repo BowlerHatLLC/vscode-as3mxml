@@ -16,11 +16,13 @@ limitations under the License.
 import * as vscode from "vscode";
 
 export default class SWCTextDocumentContentProvider
-  implements vscode.TextDocumentContentProvider {
+  implements vscode.TextDocumentContentProvider
+{
   provideTextDocumentContent(
     uri: vscode.Uri,
     token: vscode.CancellationToken
   ): vscode.ProviderResult<string> {
-    return decodeURIComponent(uri.query);
+    let query = decodeURIComponent(uri.query);
+    return Buffer.from(query, "base64").toString("utf8");
   }
 }

@@ -15,11 +15,13 @@ limitations under the License.
 */
 package com.as3mxml.vscode.utils;
 
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.Comparator;
-
-import com.google.common.net.UrlEscapers;
 
 import org.apache.royale.abc.ABCConstants;
 import org.apache.royale.compiler.constants.IASKeywordConstants;
@@ -35,12 +37,12 @@ import org.apache.royale.compiler.definitions.IFunctionDefinition;
 import org.apache.royale.compiler.definitions.IGetterDefinition;
 import org.apache.royale.compiler.definitions.IInterfaceDefinition;
 import org.apache.royale.compiler.definitions.INamespaceDefinition;
+import org.apache.royale.compiler.definitions.INamespaceDefinition.IInterfaceNamespaceDefinition;
 import org.apache.royale.compiler.definitions.IParameterDefinition;
 import org.apache.royale.compiler.definitions.ISetterDefinition;
 import org.apache.royale.compiler.definitions.IStyleDefinition;
 import org.apache.royale.compiler.definitions.ITypeDefinition;
 import org.apache.royale.compiler.definitions.IVariableDefinition;
-import org.apache.royale.compiler.definitions.INamespaceDefinition.IInterfaceNamespaceDefinition;
 import org.apache.royale.compiler.definitions.metadata.IMetaTag;
 import org.apache.royale.compiler.definitions.metadata.IMetaTagAttribute;
 import org.apache.royale.compiler.projects.ICompilerProject;
@@ -59,7 +61,11 @@ public class DefinitionTextUtils {
     private static final String NEW_LINE = "\n";
     private static final String INDENT = "\t";
     private static final String FILE_EXTENSION_AS = ".as";
+    private static final String ASDOC_START = "/**";
+    private static final String ASDOC_LINE_START = " * ";
+    private static final String ASDOC_END = " */";
     private static final String PATH_PREFIX_GENERATED = "generated/";
+    private static final String PROTOCOL_SWC = "swc://";
     public static final Comparator<IDefinition> DEFINITION_COMPARATOR = (IDefinition def1, IDefinition def2) -> {
         // static first
         boolean static1 = def1.isStatic();
@@ -143,8 +149,14 @@ public class DefinitionTextUtils {
 
         public Location toLocation() {
             Location location = new Location();
-            String escapedText = UrlEscapers.urlFragmentEscaper().escape(text);
-            URI uri = URI.create("swc://" + path + "?" + escapedText);
+            byte[] bytes = text.getBytes(StandardCharsets.UTF_8);
+            bytes = Base64.getEncoder().encode(bytes);
+            String escapedText = new String(bytes, StandardCharsets.UTF_8);
+            try {
+                escapedText = URLEncoder.encode(escapedText, StandardCharsets.UTF_8.toString());
+            } catch (UnsupportedEncodingException e) {
+            }
+            URI uri = URI.create(PROTOCOL_SWC + path + "?" + escapedText);
             location.setUri(uri.toString());
             location.setRange(toRange());
             return location;
@@ -325,10 +337,11 @@ public class DefinitionTextUtils {
     private static void insertClassDefinitionIntoTextDocument(IClassDefinition classDefinition,
             StringBuilder textDocumentBuilder, String indent, ICompilerProject currentProject, DefinitionAsText result,
             IDefinition definitionToFind) {
-        insertASDocIntoTextDocument(classDefinition, textDocumentBuilder, currentProject, indent);
-            
+
         insertMetaTagsIntoTextDocument(classDefinition, textDocumentBuilder, indent, currentProject, result,
                 definitionToFind);
+
+        insertASDocIntoTextDocument(classDefinition, textDocumentBuilder, currentProject, indent);
 
         textDocumentBuilder.append(indent);
         if (classDefinition.isPublic()) {
@@ -401,10 +414,11 @@ public class DefinitionTextUtils {
     private static void insertInterfaceDefinitionIntoTextDocument(IInterfaceDefinition interfaceDefinition,
             StringBuilder textDocumentBuilder, String indent, ICompilerProject currentProject, DefinitionAsText result,
             IDefinition definitionToFind) {
-        insertASDocIntoTextDocument(interfaceDefinition, textDocumentBuilder, currentProject, indent);
 
         insertMetaTagsIntoTextDocument(interfaceDefinition, textDocumentBuilder, indent, currentProject, result,
                 definitionToFind);
+
+        insertASDocIntoTextDocument(interfaceDefinition, textDocumentBuilder, currentProject, indent);
 
         textDocumentBuilder.append(indent);
         if (interfaceDefinition.isPublic()) {
@@ -457,10 +471,10 @@ public class DefinitionTextUtils {
     private static void insertNamespaceDefinitionIntoTextDocument(INamespaceDefinition namespaceDefinition,
             StringBuilder textDocumentBuilder, String indent, ICompilerProject currentProject, DefinitionAsText result,
             IDefinition definitionToFind) {
-        insertASDocIntoTextDocument(namespaceDefinition, textDocumentBuilder, currentProject, indent);
-
         insertMetaTagsIntoTextDocument(namespaceDefinition, textDocumentBuilder, indent, currentProject, result,
                 definitionToFind);
+
+        insertASDocIntoTextDocument(namespaceDefinition, textDocumentBuilder, currentProject, indent);
 
         textDocumentBuilder.append(indent);
         if (namespaceDefinition.isPublic()) {
@@ -486,10 +500,10 @@ public class DefinitionTextUtils {
     private static void insertFunctionDefinitionIntoTextDocument(IFunctionDefinition functionDefinition,
             StringBuilder textDocumentBuilder, String indent, ICompilerProject currentProject, DefinitionAsText result,
             IDefinition definitionToFind) {
-        insertASDocIntoTextDocument(functionDefinition, textDocumentBuilder, currentProject, indent);
-
         insertMetaTagsIntoTextDocument(functionDefinition, textDocumentBuilder, indent, currentProject, result,
                 definitionToFind);
+
+        insertASDocIntoTextDocument(functionDefinition, textDocumentBuilder, currentProject, indent);
 
         textDocumentBuilder.append(indent);
         if (functionDefinition.isOverride()) {
@@ -542,10 +556,11 @@ public class DefinitionTextUtils {
     private static void insertVariableDefinitionIntoTextDocument(IVariableDefinition variableDefinition,
             StringBuilder textDocumentBuilder, String indent, ICompilerProject currentProject, DefinitionAsText result,
             IDefinition definitionToFind) {
-        insertASDocIntoTextDocument(variableDefinition, textDocumentBuilder, currentProject, indent);
 
         insertMetaTagsIntoTextDocument(variableDefinition, textDocumentBuilder, indent, currentProject, result,
                 definitionToFind);
+
+        insertASDocIntoTextDocument(variableDefinition, textDocumentBuilder, currentProject, indent);
 
         textDocumentBuilder.append(indent);
         if (variableDefinition.isPublic()) {
@@ -970,33 +985,37 @@ public class DefinitionTextUtils {
         return indent.substring(1);
     }
 
-    private static void insertASDocIntoTextDocument(IDocumentableDefinition def, StringBuilder textDocumentBuilder, ICompilerProject currentProject, String indent)
-    {
-        String comment = DefinitionDocumentationUtils.getDocumentationForDefinition(def, false, currentProject.getWorkspace(), true);
-        if (comment != null)
-        {
-            textDocumentBuilder.append(indent).append("/**");
-            for (String line : comment.split(NEW_LINE))
-            {
-                // length of indent plus 3 for the " * "
-                final int baseWidth = indent.length() + 3;
-                int currentWidth = 80;
-                for (String word : line.trim().split(" ", -1))
-                {
-                    // 1 extra for space
-                    if (currentWidth + 1 + word.length() < 80)
-                    {
-                        textDocumentBuilder.append(" ").append(word);
-                        currentWidth += 1 + word.length();
-                    }
-                    else
-                    {
-                        textDocumentBuilder.append(NEW_LINE).append(indent).append(" * ").append(word);
-                        currentWidth = baseWidth + word.length();
-                    }
+    private static void insertASDocIntoTextDocument(IDocumentableDefinition def, StringBuilder textDocumentBuilder,
+            ICompilerProject currentProject, String indent) {
+        String comment = DefinitionDocumentationUtils.getDocumentationForDefinition(def, false,
+                currentProject.getWorkspace(), true);
+        if (comment == null) {
+            return;
+        }
+        textDocumentBuilder.append(indent);
+        textDocumentBuilder.append(ASDOC_START);
+        // assume tab is 4 characters wide
+        final int baseWidth = indent.replace("\t", "    ").length() + ASDOC_LINE_START.length();
+        for (String line : comment.split(NEW_LINE)) {
+            int currentWidth = 80;
+            for (String word : line.trim().split(" ", -1)) {
+                // 1 extra for space
+                if (currentWidth + 1 + word.length() < 80) {
+                    textDocumentBuilder.append(" ");
+                    textDocumentBuilder.append(word);
+                    currentWidth += 1 + word.length();
+                } else {
+                    textDocumentBuilder.append(NEW_LINE);
+                    textDocumentBuilder.append(indent);
+                    textDocumentBuilder.append(ASDOC_LINE_START);
+                    textDocumentBuilder.append(word);
+                    currentWidth = baseWidth + word.length();
                 }
             }
-            textDocumentBuilder.append(NEW_LINE).append(indent).append(" */\n");
         }
+        textDocumentBuilder.append(NEW_LINE);
+        textDocumentBuilder.append(indent);
+        textDocumentBuilder.append(ASDOC_END);
+        textDocumentBuilder.append(NEW_LINE);
     }
 }
