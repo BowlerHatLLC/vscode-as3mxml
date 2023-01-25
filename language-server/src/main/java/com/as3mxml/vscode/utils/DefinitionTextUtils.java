@@ -641,7 +641,25 @@ public class DefinitionTextUtils {
             return null;
         }
         if (value instanceof String) {
-            return "\"" + value + "\"";
+            String stringValue = (String) value;
+            // handle rendering of certain whitespace and other escape sequences
+            // https://help.adobe.com/en_US/as3/dev/WS5b3ccc516d4fbf351e63e3d118a9b90204-7ef8.html
+            stringValue = stringValue
+                    // backslash (must be first because the rest add more backslashes)
+                    .replace("\\", "\\\\")
+                    // backspace
+                    .replace("\b", "\\b")
+                    // form feed
+                    .replace("\f", "\\f")
+                    // new line
+                    .replace("\n", "\\n")
+                    // carriage return
+                    .replace("\r", "\\r")
+                    // horizontal tab
+                    .replace("\t", "\\t")
+                    // double quote
+                    .replace("\"", "\\\"");
+            return "\"" + stringValue + "\"";
         } else if (value == ABCConstants.UNDEFINED_VALUE) {
             return IASLanguageConstants.UNDEFINED;
         } else if (value == ABCConstants.NULL_VALUE) {
@@ -848,18 +866,9 @@ public class DefinitionTextUtils {
             if (parameterDefinition.hasDefaultValue()) {
                 labelBuilder.append(" = ");
                 Object defaultValue = parameterDefinition.resolveDefaultValue(currentProject);
-                if (defaultValue instanceof String) {
-                    labelBuilder.append("\"");
-                    labelBuilder.append(defaultValue);
-                    labelBuilder.append("\"");
-                } else if (defaultValue != null) {
-                    if (defaultValue.getClass() == Object.class) {
-                        // for some reason, null is some strange random object
-                        labelBuilder.append(IASLanguageConstants.NULL);
-                    } else {
-                        // numeric values and everything else should be okay
-                        labelBuilder.append(defaultValue);
-                    }
+                String defaultValueAsString = valueToString(defaultValue);
+                if (defaultValueAsString != null) {
+                    labelBuilder.append(defaultValueAsString);
                 } else {
                     // I don't know how this might happen, but this is probably
                     // a safe fallback value
