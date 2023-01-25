@@ -1483,10 +1483,16 @@ public class ASConfigC {
 		if (options.verbose) {
 			System.out.println("Processing Adobe AIR application descriptor(s)...");
 		}
+		String templatePath = Paths.get(sdkHome).resolve("templates/air/descriptor-template.xml").toString();
+		String templateNamespace = null;
+		try {
+			String templateContents = new String(Files.readAllBytes(Paths.get(templatePath)));
+			templateNamespace = ProjectUtils.findAIRDescriptorNamespace(templateContents);
+		} catch (IOException e) {
+		}
 		boolean populateTemplate = false;
 		if (airDescriptorPaths == null || airDescriptorPaths.size() == 0) {
 			airDescriptorPaths = new ArrayList<String>();
-			String templatePath = Paths.get(sdkHome).resolve("templates/air/descriptor-template.xml").toString();
 			airDescriptorPaths.add(templatePath);
 			populateTemplate = true;
 			if (options.verbose) {
@@ -1530,6 +1536,10 @@ public class ASConfigC {
 				airDescriptorPath = null;
 			}
 			descriptorContents = ProjectUtils.populateAdobeAIRDescriptorContent(descriptorContents, contentValue);
+			if (templateNamespace != null) {
+				descriptorContents = ProjectUtils.populateAdobeAIRDescriptorNamespace(descriptorContents,
+						templateNamespace);
+			}
 			if (outputIsJS) {
 				String debugDescriptorOutputPath = ProjectUtils.findAIRDescriptorOutputPath(mainFile, airDescriptorPath,
 						outputPathForTarget, System.getProperty("user.dir"), false, true);

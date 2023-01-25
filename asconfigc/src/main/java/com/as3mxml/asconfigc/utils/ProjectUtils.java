@@ -31,6 +31,7 @@ import com.as3mxml.asconfigc.compiler.ProjectType;
 
 public class ProjectUtils {
 	private static final String JAR_NAME_ADT = "adt.jar";
+	private static final String AIR_NAMESPACE_PREFIX = "<application xmlns=\"";
 
 	public static String findAIRDescriptorOutputPath(String mainFile, String airDescriptor, String outputPath,
 			String projectPath, boolean isSWF, boolean debugBuild) {
@@ -367,6 +368,12 @@ public class ProjectUtils {
 				"<content>" + contentValue + "</content>");
 	}
 
+	public static String populateAdobeAIRDescriptorNamespace(String descriptor, String namespaceValue) {
+		// (?!\s*-->) ignores lines that are commented out
+		return descriptor.replaceFirst("<application xmlns=\".*?\"",
+				"<application xmlns=\"" + namespaceValue + "\"");
+	}
+
 	public static String populateHTMLTemplateFile(String contents, Map<String, String> templateOptions) {
 		if (templateOptions == null) {
 			return contents;
@@ -376,5 +383,21 @@ public class ProjectUtils {
 			contents = contents.replace(token, templateOptions.get(option));
 		}
 		return contents;
+	}
+
+	public static String findAIRDescriptorNamespace(String airDescriptorContents) {
+		if (airDescriptorContents == null) {
+			return null;
+		}
+		int startIndex = airDescriptorContents.indexOf(AIR_NAMESPACE_PREFIX);
+		if (startIndex == -1) {
+			return null;
+		}
+		startIndex += AIR_NAMESPACE_PREFIX.length();
+		int endIndex = airDescriptorContents.indexOf("\"", startIndex);
+		if (endIndex == -1) {
+			return null;
+		}
+		return airDescriptorContents.substring(startIndex, endIndex);
 	}
 }
