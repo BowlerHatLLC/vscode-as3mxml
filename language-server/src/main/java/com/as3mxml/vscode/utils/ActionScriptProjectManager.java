@@ -685,6 +685,8 @@ public class ActionScriptProjectManager {
     private void removeProject(ActionScriptProjectData projectData) {
         removeProjectCallback.test(projectData);
         allProjectData.remove(projectData);
+        projectData.codeProblemTracker.releaseStale();
+        projectData.configProblemTracker.releaseStale();
         projectData.cleanup();
     }
 
