@@ -360,7 +360,6 @@ public class ExecuteCommandProvider {
                 sortImports = true;
                 break;
         }
-        System.err.println("*** add: " + addMissing + ", remove: " + removeUnused + ", sort: " + sortImports);
         Set<String> missingNames = null;
         Set<String> importsToAdd = null;
         List<IImportNode> importsToRemove = null;
