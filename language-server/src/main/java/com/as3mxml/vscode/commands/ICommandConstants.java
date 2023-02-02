@@ -20,6 +20,9 @@ public interface ICommandConstants {
 	public static final String ADD_MXML_NAMESPACE = "as3mxml.addMXMLNamespace";
 	public static final String ORGANIZE_IMPORTS_IN_URI = "as3mxml.organizeImportsInUri";
 	public static final String ORGANIZE_IMPORTS_IN_DIRECTORY = "as3mxml.organizeImportsInDirectory";
+	public static final String REMOVE_UNUSED_IMPORTS_IN_URI = "as3mxml.removeUnusedImportsInUri";
+	public static final String ADD_MISSING_IMPORTS_IN_URI = "as3mxml.addMissingImportsInUri";
+	public static final String SORT_IMPORTS_IN_URI = "as3mxml.sortImportsInUri";
 	public static final String QUICK_COMPILE = "as3mxml.quickCompile";
 	public static final String GET_ACTIVE_PROJECT_URIS = "as3mxml.getActiveProjectURIs";
 }

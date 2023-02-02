@@ -159,7 +159,9 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
         executeCommandOptions
                 .setCommands(Arrays.asList(ICommandConstants.ADD_IMPORT, ICommandConstants.ADD_MXML_NAMESPACE,
                         ICommandConstants.ORGANIZE_IMPORTS_IN_URI, ICommandConstants.ORGANIZE_IMPORTS_IN_DIRECTORY,
-                        ICommandConstants.QUICK_COMPILE, ICommandConstants.GET_ACTIVE_PROJECT_URIS));
+                        ICommandConstants.ADD_MISSING_IMPORTS_IN_URI, ICommandConstants.REMOVE_UNUSED_IMPORTS_IN_URI,
+                        ICommandConstants.SORT_IMPORTS_IN_URI, ICommandConstants.QUICK_COMPILE,
+                        ICommandConstants.GET_ACTIVE_PROJECT_URIS));
         serverCapabilities.setExecuteCommandProvider(executeCommandOptions);
 
         result.setCapabilities(serverCapabilities);

@@ -141,14 +141,50 @@ public class CodeActionProvider {
         Command organizeCommand = new Command();
         organizeCommand.setTitle("Organize Imports");
         organizeCommand.setCommand(ICommandConstants.ORGANIZE_IMPORTS_IN_URI);
-        JsonObject uri = new JsonObject();
-        uri.addProperty("external", path.toUri().toString());
-        organizeCommand.setArguments(Lists.newArrayList(uri));
+        JsonObject organizeUri = new JsonObject();
+        organizeUri.addProperty("external", path.toUri().toString());
+        organizeCommand.setArguments(Lists.newArrayList(organizeUri));
         CodeAction organizeImports = new CodeAction();
         organizeImports.setKind(CodeActionKind.SourceOrganizeImports);
         organizeImports.setTitle(organizeCommand.getTitle());
         organizeImports.setCommand(organizeCommand);
         codeActions.add(Either.forRight(organizeImports));
+
+        Command removeImportsCommand = new Command();
+        removeImportsCommand.setTitle("Remove Unused Imports");
+        removeImportsCommand.setCommand(ICommandConstants.REMOVE_UNUSED_IMPORTS_IN_URI);
+        JsonObject removeUri = new JsonObject();
+        removeUri.addProperty("external", path.toUri().toString());
+        removeImportsCommand.setArguments(Lists.newArrayList(removeUri));
+        CodeAction removeImports = new CodeAction();
+        removeImports.setKind("source.removeUnusedImports");
+        removeImports.setTitle(removeImportsCommand.getTitle());
+        removeImports.setCommand(removeImportsCommand);
+        codeActions.add(Either.forRight(removeImports));
+
+        Command sortImportsCommand = new Command();
+        sortImportsCommand.setTitle("Sort Imports");
+        sortImportsCommand.setCommand(ICommandConstants.SORT_IMPORTS_IN_URI);
+        JsonObject sortUri = new JsonObject();
+        sortUri.addProperty("external", path.toUri().toString());
+        sortImportsCommand.setArguments(Lists.newArrayList(sortUri));
+        CodeAction sortImports = new CodeAction();
+        sortImports.setKind("source.sortImports");
+        sortImports.setTitle(sortImportsCommand.getTitle());
+        sortImports.setCommand(sortImportsCommand);
+        codeActions.add(Either.forRight(sortImports));
+
+        Command addImportsCommand = new Command();
+        addImportsCommand.setTitle("Add Missing Imports");
+        addImportsCommand.setCommand(ICommandConstants.ADD_MISSING_IMPORTS_IN_URI);
+        JsonObject addUri = new JsonObject();
+        addUri.addProperty("external", path.toUri().toString());
+        addImportsCommand.setArguments(Lists.newArrayList(addUri));
+        CodeAction addImports = new CodeAction();
+        addImports.setKind("source.addMissingImports");
+        addImports.setTitle(addImportsCommand.getTitle());
+        addImports.setCommand(addImportsCommand);
+        codeActions.add(Either.forRight(addImports));
     }
 
     private void findCodeActionsForDiagnostics(Path path, ActionScriptProjectData projectData,

@@ -63,6 +63,9 @@
     "onView:actionScriptSourcePaths",
     "onCommand:as3mxml.organizeImportsInUri",
     "onCommand:as3mxml.organizeImportsInDirectory",
+    "onCommand:as3mxml.removeUnusedImportsInUri",
+    "onCommand:as3mxml.addMissingImportsInUri",
+    "onCommand:as3mxml.sortImportsInUri",
     "onCommand:as3mxml.saveSessionPassword",
     "onCommand:as3mxml.selectWorkspaceSDK",
     "onCommand:as3mxml.restartServer",
@@ -93,6 +96,18 @@
       {
         "command": "as3mxml.organizeImportsInUri",
         "title": "Organize Imports"
+      },
+      {
+        "command": "as3mxml.removeUnusedImportsInUri",
+        "title": "Remove Unused Imports"
+      },
+      {
+        "command": "as3mxml.addMissingImportsInUri",
+        "title": "Remove Unused Imports"
+      },
+      {
+        "command": "as3mxml.sortImportsInUri",
+        "title": "Sort Imports"
       },
       {
         "command": "as3mxml.organizeImportsInDirectory",
@@ -141,6 +156,18 @@
         },
         {
           "command": "as3mxml.organizeImportsInUri",
+          "when": "false"
+        },
+        {
+          "command": "as3mxml.removeUnusedImportsInUri",
+          "when": "false"
+        },
+        {
+          "command": "as3mxml.addMissingImportsInUri",
+          "when": "false"
+        },
+        {
+          "command": "as3mxml.sortImportsInUri",
           "when": "false"
         },
         {

@@ -100,6 +100,15 @@ public class ExecuteCommandProvider {
             case ICommandConstants.ORGANIZE_IMPORTS_IN_DIRECTORY: {
                 return executeOrganizeImportsInDirectoryCommand(params);
             }
+            case ICommandConstants.REMOVE_UNUSED_IMPORTS_IN_URI: {
+                return executeOrganizeImportsInUriCommand(params);
+            }
+            case ICommandConstants.ADD_MISSING_IMPORTS_IN_URI: {
+                return executeOrganizeImportsInUriCommand(params);
+            }
+            case ICommandConstants.SORT_IMPORTS_IN_URI: {
+                return executeOrganizeImportsInUriCommand(params);
+            }
             case ICommandConstants.GET_ACTIVE_PROJECT_URIS: {
                 return executeGetActiveProjectUrisCommand(params);
             }
@@ -180,7 +189,7 @@ public class ExecuteCommandProvider {
             }
             Map<String, List<TextEdit>> changes = new HashMap<>();
             for (String fileURI : fileURIs) {
-                organizeImportsInUri(fileURI, changes);
+                organizeImportsInUri(fileURI, OrganizeImportsKind.ORGANIZE, changes);
             }
 
             if (changes.keySet().size() > 0) {
@@ -219,6 +228,19 @@ public class ExecuteCommandProvider {
         JsonObject uriObject = (JsonObject) args.get(0);
         String uri = uriObject.get("external").getAsString();
 
+        OrganizeImportsKind kind = OrganizeImportsKind.ORGANIZE;
+        switch (params.getCommand()) {
+            case ICommandConstants.REMOVE_UNUSED_IMPORTS_IN_URI:
+                kind = OrganizeImportsKind.REMOVE_ONLY;
+                break;
+            case ICommandConstants.ADD_MISSING_IMPORTS_IN_URI:
+                kind = OrganizeImportsKind.ADD_ONLY;
+                break;
+            case ICommandConstants.SORT_IMPORTS_IN_URI:
+                kind = OrganizeImportsKind.SORT_ONLY;
+                break;
+        }
+
         Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(uri);
         if (path == null) {
             if (cancelToken != null) {
@@ -240,7 +262,7 @@ public class ExecuteCommandProvider {
             }
 
             Map<String, List<TextEdit>> changes = new HashMap<>();
-            organizeImportsInUri(uri, changes);
+            organizeImportsInUri(uri, kind, changes);
 
             if (changes.keySet().size() > 0) {
                 editParams = new ApplyWorkspaceEditParams();
@@ -290,7 +312,15 @@ public class ExecuteCommandProvider {
         compilerWorkspace.fileChanged(fileSpec);
     }
 
-    private void organizeImportsInUri(String uri, Map<String, List<TextEdit>> changes) {
+    public static enum OrganizeImportsKind {
+        ORGANIZE,
+        REMOVE_ONLY,
+        ADD_ONLY,
+        SORT_ONLY,
+    }
+
+    private void organizeImportsInUri(String uri, OrganizeImportsKind kind,
+            Map<String, List<TextEdit>> changes) {
         Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(uri);
         if (path == null) {
             return;
@@ -311,15 +341,35 @@ public class ExecuteCommandProvider {
             return;
         }
 
+        boolean sortImports = false;
+        boolean addMissing = false;
+        boolean removeUnused = false;
+        switch (kind) {
+            case REMOVE_ONLY:
+                removeUnused = true;
+                break;
+            case ADD_ONLY:
+                addMissing = true;
+                break;
+            case SORT_ONLY:
+                sortImports = true;
+                break;
+            case ORGANIZE:
+                addMissing = organizeImports_addMissingImports;
+                removeUnused = organizeImports_removeUnusedImports;
+                sortImports = true;
+                break;
+        }
+        System.err.println("*** add: " + addMissing + ", remove: " + removeUnused + ", sort: " + sortImports);
         Set<String> missingNames = null;
         Set<String> importsToAdd = null;
         List<IImportNode> importsToRemove = null;
         IASNode ast = ASTUtils.getCompilationUnitAST(unit);
         if (ast != null) {
-            if (organizeImports_addMissingImports) {
+            if (addMissing) {
                 missingNames = ASTUtils.findUnresolvedIdentifiersToImport(ast, project);
             }
-            if (organizeImports_removeUnusedImports) {
+            if (removeUnused) {
                 String qualifiedName = CompilationUnitUtils.getPrimaryQualifiedName(unit);
                 Set<String> requiredImports = project.getQNamesOfDependencies(unit);
                 importsToRemove = ASTUtils.findImportNodesToRemove(ast, qualifiedName, requiredImports);
@@ -336,7 +386,7 @@ public class ExecuteCommandProvider {
                 }
             }
         }
-        List<TextEdit> edits = ImportTextEditUtils.organizeImports(text, importsToRemove, importsToAdd,
+        List<TextEdit> edits = ImportTextEditUtils.organizeImports(text, importsToRemove, importsToAdd, sortImports,
                 organizeImports_insertNewLineBetweenTopLevelPackages);
         if (edits == null || edits.size() == 0) {
             // no edit required
