@@ -512,6 +512,162 @@ public class CompilerOptionsParser {
 		}
 	}
 
+	public void parseForASDoc(JsonNode options, List<String> result)
+			throws UnknownCompilerOptionException {
+		Iterator<String> iterator = options.fieldNames();
+		while (iterator.hasNext()) {
+			String key = iterator.next();
+			switch (key) {
+				case CompilerOptions.DEFINE: {
+					setDefine(key, options.get(key), result);
+					break;
+				}
+				case CompilerOptions.EXTERNAL_LIBRARY_PATH: {
+					List<String> values = JsonUtils.jsonNodeToListOfStrings(options.get(key));
+					OptionsFormatter.appendPaths(key, values, result);
+					break;
+				}
+				case CompilerOptions.INCLUDE_LIBRARIES: {
+					List<String> values = JsonUtils.jsonNodeToListOfStrings(options.get(key));
+					OptionsFormatter.appendPaths(key, values, result);
+					break;
+				}
+				case CompilerOptions.LIBRARY_PATH: {
+					List<String> values = JsonUtils.jsonNodeToListOfStrings(options.get(key));
+					OptionsFormatter.appendPaths(key, values, result);
+					break;
+				}
+				case CompilerOptions.LOAD_CONFIG: {
+					List<String> values = JsonUtils.jsonNodeToListOfStrings(options.get(key));
+					OptionsFormatter.appendPaths(key, values, result);
+					break;
+				}
+				case CompilerOptions.STRICT: {
+					OptionsFormatter.setBoolean(key, options.get(key).asBoolean(), result);
+					break;
+				}
+				case CompilerOptions.SOURCE_PATH: {
+					List<String> values = JsonUtils.jsonNodeToListOfStrings(options.get(key));
+					OptionsFormatter.appendPaths(key, values, result);
+					break;
+				}
+				case CompilerOptions.ACCESSIBLE:
+				case CompilerOptions.ADVANCED_TELEMETRY:
+				case CompilerOptions.ALLOW_ABSTRACT_CLASSES:
+				case CompilerOptions.ALLOW_IMPORT_ALIASES:
+				case CompilerOptions.ALLOW_PRIVATE_CONSTRUCTORS:
+				case CompilerOptions.BENCHMARK:
+				case CompilerOptions.DEBUG:
+				case CompilerOptions.DEBUG_PASSWORD:
+				case CompilerOptions.DEFAULT_BACKGROUND_COLOR:
+				case CompilerOptions.DEFAULT_FRAME_RATE:
+				case CompilerOptions.DEFAULT_SIZE:
+				case CompilerOptions.DEFAULTS_CSS_FILES:
+				case CompilerOptions.JS_DEFINE:
+				case CompilerOptions.DIRECTORY:
+				case CompilerOptions.DUMP_CONFIG:
+				case CompilerOptions.EXCLUDE_DEFAULTS_CSS_FILES:
+				case CompilerOptions.EXPORT_PUBLIC_SYMBOLS:
+				case CompilerOptions.EXPORT_PROTECTED_SYMBOLS:
+				case CompilerOptions.EXPORT_INTERNAL_SYMBOLS:
+				case CompilerOptions.HTML_OUTPUT_FILENAME:
+				case CompilerOptions.HTML_TEMPLATE:
+				case CompilerOptions.INCLUDE_CLASSES:
+				case CompilerOptions.INCLUDE_FILE:
+				case CompilerOptions.INCLUDE_NAMESPACES:
+				case CompilerOptions.INCLUDE_SOURCES:
+				case CompilerOptions.INLINE_CONSTANTS:
+				case CompilerOptions.JS_COMPILER_OPTION:
+				case CompilerOptions.JS_COMPLEX_IMPLICIT_COERCIONS:
+				case CompilerOptions.JS_DEFAULT_INITIALIZERS:
+				case CompilerOptions.JS_DYNAMIC_ACCESS_UNKNOWN_MEMBERS:
+				case CompilerOptions.JS_EXTERNAL_LIBRARY_PATH:
+				case CompilerOptions.JS_LIBRARY_PATH:
+				case CompilerOptions.JS_OUTPUT:
+				case CompilerOptions.JS_OUTPUT_OPTIMIZATION:
+				case CompilerOptions.JS_OUTPUT_TYPE:
+				case CompilerOptions.JS_VECTOR_EMULATION_CLASS:
+				case CompilerOptions.JS_VECTOR_INDEX_CHECKS:
+				case CompilerOptions.KEEP_ALL_TYPE_SELECTORS:
+				case CompilerOptions.KEEP_AS3_METADATA:
+				case CompilerOptions.KEEP_GENERATED_ACTIONSCRIPT:
+				case CompilerOptions.LINK_REPORT:
+				case CompilerOptions.JS_LOAD_CONFIG:
+				case CompilerOptions.LOAD_EXTERNS:
+				case CompilerOptions.LOCALE:
+				case CompilerOptions.NAMESPACE:
+				case CompilerOptions.OPTIMIZE:
+				case CompilerOptions.OMIT_TRACE_STATEMENTS:
+				case CompilerOptions.OUTPUT:
+				case CompilerOptions.PRELOADER:
+				case CompilerOptions.PREVENT_RENAME_PUBLIC_SYMBOLS:
+				case CompilerOptions.PREVENT_RENAME_PUBLIC_STATIC_METHODS:
+				case CompilerOptions.PREVENT_RENAME_PUBLIC_INSTANCE_METHODS:
+				case CompilerOptions.PREVENT_RENAME_PUBLIC_STATIC_VARIABLES:
+				case CompilerOptions.PREVENT_RENAME_PUBLIC_INSTANCE_VARIABLES:
+				case CompilerOptions.PREVENT_RENAME_PUBLIC_STATIC_ACCESSORS:
+				case CompilerOptions.PREVENT_RENAME_PUBLIC_INSTANCE_ACCESSORS:
+				case CompilerOptions.PREVENT_RENAME_PROTECTED_SYMBOLS:
+				case CompilerOptions.PREVENT_RENAME_PROTECTED_STATIC_METHODS:
+				case CompilerOptions.PREVENT_RENAME_PROTECTED_INSTANCE_METHODS:
+				case CompilerOptions.PREVENT_RENAME_PROTECTED_STATIC_VARIABLES:
+				case CompilerOptions.PREVENT_RENAME_PROTECTED_INSTANCE_VARIABLES:
+				case CompilerOptions.PREVENT_RENAME_PROTECTED_STATIC_ACCESSORS:
+				case CompilerOptions.PREVENT_RENAME_PROTECTED_INSTANCE_ACCESSORS:
+				case CompilerOptions.PREVENT_RENAME_INTERNAL_SYMBOLS:
+				case CompilerOptions.PREVENT_RENAME_INTERNAL_STATIC_METHODS:
+				case CompilerOptions.PREVENT_RENAME_INTERNAL_INSTANCE_METHODS:
+				case CompilerOptions.PREVENT_RENAME_INTERNAL_STATIC_VARIABLES:
+				case CompilerOptions.PREVENT_RENAME_INTERNAL_INSTANCE_VARIABLES:
+				case CompilerOptions.PREVENT_RENAME_INTERNAL_STATIC_ACCESSORS:
+				case CompilerOptions.PREVENT_RENAME_INTERNAL_INSTANCE_ACCESSORS:
+				case CompilerOptions.REMOVE_CIRCULARS:
+				case CompilerOptions.SHOW_UNUSED_TYPE_SELECTOR_WARNINGS:
+				case CompilerOptions.SIZE_REPORT:
+				case CompilerOptions.SOURCE_MAP:
+				case CompilerOptions.SOURCE_MAP_SOURCE_ROOT:
+				case CompilerOptions.STATIC_LINK_RUNTIME_SHARED_LIBRARIES:
+				case CompilerOptions.STRICT_IDENTIFIER_NAMES:
+				case CompilerOptions.SWF_EXTERNAL_LIBRARY_PATH:
+				case CompilerOptions.SWF_LIBRARY_PATH:
+				case CompilerOptions.SWF_VERSION:
+				case CompilerOptions.TARGET_PLAYER:
+				case CompilerOptions.TARGETS:
+				case CompilerOptions.THEME:
+				case CompilerOptions.TOOLS_LOCALE:
+				case CompilerOptions.USE_DIRECT_BLIT:
+				case CompilerOptions.USE_GPU:
+				case CompilerOptions.USE_NETWORK:
+				case CompilerOptions.USE_RESOURCE_BUNDLE_METADATA:
+				case CompilerOptions.VERBOSE_STACKTRACES:
+				case CompilerOptions.WARNINGS:
+				case CompilerOptions.WARN_PUBLIC_VARS:
+					break;
+				default: {
+					throw new UnknownCompilerOptionException(key);
+				}
+			}
+		}
+	}
+
+	public static void parseASDoc(JsonNode options, List<String> result) {
+		if (options.has(ASDocOptions.DOC_SOURCES)) {
+			for (String source : JsonUtils.jsonNodeToListOfStrings(options.get(ASDocOptions.DOC_SOURCES))) {
+				result.add(0, "-doc-sources+=" + source);
+			}
+		}
+		if (options.has(ASDocOptions.DOC_CLASSES)) {
+			for (String source : JsonUtils.jsonNodeToListOfStrings(options.get(ASDocOptions.DOC_CLASSES))) {
+				result.add(0, "-doc-classes+=" + source);
+			}
+		}
+		if (options.has(ASDocOptions.DOC_NAMESPACES)) {
+			for (String source : JsonUtils.jsonNodeToListOfStrings(options.get(ASDocOptions.DOC_NAMESPACES))) {
+				result.add(0, "-doc-namespaces+=" + source);
+			}
+		}
+	}
+
 	private void appendNamespace(JsonNode values, List<String> result) {
 		int size = values.size();
 		if (size == 0) {

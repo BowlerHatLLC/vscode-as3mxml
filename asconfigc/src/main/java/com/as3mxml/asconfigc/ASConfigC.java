@@ -63,6 +63,7 @@ import com.as3mxml.asconfigc.air.AIROptions;
 import com.as3mxml.asconfigc.air.AIROptionsParser;
 import com.as3mxml.asconfigc.air.AIRSigningOptions;
 import com.as3mxml.asconfigc.animate.AnimateOptions;
+import com.as3mxml.asconfigc.compiler.ASDocOptions;
 import com.as3mxml.asconfigc.compiler.CompilerOptions;
 import com.as3mxml.asconfigc.compiler.CompilerOptionsParser;
 import com.as3mxml.asconfigc.compiler.ConfigName;
@@ -242,6 +243,7 @@ public class ASConfigC {
 
 	private ASConfigCOptions options;
 	private List<String> compilerOptions;
+	private List<String> asdocOptions;
 	private List<List<String>> allModuleCompilerOptions;
 	private List<List<String>> allWorkerCompilerOptions;
 	private List<String> airOptions;
@@ -250,6 +252,7 @@ public class ASConfigC {
 	private String projectType;
 	private boolean clean;
 	private boolean watch;
+	private boolean includeAsdoc;
 	private boolean debugBuild;
 	private boolean copySourcePathAssets;
 	private String jsOutputType;
@@ -378,6 +381,7 @@ public class ASConfigC {
 			debugBuild = options.debug != null && options.debug.equals(true);
 		}
 		compilerOptions = new ArrayList<>();
+		asdocOptions = new ArrayList<>();
 		allModuleCompilerOptions = new ArrayList<>();
 		allWorkerCompilerOptions = new ArrayList<>();
 		if (options.debug != null) {
@@ -393,6 +397,7 @@ public class ASConfigC {
 			String configName = json.get(TopLevelFields.CONFIG).asText();
 			detectConfigRequirements(configName);
 			compilerOptions.add("+configname=" + configName);
+			asdocOptions.add("+configname=" + configName);
 		}
 		if (json.has(TopLevelFields.COMPILER_OPTIONS)) {
 			compilerOptionsJSON = json.get(TopLevelFields.COMPILER_OPTIONS);
@@ -410,6 +415,13 @@ public class ASConfigC {
 			}
 			if (compilerOptionsJSON.has(CompilerOptions.JS_OUTPUT)) {
 				jsOutputPath = compilerOptionsJSON.get(CompilerOptions.JS_OUTPUT).asText();
+			}
+		}
+		if (json.has(TopLevelFields.ASDOC_OPTIONS)) {
+			JsonNode asdocOptionsJSON = json.get(TopLevelFields.ASDOC_OPTIONS);
+			CompilerOptionsParser.parseASDoc(asdocOptionsJSON, asdocOptions);
+			if (asdocOptionsJSON.has(ASDocOptions.INCLUDE)) {
+				includeAsdoc = asdocOptionsJSON.get(ASDocOptions.INCLUDE).asBoolean();
 			}
 		}
 		if (json.has(TopLevelFields.ADDITIONAL_OPTIONS)) {
@@ -845,6 +857,7 @@ public class ASConfigC {
 		CompilerOptionsParser parser = new CompilerOptionsParser();
 		try {
 			parser.parse(compilerOptionsJson, options.debug, compilerOptions);
+			parser.parseForASDoc(compilerOptionsJson, asdocOptions);
 		} catch (Exception e) {
 			StringWriter stackTrace = new StringWriter();
 			e.printStackTrace(new PrintWriter(stackTrace));
@@ -1078,6 +1091,10 @@ public class ASConfigC {
 		for (int i = 0; i < allModuleCompilerOptions.size(); i++) {
 			List<String> moduleCompilerOptions = allModuleCompilerOptions.get(i);
 			options.compiler.compile(projectType, moduleCompilerOptions, workspacePath, sdkPath);
+		}
+
+		if (includeAsdoc && swfOutputPath != null) {
+			options.compiler.buildASDoc(projectType, swfOutputPath, asdocOptions, workspacePath, sdkPath);
 		}
 	}
 
