@@ -775,9 +775,9 @@ public class DefinitionTextUtils {
             detailBuilder.append(variableDefinition.getQualifiedName());
             detailBuilder.append(":");
             detailBuilder.append(getTypeAsDisplayString(variableDefinition));
-            if (variableDefinition instanceof IConstantDefinition
-                    || variableDefinition instanceof IParameterDefinition) {
-                Object initialValue = variableDefinition.resolveInitialValue(currentProject);
+            if (variableDefinition instanceof IConstantDefinition) {
+                IConstantDefinition constantDefinition = (IConstantDefinition) variableDefinition;
+                Object initialValue = constantDefinition.resolveInitialValue(currentProject);
                 String initialValueAsString = valueToString(initialValue);
                 if (initialValueAsString != null) {
                     detailBuilder.append(" = ");
