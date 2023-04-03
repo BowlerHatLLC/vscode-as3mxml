@@ -504,25 +504,29 @@ public class ASTUtils {
                         // new Identifier()
                         // x = Identifier(y)
                         IFunctionCallNode functionCallNode = (IFunctionCallNode) node;
-                        if (functionCallNode.getNameNode().equals(identifierNode)) {
+                        IExpressionNode nameNode = functionCallNode.getNameNode();
+                        if (nameNode != null && nameNode.equals(identifierNode)) {
                             importsToAdd.add(identifierName);
                         }
                     } else if (node instanceof IVariableNode) {
                         // var x:Identifier
                         IVariableNode variableNode = (IVariableNode) node;
-                        if (variableNode.getVariableTypeNode().equals(identifierNode)) {
+                        IExpressionNode variableTypeNode = variableNode.getVariableTypeNode();
+                        if (variableTypeNode != null && variableTypeNode.equals(identifierNode)) {
                             importsToAdd.add(identifierName);
                         }
                     } else if (node instanceof IFunctionNode) {
                         // function():Identifier
                         IFunctionNode functionNode = (IFunctionNode) node;
-                        if (functionNode.getReturnTypeNode().equals(identifierNode)) {
+                        IExpressionNode returnTypeNode = functionNode.getReturnTypeNode();
+                        if (returnTypeNode != null && returnTypeNode.equals(identifierNode)) {
                             importsToAdd.add(identifierName);
                         }
                     } else if (node instanceof IClassNode) {
                         // class x extends Identifier
                         IClassNode classNode = (IClassNode) node;
-                        if (classNode.getBaseClassExpressionNode().equals(identifierNode)) {
+                        IExpressionNode baseClassExpressionNode = classNode.getBaseClassExpressionNode();
+                        if (baseClassExpressionNode.equals(identifierNode)) {
                             importsToAdd.add(identifierName);
                         }
                     } else if (node instanceof ITransparentContainerNode && gp instanceof IClassNode) {
