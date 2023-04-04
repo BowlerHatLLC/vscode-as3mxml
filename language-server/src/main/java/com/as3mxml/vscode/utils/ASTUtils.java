@@ -526,7 +526,7 @@ public class ASTUtils {
                         // class x extends Identifier
                         IClassNode classNode = (IClassNode) node;
                         IExpressionNode baseClassExpressionNode = classNode.getBaseClassExpressionNode();
-                        if (baseClassExpressionNode.equals(identifierNode)) {
+                        if (baseClassExpressionNode != null && baseClassExpressionNode.equals(identifierNode)) {
                             importsToAdd.add(identifierName);
                         }
                     } else if (node instanceof ITransparentContainerNode && gp instanceof IClassNode) {
