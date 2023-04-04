@@ -102,12 +102,36 @@ function findDocumentSymbol(
       return false;
     }
     if (symbol.kind !== symbolToFind.kind) {
+      // console.warn(
+      //   `Symbol ${symbol.name} has non-matching kind: ${symbol.kind} != ${symbolToFind.kind}`
+      // );
       return false;
     }
-    if (symbol.range.start.line !== symbolToFind.range.start.line) {
+    if (
+      symbol.range.start.line !== symbolToFind.range.start.line ||
+      symbol.range.start.character !== symbolToFind.range.start.character ||
+      symbol.range.end.line !== symbolToFind.range.end.line ||
+      symbol.range.end.character !== symbolToFind.range.end.character
+    ) {
+      // log for debugging purposes
+      console.warn(
+        `Symbol ${symbol.name} of kind ${symbol.kind} has non-matching range: (${symbol.range.start.line}, ${symbol.range.start.character}), (${symbol.range.end.line}, ${symbol.range.end.character}) != (${symbolToFind.range.start.line}, ${symbolToFind.range.start.character}), (${symbolToFind.range.end.line}, ${symbolToFind.range.end.character})`
+      );
       return false;
     }
-    if (symbol.range.start.character !== symbolToFind.range.start.character) {
+    if (
+      symbol.selectionRange.start.line !==
+        symbolToFind.selectionRange.start.line ||
+      symbol.selectionRange.start.character !==
+        symbolToFind.selectionRange.start.character ||
+      symbol.selectionRange.end.line !== symbolToFind.selectionRange.end.line ||
+      symbol.selectionRange.end.character !==
+        symbolToFind.selectionRange.end.character
+    ) {
+      // log for debugging purposes
+      console.warn(
+        `Symbol ${symbol.name} of kind ${symbol.kind} has non-matching selection range: (${symbol.selectionRange.start.line}, ${symbol.selectionRange.start.character}), (${symbol.selectionRange.end.line}, ${symbol.selectionRange.end.character}) != (${symbolToFind.selectionRange.start.line}, ${symbolToFind.selectionRange.start.character}), (${symbolToFind.selectionRange.end.line}, ${symbolToFind.selectionRange.end.character})`
+      );
       return false;
     }
     return true;
@@ -263,8 +287,8 @@ suite("document symbol provider: Application workspace", () => {
                   className,
                   null,
                   vscode.SymbolKind.Class,
-                  createRange(2, 14),
-                  createRange(2, 14)
+                  createRange(2, 1, 31, 2),
+                  createRange(2, 14, 2, 18)
                 )
               ),
               "vscode.executeDocumentSymbolProvider failed to provide symbol for class: " +
@@ -298,8 +322,8 @@ suite("document symbol provider: Application workspace", () => {
                   className,
                   null,
                   vscode.SymbolKind.Constructor,
-                  createRange(16, 18),
-                  createRange(16, 18)
+                  createRange(16, 2, 19, 3),
+                  createRange(16, 18, 16, 22)
                 )
               ),
               "vscode.executeDocumentSymbolProvider failed to provide symbol for constructor: " +
@@ -333,8 +357,8 @@ suite("document symbol provider: Application workspace", () => {
                   memberVarName,
                   null,
                   vscode.SymbolKind.Field,
-                  createRange(21, 13),
-                  createRange(21, 13)
+                  createRange(21, 2, 21, 29),
+                  createRange(21, 13, 21, 22)
                 )
               ),
               "vscode.executeDocumentSymbolProvider failed to provide symbol for member variable: " +
@@ -368,8 +392,8 @@ suite("document symbol provider: Application workspace", () => {
                   memberFunctionName,
                   null,
                   vscode.SymbolKind.Method,
-                  createRange(23, 19),
-                  createRange(23, 19)
+                  createRange(23, 2, 25, 3),
+                  createRange(23, 19, 23, 33)
                 )
               ),
               "vscode.executeDocumentSymbolProvider failed to provide symbol for member function: " +
@@ -395,7 +419,7 @@ suite("document symbol provider: Application workspace", () => {
         .executeCommand("vscode.executeDocumentSymbolProvider", uri)
         .then(
           (symbols: vscode.DocumentSymbol[]) => {
-            let memberPropertyName = "memberProperty";
+            let memberPropertyName = "get memberProperty";
             assert.ok(
               findDocumentSymbol(
                 symbols,
@@ -403,8 +427,8 @@ suite("document symbol provider: Application workspace", () => {
                   memberPropertyName,
                   null,
                   vscode.SymbolKind.Property,
-                  createRange(27, 22),
-                  createRange(27, 22)
+                  createRange(27, 2, 30, 3),
+                  createRange(27, 22, 27, 36)
                 )
               ),
               "vscode.executeDocumentSymbolProvider failed to provide symbol for member variable: " +
@@ -438,8 +462,8 @@ suite("document symbol provider: Application workspace", () => {
                   staticVarName,
                   null,
                   vscode.SymbolKind.Field,
-                  createRange(4, 21),
-                  createRange(4, 21)
+                  createRange(4, 2, 4, 37),
+                  createRange(4, 21, 4, 30)
                 )
               ),
               "vscode.executeDocumentSymbolProvider failed to provide symbol for static variable: " +
@@ -473,8 +497,8 @@ suite("document symbol provider: Application workspace", () => {
                   staticConstName,
                   null,
                   vscode.SymbolKind.Constant,
-                  createRange(5, 22),
-                  createRange(5, 22)
+                  createRange(5, 2, 5, 42),
+                  createRange(5, 22, 5, 34)
                 )
               ),
               "vscode.executeDocumentSymbolProvider failed to provide symbol for static constant: " +
@@ -508,8 +532,8 @@ suite("document symbol provider: Application workspace", () => {
                   staticFunctionName,
                   null,
                   vscode.SymbolKind.Method,
-                  createRange(7, 28),
-                  createRange(7, 28)
+                  createRange(7, 2, 9, 3),
+                  createRange(7, 28, 7, 42)
                 )
               ),
               "vscode.executeDocumentSymbolProvider failed to provide symbol for static function: " +
@@ -535,7 +559,7 @@ suite("document symbol provider: Application workspace", () => {
         .executeCommand("vscode.executeDocumentSymbolProvider", uri)
         .then(
           (symbols: vscode.DocumentSymbol[]) => {
-            let staticPropertyName = "staticProperty";
+            let staticPropertyName = "get staticProperty";
             assert.ok(
               findDocumentSymbol(
                 symbols,
@@ -543,8 +567,8 @@ suite("document symbol provider: Application workspace", () => {
                   staticPropertyName,
                   null,
                   vscode.SymbolKind.Property,
-                  createRange(11, 29),
-                  createRange(11, 29)
+                  createRange(11, 2, 14, 3),
+                  createRange(11, 29, 11, 43)
                 )
               ),
               "vscode.executeDocumentSymbolProvider failed to provide symbol for static variable: " +
@@ -578,8 +602,8 @@ suite("document symbol provider: Application workspace", () => {
                   className,
                   null,
                   vscode.SymbolKind.Class,
-                  createRange(34, 6),
-                  createRange(34, 6)
+                  createRange(34, 0, 37, 1),
+                  createRange(34, 6, 34, 23)
                 )
               ),
               "vscode.executeDocumentSymbolProvider failed to provide symbol for internal class: " +
@@ -613,8 +637,8 @@ suite("document symbol provider: Application workspace", () => {
                   memberVarName,
                   null,
                   vscode.SymbolKind.Field,
-                  createRange(36, 13),
-                  createRange(36, 13)
+                  createRange(36, 1, 36, 42),
+                  createRange(36, 13, 36, 35)
                 )
               ),
               "vscode.executeDocumentSymbolProvider failed to provide symbol for member variable in internal class: " +
@@ -24530,8 +24554,8 @@ suite("document symbol provider: Library workspace", () => {
                   className,
                   null,
                   vscode.SymbolKind.Class,
-                  createRange(2, 14),
-                  createRange(2, 14)
+                  createRange(2, 1, 38, 2),
+                  createRange(2, 14, 2, 36)
                 )
               ),
               "vscode.executeDocumentSymbolProvider failed to provide symbol for class: " +

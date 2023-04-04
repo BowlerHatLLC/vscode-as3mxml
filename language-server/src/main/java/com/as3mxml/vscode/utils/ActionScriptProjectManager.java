@@ -25,19 +25,14 @@ import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import com.as3mxml.vscode.project.ActionScriptProjectData;
-import com.as3mxml.vscode.project.ILspProject;
-import com.as3mxml.vscode.project.IProjectConfigStrategy;
-import com.as3mxml.vscode.project.IProjectConfigStrategyFactory;
-import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
-import com.as3mxml.vscode.utils.DefinitionTextUtils.DefinitionAsText;
-
 import org.apache.royale.compiler.common.ISourceLocation;
 import org.apache.royale.compiler.config.Configuration;
 import org.apache.royale.compiler.definitions.IClassDefinition;
 import org.apache.royale.compiler.definitions.IDefinition;
 import org.apache.royale.compiler.definitions.IEventDefinition;
+import org.apache.royale.compiler.definitions.IGetterDefinition;
 import org.apache.royale.compiler.definitions.IPackageDefinition;
+import org.apache.royale.compiler.definitions.ISetterDefinition;
 import org.apache.royale.compiler.definitions.ITypeDefinition;
 import org.apache.royale.compiler.definitions.metadata.IDeprecationInfo;
 import org.apache.royale.compiler.filespecs.IFileSpecification;
@@ -46,6 +41,7 @@ import org.apache.royale.compiler.mxml.IMXMLDataManager;
 import org.apache.royale.compiler.mxml.IMXMLTagAttributeData;
 import org.apache.royale.compiler.mxml.IMXMLTagData;
 import org.apache.royale.compiler.tree.as.IASNode;
+import org.apache.royale.compiler.tree.as.IDefinitionNode;
 import org.apache.royale.compiler.tree.mxml.IMXMLClassReferenceNode;
 import org.apache.royale.compiler.tree.mxml.IMXMLConcatenatedDataBindingNode;
 import org.apache.royale.compiler.tree.mxml.IMXMLEventSpecifierNode;
@@ -62,6 +58,13 @@ import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.SymbolTag;
 import org.eclipse.lsp4j.WorkspaceFolder;
 import org.eclipse.lsp4j.services.LanguageClient;
+
+import com.as3mxml.vscode.project.ActionScriptProjectData;
+import com.as3mxml.vscode.project.ILspProject;
+import com.as3mxml.vscode.project.IProjectConfigStrategy;
+import com.as3mxml.vscode.project.IProjectConfigStrategyFactory;
+import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
+import com.as3mxml.vscode.utils.DefinitionTextUtils.DefinitionAsText;
 
 public class ActionScriptProjectManager {
     private static final String FILE_EXTENSION_AS = ".as";
@@ -442,7 +445,7 @@ public class ActionScriptProjectManager {
             location = new Location();
             Path definitionPath = Paths.get(sourcePath);
             location.setUri(definitionPath.toUri().toString());
-            Range range = definitionToRange(definition, project);
+            Range range = definitionToSelectionRange(definition, project);
             if (range == null) {
                 return null;
             }
@@ -451,7 +454,7 @@ public class ActionScriptProjectManager {
         return location;
     }
 
-    public Range definitionToRange(IDefinition definition, ILspProject project) {
+    public Range definitionToSelectionRange(IDefinition definition, ILspProject project) {
         String sourcePath = LanguageServerCompilerUtils.getSourcePathFromDefinition(definition, project);
         if (sourcePath == null) {
             // we can't find where the source code for this symbol is located
@@ -477,6 +480,12 @@ public class ActionScriptProjectManager {
             // makes more sense to jump to where the definition name starts
             int line = definition.getNameLine();
             int column = definition.getNameColumn();
+            int nameEnd = definition.getNameEnd();
+            int nameStart = definition.getNameStart();
+            int nameLength = 0;
+            if (nameEnd != -1 && nameStart != -1) {
+                nameLength = nameEnd - nameStart;
+            }
             if (line < 0 || column < 0) {
                 // this is not ideal, but MXML variable definitions may not have a
                 // node associated with them, so we need to figure this out from the
@@ -491,7 +500,7 @@ public class ActionScriptProjectManager {
                         LanguageServerCompilerUtils.getPositionFromOffset(definitionReader, definition.getNameStart(),
                                 start);
                         end.setLine(start.getLine());
-                        end.setCharacter(start.getCharacter());
+                        end.setCharacter(start.getCharacter() + nameLength);
                     } finally {
                         try {
                             definitionReader.close();
@@ -503,7 +512,58 @@ public class ActionScriptProjectManager {
                 start.setLine(line);
                 start.setCharacter(column);
                 end.setLine(line);
-                end.setCharacter(column);
+                end.setCharacter(column + nameLength);
+            }
+            range = new Range();
+            range.setStart(start);
+            range.setEnd(end);
+        }
+        return range;
+    }
+
+    public Range definitionToRange(IDefinition definition, ILspProject project) {
+        String sourcePath = LanguageServerCompilerUtils.getSourcePathFromDefinition(definition, project);
+        if (sourcePath == null) {
+            // we can't find where the source code for this symbol is located
+            return null;
+        }
+        Range range = null;
+        if (sourcePath.endsWith(FILE_EXTENSION_SWC) || sourcePath.endsWith(FILE_EXTENSION_ANE)) {
+            DefinitionAsText definitionText = DefinitionTextUtils.definitionToTextDocument(definition, project);
+            // may be null if definitionToTextDocument() doesn't know how
+            // to parse that type of definition
+            if (definitionText != null) {
+                // if we get here, we couldn't find a framework source file and
+                // the definition path still ends with .swc
+                // we're going to try our best to display "decompiled" content
+                range = definitionText.toRange();
+            }
+        }
+        if (range == null) {
+            Position start = new Position();
+            Position end = new Position();
+            int line = definition.getLine();
+            int column = definition.getColumn();
+            if (line < 0 || column < 0) {
+                return null;
+            } else {
+                int endLine = line;
+                int endColumn = column;
+                IDefinitionNode node = definition.getNode();
+                if (node != null) {
+                    endLine = node.getEndLine();
+                    if (endLine == -1) {
+                        endLine = line;
+                    }
+                    endColumn = node.getEndColumn();
+                    if (endColumn == -1) {
+                        endColumn = column;
+                    }
+                }
+                start.setLine(line);
+                start.setCharacter(column);
+                end.setLine(endLine);
+                end.setCharacter(endColumn);
             }
             range = new Range();
             range.setStart(start);
@@ -521,6 +581,12 @@ public class ActionScriptProjectManager {
             // vscode expects all items to have a name
             return null;
         }
+        if (definition instanceof IGetterDefinition) {
+            definitionBaseName = "get " + definitionBaseName;
+        }
+        if (definition instanceof ISetterDefinition) {
+            definitionBaseName = "set " + definitionBaseName;
+        }
 
         Range range = definitionToRange(definition, project);
         if (range == null) {
@@ -528,11 +594,12 @@ public class ActionScriptProjectManager {
             return null;
         }
 
+        Range selectionRange = definitionToSelectionRange(definition, project);
         DocumentSymbol symbol = new DocumentSymbol();
         symbol.setKind(LanguageServerCompilerUtils.getSymbolKindFromDefinition(definition));
         symbol.setName(definitionBaseName);
         symbol.setRange(range);
-        symbol.setSelectionRange(range);
+        symbol.setSelectionRange(selectionRange);
 
         List<SymbolTag> tags = definitionToSymbolTags(definition);
         if (tags.size() > 0) {
