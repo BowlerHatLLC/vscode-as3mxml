@@ -88,6 +88,10 @@ Debug and run SWF projects in Adobe AIR or Flash Player by installing the separa
 
 Debug and run Apache Royale with Visual Studio Code's built-in support for debugging JavaScript (or install the appropriate extension for debugging in your chosen web browser). Enable the `source-map` compiler option in your _asconfig.json_ file so that you may add breakpoints and step through your original _.as_ or _.mxml_ class files.
 
+## Nightly builds
+
+Continuous integration produces builds on every push to the repository. Visit the [Actions page for vscode-as3mxml](https://github.com/BowlerHatLLC/vscode-as3mxml/actions?query=branch%3Amaster+is%3Asuccess+event%3Apush) to find the most recent successful runs. Each run should have an artifact attached that is named **vscode-as3mxml**. Download this file, unzip it, and you'll get a _.vsix_ file that may be installed by Visual Studio Code.
+
 ## Support this project
 
 The [ActionScript & MXML language extension for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=bowlerhatllc.vscode-as3mxml) is developed by [Josh Tynjala](http://patreon.com/josht) — thanks to the generous support of developers and small businesses in the community. Folks just like you! By [becoming a patron](https://www.patreon.com/bePatron?c=203199), you can join them in supporting the ongoing development of this project.
