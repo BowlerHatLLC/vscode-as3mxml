@@ -294,7 +294,8 @@ public class ProjectUtils {
 			File[] listedFiles = file.listFiles();
 			if (listedFiles == null) {
 				// this file is invalid for some reason
-				throw new IOException("Invalid source path: " + sourcePath);
+				System.err.println("Skipping assets in source path: " + sourcePath);
+				continue;
 			}
 			for (File innerFile : file.listFiles()) {
 				String innerFilePath = innerFile.getAbsolutePath();
