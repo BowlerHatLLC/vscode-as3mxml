@@ -19,6 +19,7 @@ public class AIRPlatform {
 	public static final String AIR = "air";
 	public static final String MAC = "mac";
 	public static final String WINDOWS = "windows";
+	public static final String BUNDLE = "bundle";
 	public static final String IOS = "ios";
 	public static final String ANDROID = "android";
 	public static final String IOS_SIMULATOR = "ios_simulator";

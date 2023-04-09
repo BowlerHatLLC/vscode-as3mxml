@@ -126,7 +126,7 @@ public class ASConfigC {
 		debugOption.setOptionalArg(true);
 		options.addOption(debugOption);
 		Option airOption = new Option(null, "air", true,
-				"Package the project as an Adobe AIR application. The allowed platforms include `android`, `ios`, `windows`, `mac`, and `air`.");
+				"Package the project as an Adobe AIR application. The allowed platforms include `android`, `ios`, `ios_simulator`, `windows`, `mac`, `bundle`, and `air`.");
 		airOption.setArgName("PLATFORM");
 		airOption.setOptionalArg(true);
 		options.addOption(airOption);

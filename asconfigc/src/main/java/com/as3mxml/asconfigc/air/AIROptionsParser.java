@@ -97,6 +97,11 @@ public class AIROptionsParser {
 					setValueWithoutAssignment(AIROptions.TARGET, AIRTarget.BUNDLE, result);
 					break;
 				}
+				case AIRPlatform.BUNDLE: {
+					// captive runtime
+					setValueWithoutAssignment(AIROptions.TARGET, AIRTarget.BUNDLE, result);
+					break;
+				}
 				default: {
 					// shared runtime
 					setValueWithoutAssignment(AIROptions.TARGET, AIRTarget.AIR, result);
