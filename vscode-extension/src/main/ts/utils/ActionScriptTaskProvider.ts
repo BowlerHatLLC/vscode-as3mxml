@@ -27,6 +27,7 @@ const PLATFORM_ANDROID = "android";
 const PLATFORM_AIR = "air";
 const PLATFORM_WINDOWS = "windows";
 const PLATFORM_MAC = "mac";
+const PLATFORM_BUNDLE = "bundle";
 const TARGET_AIR = "air";
 const TARGET_BUNDLE = "bundle";
 const TARGET_NATIVE = "native";
@@ -47,6 +48,8 @@ const TASK_NAME_PACKAGE_DESKTOP_SHARED_DEBUG =
   "package desktop debug (shared runtime)";
 const TASK_NAME_PACKAGE_DESKTOP_SHARED_RELEASE =
   "package desktop release (shared runtime)";
+const TASK_NAME_PACKAGE_DESKTOP_CAPTIVE =
+  "package desktop bundle release (captive runtime)";
 const TASK_NAME_PACKAGE_WINDOWS_SHARED_DEBUG =
   "package Windows debug (shared runtime)";
 const TASK_NAME_PACKAGE_WINDOWS_SHARED_RELEASE =
@@ -395,14 +398,25 @@ export default class ActionScriptTaskProvider
         ((isWindows && !isWindowsOverrideBundle) ||
           (!isWindows && !isMacOverrideBundle))
       ) {
-        let taskName = isWindows
+        let taskName = TASK_NAME_PACKAGE_DESKTOP_CAPTIVE;
+        let airPlatform = PLATFORM_BUNDLE;
+        result.push(
+          this.getTask(
+            `${taskName} - ${taskNameSuffix}`,
+            jsonURI,
+            workspaceFolder,
+            command,
+            frameworkSDK,
+            false,
+            airPlatform,
+            false
+          )
+        );
+
+        taskName = isWindows
           ? TASK_NAME_PACKAGE_WINDOWS_CAPTIVE
           : TASK_NAME_PACKAGE_MAC_CAPTIVE;
-        let airPlatform = PLATFORM_AIR;
-        if (isRootTargetEmpty) {
-          //this forces bundle
-          airPlatform = isWindows ? PLATFORM_WINDOWS : PLATFORM_MAC;
-        }
+        airPlatform = isWindows ? PLATFORM_WINDOWS : PLATFORM_MAC;
         result.push(
           this.getTask(
             `${taskName} - ${taskNameSuffix}`,
