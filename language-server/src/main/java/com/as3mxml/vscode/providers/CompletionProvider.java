@@ -323,12 +323,11 @@ public class CompletionProvider {
             IExpressionNode typeNode = variableNode.getVariableTypeNode();
             int line = position.getLine();
             int column = position.getCharacter();
-            if (line >= nameExpression.getEndLine() && line <= typeNode.getLine()) {
-                if ((line != nameExpression.getEndLine() && line != typeNode.getLine())
-                        || (line == nameExpression.getEndLine() && column > nameExpression.getEndColumn())
-                        || (line == typeNode.getLine() && column <= typeNode.getColumn())) {
-                    autoCompleteTypes(offsetNode, addImportData, project, result);
-                }
+            if ((line > nameExpression.getLine()
+                    || (line == nameExpression.getLine() && column > nameExpression.getEndColumn()))
+                    && (line < typeNode.getLine()
+                            || (line == typeNode.getLine() && column <= typeNode.getEndColumn()))) {
+                autoCompleteTypes(offsetNode, addImportData, project, result);
                 return result;
             }
         }
