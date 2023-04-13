@@ -1,5 +1,24 @@
 # ActionScript & MXML for Visual Studio Code Changelog
 
+## 1.16.0
+
+### New Features
+
+- Build: Automatically detects the Adobe AIR SDK namespace and updates the application descriptor when copying it to the output directory.
+- Build: May specify `"bundle"` for `air` field in _tasks.json_ to detect current operating system and choose `"windows"` or `"mac"` automatically.
+- Code Actions: New code actions to separately add missing imports, remove unused imports, and sort imports, instead of doing all three together with the Organize Imports code action.
+- Definition: When using Go To Definiton for a class in a _.swc_ file, the generated interface now includes ASDoc comments, if available.
+- Hover: Improved formatting of `String` constant values that contain whitespace like new lines.
+
+### Fixed Issues
+
+- Build: When copying assets from the source path, skips invalid source paths and lets the compiler report any errors. This allows special tokens like `{locale}` to be used.
+- Completion: Fixed completion suggestions between the variable type and the initialization value, which sometimes suggested only types, but should have included the full scope.
+- General: Fixed ranges of symbols in the Outline view so that Visual Studio Code's sticky scroll feature works properly.
+- General: Fixed null reference exceptions during certain operations, such as detecting identifiers in a source file.
+- Problems: Clears a deleted project's problems when removing a root folder from the workspace.
+- Signature Help: Fixed detection of active parameter when caret is in the whitespace between parameters.
+
 ## 1.15.0
 
 ### New Features
