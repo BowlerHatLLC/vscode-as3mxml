@@ -19,6 +19,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.as3mxml.asconfigc.air.AIRPlatform;
 import com.as3mxml.asconfigc.compiler.DefaultCompiler;
 import com.as3mxml.asconfigc.compiler.IASConfigCCompiler;
 
@@ -75,6 +76,18 @@ public class ASConfigCOptions {
 		}
 		if (line.hasOption(OPTION_AIR)) {
 			air = line.getOptionValue(OPTION_AIR, "air");
+			if (air.equals("bundle")) {
+				String osName = System.getProperty("os.name").toLowerCase();
+				if (osName.startsWith("mac")) {
+					air = AIRPlatform.MAC;
+				} else if (osName.startsWith("windows")) {
+					air = AIRPlatform.WINDOWS;
+				} else {
+					throw new Error(
+							"Adobe AIR target \"bundle\" specified, but current operating system not recognized: "
+									+ System.getProperty("os.name"));
+				}
+			}
 		}
 		if (line.hasOption(OPTION_STOREPASS)) {
 			storepass = line.getOptionValue(OPTION_STOREPASS, null);

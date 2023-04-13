@@ -35,7 +35,8 @@ public class AIROptionsParser {
 		// AIR_SIGNING_OPTIONS begin
 		// these are *desktop* signing options only
 		// mobile signing options must be specified later!
-		if (platform.equals(AIRPlatform.AIR) || platform.equals(AIRPlatform.WINDOWS)
+		if (platform.equals(AIRPlatform.AIR)
+				|| platform.equals(AIRPlatform.WINDOWS)
 				|| platform.equals(AIRPlatform.MAC)) {
 			if (options.has(AIROptions.SIGNING_OPTIONS)
 					&& !overridesOptionForPlatform(options, AIROptions.SIGNING_OPTIONS, platform)) {
@@ -45,10 +46,11 @@ public class AIROptionsParser {
 				parseSigningOptions(options.get(platform).get(AIROptions.SIGNING_OPTIONS), debug, result);
 			} else if (!options.has(AIROptions.SIGNING_OPTIONS)) {
 				// desktop shared runtime, but signing options overridden for windows or mac
-				if (System.getProperty("os.name").toLowerCase().startsWith("mac")
+				String osName = System.getProperty("os.name").toLowerCase();
+				if (osName.startsWith("mac")
 						&& overridesOptionForPlatform(options, AIROptions.SIGNING_OPTIONS, AIRPlatform.MAC)) {
 					parseSigningOptions(options.get(AIRPlatform.MAC).get(AIROptions.SIGNING_OPTIONS), debug, result);
-				} else if (System.getProperty("os.name").toLowerCase().startsWith("windows")
+				} else if (osName.startsWith("windows")
 						&& overridesOptionForPlatform(options, AIROptions.SIGNING_OPTIONS, AIRPlatform.WINDOWS)) {
 					parseSigningOptions(options.get(AIRPlatform.WINDOWS).get(AIROptions.SIGNING_OPTIONS), debug,
 							result);
@@ -93,11 +95,6 @@ public class AIROptionsParser {
 					break;
 				}
 				case AIRPlatform.MAC: {
-					// captive runtime
-					setValueWithoutAssignment(AIROptions.TARGET, AIRTarget.BUNDLE, result);
-					break;
-				}
-				case AIRPlatform.BUNDLE: {
 					// captive runtime
 					setValueWithoutAssignment(AIROptions.TARGET, AIRTarget.BUNDLE, result);
 					break;
