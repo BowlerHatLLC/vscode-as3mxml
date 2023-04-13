@@ -257,6 +257,20 @@ export default class ActionScriptTaskProvider
       //to determine what to display in the list of tasks.
 
       //captive runtime
+      if (isWindowsOverrideBundle || isMacOverrideBundle) {
+        result.push(
+          this.getTask(
+            `${TASK_NAME_PACKAGE_DESKTOP_CAPTIVE} - ${taskNameSuffix}`,
+            jsonURI,
+            workspaceFolder,
+            command,
+            frameworkSDK,
+            false,
+            PLATFORM_BUNDLE,
+            false
+          )
+        );
+      }
       if (isWindowsOverrideBundle) {
         result.push(
           this.getTask(
@@ -398,25 +412,23 @@ export default class ActionScriptTaskProvider
         ((isWindows && !isWindowsOverrideBundle) ||
           (!isWindows && !isMacOverrideBundle))
       ) {
-        let taskName = TASK_NAME_PACKAGE_DESKTOP_CAPTIVE;
-        let airPlatform = PLATFORM_BUNDLE;
         result.push(
           this.getTask(
-            `${taskName} - ${taskNameSuffix}`,
+            `${TASK_NAME_PACKAGE_DESKTOP_CAPTIVE} - ${taskNameSuffix}`,
             jsonURI,
             workspaceFolder,
             command,
             frameworkSDK,
             false,
-            airPlatform,
+            PLATFORM_BUNDLE,
             false
           )
         );
 
-        taskName = isWindows
+        let taskName = isWindows
           ? TASK_NAME_PACKAGE_WINDOWS_CAPTIVE
           : TASK_NAME_PACKAGE_MAC_CAPTIVE;
-        airPlatform = isWindows ? PLATFORM_WINDOWS : PLATFORM_MAC;
+        let airPlatform = isWindows ? PLATFORM_WINDOWS : PLATFORM_MAC;
         result.push(
           this.getTask(
             `${taskName} - ${taskNameSuffix}`,
