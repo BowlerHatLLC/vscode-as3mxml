@@ -137,6 +137,7 @@ public class DefinitionTextUtils {
         public String text;
         public String path;
         public String swcPath;
+        public boolean includeASDoc = false;
         public List<String> symbols = new ArrayList<>();
 
         public Range toRange() {
@@ -155,6 +156,8 @@ public class DefinitionTextUtils {
         public URI toUri() {
             StringBuilder queryBuilder = new StringBuilder();
             queryBuilder.append(swcPath);
+            queryBuilder.append(",");
+            queryBuilder.append(includeASDoc);
             for (String symbol : symbols) {
                 queryBuilder.append(",");
                 queryBuilder.append(symbol);
@@ -177,34 +180,37 @@ public class DefinitionTextUtils {
         }
     }
 
-    public static Location definitionToLocation(IDefinition definition, ICompilerProject currentProject) {
-        DefinitionAsText definitionText = definitionToTextDocument(definition, currentProject);
+    public static Location definitionToLocation(IDefinition definition, ICompilerProject currentProject,
+            boolean includeASDoc) {
+        DefinitionAsText definitionText = definitionToTextDocument(definition, currentProject, includeASDoc);
         if (definitionText != null) {
             return definitionText.toLocation();
         }
         return null;
     }
 
-    public static Range definitionToRange(IDefinition definition, ICompilerProject currentProject) {
-        DefinitionAsText definitionText = definitionToTextDocument(definition, currentProject);
+    public static Range definitionToRange(IDefinition definition, ICompilerProject currentProject,
+            boolean includeASDoc) {
+        DefinitionAsText definitionText = definitionToTextDocument(definition, currentProject, includeASDoc);
         if (definitionText != null) {
             return definitionText.toRange();
         }
         return null;
     }
 
-    public static DefinitionAsText definitionToTextDocument(IDefinition definition, ICompilerProject currentProject) {
+    public static DefinitionAsText definitionToTextDocument(IDefinition definition, ICompilerProject currentProject,
+            boolean includeASDoc) {
         if (definition instanceof IClassDefinition) {
             IClassDefinition classDefinition = (IClassDefinition) definition;
-            return classDefinitionToTextDocument(classDefinition, currentProject, definition);
+            return classDefinitionToTextDocument(classDefinition, currentProject, definition, includeASDoc);
         }
         if (definition instanceof IInterfaceDefinition) {
             IInterfaceDefinition interfaceDefinition = (IInterfaceDefinition) definition;
-            return interfaceDefinitionToTextDocument(interfaceDefinition, currentProject, definition);
+            return interfaceDefinitionToTextDocument(interfaceDefinition, currentProject, definition, includeASDoc);
         }
         if (definition instanceof INamespaceDefinition) {
             INamespaceDefinition namespaceDefinition = (INamespaceDefinition) definition;
-            return namespaceDefinitionToTextDocument(namespaceDefinition, currentProject, definition);
+            return namespaceDefinitionToTextDocument(namespaceDefinition, currentProject, definition, includeASDoc);
         }
         if (definition instanceof IFunctionDefinition) {
             IFunctionDefinition functionDefinition = (IFunctionDefinition) definition;
@@ -212,13 +218,14 @@ public class DefinitionTextUtils {
             if (parentDefinition instanceof ITypeDefinition) {
                 if (parentDefinition instanceof IClassDefinition) {
                     IClassDefinition classDefinition = (IClassDefinition) parentDefinition;
-                    return classDefinitionToTextDocument(classDefinition, currentProject, definition);
+                    return classDefinitionToTextDocument(classDefinition, currentProject, definition, includeASDoc);
                 } else if (parentDefinition instanceof IInterfaceDefinition) {
                     IInterfaceDefinition interfaceDefinition = (IInterfaceDefinition) parentDefinition;
-                    return interfaceDefinitionToTextDocument(interfaceDefinition, currentProject, definition);
+                    return interfaceDefinitionToTextDocument(interfaceDefinition, currentProject, definition,
+                            includeASDoc);
                 }
             } else {
-                return functionDefinitionToTextDocument(functionDefinition, currentProject, definition);
+                return functionDefinitionToTextDocument(functionDefinition, currentProject, definition, includeASDoc);
             }
         }
         if (definition instanceof IVariableDefinition) {
@@ -227,23 +234,25 @@ public class DefinitionTextUtils {
             if (parentDefinition instanceof ITypeDefinition) {
                 if (parentDefinition instanceof IClassDefinition) {
                     IClassDefinition classDefinition = (IClassDefinition) parentDefinition;
-                    return classDefinitionToTextDocument(classDefinition, currentProject, definition);
+                    return classDefinitionToTextDocument(classDefinition, currentProject, definition, includeASDoc);
                 } else if (parentDefinition instanceof IInterfaceDefinition) {
                     IInterfaceDefinition interfaceDefinition = (IInterfaceDefinition) parentDefinition;
-                    return interfaceDefinitionToTextDocument(interfaceDefinition, currentProject, definition);
+                    return interfaceDefinitionToTextDocument(interfaceDefinition, currentProject, definition,
+                            includeASDoc);
                 }
             } else {
-                return variableDefinitionToTextDocument(variableDefinition, currentProject, definition);
+                return variableDefinitionToTextDocument(variableDefinition, currentProject, definition, includeASDoc);
             }
         }
         return null;
     }
 
     private static DefinitionAsText classDefinitionToTextDocument(IClassDefinition classDefinition,
-            ICompilerProject currentProject, IDefinition definitionToFind) {
+            ICompilerProject currentProject, IDefinition definitionToFind, boolean includeASDoc) {
         DefinitionAsText result = new DefinitionAsText();
         result.path = definitionToGeneratedPath(classDefinition);
         result.swcPath = classDefinition.getContainingFilePath();
+        result.includeASDoc = includeASDoc;
         String indent = "";
         StringBuilder textDocumentBuilder = new StringBuilder();
         insertHeaderCommentIntoTextDocument(classDefinition, textDocumentBuilder);
@@ -258,7 +267,7 @@ public class DefinitionTextUtils {
         textDocumentBuilder.append(NEW_LINE);
         indent = increaseIndent(indent);
         insertClassDefinitionIntoTextDocument(classDefinition, textDocumentBuilder, indent, currentProject, result,
-                definitionToFind);
+                definitionToFind, includeASDoc);
         indent = decreaseIndent(indent);
         textDocumentBuilder.append("}");
         result.text = textDocumentBuilder.toString();
@@ -266,10 +275,11 @@ public class DefinitionTextUtils {
     }
 
     private static DefinitionAsText interfaceDefinitionToTextDocument(IInterfaceDefinition interfaceDefinition,
-            ICompilerProject currentProject, IDefinition definitionToFind) {
+            ICompilerProject currentProject, IDefinition definitionToFind, boolean includeASDoc) {
         DefinitionAsText result = new DefinitionAsText();
         result.path = definitionToGeneratedPath(interfaceDefinition);
         result.swcPath = interfaceDefinition.getContainingFilePath();
+        result.includeASDoc = includeASDoc;
         String indent = "";
         StringBuilder textDocumentBuilder = new StringBuilder();
         insertHeaderCommentIntoTextDocument(interfaceDefinition, textDocumentBuilder);
@@ -284,7 +294,7 @@ public class DefinitionTextUtils {
         textDocumentBuilder.append(NEW_LINE);
         indent = increaseIndent(indent);
         insertInterfaceDefinitionIntoTextDocument(interfaceDefinition, textDocumentBuilder, indent, currentProject,
-                result, definitionToFind);
+                result, definitionToFind, includeASDoc);
         indent = decreaseIndent(indent);
         textDocumentBuilder.append("}");
         result.text = textDocumentBuilder.toString();
@@ -292,10 +302,11 @@ public class DefinitionTextUtils {
     }
 
     private static DefinitionAsText namespaceDefinitionToTextDocument(INamespaceDefinition namespaceDefinition,
-            ICompilerProject currentProject, IDefinition definitionToFind) {
+            ICompilerProject currentProject, IDefinition definitionToFind, boolean includeASDoc) {
         DefinitionAsText result = new DefinitionAsText();
         result.path = definitionToGeneratedPath(namespaceDefinition);
         result.swcPath = namespaceDefinition.getContainingFilePath();
+        result.includeASDoc = includeASDoc;
         String indent = "";
         StringBuilder textDocumentBuilder = new StringBuilder();
         insertHeaderCommentIntoTextDocument(namespaceDefinition, textDocumentBuilder);
@@ -310,7 +321,7 @@ public class DefinitionTextUtils {
         textDocumentBuilder.append(NEW_LINE);
         indent = increaseIndent(indent);
         insertNamespaceDefinitionIntoTextDocument(namespaceDefinition, textDocumentBuilder, indent, currentProject,
-                result, definitionToFind);
+                result, definitionToFind, includeASDoc);
         indent = decreaseIndent(indent);
         textDocumentBuilder.append("}");
         result.text = textDocumentBuilder.toString();
@@ -318,10 +329,11 @@ public class DefinitionTextUtils {
     }
 
     private static DefinitionAsText functionDefinitionToTextDocument(IFunctionDefinition functionDefinition,
-            ICompilerProject currentProject, IDefinition definitionToFind) {
+            ICompilerProject currentProject, IDefinition definitionToFind, boolean includeASDoc) {
         DefinitionAsText result = new DefinitionAsText();
         result.path = definitionToGeneratedPath(functionDefinition);
         result.swcPath = functionDefinition.getContainingFilePath();
+        result.includeASDoc = includeASDoc;
         String indent = "";
         StringBuilder textDocumentBuilder = new StringBuilder();
         insertHeaderCommentIntoTextDocument(functionDefinition, textDocumentBuilder);
@@ -336,7 +348,7 @@ public class DefinitionTextUtils {
         textDocumentBuilder.append(NEW_LINE);
         indent = increaseIndent(indent);
         insertFunctionDefinitionIntoTextDocument(functionDefinition, textDocumentBuilder, indent, currentProject,
-                result, definitionToFind);
+                result, definitionToFind, includeASDoc);
         indent = decreaseIndent(indent);
         textDocumentBuilder.append("}");
         result.text = textDocumentBuilder.toString();
@@ -344,10 +356,11 @@ public class DefinitionTextUtils {
     }
 
     private static DefinitionAsText variableDefinitionToTextDocument(IVariableDefinition variableDefinition,
-            ICompilerProject currentProject, IDefinition definitionToFind) {
+            ICompilerProject currentProject, IDefinition definitionToFind, boolean includeASDoc) {
         DefinitionAsText result = new DefinitionAsText();
         result.path = definitionToGeneratedPath(variableDefinition);
         result.swcPath = variableDefinition.getContainingFilePath();
+        result.includeASDoc = includeASDoc;
         String indent = "";
         StringBuilder textDocumentBuilder = new StringBuilder();
         insertHeaderCommentIntoTextDocument(variableDefinition, textDocumentBuilder);
@@ -362,7 +375,7 @@ public class DefinitionTextUtils {
         textDocumentBuilder.append(NEW_LINE);
         indent = increaseIndent(indent);
         insertVariableDefinitionIntoTextDocument(variableDefinition, textDocumentBuilder, indent, currentProject,
-                result, definitionToFind);
+                result, definitionToFind, includeASDoc);
         indent = decreaseIndent(indent);
         textDocumentBuilder.append("}");
         result.text = textDocumentBuilder.toString();
@@ -371,12 +384,14 @@ public class DefinitionTextUtils {
 
     private static void insertClassDefinitionIntoTextDocument(IClassDefinition classDefinition,
             StringBuilder textDocumentBuilder, String indent, ICompilerProject currentProject, DefinitionAsText result,
-            IDefinition definitionToFind) {
+            IDefinition definitionToFind, boolean includeASDoc) {
 
         insertMetaTagsIntoTextDocument(classDefinition, textDocumentBuilder, indent, currentProject, result,
                 definitionToFind);
 
-        insertASDocIntoTextDocument(classDefinition, textDocumentBuilder, currentProject, indent);
+        if (includeASDoc) {
+            insertASDocIntoTextDocument(classDefinition, textDocumentBuilder, currentProject, indent);
+        }
 
         textDocumentBuilder.append(indent);
         if (classDefinition.isPublic()) {
@@ -429,15 +444,15 @@ public class DefinitionTextUtils {
             if (childDefinition instanceof IAccessorDefinition) {
                 IAccessorDefinition functionDefinition = (IAccessorDefinition) childDefinition;
                 insertFunctionDefinitionIntoTextDocument(functionDefinition, textDocumentBuilder, childIndent,
-                        currentProject, result, definitionToFind);
+                        currentProject, result, definitionToFind, includeASDoc);
             } else if (childDefinition instanceof IFunctionDefinition) {
                 IFunctionDefinition functionDefinition = (IFunctionDefinition) childDefinition;
                 insertFunctionDefinitionIntoTextDocument(functionDefinition, textDocumentBuilder, childIndent,
-                        currentProject, result, definitionToFind);
+                        currentProject, result, definitionToFind, includeASDoc);
             } else if (childDefinition instanceof IVariableDefinition) {
                 IVariableDefinition variableDefinition = (IVariableDefinition) childDefinition;
                 insertVariableDefinitionIntoTextDocument(variableDefinition, textDocumentBuilder, childIndent,
-                        currentProject, result, definitionToFind);
+                        currentProject, result, definitionToFind, includeASDoc);
             }
         });
         indent = decreaseIndent(indent);
@@ -448,12 +463,14 @@ public class DefinitionTextUtils {
 
     private static void insertInterfaceDefinitionIntoTextDocument(IInterfaceDefinition interfaceDefinition,
             StringBuilder textDocumentBuilder, String indent, ICompilerProject currentProject, DefinitionAsText result,
-            IDefinition definitionToFind) {
+            IDefinition definitionToFind, boolean includeASDoc) {
 
         insertMetaTagsIntoTextDocument(interfaceDefinition, textDocumentBuilder, indent, currentProject, result,
                 definitionToFind);
 
-        insertASDocIntoTextDocument(interfaceDefinition, textDocumentBuilder, currentProject, indent);
+        if (includeASDoc) {
+            insertASDocIntoTextDocument(interfaceDefinition, textDocumentBuilder, currentProject, indent);
+        }
 
         textDocumentBuilder.append(indent);
         if (interfaceDefinition.isPublic()) {
@@ -490,11 +507,11 @@ public class DefinitionTextUtils {
             if (childDefinition instanceof IAccessorDefinition) {
                 IAccessorDefinition functionDefinition = (IAccessorDefinition) childDefinition;
                 insertFunctionDefinitionIntoTextDocument(functionDefinition, textDocumentBuilder, childIndent,
-                        currentProject, result, definitionToFind);
+                        currentProject, result, definitionToFind, includeASDoc);
             } else if (childDefinition instanceof IFunctionDefinition) {
                 IFunctionDefinition functionDefinition = (IFunctionDefinition) childDefinition;
                 insertFunctionDefinitionIntoTextDocument(functionDefinition, textDocumentBuilder, childIndent,
-                        currentProject, result, definitionToFind);
+                        currentProject, result, definitionToFind, includeASDoc);
             }
         });
         indent = decreaseIndent(indent);
@@ -505,11 +522,13 @@ public class DefinitionTextUtils {
 
     private static void insertNamespaceDefinitionIntoTextDocument(INamespaceDefinition namespaceDefinition,
             StringBuilder textDocumentBuilder, String indent, ICompilerProject currentProject, DefinitionAsText result,
-            IDefinition definitionToFind) {
+            IDefinition definitionToFind, boolean includeASDoc) {
         insertMetaTagsIntoTextDocument(namespaceDefinition, textDocumentBuilder, indent, currentProject, result,
                 definitionToFind);
 
-        insertASDocIntoTextDocument(namespaceDefinition, textDocumentBuilder, currentProject, indent);
+        if (includeASDoc) {
+            insertASDocIntoTextDocument(namespaceDefinition, textDocumentBuilder, currentProject, indent);
+        }
 
         textDocumentBuilder.append(indent);
         if (namespaceDefinition.isPublic()) {
@@ -534,11 +553,13 @@ public class DefinitionTextUtils {
 
     private static void insertFunctionDefinitionIntoTextDocument(IFunctionDefinition functionDefinition,
             StringBuilder textDocumentBuilder, String indent, ICompilerProject currentProject, DefinitionAsText result,
-            IDefinition definitionToFind) {
+            IDefinition definitionToFind, boolean includeASDoc) {
         insertMetaTagsIntoTextDocument(functionDefinition, textDocumentBuilder, indent, currentProject, result,
                 definitionToFind);
 
-        insertASDocIntoTextDocument(functionDefinition, textDocumentBuilder, currentProject, indent);
+        if (includeASDoc) {
+            insertASDocIntoTextDocument(functionDefinition, textDocumentBuilder, currentProject, indent);
+        }
 
         textDocumentBuilder.append(indent);
         if (functionDefinition.isOverride()) {
@@ -590,12 +611,14 @@ public class DefinitionTextUtils {
 
     private static void insertVariableDefinitionIntoTextDocument(IVariableDefinition variableDefinition,
             StringBuilder textDocumentBuilder, String indent, ICompilerProject currentProject, DefinitionAsText result,
-            IDefinition definitionToFind) {
+            IDefinition definitionToFind, boolean includeASDoc) {
 
         insertMetaTagsIntoTextDocument(variableDefinition, textDocumentBuilder, indent, currentProject, result,
                 definitionToFind);
 
-        insertASDocIntoTextDocument(variableDefinition, textDocumentBuilder, currentProject, indent);
+        if (includeASDoc) {
+            insertASDocIntoTextDocument(variableDefinition, textDocumentBuilder, currentProject, indent);
+        }
 
         textDocumentBuilder.append(indent);
         if (variableDefinition.isPublic()) {

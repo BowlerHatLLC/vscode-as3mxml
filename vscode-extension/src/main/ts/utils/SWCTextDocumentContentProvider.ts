@@ -25,8 +25,12 @@ export default class SWCTextDocumentContentProvider
     const symbols = Buffer.from(decodeURIComponent(uri.query), "base64")
       .toString("utf8")
       .split(",");
+    const swfPath = symbols.shift();
+    const includeASDoc = symbols.shift() === "true";
     return vscode.commands.executeCommand(
       "as3mxml.getLibraryDefinitionText",
+      swfPath,
+      includeASDoc,
       ...symbols
     );
   }

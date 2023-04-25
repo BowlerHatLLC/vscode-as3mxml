@@ -159,7 +159,7 @@ public class ImplementationProvider {
                 }
                 IClassDefinition classDefinition = (IClassDefinition) definition;
                 if (DefinitionUtils.isImplementationOfInterface(classDefinition, interfaceDefinition, project)) {
-                    Location location = actionScriptProjectManager.getLocationFromDefinition(classDefinition, project);
+                    Location location = actionScriptProjectManager.definitionToLocation(classDefinition, project);
                     if (location != null) {
                         result.add(location);
                     }

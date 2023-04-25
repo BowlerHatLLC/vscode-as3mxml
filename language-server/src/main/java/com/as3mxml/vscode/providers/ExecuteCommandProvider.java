@@ -563,8 +563,9 @@ public class ExecuteCommandProvider {
     private CompletableFuture<Object> executeGetLibraryDefinitionTextCommand(ExecuteCommandParams params) {
         List<Object> args = params.getArguments();
         String swcPath = ((JsonPrimitive) args.get(0)).getAsString();
+        boolean includeASDoc = ((JsonPrimitive) args.get(1)).getAsBoolean();
         List<String> symbols = new ArrayList<>();
-        for (int i = 1; i < args.size(); i++) {
+        for (int i = 2; i < args.size(); i++) {
             String symbol = ((JsonPrimitive) args.get(i)).getAsString();
             symbols.add(symbol);
         }
@@ -591,8 +592,7 @@ public class ExecuteCommandProvider {
                                     }
                                 } else {
                                     DefinitionAsText definitionText = DefinitionTextUtils.definitionToTextDocument(
-                                            definition,
-                                            projectData.project);
+                                            definition, project, includeASDoc);
                                     return CompletableFuture.completedFuture(definitionText.text);
                                 }
                             }
@@ -609,7 +609,7 @@ public class ExecuteCommandProvider {
         StringBuilder errorBuilder = new StringBuilder();
         errorBuilder.append("//Generated from: ");
         errorBuilder.append(swcPath);
-        errorBuilder.append("\n // Failed to resolve definition: ");
+        errorBuilder.append("\n//Failed to resolve definition: ");
         errorBuilder.append(symbolName);
         return CompletableFuture.completedFuture(errorBuilder.toString());
     }

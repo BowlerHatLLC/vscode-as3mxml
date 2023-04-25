@@ -64,7 +64,6 @@ import com.as3mxml.vscode.project.ILspProject;
 import com.as3mxml.vscode.project.IProjectConfigStrategy;
 import com.as3mxml.vscode.project.IProjectConfigStrategyFactory;
 import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
-import com.as3mxml.vscode.utils.DefinitionTextUtils.DefinitionAsText;
 
 public class ActionScriptProjectManager {
     private static final String FILE_EXTENSION_AS = ".as";
@@ -423,7 +422,7 @@ public class ActionScriptProjectManager {
         return result;
     }
 
-    public Location getLocationFromDefinition(IDefinition definition, ILspProject project) {
+    public Location definitionToLocation(IDefinition definition, ILspProject project) {
         String sourcePath = LanguageServerCompilerUtils.getSourcePathFromDefinition(definition, project);
         if (sourcePath == null) {
             // we can't find where the source code for this symbol is located
@@ -431,9 +430,8 @@ public class ActionScriptProjectManager {
         }
         Location location = null;
         if (sourcePath.endsWith(FILE_EXTENSION_SWC) || sourcePath.endsWith(FILE_EXTENSION_ANE)) {
-            location = DefinitionTextUtils.definitionToLocation(definition, project);
-        }
-        if (location == null) {
+            location = DefinitionTextUtils.definitionToLocation(definition, project, true);
+        } else if (location == null) {
             location = new Location();
             Path definitionPath = Paths.get(sourcePath);
             location.setUri(definitionPath.toUri().toString());
@@ -454,7 +452,7 @@ public class ActionScriptProjectManager {
         }
         Range range = null;
         if (sourcePath.endsWith(FILE_EXTENSION_SWC) || sourcePath.endsWith(FILE_EXTENSION_ANE)) {
-            range = DefinitionTextUtils.definitionToRange(definition, project);
+            range = DefinitionTextUtils.definitionToRange(definition, project, true);
         }
         if (range == null) {
             Path definitionPath = Paths.get(sourcePath);
@@ -513,7 +511,7 @@ public class ActionScriptProjectManager {
         }
         Range range = null;
         if (sourcePath.endsWith(FILE_EXTENSION_SWC) || sourcePath.endsWith(FILE_EXTENSION_ANE)) {
-            range = DefinitionTextUtils.definitionToRange(definition, project);
+            range = DefinitionTextUtils.definitionToRange(definition, project, true);
         }
         if (range == null) {
             Position start = new Position();
@@ -592,7 +590,14 @@ public class ActionScriptProjectManager {
             return null;
         }
 
-        Location location = getLocationFromDefinition(definition, project);
+        Location location = null;
+        String containingFilePath = definition.getContainingFilePath();
+        if (containingFilePath != null && (containingFilePath.endsWith(FILE_EXTENSION_SWC)
+                || containingFilePath.endsWith(FILE_EXTENSION_ANE))) {
+            location = DefinitionTextUtils.definitionToLocation(definition, project, false);
+        } else {
+            location = definitionToLocation(definition, project);
+        }
         if (location == null) {
             // we can't find where the source code for this symbol is located
             return null;
@@ -648,7 +653,7 @@ public class ActionScriptProjectManager {
                 }
             }
             if (definitionPath.endsWith(FILE_EXTENSION_SWC) || definitionPath.endsWith(FILE_EXTENSION_ANE)) {
-                Location location = DefinitionTextUtils.definitionToLocation(definition, projectData.project);
+                Location location = DefinitionTextUtils.definitionToLocation(definition, projectData.project, true);
                 // may be null if definitionToTextDocument() doesn't know how
                 // to parse that type of definition
                 if (location != null) {
