@@ -25,4 +25,5 @@ public interface ICommandConstants {
 	public static final String SORT_IMPORTS_IN_URI = "as3mxml.sortImportsInUri";
 	public static final String QUICK_COMPILE = "as3mxml.quickCompile";
 	public static final String GET_ACTIVE_PROJECT_URIS = "as3mxml.getActiveProjectURIs";
+	public static final String GET_LIBRARY_DEFINITION_TEXT = "as3mxml.getLibraryDefinitionText";
 }

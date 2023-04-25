@@ -18,6 +18,7 @@ package com.as3mxml.vscode.providers;
 import java.io.File;
 import java.io.StringReader;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -28,29 +29,14 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
-import com.as3mxml.asconfigc.compiler.ProjectType;
-import com.as3mxml.vscode.commands.ICommandConstants;
-import com.as3mxml.vscode.project.ILspProject;
-import com.as3mxml.vscode.project.ActionScriptProjectData;
-import com.as3mxml.vscode.services.ActionScriptLanguageClient;
-import com.as3mxml.vscode.utils.ASTUtils;
-import com.as3mxml.vscode.utils.CodeActionsUtils;
-import com.as3mxml.vscode.utils.CompilationUnitUtils;
-import com.as3mxml.vscode.utils.CompilerProjectUtils;
-import com.as3mxml.vscode.utils.FileTracker;
-import com.as3mxml.vscode.utils.ImportRange;
-import com.as3mxml.vscode.utils.ImportTextEditUtils;
-import com.as3mxml.vscode.utils.LanguageServerCompilerUtils;
-import com.as3mxml.vscode.utils.MXMLDataUtils;
-import com.as3mxml.vscode.utils.ActionScriptProjectManager;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
-
 import org.apache.royale.compiler.definitions.IDefinition;
+import org.apache.royale.compiler.definitions.IScopedDefinition;
 import org.apache.royale.compiler.filespecs.IFileSpecification;
 import org.apache.royale.compiler.internal.mxml.MXMLData;
 import org.apache.royale.compiler.internal.workspaces.Workspace;
 import org.apache.royale.compiler.mxml.IMXMLTagData;
+import org.apache.royale.compiler.projects.ICompilerProject;
+import org.apache.royale.compiler.scopes.IASScope;
 import org.apache.royale.compiler.tree.as.IASNode;
 import org.apache.royale.compiler.tree.as.IImportNode;
 import org.apache.royale.compiler.units.ICompilationUnit;
@@ -62,6 +48,26 @@ import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.WorkspaceEdit;
 import org.eclipse.lsp4j.jsonrpc.CancelChecker;
 import org.eclipse.lsp4j.jsonrpc.CompletableFutures;
+
+import com.as3mxml.asconfigc.compiler.ProjectType;
+import com.as3mxml.vscode.commands.ICommandConstants;
+import com.as3mxml.vscode.project.ActionScriptProjectData;
+import com.as3mxml.vscode.project.ILspProject;
+import com.as3mxml.vscode.services.ActionScriptLanguageClient;
+import com.as3mxml.vscode.utils.ASTUtils;
+import com.as3mxml.vscode.utils.ActionScriptProjectManager;
+import com.as3mxml.vscode.utils.CodeActionsUtils;
+import com.as3mxml.vscode.utils.CompilationUnitUtils;
+import com.as3mxml.vscode.utils.CompilerProjectUtils;
+import com.as3mxml.vscode.utils.DefinitionTextUtils;
+import com.as3mxml.vscode.utils.DefinitionTextUtils.DefinitionAsText;
+import com.as3mxml.vscode.utils.FileTracker;
+import com.as3mxml.vscode.utils.ImportRange;
+import com.as3mxml.vscode.utils.ImportTextEditUtils;
+import com.as3mxml.vscode.utils.LanguageServerCompilerUtils;
+import com.as3mxml.vscode.utils.MXMLDataUtils;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 
 public class ExecuteCommandProvider {
     private static final String FILE_EXTENSION_MXML = ".mxml";
@@ -111,6 +117,9 @@ public class ExecuteCommandProvider {
             }
             case ICommandConstants.GET_ACTIVE_PROJECT_URIS: {
                 return executeGetActiveProjectUrisCommand(params);
+            }
+            case ICommandConstants.GET_LIBRARY_DEFINITION_TEXT: {
+                return executeGetLibraryDefinitionTextCommand(params);
             }
             default: {
                 System.err.println("Unknown command: " + params.getCommand());
@@ -549,5 +558,59 @@ public class ExecuteCommandProvider {
                         : true)
                 .map(projectData -> projectData.projectRoot.toUri().toString()).collect(Collectors.toList());
         return CompletableFuture.completedFuture(result);
+    }
+
+    private CompletableFuture<Object> executeGetLibraryDefinitionTextCommand(ExecuteCommandParams params) {
+        List<Object> args = params.getArguments();
+        String swcPath = ((JsonPrimitive) args.get(0)).getAsString();
+        List<String> symbols = new ArrayList<>();
+        for (int i = 1; i < args.size(); i++) {
+            String symbol = ((JsonPrimitive) args.get(i)).getAsString();
+            symbols.add(symbol);
+        }
+        String symbolName = "Unknown";
+        if (symbols.size() > 0) {
+            symbolName = symbols.get(symbols.size() - 1);
+            List<ActionScriptProjectData> allProjectData = actionScriptProjectManager
+                    .getAllProjectDataForSWCFile(Paths.get(swcPath));
+            if (allProjectData.size() > 0) {
+                ActionScriptProjectData projectData = allProjectData.get(0);
+                ICompilerProject project = projectData.project;
+                if (project != null) {
+                    String currentSymbol = symbols.remove(0);
+                    IASScope currentScope = project.getScope();
+                    while (currentScope != null) {
+                        IASScope newScope = null;
+                        for (IDefinition definition : currentScope.getAllLocalDefinitions()) {
+                            if (currentSymbol.equals(definition.getQualifiedName())) {
+                                if (symbols.size() > 0) {
+                                    if (definition instanceof IScopedDefinition) {
+                                        IScopedDefinition scopedDefinition = (IScopedDefinition) definition;
+                                        newScope = scopedDefinition.getContainedScope();
+                                        break;
+                                    }
+                                } else {
+                                    DefinitionAsText definitionText = DefinitionTextUtils.definitionToTextDocument(
+                                            definition,
+                                            projectData.project);
+                                    return CompletableFuture.completedFuture(definitionText.text);
+                                }
+                            }
+                        }
+                        if (newScope == null || symbols.size() == 0) {
+                            break;
+                        }
+                        currentScope = newScope;
+                        currentSymbol = symbols.remove(0);
+                    }
+                }
+            }
+        }
+        StringBuilder errorBuilder = new StringBuilder();
+        errorBuilder.append("//Generated from: ");
+        errorBuilder.append(swcPath);
+        errorBuilder.append("\n // Failed to resolve definition: ");
+        errorBuilder.append(symbolName);
+        return CompletableFuture.completedFuture(errorBuilder.toString());
     }
 }

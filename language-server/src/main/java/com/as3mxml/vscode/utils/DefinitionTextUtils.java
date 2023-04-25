@@ -19,9 +19,11 @@ import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.List;
 
 import org.apache.royale.abc.ABCConstants;
 import org.apache.royale.compiler.constants.IASKeywordConstants;
@@ -37,6 +39,7 @@ import org.apache.royale.compiler.definitions.IFunctionDefinition;
 import org.apache.royale.compiler.definitions.IGetterDefinition;
 import org.apache.royale.compiler.definitions.IInterfaceDefinition;
 import org.apache.royale.compiler.definitions.INamespaceDefinition;
+import org.apache.royale.compiler.definitions.IPackageDefinition;
 import org.apache.royale.compiler.definitions.INamespaceDefinition.IInterfaceNamespaceDefinition;
 import org.apache.royale.compiler.definitions.IParameterDefinition;
 import org.apache.royale.compiler.definitions.ISetterDefinition;
@@ -133,6 +136,8 @@ public class DefinitionTextUtils {
         public int endColumn = 0;
         public String text;
         public String path;
+        public String swcPath;
+        public List<String> symbols = new ArrayList<>();
 
         public Range toRange() {
             Position start = new Position();
@@ -147,17 +152,26 @@ public class DefinitionTextUtils {
             return range;
         }
 
-        public Location toLocation() {
-            Location location = new Location();
-            byte[] bytes = text.getBytes(StandardCharsets.UTF_8);
+        public URI toUri() {
+            StringBuilder queryBuilder = new StringBuilder();
+            queryBuilder.append(swcPath);
+            for (String symbol : symbols) {
+                queryBuilder.append(",");
+                queryBuilder.append(symbol);
+            }
+            byte[] bytes = queryBuilder.toString().getBytes(StandardCharsets.UTF_8);
             bytes = Base64.getEncoder().encode(bytes);
-            String escapedText = new String(bytes, StandardCharsets.UTF_8);
+            String query = new String(bytes, StandardCharsets.UTF_8);
             try {
-                escapedText = URLEncoder.encode(escapedText, StandardCharsets.UTF_8.toString());
+                query = URLEncoder.encode(query, StandardCharsets.UTF_8.toString());
             } catch (UnsupportedEncodingException e) {
             }
-            URI uri = URI.create(PROTOCOL_SWC + path + "?" + escapedText);
-            location.setUri(uri.toString());
+            return URI.create(PROTOCOL_SWC + path + "?" + query);
+        }
+
+        public Location toLocation() {
+            Location location = new Location();
+            location.setUri(toUri().toString());
             location.setRange(toRange());
             return location;
         }
@@ -213,6 +227,7 @@ public class DefinitionTextUtils {
             ICompilerProject currentProject, IDefinition definitionToFind) {
         DefinitionAsText result = new DefinitionAsText();
         result.path = definitionToGeneratedPath(classDefinition);
+        result.swcPath = classDefinition.getContainingFilePath();
         String indent = "";
         StringBuilder textDocumentBuilder = new StringBuilder();
         insertHeaderCommentIntoTextDocument(classDefinition, textDocumentBuilder);
@@ -238,6 +253,7 @@ public class DefinitionTextUtils {
             ICompilerProject currentProject, IDefinition definitionToFind) {
         DefinitionAsText result = new DefinitionAsText();
         result.path = definitionToGeneratedPath(interfaceDefinition);
+        result.swcPath = interfaceDefinition.getContainingFilePath();
         String indent = "";
         StringBuilder textDocumentBuilder = new StringBuilder();
         insertHeaderCommentIntoTextDocument(interfaceDefinition, textDocumentBuilder);
@@ -263,6 +279,7 @@ public class DefinitionTextUtils {
             ICompilerProject currentProject, IDefinition definitionToFind) {
         DefinitionAsText result = new DefinitionAsText();
         result.path = definitionToGeneratedPath(namespaceDefinition);
+        result.swcPath = namespaceDefinition.getContainingFilePath();
         String indent = "";
         StringBuilder textDocumentBuilder = new StringBuilder();
         insertHeaderCommentIntoTextDocument(namespaceDefinition, textDocumentBuilder);
@@ -288,6 +305,7 @@ public class DefinitionTextUtils {
             ICompilerProject currentProject, IDefinition definitionToFind) {
         DefinitionAsText result = new DefinitionAsText();
         result.path = definitionToGeneratedPath(functionDefinition);
+        result.swcPath = functionDefinition.getContainingFilePath();
         String indent = "";
         StringBuilder textDocumentBuilder = new StringBuilder();
         insertHeaderCommentIntoTextDocument(functionDefinition, textDocumentBuilder);
@@ -313,6 +331,7 @@ public class DefinitionTextUtils {
             ICompilerProject currentProject, IDefinition definitionToFind) {
         DefinitionAsText result = new DefinitionAsText();
         result.path = definitionToGeneratedPath(variableDefinition);
+        result.swcPath = variableDefinition.getContainingFilePath();
         String indent = "";
         StringBuilder textDocumentBuilder = new StringBuilder();
         insertHeaderCommentIntoTextDocument(variableDefinition, textDocumentBuilder);
@@ -918,6 +937,14 @@ public class DefinitionTextUtils {
             IDefinition definitionToFind, DefinitionAsText result) {
         String name = definition.getBaseName();
         if (definition.equals(definitionToFind)) {
+            IDefinition currentDefinition = definition;
+            while (currentDefinition != null) {
+                if (currentDefinition instanceof IPackageDefinition) {
+                    break;
+                }
+                result.symbols.add(0, currentDefinition.getQualifiedName());
+                currentDefinition = currentDefinition.getParent();
+            }
             String[] lines = textDocumentBuilder.toString().split(NEW_LINE);
             result.startLine = lines.length - 1;
             result.startColumn = lines[lines.length - 1].length();
