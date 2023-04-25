@@ -945,7 +945,9 @@ public class DefinitionTextUtils {
     }
 
     private static void insertHeaderCommentIntoTextDocument(IDefinition definition, StringBuilder builder) {
-        builder.append("//Generated from: " + definition.getContainingFilePath() + "\n");
+        builder.append("// Generated from: ");
+        builder.append(definition.getContainingFilePath());
+        builder.append("\n");
     }
 
     private static void appendDefinitionName(IDefinition definition, StringBuilder textDocumentBuilder,

@@ -607,9 +607,9 @@ public class ExecuteCommandProvider {
             }
         }
         StringBuilder errorBuilder = new StringBuilder();
-        errorBuilder.append("//Generated from: ");
+        errorBuilder.append("// Generated from: ");
         errorBuilder.append(swcPath);
-        errorBuilder.append("\n//Failed to resolve definition: ");
+        errorBuilder.append("\n// Failed to resolve definition: ");
         errorBuilder.append(symbolName);
         return CompletableFuture.completedFuture(errorBuilder.toString());
     }
