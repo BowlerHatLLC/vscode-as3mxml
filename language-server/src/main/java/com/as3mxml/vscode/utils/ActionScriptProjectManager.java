@@ -431,15 +431,7 @@ public class ActionScriptProjectManager {
         }
         Location location = null;
         if (sourcePath.endsWith(FILE_EXTENSION_SWC) || sourcePath.endsWith(FILE_EXTENSION_ANE)) {
-            DefinitionAsText definitionText = DefinitionTextUtils.definitionToTextDocument(definition, project);
-            // may be null if definitionToTextDocument() doesn't know how
-            // to parse that type of definition
-            if (definitionText != null) {
-                // if we get here, we couldn't find a framework source file and
-                // the definition path still ends with .swc
-                // we're going to try our best to display "decompiled" content
-                location = definitionText.toLocation();
-            }
+            location = DefinitionTextUtils.definitionToLocation(definition, project);
         }
         if (location == null) {
             location = new Location();
@@ -462,15 +454,7 @@ public class ActionScriptProjectManager {
         }
         Range range = null;
         if (sourcePath.endsWith(FILE_EXTENSION_SWC) || sourcePath.endsWith(FILE_EXTENSION_ANE)) {
-            DefinitionAsText definitionText = DefinitionTextUtils.definitionToTextDocument(definition, project);
-            // may be null if definitionToTextDocument() doesn't know how
-            // to parse that type of definition
-            if (definitionText != null) {
-                // if we get here, we couldn't find a framework source file and
-                // the definition path still ends with .swc
-                // we're going to try our best to display "decompiled" content
-                range = definitionText.toRange();
-            }
+            range = DefinitionTextUtils.definitionToRange(definition, project);
         }
         if (range == null) {
             Path definitionPath = Paths.get(sourcePath);
@@ -529,15 +513,7 @@ public class ActionScriptProjectManager {
         }
         Range range = null;
         if (sourcePath.endsWith(FILE_EXTENSION_SWC) || sourcePath.endsWith(FILE_EXTENSION_ANE)) {
-            DefinitionAsText definitionText = DefinitionTextUtils.definitionToTextDocument(definition, project);
-            // may be null if definitionToTextDocument() doesn't know how
-            // to parse that type of definition
-            if (definitionText != null) {
-                // if we get here, we couldn't find a framework source file and
-                // the definition path still ends with .swc
-                // we're going to try our best to display "decompiled" content
-                range = definitionText.toRange();
-            }
+            range = DefinitionTextUtils.definitionToRange(definition, project);
         }
         if (range == null) {
             Position start = new Position();
@@ -672,15 +648,14 @@ public class ActionScriptProjectManager {
                 }
             }
             if (definitionPath.endsWith(FILE_EXTENSION_SWC) || definitionPath.endsWith(FILE_EXTENSION_ANE)) {
-                DefinitionAsText definitionText = DefinitionTextUtils.definitionToTextDocument(definition,
-                        projectData.project);
+                Location location = DefinitionTextUtils.definitionToLocation(definition, projectData.project);
                 // may be null if definitionToTextDocument() doesn't know how
                 // to parse that type of definition
-                if (definitionText != null) {
+                if (location != null) {
                     // if we get here, we couldn't find a framework source file and
                     // the definition path still ends with .swc
                     // we're going to try our best to display "decompiled" content
-                    result.add(definitionText.toLocation());
+                    result.add(location);
                 }
                 return;
             }

@@ -177,6 +177,22 @@ public class DefinitionTextUtils {
         }
     }
 
+    public static Location definitionToLocation(IDefinition definition, ICompilerProject currentProject) {
+        DefinitionAsText definitionText = definitionToTextDocument(definition, currentProject);
+        if (definitionText != null) {
+            return definitionText.toLocation();
+        }
+        return null;
+    }
+
+    public static Range definitionToRange(IDefinition definition, ICompilerProject currentProject) {
+        DefinitionAsText definitionText = definitionToTextDocument(definition, currentProject);
+        if (definitionText != null) {
+            return definitionText.toRange();
+        }
+        return null;
+    }
+
     public static DefinitionAsText definitionToTextDocument(IDefinition definition, ICompilerProject currentProject) {
         if (definition instanceof IClassDefinition) {
             IClassDefinition classDefinition = (IClassDefinition) definition;
