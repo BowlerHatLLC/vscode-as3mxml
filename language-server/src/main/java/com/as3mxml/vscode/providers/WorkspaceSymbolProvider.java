@@ -110,21 +110,41 @@ public class WorkspaceSymbolProvider {
 						if (definition.isImplicit()) {
 							continue;
 						}
-						if (!matchesQueries(queries, definition.getQualifiedName())) {
-							continue;
-						}
 						String qualifiedName = definition.getQualifiedName();
-						if (qualifiedNames.contains(qualifiedName)) {
-							// we've already added this symbol
-							// this can happen when there are multiple root
-							// folders in the workspace
-							continue;
+						if (matchesQueries(queries, qualifiedName)) {
+							if (qualifiedNames.contains(qualifiedName)) {
+								// we've already added this symbol
+								// this can happen when there are multiple root
+								// folders in the workspace
+								continue;
+							}
+							WorkspaceSymbol symbol = actionScriptProjectManager.definitionToWorkspaceSymbol(definition,
+									project, allowResolveRange);
+							if (symbol != null) {
+								qualifiedNames.add(qualifiedName);
+								result.add(symbol);
+							}
 						}
-						WorkspaceSymbol symbol = actionScriptProjectManager.definitionToWorkspaceSymbol(definition,
-								project, allowResolveRange);
-						if (symbol != null) {
-							qualifiedNames.add(qualifiedName);
-							result.add(symbol);
+						if (definition instanceof ITypeDefinition) {
+							ITypeDefinition typeDef = (ITypeDefinition) definition;
+							IASScope typeScope = typeDef.getContainedScope();
+							if (typeScope != null) {
+								for (IDefinition localDef : typeScope.getAllLocalDefinitions()) {
+									if (localDef.isOverride() || localDef.isPrivate()) {
+										// skip overrides and private
+										continue;
+									}
+									if (!matchesQueries(queries, localDef.getQualifiedName())) {
+										continue;
+									}
+									WorkspaceSymbol localSymbol = actionScriptProjectManager
+											.definitionToWorkspaceSymbol(localDef,
+													project, allowResolveRange);
+									if (localSymbol != null) {
+										result.add(localSymbol);
+									}
+								}
+							}
 						}
 					}
 				} else if (UnitType.AS_UNIT.equals(unitType) || UnitType.MXML_UNIT.equals(unitType)) {

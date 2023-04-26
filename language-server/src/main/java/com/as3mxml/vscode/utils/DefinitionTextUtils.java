@@ -143,6 +143,9 @@ public class DefinitionTextUtils {
         }
 
         public Location toLocation() {
+            if (uri == null) {
+                return null;
+            }
             Location location = new Location();
             location.setUri(uri);
             location.setRange(toRange());
