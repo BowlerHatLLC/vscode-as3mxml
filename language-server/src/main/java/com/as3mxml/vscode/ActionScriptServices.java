@@ -50,7 +50,6 @@ import org.apache.royale.compiler.config.CommandLineConfigurator;
 import org.apache.royale.compiler.config.Configuration;
 import org.apache.royale.compiler.config.ICompilerProblemSettings;
 import org.apache.royale.compiler.config.ICompilerSettingsConstants;
-import org.apache.royale.compiler.definitions.IDefinition;
 import org.apache.royale.compiler.exceptions.ConfigurationException;
 import org.apache.royale.compiler.filespecs.IFileSpecification;
 import org.apache.royale.compiler.internal.parsing.as.ASParser;
@@ -66,7 +65,6 @@ import org.apache.royale.compiler.problems.FileNotFoundProblem;
 import org.apache.royale.compiler.problems.ICompilerProblem;
 import org.apache.royale.compiler.problems.InternalCompilerProblem;
 import org.apache.royale.compiler.problems.MissingRequirementConfigurationProblem;
-import org.apache.royale.compiler.projects.ICompilerProject;
 import org.apache.royale.compiler.targets.ITarget;
 import org.apache.royale.compiler.targets.ITargetSettings;
 import org.apache.royale.compiler.tree.as.IASNode;
@@ -116,6 +114,7 @@ import org.eclipse.lsp4j.ReferenceParams;
 import org.eclipse.lsp4j.RenameParams;
 import org.eclipse.lsp4j.SignatureHelp;
 import org.eclipse.lsp4j.SignatureHelpParams;
+import org.eclipse.lsp4j.SymbolCapabilities;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.TextDocumentItem;
@@ -169,7 +168,6 @@ import com.as3mxml.vscode.utils.CompilationUnitUtils;
 import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
 import com.as3mxml.vscode.utils.CompilerProblemFilter;
 import com.as3mxml.vscode.utils.CompilerProjectUtils;
-import com.as3mxml.vscode.utils.DefinitionURI;
 import com.as3mxml.vscode.utils.FileTracker;
 import com.as3mxml.vscode.utils.LanguageServerCompilerUtils;
 import com.as3mxml.vscode.utils.ProblemTracker;
@@ -203,6 +201,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     private ClientCapabilities clientCapabilities;
     private boolean completionSupportsSnippets = false;
     private boolean completionSupportsSimpleSnippets = false;
+    private SymbolCapabilities workspaceSymbolCapabilities;
     private FileTracker fileTracker;
     private CompilerProblemFilter compilerProblemFilter = new CompilerProblemFilter();
     private boolean initialized = false;
@@ -282,6 +281,12 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         try {
             completionSupportsSnippets = clientCapabilities.getTextDocument().getCompletion().getCompletionItem()
                     .getSnippetSupport();
+        } catch (NullPointerException e) {
+            // ignore
+        }
+        workspaceSymbolCapabilities = null;
+        try {
+            workspaceSymbolCapabilities = clientCapabilities.getWorkspace().getSymbol();
         } catch (NullPointerException e) {
             // ignore
         }
@@ -591,6 +596,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         compilerWorkspace.startBuilding();
         try {
             WorkspaceSymbolProvider provider = new WorkspaceSymbolProvider(actionScriptProjectManager);
+            provider.symbolCapabilities = workspaceSymbolCapabilities;
             return provider.workspaceSymbol(params, cancelToken);
         } finally {
             compilerWorkspace.doneBuilding();
@@ -599,27 +605,30 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
 
     @Override
     public CompletableFuture<WorkspaceSymbol> resolveWorkspaceSymbol(WorkspaceSymbol workspaceSymbol) {
-        return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(),
-                cancelToken -> {
-                    cancelToken.checkCanceled();
-                    if (!workspaceSymbol.getLocation().isRight()) {
-                        return null;
-                    }
-                    URI uri = URI.create(workspaceSymbol.getLocation().getRight().getUri());
-                    String query = uri.getQuery();
-                    DefinitionURI decodedQuery = DefinitionURI.decode(query, actionScriptProjectManager);
-                    IDefinition definition = decodedQuery.definition;
-                    ICompilerProject project = decodedQuery.project;
-                    if (definition != null && project != null) {
-                        Location location = actionScriptProjectManager
-                                .definitionToLocation(definition, project);
-                        if (location != null) {
-                            workspaceSymbol.setLocation(Either.forLeft(location));
-                            return workspaceSymbol;
-                        }
-                    }
-                    return null;
-                });
+        if (!concurrentRequests) {
+            return CompletableFuture.completedFuture(resolveWorkspaceSymbol2(workspaceSymbol, null));
+        }
+        return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken -> {
+            cancelToken.checkCanceled();
+            return resolveWorkspaceSymbol2(workspaceSymbol, cancelToken);
+        });
+    }
+
+    public WorkspaceSymbol resolveWorkspaceSymbol2(WorkspaceSymbol workspaceSymbol, CancelChecker cancelToken) {
+        // make sure that the latest changes have been passed to
+        // workspace.fileChanged() before proceeding
+        if (realTimeProblemsChecker != null) {
+            realTimeProblemsChecker.updateNow();
+        }
+
+        compilerWorkspace.startBuilding();
+        try {
+            WorkspaceSymbolProvider provider = new WorkspaceSymbolProvider(actionScriptProjectManager);
+            provider.symbolCapabilities = workspaceSymbolCapabilities;
+            return provider.resolveWorkspaceSymbol(workspaceSymbol, cancelToken);
+        } finally {
+            compilerWorkspace.doneBuilding();
+        }
     }
 
     /**
