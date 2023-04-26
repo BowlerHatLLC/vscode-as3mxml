@@ -28,6 +28,7 @@ import org.apache.royale.abc.Pool;
 import org.apache.royale.abc.PoolingABCVisitor;
 import org.apache.royale.compiler.constants.IASLanguageConstants;
 import org.apache.royale.compiler.constants.IMetaAttributeConstants;
+import org.apache.royale.compiler.definitions.IAccessorDefinition;
 import org.apache.royale.compiler.definitions.IAppliedVectorDefinition;
 import org.apache.royale.compiler.definitions.IClassDefinition;
 import org.apache.royale.compiler.definitions.IClassDefinition.ClassClassification;
@@ -50,10 +51,13 @@ import org.apache.royale.compiler.internal.scopes.ASScope;
 import org.apache.royale.compiler.internal.scopes.TypeScope;
 import org.apache.royale.compiler.projects.ICompilerProject;
 import org.apache.royale.compiler.tree.as.IASNode;
+import org.apache.royale.compiler.tree.as.IBinaryOperatorNode;
+import org.apache.royale.compiler.tree.as.IBlockNode;
 import org.apache.royale.compiler.tree.as.IDynamicAccessNode;
 import org.apache.royale.compiler.tree.as.IExpressionNode;
 import org.apache.royale.compiler.tree.as.IIdentifierNode;
 import org.apache.royale.compiler.tree.as.IMemberAccessExpressionNode;
+import org.apache.royale.compiler.tree.as.IOperatorNode.OperatorType;
 import org.apache.royale.compiler.units.ICompilationUnit;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
@@ -185,6 +189,45 @@ public class DefinitionUtils {
 			Range sourceRange) {
 		IDefinition definition = identifierNode.resolve(project);
 		if (definition != null) {
+			if (definition instanceof IAccessorDefinition) {
+				boolean preferSetter = false;
+				IASNode parentNode = identifierNode.getParent();
+				while (parentNode != null) {
+					if (parentNode instanceof IMemberAccessExpressionNode) {
+						IMemberAccessExpressionNode memberAccess = (IMemberAccessExpressionNode) parentNode;
+						IASNode rightOperandNode = memberAccess.getRightOperandNode();
+						if (identifierNode.equals(rightOperandNode)
+								|| ASTUtils.nodeContainsNode(rightOperandNode, identifierNode)) {
+							parentNode = parentNode.getParent();
+							continue;
+						}
+						break;
+					} else if (parentNode instanceof IBinaryOperatorNode) {
+						IBinaryOperatorNode binaryOperatorNode = (IBinaryOperatorNode) parentNode;
+						if (OperatorType.ASSIGNMENT.equals(binaryOperatorNode.getOperator())) {
+							IASNode leftOperandNode = binaryOperatorNode.getLeftOperandNode();
+							preferSetter = identifierNode.equals(leftOperandNode)
+									|| ASTUtils.nodeContainsNode(leftOperandNode, identifierNode);
+						}
+						break;
+					}
+					break;
+				}
+
+				if (preferSetter && definition instanceof IGetterDefinition) {
+					IGetterDefinition getterDefinition = (IGetterDefinition) definition;
+					ISetterDefinition setterDefinition = getterDefinition.resolveSetter(project);
+					if (setterDefinition != null) {
+						definition = setterDefinition;
+					}
+				} else if (!preferSetter && definition instanceof ISetterDefinition) {
+					ISetterDefinition setterDefinition = (ISetterDefinition) definition;
+					IGetterDefinition getterDefinition = setterDefinition.resolveGetter(project);
+					if (getterDefinition != null) {
+						definition = getterDefinition;
+					}
+				}
+			}
 			return definition;
 		}
 
