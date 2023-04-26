@@ -567,12 +567,19 @@ public class ExecuteCommandProvider {
             IDefinition definition = decodedQuery.definition;
             ICompilerProject project = decodedQuery.project;
             if (definition != null && project != null) {
+                symbolName = definition.getQualifiedName();
                 DefinitionAsText definitionText = DefinitionTextUtils.definitionToTextDocument(
-                        definition, project, true);
+                        definition, project, decodedQuery.includeASDoc);
                 if (definitionText != null) {
                     return CompletableFuture.completedFuture(definitionText.text);
                 }
             }
+            StringBuilder errorBuilder = new StringBuilder();
+            errorBuilder.append("// Generated from: ");
+            errorBuilder.append(decodedQuery.swcFilePath);
+            errorBuilder.append("\n// Failed to resolve definition: ");
+            errorBuilder.append(symbolName);
+            return CompletableFuture.completedFuture(errorBuilder.toString());
         }
         return CompletableFuture.completedFuture("// Failed to resolve definition");
     }

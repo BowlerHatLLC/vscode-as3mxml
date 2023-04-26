@@ -42,6 +42,7 @@ public class DefinitionURI {
 	public ICompilerProject project;
 	public IDefinition definition;
 	public IDefinition rootDefinition;
+	public boolean includeASDoc;
 
 	public DefinitionURI() {
 
@@ -54,8 +55,9 @@ public class DefinitionURI {
 		String query = new String(bytes, StandardCharsets.UTF_8);
 		String[] parts = query.split(",");
 		result.swcFilePath = parts[0];
+		result.includeASDoc = "true".equals(parts[1]);
 		List<String> symbols = new ArrayList<>();
-		for (int i = 1; i < parts.length; i++) {
+		for (int i = 2; i < parts.length; i++) {
 			symbols.add(parts[i]);
 		}
 		result.symbols = symbols;
@@ -101,6 +103,8 @@ public class DefinitionURI {
 	public String encode() {
 		StringBuilder queryBuilder = new StringBuilder();
 		queryBuilder.append(swcFilePath);
+		queryBuilder.append(",");
+		queryBuilder.append(includeASDoc);
 		for (String symbol : symbols) {
 			queryBuilder.append(",");
 			queryBuilder.append(symbol);

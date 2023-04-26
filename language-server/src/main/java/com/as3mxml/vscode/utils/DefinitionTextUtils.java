@@ -369,7 +369,7 @@ public class DefinitionTextUtils {
         }
         textDocumentBuilder.append(IASKeywordConstants.CLASS);
         textDocumentBuilder.append(" ");
-        appendDefinitionName(classDefinition, textDocumentBuilder, definitionToFind, result);
+        appendDefinitionName(classDefinition, textDocumentBuilder, definitionToFind, includeASDoc, result);
         String baseClassName = classDefinition.getBaseClassAsDisplayString();
         if (baseClassName != null && baseClassName.length() > 0 && !baseClassName.equals(IASLanguageConstants.Object)) {
             textDocumentBuilder.append(" ");
@@ -440,7 +440,7 @@ public class DefinitionTextUtils {
         }
         textDocumentBuilder.append(IASKeywordConstants.INTERFACE);
         textDocumentBuilder.append(" ");
-        appendDefinitionName(interfaceDefinition, textDocumentBuilder, definitionToFind, result);
+        appendDefinitionName(interfaceDefinition, textDocumentBuilder, definitionToFind, includeASDoc, result);
         String[] interfaceNames = interfaceDefinition.getExtendedInterfacesAsDisplayStrings();
         if (interfaceNames.length > 0) {
             textDocumentBuilder.append(" ");
@@ -498,7 +498,7 @@ public class DefinitionTextUtils {
         }
         textDocumentBuilder.append(IASKeywordConstants.NAMESPACE);
         textDocumentBuilder.append(" ");
-        appendDefinitionName(namespaceDefinition, textDocumentBuilder, definitionToFind, result);
+        appendDefinitionName(namespaceDefinition, textDocumentBuilder, definitionToFind, includeASDoc, result);
         textDocumentBuilder.append(" ");
         textDocumentBuilder.append("=");
         textDocumentBuilder.append(" ");
@@ -561,7 +561,7 @@ public class DefinitionTextUtils {
             textDocumentBuilder.append(IASKeywordConstants.SET);
             textDocumentBuilder.append(" ");
         }
-        appendDefinitionName(functionDefinition, textDocumentBuilder, definitionToFind, result);
+        appendDefinitionName(functionDefinition, textDocumentBuilder, definitionToFind, includeASDoc, result);
         textDocumentBuilder.append(functionDefinitionToParametersAndReturnValue(functionDefinition, currentProject));
         textDocumentBuilder.append(";");
         textDocumentBuilder.append(NEW_LINE);
@@ -607,7 +607,7 @@ public class DefinitionTextUtils {
             textDocumentBuilder.append(IASKeywordConstants.VAR);
         }
         textDocumentBuilder.append(" ");
-        appendDefinitionName(variableDefinition, textDocumentBuilder, definitionToFind, result);
+        appendDefinitionName(variableDefinition, textDocumentBuilder, definitionToFind, includeASDoc, result);
         textDocumentBuilder.append(":");
         textDocumentBuilder.append(getTypeAsDisplayString(variableDefinition));
         if (variableDefinition instanceof IConstantDefinition) {
@@ -933,7 +933,7 @@ public class DefinitionTextUtils {
     }
 
     private static void appendDefinitionName(IDefinition definition, StringBuilder textDocumentBuilder,
-            IDefinition definitionToFind, DefinitionAsText result) {
+            IDefinition definitionToFind, boolean includeASDoc, DefinitionAsText result) {
         String name = definition.getBaseName();
         if (definition.equals(definitionToFind)) {
             DefinitionURI defUri = new DefinitionURI();
@@ -951,6 +951,7 @@ public class DefinitionTextUtils {
             }
             defUri.symbols = symbols;
             defUri.definition = definition;
+            defUri.includeASDoc = includeASDoc;
             result.uri = defUri.encode();
             String[] lines = textDocumentBuilder.toString().split(NEW_LINE);
             result.startLine = lines.length - 1;
