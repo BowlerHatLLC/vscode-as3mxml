@@ -151,7 +151,7 @@ public class WorkspaceSymbolProvider {
 			cancelToken.checkCanceled();
 		}
 		if (!workspaceSymbol.getLocation().isRight()) {
-			return null;
+			return workspaceSymbol;
 		}
 		URI uri = URI.create(workspaceSymbol.getLocation().getRight().getUri());
 		String query = uri.getQuery();
@@ -169,7 +169,7 @@ public class WorkspaceSymbolProvider {
 		if (cancelToken != null) {
 			cancelToken.checkCanceled();
 		}
-		return null;
+		return workspaceSymbol;
 	}
 
 	private void querySymbolsInScope(List<String> queries, IASScope scope, boolean allowResolveRange,
