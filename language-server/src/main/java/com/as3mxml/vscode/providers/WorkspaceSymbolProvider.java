@@ -59,6 +59,13 @@ public class WorkspaceSymbolProvider {
 		if (cancelToken != null) {
 			cancelToken.checkCanceled();
 		}
+		boolean allowResolveRange = false;
+		if (symbolCapabilities != null) {
+			try {
+				allowResolveRange = symbolCapabilities.getResolveSupport().getProperties().contains("location.range");
+			} catch (NullPointerException e) {
+			}
+		}
 		Set<String> qualifiedNames = new HashSet<>();
 		List<WorkspaceSymbol> result = new ArrayList<>();
 		String query = params.getQuery();
@@ -114,7 +121,7 @@ public class WorkspaceSymbolProvider {
 							continue;
 						}
 						WorkspaceSymbol symbol = actionScriptProjectManager.definitionToWorkspaceSymbol(definition,
-								project, true);
+								project, allowResolveRange);
 						if (symbol != null) {
 							qualifiedNames.add(qualifiedName);
 							result.add(symbol);
@@ -128,7 +135,7 @@ public class WorkspaceSymbolProvider {
 						return Either.forRight(Collections.emptyList());
 					}
 					for (IASScope scope : scopes) {
-						querySymbolsInScope(queries, scope, qualifiedNames, project, result);
+						querySymbolsInScope(queries, scope, allowResolveRange, qualifiedNames, project, result);
 					}
 				}
 			}
@@ -140,7 +147,9 @@ public class WorkspaceSymbolProvider {
 	}
 
 	public WorkspaceSymbol resolveWorkspaceSymbol(WorkspaceSymbol workspaceSymbol, CancelChecker cancelToken) {
-		cancelToken.checkCanceled();
+		if (cancelToken != null) {
+			cancelToken.checkCanceled();
+		}
 		if (!workspaceSymbol.getLocation().isRight()) {
 			return null;
 		}
@@ -157,17 +166,20 @@ public class WorkspaceSymbolProvider {
 				return workspaceSymbol;
 			}
 		}
+		if (cancelToken != null) {
+			cancelToken.checkCanceled();
+		}
 		return null;
 	}
 
-	private void querySymbolsInScope(List<String> queries, IASScope scope, Set<String> foundTypes, ILspProject project,
-			Collection<WorkspaceSymbol> result) {
+	private void querySymbolsInScope(List<String> queries, IASScope scope, boolean allowResolveRange,
+			Set<String> foundTypes, ILspProject project, Collection<WorkspaceSymbol> result) {
 		Collection<IDefinition> definitions = scope.getAllLocalDefinitions();
 		for (IDefinition definition : definitions) {
 			if (definition instanceof IPackageDefinition) {
 				IPackageDefinition packageDefinition = (IPackageDefinition) definition;
 				IASScope packageScope = packageDefinition.getContainedScope();
-				querySymbolsInScope(queries, packageScope, foundTypes, project, result);
+				querySymbolsInScope(queries, packageScope, allowResolveRange, foundTypes, project, result);
 			} else if (definition instanceof ITypeDefinition) {
 				String qualifiedName = definition.getQualifiedName();
 				if (foundTypes.contains(qualifiedName)) {
@@ -179,13 +191,13 @@ public class WorkspaceSymbolProvider {
 				ITypeDefinition typeDefinition = (ITypeDefinition) definition;
 				if (!definition.isImplicit() && matchesQueries(queries, qualifiedName)) {
 					WorkspaceSymbol symbol = actionScriptProjectManager.definitionToWorkspaceSymbol(typeDefinition,
-							project, true);
+							project, allowResolveRange);
 					if (symbol != null) {
 						result.add(symbol);
 					}
 				}
 				IASScope typeScope = typeDefinition.getContainedScope();
-				querySymbolsInScope(queries, typeScope, foundTypes, project, result);
+				querySymbolsInScope(queries, typeScope, allowResolveRange, foundTypes, project, result);
 			} else if (definition instanceof IFunctionDefinition) {
 				if (definition.isImplicit()) {
 					continue;
@@ -195,7 +207,7 @@ public class WorkspaceSymbolProvider {
 				}
 				IFunctionDefinition functionDefinition = (IFunctionDefinition) definition;
 				WorkspaceSymbol symbol = actionScriptProjectManager.definitionToWorkspaceSymbol(functionDefinition,
-						project, true);
+						project, allowResolveRange);
 				if (symbol != null) {
 					result.add(symbol);
 				}
@@ -208,7 +220,7 @@ public class WorkspaceSymbolProvider {
 				}
 				IVariableDefinition variableDefinition = (IVariableDefinition) definition;
 				WorkspaceSymbol symbol = actionScriptProjectManager.definitionToWorkspaceSymbol(variableDefinition,
-						project, true);
+						project, allowResolveRange);
 				if (symbol != null) {
 					result.add(symbol);
 				}
