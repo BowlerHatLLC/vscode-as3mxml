@@ -2156,7 +2156,7 @@ suite("definition provider: Application workspace", () => {
             );
             assert.strictEqual(
               location.targetRange.start.line,
-              20,
+              25,
               "vscode.executeDefinitionProvider provided incorrect line for member property definition"
             );
             assert.strictEqual(
@@ -2199,7 +2199,7 @@ suite("definition provider: Application workspace", () => {
             );
             assert.strictEqual(
               location.targetRange.start.line,
-              20,
+              25,
               "vscode.executeDefinitionProvider provided incorrect line for member property definition with member access operator on this"
             );
             assert.strictEqual(
@@ -2414,7 +2414,7 @@ suite("definition provider: Application workspace", () => {
             );
             assert.strictEqual(
               location.targetRange.start.line,
-              29,
+              34,
               "vscode.executeDefinitionProvider provided incorrect line for static property definition"
             );
             assert.strictEqual(
@@ -2457,7 +2457,7 @@ suite("definition provider: Application workspace", () => {
             );
             assert.strictEqual(
               location.targetRange.start.line,
-              29,
+              34,
               "vscode.executeDefinitionProvider provided incorrect line for static property definition with member access operator on class"
             );
             assert.strictEqual(
@@ -2821,7 +2821,7 @@ suite("definition provider: Application workspace", () => {
             );
             assert.strictEqual(
               location.targetRange.start.line,
-              6,
+              11,
               "vscode.executeDefinitionProvider provided incorrect line for super static property definition"
             );
             assert.strictEqual(
@@ -2873,7 +2873,7 @@ suite("definition provider: Application workspace", () => {
             );
             assert.strictEqual(
               location.targetRange.start.line,
-              6,
+              11,
               "vscode.executeDefinitionProvider provided incorrect line for super static property definition with member access operator on superclass"
             );
             assert.strictEqual(
@@ -3341,7 +3341,7 @@ suite("definition provider: Application workspace", () => {
             );
             assert.strictEqual(
               location.targetRange.start.line,
-              21,
+              26,
               "vscode.executeDefinitionProvider provided incorrect line for super member property definition"
             );
             assert.strictEqual(
@@ -3393,7 +3393,7 @@ suite("definition provider: Application workspace", () => {
             );
             assert.strictEqual(
               location.targetRange.start.line,
-              21,
+              26,
               "vscode.executeDefinitionProvider provided incorrect line for super member property definition with member access operator on this"
             );
             assert.strictEqual(
@@ -3445,7 +3445,7 @@ suite("definition provider: Application workspace", () => {
             );
             assert.strictEqual(
               location.targetRange.start.line,
-              21,
+              26,
               "vscode.executeDefinitionProvider provided incorrect line for super member property definition with member access operator on super"
             );
             assert.strictEqual(
@@ -3798,7 +3798,7 @@ suite("definition provider: Application workspace", () => {
             );
             assert.strictEqual(
               location.targetRange.start.line,
-              134,
+              139,
               "vscode.executeDefinitionProvider provided incorrect line for file-internal member property definition"
             );
             assert.strictEqual(
@@ -3841,7 +3841,7 @@ suite("definition provider: Application workspace", () => {
             );
             assert.strictEqual(
               location.targetRange.start.line,
-              119,
+              124,
               "vscode.executeDefinitionProvider provided incorrect line for file-internal static property definition"
             );
             assert.strictEqual(
