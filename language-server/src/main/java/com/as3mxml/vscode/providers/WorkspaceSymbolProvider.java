@@ -54,7 +54,7 @@ public class WorkspaceSymbolProvider {
 			cancelToken.checkCanceled();
 		}
 		Set<String> qualifiedNames = new HashSet<>();
-		List<SymbolInformation> result = new ArrayList<>();
+		List<WorkspaceSymbol> result = new ArrayList<>();
 		String query = params.getQuery();
 		StringBuilder currentQuery = new StringBuilder();
 		List<String> queries = new ArrayList<>();
@@ -107,8 +107,8 @@ public class WorkspaceSymbolProvider {
 							// folders in the workspace
 							continue;
 						}
-						SymbolInformation symbol = actionScriptProjectManager.definitionToSymbolInformation(definition,
-								project);
+						WorkspaceSymbol symbol = actionScriptProjectManager.definitionToWorkspaceSymbol(definition,
+								project, true);
 						if (symbol != null) {
 							qualifiedNames.add(qualifiedName);
 							result.add(symbol);
@@ -130,11 +130,11 @@ public class WorkspaceSymbolProvider {
 		if (cancelToken != null) {
 			cancelToken.checkCanceled();
 		}
-		return Either.forLeft(result);
+		return Either.forRight(result);
 	}
 
 	private void querySymbolsInScope(List<String> queries, IASScope scope, Set<String> foundTypes, ILspProject project,
-			Collection<SymbolInformation> result) {
+			Collection<WorkspaceSymbol> result) {
 		Collection<IDefinition> definitions = scope.getAllLocalDefinitions();
 		for (IDefinition definition : definitions) {
 			if (definition instanceof IPackageDefinition) {
@@ -151,8 +151,8 @@ public class WorkspaceSymbolProvider {
 				foundTypes.add(qualifiedName);
 				ITypeDefinition typeDefinition = (ITypeDefinition) definition;
 				if (!definition.isImplicit() && matchesQueries(queries, qualifiedName)) {
-					SymbolInformation symbol = actionScriptProjectManager.definitionToSymbolInformation(typeDefinition,
-							project);
+					WorkspaceSymbol symbol = actionScriptProjectManager.definitionToWorkspaceSymbol(typeDefinition,
+							project, true);
 					if (symbol != null) {
 						result.add(symbol);
 					}
@@ -167,8 +167,8 @@ public class WorkspaceSymbolProvider {
 					continue;
 				}
 				IFunctionDefinition functionDefinition = (IFunctionDefinition) definition;
-				SymbolInformation symbol = actionScriptProjectManager.definitionToSymbolInformation(functionDefinition,
-						project);
+				WorkspaceSymbol symbol = actionScriptProjectManager.definitionToWorkspaceSymbol(functionDefinition,
+						project, true);
 				if (symbol != null) {
 					result.add(symbol);
 				}
@@ -180,8 +180,8 @@ public class WorkspaceSymbolProvider {
 					continue;
 				}
 				IVariableDefinition variableDefinition = (IVariableDefinition) definition;
-				SymbolInformation symbol = actionScriptProjectManager.definitionToSymbolInformation(variableDefinition,
-						project);
+				WorkspaceSymbol symbol = actionScriptProjectManager.definitionToWorkspaceSymbol(variableDefinition,
+						project, true);
 				if (symbol != null) {
 					result.add(symbol);
 				}

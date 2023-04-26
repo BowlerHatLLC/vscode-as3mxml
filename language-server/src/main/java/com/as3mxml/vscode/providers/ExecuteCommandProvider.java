@@ -18,7 +18,6 @@ package com.as3mxml.vscode.providers;
 import java.io.File;
 import java.io.StringReader;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -30,13 +29,11 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import org.apache.royale.compiler.definitions.IDefinition;
-import org.apache.royale.compiler.definitions.IScopedDefinition;
 import org.apache.royale.compiler.filespecs.IFileSpecification;
 import org.apache.royale.compiler.internal.mxml.MXMLData;
 import org.apache.royale.compiler.internal.workspaces.Workspace;
 import org.apache.royale.compiler.mxml.IMXMLTagData;
 import org.apache.royale.compiler.projects.ICompilerProject;
-import org.apache.royale.compiler.scopes.IASScope;
 import org.apache.royale.compiler.tree.as.IASNode;
 import org.apache.royale.compiler.tree.as.IImportNode;
 import org.apache.royale.compiler.units.ICompilationUnit;
@@ -61,6 +58,7 @@ import com.as3mxml.vscode.utils.CompilationUnitUtils;
 import com.as3mxml.vscode.utils.CompilerProjectUtils;
 import com.as3mxml.vscode.utils.DefinitionTextUtils;
 import com.as3mxml.vscode.utils.DefinitionTextUtils.DefinitionAsText;
+import com.as3mxml.vscode.utils.DefinitionURI;
 import com.as3mxml.vscode.utils.FileTracker;
 import com.as3mxml.vscode.utils.ImportRange;
 import com.as3mxml.vscode.utils.ImportTextEditUtils;
@@ -562,55 +560,20 @@ public class ExecuteCommandProvider {
 
     private CompletableFuture<Object> executeGetLibraryDefinitionTextCommand(ExecuteCommandParams params) {
         List<Object> args = params.getArguments();
-        String swcPath = ((JsonPrimitive) args.get(0)).getAsString();
-        boolean includeASDoc = ((JsonPrimitive) args.get(1)).getAsBoolean();
-        List<String> symbols = new ArrayList<>();
-        for (int i = 2; i < args.size(); i++) {
-            String symbol = ((JsonPrimitive) args.get(i)).getAsString();
-            symbols.add(symbol);
-        }
+        String encodedQuery = ((JsonPrimitive) args.get(0)).getAsString();
+        DefinitionURI decodedQuery = DefinitionURI.decode(encodedQuery, actionScriptProjectManager);
         String symbolName = "Unknown";
-        if (symbols.size() > 0) {
-            symbolName = symbols.get(symbols.size() - 1);
-            List<ActionScriptProjectData> allProjectData = actionScriptProjectManager
-                    .getAllProjectDataForSWCFile(Paths.get(swcPath));
-            if (allProjectData.size() > 0) {
-                ActionScriptProjectData projectData = allProjectData.get(0);
-                ICompilerProject project = projectData.project;
-                if (project != null) {
-                    String currentSymbol = symbols.remove(0);
-                    IASScope currentScope = project.getScope();
-                    while (currentScope != null) {
-                        IASScope newScope = null;
-                        for (IDefinition definition : currentScope.getAllLocalDefinitions()) {
-                            if (currentSymbol.equals(definition.getQualifiedName())) {
-                                if (symbols.size() > 0) {
-                                    if (definition instanceof IScopedDefinition) {
-                                        IScopedDefinition scopedDefinition = (IScopedDefinition) definition;
-                                        newScope = scopedDefinition.getContainedScope();
-                                        break;
-                                    }
-                                } else {
-                                    DefinitionAsText definitionText = DefinitionTextUtils.definitionToTextDocument(
-                                            definition, project, includeASDoc);
-                                    return CompletableFuture.completedFuture(definitionText.text);
-                                }
-                            }
-                        }
-                        if (newScope == null || symbols.size() == 0) {
-                            break;
-                        }
-                        currentScope = newScope;
-                        currentSymbol = symbols.remove(0);
-                    }
+        if (decodedQuery != null) {
+            IDefinition definition = decodedQuery.definition;
+            ICompilerProject project = decodedQuery.project;
+            if (definition != null && project != null) {
+                DefinitionAsText definitionText = DefinitionTextUtils.definitionToTextDocument(
+                        definition, project, true);
+                if (definitionText != null) {
+                    return CompletableFuture.completedFuture(definitionText.text);
                 }
             }
         }
-        StringBuilder errorBuilder = new StringBuilder();
-        errorBuilder.append("// Generated from: ");
-        errorBuilder.append(swcPath);
-        errorBuilder.append("\n// Failed to resolve definition: ");
-        errorBuilder.append(symbolName);
-        return CompletableFuture.completedFuture(errorBuilder.toString());
+        return CompletableFuture.completedFuture("// Failed to resolve definition");
     }
 }

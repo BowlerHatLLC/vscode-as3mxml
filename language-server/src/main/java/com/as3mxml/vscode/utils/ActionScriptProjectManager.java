@@ -40,6 +40,7 @@ import org.apache.royale.compiler.internal.mxml.MXMLData;
 import org.apache.royale.compiler.mxml.IMXMLDataManager;
 import org.apache.royale.compiler.mxml.IMXMLTagAttributeData;
 import org.apache.royale.compiler.mxml.IMXMLTagData;
+import org.apache.royale.compiler.projects.ICompilerProject;
 import org.apache.royale.compiler.tree.as.IASNode;
 import org.apache.royale.compiler.tree.as.IDefinitionNode;
 import org.apache.royale.compiler.tree.mxml.IMXMLClassReferenceNode;
@@ -57,6 +58,8 @@ import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.SymbolTag;
 import org.eclipse.lsp4j.WorkspaceFolder;
+import org.eclipse.lsp4j.WorkspaceSymbol;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.LanguageClient;
 
 import com.as3mxml.vscode.project.ActionScriptProjectData;
@@ -422,7 +425,7 @@ public class ActionScriptProjectManager {
         return result;
     }
 
-    public Location definitionToLocation(IDefinition definition, ILspProject project) {
+    public Location definitionToLocation(IDefinition definition, ICompilerProject project) {
         String sourcePath = LanguageServerCompilerUtils.getSourcePathFromDefinition(definition, project);
         if (sourcePath == null) {
             // we can't find where the source code for this symbol is located
@@ -444,7 +447,7 @@ public class ActionScriptProjectManager {
         return location;
     }
 
-    public Range definitionToSelectionRange(IDefinition definition, ILspProject project) {
+    public Range definitionToSelectionRange(IDefinition definition, ICompilerProject project) {
         String sourcePath = LanguageServerCompilerUtils.getSourcePathFromDefinition(definition, project);
         if (sourcePath == null) {
             // we can't find where the source code for this symbol is located
@@ -574,6 +577,71 @@ public class ActionScriptProjectManager {
         symbol.setName(definitionBaseName);
         symbol.setRange(range);
         symbol.setSelectionRange(selectionRange);
+
+        List<SymbolTag> tags = definitionToSymbolTags(definition);
+        if (tags.size() > 0) {
+            symbol.setTags(tags);
+        }
+
+        return symbol;
+    }
+
+    public WorkspaceSymbol definitionToWorkspaceSymbol(IDefinition definition, ILspProject project,
+            boolean allowResolve) {
+        String definitionBaseName = definition.getBaseName();
+        if (definitionBaseName.length() == 0) {
+            // vscode expects all items to have a name
+            return null;
+        }
+
+        WorkspaceSymbol symbol = new WorkspaceSymbol();
+        Location location = null;
+        String sourcePath = LanguageServerCompilerUtils.getSourcePathFromDefinition(definition, project);
+        if (sourcePath != null && (sourcePath.endsWith(FILE_EXTENSION_SWC)
+                || sourcePath.endsWith(FILE_EXTENSION_ANE))) {
+            if (allowResolve) {
+                DefinitionURI defUri = new DefinitionURI();
+                defUri.definition = definition;
+                defUri.swcFilePath = sourcePath;
+                List<String> symbols = new ArrayList<>();
+                IDefinition currentDefinition = definition;
+                while (currentDefinition != null) {
+                    if (currentDefinition instanceof IPackageDefinition) {
+                        break;
+                    }
+                    symbols.add(0, currentDefinition.getQualifiedName());
+                    defUri.rootDefinition = currentDefinition;
+                    currentDefinition = currentDefinition.getParent();
+                }
+                defUri.symbols = symbols;
+                location = new Location();
+                location.setUri(defUri.encode());
+            } else {
+                location = DefinitionTextUtils.definitionToLocation(definition, project,
+                        false);
+            }
+        } else {
+            location = definitionToLocation(definition, project);
+        }
+        if (location == null) {
+            // we can't find where the source code for this symbol is located
+            return null;
+        }
+
+        symbol.setKind(LanguageServerCompilerUtils.getSymbolKindFromDefinition(definition));
+        if (!definition.getQualifiedName().equals(definitionBaseName)) {
+            symbol.setContainerName(definition.getPackageName());
+        } else if (definition instanceof ITypeDefinition) {
+            symbol.setContainerName("No Package");
+        } else {
+            IDefinition parentDefinition = definition.getParent();
+            if (parentDefinition != null) {
+                symbol.setContainerName(parentDefinition.getQualifiedName());
+            }
+        }
+        symbol.setName(definitionBaseName);
+
+        symbol.setLocation(Either.forLeft(location));
 
         List<SymbolTag> tags = definitionToSymbolTags(definition);
         if (tags.size() > 0) {

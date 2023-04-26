@@ -15,13 +15,10 @@ limitations under the License.
 */
 package com.as3mxml.vscode.utils;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URI;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.List;
 
 import org.apache.royale.abc.ABCConstants;
 import org.apache.royale.compiler.constants.IASKeywordConstants;
@@ -38,6 +35,7 @@ import org.apache.royale.compiler.definitions.IGetterDefinition;
 import org.apache.royale.compiler.definitions.IInterfaceDefinition;
 import org.apache.royale.compiler.definitions.INamespaceDefinition;
 import org.apache.royale.compiler.definitions.INamespaceDefinition.IInterfaceNamespaceDefinition;
+import org.apache.royale.compiler.definitions.IPackageDefinition;
 import org.apache.royale.compiler.definitions.IParameterDefinition;
 import org.apache.royale.compiler.definitions.ISetterDefinition;
 import org.apache.royale.compiler.definitions.IStyleDefinition;
@@ -60,12 +58,9 @@ public class DefinitionTextUtils {
     private static final String NAMESPACE_MX_INTERNAL = "http://www.adobe.com/2006/flex/mx/internal";
     private static final String NEW_LINE = "\n";
     private static final String INDENT = "\t";
-    private static final String FILE_EXTENSION_AS = ".as";
     private static final String ASDOC_START = "/**";
     private static final String ASDOC_LINE_START = " * ";
     private static final String ASDOC_END = " */";
-    private static final String PATH_PREFIX_GENERATED = "generated/";
-    private static final String PROTOCOL_SWC = "swc://";
     public static final Comparator<IDefinition> DEFINITION_COMPARATOR = (IDefinition def1, IDefinition def2) -> {
         // static first
         boolean static1 = def1.isStatic();
@@ -132,7 +127,7 @@ public class DefinitionTextUtils {
         public int endLine = 0;
         public int endColumn = 0;
         public String text;
-        public String path;
+        public String uri;
 
         public Range toRange() {
             Position start = new Position();
@@ -147,20 +142,9 @@ public class DefinitionTextUtils {
             return range;
         }
 
-        public URI toUri() {
-            byte[] bytes = text.toString().getBytes(StandardCharsets.UTF_8);
-            bytes = Base64.getEncoder().encode(bytes);
-            String query = new String(bytes, StandardCharsets.UTF_8);
-            try {
-                query = URLEncoder.encode(query, StandardCharsets.UTF_8.toString());
-            } catch (UnsupportedEncodingException e) {
-            }
-            return URI.create(PROTOCOL_SWC + path + "?" + query);
-        }
-
         public Location toLocation() {
             Location location = new Location();
-            location.setUri(toUri().toString());
+            location.setUri(uri);
             location.setRange(toRange());
             return location;
         }
@@ -236,7 +220,6 @@ public class DefinitionTextUtils {
     private static DefinitionAsText classDefinitionToTextDocument(IClassDefinition classDefinition,
             ICompilerProject currentProject, IDefinition definitionToFind, boolean includeASDoc) {
         DefinitionAsText result = new DefinitionAsText();
-        result.path = definitionToGeneratedPath(classDefinition);
         String indent = "";
         StringBuilder textDocumentBuilder = new StringBuilder();
         insertHeaderCommentIntoTextDocument(classDefinition, textDocumentBuilder);
@@ -261,7 +244,6 @@ public class DefinitionTextUtils {
     private static DefinitionAsText interfaceDefinitionToTextDocument(IInterfaceDefinition interfaceDefinition,
             ICompilerProject currentProject, IDefinition definitionToFind, boolean includeASDoc) {
         DefinitionAsText result = new DefinitionAsText();
-        result.path = definitionToGeneratedPath(interfaceDefinition);
         String indent = "";
         StringBuilder textDocumentBuilder = new StringBuilder();
         insertHeaderCommentIntoTextDocument(interfaceDefinition, textDocumentBuilder);
@@ -286,7 +268,6 @@ public class DefinitionTextUtils {
     private static DefinitionAsText namespaceDefinitionToTextDocument(INamespaceDefinition namespaceDefinition,
             ICompilerProject currentProject, IDefinition definitionToFind, boolean includeASDoc) {
         DefinitionAsText result = new DefinitionAsText();
-        result.path = definitionToGeneratedPath(namespaceDefinition);
         String indent = "";
         StringBuilder textDocumentBuilder = new StringBuilder();
         insertHeaderCommentIntoTextDocument(namespaceDefinition, textDocumentBuilder);
@@ -311,7 +292,6 @@ public class DefinitionTextUtils {
     private static DefinitionAsText functionDefinitionToTextDocument(IFunctionDefinition functionDefinition,
             ICompilerProject currentProject, IDefinition definitionToFind, boolean includeASDoc) {
         DefinitionAsText result = new DefinitionAsText();
-        result.path = definitionToGeneratedPath(functionDefinition);
         String indent = "";
         StringBuilder textDocumentBuilder = new StringBuilder();
         insertHeaderCommentIntoTextDocument(functionDefinition, textDocumentBuilder);
@@ -336,7 +316,6 @@ public class DefinitionTextUtils {
     private static DefinitionAsText variableDefinitionToTextDocument(IVariableDefinition variableDefinition,
             ICompilerProject currentProject, IDefinition definitionToFind, boolean includeASDoc) {
         DefinitionAsText result = new DefinitionAsText();
-        result.path = definitionToGeneratedPath(variableDefinition);
         String indent = "";
         StringBuilder textDocumentBuilder = new StringBuilder();
         insertHeaderCommentIntoTextDocument(variableDefinition, textDocumentBuilder);
@@ -954,6 +933,22 @@ public class DefinitionTextUtils {
             IDefinition definitionToFind, DefinitionAsText result) {
         String name = definition.getBaseName();
         if (definition.equals(definitionToFind)) {
+            DefinitionURI defUri = new DefinitionURI();
+            List<String> symbols = new ArrayList<>();
+            IDefinition currentDefinition = definition;
+            while (currentDefinition != null) {
+                if (currentDefinition instanceof IPackageDefinition) {
+                    break;
+                }
+                String qualifiedName = currentDefinition.getQualifiedName();
+                symbols.add(0, qualifiedName);
+                defUri.swcFilePath = definition.getContainingFilePath();
+                defUri.rootDefinition = currentDefinition;
+                currentDefinition = currentDefinition.getParent();
+            }
+            defUri.symbols = symbols;
+            defUri.definition = definition;
+            result.uri = defUri.encode();
             String[] lines = textDocumentBuilder.toString().split(NEW_LINE);
             result.startLine = lines.length - 1;
             result.startColumn = lines[lines.length - 1].length();
@@ -993,12 +988,6 @@ public class DefinitionTextUtils {
                 textDocumentBuilder.append(" */ ");
             }
         }
-    }
-
-    private static String definitionToGeneratedPath(IDefinition definition) {
-        // we add a fake directory as a prefix here because VSCode won't display
-        // the file name if it isn't in a directory
-        return PATH_PREFIX_GENERATED + definition.getQualifiedName().replaceAll("\\.", "/") + FILE_EXTENSION_AS;
     }
 
     private static String getTypeAsDisplayString(IDefinition definition) {

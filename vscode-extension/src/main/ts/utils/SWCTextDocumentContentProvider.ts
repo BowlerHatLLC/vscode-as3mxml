@@ -22,7 +22,9 @@ export default class SWCTextDocumentContentProvider
     uri: vscode.Uri,
     token: vscode.CancellationToken
   ): vscode.ProviderResult<string> {
-    let query = decodeURIComponent(uri.query);
-    return Buffer.from(query, "base64").toString("utf8");
+    return vscode.commands.executeCommand(
+      "as3mxml.getLibraryDefinitionText",
+      uri.query
+    );
   }
 }

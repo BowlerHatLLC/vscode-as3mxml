@@ -23,12 +23,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-import com.as3mxml.vscode.commands.ICommandConstants;
-import com.as3mxml.vscode.project.IProjectConfigStrategyFactory;
-import com.as3mxml.vscode.services.ActionScriptLanguageClient;
-import com.google.common.collect.Lists;
-import com.google.gson.JsonObject;
-
 import org.apache.royale.compiler.tree.as.IASNode;
 import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.CodeActionOptions;
@@ -47,12 +41,19 @@ import org.eclipse.lsp4j.TextDocumentSyncKind;
 import org.eclipse.lsp4j.WorkspaceFolder;
 import org.eclipse.lsp4j.WorkspaceFoldersOptions;
 import org.eclipse.lsp4j.WorkspaceServerCapabilities;
+import org.eclipse.lsp4j.WorkspaceSymbolOptions;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.LanguageClientAware;
 import org.eclipse.lsp4j.services.LanguageServer;
 import org.eclipse.lsp4j.services.TextDocumentService;
 import org.eclipse.lsp4j.services.WorkspaceService;
+
+import com.as3mxml.vscode.commands.ICommandConstants;
+import com.as3mxml.vscode.project.IProjectConfigStrategyFactory;
+import com.as3mxml.vscode.services.ActionScriptLanguageClient;
+import com.google.common.collect.Lists;
+import com.google.gson.JsonObject;
 
 /**
  * Tells Visual Studio Code about the language server's capabilities, and sets
@@ -146,7 +147,9 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
         signatureHelpOptions.setTriggerCharacters(Arrays.asList("(", ","));
         serverCapabilities.setSignatureHelpProvider(signatureHelpOptions);
 
-        serverCapabilities.setWorkspaceSymbolProvider(true);
+        WorkspaceSymbolOptions workspaceSymbolOptions = new WorkspaceSymbolOptions();
+        workspaceSymbolOptions.setResolveProvider(true);
+        serverCapabilities.setWorkspaceSymbolProvider(workspaceSymbolOptions);
 
         WorkspaceServerCapabilities workspaceCapabilities = new WorkspaceServerCapabilities();
         WorkspaceFoldersOptions workspaceFoldersOptions = new WorkspaceFoldersOptions();

@@ -45,55 +45,12 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
-import com.as3mxml.asconfigc.ASConfigC;
-import com.as3mxml.asconfigc.ASConfigCException;
-import com.as3mxml.asconfigc.ASConfigCOptions;
-import com.as3mxml.asconfigc.compiler.ProjectType;
-import com.as3mxml.vscode.asdoc.VSCodeASDocDelegate;
-import com.as3mxml.vscode.commands.ICommandConstants;
-import com.as3mxml.vscode.compiler.CompilerShell;
-import com.as3mxml.vscode.compiler.problems.LSPFileNotFoundProblem;
-import com.as3mxml.vscode.compiler.problems.SyntaxFallbackProblem;
-import com.as3mxml.vscode.project.ActionScriptProjectData;
-import com.as3mxml.vscode.project.ILspProject;
-import com.as3mxml.vscode.project.IProjectConfigStrategy;
-import com.as3mxml.vscode.project.IProjectConfigStrategyFactory;
-import com.as3mxml.vscode.project.ProjectOptions;
-import com.as3mxml.vscode.project.SimpleProjectConfigStrategy;
-import com.as3mxml.vscode.providers.CodeActionProvider;
-import com.as3mxml.vscode.providers.CompletionProvider;
-import com.as3mxml.vscode.providers.DefinitionProvider;
-import com.as3mxml.vscode.providers.DocumentSymbolProvider;
-import com.as3mxml.vscode.providers.ExecuteCommandProvider;
-import com.as3mxml.vscode.providers.FormattingProvider;
-import com.as3mxml.vscode.providers.HoverProvider;
-import com.as3mxml.vscode.providers.ImplementationProvider;
-import com.as3mxml.vscode.providers.ReferencesProvider;
-import com.as3mxml.vscode.providers.RenameProvider;
-import com.as3mxml.vscode.providers.SignatureHelpProvider;
-import com.as3mxml.vscode.providers.TypeDefinitionProvider;
-import com.as3mxml.vscode.providers.WorkspaceSymbolProvider;
-import com.as3mxml.vscode.services.ActionScriptLanguageClient;
-import com.as3mxml.vscode.utils.ASTUtils;
-import com.as3mxml.vscode.utils.ActionScriptProjectManager;
-import com.as3mxml.vscode.utils.ActionScriptSDKUtils;
-import com.as3mxml.vscode.utils.CompilationUnitUtils;
-import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
-import com.as3mxml.vscode.utils.CompilerProblemFilter;
-import com.as3mxml.vscode.utils.CompilerProjectUtils;
-import com.as3mxml.vscode.utils.FileTracker;
-import com.as3mxml.vscode.utils.LanguageServerCompilerUtils;
-import com.as3mxml.vscode.utils.ProblemTracker;
-import com.as3mxml.vscode.utils.RealTimeProblemsChecker;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
-
 import org.apache.royale.compiler.clients.problems.ProblemQuery;
 import org.apache.royale.compiler.config.CommandLineConfigurator;
 import org.apache.royale.compiler.config.Configuration;
 import org.apache.royale.compiler.config.ICompilerProblemSettings;
 import org.apache.royale.compiler.config.ICompilerSettingsConstants;
+import org.apache.royale.compiler.definitions.IDefinition;
 import org.apache.royale.compiler.exceptions.ConfigurationException;
 import org.apache.royale.compiler.filespecs.IFileSpecification;
 import org.apache.royale.compiler.internal.parsing.as.ASParser;
@@ -109,6 +66,7 @@ import org.apache.royale.compiler.problems.FileNotFoundProblem;
 import org.apache.royale.compiler.problems.ICompilerProblem;
 import org.apache.royale.compiler.problems.InternalCompilerProblem;
 import org.apache.royale.compiler.problems.MissingRequirementConfigurationProblem;
+import org.apache.royale.compiler.projects.ICompilerProject;
 import org.apache.royale.compiler.targets.ITarget;
 import org.apache.royale.compiler.targets.ITargetSettings;
 import org.apache.royale.compiler.tree.as.IASNode;
@@ -174,6 +132,51 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.jsonrpc.services.JsonNotification;
 import org.eclipse.lsp4j.services.TextDocumentService;
 import org.eclipse.lsp4j.services.WorkspaceService;
+
+import com.as3mxml.asconfigc.ASConfigC;
+import com.as3mxml.asconfigc.ASConfigCException;
+import com.as3mxml.asconfigc.ASConfigCOptions;
+import com.as3mxml.asconfigc.compiler.ProjectType;
+import com.as3mxml.vscode.asdoc.VSCodeASDocDelegate;
+import com.as3mxml.vscode.commands.ICommandConstants;
+import com.as3mxml.vscode.compiler.CompilerShell;
+import com.as3mxml.vscode.compiler.problems.LSPFileNotFoundProblem;
+import com.as3mxml.vscode.compiler.problems.SyntaxFallbackProblem;
+import com.as3mxml.vscode.project.ActionScriptProjectData;
+import com.as3mxml.vscode.project.ILspProject;
+import com.as3mxml.vscode.project.IProjectConfigStrategy;
+import com.as3mxml.vscode.project.IProjectConfigStrategyFactory;
+import com.as3mxml.vscode.project.ProjectOptions;
+import com.as3mxml.vscode.project.SimpleProjectConfigStrategy;
+import com.as3mxml.vscode.providers.CodeActionProvider;
+import com.as3mxml.vscode.providers.CompletionProvider;
+import com.as3mxml.vscode.providers.DefinitionProvider;
+import com.as3mxml.vscode.providers.DocumentSymbolProvider;
+import com.as3mxml.vscode.providers.ExecuteCommandProvider;
+import com.as3mxml.vscode.providers.FormattingProvider;
+import com.as3mxml.vscode.providers.HoverProvider;
+import com.as3mxml.vscode.providers.ImplementationProvider;
+import com.as3mxml.vscode.providers.ReferencesProvider;
+import com.as3mxml.vscode.providers.RenameProvider;
+import com.as3mxml.vscode.providers.SignatureHelpProvider;
+import com.as3mxml.vscode.providers.TypeDefinitionProvider;
+import com.as3mxml.vscode.providers.WorkspaceSymbolProvider;
+import com.as3mxml.vscode.services.ActionScriptLanguageClient;
+import com.as3mxml.vscode.utils.ASTUtils;
+import com.as3mxml.vscode.utils.ActionScriptProjectManager;
+import com.as3mxml.vscode.utils.ActionScriptSDKUtils;
+import com.as3mxml.vscode.utils.CompilationUnitUtils;
+import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
+import com.as3mxml.vscode.utils.CompilerProblemFilter;
+import com.as3mxml.vscode.utils.CompilerProjectUtils;
+import com.as3mxml.vscode.utils.DefinitionURI;
+import com.as3mxml.vscode.utils.FileTracker;
+import com.as3mxml.vscode.utils.LanguageServerCompilerUtils;
+import com.as3mxml.vscode.utils.ProblemTracker;
+import com.as3mxml.vscode.utils.RealTimeProblemsChecker;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 
 /**
  * Handles requests from Visual Studio Code that are at the document level,
@@ -592,6 +595,31 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         } finally {
             compilerWorkspace.doneBuilding();
         }
+    }
+
+    @Override
+    public CompletableFuture<WorkspaceSymbol> resolveWorkspaceSymbol(WorkspaceSymbol workspaceSymbol) {
+        return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(),
+                cancelToken -> {
+                    cancelToken.checkCanceled();
+                    if (!workspaceSymbol.getLocation().isRight()) {
+                        return null;
+                    }
+                    URI uri = URI.create(workspaceSymbol.getLocation().getRight().getUri());
+                    String query = uri.getQuery();
+                    DefinitionURI decodedQuery = DefinitionURI.decode(query, actionScriptProjectManager);
+                    IDefinition definition = decodedQuery.definition;
+                    ICompilerProject project = decodedQuery.project;
+                    if (definition != null && project != null) {
+                        Location location = actionScriptProjectManager
+                                .definitionToLocation(definition, project);
+                        if (location != null) {
+                            workspaceSymbol.setLocation(Either.forLeft(location));
+                            return workspaceSymbol;
+                        }
+                    }
+                    return null;
+                });
     }
 
     /**
