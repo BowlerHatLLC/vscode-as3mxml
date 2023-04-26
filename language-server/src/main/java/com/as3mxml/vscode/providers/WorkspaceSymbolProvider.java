@@ -22,12 +22,19 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 
+import org.apache.royale.compiler.definitions.IClassDefinition;
 import org.apache.royale.compiler.definitions.IDefinition;
 import org.apache.royale.compiler.definitions.IFunctionDefinition;
+import org.apache.royale.compiler.definitions.IInterfaceDefinition;
 import org.apache.royale.compiler.definitions.IPackageDefinition;
 import org.apache.royale.compiler.definitions.ITypeDefinition;
 import org.apache.royale.compiler.definitions.IVariableDefinition;
+import org.apache.royale.compiler.definitions.IClassDefinition.ClassClassification;
+import org.apache.royale.compiler.definitions.IFunctionDefinition.FunctionClassification;
+import org.apache.royale.compiler.definitions.IInterfaceDefinition.InterfaceClassification;
+import org.apache.royale.compiler.definitions.IVariableDefinition.VariableClassification;
 import org.apache.royale.compiler.internal.scopes.ASProjectScope.DefinitionPromise;
 import org.apache.royale.compiler.projects.ICompilerProject;
 import org.apache.royale.compiler.scopes.IASScope;
@@ -47,6 +54,7 @@ import com.as3mxml.vscode.utils.ActionScriptProjectManager;
 import com.as3mxml.vscode.utils.DefinitionURI;
 
 public class WorkspaceSymbolProvider {
+	private static final Pattern FULLY_QUALIFIED_NAME_PATTERN = Pattern.compile("^(\\w+\\.)+\\w*$");
 	private ActionScriptProjectManager actionScriptProjectManager;
 	public SymbolCapabilities symbolCapabilities;
 
@@ -82,6 +90,10 @@ public class WorkspaceSymbolProvider {
 		if (currentQuery.length() > 0) {
 			queries.add(currentQuery.toString().toLowerCase());
 		}
+		String fullyQualifiedQuery = null;
+		if (FULLY_QUALIFIED_NAME_PATTERN.matcher(query).matches()) {
+			fullyQualifiedQuery = query.toLowerCase();
+		}
 		for (ActionScriptProjectData projectData : actionScriptProjectManager.getAllProjectData()) {
 			ILspProject project = projectData.project;
 			if (project == null) {
@@ -111,7 +123,9 @@ public class WorkspaceSymbolProvider {
 							continue;
 						}
 						String qualifiedName = definition.getQualifiedName();
-						if (matchesQueries(queries, qualifiedName)) {
+						boolean fullyQualifiedMatch = fullyQualifiedQuery != null
+								&& qualifiedName.toLowerCase().startsWith(fullyQualifiedQuery);
+						if (fullyQualifiedMatch || matchesQueries(queries, qualifiedName)) {
 							if (qualifiedNames.contains(qualifiedName)) {
 								// we've already added this symbol
 								// this can happen when there are multiple root
@@ -121,6 +135,9 @@ public class WorkspaceSymbolProvider {
 							WorkspaceSymbol symbol = actionScriptProjectManager.definitionToWorkspaceSymbol(definition,
 									project, allowResolveRange);
 							if (symbol != null) {
+								if (fullyQualifiedMatch) {
+									symbol.setName(qualifiedName);
+								}
 								qualifiedNames.add(qualifiedName);
 								result.add(symbol);
 							}
@@ -155,7 +172,8 @@ public class WorkspaceSymbolProvider {
 						return Either.forRight(Collections.emptyList());
 					}
 					for (IASScope scope : scopes) {
-						querySymbolsInScope(queries, scope, allowResolveRange, qualifiedNames, project, result);
+						querySymbolsInScope(queries, fullyQualifiedQuery, scope, allowResolveRange, qualifiedNames,
+								project, result);
 					}
 				}
 			}
@@ -192,56 +210,122 @@ public class WorkspaceSymbolProvider {
 		return workspaceSymbol;
 	}
 
-	private void querySymbolsInScope(List<String> queries, IASScope scope, boolean allowResolveRange,
-			Set<String> foundTypes, ILspProject project, Collection<WorkspaceSymbol> result) {
+	private void querySymbolsInScope(List<String> queries, String fullyQualifiedQuery, IASScope scope,
+			boolean allowResolveRange, Set<String> foundSymbols, ILspProject project,
+			Collection<WorkspaceSymbol> result) {
 		Collection<IDefinition> definitions = scope.getAllLocalDefinitions();
 		for (IDefinition definition : definitions) {
+			if (definition.isImplicit()) {
+				continue;
+			}
 			if (definition instanceof IPackageDefinition) {
 				IPackageDefinition packageDefinition = (IPackageDefinition) definition;
 				IASScope packageScope = packageDefinition.getContainedScope();
-				querySymbolsInScope(queries, packageScope, allowResolveRange, foundTypes, project, result);
-			} else if (definition instanceof ITypeDefinition) {
+				querySymbolsInScope(queries, fullyQualifiedQuery, packageScope, allowResolveRange, foundSymbols,
+						project,
+						result);
+			} else if (definition instanceof IClassDefinition) {
+				IClassDefinition classDefinition = (IClassDefinition) definition;
 				String qualifiedName = definition.getQualifiedName();
-				if (foundTypes.contains(qualifiedName)) {
-					// skip types that we've already encountered because we don't
-					// want duplicates in the result
-					continue;
+				boolean fullyQualifiedMatch = false;
+				if (ClassClassification.PACKAGE_MEMBER.equals(classDefinition.getClassClassification())) {
+					if (foundSymbols.contains(qualifiedName)) {
+						// skip symbols that we've already encountered because
+						// we don't want duplicates in the result
+						continue;
+					}
+					foundSymbols.add(qualifiedName);
+					fullyQualifiedMatch = fullyQualifiedQuery != null
+							&& qualifiedName.toLowerCase().startsWith(fullyQualifiedQuery);
 				}
-				foundTypes.add(qualifiedName);
-				ITypeDefinition typeDefinition = (ITypeDefinition) definition;
-				if (!definition.isImplicit() && matchesQueries(queries, qualifiedName)) {
-					WorkspaceSymbol symbol = actionScriptProjectManager.definitionToWorkspaceSymbol(typeDefinition,
+				if (fullyQualifiedMatch || matchesQueries(queries, qualifiedName)) {
+					WorkspaceSymbol symbol = actionScriptProjectManager.definitionToWorkspaceSymbol(classDefinition,
 							project, allowResolveRange);
 					if (symbol != null) {
+						if (fullyQualifiedMatch) {
+							symbol.setName(qualifiedName);
+						}
 						result.add(symbol);
 					}
 				}
-				IASScope typeScope = typeDefinition.getContainedScope();
-				querySymbolsInScope(queries, typeScope, allowResolveRange, foundTypes, project, result);
+				IASScope typeScope = classDefinition.getContainedScope();
+				querySymbolsInScope(queries, fullyQualifiedQuery, typeScope, allowResolveRange, foundSymbols, project,
+						result);
+			} else if (definition instanceof IInterfaceDefinition) {
+				IInterfaceDefinition interfaceDefinition = (IInterfaceDefinition) definition;
+				String qualifiedName = definition.getQualifiedName();
+				boolean fullyQualifiedMatch = false;
+				if (InterfaceClassification.PACKAGE_MEMBER.equals(interfaceDefinition.getInterfaceClassification())) {
+					if (foundSymbols.contains(qualifiedName)) {
+						// skip symbols that we've already encountered because
+						// we don't want duplicates in the result
+						continue;
+					}
+					foundSymbols.add(qualifiedName);
+					fullyQualifiedMatch = fullyQualifiedQuery != null
+							&& qualifiedName.toLowerCase().startsWith(fullyQualifiedQuery);
+				}
+				if (fullyQualifiedMatch || matchesQueries(queries, qualifiedName)) {
+					WorkspaceSymbol symbol = actionScriptProjectManager.definitionToWorkspaceSymbol(interfaceDefinition,
+							project, allowResolveRange);
+					if (symbol != null) {
+						if (fullyQualifiedMatch) {
+							symbol.setName(qualifiedName);
+						}
+						result.add(symbol);
+					}
+				}
+				IASScope typeScope = interfaceDefinition.getContainedScope();
+				querySymbolsInScope(queries, fullyQualifiedQuery, typeScope, allowResolveRange, foundSymbols, project,
+						result);
 			} else if (definition instanceof IFunctionDefinition) {
-				if (definition.isImplicit()) {
-					continue;
-				}
-				if (!matchesQueries(queries, definition.getQualifiedName())) {
-					continue;
-				}
 				IFunctionDefinition functionDefinition = (IFunctionDefinition) definition;
+				String qualifiedName = definition.getQualifiedName();
+				boolean fullyQualifiedMatch = false;
+				if (FunctionClassification.PACKAGE_MEMBER.equals(functionDefinition.getFunctionClassification())) {
+					if (foundSymbols.contains(qualifiedName)) {
+						// skip symbols that we've already encountered because
+						// we don't want duplicates in the result
+						continue;
+					}
+					foundSymbols.add(qualifiedName);
+					fullyQualifiedMatch = fullyQualifiedQuery != null
+							&& qualifiedName.toLowerCase().startsWith(fullyQualifiedQuery);
+				}
+				if (!fullyQualifiedMatch && !matchesQueries(queries, qualifiedName)) {
+					continue;
+				}
 				WorkspaceSymbol symbol = actionScriptProjectManager.definitionToWorkspaceSymbol(functionDefinition,
 						project, allowResolveRange);
 				if (symbol != null) {
+					if (fullyQualifiedMatch) {
+						symbol.setName(qualifiedName);
+					}
 					result.add(symbol);
 				}
 			} else if (definition instanceof IVariableDefinition) {
-				if (definition.isImplicit()) {
-					continue;
-				}
-				if (!matchesQueries(queries, definition.getQualifiedName())) {
-					continue;
-				}
 				IVariableDefinition variableDefinition = (IVariableDefinition) definition;
+				String qualifiedName = definition.getQualifiedName();
+				boolean fullyQualifiedMatch = false;
+				if (VariableClassification.PACKAGE_MEMBER.equals(variableDefinition.getVariableClassification())) {
+					if (foundSymbols.contains(qualifiedName)) {
+						// skip symbols that we've already encountered because
+						// we don't want duplicates in the result
+						continue;
+					}
+					foundSymbols.add(qualifiedName);
+					fullyQualifiedMatch = fullyQualifiedQuery != null
+							&& qualifiedName.toLowerCase().startsWith(fullyQualifiedQuery);
+				}
+				if (!fullyQualifiedMatch && !matchesQueries(queries, qualifiedName)) {
+					continue;
+				}
 				WorkspaceSymbol symbol = actionScriptProjectManager.definitionToWorkspaceSymbol(variableDefinition,
 						project, allowResolveRange);
 				if (symbol != null) {
+					if (fullyQualifiedMatch) {
+						symbol.setName(qualifiedName);
+					}
 					result.add(symbol);
 				}
 			}
