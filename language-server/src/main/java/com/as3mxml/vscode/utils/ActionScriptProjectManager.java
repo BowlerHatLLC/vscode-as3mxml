@@ -603,6 +603,7 @@ public class ActionScriptProjectManager {
                 DefinitionURI defUri = new DefinitionURI();
                 defUri.definition = definition;
                 defUri.swcFilePath = sourcePath;
+                defUri.includeASDoc = allowResolve;
                 List<String> symbols = new ArrayList<>();
                 IDefinition currentDefinition = definition;
                 while (currentDefinition != null) {
