@@ -1,5 +1,19 @@
 # ActionScript & MXML for Visual Studio Code Changelog
 
+## 1.17.0
+
+### New Features
+
+- Workspace Symbol: Can now seach by fully-qualified name, including the package, such as `flash.display.Sprite` or `flash.net.navigateToURL`. Previously, only the symbol base name, such as `Sprite` or `navigateToURL`, was supported.
+
+### Fixed Issues
+
+- Definition: Jump to definition for properties will now default to the getter, except when the property is being set as part of an assignment statement.
+- Rename: Fixed overrides of methods being skipped when the original method was renamed.
+- References: Fixed overrides of methods not being considered the same reference as the original method.
+- Workspace Symbol: Fixed performance regression caused by inclusion of ASDoc comments into code generated for symbols from _.swc_ libraries.
+- Workspace Symbol: Added missing non-private methods and properties from _.swc_ libraries (they were already included from source files).
+
 ## 1.16.0
 
 ### New Features
