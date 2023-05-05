@@ -214,6 +214,19 @@ public class ReferencesProvider {
     }
 
     private void referencesForDefinition(IDefinition definition, ILspProject project, List<Location> result) {
+        if (definition instanceof IFunctionDefinition) {
+            IFunctionDefinition functionDefinition = (IFunctionDefinition) definition;
+            if (functionDefinition.isOverride()) {
+                IFunctionDefinition overriddenFunction = functionDefinition.resolveOverriddenFunction(project);
+                if (overriddenFunction != null) {
+                    // if function overrides one from a superclass, resolve the
+                    // original function instead.
+                    // this makes it easier to find all overrides.
+                    definition = overriddenFunction;
+                }
+            }
+        }
+
         boolean isPrivate = definition.isPrivate();
         boolean isLocal = false;
         if (definition instanceof IVariableDefinition) {
