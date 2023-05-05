@@ -232,6 +232,24 @@ public class RenameProvider {
             // Cannot rename this element
             return null;
         }
+        if (definition instanceof IPackageDefinition) {
+            // Cannot rename this element
+            return null;
+        }
+        if (definition instanceof IFunctionDefinition) {
+            IFunctionDefinition functionDefinition = (IFunctionDefinition) definition;
+            if (functionDefinition.isOverride()) {
+                IFunctionDefinition overriddenFunction = functionDefinition.resolveOverriddenFunction(project);
+                if (overriddenFunction != null) {
+                    // if function overrides one from a superclass, resolve the
+                    // original function instead.
+                    // this ensures that the original function isn't in a SWC,
+                    // and makes it easier to find all overrides.
+                    definition = overriddenFunction;
+                }
+            }
+        }
+
         WorkspaceEdit result = new WorkspaceEdit();
         List<Either<TextDocumentEdit, ResourceOperation>> documentChanges = new ArrayList<>();
         result.setDocumentChanges(documentChanges);
@@ -239,10 +257,7 @@ public class RenameProvider {
             // Cannot rename this element
             return null;
         }
-        if (definition instanceof IPackageDefinition) {
-            // Cannot rename this element
-            return null;
-        }
+
         boolean isPrivate = definition.isPrivate();
         boolean isLocal = false;
         if (definition instanceof IVariableDefinition) {

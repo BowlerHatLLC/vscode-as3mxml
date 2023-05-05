@@ -475,6 +475,17 @@ public class ASTUtils {
                     if (getterDefinition != null && resolvedDefinition == getterDefinition) {
                         result.add(identifierNode);
                     }
+                } else if (resolvedDefinition instanceof IFunctionDefinition
+                        && definition instanceof IFunctionDefinition) {
+                    IFunctionDefinition resolvedFunctionFunction = (IFunctionDefinition) resolvedDefinition;
+                    if (resolvedFunctionFunction.isOverride()) {
+                        IFunctionDefinition overriddenFunction = resolvedFunctionFunction
+                                .resolveOverriddenFunction(project);
+                        if (definition == overriddenFunction) {
+                            result.add(identifierNode);
+                        }
+
+                    }
                 }
             }
             if (!(node instanceof ILiteralContainerNode)) {
