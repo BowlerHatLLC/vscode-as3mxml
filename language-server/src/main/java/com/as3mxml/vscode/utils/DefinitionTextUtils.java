@@ -898,10 +898,15 @@ public class DefinitionTextUtils {
                 labelBuilder.append(IASLanguageConstants.REST);
             }
             String baseName = parameterDefinition.getBaseName();
-            if (parameterDefinition.isRest() && (baseName == null || baseName.length() == 0)) {
-                labelBuilder.append(IASLanguageConstants.REST_IDENTIFIER);
+            if (baseName == null || baseName.length() == 0) {
+                if (parameterDefinition.isRest()) {
+                    labelBuilder.append(IASLanguageConstants.REST_IDENTIFIER);
+                } else {
+                    labelBuilder.append("arg");
+                    labelBuilder.append(i);
+                }
             } else {
-                labelBuilder.append(parameterDefinition.getBaseName());
+                labelBuilder.append(baseName);
             }
             labelBuilder.append(":");
             labelBuilder.append(getTypeAsDisplayString(parameterDefinition));
