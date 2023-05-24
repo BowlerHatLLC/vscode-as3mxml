@@ -36,6 +36,7 @@ import org.eclipse.lsp4j.InitializedParams;
 import org.eclipse.lsp4j.Registration;
 import org.eclipse.lsp4j.RegistrationParams;
 import org.eclipse.lsp4j.ServerCapabilities;
+import org.eclipse.lsp4j.SetTraceParams;
 import org.eclipse.lsp4j.SignatureHelpOptions;
 import org.eclipse.lsp4j.TextDocumentSyncKind;
 import org.eclipse.lsp4j.WorkspaceFolder;
@@ -246,6 +247,11 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
     @Override
     public void connect(LanguageClient client) {
         connect((ActionScriptLanguageClient) client);
+    }
+
+    @Override
+    public void setTrace(SetTraceParams params) {
+        // safe to ignore
     }
 
     /**
