@@ -95,6 +95,7 @@ import org.apache.royale.compiler.mxml.IMXMLTagData;
 import org.apache.royale.compiler.scopes.IASScope;
 import org.apache.royale.compiler.tree.ASTNodeID;
 import org.apache.royale.compiler.tree.as.IASNode;
+import org.apache.royale.compiler.tree.as.IAccessorNode;
 import org.apache.royale.compiler.tree.as.IBinaryOperatorNode;
 import org.apache.royale.compiler.tree.as.IBlockNode;
 import org.apache.royale.compiler.tree.as.IClassNode;
@@ -316,29 +317,33 @@ public class CompletionProvider {
             nextChar = fileText.charAt(currentOffset);
         }
 
-        // variable types
-        if (offsetNode instanceof IVariableNode) {
+        // variable types (not getters or setters)
+        if (offsetNode instanceof IVariableNode
+                && !(offsetNode instanceof IAccessorNode)) {
             IVariableNode variableNode = (IVariableNode) offsetNode;
-            IExpressionNode nameExpression = variableNode.getNameExpressionNode();
+            IExpressionNode nameExprNode = variableNode.getNameExpressionNode();
             IExpressionNode typeNode = variableNode.getVariableTypeNode();
-            int line = position.getLine();
-            int column = position.getCharacter();
-            if ((line > nameExpression.getLine()
-                    || (line == nameExpression.getLine() && column > nameExpression.getEndColumn()))
-                    && (line < typeNode.getLine()
-                            || (line == typeNode.getLine() && column <= typeNode.getEndColumn()))) {
-                autoCompleteTypes(offsetNode, addImportData, project, result);
-                return result;
+            if (nameExprNode != null && typeNode != null) {
+                int line = position.getLine();
+                int column = position.getCharacter();
+                if ((line > nameExprNode.getLine()
+                        || (line == nameExprNode.getLine() && column > nameExprNode.getEndColumn()))
+                        && (line < typeNode.getLine()
+                                || (line == typeNode.getLine() && column <= typeNode.getEndColumn()))) {
+                    autoCompleteTypes(offsetNode, addImportData, project, result);
+                    return result;
+                }
             }
         }
-        if (parentNode != null && parentNode instanceof IVariableNode) {
+        if (parentNode != null && parentNode instanceof IVariableNode
+                && !(parentNode instanceof IAccessorNode)) {
             IVariableNode variableNode = (IVariableNode) parentNode;
             if (offsetNode == variableNode.getVariableTypeNode()) {
                 autoCompleteTypes(parentNode, addImportData, project, result);
                 return result;
             }
         }
-        // function return types
+        // function return types (including getters and setters)
         if (offsetNode instanceof IFunctionNode) {
             IFunctionNode functionNode = (IFunctionNode) offsetNode;
             IContainerNode parameters = functionNode.getParametersContainerNode();
