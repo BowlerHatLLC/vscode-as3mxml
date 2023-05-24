@@ -836,7 +836,7 @@ public class DefinitionTextUtils {
             detailBuilder.append(IMetaAttributeConstants.NAME_EVENT_TYPE);
             detailBuilder.append("=");
             detailBuilder.append("\"");
-            detailBuilder.append(eventDefinition.getTypeAsDisplayString());
+            detailBuilder.append(getTypeAsDisplayString(eventDefinition));
             detailBuilder.append("\"");
             detailBuilder.append(")");
             detailBuilder.append("]");
@@ -849,7 +849,7 @@ public class DefinitionTextUtils {
             detailBuilder.append(IMetaAttributeConstants.NAME_STYLE_NAME);
             detailBuilder.append("=");
             detailBuilder.append("\"");
-            detailBuilder.append(styleDefinition.getBaseName());
+            detailBuilder.append(getTypeAsDisplayString(styleDefinition));
             detailBuilder.append("\"");
             detailBuilder.append(",");
             detailBuilder.append(IMetaAttributeConstants.NAME_STYLE_TYPE);
@@ -925,8 +925,13 @@ public class DefinitionTextUtils {
         }
         labelBuilder.append(")");
         if (!functionDefinition.isConstructor()) {
+            String returnTypeString = functionDefinition.getReturnTypeAsDisplayString();
+            if (returnTypeString.length() == 0) {
+                // replace empty string with *
+                returnTypeString = IASLanguageConstants.ANY_TYPE;
+            }
             labelBuilder.append(":");
-            labelBuilder.append(functionDefinition.getReturnTypeAsDisplayString());
+            labelBuilder.append(returnTypeString);
         }
         return labelBuilder.toString();
     }
@@ -1002,7 +1007,7 @@ public class DefinitionTextUtils {
     private static String getTypeAsDisplayString(IDefinition definition) {
         String typeAsDisplayString = definition.getTypeAsDisplayString();
         if (typeAsDisplayString.length() == 0) {
-            // returns an empty string if there is no type reference
+            // replace empty string with *
             return IASLanguageConstants.ANY_TYPE;
         }
         return typeAsDisplayString;
