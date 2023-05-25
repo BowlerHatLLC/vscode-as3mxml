@@ -849,13 +849,13 @@ public class DefinitionTextUtils {
             detailBuilder.append(IMetaAttributeConstants.NAME_STYLE_NAME);
             detailBuilder.append("=");
             detailBuilder.append("\"");
-            detailBuilder.append(getTypeAsDisplayString(styleDefinition));
+            detailBuilder.append(styleDefinition.getBaseName());
             detailBuilder.append("\"");
             detailBuilder.append(",");
             detailBuilder.append(IMetaAttributeConstants.NAME_STYLE_TYPE);
             detailBuilder.append("=");
             detailBuilder.append("\"");
-            detailBuilder.append(styleDefinition.getTypeAsDisplayString());
+            detailBuilder.append(getTypeAsDisplayString(styleDefinition));
             detailBuilder.append("\"");
             detailBuilder.append(")");
             detailBuilder.append("]");
