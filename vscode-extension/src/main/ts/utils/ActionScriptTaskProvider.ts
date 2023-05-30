@@ -175,7 +175,7 @@ export default class ActionScriptTaskProvider
       )
     );
 
-    if (validateRoyale(frameworkSDK, "0.9.9")) {
+    if (validateRoyale(frameworkSDK, "0.9.10")) {
       result.push(
         this.getWatchTask(
           `${TASK_NAME_WATCH} - ${taskNameSuffix}`,
