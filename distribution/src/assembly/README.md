@@ -15,6 +15,8 @@ Extension created and maintained by [Josh Tynjala](https://patreon.com/josht). B
 - **Find All References** for any symbol in the project across all source files.
 - **Rename Symbol** for classes, interfaces, methods, and variables.
 - **Organize Imports** sorts imports alphabetically, removes unused imports, and adds missing imports.
+- **Format** ActionScript and MXML code to match a particular style.
+- **Lint** ActionScript and MXML code to find "code smells" and other common issues.
 - **Quick Fixes** to add missing imports, generate missing variables or methods, or convert variables to getters/setters.
 - **Outline view** lists all symbols from the current file in a hierarchical tree.
 - **Go to Symbol in Workspace** with `Ctrl+T` and type the name of any symbol to search for it in the workspace.
