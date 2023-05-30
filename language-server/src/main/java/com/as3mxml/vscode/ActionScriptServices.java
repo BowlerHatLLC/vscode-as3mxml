@@ -1102,7 +1102,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                 }
             }
 
-            // if linting is enabled, checek for problems if aslint-config.xml
+            // if linting is enabled, check for problems when aslint-config.xml
             // is changed
             if (lint_enabled && FILE_NAME_ASLINT_CONFIG_XML.equals(changedPath.getFileName().toString())) {
                 ActionScriptProjectData projectData = actionScriptProjectManager
