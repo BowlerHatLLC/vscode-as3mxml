@@ -58,7 +58,7 @@ limitations under the License.
     <dependency>
       <groupId>org.apache.royale.compiler</groupId>
       <artifactId>compiler</artifactId>
-      <version>0.9.9</version>
+      <version>0.9.10</version>
       <scope>provided</scope>
     </dependency>
   </dependencies>
