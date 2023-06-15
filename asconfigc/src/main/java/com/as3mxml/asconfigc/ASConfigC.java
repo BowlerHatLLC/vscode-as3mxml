@@ -34,9 +34,9 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
+import java.nio.file.WatchEvent.Modifier;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
-import java.nio.file.WatchEvent.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -59,15 +59,6 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.UnrecognizedOptionException;
 
-import com.fasterxml.jackson.core.JsonLocation;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.networknt.schema.JsonSchema;
-import com.networknt.schema.JsonSchemaFactory;
-import com.networknt.schema.ValidationMessage;
-import com.networknt.schema.SpecVersion.VersionFlag;
 import com.as3mxml.asconfigc.air.AIROptions;
 import com.as3mxml.asconfigc.air.AIROptionsParser;
 import com.as3mxml.asconfigc.air.AIRSigningOptions;
@@ -89,6 +80,15 @@ import com.as3mxml.asconfigc.utils.JsonUtils;
 import com.as3mxml.asconfigc.utils.OptionsFormatter;
 import com.as3mxml.asconfigc.utils.OptionsUtils;
 import com.as3mxml.asconfigc.utils.ProjectUtils;
+import com.fasterxml.jackson.core.JsonLocation;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.networknt.schema.JsonSchema;
+import com.networknt.schema.JsonSchemaFactory;
+import com.networknt.schema.SpecVersion.VersionFlag;
+import com.networknt.schema.ValidationMessage;
 
 /**
  * Parses asconfig.json and executes the compiler with the specified options.
@@ -1295,7 +1295,14 @@ public class ASConfigC {
 		File outputDirectory = new File(outputDirectoryPath);
 		File unpackedAneDirectory = new File(outputDirectory, FILE_NAME_UNPACKAGED_ANES);
 		File currentAneDirectory = new File(unpackedAneDirectory, aneFile.getName());
-		if (!currentAneDirectory.exists() && !currentAneDirectory.mkdirs()) {
+		if (currentAneDirectory.exists() && currentAneDirectory.isDirectory()) {
+			if (currentAneDirectory.lastModified() == aneFile.lastModified()) {
+				if (options.verbose) {
+					System.out.println("Skipping unchanged: " + currentAneDirectory.getName());
+				}
+				return;
+			}
+		} else if (!currentAneDirectory.mkdirs()) {
 			throw new ASConfigCException("Failed to copy Adobe AIR native extension to path: " + currentAneDirectory
 					+ " because the directories could not be created.");
 		}
@@ -1332,6 +1339,9 @@ public class ASConfigC {
 			throw new ASConfigCException(
 					"Failed to copy Adobe AIR native extension from path: " + aneFile.getAbsolutePath() + ".");
 		}
+		// save the last modified time of the .ane file to determine later
+		// if we need to unpack again or not
+		currentAneDirectory.setLastModified(aneFile.lastModified());
 	}
 
 	private void createParentAndCopyAsset(Path srcPath, Path destPath) throws ASConfigCException {
