@@ -486,6 +486,9 @@ public class CodeActionProvider {
                 }
             }
         }
+        if (offsetNode == null) {
+            return;
+        }
         IASNode parentNode = offsetNode.getParent();
 
         IFunctionCallNode functionCallNode = null;
