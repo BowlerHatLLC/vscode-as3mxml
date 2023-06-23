@@ -71,6 +71,22 @@ public class CompilerOptionsParser {
 					OptionsFormatter.setBoolean(key, options.get(key).asBoolean(), result);
 					break;
 				}
+				case CompilerOptions.CONTEXT_ROOT: {
+					OptionsFormatter.setValue(key, options.get(key).asText(), result);
+					break;
+				}
+				case CompilerOptions.CONTRIBUTOR: {
+					OptionsFormatter.setValue(key, options.get(key).asText(), result);
+					break;
+				}
+				case CompilerOptions.CREATOR: {
+					OptionsFormatter.setValue(key, options.get(key).asText(), result);
+					break;
+				}
+				case CompilerOptions.DATE: {
+					OptionsFormatter.setValue(key, options.get(key).asText(), result);
+					break;
+				}
 				case CompilerOptions.DEBUG: {
 					if (debugBuild == null) {
 						// don't set -debug if it's been overridden
@@ -105,6 +121,10 @@ public class CompilerOptionsParser {
 				}
 				case CompilerOptions.JS_DEFINE: {
 					setDefine(key, options.get(key), result);
+					break;
+				}
+				case CompilerOptions.DESCRIPTION: {
+					OptionsFormatter.setValue(key, options.get(key).asText(), result);
 					break;
 				}
 				case CompilerOptions.DIRECTORY: {
@@ -232,6 +252,10 @@ public class CompilerOptionsParser {
 				}
 				case CompilerOptions.KEEP_GENERATED_ACTIONSCRIPT: {
 					OptionsFormatter.setBoolean(key, options.get(key).asBoolean(), result);
+					break;
+				}
+				case CompilerOptions.LANGUAGE: {
+					OptionsFormatter.setValue(key, options.get(key).asText(), result);
 					break;
 				}
 				case CompilerOptions.LIBRARY_PATH: {
@@ -367,8 +391,16 @@ public class CompilerOptionsParser {
 					OptionsFormatter.setBoolean(key, options.get(key).asBoolean(), result);
 					break;
 				}
+				case CompilerOptions.PUBLISHER: {
+					OptionsFormatter.setValue(key, options.get(key).asText(), result);
+					break;
+				}
 				case CompilerOptions.REMOVE_CIRCULARS: {
 					OptionsFormatter.setBoolean(key, options.get(key).asBoolean(), result);
+					break;
+				}
+				case CompilerOptions.SERVICES: {
+					OptionsFormatter.setValue(key, options.get(key).asText(), result);
 					break;
 				}
 				case CompilerOptions.SHOW_UNUSED_TYPE_SELECTOR_WARNINGS: {
@@ -435,6 +467,10 @@ public class CompilerOptionsParser {
 					} else {
 						OptionsFormatter.setPathValue(key, options.get(key).asText(), result);
 					}
+					break;
+				}
+				case CompilerOptions.TITLE: {
+					OptionsFormatter.setValue(key, options.get(key).asText(), result);
 					break;
 				}
 				case CompilerOptions.TOOLS_LOCALE: {

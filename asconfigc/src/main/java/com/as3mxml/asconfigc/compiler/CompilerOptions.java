@@ -19,6 +19,10 @@ public class CompilerOptions {
 	public static final String ACCESSIBLE = "accessible";
 	public static final String ADVANCED_TELEMETRY = "advanced-telemetry";
 	public static final String BENCHMARK = "benchmark";
+	public static final String CONTEXT_ROOT = "context-root";
+	public static final String CONTRIBUTOR = "contributor";
+	public static final String CREATOR = "creator";
+	public static final String DATE = "date";
 	public static final String DEBUG = "debug";
 	public static final String DEBUG_PASSWORD = "debug-password";
 	public static final String DEFAULT_BACKGROUND_COLOR = "default-background-color";
@@ -26,6 +30,7 @@ public class CompilerOptions {
 	public static final String DEFAULT_SIZE = "default-size";
 	public static final String DEFAULTS_CSS_FILES = "defaults-css-files";
 	public static final String DEFINE = "define";
+	public static final String DESCRIPTION = "description";
 	public static final String DIRECTORY = "directory";
 	public static final String DUMP_CONFIG = "dump-config";
 	public static final String EXTERNAL_LIBRARY_PATH = "external-library-path";
@@ -33,6 +38,7 @@ public class CompilerOptions {
 	public static final String KEEP_ALL_TYPE_SELECTORS = "keep-all-type-selectors";
 	public static final String KEEP_AS3_METADATA = "keep-as3-metadata";
 	public static final String KEEP_GENERATED_ACTIONSCRIPT = "keep-generated-actionscript";
+	public static final String LANGUAGE = "language";
 	public static final String LIBRARY_PATH = "library-path";
 	public static final String LINK_REPORT = "link-report";
 	public static final String LOAD_CONFIG = "load-config";
@@ -43,6 +49,8 @@ public class CompilerOptions {
 	public static final String OMIT_TRACE_STATEMENTS = "omit-trace-statements";
 	public static final String OUTPUT = "output";
 	public static final String PRELOADER = "preloader";
+	public static final String PUBLISHER = "publisher";
+	public static final String SERVICES = "services";
 	public static final String SHOW_UNUSED_TYPE_SELECTOR_WARNINGS = "show-unused-type-selector-warnings";
 	public static final String SIZE_REPORT = "size-report";
 	public static final String SOURCE_PATH = "source-path";
@@ -51,6 +59,7 @@ public class CompilerOptions {
 	public static final String SWF_VERSION = "swf-version";
 	public static final String TARGET_PLAYER = "target-player";
 	public static final String THEME = "theme";
+	public static final String TITLE = "title";
 	public static final String TOOLS_LOCALE = "tools-locale";
 	public static final String USE_DIRECT_BLIT = "use-direct-blit";
 	public static final String USE_GPU = "use-gpu";
