@@ -602,7 +602,7 @@
         },
         "as3mxml.lint.enabled": {
           "type": "boolean",
-          "default": true,
+          "default": false,
           "description": "Enable or disable the ActionScript and MXML linter"
         },
         "actionscript.trace.server": {
