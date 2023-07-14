@@ -372,14 +372,29 @@ public class CompletionProvider {
         }
         // new keyword types
         IFunctionCallNode newExpressionCall = null;
-        IVariableNode newExpressionVariable = null;
+        IDefinition priorityNewClass = null;
         if (parentNode != null && parentNode instanceof IFunctionCallNode) {
             IFunctionCallNode functionCallNode = (IFunctionCallNode) parentNode;
             if (functionCallNode.getNameNode() == offsetNode && functionCallNode.isNewExpression()) {
                 newExpressionCall = functionCallNode;
-                IASNode newParent = newExpressionCall.getParent();
-                if (newParent != null && newParent instanceof IVariableNode) {
-                    newExpressionVariable = (IVariableNode) newParent;
+                IASNode newParent = functionCallNode.getParent();
+                if (newParent != null) {
+                    if (newParent instanceof IVariableNode) {
+                        IVariableNode variableNode = (IVariableNode) newParent;
+                        IExpressionNode variableTypeNode = variableNode.getVariableTypeNode();
+                        if (variableTypeNode != null) {
+                            priorityNewClass = variableTypeNode.resolve(project);
+                        }
+                    } else if (newParent instanceof IBinaryOperatorNode) {
+                        IBinaryOperatorNode binaryOpNode = (IBinaryOperatorNode) newParent;
+                        if (OperatorType.ASSIGNMENT.equals(binaryOpNode.getOperator())
+                                && functionCallNode.equals(binaryOpNode.getRightOperandNode())) {
+                            IExpressionNode leftOperandNode = binaryOpNode.getLeftOperandNode();
+                            if (leftOperandNode != null) {
+                                priorityNewClass = leftOperandNode.resolveType(project);
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -390,28 +405,57 @@ public class CompletionProvider {
                 IFunctionCallNode functionCallNode = (IFunctionCallNode) prevParent;
                 if (functionCallNode.isNewExpression()) {
                     newExpressionCall = functionCallNode;
-                    IASNode newParent = newExpressionCall.getParent();
-                    if (newParent != null && newParent instanceof IBinaryOperatorNode) {
-                        IBinaryOperatorNode binaryOperatorNode = (IBinaryOperatorNode) newParent;
-                        if (OperatorType.ASSIGNMENT.equals(binaryOperatorNode.getOperator())) {
-                            IASNode newGP = binaryOperatorNode.getParent();
-                            if (newGP != null && newGP instanceof IVariableNode) {
-                                newExpressionVariable = (IVariableNode) newGP;
+                    IASNode newParent = functionCallNode.getParent();
+                    if (newParent != null) {
+                        if (newParent instanceof IVariableNode) {
+                            IVariableNode variableNode = (IVariableNode) newParent;
+                            IExpressionNode variableTypeNode = variableNode.getVariableTypeNode();
+                            if (variableTypeNode != null) {
+                                priorityNewClass = variableTypeNode.resolve(project);
                             }
-
+                        } else {
+                            IASNode newGP = newParent.getParent();
+                            if (newGP != null && newGP instanceof IVariableNode) {
+                                IVariableNode variableNode = (IVariableNode) newGP;
+                                IExpressionNode assignedValueNode = variableNode.getAssignedValueNode();
+                                if (assignedValueNode != null
+                                        && ASTUtils.nodeContainsNode(assignedValueNode, nodeAtPreviousOffset)) {
+                                    IExpressionNode variableTypeNode = variableNode.getVariableTypeNode();
+                                    if (variableTypeNode != null) {
+                                        priorityNewClass = variableTypeNode.resolve(project);
+                                    }
+                                }
+                            }
+                            if (priorityNewClass == null) {
+                                if (newParent != null && newParent instanceof IBinaryOperatorNode) {
+                                    IBinaryOperatorNode binaryOpNode = (IBinaryOperatorNode) newParent;
+                                    if (OperatorType.ASSIGNMENT.equals(binaryOpNode.getOperator())
+                                            && functionCallNode.equals(binaryOpNode.getRightOperandNode())) {
+                                        IExpressionNode leftOperandNode = binaryOpNode.getLeftOperandNode();
+                                        if (leftOperandNode != null) {
+                                            priorityNewClass = leftOperandNode.resolveType(project);
+                                        }
+                                    }
+                                }
+                                if (priorityNewClass == null) {
+                                    if (newGP != null && newGP instanceof IBinaryOperatorNode) {
+                                        IBinaryOperatorNode binaryOpNode = (IBinaryOperatorNode) newGP;
+                                        if (OperatorType.ASSIGNMENT.equals(binaryOpNode.getOperator())
+                                                && newParent.equals(binaryOpNode.getRightOperandNode())) {
+                                            IExpressionNode leftOperandNode = binaryOpNode.getLeftOperandNode();
+                                            if (leftOperandNode != null) {
+                                                priorityNewClass = leftOperandNode.resolveType(project);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
             }
         }
         if (newExpressionCall != null) {
-            IDefinition priorityNewClass = null;
-            if (newExpressionVariable != null) {
-                IExpressionNode variableTypeNode = newExpressionVariable.getVariableTypeNode();
-                if (variableTypeNode != null) {
-                    priorityNewClass = variableTypeNode.resolve(project);
-                }
-            }
             autoCompleteTypes(parentNode, priorityNewClass, addImportData, project, result);
             return result;
         }
@@ -1945,21 +1989,22 @@ public class CompletionProvider {
             IFunctionDefinition funcDef = (IFunctionDefinition) definition;
             if (FunctionClassification.CLASS_MEMBER.equals(funcDef.getFunctionClassification())
                     && prioritySuperFunction.getName().equals(funcDef.getBaseName())) {
-                priority = 1;
+                priority += 1;
             }
         }
         if (priorityNewClass != null && definition instanceof IClassDefinition) {
             IClassDefinition classDefinition = (IClassDefinition) definition;
             if (classDefinition.equals(priorityNewClass)) {
                 // exact match has higher priority than subclasses
-                priority = 2;
-            }
-            IClassIterator classIterator = classDefinition.classIterator(project, false);
-            while (classIterator.hasNext()) {
-                IClassDefinition otherClass = classIterator.next();
-                if (otherClass.equals(priorityNewClass)) {
-                    // subclasses have lower priority than exact match
-                    priority = 1;
+                priority += 2;
+            } else {
+                IClassIterator classIterator = classDefinition.classIterator(project, false);
+                while (classIterator.hasNext()) {
+                    IClassDefinition otherClass = classIterator.next();
+                    if (otherClass.equals(priorityNewClass)) {
+                        // subclasses have lower priority than exact match
+                        priority += 1;
+                    }
                 }
             }
         }
