@@ -77,6 +77,7 @@ import org.apache.royale.compiler.definitions.ISetterDefinition;
 import org.apache.royale.compiler.definitions.IStyleDefinition;
 import org.apache.royale.compiler.definitions.ITypeDefinition;
 import org.apache.royale.compiler.definitions.IVariableDefinition;
+import org.apache.royale.compiler.definitions.IClassDefinition.IClassIterator;
 import org.apache.royale.compiler.definitions.IFunctionDefinition.FunctionClassification;
 import org.apache.royale.compiler.definitions.metadata.IMetaTag;
 import org.apache.royale.compiler.definitions.metadata.IMetaTagAttribute;
@@ -404,14 +405,14 @@ public class CompletionProvider {
             }
         }
         if (newExpressionCall != null) {
-            IDefinition priorityType = null;
+            IDefinition priorityNewClass = null;
             if (newExpressionVariable != null) {
                 IExpressionNode variableTypeNode = newExpressionVariable.getVariableTypeNode();
                 if (variableTypeNode != null) {
-                    priorityType = variableTypeNode.resolve(project);
+                    priorityNewClass = variableTypeNode.resolve(project);
                 }
             }
-            autoCompleteTypes(parentNode, priorityType, addImportData, project, result);
+            autoCompleteTypes(parentNode, priorityNewClass, addImportData, project, result);
             return result;
         }
         // as and is keyword types
@@ -1132,7 +1133,7 @@ public class CompletionProvider {
         result.getItems().add(tagNameItem);
     }
 
-    private void autoCompleteTypes(IASNode withNode, IDefinition priorityType, AddImportData addImportData,
+    private void autoCompleteTypes(IASNode withNode, IDefinition priorityNewClass, AddImportData addImportData,
             ILspProject project, CompletionList result) {
         // start by getting the types in scope
         IASNode node = withNode;
@@ -1149,7 +1150,7 @@ public class CompletionProvider {
             node = node.getParent();
         } while (node != null);
         autoCompleteDefinitionsForActionScript(result, project, withNode, true, null, null, false, null, (char) -1,
-                priorityType, addImportData);
+                priorityNewClass, addImportData);
     }
 
     private void autoCompleteScope(IScopedNode node, boolean typesOnly, char nextChar, AddImportData addImportData,
@@ -1926,7 +1927,7 @@ public class CompletionProvider {
     }
 
     private void addDefinitionAutoCompleteActionScript(IDefinition definition, IASNode offsetNode, char nextChar,
-            IFunctionNode prioritySuperFunction, IDefinition priorityType, AddImportData addImportData,
+            IFunctionNode prioritySuperFunction, IDefinition priorityNewClass, AddImportData addImportData,
             ILspProject project, CompletionList result) {
         String definitionBaseName = definition.getBaseName();
         if (definitionBaseName.length() == 0) {
@@ -1947,12 +1948,24 @@ public class CompletionProvider {
                 priority = 1;
             }
         }
+        if (priorityNewClass != null && definition instanceof IClassDefinition) {
+            IClassDefinition classDefinition = (IClassDefinition) definition;
+            if (classDefinition.equals(priorityNewClass)) {
+                // exact match has higher priority than subclasses
+                priority = 2;
+            }
+            IClassIterator classIterator = classDefinition.classIterator(project, false);
+            while (classIterator.hasNext()) {
+                IClassDefinition otherClass = classIterator.next();
+                if (otherClass.equals(priorityNewClass)) {
+                    // subclasses have lower priority than exact match
+                    priority = 1;
+                }
+            }
+        }
         if (definition instanceof ITypeDefinition) {
             String qualifiedName = definition.getQualifiedName();
             completionTypes.add(qualifiedName);
-            if (priorityType != null && priorityType.equals(definition)) {
-                priority = 1;
-            }
         }
         CompletionItem item = CompletionItemUtils.createDefinitionItem(definition, project);
         if (priority > 0) {
@@ -2345,7 +2358,7 @@ public class CompletionProvider {
 
     private void autoCompleteDefinitionsForActionScript(CompletionList result, ILspProject project, IASNode offsetNode,
             boolean typesOnly, String requiredPackageName, IDefinition definitionToSkip, boolean includeOpenTagBracket,
-            String typeFilter, char nextChar, IDefinition priorityType, AddImportData addImportData) {
+            String typeFilter, char nextChar, IDefinition priorityNewClass, AddImportData addImportData) {
         String skipQualifiedName = null;
         if (definitionToSkip != null) {
             skipQualifiedName = definitionToSkip.getQualifiedName();
@@ -2377,7 +2390,7 @@ public class CompletionProvider {
                                 continue;
                             }
                         }
-                        addDefinitionAutoCompleteActionScript(definition, offsetNode, nextChar, null, priorityType,
+                        addDefinitionAutoCompleteActionScript(definition, offsetNode, nextChar, null, priorityNewClass,
                                 addImportData, project, result);
                     }
                 }
