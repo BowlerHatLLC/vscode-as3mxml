@@ -146,7 +146,8 @@ public class WorkspaceSymbolProvider {
 							ITypeDefinition typeDef = (ITypeDefinition) definition;
 							IASScope typeScope = typeDef.getContainedScope();
 							if (typeScope != null) {
-								for (IDefinition localDef : typeScope.getAllLocalDefinitions()) {
+								Collection<IDefinition> localDefs = new ArrayList<>(typeScope.getAllLocalDefinitions());
+								for (IDefinition localDef : localDefs) {
 									if (localDef.isOverride() || localDef.isPrivate()) {
 										// skip overrides and private
 										continue;
@@ -213,8 +214,8 @@ public class WorkspaceSymbolProvider {
 	private void querySymbolsInScope(List<String> queries, String fullyQualifiedQuery, IASScope scope,
 			boolean allowResolveRange, Set<String> foundSymbols, ILspProject project,
 			Collection<WorkspaceSymbol> result) {
-		Collection<IDefinition> definitions = scope.getAllLocalDefinitions();
-		for (IDefinition definition : definitions) {
+		Collection<IDefinition> localDefs = new ArrayList<>(scope.getAllLocalDefinitions());
+		for (IDefinition definition : localDefs) {
 			if (definition.isImplicit()) {
 				continue;
 			}

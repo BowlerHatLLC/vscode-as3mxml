@@ -117,8 +117,8 @@ public class DocumentSymbolProvider {
     }
 
     private void scopeToSymbolInformation(IASScope scope, ILspProject project, List<SymbolInformation> result) {
-        Collection<IDefinition> definitions = scope.getAllLocalDefinitions();
-        for (IDefinition definition : definitions) {
+        Collection<IDefinition> localDefs = new ArrayList<>(scope.getAllLocalDefinitions());
+        for (IDefinition definition : localDefs) {
             if (definition instanceof IPackageDefinition) {
                 IPackageDefinition packageDefinition = (IPackageDefinition) definition;
                 IASScope packageScope = packageDefinition.getContainedScope();
@@ -147,8 +147,8 @@ public class DocumentSymbolProvider {
     }
 
     private void scopeToDocumentSymbols(IASScope scope, ILspProject project, List<DocumentSymbol> result) {
-        Collection<IDefinition> definitions = scope.getAllLocalDefinitions();
-        for (IDefinition definition : definitions) {
+        Collection<IDefinition> localDefs = new ArrayList<>(scope.getAllLocalDefinitions());
+        for (IDefinition definition : localDefs) {
             if (definition instanceof IPackageDefinition) {
                 IPackageDefinition packageDefinition = (IPackageDefinition) definition;
                 IASScope packageScope = packageDefinition.getContainedScope();

@@ -1133,7 +1133,8 @@ public class CompletionProvider {
                             addImportData, project, result);
                 }
             } else {
-                for (IDefinition localDefinition : currentScope.getAllLocalDefinitions()) {
+                Collection<IDefinition> localDefs = new ArrayList<>(currentScope.getAllLocalDefinitions());
+                for (IDefinition localDefinition : localDefs) {
                     if (localDefinition.getBaseName().length() == 0) {
                         continue;
                     }

@@ -74,7 +74,8 @@ public class DefinitionURI {
 					IASScope currentScope = project.getScope();
 					while (currentScope != null) {
 						IASScope newScope = null;
-						for (IDefinition definition : currentScope.getAllLocalDefinitions()) {
+						List<IDefinition> localDefs = new ArrayList<>(currentScope.getAllLocalDefinitions());
+						for (IDefinition definition : localDefs) {
 							if (currentSymbol.equals(definition.getQualifiedName())) {
 								if (symbols.size() > 0) {
 									if (definition instanceof IScopedDefinition) {

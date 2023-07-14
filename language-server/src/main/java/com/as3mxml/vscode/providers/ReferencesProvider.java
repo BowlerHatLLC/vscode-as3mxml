@@ -197,7 +197,8 @@ public class ReferencesProvider {
             return Collections.emptyList();
         }
         IASScope scope = classDefinition.getContainedScope();
-        for (IDefinition currentDefinition : scope.getAllLocalDefinitions()) {
+        Collection<IDefinition> localDefs = new ArrayList<>(scope.getAllLocalDefinitions());
+        for (IDefinition currentDefinition : localDefs) {
             if (currentDefinition.getBaseName().equals(attributeData.getRawValue())) {
                 definition = currentDefinition;
                 break;

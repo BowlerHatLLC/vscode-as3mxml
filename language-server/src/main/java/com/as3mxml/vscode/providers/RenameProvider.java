@@ -213,7 +213,8 @@ public class RenameProvider {
             return new WorkspaceEdit(new HashMap<>());
         }
         IASScope scope = classDefinition.getContainedScope();
-        for (IDefinition currentDefinition : scope.getAllLocalDefinitions()) {
+        Collection<IDefinition> localDefs = new ArrayList<>(scope.getAllLocalDefinitions());
+        for (IDefinition currentDefinition : localDefs) {
             if (currentDefinition.getBaseName().equals(attributeData.getRawValue())) {
                 definition = currentDefinition;
                 break;
@@ -371,12 +372,14 @@ public class RenameProvider {
             return false;
         }
         for (IASScope scope : scopes) {
-            for (IDefinition localDefinition : scope.getAllLocalDefinitions()) {
+            Collection<IDefinition> localDefs = new ArrayList<>(scope.getAllLocalDefinitions());
+            for (IDefinition localDefinition : localDefs) {
                 if (localDefinition instanceof IPackageDefinition) {
                     IPackageDefinition packageDefinition = (IPackageDefinition) localDefinition;
                     IASScope packageScope = packageDefinition.getContainedScope();
                     boolean mightBeConstructor = definition instanceof IFunctionDefinition;
-                    for (IDefinition localDefinition2 : packageScope.getAllLocalDefinitions()) {
+                    Collection<IDefinition> packageDefs = new ArrayList<>(packageScope.getAllLocalDefinitions());
+                    for (IDefinition localDefinition2 : packageDefs) {
                         if (localDefinition2 == definition) {
                             return true;
                         }

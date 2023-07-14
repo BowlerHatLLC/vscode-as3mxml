@@ -15,6 +15,8 @@ limitations under the License.
 */
 package com.as3mxml.vscode.utils;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -142,8 +144,9 @@ public class ASDocUtils {
 				}
 				if (typeNameDefinition instanceof ITypeDefinition) {
 					ITypeDefinition typeDefinition = (ITypeDefinition) typeNameDefinition;
-					for (IDefinition memberDefinition : typeDefinition.getContainedScope()
-							.getAllLocalDefinitions()) {
+					Collection<IDefinition> localDefs = new ArrayList<>(typeDefinition.getContainedScope()
+							.getAllLocalDefinitions());
+					for (IDefinition memberDefinition : localDefs) {
 						if (mustBeFunction && !(memberDefinition instanceof IFunctionDefinition)) {
 							continue;
 						}
