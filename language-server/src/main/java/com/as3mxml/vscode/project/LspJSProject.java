@@ -28,6 +28,11 @@ import org.apache.royale.compiler.units.ICompilationUnit;
 public class LspJSProject extends RoyaleJSProject implements ILspProject {
 	public LspJSProject(Workspace workspace, IBackend backend) {
 		super(workspace, backend);
+		// using a custom handler to create compilation units for .as source
+		// files because the default ASCompilationUnit allows ASTs to be garbage
+		// collected, and the scopes can get out of sync.
+		// that's probably a Royale compiler bug, but a workaround is easier.
+		getSourceCompilationUnitFactory().addHandler(LspASSourceFileHandler.INSTANCE);
 	}
 
 	public Set<String> getQNamesOfDependencies(ICompilationUnit from) {
