@@ -1232,8 +1232,8 @@ public class CompletionProvider {
                                 continue;
                             }
                         }
-                        addDefinitionAutoCompleteActionScript(localDefinition, currentNode, nextChar, null, null,
-                                addImportData, project, result);
+                        addDefinitionAutoCompleteActionScript(localDefinition, currentNode, typesOnly, nextChar, null,
+                                null, addImportData, project, result);
                     }
                 }
             }
@@ -1810,8 +1810,8 @@ public class CompletionProvider {
                         includeOpenTagBracket, includeOpenTagPrefix, nextChar, offsetTag, project, result);
             } else // actionscript
             {
-                addDefinitionAutoCompleteActionScript(localDefinition, null, nextChar, prioritySuperFunction, null,
-                        addImportData, project, result);
+                addDefinitionAutoCompleteActionScript(localDefinition, null, false, nextChar, prioritySuperFunction,
+                        null, addImportData, project, result);
             }
         }
     }
@@ -1970,9 +1970,9 @@ public class CompletionProvider {
                 includeOpenTagBracket, true, nextChar, offsetTag, project, result);
     }
 
-    private void addDefinitionAutoCompleteActionScript(IDefinition definition, IASNode offsetNode, char nextChar,
-            IFunctionNode prioritySuperFunction, IDefinition priorityNewClass, AddImportData addImportData,
-            ILspProject project, CompletionList result) {
+    private void addDefinitionAutoCompleteActionScript(IDefinition definition, IASNode offsetNode, boolean typesOnly,
+            char nextChar, IFunctionNode prioritySuperFunction, IDefinition priorityNewClass,
+            AddImportData addImportData, ILspProject project, CompletionList result) {
         String definitionBaseName = definition.getBaseName();
         if (definitionBaseName.length() == 0) {
             // vscode expects all items to have a name
@@ -2009,8 +2009,13 @@ public class CompletionProvider {
             }
         }
         if (definition instanceof ITypeDefinition) {
-            String qualifiedName = definition.getQualifiedName();
+            ITypeDefinition typeDefinition = (ITypeDefinition) definition;
+            String qualifiedName = typeDefinition.getQualifiedName();
             completionTypes.add(qualifiedName);
+
+            if (typesOnly && ASTUtils.isExplicitlyImported(offsetNode, qualifiedName)) {
+                priority += 1;
+            }
         }
         CompletionItem item = CompletionItemUtils.createDefinitionItem(definition, project);
         if (priority > 0) {
@@ -2393,8 +2398,8 @@ public class CompletionProvider {
                         addMXMLTypeDefinitionAutoComplete(typeDefinition, xmlnsPosition, offsetUnit, offsetTag,
                                 includeOpenTagBracket, nextChar, project, result);
                     } else {
-                        addDefinitionAutoCompleteActionScript(definition, null, (char) -1, null, null, addImportData,
-                                project, result);
+                        addDefinitionAutoCompleteActionScript(definition, null, typesOnly, (char) -1, null, null,
+                                addImportData, project, result);
                     }
                 }
             }
@@ -2435,8 +2440,8 @@ public class CompletionProvider {
                                 continue;
                             }
                         }
-                        addDefinitionAutoCompleteActionScript(definition, offsetNode, nextChar, null, priorityNewClass,
-                                addImportData, project, result);
+                        addDefinitionAutoCompleteActionScript(definition, offsetNode, typesOnly, nextChar, null,
+                                priorityNewClass, addImportData, project, result);
                     }
                 }
             }
