@@ -208,6 +208,35 @@ public class ASTUtils {
         return node;
     }
 
+    public static boolean isBaseNameImported(IASNode offsetNode, IDefinition definition) {
+        return isBaseNameImported(offsetNode, definition.getBaseName());
+    }
+
+    public static boolean isBaseNameImported(IASNode offsetNode, String baseName) {
+        if (offsetNode == null) {
+            return false;
+        }
+        IASNode node = offsetNode.getParent();
+        while (node != null) {
+            for (int i = 0; i < node.getChildCount(); i++) {
+                IASNode child = node.getChild(i);
+                if (child instanceof IImportNode) {
+                    IImportNode importNode = (IImportNode) child;
+                    String importNodeName = importNode.getImportName();
+                    int packageEndIndex = importNodeName.lastIndexOf(".");
+                    if (packageEndIndex != -1) {
+                        importNodeName = importNodeName.substring(packageEndIndex + 1);
+                    }
+                    if (importNodeName.equals(baseName)) {
+                        return true;
+                    }
+                }
+            }
+            node = node.getParent();
+        }
+        return false;
+    }
+
     public static boolean isExplicitlyImported(IASNode offsetNode, IDefinition definition) {
         return isExplicitlyImported(offsetNode, definition.getQualifiedName());
     }
