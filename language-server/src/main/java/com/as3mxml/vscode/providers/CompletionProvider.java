@@ -79,6 +79,7 @@ import org.apache.royale.compiler.definitions.ITypeDefinition;
 import org.apache.royale.compiler.definitions.IVariableDefinition;
 import org.apache.royale.compiler.definitions.IClassDefinition.IClassIterator;
 import org.apache.royale.compiler.definitions.IFunctionDefinition.FunctionClassification;
+import org.apache.royale.compiler.definitions.IVariableDefinition.VariableClassification;
 import org.apache.royale.compiler.definitions.metadata.IMetaTag;
 import org.apache.royale.compiler.definitions.metadata.IMetaTagAttribute;
 import org.apache.royale.compiler.filespecs.IFileSpecification;
@@ -1985,13 +1986,6 @@ public class CompletionProvider {
             return;
         }
         int priority = 0;
-        if (prioritySuperFunction != null && definition instanceof IFunctionDefinition) {
-            IFunctionDefinition funcDef = (IFunctionDefinition) definition;
-            if (FunctionClassification.CLASS_MEMBER.equals(funcDef.getFunctionClassification())
-                    && prioritySuperFunction.getName().equals(funcDef.getBaseName())) {
-                priority += 1;
-            }
-        }
         if (priorityNewClass != null && definition instanceof IClassDefinition) {
             IClassDefinition classDefinition = (IClassDefinition) definition;
             if (classDefinition.equals(priorityNewClass)) {
@@ -2008,25 +2002,49 @@ public class CompletionProvider {
                 }
             }
         }
-        if (definition instanceof ITypeDefinition) {
+        if (definition instanceof IFunctionDefinition) {
+            IFunctionDefinition funcDef = (IFunctionDefinition) definition;
+            switch (funcDef.getFunctionClassification()) {
+                case INTERFACE_MEMBER:
+                    priority += 1;
+                    break;
+                case CLASS_MEMBER:
+                    priority += 1;
+                    if (prioritySuperFunction != null
+                            && prioritySuperFunction.getName().equals(funcDef.getBaseName())) {
+                        priority += 1;
+                    }
+                    break;
+                case LOCAL:
+                    priority += 2;
+                    break;
+                default:
+            }
+        } else if (definition instanceof IVariableDefinition) {
+            IVariableDefinition varDef = (IVariableDefinition) definition;
+            switch (varDef.getVariableClassification()) {
+                case INTERFACE_MEMBER:
+                    priority += 1;
+                    break;
+                case CLASS_MEMBER:
+                    priority += 1;
+                    break;
+                case PARAMETER:
+                    priority += 2;
+                    break;
+                case LOCAL:
+                    priority += 2;
+                    break;
+                default:
+            }
+
+        } else if (definition instanceof ITypeDefinition) {
             ITypeDefinition typeDefinition = (ITypeDefinition) definition;
             String qualifiedName = typeDefinition.getQualifiedName();
             completionTypes.add(qualifiedName);
 
             if (ASTUtils.isExplicitlyImported(offsetNode, qualifiedName)) {
                 priority += 1;
-            }
-        }
-
-        IDefinition parentDefinition = definition.getParent();
-        if (parentDefinition != null) {
-            boolean isTypeMember = parentDefinition instanceof ITypeDefinition;
-            boolean isFunctionMember = parentDefinition instanceof IFunctionDefinition;
-            if (isTypeMember || isFunctionMember) {
-                if (ASTUtils.isBaseNameImported(offsetNode, definitionBaseName)) {
-                    // make sure that members and locals take priority over imports
-                    priority += isTypeMember ? 2 : 3;
-                }
             }
         }
 
