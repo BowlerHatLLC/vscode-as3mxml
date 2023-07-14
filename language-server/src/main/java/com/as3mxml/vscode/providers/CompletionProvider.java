@@ -118,6 +118,7 @@ import org.apache.royale.compiler.tree.as.IScopedNode;
 import org.apache.royale.compiler.tree.as.ITypeNode;
 import org.apache.royale.compiler.tree.as.IVariableNode;
 import org.apache.royale.compiler.tree.as.ILanguageIdentifierNode.LanguageIdentifierKind;
+import org.apache.royale.compiler.tree.as.IOperatorNode.OperatorType;
 import org.apache.royale.compiler.tree.mxml.IMXMLClassDefinitionNode;
 import org.apache.royale.compiler.units.ICompilationUnit;
 import org.eclipse.lsp4j.Command;
@@ -333,7 +334,7 @@ public class CompletionProvider {
                         || (line == nameExprNode.getLine() && column > nameExprNode.getEndColumn()))
                         && (line < typeNode.getLine()
                                 || (line == typeNode.getLine() && column <= typeNode.getEndColumn()))) {
-                    autoCompleteTypes(offsetNode, addImportData, project, result);
+                    autoCompleteTypes(offsetNode, null, addImportData, project, result);
                     return result;
                 }
             }
@@ -342,7 +343,7 @@ public class CompletionProvider {
                 && !(parentNode instanceof IAccessorNode)) {
             IVariableNode variableNode = (IVariableNode) parentNode;
             if (offsetNode == variableNode.getVariableTypeNode()) {
-                autoCompleteTypes(parentNode, addImportData, project, result);
+                autoCompleteTypes(parentNode, null, addImportData, project, result);
                 return result;
             }
         }
@@ -356,7 +357,7 @@ public class CompletionProvider {
                 int column = position.getCharacter();
                 if (line >= parameters.getEndLine() && column > parameters.getEndColumn() && line <= typeNode.getLine()
                         && column <= typeNode.getColumn()) {
-                    autoCompleteTypes(offsetNode, addImportData, project, result);
+                    autoCompleteTypes(offsetNode, null, addImportData, project, result);
                     return result;
                 }
             }
@@ -364,21 +365,53 @@ public class CompletionProvider {
         if (parentNode != null && parentNode instanceof IFunctionNode) {
             IFunctionNode functionNode = (IFunctionNode) parentNode;
             if (offsetNode == functionNode.getReturnTypeNode()) {
-                autoCompleteTypes(parentNode, addImportData, project, result);
+                autoCompleteTypes(parentNode, null, addImportData, project, result);
                 return result;
             }
         }
         // new keyword types
+        IFunctionCallNode newExpressionCall = null;
+        IVariableNode newExpressionVariable = null;
         if (parentNode != null && parentNode instanceof IFunctionCallNode) {
             IFunctionCallNode functionCallNode = (IFunctionCallNode) parentNode;
             if (functionCallNode.getNameNode() == offsetNode && functionCallNode.isNewExpression()) {
-                autoCompleteTypes(parentNode, addImportData, project, result);
-                return result;
+                newExpressionCall = functionCallNode;
+                IASNode newParent = newExpressionCall.getParent();
+                if (newParent != null && newParent instanceof IVariableNode) {
+                    newExpressionVariable = (IVariableNode) newParent;
+                }
             }
         }
-        if (nodeAtPreviousOffset != null && nodeAtPreviousOffset instanceof IKeywordNode
+        if (newExpressionCall == null && nodeAtPreviousOffset != null && nodeAtPreviousOffset instanceof IKeywordNode
                 && nodeAtPreviousOffset.getNodeID() == ASTNodeID.KeywordNewID) {
-            autoCompleteTypes(nodeAtPreviousOffset, addImportData, project, result);
+            IASNode prevParent = nodeAtPreviousOffset.getParent();
+            if (prevParent != null && prevParent instanceof IFunctionCallNode) {
+                IFunctionCallNode functionCallNode = (IFunctionCallNode) prevParent;
+                if (functionCallNode.isNewExpression()) {
+                    newExpressionCall = functionCallNode;
+                    IASNode newParent = newExpressionCall.getParent();
+                    if (newParent != null && newParent instanceof IBinaryOperatorNode) {
+                        IBinaryOperatorNode binaryOperatorNode = (IBinaryOperatorNode) newParent;
+                        if (OperatorType.ASSIGNMENT.equals(binaryOperatorNode.getOperator())) {
+                            IASNode newGP = binaryOperatorNode.getParent();
+                            if (newGP != null && newGP instanceof IVariableNode) {
+                                newExpressionVariable = (IVariableNode) newGP;
+                            }
+
+                        }
+                    }
+                }
+            }
+        }
+        if (newExpressionCall != null) {
+            IDefinition priorityType = null;
+            if (newExpressionVariable != null) {
+                IExpressionNode variableTypeNode = newExpressionVariable.getVariableTypeNode();
+                if (variableTypeNode != null) {
+                    priorityType = variableTypeNode.resolve(project);
+                }
+            }
+            autoCompleteTypes(parentNode, priorityType, addImportData, project, result);
             return result;
         }
         // as and is keyword types
@@ -386,35 +419,35 @@ public class CompletionProvider {
                 && (parentNode.getNodeID() == ASTNodeID.Op_AsID || parentNode.getNodeID() == ASTNodeID.Op_IsID)) {
             IBinaryOperatorNode binaryOperatorNode = (IBinaryOperatorNode) parentNode;
             if (binaryOperatorNode.getRightOperandNode() == offsetNode) {
-                autoCompleteTypes(parentNode, addImportData, project, result);
+                autoCompleteTypes(parentNode, null, addImportData, project, result);
                 return result;
             }
         }
         if (nodeAtPreviousOffset != null && nodeAtPreviousOffset instanceof IBinaryOperatorNode
                 && (nodeAtPreviousOffset.getNodeID() == ASTNodeID.Op_AsID
                         || nodeAtPreviousOffset.getNodeID() == ASTNodeID.Op_IsID)) {
-            autoCompleteTypes(nodeAtPreviousOffset, addImportData, project, result);
+            autoCompleteTypes(nodeAtPreviousOffset, null, addImportData, project, result);
             return result;
         }
         // class extends keyword
         if (offsetNode instanceof IClassNode && nodeAtPreviousOffset != null
                 && nodeAtPreviousOffset instanceof IKeywordNode
                 && nodeAtPreviousOffset.getNodeID() == ASTNodeID.KeywordExtendsID) {
-            autoCompleteTypes(offsetNode, addImportData, project, result);
+            autoCompleteTypes(offsetNode, null, addImportData, project, result);
             return result;
         }
         // class implements keyword
         if (offsetNode instanceof IClassNode && nodeAtPreviousOffset != null
                 && nodeAtPreviousOffset instanceof IKeywordNode
                 && nodeAtPreviousOffset.getNodeID() == ASTNodeID.KeywordImplementsID) {
-            autoCompleteTypes(offsetNode, addImportData, project, result);
+            autoCompleteTypes(offsetNode, null, addImportData, project, result);
             return result;
         }
         // interface extends keyword
         if (offsetNode instanceof IInterfaceNode && nodeAtPreviousOffset != null
                 && nodeAtPreviousOffset instanceof IKeywordNode
                 && nodeAtPreviousOffset.getNodeID() == ASTNodeID.KeywordExtendsID) {
-            autoCompleteTypes(offsetNode, addImportData, project, result);
+            autoCompleteTypes(offsetNode, null, addImportData, project, result);
             return result;
         }
 
@@ -608,7 +641,7 @@ public class CompletionProvider {
                 IASScope scope = scopedNode.getScope();
                 IDefinition definitionToSkip = scope.getDefinition();
                 autoCompleteDefinitionsForActionScript(result, project, scopedNode, false, null, definitionToSkip,
-                        false, null, nextChar, addImportData);
+                        false, null, nextChar, null, addImportData);
                 autoCompleteKeywords(scopedNode, result);
                 return result;
             }
@@ -1099,8 +1132,8 @@ public class CompletionProvider {
         result.getItems().add(tagNameItem);
     }
 
-    private void autoCompleteTypes(IASNode withNode, AddImportData addImportData, ILspProject project,
-            CompletionList result) {
+    private void autoCompleteTypes(IASNode withNode, IDefinition priorityType, AddImportData addImportData,
+            ILspProject project, CompletionList result) {
         // start by getting the types in scope
         IASNode node = withNode;
         do {
@@ -1116,7 +1149,7 @@ public class CompletionProvider {
             node = node.getParent();
         } while (node != null);
         autoCompleteDefinitionsForActionScript(result, project, withNode, true, null, null, false, null, (char) -1,
-                addImportData);
+                priorityType, addImportData);
     }
 
     private void autoCompleteScope(IScopedNode node, boolean typesOnly, char nextChar, AddImportData addImportData,
@@ -1154,7 +1187,7 @@ public class CompletionProvider {
                                 continue;
                             }
                         }
-                        addDefinitionAutoCompleteActionScript(localDefinition, currentNode, nextChar, null,
+                        addDefinitionAutoCompleteActionScript(localDefinition, currentNode, nextChar, null, null,
                                 addImportData, project, result);
                     }
                 }
@@ -1382,7 +1415,7 @@ public class CompletionProvider {
             String packageName = ASTUtils.memberAccessToPackageName(memberAccess);
             if (packageName != null) {
                 autoCompleteDefinitionsForActionScript(result, project, node, false, packageName, null, false, null,
-                        nextChar, addImportData);
+                        nextChar, null, addImportData);
                 return;
             }
         }
@@ -1732,7 +1765,7 @@ public class CompletionProvider {
                         includeOpenTagBracket, includeOpenTagPrefix, nextChar, offsetTag, project, result);
             } else // actionscript
             {
-                addDefinitionAutoCompleteActionScript(localDefinition, null, nextChar, prioritySuperFunction,
+                addDefinitionAutoCompleteActionScript(localDefinition, null, nextChar, prioritySuperFunction, null,
                         addImportData, project, result);
             }
         }
@@ -1893,8 +1926,8 @@ public class CompletionProvider {
     }
 
     private void addDefinitionAutoCompleteActionScript(IDefinition definition, IASNode offsetNode, char nextChar,
-            IFunctionNode prioritySuperFunction, AddImportData addImportData, ILspProject project,
-            CompletionList result) {
+            IFunctionNode prioritySuperFunction, IDefinition priorityType, AddImportData addImportData,
+            ILspProject project, CompletionList result) {
         String definitionBaseName = definition.getBaseName();
         if (definitionBaseName.length() == 0) {
             // vscode expects all items to have a name
@@ -1917,6 +1950,9 @@ public class CompletionProvider {
         if (definition instanceof ITypeDefinition) {
             String qualifiedName = definition.getQualifiedName();
             completionTypes.add(qualifiedName);
+            if (priorityType != null && priorityType.equals(definition)) {
+                priority = 1;
+            }
         }
         CompletionItem item = CompletionItemUtils.createDefinitionItem(definition, project);
         if (priority > 0) {
@@ -2299,8 +2335,8 @@ public class CompletionProvider {
                         addMXMLTypeDefinitionAutoComplete(typeDefinition, xmlnsPosition, offsetUnit, offsetTag,
                                 includeOpenTagBracket, nextChar, project, result);
                     } else {
-                        addDefinitionAutoCompleteActionScript(definition, null, (char) -1, null, addImportData, project,
-                                result);
+                        addDefinitionAutoCompleteActionScript(definition, null, (char) -1, null, null, addImportData,
+                                project, result);
                     }
                 }
             }
@@ -2309,12 +2345,13 @@ public class CompletionProvider {
 
     private void autoCompleteDefinitionsForActionScript(CompletionList result, ILspProject project, IASNode offsetNode,
             boolean typesOnly, String requiredPackageName, IDefinition definitionToSkip, boolean includeOpenTagBracket,
-            String typeFilter, char nextChar, AddImportData addImportData) {
+            String typeFilter, char nextChar, IDefinition priorityType, AddImportData addImportData) {
         String skipQualifiedName = null;
         if (definitionToSkip != null) {
             skipQualifiedName = definitionToSkip.getQualifiedName();
         }
-        for (ICompilationUnit unit : project.getCompilationUnits()) {
+        Collection<ICompilationUnit> units = new ArrayList<>(project.getCompilationUnits());
+        for (ICompilationUnit unit : units) {
             if (unit == null) {
                 continue;
             }
@@ -2340,8 +2377,8 @@ public class CompletionProvider {
                                 continue;
                             }
                         }
-                        addDefinitionAutoCompleteActionScript(definition, offsetNode, nextChar, null, addImportData,
-                                project, result);
+                        addDefinitionAutoCompleteActionScript(definition, offsetNode, nextChar, null, priorityType,
+                                addImportData, project, result);
                     }
                 }
             }
