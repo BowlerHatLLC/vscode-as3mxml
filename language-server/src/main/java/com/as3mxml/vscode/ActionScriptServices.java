@@ -830,16 +830,6 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
      */
     @Override
     public void didOpen(DidOpenTextDocumentParams params) {
-        if (!concurrentRequests) {
-            didOpen2(params);
-            return;
-        }
-        compilerWorkspace.getExecutorService().submit(() -> {
-            didOpen2(params);
-        });
-    }
-
-    private void didOpen2(DidOpenTextDocumentParams params) {
         TextDocumentItem textDocument = params.getTextDocument();
         String textDocumentUri = textDocument.getUri();
         if (!textDocumentUri.endsWith(FILE_EXTENSION_AS) && !textDocumentUri.endsWith(FILE_EXTENSION_MXML)) {
@@ -896,16 +886,6 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
      */
     @Override
     public void didChange(DidChangeTextDocumentParams params) {
-        if (!concurrentRequests) {
-            didChange2(params);
-            return;
-        }
-        compilerWorkspace.getExecutorService().submit(() -> {
-            didChange2(params);
-        });
-    }
-
-    private void didChange2(DidChangeTextDocumentParams params) {
         VersionedTextDocumentIdentifier textDocument = params.getTextDocument();
         String textDocumentUri = textDocument.getUri();
         if (!textDocumentUri.endsWith(FILE_EXTENSION_AS) && !textDocumentUri.endsWith(FILE_EXTENSION_MXML)) {
@@ -995,16 +975,6 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
      */
     @Override
     public void didClose(DidCloseTextDocumentParams params) {
-        if (!concurrentRequests) {
-            didClose2(params);
-            return;
-        }
-        compilerWorkspace.getExecutorService().submit(() -> {
-            didClose2(params);
-        });
-    }
-
-    private void didClose2(DidCloseTextDocumentParams params) {
         TextDocumentIdentifier textDocument = params.getTextDocument();
         String textDocumentUri = textDocument.getUri();
         if (!textDocumentUri.endsWith(FILE_EXTENSION_AS) && !textDocumentUri.endsWith(FILE_EXTENSION_MXML)) {
@@ -1071,16 +1041,6 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
      */
     @Override
     public void didSave(DidSaveTextDocumentParams params) {
-        if (!concurrentRequests) {
-            didSave2(params);
-            return;
-        }
-        compilerWorkspace.getExecutorService().submit(() -> {
-            didSave2(params);
-        });
-    }
-
-    private void didSave2(DidSaveTextDocumentParams params) {
         if (realTimeProblems) {
             // as long as we're checking on change, we shouldn't need to do
             // anything on save because we should already have the correct state
@@ -1125,16 +1085,6 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
      * project.
      */
     public void didChangeWatchedFiles(DidChangeWatchedFilesParams params) {
-        if (!concurrentRequests) {
-            didChangeWatchedFiles2(params);
-            return;
-        }
-        compilerWorkspace.getExecutorService().submit(() -> {
-            didChangeWatchedFiles2(params);
-        });
-    }
-
-    private void didChangeWatchedFiles2(DidChangeWatchedFilesParams params) {
         Set<ActionScriptProjectData> foldersToCheck = new HashSet<>();
 
         for (FileEvent event : params.getChanges()) {
@@ -1287,16 +1237,6 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
 
     @Override
     public void didChangeConfiguration(DidChangeConfigurationParams params) {
-        if (!concurrentRequests) {
-            didChangeConfiguration2(params);
-            return;
-        }
-        compilerWorkspace.getExecutorService().submit(() -> {
-            didChangeConfiguration2(params);
-        });
-    }
-
-    private void didChangeConfiguration2(DidChangeConfigurationParams params) {
         if (!(params.getSettings() instanceof JsonObject)) {
             return;
         }
@@ -1331,16 +1271,6 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
 
     @Override
     public void didChangeWorkspaceFolders(DidChangeWorkspaceFoldersParams params) {
-        if (!concurrentRequests) {
-            didChangeWorkspaceFolders2(params);
-            return;
-        }
-        compilerWorkspace.getExecutorService().submit(() -> {
-            didChangeWorkspaceFolders2(params);
-        });
-    }
-
-    private void didChangeWorkspaceFolders2(DidChangeWorkspaceFoldersParams params) {
         for (WorkspaceFolder folder : params.getEvent().getRemoved()) {
             removeWorkspaceFolder(folder);
         }
