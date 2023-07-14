@@ -208,6 +208,10 @@ public class ASTUtils {
         return node;
     }
 
+    public static boolean needsImport(IASNode offsetNode, IDefinition definition) {
+        return needsImport(offsetNode, definition.getQualifiedName());
+    }
+
     public static boolean needsImport(IASNode offsetNode, String qualifiedName) {
         int packageEndIndex = qualifiedName.lastIndexOf(".");
         if (packageEndIndex == -1) {
