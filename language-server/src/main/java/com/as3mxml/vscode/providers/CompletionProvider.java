@@ -77,6 +77,7 @@ import org.apache.royale.compiler.definitions.ISetterDefinition;
 import org.apache.royale.compiler.definitions.IStyleDefinition;
 import org.apache.royale.compiler.definitions.ITypeDefinition;
 import org.apache.royale.compiler.definitions.IVariableDefinition;
+import org.apache.royale.compiler.definitions.IFunctionDefinition.FunctionClassification;
 import org.apache.royale.compiler.definitions.metadata.IMetaTag;
 import org.apache.royale.compiler.definitions.metadata.IMetaTagAttribute;
 import org.apache.royale.compiler.filespecs.IFileSpecification;
@@ -109,12 +110,14 @@ import org.apache.royale.compiler.tree.as.IIdentifierNode;
 import org.apache.royale.compiler.tree.as.IImportNode;
 import org.apache.royale.compiler.tree.as.IInterfaceNode;
 import org.apache.royale.compiler.tree.as.IKeywordNode;
+import org.apache.royale.compiler.tree.as.ILanguageIdentifierNode;
 import org.apache.royale.compiler.tree.as.IMemberAccessExpressionNode;
 import org.apache.royale.compiler.tree.as.IModifierNode;
 import org.apache.royale.compiler.tree.as.IPackageNode;
 import org.apache.royale.compiler.tree.as.IScopedNode;
 import org.apache.royale.compiler.tree.as.ITypeNode;
 import org.apache.royale.compiler.tree.as.IVariableNode;
+import org.apache.royale.compiler.tree.as.ILanguageIdentifierNode.LanguageIdentifierKind;
 import org.apache.royale.compiler.tree.mxml.IMXMLClassDefinitionNode;
 import org.apache.royale.compiler.units.ICompilationUnit;
 import org.eclipse.lsp4j.Command;
@@ -1127,10 +1130,10 @@ public class CompletionProvider {
             if (currentScope instanceof TypeScope && !typesOnly) {
                 TypeScope typeScope = (TypeScope) currentScope;
                 addDefinitionsInTypeScopeToAutoComplete(typeScope, scope, true, true, false, false, null, false, false,
-                        nextChar, addImportData, null, null, project, result);
+                        nextChar, null, addImportData, null, null, project, result);
                 if (!staticOnly) {
                     addDefinitionsInTypeScopeToAutoCompleteActionScript(typeScope, scope, false, nextChar,
-                            addImportData, project, result);
+                            null, addImportData, project, result);
                 }
             } else {
                 Collection<IDefinition> localDefs = new ArrayList<>(currentScope.getAllLocalDefinitions());
@@ -1151,8 +1154,8 @@ public class CompletionProvider {
                                 continue;
                             }
                         }
-                        addDefinitionAutoCompleteActionScript(localDefinition, currentNode, nextChar, addImportData,
-                                project, result);
+                        addDefinitionAutoCompleteActionScript(localDefinition, currentNode, nextChar, null,
+                                addImportData, project, result);
                     }
                 }
             }
@@ -1331,7 +1334,7 @@ public class CompletionProvider {
         if (leftDefinition != null && leftDefinition instanceof ITypeDefinition) {
             ITypeDefinition typeDefinition = (ITypeDefinition) leftDefinition;
             TypeScope typeScope = (TypeScope) typeDefinition.getContainedScope();
-            addDefinitionsInTypeScopeToAutoCompleteActionScript(typeScope, scope, true, nextChar, addImportData,
+            addDefinitionsInTypeScopeToAutoCompleteActionScript(typeScope, scope, true, nextChar, null, addImportData,
                     project, result);
             return;
         }
@@ -1346,7 +1349,7 @@ public class CompletionProvider {
                 if (elementType != null) {
                     TypeScope typeScope = (TypeScope) elementType.getContainedScope();
                     addDefinitionsInTypeScopeToAutoCompleteActionScript(typeScope, scope, false, nextChar,
-                            addImportData, project, result);
+                            null, addImportData, project, result);
                     return;
                 }
             }
@@ -1355,7 +1358,21 @@ public class CompletionProvider {
         ITypeDefinition leftType = leftOperand.resolveType(project);
         if (leftType != null) {
             TypeScope typeScope = (TypeScope) leftType.getContainedScope();
-            addDefinitionsInTypeScopeToAutoCompleteActionScript(typeScope, scope, false, nextChar, addImportData,
+            IFunctionNode prioritySuperFunction = null;
+            if (leftOperand instanceof ILanguageIdentifierNode) {
+                ILanguageIdentifierNode identifierNode = (ILanguageIdentifierNode) leftOperand;
+                if (LanguageIdentifierKind.SUPER.equals(identifierNode.getKind())) {
+                    IFunctionNode containingFunction = (IFunctionNode) node.getAncestorOfType(IFunctionNode.class);
+                    if (containingFunction != null && containingFunction.hasModifier(ASModifier.OVERRIDE)
+                            && FunctionClassification.CLASS_MEMBER
+                                    .equals(containingFunction.getFunctionClassification())) {
+                        prioritySuperFunction = containingFunction;
+                    }
+                }
+            }
+
+            addDefinitionsInTypeScopeToAutoCompleteActionScript(typeScope, scope, false, nextChar,
+                    prioritySuperFunction, addImportData,
                     project, result);
             return;
         }
@@ -1627,9 +1644,10 @@ public class CompletionProvider {
     }
 
     private void addDefinitionsInTypeScopeToAutoCompleteActionScript(TypeScope typeScope, ASScope otherScope,
-            boolean isStatic, char nextChar, AddImportData addImportData, ILspProject project, CompletionList result) {
+            boolean isStatic, char nextChar, IFunctionNode prioritySuperFunction, AddImportData addImportData,
+            ILspProject project, CompletionList result) {
         addDefinitionsInTypeScopeToAutoComplete(typeScope, otherScope, isStatic, false, false, false, null, false,
-                false, nextChar, addImportData, null, null, project, result);
+                false, nextChar, prioritySuperFunction, addImportData, null, null, project, result);
     }
 
     private void addDefinitionsInTypeScopeToAutoCompleteMXML(TypeScope typeScope, ASScope otherScope,
@@ -1637,13 +1655,14 @@ public class CompletionProvider {
             AddImportData addImportData, Position xmlnsPosition, IMXMLTagData offsetTag, ILspProject project,
             CompletionList result) {
         addDefinitionsInTypeScopeToAutoComplete(typeScope, otherScope, false, false, true, isAttribute, prefix,
-                includeOpenTagBracket, includeOpenTagPrefix, (char) -1, addImportData, xmlnsPosition, offsetTag,
+                includeOpenTagBracket, includeOpenTagPrefix, (char) -1, null, addImportData, xmlnsPosition, offsetTag,
                 project, result);
     }
 
     private void addDefinitionsInTypeScopeToAutoComplete(TypeScope typeScope, ASScope otherScope, boolean isStatic,
             boolean includeSuperStatics, boolean forMXML, boolean isAttribute, String prefix,
-            boolean includeOpenTagBracket, boolean includeOpenTagPrefix, char nextChar, AddImportData addImportData,
+            boolean includeOpenTagBracket, boolean includeOpenTagPrefix, char nextChar,
+            IFunctionNode prioritySuperFunction, AddImportData addImportData,
             Position xmlnsPosition, IMXMLTagData offsetTag, ILspProject project, CompletionList result) {
         IMetaTag[] excludeMetaTags = typeScope.getDefinition()
                 .getMetaTagsByName(IMetaAttributeConstants.ATTRIBUTE_EXCLUDE);
@@ -1713,7 +1732,8 @@ public class CompletionProvider {
                         includeOpenTagBracket, includeOpenTagPrefix, nextChar, offsetTag, project, result);
             } else // actionscript
             {
-                addDefinitionAutoCompleteActionScript(localDefinition, null, nextChar, addImportData, project, result);
+                addDefinitionAutoCompleteActionScript(localDefinition, null, nextChar, prioritySuperFunction,
+                        addImportData, project, result);
             }
         }
     }
@@ -1873,7 +1893,8 @@ public class CompletionProvider {
     }
 
     private void addDefinitionAutoCompleteActionScript(IDefinition definition, IASNode offsetNode, char nextChar,
-            AddImportData addImportData, ILspProject project, CompletionList result) {
+            IFunctionNode prioritySuperFunction, AddImportData addImportData, ILspProject project,
+            CompletionList result) {
         String definitionBaseName = definition.getBaseName();
         if (definitionBaseName.length() == 0) {
             // vscode expects all items to have a name
@@ -1885,11 +1906,23 @@ public class CompletionProvider {
         if (isDuplicateTypeDefinition(definition)) {
             return;
         }
+        int priority = 0;
+        if (prioritySuperFunction != null && definition instanceof IFunctionDefinition) {
+            IFunctionDefinition funcDef = (IFunctionDefinition) definition;
+            if (FunctionClassification.CLASS_MEMBER.equals(funcDef.getFunctionClassification())
+                    && prioritySuperFunction.getName().equals(funcDef.getBaseName())) {
+                priority = 1;
+            }
+        }
         if (definition instanceof ITypeDefinition) {
             String qualifiedName = definition.getQualifiedName();
             completionTypes.add(qualifiedName);
         }
         CompletionItem item = CompletionItemUtils.createDefinitionItem(definition, project);
+        if (priority > 0) {
+            // if we ever target JDK 11, use repeat() instead
+            item.setSortText(String.join("", Collections.nCopies(3 + priority, "0")) + definitionBaseName);
+        }
         if (definition instanceof IFunctionDefinition && !(definition instanceof IAccessorDefinition) && nextChar != '('
                 && (completionSupportsSnippets || completionSupportsSimpleSnippets)) {
             IFunctionDefinition functionDefinition = (IFunctionDefinition) definition;
@@ -2266,7 +2299,7 @@ public class CompletionProvider {
                         addMXMLTypeDefinitionAutoComplete(typeDefinition, xmlnsPosition, offsetUnit, offsetTag,
                                 includeOpenTagBracket, nextChar, project, result);
                     } else {
-                        addDefinitionAutoCompleteActionScript(definition, null, (char) -1, addImportData, project,
+                        addDefinitionAutoCompleteActionScript(definition, null, (char) -1, null, addImportData, project,
                                 result);
                     }
                 }
@@ -2307,8 +2340,8 @@ public class CompletionProvider {
                                 continue;
                             }
                         }
-                        addDefinitionAutoCompleteActionScript(definition, offsetNode, nextChar, addImportData, project,
-                                result);
+                        addDefinitionAutoCompleteActionScript(definition, offsetNode, nextChar, null, addImportData,
+                                project, result);
                     }
                 }
             }
