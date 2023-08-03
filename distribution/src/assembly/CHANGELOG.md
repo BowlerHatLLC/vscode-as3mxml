@@ -10,7 +10,7 @@
 - Debug: Faster AIR debug launcher builds with native extensions. If original _.ane_ file is unmodified since previous build, does not overwrite the unpackaged version. Run the clean task to force _.ane_ to be unpacked again.
 - Format: Added support for _asformat-config.xml_ file at root of project to configure formatting options.
 - General: Fixed incorrect duplicate function definition errors when using JDK 16+.
-- General: New ActionScript 3.0 language features from HARMAN AIR 50.0 and Apach Royale 0.9.10 are now supported.
+- General: New ActionScript 3.0 language features from HARMAN AIR 50.0 and Apache Royale 0.9.10 are now supported.
 - Lint: Added new `as3mxml.lint.enabled` setting to optionally enable Apache Royale's new AS3 linter to check for issues. May be slow for larger projects. Supports automatic detection of _aslint-config.xml_ file at root of project.
 - Settings: All formatting options accept `null`, in addition to `true`/`false`, to allow compiler defaults to change in the future.
 
