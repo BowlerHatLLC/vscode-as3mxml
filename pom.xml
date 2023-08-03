@@ -20,7 +20,7 @@ limitations under the License.
 
   <groupId>com.as3mxml.vscode</groupId>
   <artifactId>vscode-as3mxml</artifactId>
-  <version>1.17.0</version>
+  <version>1.18.0</version>
   <name>vscode-as3mxml</name>
   <packaging>pom</packaging>
 

@@ -1,5 +1,32 @@
 # ActionScript & MXML for Visual Studio Code Changelog
 
+## 1.18.0
+
+### New Features
+
+- Build: Added new _ActionScript: watch_ build task for Apache Royale projects when the Royale compiler's new `--watch` option is available.
+- Build: Added missing `context-root`, `contributor`, `creator`, `date`, `description`, `language`, `publisher`, `services`, and `title` to `compilerOptions` field in _asconfig.json_ files.
+- Completion: Improved sorting for a number of operations, including after `super.` and `new`, and for symbols that are referenced with `import`. Completion also gives highest priority to local variables, then member fields/methods, and then everything else.
+- Debug: Faster AIR debug launcher builds with native extensions. If original _.ane_ file is unmodified since previous build, does not overwrite the unpackaged version. Run the clean task to force _.ane_ to be unpacked again.
+- Format: Added support for _asformat-config.xml_ file at root of project to configure formatting options.
+- General: Fixed incorrect duplicate function definition errors when using JDK 16+.
+- General: New ActionScript 3.0 language features from HARMAN AIR 50.0 and Apach Royale 0.9.10 are now supported.
+- Lint: Added new `as3mxml.lint.enabled` setting to optionally enable Apache Royale's new AS3 linter to check for issues. May be slow for larger projects. Supports automatic detection of _aslint-config.xml_ file at root of project.
+- Settings: All formatting options accept `null`, in addition to `true`/`false`, to allow compiler defaults to change in the future.
+
+### Fixed Issues
+
+- Code Actions: Fix possible null exception when node is not found for missing method.
+- Completion: Fix possible null exception for getters and setters.
+- General: Fix unsupported operation exception for `$/setTrace` language server protocol message sent by VSCode.
+- Hover: When generating signature for function in binary _.swc_ file, provides a fallback name for parameters that don't have names in the _.swc_ file.
+- Hover: When generating function signature, event details, or style details, specify `*` when type is not declared.
+- Signature Help: Fixed issue where popup disappeared after entering comma `,` separator between arguments.
+
+### Other Changes
+
+- Dependencies: Apache Royale compiler updated to v0.9.10. This fixes issue in symbol renaming, formatting AS3 code, and more.
+
 ## 1.17.0
 
 ### New Features
