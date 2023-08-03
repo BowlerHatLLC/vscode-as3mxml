@@ -34,7 +34,7 @@ Extension created and maintained by [Josh Tynjala](https://patreon.com/josht). B
 ## Minimum Requirements
 
 - Visual Studio Code 1.70
-- Java 8 or 11 recommended (has known issues with Java 16 or newer)
+- Java 8 or newer
 
 ## asconfig.json
 
