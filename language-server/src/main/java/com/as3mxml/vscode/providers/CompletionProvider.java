@@ -296,6 +296,10 @@ public class CompletionProvider {
         IASNode nodeAtPreviousOffset = null;
         if (parentNode != null) {
             nodeAtPreviousOffset = parentNode.getContainingNode(currentOffset - 1);
+        } else if (offsetNode instanceof IFileNode) {
+            // there is no parent, but we may still be able to detect
+            // a child of the file node
+            nodeAtPreviousOffset = offsetNode.getContainingNode(currentOffset - 1);
         }
 
         String fileText = fileTracker.getText(path);
