@@ -28,6 +28,7 @@ import com.as3mxml.vscode.compiler.problems.UnusedImportProblem;
 import org.apache.royale.compiler.asdoc.IASDocComment;
 import org.apache.royale.compiler.common.ISourceLocation;
 import org.apache.royale.compiler.constants.IASLanguageConstants;
+import org.apache.royale.compiler.constants.IASLanguageConstants.BuiltinType;
 import org.apache.royale.compiler.constants.IMetaAttributeConstants;
 import org.apache.royale.compiler.definitions.IClassDefinition;
 import org.apache.royale.compiler.definitions.IClassDefinition.ClassClassification;
@@ -38,6 +39,7 @@ import org.apache.royale.compiler.definitions.IFunctionDefinition.FunctionClassi
 import org.apache.royale.compiler.definitions.IGetterDefinition;
 import org.apache.royale.compiler.definitions.IInterfaceDefinition;
 import org.apache.royale.compiler.definitions.IInterfaceDefinition.InterfaceClassification;
+import org.apache.royale.compiler.definitions.IParameterDefinition;
 import org.apache.royale.compiler.definitions.ISetterDefinition;
 import org.apache.royale.compiler.definitions.ITypeDefinition;
 import org.apache.royale.compiler.definitions.IVariableDefinition;
@@ -849,5 +851,43 @@ public class ASTUtils {
             }
         }
         return false;
+    }
+
+    public static boolean isOffsetNodeInsideParameterOfTypeFunction(IASNode offsetNode, String fileText,
+            int currentOffset, ICompilerProject project) {
+
+        IFunctionCallNode functionCallNode = (IFunctionCallNode) offsetNode.getAncestorOfType(IFunctionCallNode.class);
+        if (functionCallNode == null) {
+            return false;
+        }
+        IDefinition calledDefinition = functionCallNode.resolveCalledExpression(project);
+        if (!(calledDefinition instanceof IFunctionDefinition)) {
+            return false;
+        }
+        IFunctionDefinition functionDefinition = (IFunctionDefinition) calledDefinition;
+        int index = ASTUtils.getFunctionCallNodeArgumentIndex(functionCallNode, offsetNode, fileText,
+                currentOffset);
+        IParameterDefinition[] parameterDefs = functionDefinition.getParameters();
+        int paramCount = parameterDefs.length;
+        if (paramCount > 0 && index >= paramCount) {
+            IParameterDefinition lastParam = parameterDefs[paramCount - 1];
+            if (lastParam.isRest()) {
+                // functions with rest parameters may accept any
+                // number of arguments, so continue to make the rest
+                // parameter active
+                index = paramCount - 1;
+            } else {
+                // if there's no rest parameter, and we're beyond the
+                // final parameter, none should be active
+                index = -1;
+            }
+        }
+        if (index == -1) {
+            return false;
+        }
+        IParameterDefinition param = parameterDefs[index];
+        IDefinition paramType = param.resolveType(project);
+        ITypeDefinition functionType = project.getBuiltinType(BuiltinType.FUNCTION);
+        return functionType.equals(paramType);
     }
 }

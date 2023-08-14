@@ -29,31 +29,6 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.as3mxml.vscode.asdoc.IASDocTagConstants;
-import com.as3mxml.vscode.asdoc.IRoyaleASDocTagConstants;
-import com.as3mxml.vscode.asdoc.VSCodeASDocComment;
-import com.as3mxml.vscode.asdoc.VSCodeASDocComment.VSCodeASDocTag;
-import com.as3mxml.vscode.project.ActionScriptProjectData;
-import com.as3mxml.vscode.project.ILspProject;
-import com.as3mxml.vscode.utils.ASTUtils;
-import com.as3mxml.vscode.utils.ActionScriptProjectManager;
-import com.as3mxml.vscode.utils.AddImportData;
-import com.as3mxml.vscode.utils.CodeActionsUtils;
-import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
-import com.as3mxml.vscode.utils.CompilerProjectUtils;
-import com.as3mxml.vscode.utils.CompletionItemUtils;
-import com.as3mxml.vscode.utils.DefinitionTextUtils;
-import com.as3mxml.vscode.utils.DefinitionUtils;
-import com.as3mxml.vscode.utils.FileTracker;
-import com.as3mxml.vscode.utils.ImportRange;
-import com.as3mxml.vscode.utils.LanguageServerCompilerUtils;
-import com.as3mxml.vscode.utils.MXMLDataUtils;
-import com.as3mxml.vscode.utils.MXMLNamespace;
-import com.as3mxml.vscode.utils.MXMLNamespaceUtils;
-import com.as3mxml.vscode.utils.ScopeUtils;
-import com.as3mxml.vscode.utils.SourcePathUtils;
-import com.as3mxml.vscode.utils.XmlnsRange;
-
 import org.apache.royale.compiler.asdoc.IASDocTag;
 import org.apache.royale.compiler.common.ASModifier;
 import org.apache.royale.compiler.common.ISourceLocation;
@@ -66,9 +41,11 @@ import org.apache.royale.compiler.constants.IMetaAttributeConstants;
 import org.apache.royale.compiler.definitions.IAccessorDefinition;
 import org.apache.royale.compiler.definitions.IAppliedVectorDefinition;
 import org.apache.royale.compiler.definitions.IClassDefinition;
+import org.apache.royale.compiler.definitions.IClassDefinition.IClassIterator;
 import org.apache.royale.compiler.definitions.IDefinition;
 import org.apache.royale.compiler.definitions.IEventDefinition;
 import org.apache.royale.compiler.definitions.IFunctionDefinition;
+import org.apache.royale.compiler.definitions.IFunctionDefinition.FunctionClassification;
 import org.apache.royale.compiler.definitions.IGetterDefinition;
 import org.apache.royale.compiler.definitions.IInterfaceDefinition;
 import org.apache.royale.compiler.definitions.INamespaceDefinition;
@@ -77,9 +54,6 @@ import org.apache.royale.compiler.definitions.ISetterDefinition;
 import org.apache.royale.compiler.definitions.IStyleDefinition;
 import org.apache.royale.compiler.definitions.ITypeDefinition;
 import org.apache.royale.compiler.definitions.IVariableDefinition;
-import org.apache.royale.compiler.definitions.IClassDefinition.IClassIterator;
-import org.apache.royale.compiler.definitions.IFunctionDefinition.FunctionClassification;
-import org.apache.royale.compiler.definitions.IVariableDefinition.VariableClassification;
 import org.apache.royale.compiler.definitions.metadata.IMetaTag;
 import org.apache.royale.compiler.definitions.metadata.IMetaTagAttribute;
 import org.apache.royale.compiler.filespecs.IFileSpecification;
@@ -113,14 +87,14 @@ import org.apache.royale.compiler.tree.as.IImportNode;
 import org.apache.royale.compiler.tree.as.IInterfaceNode;
 import org.apache.royale.compiler.tree.as.IKeywordNode;
 import org.apache.royale.compiler.tree.as.ILanguageIdentifierNode;
+import org.apache.royale.compiler.tree.as.ILanguageIdentifierNode.LanguageIdentifierKind;
 import org.apache.royale.compiler.tree.as.IMemberAccessExpressionNode;
 import org.apache.royale.compiler.tree.as.IModifierNode;
+import org.apache.royale.compiler.tree.as.IOperatorNode.OperatorType;
 import org.apache.royale.compiler.tree.as.IPackageNode;
 import org.apache.royale.compiler.tree.as.IScopedNode;
 import org.apache.royale.compiler.tree.as.ITypeNode;
 import org.apache.royale.compiler.tree.as.IVariableNode;
-import org.apache.royale.compiler.tree.as.ILanguageIdentifierNode.LanguageIdentifierKind;
-import org.apache.royale.compiler.tree.as.IOperatorNode.OperatorType;
 import org.apache.royale.compiler.tree.mxml.IMXMLClassDefinitionNode;
 import org.apache.royale.compiler.units.ICompilationUnit;
 import org.eclipse.lsp4j.Command;
@@ -134,6 +108,31 @@ import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.jsonrpc.CancelChecker;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
+
+import com.as3mxml.vscode.asdoc.IASDocTagConstants;
+import com.as3mxml.vscode.asdoc.IRoyaleASDocTagConstants;
+import com.as3mxml.vscode.asdoc.VSCodeASDocComment;
+import com.as3mxml.vscode.asdoc.VSCodeASDocComment.VSCodeASDocTag;
+import com.as3mxml.vscode.project.ActionScriptProjectData;
+import com.as3mxml.vscode.project.ILspProject;
+import com.as3mxml.vscode.utils.ASTUtils;
+import com.as3mxml.vscode.utils.ActionScriptProjectManager;
+import com.as3mxml.vscode.utils.AddImportData;
+import com.as3mxml.vscode.utils.CodeActionsUtils;
+import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
+import com.as3mxml.vscode.utils.CompilerProjectUtils;
+import com.as3mxml.vscode.utils.CompletionItemUtils;
+import com.as3mxml.vscode.utils.DefinitionTextUtils;
+import com.as3mxml.vscode.utils.DefinitionUtils;
+import com.as3mxml.vscode.utils.FileTracker;
+import com.as3mxml.vscode.utils.ImportRange;
+import com.as3mxml.vscode.utils.LanguageServerCompilerUtils;
+import com.as3mxml.vscode.utils.MXMLDataUtils;
+import com.as3mxml.vscode.utils.MXMLNamespace;
+import com.as3mxml.vscode.utils.MXMLNamespaceUtils;
+import com.as3mxml.vscode.utils.ScopeUtils;
+import com.as3mxml.vscode.utils.SourcePathUtils;
+import com.as3mxml.vscode.utils.XmlnsRange;
 
 public class CompletionProvider {
     private static final String FILE_EXTENSION_MXML = ".mxml";
@@ -322,6 +321,9 @@ public class CompletionProvider {
         if (fileText.length() > currentOffset) {
             nextChar = fileText.charAt(currentOffset);
         }
+
+        boolean isParamOfTypeFunction = ASTUtils.isOffsetNodeInsideParameterOfTypeFunction(offsetNode, fileText,
+                currentOffset, project);
 
         // variable types (not getters or setters)
         if (offsetNode instanceof IVariableNode
@@ -592,7 +594,8 @@ public class CompletionProvider {
                 if ((line != leftOperand.getEndLine() && line != rightOperand.getLine())
                         || (line == leftOperand.getEndLine() && column > leftOperand.getEndColumn())
                         || (line == rightOperand.getLine() && column <= rightOperand.getColumn())) {
-                    autoCompleteMemberAccess(memberAccessNode, nextChar, addImportData, project, result);
+                    autoCompleteMemberAccess(memberAccessNode, nextChar, isParamOfTypeFunction, addImportData, project,
+                            result);
                     return result;
                 }
             }
@@ -610,7 +613,8 @@ public class CompletionProvider {
                 isValidLeft = false;
             }
             if (offsetNode == memberAccessNode.getRightOperandNode() || isValidLeft) {
-                autoCompleteMemberAccess(memberAccessNode, nextChar, addImportData, project, result);
+                autoCompleteMemberAccess(memberAccessNode, nextChar, isParamOfTypeFunction, addImportData, project,
+                        result);
                 return result;
             }
         }
@@ -623,7 +627,8 @@ public class CompletionProvider {
             if (rightOperandNode instanceof IIdentifierNode) {
                 IIdentifierNode identifierNode = (IIdentifierNode) rightOperandNode;
                 if (identifierNode.getName().equals("")) {
-                    autoCompleteMemberAccess(memberAccessNode, nextChar, addImportData, project, result);
+                    autoCompleteMemberAccess(memberAccessNode, nextChar, isParamOfTypeFunction, addImportData, project,
+                            result);
                     return result;
                 }
             }
@@ -681,13 +686,13 @@ public class CompletionProvider {
                 IScopedNode scopedNode = (IScopedNode) currentNodeForScope;
 
                 // include all members and local things that are in scope
-                autoCompleteScope(scopedNode, false, nextChar, addImportData, project, result);
+                autoCompleteScope(scopedNode, false, nextChar, isParamOfTypeFunction, addImportData, project, result);
 
                 // include all public definitions
                 IASScope scope = scopedNode.getScope();
                 IDefinition definitionToSkip = scope.getDefinition();
                 autoCompleteDefinitionsForActionScript(result, project, scopedNode, false, null, definitionToSkip,
-                        false, null, nextChar, null, addImportData);
+                        false, null, nextChar, null, isParamOfTypeFunction, addImportData);
                 autoCompleteKeywords(scopedNode, result);
                 return result;
             }
@@ -1189,17 +1194,17 @@ public class CompletionProvider {
                 IScopedNode scopedNode = (IScopedNode) node;
 
                 // include all members and local things that are in scope
-                autoCompleteScope(scopedNode, true, (char) -1, addImportData, project, result);
+                autoCompleteScope(scopedNode, true, (char) -1, false, addImportData, project, result);
                 break;
             }
             node = node.getParent();
         } while (node != null);
         autoCompleteDefinitionsForActionScript(result, project, withNode, true, null, null, false, null, (char) -1,
-                priorityNewClass, addImportData);
+                priorityNewClass, false, addImportData);
     }
 
     private void autoCompleteScope(IScopedNode scopedNode, boolean typesOnly, char nextChar,
-            AddImportData addImportData, ILspProject project, CompletionList result) {
+            boolean isParamOfTypeFunction, AddImportData addImportData, ILspProject project, CompletionList result) {
         IScopedNode currentNode = scopedNode;
         ASScope scope = (ASScope) scopedNode.getScope();
         while (currentNode != null) {
@@ -1209,11 +1214,11 @@ public class CompletionProvider {
             if (currentScope instanceof TypeScope && !typesOnly) {
                 TypeScope typeScope = (TypeScope) currentScope;
                 addDefinitionsInTypeScopeToAutoComplete(typeScope, scope, scopedNode, true, true, false, false, null,
-                        false, false,
-                        nextChar, null, addImportData, null, null, project, result);
+                        false, false, nextChar, null, isParamOfTypeFunction, addImportData, null, null, project,
+                        result);
                 if (!staticOnly) {
                     addDefinitionsInTypeScopeToAutoCompleteActionScript(typeScope, scope, scopedNode, false, nextChar,
-                            null, addImportData, project, result);
+                            null, isParamOfTypeFunction, addImportData, project, result);
                 }
             } else {
                 Collection<IDefinition> localDefs = new ArrayList<>(currentScope.getAllLocalDefinitions());
@@ -1235,7 +1240,7 @@ public class CompletionProvider {
                             }
                         }
                         addDefinitionAutoCompleteActionScript(localDefinition, scopedNode, nextChar, null,
-                                null, addImportData, project, result);
+                                null, isParamOfTypeFunction, addImportData, project, result);
                     }
                 }
             }
@@ -1406,7 +1411,8 @@ public class CompletionProvider {
         }
     }
 
-    private void autoCompleteMemberAccess(IMemberAccessExpressionNode node, char nextChar, AddImportData addImportData,
+    private void autoCompleteMemberAccess(IMemberAccessExpressionNode node, char nextChar,
+            boolean isParamOfTypeFunction, AddImportData addImportData,
             ILspProject project, CompletionList result) {
         ASScope scope = (ASScope) node.getContainingScope().getScope();
         IExpressionNode leftOperand = node.getLeftOperandNode();
@@ -1415,7 +1421,7 @@ public class CompletionProvider {
             ITypeDefinition typeDefinition = (ITypeDefinition) leftDefinition;
             TypeScope typeScope = (TypeScope) typeDefinition.getContainedScope();
             addDefinitionsInTypeScopeToAutoCompleteActionScript(typeScope, scope, node, true, nextChar, null,
-                    addImportData, project, result);
+                    isParamOfTypeFunction, addImportData, project, result);
             return;
         }
 
@@ -1429,7 +1435,7 @@ public class CompletionProvider {
                 if (elementType != null) {
                     TypeScope typeScope = (TypeScope) elementType.getContainedScope();
                     addDefinitionsInTypeScopeToAutoCompleteActionScript(typeScope, scope, node, false, nextChar,
-                            null, addImportData, project, result);
+                            null, isParamOfTypeFunction, addImportData, project, result);
                     return;
                 }
             }
@@ -1452,7 +1458,7 @@ public class CompletionProvider {
             }
 
             addDefinitionsInTypeScopeToAutoCompleteActionScript(typeScope, scope, node, false, nextChar,
-                    prioritySuperFunction, addImportData, project, result);
+                    prioritySuperFunction, isParamOfTypeFunction, addImportData, project, result);
             return;
         }
 
@@ -1461,7 +1467,7 @@ public class CompletionProvider {
             String packageName = ASTUtils.memberAccessToPackageName(memberAccess);
             if (packageName != null) {
                 autoCompleteDefinitionsForActionScript(result, project, node, false, packageName, null, false, null,
-                        nextChar, null, addImportData);
+                        nextChar, null, false, addImportData);
                 return;
             }
         }
@@ -1724,9 +1730,10 @@ public class CompletionProvider {
 
     private void addDefinitionsInTypeScopeToAutoCompleteActionScript(TypeScope typeScope, ASScope otherScope,
             IASNode offsetNode, boolean isStatic, char nextChar, IFunctionNode prioritySuperFunction,
-            AddImportData addImportData, ILspProject project, CompletionList result) {
+            boolean isParamOfTypeFunction, AddImportData addImportData, ILspProject project, CompletionList result) {
         addDefinitionsInTypeScopeToAutoComplete(typeScope, otherScope, offsetNode, isStatic, false, false, false, null,
-                false, false, nextChar, prioritySuperFunction, addImportData, null, null, project, result);
+                false, false, nextChar, prioritySuperFunction, isParamOfTypeFunction, addImportData, null, null,
+                project, result);
     }
 
     private void addDefinitionsInTypeScopeToAutoCompleteMXML(TypeScope typeScope, ASScope otherScope,
@@ -1734,14 +1741,14 @@ public class CompletionProvider {
             AddImportData addImportData, Position xmlnsPosition, IMXMLTagData offsetTag,
             ILspProject project, CompletionList result) {
         addDefinitionsInTypeScopeToAutoComplete(typeScope, otherScope, null, false, false, true, isAttribute,
-                prefix, includeOpenTagBracket, includeOpenTagPrefix, (char) -1, null, addImportData, xmlnsPosition,
-                offsetTag, project, result);
+                prefix, includeOpenTagBracket, includeOpenTagPrefix, (char) -1, null, false, addImportData,
+                xmlnsPosition, offsetTag, project, result);
     }
 
     private void addDefinitionsInTypeScopeToAutoComplete(TypeScope typeScope, ASScope otherScope, IASNode offsetNode,
             boolean isStatic, boolean includeSuperStatics, boolean forMXML, boolean isAttribute,
             String prefix, boolean includeOpenTagBracket, boolean includeOpenTagPrefix, char nextChar,
-            IFunctionNode prioritySuperFunction, AddImportData addImportData,
+            IFunctionNode prioritySuperFunction, boolean isParamOfTypeFunction, AddImportData addImportData,
             Position xmlnsPosition, IMXMLTagData offsetTag, ILspProject project, CompletionList result) {
         IMetaTag[] excludeMetaTags = typeScope.getDefinition()
                 .getMetaTagsByName(IMetaAttributeConstants.ATTRIBUTE_EXCLUDE);
@@ -1812,7 +1819,7 @@ public class CompletionProvider {
             } else // actionscript
             {
                 addDefinitionAutoCompleteActionScript(localDefinition, offsetNode, nextChar,
-                        prioritySuperFunction, null, addImportData, project, result);
+                        prioritySuperFunction, null, isParamOfTypeFunction, addImportData, project, result);
             }
         }
     }
@@ -1973,7 +1980,7 @@ public class CompletionProvider {
 
     private void addDefinitionAutoCompleteActionScript(IDefinition definition, IASNode offsetNode,
             char nextChar, IFunctionNode prioritySuperFunction, IDefinition priorityNewClass,
-            AddImportData addImportData, ILspProject project, CompletionList result) {
+            boolean isParamOfTypeFunction, AddImportData addImportData, ILspProject project, CompletionList result) {
         String definitionBaseName = definition.getBaseName();
         if (definitionBaseName.length() == 0) {
             // vscode expects all items to have a name
@@ -2054,9 +2061,10 @@ public class CompletionProvider {
             item.setSortText(String.join("", Collections.nCopies(3 + priority, "0")) + definitionBaseName);
         }
         if (definition instanceof IFunctionDefinition && !(definition instanceof IAccessorDefinition) && nextChar != '('
-                && (completionSupportsSnippets || completionSupportsSimpleSnippets)) {
+                && (completionSupportsSnippets || completionSupportsSimpleSnippets) && !isParamOfTypeFunction) {
             IFunctionDefinition functionDefinition = (IFunctionDefinition) definition;
             String functionName = definition.getBaseName();
+
             if (functionDefinition.getParameters().length == 0) {
                 item.setInsertText(functionName + "()");
             } else {
@@ -2430,7 +2438,7 @@ public class CompletionProvider {
                                 includeOpenTagBracket, nextChar, project, result);
                     } else {
                         addDefinitionAutoCompleteActionScript(definition, null, (char) -1, null, null,
-                                addImportData, project, result);
+                                false, addImportData, project, result);
                     }
                 }
             }
@@ -2439,7 +2447,8 @@ public class CompletionProvider {
 
     private void autoCompleteDefinitionsForActionScript(CompletionList result, ILspProject project, IASNode offsetNode,
             boolean typesOnly, String requiredPackageName, IDefinition definitionToSkip, boolean includeOpenTagBracket,
-            String typeFilter, char nextChar, IDefinition priorityNewClass, AddImportData addImportData) {
+            String typeFilter, char nextChar, IDefinition priorityNewClass, boolean isParamOfTypeFunction,
+            AddImportData addImportData) {
         String skipQualifiedName = null;
         if (definitionToSkip != null) {
             skipQualifiedName = definitionToSkip.getQualifiedName();
@@ -2472,7 +2481,7 @@ public class CompletionProvider {
                             }
                         }
                         addDefinitionAutoCompleteActionScript(definition, offsetNode, nextChar, null,
-                                priorityNewClass, addImportData, project, result);
+                                priorityNewClass, isParamOfTypeFunction, addImportData, project, result);
                     }
                 }
             }
