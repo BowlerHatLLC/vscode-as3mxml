@@ -178,18 +178,16 @@ public class SignatureHelpProvider {
 			IParameterDefinition[] parameterDefs = functionDefinition.getParameters();
 			int paramCount = parameterDefs.length;
 			if (paramCount > 0 && index >= paramCount) {
-				if (index >= paramCount) {
-					IParameterDefinition lastParam = parameterDefs[paramCount - 1];
-					if (lastParam.isRest()) {
-						// functions with rest parameters may accept any
-						// number of arguments, so continue to make the rest
-						// parameter active
-						index = paramCount - 1;
-					} else {
-						// if there's no rest parameter, and we're beyond the
-						// final parameter, none should be active
-						index = -1;
-					}
+				IParameterDefinition lastParam = parameterDefs[paramCount - 1];
+				if (lastParam.isRest()) {
+					// functions with rest parameters may accept any
+					// number of arguments, so continue to make the rest
+					// parameter active
+					index = paramCount - 1;
+				} else {
+					// if there's no rest parameter, and we're beyond the
+					// final parameter, none should be active
+					index = -1;
 				}
 			}
 			if (index != -1) {
