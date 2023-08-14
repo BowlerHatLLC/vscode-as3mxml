@@ -77,6 +77,7 @@ import org.apache.royale.compiler.tree.as.IBinaryOperatorNode;
 import org.apache.royale.compiler.tree.as.IBlockNode;
 import org.apache.royale.compiler.tree.as.IClassNode;
 import org.apache.royale.compiler.tree.as.IContainerNode;
+import org.apache.royale.compiler.tree.as.IDefinitionNode;
 import org.apache.royale.compiler.tree.as.IDynamicAccessNode;
 import org.apache.royale.compiler.tree.as.IExpressionNode;
 import org.apache.royale.compiler.tree.as.IFileNode;
@@ -324,6 +325,48 @@ public class CompletionProvider {
 
         boolean isParamOfTypeFunction = ASTUtils.isOffsetNodeInsideParameterOfTypeFunction(offsetNode, fileText,
                 currentOffset, project);
+
+        // definition names
+        if (nodeAtPreviousOffset != null && nodeAtPreviousOffset instanceof IKeywordNode) {
+            IKeywordNode keywordNode = (IKeywordNode) nodeAtPreviousOffset;
+            // no completion for the name of the symbol currently being declared
+            if (ASTNodeID.KeywordFunctionID.equals(keywordNode.getNodeID())) {
+                IASNode currentNodeForScope = offsetNode;
+                do {
+                    // just keep traversing up until we get a scoped node or we
+                    // run out of nodes to check
+                    if (currentNodeForScope instanceof IScopedNode) {
+                        IScopedNode scopedNode = (IScopedNode) currentNodeForScope;
+
+                        if (scopedNode.getScope() instanceof TypeScope) {
+                            // get and set after function is allowed in type scope
+                            autoCompleteKeyword(IASKeywordConstants.GET, result);
+                            autoCompleteKeyword(IASKeywordConstants.SET, result);
+                        }
+                        break;
+                    }
+                    currentNodeForScope = currentNodeForScope.getParent();
+                } while (currentNodeForScope != null);
+
+                return result;
+            }
+            if (ASTNodeID.KeywordVarID.equals(keywordNode.getNodeID())
+                    || ASTNodeID.KeywordConstID.equals(keywordNode.getNodeID())
+                    || ASTNodeID.KeywordClassID.equals(keywordNode.getNodeID())
+                    || ASTNodeID.KeywordInterfaceID.equals(keywordNode.getNodeID())
+                    || ASTNodeID.KeywordGetID.equals(keywordNode.getNodeID())
+                    || ASTNodeID.KeywordSetID.equals(keywordNode.getNodeID())) {
+                return result;
+            }
+        }
+        if (parentNode != null && parentNode instanceof IDefinitionNode) {
+            IDefinitionNode defNode = (IDefinitionNode) parentNode;
+            if (offsetNode == defNode.getNameExpressionNode()) {
+                // no completion for definition names because names shouldn't
+                // conflict with each other
+                return result;
+            }
+        }
 
         // variable types (not getters or setters)
         if (offsetNode instanceof IVariableNode
