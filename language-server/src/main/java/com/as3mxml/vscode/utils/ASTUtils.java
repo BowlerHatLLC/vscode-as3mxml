@@ -882,7 +882,7 @@ public class ASTUtils {
                 index = -1;
             }
         }
-        if (index == -1) {
+        if (index == -1 || index >= paramCount) {
             return false;
         }
         IParameterDefinition param = parameterDefs[index];
