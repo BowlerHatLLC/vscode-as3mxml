@@ -1803,10 +1803,18 @@ public class CompletionProvider {
         ArrayList<IDefinition> memberAccessDefinitions = new ArrayList<>();
         Set<INamespaceDefinition> namespaceSet = ScopeUtils.getNamespaceSetForScopes(typeScope, otherScope, project);
 
+        boolean isInterfaceScope = typeScope.getDefinition() instanceof IInterfaceDefinition;
         typeScope.getAllPropertiesForMemberAccess((CompilerProject) project, memberAccessDefinitions, namespaceSet);
         for (IDefinition localDefinition : memberAccessDefinitions) {
             if (localDefinition.isOverride()) {
                 // overrides would add unnecessary duplicates to the list
+                continue;
+            }
+            if (isInterfaceScope && localDefinition instanceof IVariableDefinition
+                    && !(localDefinition instanceof IFunctionDefinition)) {
+                // interfaces can't have variables, but technically, the
+                // compiler will still add variables to the scope while
+                // reporting an error. we might as well just skip them.
                 continue;
             }
             if (excludeMetaTags != null && excludeMetaTags.length > 0) {
