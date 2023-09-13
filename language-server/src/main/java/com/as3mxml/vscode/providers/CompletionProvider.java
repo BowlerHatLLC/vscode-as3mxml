@@ -46,6 +46,7 @@ import org.apache.royale.compiler.definitions.IDefinition;
 import org.apache.royale.compiler.definitions.IEventDefinition;
 import org.apache.royale.compiler.definitions.IFunctionDefinition;
 import org.apache.royale.compiler.definitions.IFunctionDefinition.FunctionClassification;
+import org.apache.royale.compiler.definitions.IVariableDefinition.VariableClassification;
 import org.apache.royale.compiler.definitions.IGetterDefinition;
 import org.apache.royale.compiler.definitions.IInterfaceDefinition;
 import org.apache.royale.compiler.definitions.INamespaceDefinition;
@@ -2058,38 +2059,44 @@ public class CompletionProvider {
         }
         if (definition instanceof IFunctionDefinition) {
             IFunctionDefinition funcDef = (IFunctionDefinition) definition;
-            switch (funcDef.getFunctionClassification()) {
-                case INTERFACE_MEMBER:
-                    priority += 1;
-                    break;
-                case CLASS_MEMBER:
-                    priority += 1;
-                    if (prioritySuperFunction != null
-                            && prioritySuperFunction.getName().equals(funcDef.getBaseName())) {
+            FunctionClassification functionClassification = funcDef.getFunctionClassification();
+            if (functionClassification != null) {
+                switch (functionClassification) {
+                    case INTERFACE_MEMBER:
                         priority += 1;
-                    }
-                    break;
-                case LOCAL:
-                    priority += 2;
-                    break;
-                default:
+                        break;
+                    case CLASS_MEMBER:
+                        priority += 1;
+                        if (prioritySuperFunction != null
+                                && prioritySuperFunction.getName().equals(funcDef.getBaseName())) {
+                            priority += 1;
+                        }
+                        break;
+                    case LOCAL:
+                        priority += 2;
+                        break;
+                    default:
+                }
             }
         } else if (definition instanceof IVariableDefinition) {
             IVariableDefinition varDef = (IVariableDefinition) definition;
-            switch (varDef.getVariableClassification()) {
-                case INTERFACE_MEMBER:
-                    priority += 1;
-                    break;
-                case CLASS_MEMBER:
-                    priority += 1;
-                    break;
-                case PARAMETER:
-                    priority += 2;
-                    break;
-                case LOCAL:
-                    priority += 2;
-                    break;
-                default:
+            VariableClassification variableClassification = varDef.getVariableClassification();
+            if (variableClassification != null) {
+                switch (varDef.getVariableClassification()) {
+                    case INTERFACE_MEMBER:
+                        priority += 1;
+                        break;
+                    case CLASS_MEMBER:
+                        priority += 1;
+                        break;
+                    case PARAMETER:
+                        priority += 2;
+                        break;
+                    case LOCAL:
+                        priority += 2;
+                        break;
+                    default:
+                }
             }
 
         } else if (definition instanceof ITypeDefinition) {
