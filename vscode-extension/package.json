@@ -74,10 +74,16 @@
     "onCommand:as3mxml.quickCompile",
     "onCommand:as3mxml.quickCompileAndDebug",
     "onCommand:as3mxml.quickCompileAndRun",
-    "onCommand:as3mxml.getActiveProjectURIs"
+    "onCommand:as3mxml.getActiveProjectURIs",
+    "onCommand:as3mxml.createNewProject"
   ],
   "contributes": {
     "commands": [
+      {
+        "command": "as3mxml.createNewProject",
+        "title": "Create New Project",
+        "category": "ActionScript"
+      },
       {
         "command": "as3mxml.saveSessionPassword",
         "title": "Save Session Password",

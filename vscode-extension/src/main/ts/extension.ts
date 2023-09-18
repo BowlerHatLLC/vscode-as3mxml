@@ -44,6 +44,7 @@ import quickCompileAndLaunch from "./commands/quickCompileAndLaunch";
 import saveSessionPassword from "./commands/saveSessionPassword";
 import normalizeUri from "./utils/normalizeUri";
 import createActionScriptSDKStatusBarItem from "./utils/createActionScriptSDKStatusBarItem";
+import { createNewProject } from "./commands/createNewProject";
 
 const INVALID_SDK_ERROR =
   "as3mxml.sdk.editor in settings does not point to a valid SDK. Requires Apache Royale 0.9.10 or newer.";
@@ -234,6 +235,12 @@ export function activate(context: vscode.ExtensionContext) {
     })
   );
 
+  savedContext.subscriptions.push(
+    vscode.commands.registerCommand(
+      "as3mxml.createNewProject",
+      createNewProject
+    )
+  );
   savedContext.subscriptions.push(
     vscode.commands.registerCommand(
       "as3mxml.selectWorkspaceSDK",
