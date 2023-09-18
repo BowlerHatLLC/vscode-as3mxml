@@ -69,7 +69,7 @@ export function createNewProject() {
           return;
         }
         try {
-          await createNewProjectAtUri(result.workspaceFolder.uri);
+          await createNewProjectAtUri(result.workspaceFolder.uri, true);
         } catch (e: any) {
           console.error(e);
           vscode.window.showErrorMessage("Project creation failed with error");
@@ -96,7 +96,7 @@ function openEmptyFolderAndCreateNewProject() {
         let result = false;
         const uri = uris[0];
         try {
-          result = await createNewProjectAtUri(uri);
+          result = await createNewProjectAtUri(uri, false);
         } catch (e: any) {
           console.error(e);
           vscode.window.showErrorMessage("Project creation failed with error");
@@ -112,7 +112,10 @@ function openEmptyFolderAndCreateNewProject() {
     );
 }
 
-async function createNewProjectAtUri(uri: vscode.Uri): Promise<boolean> {
+async function createNewProjectAtUri(
+  uri: vscode.Uri,
+  detectExistingSDK: boolean
+): Promise<boolean> {
   const projectRoot = uri.fsPath;
 
   if (fs.readdirSync(projectRoot).length > 0) {
@@ -122,9 +125,12 @@ async function createNewProjectAtUri(uri: vscode.Uri): Promise<boolean> {
     return Promise.resolve(false);
   }
 
-  const sdkSettingValue = vscode.workspace
-    .getConfiguration("as3mxml", uri)
-    .get("sdk.framework") as string | undefined;
+  let sdkSettingValue: string | undefined = undefined;
+  if (detectExistingSDK) {
+    sdkSettingValue = vscode.workspace
+      .getConfiguration("as3mxml", uri)
+      .get("sdk.framework") as string | undefined;
+  }
   const sdkUri = sdkSettingValue
     ? vscode.Uri.file(sdkSettingValue)
     : await selectWorkspaceSDK(false);
