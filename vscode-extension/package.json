@@ -197,6 +197,13 @@
         }
       ]
     },
+    "viewsWelcome": [
+      {
+        "view": "explorer",
+        "contents": "%viewsWelcome.workbench.createNewActionScriptProject%",
+        "when": "workspaceFolderCount == 0"
+      }
+    ],
     "languages": [
       {
         "id": "actionscript",

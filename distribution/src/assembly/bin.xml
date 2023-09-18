@@ -98,6 +98,7 @@
       <outputDirectory>.</outputDirectory>
       <includes>
         <include>package.json</include>
+        <include>package.nls.json</include>
       </includes>
     </fileSet>
     <fileSet>

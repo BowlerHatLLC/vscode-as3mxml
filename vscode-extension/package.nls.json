@@ -1,0 +1,3 @@
+{
+  "viewsWelcome.workbench.createNewActionScriptProject": "You can also create new ActionScript & MXML projects using [Adobe AIR](https://airsdk.dev), [Apache Royale](https://royale.apache.org), [Apache Flex](https://flex.apache.org), and the [Feathers SDK](https://feathersui.com/learn/as3-starling/sdk/).\n[Create ActionScript Project](command:as3mxml.createNewProject)"
+}
