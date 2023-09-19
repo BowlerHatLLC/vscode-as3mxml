@@ -50,6 +50,14 @@ export function createNewProject() {
 
   var items: Array<WorkspaceFolderQuickPickItem> = [];
   for (let workspaceFolder of workspaceFolders) {
+    const asconfigJsonPath = path.resolve(
+      workspaceFolder.uri.fsPath,
+      FILE_ASCONFIG_JSON
+    );
+    if (fs.existsSync(asconfigJsonPath)) {
+      // already contains a project
+      continue;
+    }
     items.push({
       label: workspaceFolder.name,
       detail: workspaceFolder.uri.fsPath,
