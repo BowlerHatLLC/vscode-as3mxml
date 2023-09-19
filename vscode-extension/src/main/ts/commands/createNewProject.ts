@@ -31,6 +31,7 @@ const FILE_EXTENSION_SWF = ".swf";
 
 interface WorkspaceFolderQuickPickItem extends vscode.QuickPickItem {
   workspaceFolder?: vscode.WorkspaceFolder;
+  mode?: "open" | "add";
 }
 
 interface ProjectQuickPickItem {
@@ -43,7 +44,7 @@ interface ProjectQuickPickItem {
 export function createNewProject() {
   var workspaceFolders = vscode.workspace.workspaceFolders;
   if (workspaceFolders == null) {
-    openEmptyFolderAndCreateNewProject();
+    openOrAddFolderAndCreateNewProject(false);
     return;
   }
 
@@ -55,7 +56,8 @@ export function createNewProject() {
       workspaceFolder: workspaceFolder,
     });
   }
-  items.push({ label: "Open Folder…" });
+  items.push({ label: "Open Folder…", mode: "open" });
+  items.push({ label: "Add Folder to Workspace…", mode: "add" });
   vscode.window
     .showQuickPick(items, { title: "Create new project in folder…" })
     .then(
@@ -65,7 +67,7 @@ export function createNewProject() {
           return;
         }
         if (!result.workspaceFolder) {
-          openEmptyFolderAndCreateNewProject();
+          openOrAddFolderAndCreateNewProject(result.mode === "add");
           return;
         }
         try {
@@ -80,7 +82,7 @@ export function createNewProject() {
     );
 }
 
-function openEmptyFolderAndCreateNewProject() {
+function openOrAddFolderAndCreateNewProject(addToWorkspace: boolean) {
   return vscode.window
     .showOpenDialog({
       title: "Open empty folder for new project…",
@@ -96,7 +98,7 @@ function openEmptyFolderAndCreateNewProject() {
         let result = false;
         const uri = uris[0];
         try {
-          result = await createNewProjectAtUri(uri, false);
+          result = await createNewProjectAtUri(uri, addToWorkspace);
         } catch (e: any) {
           console.error(e);
           vscode.window.showErrorMessage("Project creation failed with error");
@@ -105,7 +107,22 @@ function openEmptyFolderAndCreateNewProject() {
         if (!result) {
           return;
         }
-        await vscode.commands.executeCommand("vscode.openFolder", uri);
+        if (addToWorkspace) {
+          if (
+            !vscode.workspace.updateWorkspaceFolders(
+              vscode.workspace.workspaceFolders.length,
+              0,
+              { uri: uri }
+            )
+          ) {
+            vscode.window.showErrorMessage(
+              "Project creation failed. Folder not added to workspace."
+            );
+            return;
+          }
+        } else {
+          await vscode.commands.executeCommand("vscode.openFolder", uri);
+        }
         return;
       },
       (reason) => {}
