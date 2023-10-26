@@ -352,24 +352,33 @@ public class CompletionProvider {
                     }
                     currentNodeForScope = currentNodeForScope.getParent();
                 } while (currentNodeForScope != null);
-
-                return result;
+                // don't return because the function might be an override
+                // and the name can be completed
             }
             if (ASTNodeID.KeywordVarID.equals(keywordNode.getNodeID())
                     || ASTNodeID.KeywordConstID.equals(keywordNode.getNodeID())
                     || ASTNodeID.KeywordClassID.equals(keywordNode.getNodeID())
-                    || ASTNodeID.KeywordInterfaceID.equals(keywordNode.getNodeID())
-                    || ASTNodeID.KeywordGetID.equals(keywordNode.getNodeID())
-                    || ASTNodeID.KeywordSetID.equals(keywordNode.getNodeID())) {
+                    || ASTNodeID.KeywordInterfaceID.equals(keywordNode.getNodeID())) {
                 return result;
             }
         }
-        if (parentNode != null && parentNode instanceof IDefinitionNode && !(parentNode instanceof IPackageNode)) {
+        if (parentNode != null && parentNode instanceof IDefinitionNode) {
             IDefinitionNode defNode = (IDefinitionNode) parentNode;
             if (offsetNode == defNode.getNameExpressionNode()) {
-                // no completion for definition names because names shouldn't
-                // conflict with each other
-                return result;
+                boolean skipCompletion = true;
+                if (defNode instanceof IPackageNode) {
+                    skipCompletion = false;
+                } else if (defNode instanceof IFunctionNode) {
+                    IFunctionNode funcNode = (IFunctionNode) defNode;
+                    if (funcNode.hasModifier(ASModifier.OVERRIDE)) {
+                        skipCompletion = false;
+                    }
+                }
+                if (skipCompletion) {
+                    // no completion for certain definition names where names
+                    // shouldn't conflict with each other
+                    return result;
+                }
             }
         }
 
