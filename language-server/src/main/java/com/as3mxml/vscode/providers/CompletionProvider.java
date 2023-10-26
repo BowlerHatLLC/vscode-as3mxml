@@ -364,7 +364,7 @@ public class CompletionProvider {
                 return result;
             }
         }
-        if (parentNode != null && parentNode instanceof IDefinitionNode) {
+        if (parentNode != null && parentNode instanceof IDefinitionNode && !(parentNode instanceof IPackageNode)) {
             IDefinitionNode defNode = (IDefinitionNode) parentNode;
             if (offsetNode == defNode.getNameExpressionNode()) {
                 // no completion for definition names because names shouldn't
