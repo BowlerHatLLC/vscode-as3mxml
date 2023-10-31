@@ -1,5 +1,19 @@
 # ActionScript & MXML for Visual Studio Code Changelog
 
+## 1.19.0
+
+### New Features
+
+- Commands: Added new _ActionScript: Create New Project_ command to create a project with some simple built-in templates for all supported SDK types, including Apache Flex, Apache Royale, Feathers SDK, and pure ActionScript 3.0 projects.
+- Explorer: When no workspace folders are oepn, a button is displayed in the Explorer to create a new ActionScript project.
+
+### Fixed Issues
+
+- Completion: Improved completion for definition names to avoid unnecessary duplicates.
+- Completion: Fixed occasional null exception when prioritizing member variables and methods.
+- Completion: No longer suggests variable members of interfaces (which are technically parsed, but not allowed to compile).
+- Completion: Fixed range exception when checking if current location is a function parameter of type `Function`.
+
 ## 1.18.0
 
 ### New Features
