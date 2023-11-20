@@ -100,11 +100,14 @@ public class ActionScriptProjectManager {
 
     public void addWorkspaceFolder(WorkspaceFolder folder) {
         workspaceFolders.add(folder);
-        Path projectRoot = Paths.get(URI.create(folder.getUri()));
+        Path projectRoot = LanguageServerCompilerUtils.getPathFromLanguageServerURI(folder.getUri());
+        if (projectRoot == null) {
+            return;
+        }
         try {
             projectRoot = projectRoot.toRealPath();
-        } catch (IOException e) {
-            // didn't seem to work, for some reason
+        } catch (Exception e) {
+            // failure to get canonical path, for some reason
         }
         addProject(projectRoot, folder);
     }

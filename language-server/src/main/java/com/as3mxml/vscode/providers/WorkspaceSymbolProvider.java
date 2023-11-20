@@ -192,7 +192,12 @@ public class WorkspaceSymbolProvider {
 		if (!workspaceSymbol.getLocation().isRight()) {
 			return workspaceSymbol;
 		}
-		URI uri = URI.create(workspaceSymbol.getLocation().getRight().getUri());
+		URI uri = null;
+		try {
+			uri = URI.create(workspaceSymbol.getLocation().getRight().getUri());
+		} catch (Exception e) {
+			return workspaceSymbol;
+		}
 		String query = uri.getQuery();
 		DefinitionURI decodedQuery = DefinitionURI.decode(query, actionScriptProjectManager);
 		IDefinition definition = decodedQuery.definition;

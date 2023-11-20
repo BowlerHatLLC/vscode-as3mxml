@@ -75,7 +75,13 @@ public class LanguageServerCompilerUtils {
         if (apiURI == null) {
             return null;
         }
-        URI uri = URI.create(apiURI);
+        URI uri = null;
+        try {
+            uri = URI.create(apiURI);
+        } catch (Exception e) {
+            // invalid URI
+            return null;
+        }
         Optional<Path> optionalPath = getFilePath(uri);
         if (!optionalPath.isPresent()) {
             if (!apiURI.startsWith("vscode-userdata:/")) {
