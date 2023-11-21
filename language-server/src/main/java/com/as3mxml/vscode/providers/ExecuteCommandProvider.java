@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import org.apache.royale.compiler.definitions.IDefinition;
@@ -64,6 +65,7 @@ import com.as3mxml.vscode.utils.ImportRange;
 import com.as3mxml.vscode.utils.ImportTextEditUtils;
 import com.as3mxml.vscode.utils.LanguageServerCompilerUtils;
 import com.as3mxml.vscode.utils.MXMLDataUtils;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
@@ -80,6 +82,8 @@ public class ExecuteCommandProvider {
     public boolean organizeImports_addMissingImports = true;
     public boolean organizeImports_removeUnusedImports = true;
     public boolean organizeImports_insertNewLineBetweenTopLevelPackages = true;
+
+    public Consumer<String> setPreferredRoyaleTargetCallback = null;
 
     public ExecuteCommandProvider(ActionScriptProjectManager actionScriptProjectManager, FileTracker fileTracker,
             Workspace compilerWorkspace, ActionScriptLanguageClient languageClient, boolean concurrentRequests) {
@@ -118,6 +122,9 @@ public class ExecuteCommandProvider {
             }
             case ICommandConstants.GET_LIBRARY_DEFINITION_TEXT: {
                 return executeGetLibraryDefinitionTextCommand(params);
+            }
+            case ICommandConstants.SET_ROYALE_PREFERRED_TARGET: {
+                return executeSetRoyalePreferredTargetCommand(params);
             }
             default: {
                 System.err.println("Unknown command: " + params.getCommand());
@@ -582,5 +589,18 @@ public class ExecuteCommandProvider {
             return CompletableFuture.completedFuture(errorBuilder.toString());
         }
         return CompletableFuture.completedFuture("// Failed to resolve definition");
+    }
+
+    private CompletableFuture<Object> executeSetRoyalePreferredTargetCommand(ExecuteCommandParams params) {
+        List<Object> args = params.getArguments();
+        JsonElement jsonPreferredTarget = (JsonElement) args.get(0);
+        String preferredTarget = null;
+        if (!jsonPreferredTarget.isJsonNull()) {
+            preferredTarget = jsonPreferredTarget.getAsString();
+        }
+        if (setPreferredRoyaleTargetCallback != null) {
+            setPreferredRoyaleTargetCallback.accept(preferredTarget);
+        }
+        return CompletableFuture.completedFuture(new Object());
     }
 }

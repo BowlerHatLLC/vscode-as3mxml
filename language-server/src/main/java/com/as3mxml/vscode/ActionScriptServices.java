@@ -223,6 +223,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     private boolean sources_organizeImports_insertNewLineBetweenTopLevelPackages = true;
     private boolean format_enabled = true;
     private boolean lint_enabled = false;
+    private String preferredRoyaleTarget = null;
 
     private SimpleProjectConfigStrategy fallbackConfig;
     private CompilerShell compilerShell;
@@ -235,6 +236,17 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         actionScriptProjectManager = new ActionScriptProjectManager(fileTracker, factory,
                 (projectData) -> onAddProject(projectData), (projectData) -> onRemoveProject(projectData));
         updateFrameworkSDK();
+    }
+
+    public void setPreferredRoyaleTarget(String value) {
+        if (preferredRoyaleTarget == null && value == null) {
+            return;
+        }
+        if (preferredRoyaleTarget != null && preferredRoyaleTarget.equals(value)) {
+            return;
+        }
+        preferredRoyaleTarget = value;
+        checkForProblemsNow(true);
     }
 
     public void addWorkspaceFolder(WorkspaceFolder folder) {
@@ -816,6 +828,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         provider.organizeImports_addMissingImports = sources_organizeImports_addMissingImports;
         provider.organizeImports_removeUnusedImports = sources_organizeImports_removeUnusedImports;
         provider.organizeImports_insertNewLineBetweenTopLevelPackages = sources_organizeImports_insertNewLineBetweenTopLevelPackages;
+        provider.setPreferredRoyaleTargetCallback = value -> setPreferredRoyaleTarget(value);
         return provider.executeCommand(params);
     }
 
@@ -1764,7 +1777,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         try {
             Path projectRoot = projectData.projectRoot;
             System.setProperty("user.dir", projectRoot.toString());
-            project = CompilerProjectUtils.createProject(projectOptions, compilerWorkspace);
+            project = CompilerProjectUtils.createProject(projectOptions, compilerWorkspace, preferredRoyaleTarget);
             configurator = CompilerProjectUtils.createConfigurator(project, projectOptions);
         } finally {
             compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);

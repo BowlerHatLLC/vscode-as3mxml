@@ -99,7 +99,20 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
     public CompletableFuture<InitializeResult> initialize(InitializeParams params) {
         actionScriptServices.setClientCapabilities(params.getCapabilities());
         actionScriptServices.setLanguageClient(languageClient);
-        // setting everything above must happen before adding workspace folders
+        boolean supportsSimpleSnippets = false;
+        String preferredRoyaleTarget = null;
+        if (params.getInitializationOptions() != null) {
+            JsonObject initializationOptions = (JsonObject) params.getInitializationOptions();
+            if (initializationOptions.has("supportsSimpleSnippets")) {
+                supportsSimpleSnippets = initializationOptions.get("supportsSimpleSnippets").getAsBoolean();
+            }
+            if (initializationOptions.has("preferredRoyaleTarget")) {
+                preferredRoyaleTarget = initializationOptions.get("preferredRoyaleTarget").getAsString();
+            }
+        }
+        actionScriptServices.setClientSupportsSimpleSnippets(supportsSimpleSnippets);
+        actionScriptServices.setPreferredRoyaleTarget(preferredRoyaleTarget);
+        // setting everything above should happen before adding workspace folders
         List<WorkspaceFolder> folders = params.getWorkspaceFolders();
         if (folders != null) {
             for (WorkspaceFolder folder : params.getWorkspaceFolders()) {
@@ -112,14 +125,6 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
             folder.setUri(params.getRootUri());
             actionScriptServices.addWorkspaceFolder(folder);
         }
-        boolean supportsSimpleSnippets = false;
-        if (params.getInitializationOptions() != null) {
-            JsonObject initializationOptions = (JsonObject) params.getInitializationOptions();
-            if (initializationOptions.has("supportsSimpleSnippets")) {
-                supportsSimpleSnippets = initializationOptions.get("supportsSimpleSnippets").getAsBoolean();
-            }
-        }
-        actionScriptServices.setClientSupportsSimpleSnippets(supportsSimpleSnippets);
 
         InitializeResult result = new InitializeResult();
 
@@ -165,7 +170,8 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
                         ICommandConstants.ORGANIZE_IMPORTS_IN_URI, ICommandConstants.ORGANIZE_IMPORTS_IN_DIRECTORY,
                         ICommandConstants.ADD_MISSING_IMPORTS_IN_URI, ICommandConstants.REMOVE_UNUSED_IMPORTS_IN_URI,
                         ICommandConstants.SORT_IMPORTS_IN_URI, ICommandConstants.QUICK_COMPILE,
-                        ICommandConstants.GET_ACTIVE_PROJECT_URIS, ICommandConstants.GET_LIBRARY_DEFINITION_TEXT));
+                        ICommandConstants.GET_ACTIVE_PROJECT_URIS, ICommandConstants.GET_LIBRARY_DEFINITION_TEXT,
+                        ICommandConstants.SET_ROYALE_PREFERRED_TARGET));
         serverCapabilities.setExecuteCommandProvider(executeCommandOptions);
 
         result.setCapabilities(serverCapabilities);

@@ -55,7 +55,8 @@ public class CompilerProjectUtils {
 
     private static final String PROPERTY_FRAMEWORK_LIB = "royalelib";
 
-    public static ILspProject createProject(ProjectOptions currentProjectOptions, Workspace compilerWorkspace) {
+    public static ILspProject createProject(ProjectOptions currentProjectOptions, Workspace compilerWorkspace,
+            String preferredRoyaleTarget) {
         Path frameworkLibPath = Paths.get(System.getProperty(PROPERTY_FRAMEWORK_LIB));
         boolean frameworkSDKIsRoyale = ActionScriptSDKUtils.isRoyaleFramework(frameworkLibPath);
 
@@ -73,15 +74,18 @@ public class CompilerProjectUtils {
         // specified. if it is, we definitely have a Royale project. we'll
         // use the first target value as the indicator of what the user
         // thinks is most important for code intelligence (native JS classes
-        // or native SWF classes?)
+        // or native SWF classes?) unless preferredTarget is set
         // this isn't ideal because it would be better if we could provide
         // code intelligence for all targets simultaneously, but this is a
         // limitation that we need to live with, for now.
         List<String> targets = currentProjectOptions.targets;
         if (targets != null && targets.size() > 0) {
+            String targetNameToFind = targets.get(0);
+            if (preferredRoyaleTarget != null && targets.contains(preferredRoyaleTarget)) {
+                targetNameToFind = preferredRoyaleTarget;
+            }
             // first, check if any targets are specified
-            String firstTarget = targets.get(0);
-            switch (MXMLJSC.JSTargetType.fromString(firstTarget)) {
+            switch (MXMLJSC.JSTargetType.fromString(targetNameToFind)) {
                 case SWF: {
                     // no backend. fall back to RoyaleProject.
                     backend = null;
