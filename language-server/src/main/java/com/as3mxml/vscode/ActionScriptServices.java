@@ -2632,9 +2632,6 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             return;
         }
         VSCodeFormatterConfiguration.mxmlInsertNewLineBetweenAttributes = newFormatMxmlInsertNewLineBetweenAttributes;
-        System.err
-                .println("*** set mxmlInsertNewLineBetweenAttributes: "
-                        + VSCodeFormatterConfiguration.mxmlInsertNewLineBetweenAttributes);
     }
 
     private void updateFormatInsertSpaceAtStartOfLineComment(JsonObject settings) {
