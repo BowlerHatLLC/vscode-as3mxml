@@ -233,7 +233,7 @@ async function createNewProjectAtUri(
 
   const settingsJsonPath = path.resolve(vscodePath, FILE_SETTINGS_JSON);
   const settingsJsonContents = `{
-	"as3mxml.sdk.framework": "${sdkPath}"
+	"as3mxml.sdk.framework": "${sdkPath.replace(/\\/g, "\\\\")}"
 }`;
   fs.writeFileSync(settingsJsonPath, settingsJsonContents, {
     encoding: "utf8",
