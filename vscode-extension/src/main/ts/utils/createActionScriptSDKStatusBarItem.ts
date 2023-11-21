@@ -1,5 +1,5 @@
 /*
-Copyright 2016-2021 Bowler Hat LLC
+Copyright 2016-2023 Bowler Hat LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ export default function createActionScriptSDKStatusBarItem(): vscode.StatusBarIt
     99
   );
   statusBarItem.command = "as3mxml.selectWorkspaceSDK";
-  vscode.window.onDidChangeActiveTextEditor((editor) => {
+  vscode.window.onDidChangeVisibleTextEditors((e) => {
     refreshStatusBarItemVisibility(statusBarItem);
   });
   refreshStatusBarItemVisibility(statusBarItem);
@@ -34,18 +34,17 @@ export default function createActionScriptSDKStatusBarItem(): vscode.StatusBarIt
 }
 
 function refreshStatusBarItemVisibility(statusBarItem: vscode.StatusBarItem) {
-  if (vscode.window.activeTextEditor === undefined) {
-    statusBarItem.hide();
-    return;
-  }
-  var fileName = vscode.window.activeTextEditor.document.fileName;
-  fileName = path.basename(fileName);
-  if (
-    !fileName.endsWith(FILE_EXTENSION_AS) &&
-    !fileName.endsWith(FILE_EXTENSION_MXML) &&
-    fileName !== FILE_NAME_ASCONFIG_JSON &&
-    !/^asconfig\.\w+\.json$/.test(fileName)
-  ) {
+  const textEditor = vscode.window.visibleTextEditors.find((textEditor) => {
+    var fileName = textEditor.document.fileName;
+    fileName = path.basename(fileName);
+    return (
+      fileName.endsWith(FILE_EXTENSION_AS) ||
+      fileName.endsWith(FILE_EXTENSION_MXML) ||
+      fileName === FILE_NAME_ASCONFIG_JSON ||
+      /^asconfig\.\w+\.json$/.test(fileName)
+    );
+  });
+  if (!textEditor) {
     statusBarItem.hide();
     return;
   }
