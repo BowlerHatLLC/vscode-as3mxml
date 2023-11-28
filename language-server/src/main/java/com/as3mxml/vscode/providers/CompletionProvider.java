@@ -2186,15 +2186,37 @@ public class CompletionProvider {
             item.setInsertTextFormat(InsertTextFormat.Snippet);
             item.setInsertText(escapedDefinitionBaseName + "=\"$0\"");
         } else if (!isAttribute) {
-            if (definition instanceof ITypeDefinition && includeOpenTagPrefix && prefix != null
-                    && prefix.length() > 0) {
-                StringBuilder labelBuilder = new StringBuilder();
-                labelBuilder.append(prefix);
-                labelBuilder.append(IMXMLCoreConstants.colon);
-                labelBuilder.append(definitionBaseName);
-                item.setLabel(labelBuilder.toString());
-                item.setSortText(definitionBaseName);
-                item.setFilterText(definitionBaseName);
+            if (definition instanceof ITypeDefinition) {
+                if (includeOpenTagPrefix && prefix != null && prefix.length() > 0) {
+                    StringBuilder labelBuilder = new StringBuilder();
+                    labelBuilder.append(prefix);
+                    labelBuilder.append(IMXMLCoreConstants.colon);
+                    labelBuilder.append(definitionBaseName);
+                    item.setLabel(labelBuilder.toString());
+                    item.setFilterText(definitionBaseName);
+                }
+
+                int priority = 0;
+                if (offsetTag != null && uri != null && prefix != null) {
+                    PrefixMap compositePrefixMap = offsetTag.getCompositePrefixMap();
+                    if (uri.equals(compositePrefixMap.getNamespaceForPrefix(prefix))) {
+                        // prefer namespaces that are explicitly declared already
+                        priority += 1;
+                    }
+                    IMXMLTagData rootTag = offsetTag.getParent().getRootTag();
+                    if (rootTag != null && uri.equals(rootTag.getURI())) {
+                        // prefer the root tag's namespace
+                        // especially useful for Royale's many component sets,
+                        // but also for Flex's Spark and MX
+                        priority += 1;
+                    }
+                }
+                if (priority > 0) {
+                    // if we ever target JDK 11, use repeat() instead
+                    item.setSortText(String.join("", Collections.nCopies(3 + priority, "0")) + definitionBaseName);
+                } else {
+                    item.setSortText(definitionBaseName);
+                }
             }
             StringBuilder insertTextBuilder = new StringBuilder();
             if (includeOpenTagBracket) {
