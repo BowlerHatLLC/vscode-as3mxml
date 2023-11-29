@@ -1150,7 +1150,6 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                 List<ActionScriptProjectData> allProjectData = actionScriptProjectManager
                         .getAllProjectDataForSourceFile(changedPath);
                 if (changeType.equals(FileChangeType.Deleted) ||
-
                 // this is weird, but it's possible for a renamed file to
                 // result in a Changed event, but not a Deleted event
                         (changeType.equals(FileChangeType.Changed) && !changedPath.toFile().exists())) {
@@ -1171,6 +1170,20 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                     compilerWorkspace.fileChanged(fileSpec);
                     foldersToCheck.addAll(allProjectData);
                 }
+                // if a project hasn't initialized properly, creating or
+                // deleting source files may fix it
+                if (event.getType().equals(FileChangeType.Created)
+                        || event.getType().equals(FileChangeType.Deleted)
+                        || (changeType.equals(FileChangeType.Changed) && !changedPath.toFile().exists())) {
+                    for (ActionScriptProjectData projectData : actionScriptProjectManager.getAllProjectData()) {
+                        ProjectOptions projectOptions = projectData.options;
+                        if (projectOptions == null || projectOptions.files == null
+                                || projectOptions.files.length == 0) {
+                            projectData.config.forceChanged();
+                            foldersToCheck.add(projectData);
+                        }
+                    }
+                }
             } else if (changeType.equals(FileChangeType.Created) && java.nio.file.Files.isDirectory(changedPath)) {
                 try {
                     java.nio.file.Files.walkFileTree(changedPath, new SimpleFileVisitor<Path>() {
@@ -1189,6 +1202,20 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                 } catch (IOException e) {
                     System.err.println("Failed to walk added path: " + changedPath.toString());
                     e.printStackTrace(System.err);
+                }
+                // if a project hasn't initialized properly, creating or
+                // deleting directories may fix it
+                if (event.getType().equals(FileChangeType.Created)
+                        || event.getType().equals(FileChangeType.Deleted)
+                        || (changeType.equals(FileChangeType.Changed) && !changedPath.toFile().exists())) {
+                    for (ActionScriptProjectData projectData : actionScriptProjectManager.getAllProjectData()) {
+                        ProjectOptions projectOptions = projectData.options;
+                        if (projectOptions == null || projectOptions.files == null
+                                || projectOptions.files.length == 0) {
+                            projectData.config.forceChanged();
+                            foldersToCheck.add(projectData);
+                        }
+                    }
                 }
             } else if (changeType.equals(FileChangeType.Deleted)) {
                 // we don't get separate didChangeWatchedFiles notifications for
