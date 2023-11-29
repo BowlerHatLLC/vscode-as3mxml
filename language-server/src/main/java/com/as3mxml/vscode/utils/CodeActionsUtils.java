@@ -191,8 +191,11 @@ public class CodeActionsUtils {
         Matcher importMatcher = importPattern.matcher(fileText);
         importMatcher.region(startIndex, endIndex);
         while (importMatcher.find()) {
-            indent = importMatcher.group(1);
-            importIndex = importMatcher.start();
+            if (!ASTUtils.isInActionScriptComment(fileText, importMatcher.start(), 0)) {
+                // this is a real import that is not in a comment
+                indent = importMatcher.group(1);
+                importIndex = importMatcher.start();
+            }
         }
         Position position = null;
         if (importIndex != -1) // found existing imports
@@ -209,8 +212,17 @@ public class CodeActionsUtils {
                 // start by looking for the package block
                 Matcher packageMatcher = packagePattern.matcher(fileText);
                 packageMatcher.region(startIndex, endIndex);
-                if (packageMatcher.find()) // found the package
-                {
+                boolean foundPackage = packageMatcher.find();
+                while (foundPackage) {
+                    if (ASTUtils.isInActionScriptComment(fileText, packageMatcher.start(), 0)) {
+                        // keep searching because it's in a comment
+                        foundPackage = packageMatcher.find();
+                        continue;
+                    }
+                    // this is a real package that isn't in a comment
+                    break;
+                }
+                if (foundPackage) {
                     position = LanguageServerCompilerUtils.getPositionFromOffset(new StringReader(fileText),
                             packageMatcher.end());
                     if (position.getCharacter() > 0) {

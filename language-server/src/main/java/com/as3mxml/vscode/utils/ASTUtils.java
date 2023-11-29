@@ -724,6 +724,11 @@ public class ASTUtils {
         return result + "." + identifierNode.getName();
     }
 
+    public static boolean isInActionScriptComment(String code, int currentOffset,
+            int minCommentStartIndex) {
+        return isInActionScriptComment(null, code, currentOffset, minCommentStartIndex);
+    }
+
     private static boolean isInActionScriptComment(IASNode offsetNode, String code, int currentOffset,
             int minCommentStartIndex) {
         if (offsetNode != null && offsetNode.isTerminal()) {
@@ -734,7 +739,19 @@ public class ASTUtils {
             startComment = -1;
         }
         if (startComment != -1) {
-            if (offsetNode != null && startComment > offsetNode.getAbsoluteStart()) {
+            if (offsetNode == null) {
+                int endComment = code.indexOf("*/", startComment);
+                if (endComment == -1) {
+                    endComment = code.length();
+                }
+                if (startComment < currentOffset && endComment >= currentOffset
+                        && !isInSingleLineComment(code, endComment, minCommentStartIndex)) {
+                    // start and end are both the same node as the offset
+                    // node, and neither is inside single line comments,
+                    // so we're probably inside a multiline comment
+                    return true;
+                }
+            } else if (startComment > offsetNode.getAbsoluteStart()) {
                 IASNode commentNode = getContainingNodeIncludingStart(offsetNode, startComment + 1);
                 if (offsetNode.equals(commentNode)
                         && !isInSingleLineComment(code, startComment, minCommentStartIndex)) {
