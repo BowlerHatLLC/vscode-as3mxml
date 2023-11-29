@@ -48,27 +48,30 @@ public class ConfigUtils {
 		if (sourcePaths != null) {
 			for (String sourcePath : sourcePaths) {
 				Path sourcePathPath = Paths.get(sourcePath);
-				Path mainClassPath = sourcePathPath.resolve(mainClassBasePath + FILE_EXTENSION_AS);
-				if (!mainClassPath.isAbsolute() && rootWorkspacePath != null) {
-					mainClassPath = Paths.get(rootWorkspacePath).resolve(mainClassPath);
+				Path mainClassPathAS = sourcePathPath.resolve(mainClassBasePath + FILE_EXTENSION_AS);
+				if (!mainClassPathAS.isAbsolute() && rootWorkspacePath != null) {
+					mainClassPathAS = Paths.get(rootWorkspacePath).resolve(mainClassPathAS);
 				}
-				if (mainClassPath.toFile().exists()) {
-					return mainClassPath.toString();
+				if (mainClassPathAS.toFile().exists()) {
+					return mainClassPathAS.toString();
 				}
-				mainClassPath = sourcePathPath.resolve(mainClassBasePath + FILE_EXTENSION_MXML);
-				if (mainClassPath.toFile().exists()) {
-					return mainClassPath.toString();
+				Path mainClassPathMXML = sourcePathPath.resolve(mainClassBasePath + FILE_EXTENSION_MXML);
+				if (!mainClassPathMXML.isAbsolute() && rootWorkspacePath != null) {
+					mainClassPathMXML = Paths.get(rootWorkspacePath).resolve(mainClassPathMXML);
+				}
+				if (mainClassPathMXML.toFile().exists()) {
+					return mainClassPathMXML.toString();
 				}
 			}
 		}
 		// as a final fallback, try in the current working directory
-		Path mainClassPath = Paths.get(mainClassBasePath + FILE_EXTENSION_AS);
-		if (mainClassPath.toFile().exists()) {
-			return mainClassPath.toString();
+		Path mainClassPathAS = Paths.get(mainClassBasePath + FILE_EXTENSION_AS);
+		if (mainClassPathAS.toFile().exists()) {
+			return mainClassPathAS.toString();
 		}
-		mainClassPath = Paths.get(mainClassBasePath + FILE_EXTENSION_MXML);
-		if (mainClassPath.toFile().exists()) {
-			return mainClassPath.toString();
+		Path mainClassPathMXML = Paths.get(mainClassBasePath + FILE_EXTENSION_MXML);
+		if (mainClassPathMXML.toFile().exists()) {
+			return mainClassPathMXML.toString();
 		}
 		return null;
 	}
