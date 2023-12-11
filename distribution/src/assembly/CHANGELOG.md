@@ -1,11 +1,27 @@
 # ActionScript & MXML for Visual Studio Code Changelog
 
+## 1.20.0
+
+### New Features
+
+- Royale: When developing a project that supports both JS and SWF targets, a new status bar item allows easy switching between `COMPILE::JS` and `COMPILE:SWF` conditional compilation values by allowing a preferred value from the `targets` compiler option to be selected.
+- Completion: Improved sorting for MXML tag completion to give higher priority to existing declared namespaces and to member variables or properties, similar to how AS3 imports and members get higher priority already.
+
+### Fixed Issues
+
+- Build: Fixed resolution of `mainClass` when _asconfig.json_ is not in the workspace root.
+- Completion: Fixed issue where imports might be incorrectly added inside a comment at the top of a file if the comment contains what appears to be the start of a `package` block or another `import` statement.
+- General: Fixed project initialization if the `mainClass` or a directory from the `source-path` compiler option doesn't exist yet.
+- General: ActionScript SDK status bar item remains visible if any _visible_ editor contains a file of type _.as_, _.mxml_ or _asconfig.json_ file. Previously, it was based on the currently active editor only, which could cause the status bar item to be hidden if the terminal or another view received active focus.
+- Project: When creating a new project on Windows, fixed invalid JSON contents of _settings.json_ for SDK path containing backslashes.
+- General: Fixed `FileSystemNotFoundException` when opening a file URI with an unrecognized protocol, such as _vsls:_.
+
 ## 1.19.0
 
 ### New Features
 
 - Commands: Added new _ActionScript: Create New Project_ command to create a project with some simple built-in templates for all supported SDK types, including Apache Flex, Apache Royale, Feathers SDK, and pure ActionScript 3.0 projects.
-- Explorer: When no workspace folders are oepn, a button is displayed in the Explorer to create a new ActionScript project.
+- Explorer: When no workspace folders are open, a button is displayed in the Explorer to create a new ActionScript project.
 
 ### Fixed Issues
 
