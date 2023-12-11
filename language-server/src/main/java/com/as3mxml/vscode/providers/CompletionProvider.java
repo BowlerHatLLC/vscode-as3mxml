@@ -2186,7 +2186,34 @@ public class CompletionProvider {
             item.setInsertTextFormat(InsertTextFormat.Snippet);
             item.setInsertText(escapedDefinitionBaseName + "=\"$0\"");
         } else if (!isAttribute) {
-            if (definition instanceof ITypeDefinition) {
+            if (definition instanceof IVariableDefinition) {
+                // start with priority 2 to be higher than the extra boost that
+                // types get from matching namespaces
+                int priority = 2;
+                IVariableDefinition varDef = (IVariableDefinition) definition;
+                VariableClassification variableClassification = varDef.getVariableClassification();
+                if (variableClassification != null) {
+                    switch (varDef.getVariableClassification()) {
+                        case INTERFACE_MEMBER:
+                            priority += 1;
+                            break;
+                        case CLASS_MEMBER:
+                            priority += 1;
+                            break;
+                        case PARAMETER:
+                            priority += 2;
+                            break;
+                        case LOCAL:
+                            priority += 2;
+                            break;
+                        default:
+                    }
+                }
+                if (priority > 0) {
+                    // if we ever target JDK 11, use repeat() instead
+                    item.setSortText(String.join("", Collections.nCopies(3 + priority, "0")) + definitionBaseName);
+                }
+            } else if (definition instanceof ITypeDefinition) {
                 if (includeOpenTagPrefix && prefix != null && prefix.length() > 0) {
                     StringBuilder labelBuilder = new StringBuilder();
                     labelBuilder.append(prefix);
