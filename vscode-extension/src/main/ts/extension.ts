@@ -13,38 +13,38 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-import findJava from "./utils/findJava";
-import validateJava from "./utils/validateJava";
-import validateEditorSDK from "./utils/validateEditorSDK";
-import ActionScriptSourcePathDataProvider, {
-  ActionScriptSourcePath,
-} from "./utils/ActionScriptSourcePathDataProvider";
-import ActionScriptTaskProvider from "./utils/ActionScriptTaskProvider";
-import AnimateTaskProvider from "./utils/AnimateTaskProvider";
-import SWCTextDocumentContentProvider from "./utils/SWCTextDocumentContentProvider";
-import getJavaClassPathDelimiter from "./utils/getJavaClassPathDelimiter";
-import findSDKShortName from "./utils/findSDKShortName";
-import getFrameworkSDKPathWithFallbacks from "./utils/getFrameworkSDKPathWithFallbacks";
-import selectWorkspaceSDK from "./commands/selectWorkspaceSDK";
-import {
-  pickProjectInWorkspace,
-  checkForProjectsToImport,
-} from "./commands/importProject";
 import * as fs from "fs";
 import * as path from "path";
 import * as vscode from "vscode";
 import {
+  Executable,
   LanguageClient,
   LanguageClientOptions,
-  Executable,
-  ExecutableOptions,
 } from "vscode-languageclient/node";
+import { createNewProject } from "./commands/createNewProject";
+import {
+  checkForProjectsToImport,
+  pickProjectInWorkspace,
+} from "./commands/importProject";
 import logCompilerShellOutput from "./commands/logCompilerShellOutput";
 import quickCompileAndLaunch from "./commands/quickCompileAndLaunch";
 import saveSessionPassword from "./commands/saveSessionPassword";
-import normalizeUri from "./utils/normalizeUri";
+import selectWorkspaceSDK from "./commands/selectWorkspaceSDK";
+import ActionScriptSourcePathDataProvider from "./utils/ActionScriptSourcePathDataProvider";
+import ActionScriptTaskProvider from "./utils/ActionScriptTaskProvider";
+import AnimateTaskProvider from "./utils/AnimateTaskProvider";
+import SWCTextDocumentContentProvider from "./utils/SWCTextDocumentContentProvider";
 import createActionScriptSDKStatusBarItem from "./utils/createActionScriptSDKStatusBarItem";
-import { createNewProject } from "./commands/createNewProject";
+import createRoyaleTargetStatusBarItem from "./utils/createRoyaleTargetStatusBarItem";
+import findJava from "./utils/findJava";
+import findSDKShortName from "./utils/findSDKShortName";
+import getFrameworkSDKPathWithFallbacks from "./utils/getFrameworkSDKPathWithFallbacks";
+import getJavaClassPathDelimiter from "./utils/getJavaClassPathDelimiter";
+import normalizeUri from "./utils/normalizeUri";
+import validateEditorSDK from "./utils/validateEditorSDK";
+import validateJava from "./utils/validateJava";
+import selectRoyalePreferredTarget from "./commands/selectRoyalePreferredTarget";
+import getRoyalePreferredTarget from "./utils/getRoyalePreferredTarget";
 
 const INVALID_SDK_ERROR =
   "as3mxml.sdk.editor in settings does not point to a valid SDK. Requires Apache Royale 0.9.10 or newer.";
@@ -71,6 +71,7 @@ let editorSDKHome: string;
 let javaExecutablePath: string;
 let frameworkSDKHome: string;
 let sdkStatusBarItem: vscode.StatusBarItem;
+let royaleTargetStatusBarItem: vscode.StatusBarItem;
 let pendingQuickCompileAndDebug = false;
 let pendingQuickCompileAndRun = false;
 
@@ -135,6 +136,10 @@ function updateSDKStatusBarItem() {
   }
   sdkStatusBarItem.text = sdkShortName;
   sdkStatusBarItem.tooltip = frameworkSDKHome;
+}
+
+function updateRoyaleTargetStatusBarItem() {
+  royaleTargetStatusBarItem.text = getRoyalePreferredTarget(savedContext);
 }
 
 function restartServer() {
@@ -245,6 +250,19 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand(
       "as3mxml.selectWorkspaceSDK",
       selectWorkspaceSDK
+    )
+  );
+  savedContext.subscriptions.push(
+    vscode.commands.registerCommand(
+      "as3mxml.selectRoyalePreferredTarget",
+      async () => {
+        await selectRoyalePreferredTarget(savedContext);
+        updateRoyaleTargetStatusBarItem();
+        vscode.commands.executeCommand(
+          "as3mxml.setRoyalePreferredTarget",
+          getRoyalePreferredTarget(savedContext)
+        );
+      }
     )
   );
   savedContext.subscriptions.push(
@@ -379,6 +397,8 @@ export function activate(context: vscode.ExtensionContext) {
 
   sdkStatusBarItem = createActionScriptSDKStatusBarItem();
   updateSDKStatusBarItem();
+  royaleTargetStatusBarItem = createRoyaleTargetStatusBarItem();
+  updateRoyaleTargetStatusBarItem();
 
   context.subscriptions.push(
     vscode.tasks.registerTaskProvider(
@@ -482,6 +502,9 @@ function startClient() {
             //this is just the default behavior, but we need to define both
             protocol2Code: (value) => vscode.Uri.parse(value),
           },
+          initializationOptions: {
+            preferredRoyaleTarget: getRoyalePreferredTarget(savedContext),
+          },
         };
         let cpDelimiter = getJavaClassPathDelimiter();
         let cp = path.resolve(savedContext.extensionPath, "bin", "*");
@@ -569,6 +592,10 @@ function startClient() {
           () => {
             logCompilerShellOutput(null, false, true);
           }
+        );
+        vscode.commands.executeCommand(
+          "as3mxml.setRoyalePreferredTarget",
+          getRoyalePreferredTarget(savedContext)
         );
         if (pendingQuickCompileAndDebug) {
           vscode.commands.executeCommand("as3mxml.quickCompileAndDebug");

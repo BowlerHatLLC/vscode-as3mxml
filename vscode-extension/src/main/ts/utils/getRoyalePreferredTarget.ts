@@ -19,7 +19,8 @@ import validateRoyale from "./validateRoyale";
 import getFrameworkSDKPathWithFallbacks from "./getFrameworkSDKPathWithFallbacks";
 
 const ROYALE_PREFERRED_TARGET = "as3mxml.royale.preferredTarget";
-const DEFAULT_TARGET_JS = "JSRoyale";
+const TARGET_JS_ROYALE = "JSRoyale";
+const TARGET_SWF = "SWF";
 
 export default function getRoyalePreferredTarget(
   context: vscode.ExtensionContext
@@ -27,7 +28,8 @@ export default function getRoyalePreferredTarget(
   if (!validateRoyale(getFrameworkSDKPathWithFallbacks())) {
     // not royale, so clear the preferred target
     context.workspaceState.update(ROYALE_PREFERRED_TARGET, undefined);
-    return;
+    // if it's not Royale, then the
+    return TARGET_SWF;
   }
 
   const savedPreferredTarget = context.workspaceState.get(
@@ -43,9 +45,9 @@ export default function getRoyalePreferredTarget(
   }
 
   let newTarget: string;
-  if (allWorkspaceTargets.has(DEFAULT_TARGET_JS)) {
+  if (allWorkspaceTargets.has(TARGET_JS_ROYALE)) {
     // prefer JSRoyale
-    newTarget = DEFAULT_TARGET_JS;
+    newTarget = TARGET_JS_ROYALE;
   } else {
     // otherwise, try to find any JS target
     for (let availableTarget of allWorkspaceTargets) {
@@ -61,7 +63,7 @@ export default function getRoyalePreferredTarget(
   }
   if (!newTarget) {
     // this shouldn't happen, but just to be safe
-    newTarget = DEFAULT_TARGET_JS;
+    newTarget = TARGET_JS_ROYALE;
   }
   if (savedPreferredTarget) {
     // if the saved target is no longer available, clear the preference

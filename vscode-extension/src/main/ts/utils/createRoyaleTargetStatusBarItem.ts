@@ -29,6 +29,7 @@ export default function createRoyaleTargetStatusBarItem(): vscode.StatusBarItem 
   );
   statusBarItem.tooltip = "Set Preferred Royale Target";
   statusBarItem.command = "as3mxml.selectRoyalePreferredTarget";
+  statusBarItem.text = "SWF";
   vscode.workspace.onDidChangeConfiguration((e) => {
     if (
       e.affectsConfiguration("as3mxml.sdk.framework") ||
