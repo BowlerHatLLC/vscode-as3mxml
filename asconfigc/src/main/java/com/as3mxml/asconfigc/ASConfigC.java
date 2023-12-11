@@ -564,7 +564,7 @@ public class ASConfigC {
 			// if set already, clear it because we're going to replace it
 			boolean hadMainFile = mainFile != null;
 			String mainClass = json.get(TopLevelFields.MAIN_CLASS).asText();
-			mainFile = ConfigUtils.resolveMainClass(mainClass, sourcePaths);
+			mainFile = ConfigUtils.resolveMainClass(mainClass, sourcePaths, System.getProperty("user.dir"));
 			if (mainFile == null) {
 				throw new ASConfigCException("Main class not found in source paths: " + mainClass);
 			}

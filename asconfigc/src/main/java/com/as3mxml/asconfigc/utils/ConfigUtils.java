@@ -66,10 +66,16 @@ public class ConfigUtils {
 		}
 		// as a final fallback, try in the current working directory
 		Path mainClassPathAS = Paths.get(mainClassBasePath + FILE_EXTENSION_AS);
+		if (!mainClassPathAS.isAbsolute() && rootWorkspacePath != null) {
+			mainClassPathAS = Paths.get(rootWorkspacePath).resolve(mainClassPathAS);
+		}
 		if (mainClassPathAS.toFile().exists()) {
 			return mainClassPathAS.toString();
 		}
 		Path mainClassPathMXML = Paths.get(mainClassBasePath + FILE_EXTENSION_MXML);
+		if (!mainClassPathMXML.isAbsolute() && rootWorkspacePath != null) {
+			mainClassPathMXML = Paths.get(rootWorkspacePath).resolve(mainClassPathMXML);
+		}
 		if (mainClassPathMXML.toFile().exists()) {
 			return mainClassPathMXML.toString();
 		}
