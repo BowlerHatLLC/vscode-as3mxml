@@ -375,9 +375,9 @@ function createAsconfigJsonRoyale(mainClassName: string): string {
   return `{
 	"config": "royale",
 	"compilerOptions": {
-    "targets": [
-      "JSRoyale"
-    ],
+		"targets": [
+			"JSRoyale"
+		],
 		"source-path": [
 			"src"
 		],
@@ -456,7 +456,7 @@ function createSourceFilesFlexDesktop(srcPath: string, mainClassName: string) {
 		<!-- Place non-visual elements (e.g., services, value objects) here -->
 	</fx:Declarations>
 
-  <s:Label text="Hello, Flex!"/>
+	<s:Label text="Hello, Flex!"/>
 </s:WindowedApplication>
 `;
   const mainClassOutputPath = path.resolve(
@@ -497,7 +497,7 @@ function createSourceFilesFlexMobile(srcPath: string, mainClassName: string) {
 		<!-- Place non-visual elements (e.g., services, value objects) here -->
 	</fx:Declarations>
 
-  <s:Label text="Hello, Flex Mobile!"/>
+	<s:Label text="Hello, Flex Mobile!"/>
 </s:View>
 `;
   const homeViewClassOutputPath = path.resolve(
@@ -520,7 +520,7 @@ function createSourceFilesRoyaleBasic(srcPath: string, mainClassName: string) {
 		<js:SimpleCSSValuesImpl/>
 	</js:valuesImpl>
 
-  <js:initialView>
+	<js:initialView>
 		<js:View>
 			<js:Label text="Hello, Apache Royale!"/>
 		</js:View>
@@ -550,7 +550,7 @@ function createSourceFilesFeathers(srcPath: string, mainClassName: string) {
 		<!-- Place non-visual elements (e.g., services, value objects) here -->
 	</fx:Declarations>
 
-  <f:Label text="Hello, Feathers!"/>
+	<f:Label text="Hello, Feathers!"/>
 </f:Application>
 `;
   const mainClassOutputPath = path.resolve(
