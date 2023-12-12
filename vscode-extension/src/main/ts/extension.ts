@@ -183,6 +183,22 @@ export function activate(context: vscode.ExtensionContext) {
   savedContext.subscriptions.push(
     vscode.workspace.onDidChangeConfiguration(onDidChangeConfiguration)
   );
+  savedContext.subscriptions.push(
+    vscode.workspace.onDidSaveTextDocument((textDocument) => {
+      if (!savedLanguageClient || !isLanguageClientReady) {
+        return;
+      }
+      const fileName = path.basename(textDocument.fileName);
+      if (fileName !== ASCONFIG_JSON) {
+        return;
+      }
+      updateRoyaleTargetStatusBarItem();
+      vscode.commands.executeCommand(
+        "as3mxml.setRoyalePreferredTarget",
+        getRoyalePreferredTarget(savedContext)
+      );
+    })
+  );
 
   savedContext.subscriptions.push(
     vscode.languages.setLanguageConfiguration("actionscript", {
