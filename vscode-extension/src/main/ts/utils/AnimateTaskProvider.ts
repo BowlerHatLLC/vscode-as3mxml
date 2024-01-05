@@ -1,5 +1,5 @@
 /*
-Copyright 2016-2021 Bowler Hat LLC
+Copyright 2016-2024 Bowler Hat LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -39,7 +39,8 @@ interface AnimateTaskDefinition extends vscode.TaskDefinition {
 
 export default class ActionScriptTaskProvider
   extends BaseAsconfigTaskProvider
-  implements vscode.TaskProvider {
+  implements vscode.TaskProvider
+{
   protected provideTasksForASConfigJSON(
     jsonURI: vscode.Uri,
     workspaceFolder: vscode.WorkspaceFolder,

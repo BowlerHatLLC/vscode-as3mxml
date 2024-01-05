@@ -1,5 +1,5 @@
 /*
-Copyright 2016-2021 Bowler Hat LLC
+Copyright 2016-2024 Bowler Hat LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,8 +17,10 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vscode from "vscode";
 
-const ANIMATE_PATH_WINDOWS_REGEXP = /^c:\\Program Files( \(x86\))?\\Adobe\\Adobe (Animate|Flash) [\w \.]+$/i;
-const ANIMATE_PATH_MACOS_REGEXP = /^\/Applications\/Adobe (Animate|Flash) [\w \.]+$/i;
+const ANIMATE_PATH_WINDOWS_REGEXP =
+  /^c:\\Program Files( \(x86\))?\\Adobe\\Adobe (Animate|Flash) [\w \.]+$/i;
+const ANIMATE_PATH_MACOS_REGEXP =
+  /^\/Applications\/Adobe (Animate|Flash) [\w \.]+$/i;
 const ANIMATE_APP_MACOS_REGEXP = /^Adobe (Animate|Flash) [\w \.]+\.app$/i;
 
 const APPLICATIONS_MACOS = "/Applications";
