@@ -327,22 +327,44 @@ function createAirDescriptor(
     encoding: "utf8",
   });
   // (?!\s*-->) ignores lines that are commented out
+
+  // set <content> value, if it isn't commented out
   descriptorContents = descriptorContents.replace(
     /<content>.*<\/content>(?!\s*-->)/,
     `<content>${swfFileName}</content>`
   );
+  // set <id> value, if it isn't commented out
   descriptorContents = descriptorContents.replace(
     /<id>.*<\/id>(?!\s*-->)/,
     `<id>${applicationId}</id>`
   );
+  // set <filename> value, if it isn't commented out
   descriptorContents = descriptorContents.replace(
     /<filename>.*<\/filename>(?!\s*-->)/,
     `<filename>${fileName}</filename>`
   );
-  if (!projectType.flex && !projectType.royale && !projectType.feathers) {
+  // set <visible> to true, if it isn't already populated
+  // (AIR-only; other SDKs handle it automatically)
+  if (
+    !projectType.flex &&
+    !projectType.royale &&
+    !projectType.feathers &&
+    !/<visible>.*<\/visible>(?!\s*-->)/.test(descriptorContents)
+  ) {
     descriptorContents = descriptorContents.replace(
       /<!-- <visible><\/visible> -->/,
       `<visible>true</visible>`
+    );
+  }
+  // set <renderMode> to direct, if it isn't already populated
+  // (Feathers-only; not assumed for other SDKs)
+  if (
+    projectType.feathers &&
+    !/<renderMode>.*<\/renderMode>(?!\s*-->)/.test(descriptorContents)
+  ) {
+    descriptorContents = descriptorContents.replace(
+      /<!-- <renderMode>.*<\/renderMode> -->/,
+      `<renderMode>direct</renderMode>`
     );
   }
 
