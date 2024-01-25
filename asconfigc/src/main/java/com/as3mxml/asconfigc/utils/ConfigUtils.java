@@ -49,33 +49,61 @@ public class ConfigUtils {
 			for (String sourcePath : sourcePaths) {
 				Path sourcePathPath = Paths.get(sourcePath);
 				Path mainClassPathAS = sourcePathPath.resolve(mainClassBasePath + FILE_EXTENSION_AS);
-				if (!mainClassPathAS.isAbsolute() && rootWorkspacePath != null) {
-					mainClassPathAS = Paths.get(rootWorkspacePath).resolve(mainClassPathAS);
+				Path absoluteMainClassPathAS = mainClassPathAS;
+				if (!absoluteMainClassPathAS.isAbsolute() && rootWorkspacePath != null) {
+					absoluteMainClassPathAS = Paths.get(rootWorkspacePath).resolve(absoluteMainClassPathAS);
 				}
-				if (mainClassPathAS.toFile().exists()) {
+				if (absoluteMainClassPathAS.toFile().exists()) {
+					// verify that the absolute path exists, but return the
+					// relative path instead.
+					// this keeps the compile command smaller, but it also
+					// reduces the possibility of spaces appearing in the
+					// compile command options.
+					// FCSH doesn't like paths with spaces.
+					// see BowlerHatLLC/vscode-as3mxml#726
 					return mainClassPathAS.toString();
 				}
 				Path mainClassPathMXML = sourcePathPath.resolve(mainClassBasePath + FILE_EXTENSION_MXML);
-				if (!mainClassPathMXML.isAbsolute() && rootWorkspacePath != null) {
-					mainClassPathMXML = Paths.get(rootWorkspacePath).resolve(mainClassPathMXML);
+				Path absoluteMainClassPathMXML = mainClassPathMXML;
+				if (!absoluteMainClassPathMXML.isAbsolute() && rootWorkspacePath != null) {
+					absoluteMainClassPathMXML = Paths.get(rootWorkspacePath).resolve(absoluteMainClassPathMXML);
 				}
-				if (mainClassPathMXML.toFile().exists()) {
+				if (absoluteMainClassPathMXML.toFile().exists()) {
+					// verify that the absolute path exists, but return the
+					// relative path instead. see note above.
 					return mainClassPathMXML.toString();
 				}
+			}
+		} else {
+			// no source paths, so assume the root of the project (which is the
+			// same directory as asconfig.json)
+			Path mainClassPathAS = Paths.get(mainClassBasePath + FILE_EXTENSION_AS);
+			Path absoluteMainClassPathAS = mainClassPathAS;
+			if (!absoluteMainClassPathAS.isAbsolute() && rootWorkspacePath != null) {
+				absoluteMainClassPathAS = Paths.get(rootWorkspacePath).resolve(absoluteMainClassPathAS);
+			}
+			if (absoluteMainClassPathAS.toFile().exists()) {
+				// verify that the absolute path exists, but return the relative
+				// path instead. see note above.
+				return mainClassPathAS.toString();
+			}
+			Path mainClassPathMXML = Paths.get(mainClassBasePath + FILE_EXTENSION_MXML);
+			Path absoluteMainClassPathMXML = mainClassPathMXML;
+			if (!absoluteMainClassPathMXML.isAbsolute() && rootWorkspacePath != null) {
+				absoluteMainClassPathMXML = Paths.get(rootWorkspacePath).resolve(absoluteMainClassPathMXML);
+			}
+			if (absoluteMainClassPathMXML.toFile().exists()) {
+				// verify that the absolute path exists, but return the relative
+				// path instead. see note above.
+				return mainClassPathMXML.toString();
 			}
 		}
 		// as a final fallback, try in the current working directory
 		Path mainClassPathAS = Paths.get(mainClassBasePath + FILE_EXTENSION_AS);
-		if (!mainClassPathAS.isAbsolute() && rootWorkspacePath != null) {
-			mainClassPathAS = Paths.get(rootWorkspacePath).resolve(mainClassPathAS);
-		}
 		if (mainClassPathAS.toFile().exists()) {
 			return mainClassPathAS.toString();
 		}
 		Path mainClassPathMXML = Paths.get(mainClassBasePath + FILE_EXTENSION_MXML);
-		if (!mainClassPathMXML.isAbsolute() && rootWorkspacePath != null) {
-			mainClassPathMXML = Paths.get(rootWorkspacePath).resolve(mainClassPathMXML);
-		}
 		if (mainClassPathMXML.toFile().exists()) {
 			return mainClassPathMXML.toString();
 		}
