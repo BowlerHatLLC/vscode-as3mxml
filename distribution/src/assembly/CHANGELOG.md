@@ -1,5 +1,16 @@
 # ActionScript & MXML for Visual Studio Code Changelog
 
+## 1.20.1
+
+### Fixed Issues
+
+- Build: Fixed resolution of `mainClass` to use relative paths for quick compile commands.
+- Build: Fixed resolution of `mainClass` when no `source-path` compiler option is specified (resolve relative to project root).
+- Build: Restores final fallback resolution of `mainClass` from the current working directory.
+- Royale: Detects when _asconfig.json_ is saved and updates the Royale target status bar item.
+- New Project: Populates `<renderMode>direct</renderMode>` for Feathers SDK projects.
+- New Project: Does not set `<visible>true</visible>` for AS3 projects if `<visible>` is uncommented.
+
 ## 1.20.0
 
 ### New Features
