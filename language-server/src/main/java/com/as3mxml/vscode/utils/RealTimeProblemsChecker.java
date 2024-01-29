@@ -194,8 +194,12 @@ public class RealTimeProblemsChecker implements Runnable {
 		}
 
 		if (pendingCompilationUnit == compilationUnit) {
-			IWorkspace workspace = projectData.project.getWorkspace();
-			workspace.fileChanged(pendingFileSpec);
+			if (projectData != null && projectData.project != null) {
+				IWorkspace workspace = projectData.project.getWorkspace();
+				if (workspace != null) {
+					workspace.fileChanged(pendingFileSpec);
+				}
+			}
 		}
 
 		compilationUnit = pendingCompilationUnit;
