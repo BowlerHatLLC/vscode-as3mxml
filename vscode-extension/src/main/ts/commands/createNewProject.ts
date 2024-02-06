@@ -276,11 +276,18 @@ async function createNewProjectAtUri(
     const descriptorTemplatePath = sdkPath
       ? path.resolve(sdkPath, "templates/air/descriptor-template.xml")
       : undefined;
+    let applicationId = mainClassName
+      .replace(/_/g, "-")
+      .replace(/[^A-Za-z0-9\-\.]/g, "");
+    if (applicationId.length == 0) {
+      // if we replaced every single character, fall back to MyApplication
+      applicationId = "MyApplication";
+    }
     const airDescriptorContents = createAirDescriptor(
       descriptorTemplatePath,
       projectType,
       swfFileName,
-      mainClassName,
+      applicationId,
       mainClassName
     );
     if (airDescriptorContents) {
