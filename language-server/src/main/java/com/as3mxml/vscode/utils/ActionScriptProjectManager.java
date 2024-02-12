@@ -492,24 +492,30 @@ public class ActionScriptProjectManager {
                 nameLength = nameEnd - nameStart;
             }
             if (line < 0 || column < 0) {
-                // this is not ideal, but MXML variable definitions may not have a
-                // node associated with them, so we need to figure this out from the
-                // offset instead of a pre-calculated line and column -JT
-                Reader definitionReader = fileTracker.getReader(definitionPath);
-                if (definitionReader == null) {
-                    // we might get here if it's from a SWC, but the associated
-                    // source file is missing.
-                    return null;
+                if (nameStart < 0) {
+                    start.setLine(definition.getLine());
+                    start.setCharacter(definition.getColumn());
+                    end.setLine(start.getLine());
+                    end.setCharacter(start.getCharacter());
                 } else {
-                    try {
-                        LanguageServerCompilerUtils.getPositionFromOffset(definitionReader, definition.getNameStart(),
-                                start);
-                        end.setLine(start.getLine());
-                        end.setCharacter(start.getCharacter() + nameLength);
-                    } finally {
+                    // this is not ideal, but MXML variable definitions may not have a
+                    // node associated with them, so we need to figure this out from the
+                    // offset instead of a pre-calculated line and column -JT
+                    Reader definitionReader = fileTracker.getReader(definitionPath);
+                    if (definitionReader == null) {
+                        // we might get here if it's from a SWC, but the associated
+                        // source file is missing.
+                        return null;
+                    } else {
                         try {
-                            definitionReader.close();
-                        } catch (IOException e) {
+                            LanguageServerCompilerUtils.getPositionFromOffset(definitionReader, nameStart, start);
+                            end.setLine(start.getLine());
+                            end.setCharacter(start.getCharacter() + nameLength);
+                        } finally {
+                            try {
+                                definitionReader.close();
+                            } catch (IOException e) {
+                            }
                         }
                     }
                 }
@@ -518,6 +524,41 @@ public class ActionScriptProjectManager {
                 start.setCharacter(column);
                 end.setLine(line);
                 end.setCharacter(column + nameLength);
+            }
+            // VSCode will not display the documentSymbol outline if
+            // selectionRange is not strictly within range
+            // so clamp selectionRange's start and end to range's start and end
+            int outerRangeLine = definition.getLine();
+            int outerRangeColumn = definition.getColumn();
+            if (outerRangeLine != -1 && outerRangeColumn != -1) {
+                if (start.getLine() < outerRangeLine
+                        || (start.getLine() == outerRangeLine
+                                && start.getCharacter() < outerRangeColumn)) {
+                    start.setLine(outerRangeLine);
+                    start.setCharacter(outerRangeColumn);
+                }
+                if (end.getLine() < outerRangeLine
+                        || (end.getLine() == outerRangeLine
+                                && end.getCharacter() < outerRangeColumn)) {
+                    end.setLine(outerRangeLine);
+                    end.setCharacter(outerRangeColumn);
+                }
+                int outerRangeEndLine = definition.getEndLine();
+                int outerRangeEndColumn = definition.getEndColumn();
+                if (outerRangeEndLine != -1 && outerRangeEndColumn != -1) {
+                    if (start.getLine() > outerRangeEndLine
+                            || (start.getLine() == outerRangeEndLine
+                                    && start.getCharacter() > outerRangeEndColumn)) {
+                        start.setLine(outerRangeEndLine);
+                        start.setCharacter(outerRangeEndColumn);
+                    }
+                    if (end.getLine() > outerRangeEndLine
+                            || (end.getLine() == outerRangeEndLine
+                                    && end.getCharacter() > outerRangeEndColumn)) {
+                        end.setLine(outerRangeEndLine);
+                        end.setCharacter(outerRangeEndColumn);
+                    }
+                }
             }
             range = new Range();
             range.setStart(start);
