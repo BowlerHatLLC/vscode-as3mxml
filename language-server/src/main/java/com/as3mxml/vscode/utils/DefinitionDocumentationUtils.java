@@ -98,9 +98,14 @@ public class DefinitionDocumentationUtils {
                     String paramName = paramTagDescription;
                     String paramDescription = null;
                     int spaceIndex = paramName.indexOf(' ');
-                    if (spaceIndex > 0) {
-                        paramDescription = paramName.substring(spaceIndex + 1);
-                        paramName = paramName.substring(0, spaceIndex);
+                    int tabIndex = paramName.indexOf('\t');
+                    int delimiterIndex = spaceIndex;
+                    if (tabIndex < delimiterIndex) {
+                        delimiterIndex = tabIndex;
+                    }
+                    if (delimiterIndex > 0) {
+                        paramDescription = paramName.substring(delimiterIndex + 1);
+                        paramName = paramName.substring(0, delimiterIndex);
                     }
                     if (useMarkdown) {
                         descriptionBuilder.append("`");
@@ -151,9 +156,14 @@ public class DefinitionDocumentationUtils {
                     String throwsName = throwsTagDescription;
                     String throwsDescription = null;
                     int spaceIndex = throwsName.indexOf(' ');
-                    if (spaceIndex > 0) {
-                        throwsDescription = throwsName.substring(spaceIndex + 1);
-                        throwsName = throwsName.substring(0, spaceIndex);
+                    int tabIndex = throwsName.indexOf('\t');
+                    int delimiterIndex = spaceIndex;
+                    if (tabIndex < delimiterIndex) {
+                        delimiterIndex = tabIndex;
+                    }
+                    if (delimiterIndex > 0) {
+                        throwsDescription = throwsName.substring(delimiterIndex + 1);
+                        throwsName = throwsName.substring(0, delimiterIndex);
                     }
                     if (useMarkdown) {
                         descriptionBuilder.append("`");
