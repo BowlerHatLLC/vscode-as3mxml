@@ -134,9 +134,11 @@ public class VSCodeASDocComment extends SourceLocation implements IASDocComment 
 			} else // tag
 			{
 				int at = line.indexOf('@');
+				// look for nearest space or tab character
 				int after = line.indexOf(' ', at + 1);
-				if (after == -1) {
-					after = line.indexOf('\t', at + 1);
+				int tabAfter = line.indexOf('\t', at + 1);
+				if (tabAfter != -1 && tabAfter < after) {
+					after = tabAfter;
 				}
 				if (after == -1) {
 					after = line.length();
