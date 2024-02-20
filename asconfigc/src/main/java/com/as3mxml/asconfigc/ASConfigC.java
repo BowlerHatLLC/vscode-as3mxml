@@ -951,7 +951,7 @@ public class ASConfigC {
 		sdkIsFlexJS = ApacheFlexJSUtils.isValidSDK(sdkHomePath);
 		if (configRequiresRoyaleOrFlexJS && !sdkIsRoyale && !sdkIsFlexJS) {
 			throw new ASConfigCException(
-					"Configuration options in asconfig.json require Apache Royale or FlexJS. Path to SDK is not valid: "
+					"Configuration options in asconfig.json require Apache Royale. Path to SDK is not valid: "
 							+ sdkHome);
 		}
 		if (configRequiresFlexJS && !sdkIsFlexJS) {
