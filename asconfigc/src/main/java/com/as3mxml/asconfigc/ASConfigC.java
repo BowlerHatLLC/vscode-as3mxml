@@ -66,7 +66,6 @@ import com.as3mxml.asconfigc.animate.AnimateOptions;
 import com.as3mxml.asconfigc.compiler.CompilerOptions;
 import com.as3mxml.asconfigc.compiler.CompilerOptionsParser;
 import com.as3mxml.asconfigc.compiler.ConfigName;
-import com.as3mxml.asconfigc.compiler.JSOutputType;
 import com.as3mxml.asconfigc.compiler.ModuleFields;
 import com.as3mxml.asconfigc.compiler.ProjectType;
 import com.as3mxml.asconfigc.compiler.RoyaleTarget;
@@ -251,7 +250,6 @@ public class ASConfigC {
 	private boolean watch;
 	private boolean debugBuild;
 	private boolean copySourcePathAssets;
-	private String jsOutputType;
 	private String swfOutputPath;
 	private String jsOutputPath = ".";
 	private String outputPathForTarget;
@@ -380,7 +378,6 @@ public class ASConfigC {
 			OptionsFormatter.setBoolean(CompilerOptions.DEBUG, options.debug, compilerOptions);
 		}
 		airOptions = new ArrayList<>();
-		jsOutputType = null;
 		projectType = ProjectType.APP;
 		if (json.has(TopLevelFields.TYPE)) {
 			projectType = json.get(TopLevelFields.TYPE).asText();
@@ -421,11 +418,6 @@ public class ASConfigC {
 					compilerOptions.addAll(OptionsUtils.parseAdditionalOptions(additionalOptions));
 				}
 			}
-		}
-		// if js-output-type was not specified, use the default
-		// swf projects won't have a js-output-type
-		if (jsOutputType != null) {
-			compilerOptions.add("--" + CompilerOptions.JS_OUTPUT_TYPE + "=" + jsOutputType);
 		}
 		if (watch) {
 			compilerOptions.add("--watch");
@@ -613,12 +605,10 @@ public class ASConfigC {
 	private void detectConfigRequirements(String configName) {
 		switch (configName) {
 			case ConfigName.JS: {
-				jsOutputType = JSOutputType.JSC;
 				configRequiresRoyale = true;
 				break;
 			}
 			case ConfigName.NODE: {
-				jsOutputType = JSOutputType.NODE;
 				configRequiresRoyale = true;
 				break;
 			}
@@ -848,14 +838,9 @@ public class ASConfigC {
 		// make sure that we require Royale for certain compiler options
 		if (compilerOptionsJson.has(CompilerOptions.JS_OUTPUT_TYPE)) {
 			configRequiresRoyale = true;
-			// if it is set explicitly, then clear the default
-			jsOutputType = null;
 		}
 		if (compilerOptionsJson.has(CompilerOptions.TARGETS)) {
 			configRequiresRoyale = true;
-			// if targets is set explicitly, then we're using a newer SDK
-			// that doesn't need js-output-type
-			jsOutputType = null;
 		}
 		if (compilerOptionsJson.has(CompilerOptions.SOURCE_MAP)) {
 			// source-map compiler option is supported by Royale
