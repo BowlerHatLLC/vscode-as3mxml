@@ -17,11 +17,9 @@ import findSDKName from "./findSDKName";
 
 const AIR = "AIR ";
 const FLEX = "Flex ";
-const FLEXJS = "FlexJS ";
 const ROYALE = "Royale ";
 const FEATHERS = "Feathers ";
 const APACHE_FLEX = "Apache Flex ";
-const APACHE_FLEXJS = "Apache Flex (FlexJS) ";
 const APACHE_ROYALE = "Apache Royale ";
 const FEATHERS_SDK = "Feathers SDK ";
 const FP = " FP";
@@ -63,9 +61,6 @@ export default function findSDKShortName(sdkPath: string): string {
   }
   if (sdkName.startsWith(APACHE_ROYALE)) {
     return stripAfterNextSpace(sdkName, APACHE_ROYALE, ROYALE);
-  }
-  if (sdkName.startsWith(APACHE_FLEXJS)) {
-    return stripAfterNextSpace(sdkName, APACHE_FLEXJS, FLEXJS);
   }
   if (sdkName.startsWith(APACHE_FLEX)) {
     return stripAfterNextSpace(sdkName, APACHE_FLEX);

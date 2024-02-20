@@ -54,10 +54,6 @@ public class MXMLNamespaceUtils {
         NAMESPACE_TO_PREFIX.put(IMXMLLibraryConstants.SPARK, PREFIX_S);
         NAMESPACE_TO_PREFIX.put(IMXMLLibraryConstants.MX, PREFIX_MX);
 
-        // FlexJS
-        NAMESPACE_TO_PREFIX.put(IMXMLLibraryConstants.FLEXJS_EXPRESS, PREFIX_JS);
-        NAMESPACE_TO_PREFIX.put(IMXMLLibraryConstants.FLEXJS_BASIC, PREFIX_JS);
-
         // Royale
         NAMESPACE_TO_PREFIX.put(IMXMLLibraryConstants.ROYALE_EXPRESS, PREFIX_JS);
         NAMESPACE_TO_PREFIX.put(IMXMLLibraryConstants.ROYALE_BASIC, PREFIX_JS);
@@ -68,8 +64,8 @@ public class MXMLNamespaceUtils {
     }
 
     private static final Pattern[] PATTERNS = {
-            // Royale/FlexJS library
-            Pattern.compile("^library:\\/\\/ns\\.apache\\.org\\/(?:flexjs|royale)\\/(\\w+)$"),
+            // Royale library
+            Pattern.compile("^library:\\/\\/ns\\.apache\\.org\\/(?:royale)\\/(\\w+)$"),
 
             // Flex library
             Pattern.compile("^[a-z]+:\\/\\/flex\\.apache\\.org\\/(\\w+)\\/ns$"),

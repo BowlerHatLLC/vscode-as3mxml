@@ -21,7 +21,6 @@ const ENVIRONMENT_VARIABLE_PATH = "PATH";
 const NODE_MODULES = "node_modules";
 const MODULE_ORG = "@apache-royale";
 const MODULE_NAMES = ["royale-js", "royale-js-swf"];
-const MODULE_NAME_FLEXJS = "flexjs";
 
 export default function findSDKsInPathEnvironmentVariable(): string[] {
   let result: string[] = [];
@@ -30,11 +29,10 @@ export default function findSDKsInPathEnvironmentVariable(): string[] {
     return result;
   }
 
-  let PATH = <string>process.env.PATH;
+  let PATH = process.env.PATH as string;
   let paths = PATH.split(path.delimiter);
   paths.forEach((currentPath) => {
-    //first check if this directory contains the NPM version of either
-    //Apache Royale or Apache FlexJS for Windows
+    //first check if this directory contains the NPM version of Apache Royale
     let mxmlcPath = path.join(currentPath, "mxmlc.cmd");
     if (fs.existsSync(mxmlcPath)) {
       for (let i = 0, count = MODULE_NAMES.length; i < count; i++) {
@@ -49,15 +47,6 @@ export default function findSDKsInPathEnvironmentVariable(): string[] {
         if (validSDK !== null) {
           result.push(validSDK);
         }
-      }
-      let sdkPath = path.join(
-        path.dirname(mxmlcPath),
-        NODE_MODULES,
-        MODULE_NAME_FLEXJS
-      );
-      let validSDK = validateFrameworkSDK(sdkPath);
-      if (validSDK !== null) {
-        result.push(validSDK);
       }
     } else {
       mxmlcPath = path.join(currentPath, "mxmlc");

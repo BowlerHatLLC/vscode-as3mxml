@@ -18,5 +18,4 @@ package com.as3mxml.asconfigc.compiler;
 public class JSOutputType {
 	public static final String JSC = "jsc";
 	public static final String NODE = "node";
-	public static final String FLEXJS = "flexjs";
 }

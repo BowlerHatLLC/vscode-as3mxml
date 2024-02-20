@@ -19,7 +19,6 @@ import * as path from "path";
 import findSDKName from "../utils/findSDKName";
 import validateFrameworkSDK from "../utils/validateFrameworkSDK";
 import findSDKInLocalRoyaleNodeModule from "../utils/findSDKInLocalRoyaleNodeModule";
-import findSDKInLocalFlexJSNodeModule from "../utils/findSDKInLocalFlexJSNodeModule";
 import findSDKInRoyaleHomeEnvironmentVariable from "../utils/findSDKInRoyaleHomeEnvironmentVariable";
 import findSDKInFlexHomeEnvironmentVariable from "../utils/findSDKInFlexHomeEnvironmentVariable";
 import findSDKsInPathEnvironmentVariable from "../utils/findSDKsInPathEnvironmentVariable";
@@ -206,16 +205,6 @@ export default function selectWorkspaceSDK(
   if (royaleNodeModuleSDK) {
     addSDKItem(
       royaleNodeModuleSDK,
-      DESCRIPTION_NODE_MODULE,
-      items,
-      allPaths,
-      true
-    );
-  }
-  let flexjsNodeModuleSDK = findSDKInLocalFlexJSNodeModule();
-  if (flexjsNodeModuleSDK) {
-    addSDKItem(
-      flexjsNodeModuleSDK,
       DESCRIPTION_NODE_MODULE,
       items,
       allPaths,

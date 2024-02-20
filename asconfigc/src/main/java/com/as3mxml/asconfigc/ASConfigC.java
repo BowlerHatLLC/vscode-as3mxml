@@ -72,7 +72,6 @@ import com.as3mxml.asconfigc.compiler.ProjectType;
 import com.as3mxml.asconfigc.compiler.RoyaleTarget;
 import com.as3mxml.asconfigc.compiler.WorkerFields;
 import com.as3mxml.asconfigc.htmlTemplate.HTMLTemplateOptionsParser;
-import com.as3mxml.asconfigc.utils.ApacheFlexJSUtils;
 import com.as3mxml.asconfigc.utils.ApacheRoyaleUtils;
 import com.as3mxml.asconfigc.utils.ConfigUtils;
 import com.as3mxml.asconfigc.utils.GenericSDKUtils;
@@ -262,11 +261,8 @@ public class ASConfigC {
 	private List<String> airDescriptorPaths;
 	private List<String> sourcePaths;
 	private boolean configRequiresRoyale;
-	private boolean configRequiresRoyaleOrFlexJS;
-	private boolean configRequiresFlexJS;
 	private boolean configRequiresAIR;
 	private boolean sdkIsRoyale;
-	private boolean sdkIsFlexJS;
 	private boolean isSWFTargetOnly;
 	private boolean outputIsJS;
 	private String sdkHome;
@@ -618,16 +614,15 @@ public class ASConfigC {
 		switch (configName) {
 			case ConfigName.JS: {
 				jsOutputType = JSOutputType.JSC;
-				configRequiresRoyaleOrFlexJS = true;
+				configRequiresRoyale = true;
 				break;
 			}
 			case ConfigName.NODE: {
 				jsOutputType = JSOutputType.NODE;
-				configRequiresRoyaleOrFlexJS = true;
+				configRequiresRoyale = true;
 				break;
 			}
 			case ConfigName.ROYALE: {
-				// this option is not supported by FlexJS
 				configRequiresRoyale = true;
 				break;
 			}
@@ -850,41 +845,21 @@ public class ASConfigC {
 			e.printStackTrace(new PrintWriter(stackTrace));
 			throw new ASConfigCException("Error: Failed to parse compiler options.\n" + stackTrace.toString());
 		}
-		// make sure that we require Royale (or FlexJS) depending on which options are
-		// specified
+		// make sure that we require Royale for certain compiler options
 		if (compilerOptionsJson.has(CompilerOptions.JS_OUTPUT_TYPE)) {
-			// this option was used in FlexJS 0.7, but it was replaced with
-			// targets in FlexJS 0.8.
-			configRequiresFlexJS = true;
+			configRequiresRoyale = true;
 			// if it is set explicitly, then clear the default
 			jsOutputType = null;
 		}
 		if (compilerOptionsJson.has(CompilerOptions.TARGETS)) {
-			JsonNode targets = compilerOptionsJson.get(CompilerOptions.TARGETS);
-			boolean foundRoyaleTarget = false;
-			for (JsonNode target : targets) {
-				String targetAsText = target.asText();
-				if (targetAsText.equals(RoyaleTarget.JS_ROYALE)
-						|| targetAsText.equals(RoyaleTarget.JS_ROYALE_CORDOVA)) {
-					// these targets definitely don't work with FlexJS
-					configRequiresRoyale = true;
-					foundRoyaleTarget = true;
-				}
-				if (targetAsText.equals(RoyaleTarget.SWF)) {
-					isSWFTargetOnly = targets.size() == 1;
-				}
-			}
-			if (!foundRoyaleTarget) {
-				// remaining targets are supported by both Royale and FlexJS
-				configRequiresRoyaleOrFlexJS = true;
-			}
+			configRequiresRoyale = true;
 			// if targets is set explicitly, then we're using a newer SDK
 			// that doesn't need js-output-type
 			jsOutputType = null;
 		}
 		if (compilerOptionsJson.has(CompilerOptions.SOURCE_MAP)) {
-			// source-map compiler option is supported by both Royale and FlexJS
-			configRequiresRoyaleOrFlexJS = true;
+			// source-map compiler option is supported by Royale
+			configRequiresRoyale = true;
 		}
 	}
 
@@ -922,17 +897,12 @@ public class ASConfigC {
 			sdkHome = ApacheRoyaleUtils.findSDK();
 		}
 		if (sdkHome == null && !configRequiresRoyale) {
-			sdkHome = ApacheFlexJSUtils.findSDK();
-		}
-		if (sdkHome == null && !configRequiresRoyale && !configRequiresRoyaleOrFlexJS && !configRequiresFlexJS) {
 			sdkHome = GenericSDKUtils.findSDK();
 		}
 		if (sdkHome == null) {
 			String envHome = "FLEX_HOME";
 			if (configRequiresRoyale) {
 				envHome = "ROYALE_HOME";
-			} else if (configRequiresRoyaleOrFlexJS) {
-				envHome = "ROYALE_HOME for Apache Royale, FLEX_HOME for Apache FlexJS";
 			}
 			throw new ASConfigCException(
 					"SDK not found. Set " + envHome + ", add SDK to PATH environment variable, or use --sdk option.");
@@ -948,18 +918,7 @@ public class ASConfigC {
 					"Configuration options in asconfig.json require Apache Royale. Path to SDK is not valid: "
 							+ sdkHome);
 		}
-		sdkIsFlexJS = ApacheFlexJSUtils.isValidSDK(sdkHomePath);
-		if (configRequiresRoyaleOrFlexJS && !sdkIsRoyale && !sdkIsFlexJS) {
-			throw new ASConfigCException(
-					"Configuration options in asconfig.json require Apache Royale. Path to SDK is not valid: "
-							+ sdkHome);
-		}
-		if (configRequiresFlexJS && !sdkIsFlexJS) {
-			throw new ASConfigCException(
-					"Configuration options in asconfig.json require Apache FlexJS. Path to SDK is not valid: "
-							+ sdkHome);
-		}
-		outputIsJS = (sdkIsRoyale || sdkIsFlexJS) && !isSWFTargetOnly;
+		outputIsJS = sdkIsRoyale && !isSWFTargetOnly;
 		outputPathForTarget = outputIsJS ? jsOutputPath : swfOutputPath;
 		if (options.verbose) {
 			System.out.println("SDK: " + sdkHomePath);

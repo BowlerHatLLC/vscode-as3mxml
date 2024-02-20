@@ -33,16 +33,6 @@ class MXMLNamespaceUtilsTests {
 	}
 
 	@Test
-	void testGetNamespaceFromURIWithFlexJSLibrary() {
-		String uri = "library://ns.apache.org/flexjs/example";
-		MXMLNamespace result = MXMLNamespaceUtils.getNamespaceFromURI(uri, new PrefixMap());
-		Assertions.assertNotNull(result);
-		Assertions.assertEquals(uri, result.uri, "MXMLNamespaceUtils.getNamespaceFromURI() returned incorrect uri.");
-		Assertions.assertEquals("example", result.prefix,
-				"MXMLNamespaceUtils.getNamespaceFromURI() returned incorrect prefix.");
-	}
-
-	@Test
 	void testGetNamespaceFromURIWithFlexLibrary() {
 		String uri = "http://flex.apache.org/example/ns";
 		MXMLNamespace result = MXMLNamespaceUtils.getNamespaceFromURI(uri, new PrefixMap());

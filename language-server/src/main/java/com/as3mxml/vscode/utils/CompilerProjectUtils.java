@@ -60,9 +60,6 @@ public class CompilerProjectUtils {
         Path frameworkLibPath = Paths.get(System.getProperty(PROPERTY_FRAMEWORK_LIB));
         boolean frameworkSDKIsRoyale = ActionScriptSDKUtils.isRoyaleFramework(frameworkLibPath);
 
-        Path asjscPath = frameworkLibPath.resolve("../js/bin/asjsc");
-        boolean frameworkSDKIsFlexJS = !frameworkSDKIsRoyale && asjscPath.toFile().exists();
-
         ILspProject project = null;
 
         // we're going to try to determine what kind of project we need
@@ -125,7 +122,7 @@ public class CompilerProjectUtils {
         }
         // finally, if the config value is missing, then choose a decent
         // default backend when the SDK is Royale
-        else if (frameworkSDKIsRoyale || frameworkSDKIsFlexJS) {
+        else if (frameworkSDKIsRoyale) {
             backend = new RoyaleBackend();
         }
 
