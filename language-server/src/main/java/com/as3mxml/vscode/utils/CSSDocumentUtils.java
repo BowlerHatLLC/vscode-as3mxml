@@ -15,37 +15,33 @@ limitations under the License.
 */
 package com.as3mxml.vscode.utils;
 
+import org.apache.royale.compiler.css.ICSSDocument;
+import org.apache.royale.compiler.css.ICSSFontFace;
+import org.apache.royale.compiler.css.ICSSNamespaceDefinition;
 import org.apache.royale.compiler.css.ICSSNode;
+import org.apache.royale.compiler.css.ICSSRule;
 
 public class CSSDocumentUtils {
 	public static boolean containsWithStart(ICSSNode node, int offset) {
 		return offset >= node.getAbsoluteStart() && offset <= node.getAbsoluteEnd();
 	}
 
-	public static ICSSNode getContainingCSSNodeIncludingStart(ICSSNode node, int offset) {
-		if (!containsWithStart(node, offset)) {
-			return null;
-		}
-		for (int i = 0, count = node.getArity(); i < count; i++) {
-			ICSSNode child = node.getNthChild(i);
-			if (child.getAbsoluteStart() == -1) {
-				// the Royale compiler has a quirk where a node can have an
-				// unknown offset, but its children have known offsets. this is
-				// where we work around that...
-				for (int j = 0, innerCount = child.getArity(); j < innerCount; j++) {
-					ICSSNode innerChild = child.getNthChild(j);
-					ICSSNode result = getContainingCSSNodeIncludingStart(innerChild, offset);
-					if (result != null) {
-						return result;
-					}
-				}
-				continue;
-			}
-			ICSSNode result = getContainingCSSNodeIncludingStart(child, offset);
-			if (result != null) {
-				return result;
+	public static ICSSNode getContainingCSSNodeIncludingStart(ICSSDocument cssDocument, int offset) {
+		for (ICSSNamespaceDefinition cssNamespace : cssDocument.getAtNamespaces()) {
+			if (containsWithStart(cssNamespace, offset)) {
+				return cssNamespace;
 			}
 		}
-		return node;
+		for (ICSSFontFace cssFontFace : cssDocument.getFontFaces()) {
+			if (containsWithStart(cssFontFace, offset)) {
+				return cssFontFace;
+			}
+		}
+		for (ICSSRule cssRule : cssDocument.getRules()) {
+			if (containsWithStart(cssRule, offset)) {
+				return cssRule;
+			}
+		}
+		return cssDocument;
 	}
 }
