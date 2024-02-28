@@ -46,7 +46,6 @@ import org.apache.royale.compiler.definitions.IDefinition;
 import org.apache.royale.compiler.definitions.IEventDefinition;
 import org.apache.royale.compiler.definitions.IFunctionDefinition;
 import org.apache.royale.compiler.definitions.IFunctionDefinition.FunctionClassification;
-import org.apache.royale.compiler.definitions.IVariableDefinition.VariableClassification;
 import org.apache.royale.compiler.definitions.IGetterDefinition;
 import org.apache.royale.compiler.definitions.IInterfaceDefinition;
 import org.apache.royale.compiler.definitions.INamespaceDefinition;
@@ -55,6 +54,7 @@ import org.apache.royale.compiler.definitions.ISetterDefinition;
 import org.apache.royale.compiler.definitions.IStyleDefinition;
 import org.apache.royale.compiler.definitions.ITypeDefinition;
 import org.apache.royale.compiler.definitions.IVariableDefinition;
+import org.apache.royale.compiler.definitions.IVariableDefinition.VariableClassification;
 import org.apache.royale.compiler.definitions.metadata.IMetaTag;
 import org.apache.royale.compiler.definitions.metadata.IMetaTagAttribute;
 import org.apache.royale.compiler.filespecs.IFileSpecification;
@@ -98,6 +98,7 @@ import org.apache.royale.compiler.tree.as.IScopedNode;
 import org.apache.royale.compiler.tree.as.ITypeNode;
 import org.apache.royale.compiler.tree.as.IVariableNode;
 import org.apache.royale.compiler.tree.mxml.IMXMLClassDefinitionNode;
+import org.apache.royale.compiler.tree.mxml.IMXMLStyleNode;
 import org.apache.royale.compiler.units.ICompilationUnit;
 import org.eclipse.lsp4j.Command;
 import org.eclipse.lsp4j.CompletionItem;
@@ -260,6 +261,21 @@ public class CompletionProvider {
             ISourceLocation offsetSourceLocation = actionScriptProjectManager
                     .getOffsetSourceLocation(path,
                             currentOffset, projectData);
+            if (offsetSourceLocation instanceof IMXMLStyleNode) {
+                // special case for <fx:Style>
+                // because CSS shouldn't include ActionScript completion
+
+                // IMXMLStyleNode styleNode = (IMXMLStyleNode) offsetSourceLocation;
+                // ICSSDocument cssDocument = styleNode.getCSSDocument(new ArrayList<>());
+
+                CompletionList result = new CompletionList();
+                result.setIsIncomplete(false);
+                result.setItems(new ArrayList<>());
+                if (cancelToken != null) {
+                    cancelToken.checkCanceled();
+                }
+                return Either.forRight(result);
+            }
             if (offsetSourceLocation instanceof VSCodeASDocComment) {
                 VSCodeASDocComment docComment = (VSCodeASDocComment) offsetSourceLocation;
                 CompletionList result = asdocCompletion(docComment, path, position, currentOffset, projectData);

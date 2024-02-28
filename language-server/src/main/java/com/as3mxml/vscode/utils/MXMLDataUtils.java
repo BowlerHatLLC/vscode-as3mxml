@@ -226,6 +226,10 @@ public class MXMLDataUtils {
             // not available inside an <fx:Script> tag that isn't self-closing
             return tag.isEmptyTag();
         }
+        if (tag.getXMLName().equals(tag.getMXMLDialect().resolveStyle())) {
+            // not available inside an <fx:Style> tag that isn't self-closing
+            return tag.isEmptyTag();
+        }
         return true;
     }
 
