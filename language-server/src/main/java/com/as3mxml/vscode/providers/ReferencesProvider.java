@@ -21,23 +21,12 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import com.as3mxml.vscode.project.ILspProject;
-import com.as3mxml.vscode.project.ActionScriptProjectData;
-import com.as3mxml.vscode.utils.ASTUtils;
-import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
-import com.as3mxml.vscode.utils.CompilerProjectUtils;
-import com.as3mxml.vscode.utils.DefinitionUtils;
-import com.as3mxml.vscode.utils.FileTracker;
-import com.as3mxml.vscode.utils.LanguageServerCompilerUtils;
-import com.as3mxml.vscode.utils.MXMLDataUtils;
-import com.as3mxml.vscode.utils.ActionScriptProjectManager;
-
 import org.apache.royale.compiler.common.ISourceLocation;
 import org.apache.royale.compiler.definitions.IClassDefinition;
 import org.apache.royale.compiler.definitions.IDefinition;
 import org.apache.royale.compiler.definitions.IFunctionDefinition;
-import org.apache.royale.compiler.definitions.IVariableDefinition;
 import org.apache.royale.compiler.definitions.IFunctionDefinition.FunctionClassification;
+import org.apache.royale.compiler.definitions.IVariableDefinition;
 import org.apache.royale.compiler.definitions.IVariableDefinition.VariableClassification;
 import org.apache.royale.compiler.internal.mxml.MXMLData;
 import org.apache.royale.compiler.internal.scopes.ASProjectScope.DefinitionPromise;
@@ -48,6 +37,7 @@ import org.apache.royale.compiler.mxml.IMXMLTagData;
 import org.apache.royale.compiler.scopes.IASScope;
 import org.apache.royale.compiler.tree.as.IASNode;
 import org.apache.royale.compiler.tree.as.IIdentifierNode;
+import org.apache.royale.compiler.tree.mxml.IMXMLStyleNode;
 import org.apache.royale.compiler.units.ICompilationUnit;
 import org.apache.royale.compiler.units.ICompilationUnit.UnitType;
 import org.eclipse.lsp4j.Location;
@@ -55,6 +45,17 @@ import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.ReferenceParams;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.jsonrpc.CancelChecker;
+
+import com.as3mxml.vscode.project.ActionScriptProjectData;
+import com.as3mxml.vscode.project.ILspProject;
+import com.as3mxml.vscode.utils.ASTUtils;
+import com.as3mxml.vscode.utils.ActionScriptProjectManager;
+import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
+import com.as3mxml.vscode.utils.CompilerProjectUtils;
+import com.as3mxml.vscode.utils.DefinitionUtils;
+import com.as3mxml.vscode.utils.FileTracker;
+import com.as3mxml.vscode.utils.LanguageServerCompilerUtils;
+import com.as3mxml.vscode.utils.MXMLDataUtils;
 
 public class ReferencesProvider {
     private static final String FILE_EXTENSION_MXML = ".mxml";
@@ -126,6 +127,10 @@ public class ReferencesProvider {
             }
         }
         IASNode offsetNode = actionScriptProjectManager.getOffsetNode(path, currentOffset, projectData);
+        if (offsetNode instanceof IMXMLStyleNode) {
+            // special case for <fx:Style>
+            return Collections.emptyList();
+        }
         List<? extends Location> result = actionScriptReferences(offsetNode, project);
         if (cancelToken != null) {
             cancelToken.checkCanceled();

@@ -39,6 +39,7 @@ import org.apache.royale.compiler.tree.as.IFunctionNode;
 import org.apache.royale.compiler.tree.as.IIdentifierNode;
 import org.apache.royale.compiler.tree.as.ILanguageIdentifierNode;
 import org.apache.royale.compiler.tree.as.IReturnNode;
+import org.apache.royale.compiler.tree.mxml.IMXMLStyleNode;
 import org.apache.royale.compiler.units.ICompilationUnit;
 import org.eclipse.lsp4j.DefinitionParams;
 import org.eclipse.lsp4j.Location;
@@ -130,6 +131,10 @@ public class DefinitionProvider {
         ISourceLocation offsetSourceLocation = actionScriptProjectManager
                 .getOffsetSourceLocation(path,
                         currentOffset, projectData);
+        if (offsetSourceLocation instanceof IMXMLStyleNode) {
+            // special case for <fx:Style>
+            return Either.forLeft(Collections.emptyList());
+        }
         if (offsetSourceLocation instanceof VSCodeASDocComment) {
             VSCodeASDocComment docComment = (VSCodeASDocComment) offsetSourceLocation;
             List<? extends LocationLink> result = asdocDefinition(docComment, path, position, projectData);

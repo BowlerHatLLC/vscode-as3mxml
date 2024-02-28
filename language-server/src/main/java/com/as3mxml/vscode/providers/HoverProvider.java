@@ -18,19 +18,6 @@ package com.as3mxml.vscode.providers;
 import java.nio.file.Path;
 import java.util.Collections;
 
-import com.as3mxml.vscode.asdoc.VSCodeASDocComment;
-import com.as3mxml.vscode.project.ActionScriptProjectData;
-import com.as3mxml.vscode.project.ILspProject;
-import com.as3mxml.vscode.utils.ASDocUtils;
-import com.as3mxml.vscode.utils.ActionScriptProjectManager;
-import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
-import com.as3mxml.vscode.utils.DefinitionDocumentationUtils;
-import com.as3mxml.vscode.utils.DefinitionTextUtils;
-import com.as3mxml.vscode.utils.DefinitionUtils;
-import com.as3mxml.vscode.utils.FileTracker;
-import com.as3mxml.vscode.utils.LanguageServerCompilerUtils;
-import com.as3mxml.vscode.utils.MXMLDataUtils;
-
 import org.apache.royale.compiler.common.ISourceLocation;
 import org.apache.royale.compiler.definitions.IClassDefinition;
 import org.apache.royale.compiler.definitions.IDefinition;
@@ -44,6 +31,7 @@ import org.apache.royale.compiler.tree.as.IFunctionCallNode;
 import org.apache.royale.compiler.tree.as.IIdentifierNode;
 import org.apache.royale.compiler.tree.as.ILanguageIdentifierNode;
 import org.apache.royale.compiler.tree.as.INamespaceDecorationNode;
+import org.apache.royale.compiler.tree.mxml.IMXMLStyleNode;
 import org.apache.royale.compiler.units.ICompilationUnit;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.HoverParams;
@@ -53,6 +41,19 @@ import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.jsonrpc.CancelChecker;
+
+import com.as3mxml.vscode.asdoc.VSCodeASDocComment;
+import com.as3mxml.vscode.project.ActionScriptProjectData;
+import com.as3mxml.vscode.project.ILspProject;
+import com.as3mxml.vscode.utils.ASDocUtils;
+import com.as3mxml.vscode.utils.ActionScriptProjectManager;
+import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
+import com.as3mxml.vscode.utils.DefinitionDocumentationUtils;
+import com.as3mxml.vscode.utils.DefinitionTextUtils;
+import com.as3mxml.vscode.utils.DefinitionUtils;
+import com.as3mxml.vscode.utils.FileTracker;
+import com.as3mxml.vscode.utils.LanguageServerCompilerUtils;
+import com.as3mxml.vscode.utils.MXMLDataUtils;
 
 public class HoverProvider {
     private static final String MARKED_STRING_LANGUAGE_ACTIONSCRIPT = "actionscript";
@@ -125,6 +126,10 @@ public class HoverProvider {
         ISourceLocation offsetSourceLocation = actionScriptProjectManager
                 .getOffsetSourceLocation(path,
                         currentOffset, projectData);
+        if (offsetSourceLocation instanceof IMXMLStyleNode) {
+            // special case for <fx:Style>
+            return new Hover(Collections.emptyList(), null);
+        }
         if (offsetSourceLocation instanceof VSCodeASDocComment) {
             VSCodeASDocComment docComment = (VSCodeASDocComment) offsetSourceLocation;
             Hover result = asdocHover(docComment, path, position, projectData);
