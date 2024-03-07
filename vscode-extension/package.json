@@ -145,13 +145,13 @@
         "key": "ctrl+enter",
         "mac": "cmd+enter",
         "command": "as3mxml.quickCompileAndRun",
-        "when": "config.as3mxml.quickCompile.enabled"
+        "when": "as3mxml.codeIntelligenceReady && config.as3mxml.quickCompile.enabled"
       },
       {
         "key": "ctrl+shift+enter",
         "mac": "cmd+shift+enter",
         "command": "as3mxml.quickCompileAndDebug",
-        "when": "config.as3mxml.quickCompile.enabled"
+        "when": "as3mxml.codeIntelligenceReady && config.as3mxml.quickCompile.enabled"
       }
     ],
     "menus": {
@@ -184,7 +184,7 @@
       "explorer/context": [
         {
           "command": "as3mxml.organizeImportsInDirectory",
-          "when": "explorerResourceIsFolder"
+          "when": "as3mxml.codeIntelligenceReady && explorerResourceIsFolder"
         }
       ]
     },
@@ -193,7 +193,7 @@
         {
           "id": "actionScriptSourcePaths",
           "name": "ActionScript Source Path",
-          "when": "resourceLangId =~ /(actionscript|mxml)/ || resourceFilename =~ /^asconfig(\\.\\w+)?\\.json$/"
+          "when": "as3mxml.codeIntelligenceReady && (resourceLangId =~ /(actionscript|mxml)/ || resourceFilename =~ /^asconfig(\\.\\w+)?\\.json$/)"
         }
       ]
     },

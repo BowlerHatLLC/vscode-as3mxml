@@ -150,6 +150,11 @@ function restartServer() {
   let languageClient = savedLanguageClient;
   savedLanguageClient = null;
   isLanguageClientReady = false;
+  vscode.commands.executeCommand(
+    "setContext",
+    "as3mxml.codeIntelligenceReady",
+    false
+  );
   languageClient.stop().then(
     () => {
       startClient();
@@ -579,6 +584,11 @@ function startClient() {
               : undefined,
           },
         };
+        vscode.commands.executeCommand(
+          "setContext",
+          "as3mxml.codeIntelligenceReady",
+          false
+        );
         isLanguageClientReady = false;
         savedLanguageClient = new LanguageClient(
           "actionscript",
@@ -597,6 +607,11 @@ function startClient() {
 
         resolve();
         isLanguageClientReady = true;
+        vscode.commands.executeCommand(
+          "setContext",
+          "as3mxml.codeIntelligenceReady",
+          true
+        );
         savedLanguageClient.onNotification(
           "as3mxml/logCompilerShellOutput",
           (notification: string) => {
