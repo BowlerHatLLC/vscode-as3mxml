@@ -101,6 +101,7 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
         actionScriptServices.setLanguageClient(languageClient);
         boolean supportsSimpleSnippets = false;
         String preferredRoyaleTarget = null;
+        boolean notifyActiveProject = false;
         if (params.getInitializationOptions() != null) {
             JsonObject initializationOptions = (JsonObject) params.getInitializationOptions();
             if (initializationOptions.has("supportsSimpleSnippets")) {
@@ -109,9 +110,13 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
             if (initializationOptions.has("preferredRoyaleTarget")) {
                 preferredRoyaleTarget = initializationOptions.get("preferredRoyaleTarget").getAsString();
             }
+            if (initializationOptions.has("notifyActiveProject")) {
+                notifyActiveProject = initializationOptions.get("notifyActiveProject").getAsBoolean();
+            }
         }
         actionScriptServices.setClientSupportsSimpleSnippets(supportsSimpleSnippets);
         actionScriptServices.setPreferredRoyaleTarget(preferredRoyaleTarget);
+        actionScriptServices.setNotifyActiveProject(notifyActiveProject);
         // setting everything above should happen before adding workspace folders
         List<WorkspaceFolder> folders = params.getWorkspaceFolders();
         if (folders != null) {

@@ -224,6 +224,8 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     private boolean format_enabled = true;
     private boolean lint_enabled = false;
     private String preferredRoyaleTarget = null;
+    private boolean notifyActiveProject = false;
+    private boolean activeProject = false;
 
     private SimpleProjectConfigStrategy fallbackConfig;
     private CompilerShell compilerShell;
@@ -236,6 +238,16 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         actionScriptProjectManager = new ActionScriptProjectManager(fileTracker, factory,
                 (projectData) -> onAddProject(projectData), (projectData) -> onRemoveProject(projectData));
         updateFrameworkSDK();
+    }
+
+    public void setNotifyActiveProject(boolean notify) {
+        if (notifyActiveProject == notify) {
+            return;
+        }
+        notifyActiveProject = notify;
+        if (initialized && notifyActiveProject && activeProject) {
+            languageClient.setActionScriptActive();
+        }
     }
 
     public void setPreferredRoyaleTarget(String value) {
@@ -253,7 +265,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         actionScriptProjectManager.addWorkspaceFolder(folder);
     }
 
-    private boolean onAddProject(ActionScriptProjectData projectData) {
+    private void onAddProject(ActionScriptProjectData projectData) {
         // let's get the code intelligence up and running!
         Path path = getMainCompilationUnitPath(projectData);
         if (path != null) {
@@ -263,11 +275,9 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         }
 
         checkProjectForProblems(projectData);
-        return true;
     }
 
-    private boolean onRemoveProject(ActionScriptProjectData projectData) {
-        return true;
+    private void onRemoveProject(ActionScriptProjectData projectData) {
     }
 
     public void removeWorkspaceFolder(WorkspaceFolder folder) {
@@ -1330,6 +1340,10 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         }
         initialized = true;
 
+        if (initialized && notifyActiveProject && activeProject) {
+            languageClient.setActionScriptActive();
+        }
+
         // this is the first time that we can notify the client about any
         // diagnostics
         checkForProblemsNow(false);
@@ -1793,112 +1807,120 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         if (project != null) {
             // clear all old problems because they won't be cleared automatically
             project.getProblems().clear();
-            return project;
-        }
+        } else {
+            String oldUserDir = System.getProperty("user.dir");
+            List<ICompilerProblem> configProblems = new ArrayList<>();
 
-        String oldUserDir = System.getProperty("user.dir");
-        List<ICompilerProblem> configProblems = new ArrayList<>();
-
-        RoyaleProjectConfigurator configurator = null;
-        compilerWorkspace.startIdleState();
-        try {
-            Path projectRoot = projectData.projectRoot;
-            System.setProperty("user.dir", projectRoot.toString());
-            project = CompilerProjectUtils.createProject(projectOptions, compilerWorkspace, preferredRoyaleTarget);
-            configurator = CompilerProjectUtils.createConfigurator(project, projectOptions);
-        } finally {
-            compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
-        }
-
-        // this is not wrapped in startIdleState() or startBuilding()
-        // because applyToProject() could trigger both, depending on context!
-        if (configurator != null) {
-            boolean result = configurator.applyToProject(project);
-            Configuration configuration = configurator.getConfiguration();
-            configProblems.addAll(configurator.getConfigurationProblems());
-            if (configuration != null) {
-                // add configurator problems before the custom problems below
-                // because configurator problems are probably more important
-                if (projectOptions.type.equals(ProjectType.LIB)) {
-                    String output = configuration.getOutput();
-                    if (output == null || output.length() == 0) {
-                        result = false;
-                        configProblems
-                                .add(new MissingRequirementConfigurationProblem(ICompilerSettingsConstants.OUTPUT_VAR));
-                    }
-                } else // app
-                {
-                    // if there are no existing configurator problems, we need to
-                    // report at least one problem so that the user knows
-                    // something is wrong
-                    if (configProblems.size() == 0 && configuration.getTargetFile() == null) {
-                        result = false;
-
-                        // fall back to the config file or the workspace folder
-                        Path problemPath = projectData.projectRoot;
-                        Path configFilePath = projectData.config.getConfigFilePath();
-                        if (configFilePath != null) {
-                            problemPath = configFilePath;
-                        }
-
-                        String[] files = projectOptions.files;
-                        if (files != null && files.length > 0) {
-                            // even if mainClass is set, an entry must be added
-                            // to the files array
-                            configProblems.add(new LSPFileNotFoundProblem(files[files.length - 1],
-                                    problemPath != null ? problemPath.toString() : null));
-                        } else {
-                            ConfigurationException e = new ConfigurationException.MustSpecifyTarget(null,
-                                    problemPath != null ? problemPath.toString() : null, -1);
-                            configProblems.add(new ConfigurationProblem(e));
-                        }
-                    }
-                }
+            RoyaleProjectConfigurator configurator = null;
+            compilerWorkspace.startIdleState();
+            try {
+                Path projectRoot = projectData.projectRoot;
+                System.setProperty("user.dir", projectRoot.toString());
+                project = CompilerProjectUtils.createProject(projectOptions, compilerWorkspace, preferredRoyaleTarget);
+                configurator = CompilerProjectUtils.createConfigurator(project, projectOptions);
+            } finally {
+                compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
             }
-            if (!result) {
-                configurator = null;
-            }
-        }
 
-        compilerWorkspace.startIdleState();
-        try {
+            // this is not wrapped in startIdleState() or startBuilding()
+            // because applyToProject() could trigger both, depending on context!
             if (configurator != null) {
-                ITarget.TargetType targetType = ITarget.TargetType.SWF;
-                if (projectOptions.type.equals(ProjectType.LIB)) {
-                    targetType = ITarget.TargetType.SWC;
+                boolean result = configurator.applyToProject(project);
+                Configuration configuration = configurator.getConfiguration();
+                configProblems.addAll(configurator.getConfigurationProblems());
+                if (configuration != null) {
+                    // add configurator problems before the custom problems below
+                    // because configurator problems are probably more important
+                    if (projectOptions.type.equals(ProjectType.LIB)) {
+                        String output = configuration.getOutput();
+                        if (output == null || output.length() == 0) {
+                            result = false;
+                            configProblems
+                                    .add(new MissingRequirementConfigurationProblem(
+                                            ICompilerSettingsConstants.OUTPUT_VAR));
+                        }
+                    } else // app
+                    {
+                        // if there are no existing configurator problems, we need to
+                        // report at least one problem so that the user knows
+                        // something is wrong
+                        if (configProblems.size() == 0 && configuration.getTargetFile() == null) {
+                            result = false;
+
+                            // fall back to the config file or the workspace folder
+                            Path problemPath = projectData.projectRoot;
+                            Path configFilePath = projectData.config.getConfigFilePath();
+                            if (configFilePath != null) {
+                                problemPath = configFilePath;
+                            }
+
+                            String[] files = projectOptions.files;
+                            if (files != null && files.length > 0) {
+                                // even if mainClass is set, an entry must be added
+                                // to the files array
+                                configProblems.add(new LSPFileNotFoundProblem(files[files.length - 1],
+                                        problemPath != null ? problemPath.toString() : null));
+                            } else {
+                                ConfigurationException e = new ConfigurationException.MustSpecifyTarget(null,
+                                        problemPath != null ? problemPath.toString() : null, -1);
+                                configProblems.add(new ConfigurationProblem(e));
+                            }
+                        }
+                    }
                 }
-                ITargetSettings targetSettings = configurator.getTargetSettings(targetType);
-                if (targetSettings == null) {
-                    // calling getTargetSettings() can add more configuration
-                    // problems that didn't exist above
-                    configProblems.addAll(configurator.getConfigurationProblems());
+                if (!result) {
                     configurator = null;
-                } else {
-                    project.setTargetSettings(targetSettings);
                 }
             }
 
-            if (configurator == null) {
-                project.delete();
-                project = null;
+            compilerWorkspace.startIdleState();
+            try {
+                if (configurator != null) {
+                    ITarget.TargetType targetType = ITarget.TargetType.SWF;
+                    if (projectOptions.type.equals(ProjectType.LIB)) {
+                        targetType = ITarget.TargetType.SWC;
+                    }
+                    ITargetSettings targetSettings = configurator.getTargetSettings(targetType);
+                    if (targetSettings == null) {
+                        // calling getTargetSettings() can add more configuration
+                        // problems that didn't exist above
+                        configProblems.addAll(configurator.getConfigurationProblems());
+                        configurator = null;
+                    } else {
+                        project.setTargetSettings(targetSettings);
+                    }
+                }
+
+                if (configurator == null) {
+                    project.delete();
+                    project = null;
+                }
+
+                System.setProperty("user.dir", oldUserDir);
+
+                ICompilerProblemSettings compilerProblemSettings = null;
+                if (configurator != null) {
+                    compilerProblemSettings = configurator.getCompilerProblemSettings();
+                }
+                ProblemQuery problemQuery = new ProblemQuery(compilerProblemSettings);
+                problemQuery.addAll(configProblems);
+                publishDiagnosticsForProblemQuery(problemQuery, projectData.configProblemTracker, projectData, true);
+
+                projectData.project = project;
+                projectData.configurator = configurator;
+                prepareNewProject(projectData);
+            } finally {
+                compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
             }
-
-            System.setProperty("user.dir", oldUserDir);
-
-            ICompilerProblemSettings compilerProblemSettings = null;
-            if (configurator != null) {
-                compilerProblemSettings = configurator.getCompilerProblemSettings();
-            }
-            ProblemQuery problemQuery = new ProblemQuery(compilerProblemSettings);
-            problemQuery.addAll(configProblems);
-            publishDiagnosticsForProblemQuery(problemQuery, projectData.configProblemTracker, projectData, true);
-
-            projectData.project = project;
-            projectData.configurator = configurator;
-            prepareNewProject(projectData);
-        } finally {
-            compilerWorkspace.endIdleState(IWorkspace.NIL_COMPILATIONUNITS_TO_UPDATE);
         }
+
+        if (!activeProject && !projectData.equals(actionScriptProjectManager.getFallbackProjectData())) {
+            activeProject = true;
+            if (initialized && notifyActiveProject) {
+                languageClient.setActionScriptActive();
+            }
+        }
+
         return project;
     }
 

@@ -24,4 +24,7 @@ public interface ActionScriptLanguageClient extends LanguageClient {
 
 	@JsonNotification("as3mxml/logCompilerShellOutput")
 	void logCompilerShellOutput(String message);
+
+	@JsonNotification("as3mxml/setActionScriptActive")
+	void setActionScriptActive();
 }

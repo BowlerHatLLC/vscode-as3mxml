@@ -21,7 +21,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Predicate;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import org.apache.royale.compiler.common.ISourceLocation;
@@ -81,12 +81,12 @@ public class ActionScriptProjectManager {
     private IProjectConfigStrategyFactory projectConfigStrategyFactory;
     private ActionScriptProjectData fallbackProjectData;
     private LanguageClient languageClient;
-    private Predicate<ActionScriptProjectData> addProjectCallback;
-    private Predicate<ActionScriptProjectData> removeProjectCallback;
+    private Consumer<ActionScriptProjectData> addProjectCallback;
+    private Consumer<ActionScriptProjectData> removeProjectCallback;
 
     public ActionScriptProjectManager(FileTracker fileTracker, IProjectConfigStrategyFactory factory,
-            Predicate<ActionScriptProjectData> addProjectCallback,
-            Predicate<ActionScriptProjectData> removeProjectCallback) {
+            Consumer<ActionScriptProjectData> addProjectCallback,
+            Consumer<ActionScriptProjectData> removeProjectCallback) {
         this.fileTracker = fileTracker;
         this.projectConfigStrategyFactory = factory;
         this.addProjectCallback = addProjectCallback;
@@ -854,12 +854,12 @@ public class ActionScriptProjectManager {
         projectData.codeProblemTracker.setLanguageClient(languageClient);
         projectData.configProblemTracker.setLanguageClient(languageClient);
         allProjectData.add(projectData);
-        addProjectCallback.test(projectData);
+        addProjectCallback.accept(projectData);
         return projectData;
     }
 
     private void removeProject(ActionScriptProjectData projectData) {
-        removeProjectCallback.test(projectData);
+        removeProjectCallback.accept(projectData);
         allProjectData.remove(projectData);
         projectData.codeProblemTracker.releaseStale();
         projectData.configProblemTracker.releaseStale();
