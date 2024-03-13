@@ -107,7 +107,7 @@ public class Main {
 
             int exitIfNegative(int result) {
                 if (result < 0) {
-                    System.err.println("Input stream has closed. Exiting...");
+                    System.err.println("AS3 & MXML input stream has closed. Exiting...");
                     System.exit(0);
                 }
                 return result;
