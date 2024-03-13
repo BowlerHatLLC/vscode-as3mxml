@@ -193,7 +193,7 @@
         {
           "id": "actionScriptSourcePaths",
           "name": "ActionScript Source Path",
-          "when": "as3mxml.codeIntelligenceReady && (resourceLangId =~ /(actionscript|mxml)/ || resourceFilename =~ /^asconfig(\\.\\w+)?\\.json$/)"
+          "when": "as3mxml.codeIntelligenceReady || resourceLangId =~ /(actionscript|mxml)/ || resourceFilename =~ /^asconfig(\\.\\w+)?\\.json$/"
         }
       ]
     },

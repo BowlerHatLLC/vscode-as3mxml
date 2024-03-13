@@ -45,6 +45,7 @@ import validateEditorSDK from "./utils/validateEditorSDK";
 import validateJava from "./utils/validateJava";
 import selectRoyalePreferredTarget from "./commands/selectRoyalePreferredTarget";
 import getRoyalePreferredTarget from "./utils/getRoyalePreferredTarget";
+import validateRoyale from "./utils/validateRoyale";
 
 const INVALID_SDK_ERROR =
   "as3mxml.sdk.editor in settings does not point to a valid SDK. Requires Apache Royale 0.9.10 or newer.";
@@ -63,7 +64,9 @@ const QUICK_COMPILE_AND_DEBUG_INIT_MESSAGE =
 const QUICK_COMPILE_AND_RUN_INIT_MESSAGE =
   "Quick Compile & Run is waiting for initialization...";
 const NO_SDK = "$(alert) No SDK";
-const ASCONFIG_JSON = "asconfig.json";
+const FILE_EXTENSION_AS = ".as";
+const FILE_EXTENSION_MXML = ".mxml";
+const FILE_NAME_ASCONFIG_JSON = "asconfig.json";
 let savedContext: vscode.ExtensionContext;
 let savedLanguageClient: LanguageClient;
 let isLanguageClientReady = false;
@@ -74,6 +77,7 @@ let sdkStatusBarItem: vscode.StatusBarItem;
 let royaleTargetStatusBarItem: vscode.StatusBarItem;
 let pendingQuickCompileAndDebug = false;
 let pendingQuickCompileAndRun = false;
+let as3mxmlCodeIntelligenceReady = false;
 
 function getValidatedEditorSDKConfiguration(
   javaExecutablePath: string
@@ -87,6 +91,11 @@ function getValidatedEditorSDKConfiguration(
     javaExecutablePath,
     result
   );
+}
+
+function onDidChangeVisibleTextEditors() {
+  refreshSDKStatusBarItemVisibility();
+  refreshRoyaleTargetStatusBarItemVisibility();
 }
 
 function onDidChangeConfiguration(event: vscode.ConfigurationChangeEvent) {
@@ -124,6 +133,14 @@ function onDidChangeConfiguration(event: vscode.ConfigurationChangeEvent) {
   if (needsSDKUpdate) {
     updateSDKStatusBarItem();
   }
+
+  if (
+    event.affectsConfiguration("as3mxml.sdk.framework") ||
+    event.affectsConfiguration("as3mxml.sdk.editor")
+  ) {
+    refreshRoyaleTargetStatusBarItemVisibility();
+  }
+
   if (needsRestart) {
     restartServer();
   }
@@ -138,8 +155,60 @@ function updateSDKStatusBarItem() {
   sdkStatusBarItem.tooltip = frameworkSDKHome;
 }
 
+function refreshSDKStatusBarItemVisibility() {
+  let showStatusBarItem = as3mxmlCodeIntelligenceReady;
+  if (!showStatusBarItem) {
+    const textEditor = vscode.window.visibleTextEditors.find((textEditor) => {
+      var fileName = textEditor.document.fileName;
+      fileName = path.basename(fileName);
+      return (
+        fileName.endsWith(FILE_EXTENSION_AS) ||
+        fileName.endsWith(FILE_EXTENSION_MXML) ||
+        fileName === FILE_NAME_ASCONFIG_JSON ||
+        /^asconfig\.\w+\.json$/.test(fileName)
+      );
+    });
+    if (textEditor) {
+      showStatusBarItem = true;
+    }
+  }
+  if (showStatusBarItem) {
+    sdkStatusBarItem.show();
+  } else {
+    sdkStatusBarItem.hide();
+  }
+}
+
 function updateRoyaleTargetStatusBarItem() {
   royaleTargetStatusBarItem.text = getRoyalePreferredTarget(savedContext);
+}
+
+function refreshRoyaleTargetStatusBarItemVisibility() {
+  let showStatusBarItem = false;
+  // show for Royale projects only
+  if (validateRoyale(getFrameworkSDKPathWithFallbacks())) {
+    showStatusBarItem = as3mxmlCodeIntelligenceReady;
+    if (!showStatusBarItem) {
+      const textEditor = vscode.window.visibleTextEditors.find((textEditor) => {
+        var fileName = textEditor.document.fileName;
+        fileName = path.basename(fileName);
+        return (
+          fileName.endsWith(FILE_EXTENSION_AS) ||
+          fileName.endsWith(FILE_EXTENSION_MXML) ||
+          fileName === FILE_NAME_ASCONFIG_JSON ||
+          /^asconfig\.\w+\.json$/.test(fileName)
+        );
+      });
+      if (textEditor) {
+        showStatusBarItem = true;
+      }
+    }
+  }
+  if (showStatusBarItem) {
+    royaleTargetStatusBarItem.show();
+  } else {
+    royaleTargetStatusBarItem.hide();
+  }
 }
 
 function restartServer() {
@@ -150,10 +219,11 @@ function restartServer() {
   let languageClient = savedLanguageClient;
   savedLanguageClient = null;
   isLanguageClientReady = false;
+  as3mxmlCodeIntelligenceReady = false;
   vscode.commands.executeCommand(
     "setContext",
     "as3mxml.codeIntelligenceReady",
-    false
+    as3mxmlCodeIntelligenceReady
   );
   languageClient.stop().then(
     () => {
@@ -189,12 +259,15 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.workspace.onDidChangeConfiguration(onDidChangeConfiguration)
   );
   savedContext.subscriptions.push(
+    vscode.window.onDidChangeVisibleTextEditors(onDidChangeVisibleTextEditors)
+  );
+  savedContext.subscriptions.push(
     vscode.workspace.onDidSaveTextDocument((textDocument) => {
       if (!savedLanguageClient || !isLanguageClientReady) {
         return;
       }
       const fileName = path.basename(textDocument.fileName);
-      if (fileName !== ASCONFIG_JSON) {
+      if (fileName !== FILE_NAME_ASCONFIG_JSON) {
         return;
       }
       updateRoyaleTargetStatusBarItem();
@@ -337,7 +410,10 @@ export function activate(context: vscode.ExtensionContext) {
             vscode.workspace.workspaceFolders === undefined ||
             !vscode.workspace.workspaceFolders.some((workspaceFolder) =>
               fs.existsSync(
-                path.resolve(workspaceFolder.uri.fsPath, ASCONFIG_JSON)
+                path.resolve(
+                  workspaceFolder.uri.fsPath,
+                  FILE_NAME_ASCONFIG_JSON
+                )
               )
             )
           ) {
@@ -384,7 +460,10 @@ export function activate(context: vscode.ExtensionContext) {
             vscode.workspace.workspaceFolders === undefined ||
             !vscode.workspace.workspaceFolders.some((workspaceFolder) =>
               fs.existsSync(
-                path.resolve(workspaceFolder.uri.fsPath, ASCONFIG_JSON)
+                path.resolve(
+                  workspaceFolder.uri.fsPath,
+                  FILE_NAME_ASCONFIG_JSON
+                )
               )
             )
           ) {
@@ -418,8 +497,10 @@ export function activate(context: vscode.ExtensionContext) {
 
   sdkStatusBarItem = createActionScriptSDKStatusBarItem();
   updateSDKStatusBarItem();
+  refreshSDKStatusBarItemVisibility();
   royaleTargetStatusBarItem = createRoyaleTargetStatusBarItem();
   updateRoyaleTargetStatusBarItem();
+  refreshRoyaleTargetStatusBarItemVisibility();
 
   context.subscriptions.push(
     vscode.tasks.registerTaskProvider(
@@ -525,6 +606,7 @@ function startClient() {
           },
           initializationOptions: {
             preferredRoyaleTarget: getRoyalePreferredTarget(savedContext),
+            notifyActiveProject: true,
           },
         };
         let cpDelimiter = getJavaClassPathDelimiter();
@@ -584,10 +666,11 @@ function startClient() {
               : undefined,
           },
         };
+        as3mxmlCodeIntelligenceReady = false;
         vscode.commands.executeCommand(
           "setContext",
           "as3mxml.codeIntelligenceReady",
-          false
+          as3mxmlCodeIntelligenceReady
         );
         isLanguageClientReady = false;
         savedLanguageClient = new LanguageClient(
@@ -595,22 +678,6 @@ function startClient() {
           "ActionScript & MXML Language Server",
           executable,
           clientOptions
-        );
-
-        try {
-          await savedLanguageClient.start();
-        } catch (e) {
-          resolve();
-          vscode.window.showErrorMessage(STARTUP_ERROR);
-          return;
-        }
-
-        resolve();
-        isLanguageClientReady = true;
-        vscode.commands.executeCommand(
-          "setContext",
-          "as3mxml.codeIntelligenceReady",
-          true
         );
         savedLanguageClient.onNotification(
           "as3mxml/logCompilerShellOutput",
@@ -624,6 +691,30 @@ function startClient() {
             logCompilerShellOutput(null, false, true);
           }
         );
+        savedLanguageClient.onNotification(
+          "as3mxml/setActionScriptActive",
+          () => {
+            as3mxmlCodeIntelligenceReady = true;
+            vscode.commands.executeCommand(
+              "setContext",
+              "as3mxml.codeIntelligenceReady",
+              as3mxmlCodeIntelligenceReady
+            );
+            refreshSDKStatusBarItemVisibility();
+            refreshRoyaleTargetStatusBarItemVisibility();
+          }
+        );
+
+        try {
+          await savedLanguageClient.start();
+        } catch (e) {
+          resolve();
+          vscode.window.showErrorMessage(STARTUP_ERROR);
+          return;
+        }
+
+        resolve();
+        isLanguageClientReady = true;
         vscode.commands.executeCommand(
           "as3mxml.setRoyalePreferredTarget",
           getRoyalePreferredTarget(savedContext)

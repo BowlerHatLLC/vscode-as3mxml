@@ -13,12 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-import * as path from "path";
 import * as vscode from "vscode";
-
-const FILE_EXTENSION_AS = ".as";
-const FILE_EXTENSION_MXML = ".mxml";
-const FILE_NAME_ASCONFIG_JSON = "asconfig.json";
 
 export default function createActionScriptSDKStatusBarItem(): vscode.StatusBarItem {
   let statusBarItem = vscode.window.createStatusBarItem(
@@ -26,27 +21,6 @@ export default function createActionScriptSDKStatusBarItem(): vscode.StatusBarIt
     99
   );
   statusBarItem.command = "as3mxml.selectWorkspaceSDK";
-  vscode.window.onDidChangeVisibleTextEditors((e) => {
-    refreshStatusBarItemVisibility(statusBarItem);
-  });
-  refreshStatusBarItemVisibility(statusBarItem);
+  statusBarItem.hide();
   return statusBarItem;
-}
-
-function refreshStatusBarItemVisibility(statusBarItem: vscode.StatusBarItem) {
-  const textEditor = vscode.window.visibleTextEditors.find((textEditor) => {
-    var fileName = textEditor.document.fileName;
-    fileName = path.basename(fileName);
-    return (
-      fileName.endsWith(FILE_EXTENSION_AS) ||
-      fileName.endsWith(FILE_EXTENSION_MXML) ||
-      fileName === FILE_NAME_ASCONFIG_JSON ||
-      /^asconfig\.\w+\.json$/.test(fileName)
-    );
-  });
-  if (!textEditor) {
-    statusBarItem.hide();
-    return;
-  }
-  statusBarItem.show();
 }

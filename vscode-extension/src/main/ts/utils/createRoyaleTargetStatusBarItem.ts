@@ -14,13 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 import * as vscode from "vscode";
-import * as path from "path";
-import validateRoyale from "./validateRoyale";
-import getFrameworkSDKPathWithFallbacks from "./getFrameworkSDKPathWithFallbacks";
-
-const FILE_EXTENSION_AS = ".as";
-const FILE_EXTENSION_MXML = ".mxml";
-const FILE_NAME_ASCONFIG_JSON = "asconfig.json";
 
 export default function createRoyaleTargetStatusBarItem(): vscode.StatusBarItem {
   let statusBarItem = vscode.window.createStatusBarItem(
@@ -30,43 +23,6 @@ export default function createRoyaleTargetStatusBarItem(): vscode.StatusBarItem 
   statusBarItem.tooltip = "Set Preferred Royale Target";
   statusBarItem.command = "as3mxml.selectRoyalePreferredTarget";
   statusBarItem.text = "SWF";
-  vscode.workspace.onDidChangeConfiguration((e) => {
-    if (
-      e.affectsConfiguration("as3mxml.sdk.framework") ||
-      e.affectsConfiguration("as3mxml.sdk.editor")
-    )
-      refreshStatusBarItemVisibility(statusBarItem);
-  });
-  vscode.window.onDidChangeVisibleTextEditors((editor) => {
-    refreshStatusBarItemVisibility(statusBarItem);
-  });
-  refreshStatusBarItemVisibility(statusBarItem);
+  statusBarItem.hide();
   return statusBarItem;
-}
-
-function refreshStatusBarItemVisibility(statusBarItem: vscode.StatusBarItem) {
-  let showStatusBarItem = true;
-  if (!validateRoyale(getFrameworkSDKPathWithFallbacks())) {
-    // show for Royale projects only
-    showStatusBarItem = false;
-  } else {
-    const textEditor = vscode.window.visibleTextEditors.find((textEditor) => {
-      var fileName = textEditor.document.fileName;
-      fileName = path.basename(fileName);
-      return (
-        fileName.endsWith(FILE_EXTENSION_AS) ||
-        fileName.endsWith(FILE_EXTENSION_MXML) ||
-        fileName === FILE_NAME_ASCONFIG_JSON ||
-        /^asconfig\.\w+\.json$/.test(fileName)
-      );
-    });
-    if (!textEditor) {
-      showStatusBarItem = false;
-    }
-  }
-  if (showStatusBarItem) {
-    statusBarItem.show();
-  } else {
-    statusBarItem.hide();
-  }
 }
