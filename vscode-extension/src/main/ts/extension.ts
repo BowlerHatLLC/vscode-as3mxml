@@ -673,6 +673,14 @@ function startClient() {
           as3mxmlCodeIntelligenceReady
         );
         isLanguageClientReady = false;
+        // NOTE: isLanguageClientReady and as3mxmlCodeIntelligenceReady mean
+        // different things.
+        // isLanguageClientReady is true once the language server has started,
+        // and is communicating with the extension, but that doesn't mean any
+        // projects have been found. in that case, as3mxmlCodeIntelligenceReady
+        // will still be false. if a valid asconfig.json file is created, the
+        // language server will activate a project, and
+        // as3mxmlCodeIntelligenceReady will be changed to true.
         savedLanguageClient = new LanguageClient(
           "actionscript",
           "ActionScript & MXML Language Server",
