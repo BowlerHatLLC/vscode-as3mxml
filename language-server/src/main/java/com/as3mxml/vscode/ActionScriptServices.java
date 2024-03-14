@@ -230,6 +230,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     private SimpleProjectConfigStrategy fallbackConfig;
     private CompilerShell compilerShell;
     private String jvmargs;
+    private List<String> tokens;
 
     public ActionScriptServices(IProjectConfigStrategyFactory factory) {
         compilerWorkspace = new Workspace();
@@ -1296,6 +1297,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         this.updateRealTimeProblems(settings);
         this.updateSourcePathWarning(settings);
         this.updateJVMArgs(settings);
+        this.updateTokens(settings);
         this.updateConcurrentRequests(settings);
         this.updateCodeGenerationGetterSettersForcePublicFunctions(settings);
         this.updateCodeGenerationGetterSettersForcePrivateVariable(settings);
@@ -2418,6 +2420,42 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         }
     }
 
+    private void updateTokens(JsonObject settings) {
+        if (!settings.has("as3mxml")) {
+            return;
+        }
+        JsonObject as3mxml = settings.get("as3mxml").getAsJsonObject();
+        if (!as3mxml.has("asconfigc")) {
+            return;
+        }
+        JsonObject asconfigc = as3mxml.get("asconfigc").getAsJsonObject();
+        if (!asconfigc.has("additionalTokens")) {
+            return;
+        }
+        JsonObject additionalTokens = asconfigc.get("additionalTokens").getAsJsonObject();
+
+        List<String> newTokens = null;
+        if (additionalTokens.size() > 0) {
+            newTokens = additionalTokens.entrySet().stream().filter(
+                    entry -> entry.getValue().isJsonPrimitive() && entry.getValue().getAsJsonPrimitive().isString())
+                    .map(entry -> "+" + entry.getKey() + "=" + entry.getValue().getAsString())
+                    .collect(Collectors.toList());
+        }
+
+        if ((tokens == null && newTokens == null) || (newTokens != null && newTokens.equals(tokens))) {
+            return;
+        }
+
+        tokens = newTokens;
+        if (compilerShell != null) {
+            compilerShell.dispose();
+            compilerShell = null;
+        }
+
+        this.actionScriptProjectManager.getAllProjectData().stream().forEach(d -> d.config.setTokens(tokens));
+        checkForProblemsNow(true);
+    }
+
     private void updateConcurrentRequests(JsonObject settings) {
         if (!settings.has("as3mxml")) {
             return;
@@ -2905,7 +2943,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                         String[] argsArray = jvmargs.split(" ");
                         argsList = Arrays.stream(argsArray).collect(Collectors.toList());
                     }
-                    compilerShell = new CompilerShell(languageClient, argsList);
+                    compilerShell = new CompilerShell(languageClient, argsList, tokens);
                 }
                 String frameworkLib = System.getProperty(PROPERTY_FRAMEWORK_LIB);
                 Path frameworkSDKHome = Paths.get(frameworkLib, "..");

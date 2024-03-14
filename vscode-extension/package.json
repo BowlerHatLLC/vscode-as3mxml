@@ -430,6 +430,18 @@
           "default": false,
           "description": "(Advanced) Specifies whether asconfigc will display verbose output during builds."
         },
+        "as3mxml.asconfigc.additionalTokens": {
+          "type":"object",
+          "default": {},
+          "description": "Adds extra tokens to the compiler that can be used for paths",
+          "patternProperties": {
+            "^[a-zA-Z0-9]+$": {
+              "type": "string",
+              "description": "value of the token by the name of this key"
+            }
+          },
+          "additionalProperties": false
+        },
         "as3mxml.quickCompile.enabled": {
           "type": "boolean",
           "default": true,

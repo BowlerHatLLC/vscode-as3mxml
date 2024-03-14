@@ -36,6 +36,7 @@ public class SimpleProjectConfigStrategy implements IProjectConfigStrategy {
     private Path projectPath;
     private WorkspaceFolder workspaceFolder;
     private boolean changed = true;
+    private List<String> tokens = null;
 
     public SimpleProjectConfigStrategy(Path projectPath, WorkspaceFolder workspaceFolder) {
         this.projectPath = projectPath;
@@ -115,6 +116,11 @@ public class SimpleProjectConfigStrategy implements IProjectConfigStrategy {
         options.compilerOptions = compilerOptions;
         options.additionalOptions = null;
         options.targets = targets;
+        options.additionalTokens = tokens;
         return options;
+    }
+
+    public void setTokens(List<String> tokens) {
+        this.tokens = tokens;
     }
 }

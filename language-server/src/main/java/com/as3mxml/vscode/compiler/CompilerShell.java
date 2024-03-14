@@ -65,11 +65,14 @@ public class CompilerShell implements IASConfigCCompiler {
     private boolean isRoyale = false;
     private boolean isAIR = false;
     private List<String> jvmargs = null;
+    private List<String> tokens = null;
     private boolean active = false;
 
-    public CompilerShell(ActionScriptLanguageClient languageClient, List<String> jvmargs) throws URISyntaxException {
+    public CompilerShell(ActionScriptLanguageClient languageClient, List<String> jvmargs, List<String> tokens)
+            throws URISyntaxException {
         this.languageClient = languageClient;
         this.jvmargs = jvmargs;
+        this.tokens = tokens;
         URI uri = getClass().getProtectionDomain().getCodeSource().getLocation().toURI();
         Path binPath = Paths.get(uri).getParent().normalize();
         rcshPath = binPath.resolve(FILE_NAME_RCSH);
@@ -367,11 +370,18 @@ public class CompilerShell implements IASConfigCCompiler {
         } else {
             command.append(EXECUTABLE_MXMLC);
         }
+
+        for (String token : tokens) {
+            command.append(token);
+            command.append(" ");
+        }
+
         command.append(" ");
         for (String option : compilerOptions) {
             command.append(option);
             command.append(" ");
         }
+
         command.append("\n");
         return command.toString();
     }

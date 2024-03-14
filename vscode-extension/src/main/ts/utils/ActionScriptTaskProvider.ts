@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-	http://www.apache.org/licenses/LICENSE-2.0
+  http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,6 +18,7 @@ import * as vscode from "vscode";
 import getFrameworkSDKPathWithFallbacks from "./getFrameworkSDKPathWithFallbacks";
 import BaseAsconfigTaskProvider from "./BaseAsconfigTaskProvider";
 import validateRoyale from "./validateRoyale";
+import getExtraCompilerTokens from "./getExtraCompilerTokens";
 
 const ASCONFIG_JSON = "asconfig.json";
 const FIELD_AIR_OPTIONS = "airOptions";
@@ -78,8 +79,7 @@ interface ActionScriptTaskDefinition extends vscode.TaskDefinition {
 
 export default class ActionScriptTaskProvider
   extends BaseAsconfigTaskProvider
-  implements vscode.TaskProvider
-{
+  implements vscode.TaskProvider {
   protected provideTasksForASConfigJSON(
     jsonURI: vscode.Uri,
     workspaceFolder: vscode.WorkspaceFolder,
@@ -559,6 +559,10 @@ export default class ActionScriptTaskProvider
     if (command.length > 1) {
       options.unshift(...command.slice(1));
     }
+    let tokens = getExtraCompilerTokens();
+    if (tokens && tokens.length != 0) {
+      options = options.concat(tokens);
+    }
     let source =
       airPlatform === null ? TASK_SOURCE_ACTIONSCRIPT : TASK_SOURCE_AIR;
     let execution = new vscode.ProcessExecution(command[0], options);
@@ -616,6 +620,10 @@ export default class ActionScriptTaskProvider
     }
     if (command.length > 1) {
       options.unshift(...command.slice(1));
+    }
+    let tokens = getExtraCompilerTokens();
+    if (tokens && tokens.length != 0) {
+      options = options.concat(tokens);
     }
     let execution = new vscode.ProcessExecution(command[0], options);
     let task = new vscode.Task(

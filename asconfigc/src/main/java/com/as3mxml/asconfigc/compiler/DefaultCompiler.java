@@ -27,16 +27,18 @@ import com.as3mxml.asconfigc.utils.ProjectUtils;
 
 public class DefaultCompiler implements IASConfigCCompiler {
 	public DefaultCompiler() {
-		this(false, null);
+		this(false, null, null);
 	}
 
-	public DefaultCompiler(boolean verbose, List<String> jvmargs) {
+	public DefaultCompiler(boolean verbose, List<String> jvmargs, List<String> tokens) {
 		this.verbose = verbose;
 		this.jvmargs = jvmargs;
+		this.tokens = tokens;
 	}
 
 	private boolean verbose = false;
 	private List<String> jvmargs = null;
+	private List<String> tokens = null;
 
 	public void compile(String projectType, List<String> compilerOptions, Path workspaceRoot, Path sdkPath)
 			throws ASConfigCException {
@@ -48,6 +50,11 @@ public class DefaultCompiler implements IASConfigCCompiler {
 				System.out.println("Compiling application...");
 			}
 		}
+
+		if (tokens != null) {
+			compilerOptions.addAll(0, tokens);
+		}
+
 		boolean sdkIsRoyale = ApacheRoyaleUtils.isValidSDK(sdkPath) != null;
 		Path jarPath = ProjectUtils.findCompilerJarPath(projectType, sdkPath.toString(), !sdkIsRoyale);
 		if (jarPath == null) {
