@@ -2,7 +2,7 @@
   "name": "vscode-as3mxml",
   "displayName": "ActionScript & MXML",
   "description": "Language support for ActionScript and MXML",
-  "version": "1.21.0-SNAPSHOT",
+  "version": "1.21.0",
   "publisher": "bowlerhatllc",
   "homepage": "https://as3mxml.com/",
   "repository": {

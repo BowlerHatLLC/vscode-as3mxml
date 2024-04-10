@@ -1,5 +1,20 @@
 # ActionScript & MXML for Visual Studio Code Changelog
 
+## 1.21.0
+
+### Fixed Issues
+
+- Completion: Fixed ActionScript completion being triggered inside `<fx:Style>` element in MXML.
+- General: Fixed null exception in real-time problems checker.
+- Hover: Fixed detection and formatting of `@param` asdoc tags that contain tab characters instead of spaces.
+- Outline: Fixed document symbols not being rendered because range and selection range were not properly bounded.
+- Create Projcet: Fixed invalid Adobe AIR application ID generatd from class and package containing underscore (`_`) or other unsupported characters.
+
+### Other Changes
+
+- General: Dropped support for old versions of Apache FlexJS. Apache Royale remains supported, of course.
+- Views: Improved visibility behavior for AS3 Source Paths view, SDK status bar item, and Royale Target status bar item. In workspaces that contain valid projects with _asconfig.json_ files, these views are always visible after the language server starts successfully. In other workspaces, these views are visible only when a file of type _.as_, _.mxml_, or _asconfig.json_ is open in a visible editor.
+
 ## 1.20.1
 
 ### Fixed Issues
