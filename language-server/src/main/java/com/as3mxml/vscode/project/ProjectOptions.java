@@ -34,6 +34,7 @@ public class ProjectOptions {
     public String[] files;
     public List<String> compilerOptions;
     public List<String> additionalOptions;
+    public List<String> additionalTokens;
 
     // while the following values are also included in the compiler options,
     // we need them available for other things in the language server
@@ -42,6 +43,6 @@ public class ProjectOptions {
     public boolean equals(ProjectOptions other) {
         return other.type.equals(type) && other.config.equals(config) && Arrays.equals(other.files, files)
                 && other.compilerOptions.equals(compilerOptions) && other.additionalOptions.equals(additionalOptions)
-                && other.targets.equals(targets);
+                && other.targets.equals(targets) && other.additionalTokens.equals(additionalTokens);
     }
 }
