@@ -44,11 +44,7 @@ public class CSSDocumentUtils {
 		return getContainingCSSNodeIncludingStart(cssDocument, offset - styleNode.getContentStart());
 	}
 
-	private static boolean containsWithStart(ICSSNode node, int offset) {
-		return offset >= node.getAbsoluteStart() && offset <= node.getAbsoluteEnd();
-	}
-
-	private static ICSSNode getContainingCSSNodeIncludingStart(ICSSNode node, int offset) {
+	public static ICSSNode getContainingCSSNodeIncludingStart(ICSSNode node, int offset) {
 		if (!containsWithStart(node, offset)) {
 			return null;
 		}
@@ -73,5 +69,9 @@ public class CSSDocumentUtils {
 			}
 		}
 		return node;
+	}
+
+	private static boolean containsWithStart(ICSSNode node, int offset) {
+		return offset >= node.getAbsoluteStart() && offset <= node.getAbsoluteEnd();
 	}
 }

@@ -27,11 +27,14 @@ import org.apache.royale.compiler.common.XMLName;
 import org.apache.royale.compiler.css.ICSSDocument;
 import org.apache.royale.compiler.css.ICSSNamespaceDefinition;
 import org.apache.royale.compiler.css.ICSSNode;
+import org.apache.royale.compiler.css.ICSSProperty;
+import org.apache.royale.compiler.css.ICSSRule;
 import org.apache.royale.compiler.css.ICSSSelector;
 import org.apache.royale.compiler.definitions.IClassDefinition;
 import org.apache.royale.compiler.definitions.IDefinition;
 import org.apache.royale.compiler.definitions.IFunctionDefinition;
 import org.apache.royale.compiler.definitions.IFunctionDefinition.FunctionClassification;
+import org.apache.royale.compiler.definitions.IStyleDefinition;
 import org.apache.royale.compiler.definitions.IVariableDefinition;
 import org.apache.royale.compiler.definitions.IVariableDefinition.VariableClassification;
 import org.apache.royale.compiler.internal.mxml.MXMLData;
@@ -69,6 +72,7 @@ import com.as3mxml.vscode.utils.DefinitionUtils;
 import com.as3mxml.vscode.utils.FileTracker;
 import com.as3mxml.vscode.utils.LanguageServerCompilerUtils;
 import com.as3mxml.vscode.utils.MXMLDataUtils;
+import com.google.common.collect.ImmutableList;
 
 public class ReferencesProvider {
     private static final String FILE_EXTENSION_MXML = ".mxml";
@@ -307,12 +311,55 @@ public class ReferencesProvider {
             ActionScriptProjectData projectData) {
         IDefinition definition = null;
 
-        ICSSNode cssNode = CSSDocumentUtils.getContainingCSSNodeIncludingStart(styleNode,
-                currentOffset);
-        if (cssNode instanceof ICSSSelector) {
-            ICSSSelector cssSelector = (ICSSSelector) cssNode;
-            ICSSDocument cssDocument = styleNode.getCSSDocument(new ArrayList<>());
-            if (cssDocument != null) {
+        ICSSDocument cssDocument = styleNode.getCSSDocument(new ArrayList<>());
+        if (cssDocument != null) {
+            ICSSNode cssNode = CSSDocumentUtils.getContainingCSSNodeIncludingStart(cssDocument,
+                    currentOffset - styleNode.getContentStart());
+
+            if (cssNode instanceof ICSSProperty) {
+                ICSSProperty cssProperty = (ICSSProperty) cssNode;
+                int propertyNameEnd = styleNode.getContentStart() + cssProperty.getAbsoluteStart()
+                        + cssProperty.getName().length();
+                if (currentOffset < propertyNameEnd) {
+                    ICSSNode propertyParent = cssProperty.getParent();
+                    ICSSRule cssRule = null;
+                    if (propertyParent instanceof ICSSRule) {
+                        cssRule = (ICSSRule) propertyParent;
+                    }
+                    if (cssRule != null) {
+                        ImmutableList<ICSSSelector> selectors = cssRule.getSelectorGroup();
+                        for (int i = selectors.size() - 1; i >= 0; i--) {
+                            ICSSSelector cssSelector = selectors.get(i);
+                            String elementName = cssSelector.getElementName();
+                            if (elementName == null || elementName.length() == 0) {
+                                continue;
+                            }
+                            ICSSNamespaceDefinition cssNamespace = CSSDocumentUtils
+                                    .getNamespaceForPrefix(cssSelector.getNamespacePrefix(), cssDocument);
+                            XMLName xmlName = new XMLName(cssNamespace.getURI(), cssSelector.getElementName());
+                            IDefinition selectorDefinition = projectData.project.resolveXMLNameToDefinition(xmlName,
+                                    MXMLDialect.DEFAULT);
+                            if (selectorDefinition instanceof IClassDefinition) {
+                                IClassDefinition classDefinition = (IClassDefinition) selectorDefinition;
+                                IStyleDefinition[] styleDefinitions = classDefinition
+                                        .getStyleDefinitions(projectData.project.getWorkspace());
+                                if (styleDefinitions != null) {
+                                    for (IStyleDefinition styleDef : styleDefinitions) {
+                                        if (styleDef.getBaseName().equals(cssProperty.getName())) {
+                                            definition = styleDef;
+                                            break;
+                                        }
+                                    }
+                                }
+                                if (definition != null) {
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            } else if (cssNode instanceof ICSSSelector) {
+                ICSSSelector cssSelector = (ICSSSelector) cssNode;
                 ICSSNamespaceDefinition cssNamespace = CSSDocumentUtils
                         .getNamespaceForPrefix(cssSelector.getNamespacePrefix(), cssDocument);
                 if (cssNamespace != null) {
