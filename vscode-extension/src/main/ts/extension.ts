@@ -592,6 +592,7 @@ function startClient() {
           documentSelector: [
             { scheme: "file", language: "actionscript" },
             { scheme: "file", language: "mxml" },
+            { scheme: "file", language: "css" },
           ],
           synchronize: {
             configurationSection: "as3mxml",
