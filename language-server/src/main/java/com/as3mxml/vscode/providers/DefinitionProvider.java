@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.antlr.runtime.ANTLRStringStream;
 import org.apache.royale.compiler.common.ISourceLocation;
 import org.apache.royale.compiler.common.XMLName;
 import org.apache.royale.compiler.constants.IASKeywordConstants;
@@ -36,6 +37,7 @@ import org.apache.royale.compiler.definitions.IClassDefinition;
 import org.apache.royale.compiler.definitions.IDefinition;
 import org.apache.royale.compiler.definitions.IFunctionDefinition;
 import org.apache.royale.compiler.definitions.IStyleDefinition;
+import org.apache.royale.compiler.internal.css.CSSDocument;
 import org.apache.royale.compiler.internal.mxml.MXMLData;
 import org.apache.royale.compiler.internal.mxml.MXMLDialect;
 import org.apache.royale.compiler.mxml.IMXMLLanguageConstants;
@@ -77,6 +79,7 @@ import com.as3mxml.vscode.utils.MXMLDataUtils;
 import com.google.common.collect.ImmutableList;
 
 public class DefinitionProvider {
+    private static final String FILE_EXTENSION_CSS = ".css";
     private static final String FILE_EXTENSION_MXML = ".mxml";
 
     private ActionScriptProjectManager actionScriptProjectManager;
@@ -94,7 +97,8 @@ public class DefinitionProvider {
         }
         TextDocumentIdentifier textDocument = params.getTextDocument();
         Position position = params.getPosition();
-        Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocument.getUri());
+        String uriString = textDocument.getUri();
+        Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(uriString);
         if (path == null) {
             if (cancelToken != null) {
                 cancelToken.checkCanceled();
@@ -118,7 +122,26 @@ public class DefinitionProvider {
             }
             return Either.forLeft(Collections.emptyList());
         }
-        boolean isMXML = textDocument.getUri().endsWith(FILE_EXTENSION_MXML);
+        if (uriString.endsWith(FILE_EXTENSION_CSS)) {
+            String cssText = fileTracker.getText(path);
+            CSSDocument cssDocument = null;
+            if (cssText != null) {
+                cssDocument = CSSDocument.parse(new ANTLRStringStream(cssText), new ArrayList<>());
+            }
+            if (cssDocument != null) {
+                cssDocument.setSourcePath(path.toString());
+                List<? extends Location> result = cssDefinition(cssDocument, currentOffset, 0, projectData);
+                if (cancelToken != null) {
+                    cancelToken.checkCanceled();
+                }
+                return Either.forLeft(result);
+            }
+            if (cancelToken != null) {
+                cancelToken.checkCanceled();
+            }
+            return Either.forLeft(Collections.emptyList());
+        }
+        boolean isMXML = uriString.endsWith(FILE_EXTENSION_MXML);
         if (isMXML) {
             MXMLData mxmlData = actionScriptProjectManager.getMXMLDataForPath(path, projectData);
             IMXMLTagData offsetTag = MXMLDataUtils.getOffsetMXMLTag(mxmlData, currentOffset);
@@ -406,32 +429,40 @@ public class DefinitionProvider {
 
     private List<? extends Location> cssDefinition(IMXMLStyleNode styleNode, int currentOffset,
             ActionScriptProjectData projectData) {
+        ICSSDocument cssDocument = styleNode.getCSSDocument(new ArrayList<>());
+        if (cssDocument == null) {
+            return Collections.emptyList();
+        }
+        return cssDefinition(cssDocument, currentOffset, styleNode.getContentStart(), projectData);
+    }
+
+    private List<? extends Location> cssDefinition(ICSSDocument cssDocument, int currentOffset, int contentStart,
+            ActionScriptProjectData projectData) {
         IDefinition definition = null;
 
-        ICSSDocument cssDocument = styleNode.getCSSDocument(new ArrayList<>());
-        if (cssDocument != null) {
-            ICSSNode cssNode = CSSDocumentUtils.getContainingCSSNodeIncludingStart(cssDocument,
-                    currentOffset - styleNode.getContentStart());
-            if (cssNode instanceof ICSSProperty) {
-                ICSSProperty cssProperty = (ICSSProperty) cssNode;
-                int propertyNameEnd = styleNode.getContentStart() + cssProperty.getAbsoluteStart()
-                        + cssProperty.getName().length();
-                if (currentOffset < propertyNameEnd) {
-                    ICSSNode propertyParent = cssProperty.getParent();
-                    ICSSRule cssRule = null;
-                    if (propertyParent instanceof ICSSRule) {
-                        cssRule = (ICSSRule) propertyParent;
-                    }
-                    if (cssRule != null) {
-                        ImmutableList<ICSSSelector> selectors = cssRule.getSelectorGroup();
-                        for (int i = selectors.size() - 1; i >= 0; i--) {
-                            ICSSSelector cssSelector = selectors.get(i);
-                            String elementName = cssSelector.getElementName();
-                            if (elementName == null || elementName.length() == 0) {
-                                continue;
-                            }
-                            ICSSNamespaceDefinition cssNamespace = CSSDocumentUtils
-                                    .getNamespaceForPrefix(cssSelector.getNamespacePrefix(), cssDocument);
+        ICSSNode cssNode = CSSDocumentUtils.getContainingCSSNodeIncludingStart(cssDocument,
+                currentOffset - contentStart);
+        if (cssNode instanceof ICSSProperty) {
+            ICSSProperty cssProperty = (ICSSProperty) cssNode;
+            int propertyNameEnd = contentStart + cssProperty.getAbsoluteStart()
+                    + cssProperty.getName().length();
+            if (currentOffset < propertyNameEnd) {
+                ICSSNode propertyParent = cssProperty.getParent();
+                ICSSRule cssRule = null;
+                if (propertyParent instanceof ICSSRule) {
+                    cssRule = (ICSSRule) propertyParent;
+                }
+                if (cssRule != null) {
+                    ImmutableList<ICSSSelector> selectors = cssRule.getSelectorGroup();
+                    for (int i = selectors.size() - 1; i >= 0; i--) {
+                        ICSSSelector cssSelector = selectors.get(i);
+                        String elementName = cssSelector.getElementName();
+                        if (elementName == null || elementName.length() == 0) {
+                            continue;
+                        }
+                        ICSSNamespaceDefinition cssNamespace = CSSDocumentUtils
+                                .getNamespaceForPrefix(cssSelector.getNamespacePrefix(), cssDocument);
+                        if (cssNamespace != null) {
                             XMLName xmlName = new XMLName(cssNamespace.getURI(), cssSelector.getElementName());
                             IDefinition selectorDefinition = projectData.project.resolveXMLNameToDefinition(xmlName,
                                     MXMLDialect.DEFAULT);
@@ -454,32 +485,32 @@ public class DefinitionProvider {
                         }
                     }
                 }
-            } else if (cssNode instanceof ICSSSelector) {
-                ICSSSelector cssSelector = (ICSSSelector) cssNode;
-                ICSSNamespaceDefinition cssNamespace = CSSDocumentUtils
-                        .getNamespaceForPrefix(cssSelector.getNamespacePrefix(), cssDocument);
-                if (cssNamespace != null) {
-                    String nsPrefix = cssNamespace.getPrefix();
-                    int prefixEnd = styleNode.getContentStart() + cssSelector.getAbsoluteStart() + nsPrefix.length();
-                    int elementNameStart = prefixEnd;
-                    if (nsPrefix.length() > 0) {
-                        elementNameStart++;
-                    }
-                    if (currentOffset >= elementNameStart) {
-                        XMLName xmlName = new XMLName(cssNamespace.getURI(), cssSelector.getElementName());
-                        definition = projectData.project.resolveXMLNameToDefinition(xmlName, MXMLDialect.DEFAULT);
-                    } else if (currentOffset < prefixEnd) {
-                        List<Location> result = new ArrayList<>();
-                        Path resolvedPath = Paths.get(cssDocument.getSourcePath());
-                        Location location = new Location();
-                        Position start = new Position(cssNamespace.getLine(), cssNamespace.getColumn());
-                        Position end = new Position(cssNamespace.getEndLine(), cssNamespace.getEndColumn());
-                        Range range = new Range(start, end);
-                        location.setRange(range);
-                        location.setUri(resolvedPath.toUri().toString());
-                        result.add(location);
-                        return result;
-                    }
+            }
+        } else if (cssNode instanceof ICSSSelector) {
+            ICSSSelector cssSelector = (ICSSSelector) cssNode;
+            ICSSNamespaceDefinition cssNamespace = CSSDocumentUtils
+                    .getNamespaceForPrefix(cssSelector.getNamespacePrefix(), cssDocument);
+            if (cssNamespace != null) {
+                String nsPrefix = cssNamespace.getPrefix();
+                int prefixEnd = contentStart + cssSelector.getAbsoluteStart() + nsPrefix.length();
+                int elementNameStart = prefixEnd;
+                if (nsPrefix.length() > 0) {
+                    elementNameStart++;
+                }
+                if (currentOffset >= elementNameStart) {
+                    XMLName xmlName = new XMLName(cssNamespace.getURI(), cssSelector.getElementName());
+                    definition = projectData.project.resolveXMLNameToDefinition(xmlName, MXMLDialect.DEFAULT);
+                } else if (currentOffset < prefixEnd) {
+                    List<Location> result = new ArrayList<>();
+                    Path resolvedPath = Paths.get(cssDocument.getSourcePath());
+                    Location location = new Location();
+                    Position start = new Position(cssNamespace.getLine(), cssNamespace.getColumn());
+                    Position end = new Position(cssNamespace.getEndLine(), cssNamespace.getEndColumn());
+                    Range range = new Range(start, end);
+                    location.setRange(range);
+                    location.setUri(resolvedPath.toUri().toString());
+                    result.add(location);
+                    return result;
                 }
             }
         }

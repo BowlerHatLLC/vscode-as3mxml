@@ -42,6 +42,8 @@ import org.eclipse.lsp4j.jsonrpc.CancelChecker;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 
 public class DocumentSymbolProvider {
+    private static final String FILE_EXTENSION_CSS = ".css";
+
     private ActionScriptProjectManager actionScriptProjectManager;
     private boolean hierarchicalDocumentSymbolSupport;
 
@@ -57,7 +59,8 @@ public class DocumentSymbolProvider {
             cancelToken.checkCanceled();
         }
         TextDocumentIdentifier textDocument = params.getTextDocument();
-        Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocument.getUri());
+        String uriString = textDocument.getUri();
+        Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(uriString);
         if (path == null) {
             if (cancelToken != null) {
                 cancelToken.checkCanceled();
@@ -66,6 +69,12 @@ public class DocumentSymbolProvider {
         }
         ActionScriptProjectData projectData = actionScriptProjectManager.getProjectDataForSourceFile(path);
         if (projectData == null || projectData.project == null) {
+            if (cancelToken != null) {
+                cancelToken.checkCanceled();
+            }
+            return Collections.emptyList();
+        }
+        if (uriString.endsWith(FILE_EXTENSION_CSS)) {
             if (cancelToken != null) {
                 cancelToken.checkCanceled();
             }

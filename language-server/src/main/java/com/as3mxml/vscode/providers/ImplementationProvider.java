@@ -51,6 +51,7 @@ import org.eclipse.lsp4j.jsonrpc.CancelChecker;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 
 public class ImplementationProvider {
+    private static final String FILE_EXTENSION_CSS = ".css";
     private static final String FILE_EXTENSION_MXML = ".mxml";
 
     private ActionScriptProjectManager actionScriptProjectManager;
@@ -68,7 +69,8 @@ public class ImplementationProvider {
         }
         TextDocumentIdentifier textDocument = params.getTextDocument();
         Position position = params.getPosition();
-        Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocument.getUri());
+        String uriString = textDocument.getUri();
+        Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(uriString);
         if (path == null) {
             if (cancelToken != null) {
                 cancelToken.checkCanceled();
@@ -77,6 +79,12 @@ public class ImplementationProvider {
         }
         ActionScriptProjectData projectData = actionScriptProjectManager.getProjectDataForSourceFile(path);
         if (projectData == null || projectData.project == null) {
+            if (cancelToken != null) {
+                cancelToken.checkCanceled();
+            }
+            return Either.forLeft(Collections.emptyList());
+        }
+        if (uriString.endsWith(FILE_EXTENSION_CSS)) {
             if (cancelToken != null) {
                 cancelToken.checkCanceled();
             }
@@ -93,7 +101,7 @@ public class ImplementationProvider {
             }
             return Either.forLeft(Collections.emptyList());
         }
-        boolean isMXML = textDocument.getUri().endsWith(FILE_EXTENSION_MXML);
+        boolean isMXML = uriString.endsWith(FILE_EXTENSION_MXML);
         if (isMXML) {
             MXMLData mxmlData = actionScriptProjectManager.getMXMLDataForPath(path, projectData);
             IMXMLTagData offsetTag = MXMLDataUtils.getOffsetMXMLTag(mxmlData, currentOffset);

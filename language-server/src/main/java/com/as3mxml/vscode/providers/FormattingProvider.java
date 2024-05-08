@@ -28,6 +28,7 @@ import com.as3mxml.vscode.utils.LanguageServerCompilerUtils;
 
 public class FormattingProvider {
     private static final String FILE_EXTENSION_AS = ".as";
+    private static final String FILE_EXTENSION_CSS = ".css";
     private static final String FILE_EXTENSION_MXML = ".mxml";
 
     private FileTracker fileTracker;
@@ -42,8 +43,15 @@ public class FormattingProvider {
         }
         TextDocumentIdentifier textDocument = params.getTextDocument();
         FormattingOptions options = params.getOptions();
-        Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocument.getUri());
+        String uriString = textDocument.getUri();
+        Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(uriString);
         if (path == null) {
+            if (cancelToken != null) {
+                cancelToken.checkCanceled();
+            }
+            return Collections.emptyList();
+        }
+        if (uriString.endsWith(FILE_EXTENSION_CSS)) {
             if (cancelToken != null) {
                 cancelToken.checkCanceled();
             }

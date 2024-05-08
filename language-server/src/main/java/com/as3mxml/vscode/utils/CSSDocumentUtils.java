@@ -25,6 +25,9 @@ import org.apache.royale.compiler.tree.mxml.IMXMLStyleNode;
 
 public class CSSDocumentUtils {
 	public static ICSSNamespaceDefinition getNamespaceForPrefix(String prefix, ICSSDocument cssDocument) {
+		if (prefix == null) {
+			prefix = "";
+		}
 		for (ICSSNamespaceDefinition cssNamespace : cssDocument.getAtNamespaces()) {
 			if (prefix.equals(cssNamespace.getPrefix())) {
 				return cssNamespace;

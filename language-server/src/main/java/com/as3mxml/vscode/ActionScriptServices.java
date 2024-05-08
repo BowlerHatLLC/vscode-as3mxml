@@ -186,8 +186,9 @@ import com.google.gson.JsonPrimitive;
  * responses to return to VSCode.
  */
 public class ActionScriptServices implements TextDocumentService, WorkspaceService {
-    private static final String FILE_EXTENSION_MXML = ".mxml";
     private static final String FILE_EXTENSION_AS = ".as";
+    private static final String FILE_EXTENSION_CSS = ".css";
+    private static final String FILE_EXTENSION_MXML = ".mxml";
     private static final String FILE_EXTENSION_SWC = ".swc";
     private static final String PROPERTY_FRAMEWORK_LIB = "royalelib";
     private static final String ROYALE_ASJS_RELATIVE_PATH_CHILD = "./royale-asjs";
@@ -856,7 +857,8 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     public void didOpen(DidOpenTextDocumentParams params) {
         TextDocumentItem textDocument = params.getTextDocument();
         String textDocumentUri = textDocument.getUri();
-        if (!textDocumentUri.endsWith(FILE_EXTENSION_AS) && !textDocumentUri.endsWith(FILE_EXTENSION_MXML)) {
+        if (!textDocumentUri.endsWith(FILE_EXTENSION_AS) && !textDocumentUri.endsWith(FILE_EXTENSION_MXML)
+                && !textDocumentUri.endsWith(FILE_EXTENSION_CSS)) {
             // code intelligence is available only in .as and .mxml files
             // so we ignore other file extensions
             return;
@@ -912,7 +914,8 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     public void didChange(DidChangeTextDocumentParams params) {
         VersionedTextDocumentIdentifier textDocument = params.getTextDocument();
         String textDocumentUri = textDocument.getUri();
-        if (!textDocumentUri.endsWith(FILE_EXTENSION_AS) && !textDocumentUri.endsWith(FILE_EXTENSION_MXML)) {
+        if (!textDocumentUri.endsWith(FILE_EXTENSION_AS) && !textDocumentUri.endsWith(FILE_EXTENSION_MXML)
+                && !textDocumentUri.endsWith(FILE_EXTENSION_CSS)) {
             // code intelligence is available only in .as and .mxml files
             // so we ignore other file extensions
             return;
@@ -1001,7 +1004,8 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     public void didClose(DidCloseTextDocumentParams params) {
         TextDocumentIdentifier textDocument = params.getTextDocument();
         String textDocumentUri = textDocument.getUri();
-        if (!textDocumentUri.endsWith(FILE_EXTENSION_AS) && !textDocumentUri.endsWith(FILE_EXTENSION_MXML)) {
+        if (!textDocumentUri.endsWith(FILE_EXTENSION_AS) && !textDocumentUri.endsWith(FILE_EXTENSION_MXML)
+                && !textDocumentUri.endsWith(FILE_EXTENSION_CSS)) {
             // code intelligence is available only in .as and .mxml files
             // so we ignore other file extensions
             return;
@@ -1073,7 +1077,8 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
 
         TextDocumentIdentifier textDocument = params.getTextDocument();
         String textDocumentUri = textDocument.getUri();
-        if (!textDocumentUri.endsWith(FILE_EXTENSION_AS) && !textDocumentUri.endsWith(FILE_EXTENSION_MXML)) {
+        if (!textDocumentUri.endsWith(FILE_EXTENSION_AS) && !textDocumentUri.endsWith(FILE_EXTENSION_MXML)
+                && !textDocumentUri.endsWith(FILE_EXTENSION_CSS)) {
             // code intelligence is available only in .as and .mxml files
             // so we ignore other file extensions
             return;
@@ -2142,6 +2147,9 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         // want to check those for errors too, even if they aren't
         // referenced by one of the roots
         for (Path openFilePath : fileTracker.getOpenFiles()) {
+            if (openFilePath.toString().endsWith(FILE_EXTENSION_CSS)) {
+                continue;
+            }
             ActionScriptProjectData openFileProjectData = actionScriptProjectManager
                     .getProjectDataForSourceFile(openFilePath);
             if (!projectData.equals(openFileProjectData)) {
@@ -2255,7 +2263,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                 }
                 if (lint_enabled) {
                     LintingProvider lintingProvider = new LintingProvider(fileTracker);
-                    lintingProvider.linting(Paths.get(unit.getAbsoluteFilename()), problems);
+                    lintingProvider.linting(unit.getAbsoluteFilename(), problems);
                 }
             } else {
                 // we can't publish diagnostics yet, but we can start the build

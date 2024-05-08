@@ -55,6 +55,7 @@ import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.jsonrpc.CancelChecker;
 
 public class SignatureHelpProvider {
+	private static final String FILE_EXTENSION_CSS = ".css";
 	private static final String FILE_EXTENSION_MXML = ".mxml";
 
 	private ActionScriptProjectManager actionScriptProjectManager;
@@ -71,7 +72,8 @@ public class SignatureHelpProvider {
 		}
 		TextDocumentIdentifier textDocument = params.getTextDocument();
 		Position position = params.getPosition();
-		Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocument.getUri());
+		String uriString = textDocument.getUri();
+		Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(uriString);
 		if (path == null) {
 			if (cancelToken != null) {
 				cancelToken.checkCanceled();
@@ -80,6 +82,12 @@ public class SignatureHelpProvider {
 		}
 		ActionScriptProjectData projectData = actionScriptProjectManager.getProjectDataForSourceFile(path);
 		if (projectData == null || projectData.project == null) {
+			if (cancelToken != null) {
+				cancelToken.checkCanceled();
+			}
+			return new SignatureHelp(Collections.emptyList(), -1, -1);
+		}
+		if (uriString.endsWith(FILE_EXTENSION_CSS)) {
 			if (cancelToken != null) {
 				cancelToken.checkCanceled();
 			}
@@ -97,7 +105,7 @@ public class SignatureHelpProvider {
 			return new SignatureHelp(Collections.emptyList(), -1, -1);
 		}
 		IASNode offsetNode = null;
-		boolean isMXML = textDocument.getUri().endsWith(FILE_EXTENSION_MXML);
+		boolean isMXML = uriString.endsWith(FILE_EXTENSION_MXML);
 		if (isMXML) {
 			MXMLData mxmlData = actionScriptProjectManager.getMXMLDataForPath(path, projectData);
 			IMXMLTagData offsetTag = MXMLDataUtils.getOffsetMXMLTag(mxmlData, currentOffset);

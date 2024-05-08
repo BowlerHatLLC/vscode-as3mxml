@@ -16,6 +16,7 @@ limitations under the License.
 package com.as3mxml.vscode.providers;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 import org.apache.royale.compiler.config.ConfigurationPathResolver;
@@ -30,6 +31,7 @@ import org.apache.royale.linter.config.Configurator;
 import com.as3mxml.vscode.utils.FileTracker;
 
 public class LintingProvider {
+	private static final String FILE_EXTENSION_CSS = ".css";
 	private static final String FILE_EXTENSION_MXML = ".mxml";
 	private static final String FILE_EXTENSION_AS = ".as";
 
@@ -39,7 +41,11 @@ public class LintingProvider {
 		this.fileTracker = fileTracker;
 	}
 
-	public void linting(Path filePath, List<ICompilerProblem> problems) {
+	public void linting(String filePathString, List<ICompilerProblem> problems) {
+		if (filePathString.endsWith(FILE_EXTENSION_CSS)) {
+			return;
+		}
+		Path filePath = Paths.get(filePathString);
 		String fileText = fileTracker.getText(filePath);
 		if (fileText == null) {
 			return;

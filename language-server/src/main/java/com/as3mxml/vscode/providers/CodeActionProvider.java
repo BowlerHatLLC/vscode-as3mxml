@@ -66,6 +66,7 @@ import com.google.common.collect.Lists;
 import com.google.gson.JsonObject;
 
 public class CodeActionProvider {
+    private static final String FILE_EXTENSION_CSS = ".css";
     private static final String FILE_EXTENSION_MXML = ".mxml";
 
     private ActionScriptProjectManager actionScriptProjectManager;
@@ -84,7 +85,8 @@ public class CodeActionProvider {
             cancelToken.checkCanceled();
         }
         TextDocumentIdentifier textDocument = params.getTextDocument();
-        Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocument.getUri());
+        String uriString = textDocument.getUri();
+        Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(uriString);
         if (path == null) {
             if (cancelToken != null) {
                 cancelToken.checkCanceled();
@@ -107,6 +109,12 @@ public class CodeActionProvider {
             // the path must be in the workspace or source-path
             return Collections.emptyList();
         }
+        if (uriString.endsWith(FILE_EXTENSION_CSS)) {
+            if (cancelToken != null) {
+                cancelToken.checkCanceled();
+            }
+            return Collections.emptyList();
+        }
         ILspProject project = projectData.project;
 
         if (project == null || !SourcePathUtils.isInProjectSourcePath(path, project, projectData.configurator)) {
@@ -127,7 +135,7 @@ public class CodeActionProvider {
             IASNode ast = ASTUtils.getCompilationUnitAST(unit);
             if (ast != null) {
                 String fileText = fileTracker.getText(path);
-                CodeActionsUtils.findGetSetCodeActions(ast, project, textDocument.getUri(), fileText, params.getRange(),
+                CodeActionsUtils.findGetSetCodeActions(ast, project, uriString, fileText, params.getRange(),
                         codeGeneration_getterSetter_forcePublicFunctions,
                         codeGeneration_getterSetter_forcePrivateVariable, codeActions);
             }

@@ -142,6 +142,7 @@ import com.as3mxml.vscode.utils.SourcePathUtils;
 import com.as3mxml.vscode.utils.XmlnsRange;
 
 public class CompletionProvider {
+    private static final String FILE_EXTENSION_CSS = ".css";
     private static final String FILE_EXTENSION_MXML = ".mxml";
     private static final String VECTOR_HIDDEN_PREFIX = "Vector$";
     private static final Pattern asdocTagAllowedPattern = Pattern.compile("^\\s*(\\*)\\s*(@.*)?$");
@@ -175,7 +176,8 @@ public class CompletionProvider {
 
             TextDocumentIdentifier textDocument = params.getTextDocument();
             Position position = params.getPosition();
-            Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocument.getUri());
+            String uriString = textDocument.getUri();
+            Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(uriString);
             if (path == null) {
                 CompletionList result = new CompletionList();
                 result.setIsIncomplete(false);
@@ -187,6 +189,15 @@ public class CompletionProvider {
             }
             ActionScriptProjectData projectData = actionScriptProjectManager.getProjectDataForSourceFile(path);
             if (projectData == null || projectData.project == null) {
+                CompletionList result = new CompletionList();
+                result.setIsIncomplete(false);
+                result.setItems(new ArrayList<>());
+                if (cancelToken != null) {
+                    cancelToken.checkCanceled();
+                }
+                return Either.forRight(result);
+            }
+            if (uriString.endsWith(FILE_EXTENSION_CSS)) {
                 CompletionList result = new CompletionList();
                 result.setIsIncomplete(false);
                 result.setItems(new ArrayList<>());
@@ -209,7 +220,7 @@ public class CompletionProvider {
                 }
                 return Either.forRight(result);
             }
-            boolean isMXML = textDocument.getUri().endsWith(FILE_EXTENSION_MXML);
+            boolean isMXML = uriString.endsWith(FILE_EXTENSION_MXML);
             if (isMXML) {
                 MXMLData mxmlData = actionScriptProjectManager.getMXMLDataForPath(path, projectData);
                 IMXMLTagData offsetTag = MXMLDataUtils.getOffsetMXMLTag(mxmlData, currentOffset);

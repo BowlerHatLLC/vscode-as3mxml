@@ -19,6 +19,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 
+import org.antlr.runtime.ANTLRStringStream;
 import org.apache.royale.compiler.common.ISourceLocation;
 import org.apache.royale.compiler.constants.IASKeywordConstants;
 import org.apache.royale.compiler.constants.IMetaAttributeConstants;
@@ -33,6 +34,7 @@ import org.apache.royale.compiler.definitions.IClassDefinition;
 import org.apache.royale.compiler.definitions.IDefinition;
 import org.apache.royale.compiler.definitions.IFunctionDefinition;
 import org.apache.royale.compiler.definitions.IStyleDefinition;
+import org.apache.royale.compiler.internal.css.CSSDocument;
 import org.apache.royale.compiler.internal.mxml.MXMLData;
 import org.apache.royale.compiler.internal.mxml.MXMLDialect;
 import org.apache.royale.compiler.mxml.IMXMLTagData;
@@ -64,18 +66,19 @@ import com.as3mxml.vscode.utils.ASDocUtils;
 import com.as3mxml.vscode.utils.ActionScriptProjectManager;
 import com.as3mxml.vscode.utils.CSSDocumentUtils;
 import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
-import com.google.common.collect.ImmutableList;
 import com.as3mxml.vscode.utils.DefinitionDocumentationUtils;
 import com.as3mxml.vscode.utils.DefinitionTextUtils;
 import com.as3mxml.vscode.utils.DefinitionUtils;
 import com.as3mxml.vscode.utils.FileTracker;
 import com.as3mxml.vscode.utils.LanguageServerCompilerUtils;
 import com.as3mxml.vscode.utils.MXMLDataUtils;
+import com.google.common.collect.ImmutableList;
 
 public class HoverProvider {
     private static final String MARKED_STRING_LANGUAGE_ACTIONSCRIPT = "actionscript";
     private static final String MARKED_STRING_LANGUAGE_CSS = "css";
     private static final String MARKED_STRING_LANGUAGE_XML = "xml";
+    private static final String FILE_EXTENSION_CSS = ".css";
     private static final String FILE_EXTENSION_MXML = ".mxml";
 
     private ActionScriptProjectManager actionScriptProjectManager;
@@ -92,7 +95,8 @@ public class HoverProvider {
         }
         TextDocumentIdentifier textDocument = params.getTextDocument();
         Position position = params.getPosition();
-        Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocument.getUri());
+        String uriString = textDocument.getUri();
+        Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(uriString);
         if (path == null) {
             if (cancelToken != null) {
                 cancelToken.checkCanceled();
@@ -116,7 +120,26 @@ public class HoverProvider {
             }
             return new Hover(Collections.emptyList(), null);
         }
-        boolean isMXML = textDocument.getUri().endsWith(FILE_EXTENSION_MXML);
+        if (uriString.endsWith(FILE_EXTENSION_CSS)) {
+            String cssText = fileTracker.getText(path);
+            CSSDocument cssDocument = null;
+            if (cssText != null) {
+                cssDocument = CSSDocument.parse(new ANTLRStringStream(cssText), new ArrayList<>());
+            }
+            if (cssDocument != null) {
+                cssDocument.setSourcePath(path.toString());
+                Hover result = cssHover(cssDocument, currentOffset, 0, projectData.project);
+                if (cancelToken != null) {
+                    cancelToken.checkCanceled();
+                }
+                return result;
+            }
+            if (cancelToken != null) {
+                cancelToken.checkCanceled();
+            }
+            return new Hover(Collections.emptyList(), null);
+        }
+        boolean isMXML = uriString.endsWith(FILE_EXTENSION_MXML);
         if (isMXML) {
             MXMLData mxmlData = actionScriptProjectManager.getMXMLDataForPath(path, projectData);
             IMXMLTagData offsetTag = MXMLDataUtils.getOffsetMXMLTag(mxmlData, currentOffset);
@@ -417,15 +440,22 @@ public class HoverProvider {
     }
 
     private Hover cssHover(IMXMLStyleNode styleNode, int currentOffset, ILspProject project) {
+        ICSSDocument cssDocument = styleNode.getCSSDocument(new ArrayList<>());
+        if (cssDocument == null) {
+            return new Hover(Collections.emptyList(), null);
+        }
+        return cssHover(cssDocument, currentOffset, styleNode.getContentStart(), project);
+    }
+
+    private Hover cssHover(ICSSDocument cssDocument, int currentOffset, int contentStart, ILspProject project) {
         IDefinition definition = null;
 
-        ICSSDocument cssDocument = styleNode.getCSSDocument(new ArrayList<>());
         if (cssDocument != null) {
             ICSSNode cssNode = CSSDocumentUtils.getContainingCSSNodeIncludingStart(cssDocument,
-                    currentOffset - styleNode.getContentStart());
+                    currentOffset - contentStart);
             if (cssNode instanceof ICSSProperty) {
                 ICSSProperty cssProperty = (ICSSProperty) cssNode;
-                int propertyNameEnd = styleNode.getContentStart() + cssProperty.getAbsoluteStart()
+                int propertyNameEnd = contentStart + cssProperty.getAbsoluteStart()
                         + cssProperty.getName().length();
                 if (currentOffset < propertyNameEnd) {
                     ICSSNode propertyParent = cssProperty.getParent();
@@ -443,23 +473,25 @@ public class HoverProvider {
                             }
                             ICSSNamespaceDefinition cssNamespace = CSSDocumentUtils
                                     .getNamespaceForPrefix(cssSelector.getNamespacePrefix(), cssDocument);
-                            XMLName xmlName = new XMLName(cssNamespace.getURI(), cssSelector.getElementName());
-                            IDefinition selectorDefinition = project.resolveXMLNameToDefinition(xmlName,
-                                    MXMLDialect.DEFAULT);
-                            if (selectorDefinition instanceof IClassDefinition) {
-                                IClassDefinition classDefinition = (IClassDefinition) selectorDefinition;
-                                IStyleDefinition[] styleDefinitions = classDefinition
-                                        .getStyleDefinitions(project.getWorkspace());
-                                if (styleDefinitions != null) {
-                                    for (IStyleDefinition styleDef : styleDefinitions) {
-                                        if (styleDef.getBaseName().equals(cssProperty.getName())) {
-                                            definition = styleDef;
-                                            break;
+                            if (cssNamespace != null) {
+                                XMLName xmlName = new XMLName(cssNamespace.getURI(), cssSelector.getElementName());
+                                IDefinition selectorDefinition = project.resolveXMLNameToDefinition(xmlName,
+                                        MXMLDialect.DEFAULT);
+                                if (selectorDefinition instanceof IClassDefinition) {
+                                    IClassDefinition classDefinition = (IClassDefinition) selectorDefinition;
+                                    IStyleDefinition[] styleDefinitions = classDefinition
+                                            .getStyleDefinitions(project.getWorkspace());
+                                    if (styleDefinitions != null) {
+                                        for (IStyleDefinition styleDef : styleDefinitions) {
+                                            if (styleDef.getBaseName().equals(cssProperty.getName())) {
+                                                definition = styleDef;
+                                                break;
+                                            }
                                         }
                                     }
-                                }
-                                if (definition != null) {
-                                    break;
+                                    if (definition != null) {
+                                        break;
+                                    }
                                 }
                             }
                         }
@@ -471,7 +503,7 @@ public class HoverProvider {
                         .getNamespaceForPrefix(cssSelector.getNamespacePrefix(), cssDocument);
                 if (cssNamespace != null) {
                     String nsPrefix = cssNamespace.getPrefix();
-                    int prefixEnd = styleNode.getContentStart() + cssSelector.getAbsoluteStart()
+                    int prefixEnd = contentStart + cssSelector.getAbsoluteStart()
                             + nsPrefix.length();
                     int elementNameStart = prefixEnd;
                     if (nsPrefix.length() > 0) {
