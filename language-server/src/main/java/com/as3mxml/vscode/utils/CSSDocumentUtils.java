@@ -15,33 +15,63 @@ limitations under the License.
 */
 package com.as3mxml.vscode.utils;
 
+import java.util.ArrayList;
+
 import org.apache.royale.compiler.css.ICSSDocument;
-import org.apache.royale.compiler.css.ICSSFontFace;
 import org.apache.royale.compiler.css.ICSSNamespaceDefinition;
 import org.apache.royale.compiler.css.ICSSNode;
-import org.apache.royale.compiler.css.ICSSRule;
+import org.apache.royale.compiler.problems.ICompilerProblem;
+import org.apache.royale.compiler.tree.mxml.IMXMLStyleNode;
 
 public class CSSDocumentUtils {
-	public static boolean containsWithStart(ICSSNode node, int offset) {
-		return offset >= node.getAbsoluteStart() && offset <= node.getAbsoluteEnd();
-	}
-
-	public static ICSSNode getContainingCSSNodeIncludingStart(ICSSDocument cssDocument, int offset) {
+	public static ICSSNamespaceDefinition getNamespaceForPrefix(String prefix, ICSSDocument cssDocument) {
 		for (ICSSNamespaceDefinition cssNamespace : cssDocument.getAtNamespaces()) {
-			if (containsWithStart(cssNamespace, offset)) {
+			if (prefix.equals(cssNamespace.getPrefix())) {
 				return cssNamespace;
 			}
 		}
-		for (ICSSFontFace cssFontFace : cssDocument.getFontFaces()) {
-			if (containsWithStart(cssFontFace, offset)) {
-				return cssFontFace;
+		return null;
+	}
+
+	public static ICSSNode getContainingCSSNodeIncludingStart(IMXMLStyleNode styleNode, int offset) {
+		ICSSDocument cssDocument = styleNode.getCSSDocument(new ArrayList<ICompilerProblem>());
+		if (cssDocument == null) {
+			return null;
+		}
+
+		// ICSSNode absolute start/end locations are local to the IMXMLStyleNode
+		// so we need to subtract the style node's real absolute content start
+		return getContainingCSSNodeIncludingStart(cssDocument, offset - styleNode.getContentStart());
+	}
+
+	private static boolean containsWithStart(ICSSNode node, int offset) {
+		return offset >= node.getAbsoluteStart() && offset <= node.getAbsoluteEnd();
+	}
+
+	private static ICSSNode getContainingCSSNodeIncludingStart(ICSSNode node, int offset) {
+		if (!containsWithStart(node, offset)) {
+			return null;
+		}
+		for (int i = 0, count = node.getArity(); i < count; i++) {
+			ICSSNode child = node.getNthChild(i);
+			if (child.getAbsoluteStart() == -1) {
+				// the Royale compiler has a quirk where a node can have an
+				// unknown offset, but its children have known offsets. this is
+				// where we work around that...
+				for (int j = 0, innerCount = child.getArity(); j < innerCount; j++) {
+					ICSSNode innerChild = child.getNthChild(j);
+					ICSSNode result = getContainingCSSNodeIncludingStart(innerChild, offset);
+					if (result != null) {
+						return result;
+					}
+				}
+				continue;
+			}
+			ICSSNode result = getContainingCSSNodeIncludingStart(child, offset);
+			if (result != null) {
+				return result;
 			}
 		}
-		for (ICSSRule cssRule : cssDocument.getRules()) {
-			if (containsWithStart(cssRule, offset)) {
-				return cssRule;
-			}
-		}
-		return cssDocument;
+		return node;
 	}
 }

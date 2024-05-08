@@ -270,7 +270,6 @@ public class CompletionProvider {
                 // because CSS shouldn't include ActionScript completion
 
                 // IMXMLStyleNode styleNode = (IMXMLStyleNode) offsetSourceLocation;
-                // ICSSDocument cssDocument = styleNode.getCSSDocument(new ArrayList<>());
 
                 CompletionList result = new CompletionList();
                 result.setIsIncomplete(false);

@@ -16,12 +16,20 @@ limitations under the License.
 package com.as3mxml.vscode.providers;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.royale.compiler.common.ISourceLocation;
+import org.apache.royale.compiler.common.XMLName;
+import org.apache.royale.compiler.css.ICSSDocument;
+import org.apache.royale.compiler.css.ICSSNamespaceDefinition;
+import org.apache.royale.compiler.css.ICSSNode;
+import org.apache.royale.compiler.css.ICSSSelector;
 import org.apache.royale.compiler.definitions.IDefinition;
 import org.apache.royale.compiler.internal.mxml.MXMLData;
+import org.apache.royale.compiler.internal.mxml.MXMLDialect;
 import org.apache.royale.compiler.mxml.IMXMLTagData;
 import org.apache.royale.compiler.tree.as.IASNode;
 import org.apache.royale.compiler.tree.as.IIdentifierNode;
@@ -29,13 +37,16 @@ import org.apache.royale.compiler.tree.mxml.IMXMLStyleNode;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.LocationLink;
 import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.TypeDefinitionParams;
 import org.eclipse.lsp4j.jsonrpc.CancelChecker;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 
+import com.as3mxml.vscode.asdoc.VSCodeASDocComment;
 import com.as3mxml.vscode.project.ActionScriptProjectData;
 import com.as3mxml.vscode.utils.ActionScriptProjectManager;
+import com.as3mxml.vscode.utils.CSSDocumentUtils;
 import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
 import com.as3mxml.vscode.utils.DefinitionUtils;
 import com.as3mxml.vscode.utils.FileTracker;
@@ -109,11 +120,30 @@ public class TypeDefinitionProvider {
 				}
 			}
 		}
-		IASNode offsetNode = actionScriptProjectManager.getOffsetNode(path, currentOffset, projectData);
-		if (offsetNode instanceof IMXMLStyleNode) {
+		ISourceLocation offsetSourceLocation = actionScriptProjectManager.getOffsetSourceLocation(path, currentOffset,
+				projectData);
+		if (offsetSourceLocation instanceof IMXMLStyleNode) {
 			// special case for <fx:Style>
+			IMXMLStyleNode styleNode = (IMXMLStyleNode) offsetSourceLocation;
+			List<? extends Location> result = cssTypeDefinition(styleNode, currentOffset, projectData);
+			if (cancelToken != null) {
+				cancelToken.checkCanceled();
+			}
+			return Either.forLeft(result);
+		}
+		if (offsetSourceLocation instanceof VSCodeASDocComment) {
+			// special case for doc comments
+			if (cancelToken != null) {
+				cancelToken.checkCanceled();
+			}
 			return Either.forLeft(Collections.emptyList());
 		}
+		if (!(offsetSourceLocation instanceof IASNode)) {
+			// we don't recognize what type this is, so don't try to treat
+			// it as an IASNode
+			offsetSourceLocation = null;
+		}
+		IASNode offsetNode = (IASNode) offsetSourceLocation;
 		List<? extends Location> result = actionScriptTypeDefinition(offsetNode, projectData);
 		if (cancelToken != null) {
 			cancelToken.checkCanceled();
@@ -157,6 +187,55 @@ public class TypeDefinitionProvider {
 
 		if (MXMLDataUtils.isInsideTagPrefix(offsetTag, currentOffset)) {
 			// ignore the tag's prefix
+			return Collections.emptyList();
+		}
+
+		List<Location> result = new ArrayList<>();
+		actionScriptProjectManager.resolveDefinition(definition, projectData, result);
+		return result;
+	}
+
+	private List<? extends Location> cssTypeDefinition(IMXMLStyleNode styleNode, int currentOffset,
+			ActionScriptProjectData projectData) {
+		IDefinition definition = null;
+
+		ICSSNode cssNode = CSSDocumentUtils.getContainingCSSNodeIncludingStart(styleNode,
+				currentOffset);
+		if (cssNode instanceof ICSSSelector) {
+			ICSSSelector cssSelector = (ICSSSelector) cssNode;
+			ICSSDocument cssDocument = styleNode.getCSSDocument(new ArrayList<>());
+			if (cssDocument != null) {
+				ICSSNamespaceDefinition cssNamespace = CSSDocumentUtils
+						.getNamespaceForPrefix(cssSelector.getNamespacePrefix(), cssDocument);
+				if (cssNamespace != null) {
+					String nsPrefix = cssNamespace.getPrefix();
+					int prefixEnd = styleNode.getContentStart() + cssSelector.getAbsoluteStart() + nsPrefix.length();
+					int elementNameStart = prefixEnd;
+					if (nsPrefix.length() > 0) {
+						elementNameStart++;
+					}
+					if (currentOffset >= elementNameStart) {
+						XMLName xmlName = new XMLName(cssNamespace.getURI(), cssSelector.getElementName());
+						definition = projectData.project.resolveXMLNameToDefinition(xmlName, MXMLDialect.DEFAULT);
+					} else if (currentOffset < prefixEnd) {
+						List<Location> result = new ArrayList<>();
+						Path resolvedPath = Paths.get(cssDocument.getSourcePath());
+						Location location = new Location();
+						Position start = new Position(cssNamespace.getLine(), cssNamespace.getColumn());
+						Position end = new Position(cssNamespace.getEndLine(), cssNamespace.getEndColumn());
+						Range range = new Range(start, end);
+						location.setRange(range);
+						location.setUri(resolvedPath.toUri().toString());
+						result.add(location);
+						return result;
+					}
+				}
+			}
+		}
+
+		if (definition == null) {
+			// VSCode may call typeDefinition() when there isn't necessarily a
+			// definition referenced at the current position.
 			return Collections.emptyList();
 		}
 

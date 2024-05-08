@@ -16,15 +16,22 @@ limitations under the License.
 package com.as3mxml.vscode.providers;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collections;
 
 import org.apache.royale.compiler.common.ISourceLocation;
 import org.apache.royale.compiler.constants.IASKeywordConstants;
 import org.apache.royale.compiler.constants.IMetaAttributeConstants;
+import org.apache.royale.compiler.common.XMLName;
+import org.apache.royale.compiler.css.ICSSDocument;
+import org.apache.royale.compiler.css.ICSSNamespaceDefinition;
+import org.apache.royale.compiler.css.ICSSNode;
+import org.apache.royale.compiler.css.ICSSSelector;
 import org.apache.royale.compiler.definitions.IClassDefinition;
 import org.apache.royale.compiler.definitions.IDefinition;
 import org.apache.royale.compiler.definitions.IFunctionDefinition;
 import org.apache.royale.compiler.internal.mxml.MXMLData;
+import org.apache.royale.compiler.internal.mxml.MXMLDialect;
 import org.apache.royale.compiler.mxml.IMXMLTagData;
 import org.apache.royale.compiler.tree.as.IASNode;
 import org.apache.royale.compiler.tree.as.IClassNode;
@@ -52,6 +59,7 @@ import com.as3mxml.vscode.project.ActionScriptProjectData;
 import com.as3mxml.vscode.project.ILspProject;
 import com.as3mxml.vscode.utils.ASDocUtils;
 import com.as3mxml.vscode.utils.ActionScriptProjectManager;
+import com.as3mxml.vscode.utils.CSSDocumentUtils;
 import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
 import com.as3mxml.vscode.utils.DefinitionDocumentationUtils;
 import com.as3mxml.vscode.utils.DefinitionTextUtils;
@@ -62,6 +70,7 @@ import com.as3mxml.vscode.utils.MXMLDataUtils;
 
 public class HoverProvider {
     private static final String MARKED_STRING_LANGUAGE_ACTIONSCRIPT = "actionscript";
+    private static final String MARKED_STRING_LANGUAGE_CSS = "css";
     private static final String MARKED_STRING_LANGUAGE_XML = "xml";
     private static final String FILE_EXTENSION_MXML = ".mxml";
 
@@ -128,12 +137,16 @@ public class HoverProvider {
                 }
             }
         }
-        ISourceLocation offsetSourceLocation = actionScriptProjectManager
-                .getOffsetSourceLocation(path,
-                        currentOffset, projectData);
+        ISourceLocation offsetSourceLocation = actionScriptProjectManager.getOffsetSourceLocation(path, currentOffset,
+                projectData);
         if (offsetSourceLocation instanceof IMXMLStyleNode) {
             // special case for <fx:Style>
-            return new Hover(Collections.emptyList(), null);
+            IMXMLStyleNode styleNode = (IMXMLStyleNode) offsetSourceLocation;
+            Hover result = cssHover(styleNode, currentOffset, projectData.project);
+            if (cancelToken != null) {
+                cancelToken.checkCanceled();
+            }
+            return result;
         }
         if (offsetSourceLocation instanceof VSCodeASDocComment) {
             VSCodeASDocComment docComment = (VSCodeASDocComment) offsetSourceLocation;
@@ -284,7 +297,10 @@ public class HoverProvider {
                 }
             }
         }
+        return createHoverForDefinition(definition, sourceRange, project);
+    }
 
+    private static Hover createHoverForDefinition(IDefinition definition, Range sourceRange, ILspProject project) {
         Hover result = new Hover();
         if (sourceRange != null) {
             result.setRange(sourceRange);
@@ -394,5 +410,48 @@ public class HoverProvider {
         }
         result.setContents(new MarkupContent(MarkupKind.MARKDOWN, detail));
         return result;
+    }
+
+    private Hover cssHover(IMXMLStyleNode styleNode, int currentOffset, ILspProject project) {
+        IDefinition definition = null;
+
+        ICSSNode cssNode = CSSDocumentUtils.getContainingCSSNodeIncludingStart(styleNode,
+                currentOffset);
+        if (cssNode instanceof ICSSSelector) {
+            ICSSSelector cssSelector = (ICSSSelector) cssNode;
+            ICSSDocument cssDocument = styleNode.getCSSDocument(new ArrayList<>());
+            if (cssDocument != null) {
+                ICSSNamespaceDefinition cssNamespace = CSSDocumentUtils
+                        .getNamespaceForPrefix(cssSelector.getNamespacePrefix(), cssDocument);
+                if (cssNamespace != null) {
+                    String nsPrefix = cssNamespace.getPrefix();
+                    int prefixEnd = styleNode.getContentStart() + cssSelector.getAbsoluteStart() + nsPrefix.length();
+                    int elementNameStart = prefixEnd;
+                    if (nsPrefix.length() > 0) {
+                        elementNameStart++;
+                    }
+                    if (currentOffset > elementNameStart) {
+                        XMLName xmlName = new XMLName(cssNamespace.getURI(), cssSelector.getElementName());
+                        definition = project.resolveXMLNameToDefinition(xmlName, MXMLDialect.DEFAULT);
+                    } else if (currentOffset < prefixEnd) {
+                        Hover result = new Hover();
+                        StringBuilder detailBuilder = new StringBuilder();
+                        if (nsPrefix.length() > 0) {
+                            detailBuilder.append("@namespace " + nsPrefix + " \"" + cssNamespace.getURI() + "\"");
+                        } else {
+                            detailBuilder.append("@namespace \"" + cssNamespace.getURI() + "\"");
+                        }
+                        String detail = codeBlock(MARKED_STRING_LANGUAGE_CSS, detailBuilder.toString());
+                        result.setContents(new MarkupContent(MarkupKind.MARKDOWN, detail));
+                        return result;
+                    }
+                }
+            }
+        }
+
+        if (definition == null) {
+            return new Hover(Collections.emptyList(), null);
+        }
+        return createHoverForDefinition(definition, null, project);
     }
 }

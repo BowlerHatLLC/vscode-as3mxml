@@ -23,6 +23,11 @@ import java.util.List;
 
 import org.apache.royale.compiler.common.ISourceLocation;
 import org.apache.royale.compiler.constants.IMetaAttributeConstants;
+import org.apache.royale.compiler.common.XMLName;
+import org.apache.royale.compiler.css.ICSSDocument;
+import org.apache.royale.compiler.css.ICSSNamespaceDefinition;
+import org.apache.royale.compiler.css.ICSSNode;
+import org.apache.royale.compiler.css.ICSSSelector;
 import org.apache.royale.compiler.definitions.IClassDefinition;
 import org.apache.royale.compiler.definitions.IDefinition;
 import org.apache.royale.compiler.definitions.IFunctionDefinition;
@@ -30,6 +35,7 @@ import org.apache.royale.compiler.definitions.IFunctionDefinition.FunctionClassi
 import org.apache.royale.compiler.definitions.IVariableDefinition;
 import org.apache.royale.compiler.definitions.IVariableDefinition.VariableClassification;
 import org.apache.royale.compiler.internal.mxml.MXMLData;
+import org.apache.royale.compiler.internal.mxml.MXMLDialect;
 import org.apache.royale.compiler.internal.scopes.ASProjectScope.DefinitionPromise;
 import org.apache.royale.compiler.mxml.IMXMLDataManager;
 import org.apache.royale.compiler.mxml.IMXMLLanguageConstants;
@@ -51,10 +57,12 @@ import org.eclipse.lsp4j.ReferenceParams;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.jsonrpc.CancelChecker;
 
+import com.as3mxml.vscode.asdoc.VSCodeASDocComment;
 import com.as3mxml.vscode.project.ActionScriptProjectData;
 import com.as3mxml.vscode.project.ILspProject;
 import com.as3mxml.vscode.utils.ASTUtils;
 import com.as3mxml.vscode.utils.ActionScriptProjectManager;
+import com.as3mxml.vscode.utils.CSSDocumentUtils;
 import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
 import com.as3mxml.vscode.utils.CompilerProjectUtils;
 import com.as3mxml.vscode.utils.DefinitionUtils;
@@ -131,11 +139,30 @@ public class ReferencesProvider {
                 }
             }
         }
-        IASNode offsetNode = actionScriptProjectManager.getOffsetNode(path, currentOffset, projectData);
-        if (offsetNode instanceof IMXMLStyleNode) {
+        ISourceLocation offsetSourceLocation = actionScriptProjectManager.getOffsetSourceLocation(path, currentOffset,
+                projectData);
+        if (offsetSourceLocation instanceof IMXMLStyleNode) {
             // special case for <fx:Style>
+            IMXMLStyleNode styleNode = (IMXMLStyleNode) offsetSourceLocation;
+            List<? extends Location> result = cssReferences(styleNode, currentOffset, projectData);
+            if (cancelToken != null) {
+                cancelToken.checkCanceled();
+            }
+            return result;
+        }
+        if (offsetSourceLocation instanceof VSCodeASDocComment) {
+            // special case for doc comments
+            if (cancelToken != null) {
+                cancelToken.checkCanceled();
+            }
             return Collections.emptyList();
         }
+        if (!(offsetSourceLocation instanceof IASNode)) {
+            // we don't recognize what type this is, so don't try to treat
+            // it as an IASNode
+            offsetSourceLocation = null;
+        }
+        IASNode offsetNode = (IASNode) offsetSourceLocation;
         List<? extends Location> result = actionScriptReferences(offsetNode, project);
         if (cancelToken != null) {
             cancelToken.checkCanceled();
@@ -273,6 +300,43 @@ public class ReferencesProvider {
         }
         ArrayList<Location> result = new ArrayList<>();
         referencesForDefinition(definition, project, result);
+        return result;
+    }
+
+    private List<? extends Location> cssReferences(IMXMLStyleNode styleNode, int currentOffset,
+            ActionScriptProjectData projectData) {
+        IDefinition definition = null;
+
+        ICSSNode cssNode = CSSDocumentUtils.getContainingCSSNodeIncludingStart(styleNode,
+                currentOffset);
+        if (cssNode instanceof ICSSSelector) {
+            ICSSSelector cssSelector = (ICSSSelector) cssNode;
+            ICSSDocument cssDocument = styleNode.getCSSDocument(new ArrayList<>());
+            if (cssDocument != null) {
+                ICSSNamespaceDefinition cssNamespace = CSSDocumentUtils
+                        .getNamespaceForPrefix(cssSelector.getNamespacePrefix(), cssDocument);
+                if (cssNamespace != null) {
+                    String nsPrefix = cssNamespace.getPrefix();
+                    int prefixEnd = styleNode.getContentStart() + cssSelector.getAbsoluteStart() + nsPrefix.length();
+                    int elementNameStart = prefixEnd;
+                    if (nsPrefix.length() > 0) {
+                        elementNameStart++;
+                    }
+                    if (currentOffset >= elementNameStart) {
+                        XMLName xmlName = new XMLName(cssNamespace.getURI(), cssSelector.getElementName());
+                        definition = projectData.project.resolveXMLNameToDefinition(xmlName, MXMLDialect.DEFAULT);
+                    }
+                }
+            }
+        }
+
+        if (definition == null) {
+            // VSCode may call references() when there isn't necessarily a
+            // definition referenced at the current position.
+            return Collections.emptyList();
+        }
+        ArrayList<Location> result = new ArrayList<>();
+        referencesForDefinition(definition, projectData.project, result);
         return result;
     }
 

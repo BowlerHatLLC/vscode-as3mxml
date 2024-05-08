@@ -43,6 +43,7 @@ import org.apache.royale.compiler.tree.as.IASNode;
 import org.apache.royale.compiler.tree.as.IExpressionNode;
 import org.apache.royale.compiler.tree.as.IFunctionCallNode;
 import org.apache.royale.compiler.tree.as.IIdentifierNode;
+import org.apache.royale.compiler.tree.mxml.IMXMLStyleNode;
 import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.MarkupKind;
 import org.eclipse.lsp4j.ParameterInformation;
@@ -113,6 +114,13 @@ public class SignatureHelpProvider {
 		}
 		if (offsetNode == null) {
 			offsetNode = actionScriptProjectManager.getOffsetNode(path, currentOffset, projectData);
+		}
+		if (offsetNode instanceof IMXMLStyleNode) {
+			// special case for <fx:Style>
+			if (cancelToken != null) {
+				cancelToken.checkCanceled();
+			}
+			return new SignatureHelp(Collections.emptyList(), -1, -1);
 		}
 		if (offsetNode == null) {
 			if (cancelToken != null) {
