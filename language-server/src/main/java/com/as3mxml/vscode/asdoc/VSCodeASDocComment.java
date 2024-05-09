@@ -119,7 +119,7 @@ public class VSCodeASDocComment extends SourceLocation implements IASDocComment 
 		appendLine(sb, line, insidePreformatted);
 		for (int i = 1; i < n - 1; i++) {
 			line = lines[i];
-			if (!asdocTagPattern.matcher(line).find()) {
+			if (insidePreformatted || !asdocTagPattern.matcher(line).find()) {
 				int star = line.indexOf("*");
 				if (star != -1) // line starts with a *
 				{
