@@ -31,6 +31,7 @@ import org.apache.royale.compiler.css.ICSSNode;
 import org.apache.royale.compiler.css.ICSSProperty;
 import org.apache.royale.compiler.css.ICSSRule;
 import org.apache.royale.compiler.css.ICSSSelector;
+import org.apache.royale.compiler.css.ICSSSelectorCondition;
 import org.apache.royale.compiler.definitions.IClassDefinition;
 import org.apache.royale.compiler.definitions.IDefinition;
 import org.apache.royale.compiler.definitions.IFunctionDefinition;
@@ -395,13 +396,13 @@ public class ReferencesProvider {
             ICSSNamespaceDefinition cssNamespace = CSSDocumentUtils
                     .getNamespaceForPrefix(cssSelector.getNamespacePrefix(), cssDocument);
             if (cssNamespace != null) {
-                String nsPrefix = cssNamespace.getPrefix();
-                int prefixEnd = contentStart + cssSelector.getAbsoluteStart() + nsPrefix.length();
-                int elementNameStart = prefixEnd;
-                if (nsPrefix.length() > 0) {
-                    elementNameStart++;
+                int conditionsStart = contentStart + cssSelector.getAbsoluteEnd();
+                for (ICSSSelectorCondition condition : cssSelector.getConditions()) {
+                    conditionsStart = contentStart + condition.getAbsoluteStart();
+                    break;
                 }
-                if (currentOffset >= elementNameStart) {
+                int elementNameStart = conditionsStart - cssSelector.getElementName().length();
+                if (currentOffset >= elementNameStart && currentOffset < conditionsStart) {
                     XMLName xmlName = new XMLName(cssNamespace.getURI(), cssSelector.getElementName());
                     definition = projectData.project.resolveXMLNameToDefinition(xmlName, MXMLDialect.DEFAULT);
                 }

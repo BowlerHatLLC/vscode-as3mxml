@@ -30,6 +30,7 @@ import org.apache.royale.compiler.css.ICSSNode;
 import org.apache.royale.compiler.css.ICSSProperty;
 import org.apache.royale.compiler.css.ICSSRule;
 import org.apache.royale.compiler.css.ICSSSelector;
+import org.apache.royale.compiler.css.ICSSSelectorCondition;
 import org.apache.royale.compiler.definitions.IClassDefinition;
 import org.apache.royale.compiler.definitions.IDefinition;
 import org.apache.royale.compiler.definitions.IFunctionDefinition;
@@ -128,7 +129,7 @@ public class HoverProvider {
             }
             if (cssDocument != null) {
                 cssDocument.setSourcePath(path.toString());
-                Hover result = cssHover(cssDocument, currentOffset, 0, projectData.project);
+                Hover result = cssHover(cssDocument, currentOffset, 0, projectData);
                 if (cancelToken != null) {
                     cancelToken.checkCanceled();
                 }
@@ -169,7 +170,7 @@ public class HoverProvider {
         if (offsetSourceLocation instanceof IMXMLStyleNode) {
             // special case for <fx:Style>
             IMXMLStyleNode styleNode = (IMXMLStyleNode) offsetSourceLocation;
-            Hover result = cssHover(styleNode, currentOffset, projectData.project);
+            Hover result = cssHover(styleNode, currentOffset, projectData);
             if (cancelToken != null) {
                 cancelToken.checkCanceled();
             }
@@ -439,15 +440,16 @@ public class HoverProvider {
         return result;
     }
 
-    private Hover cssHover(IMXMLStyleNode styleNode, int currentOffset, ILspProject project) {
+    private Hover cssHover(IMXMLStyleNode styleNode, int currentOffset, ActionScriptProjectData projectData) {
         ICSSDocument cssDocument = styleNode.getCSSDocument(new ArrayList<>());
         if (cssDocument == null) {
             return new Hover(Collections.emptyList(), null);
         }
-        return cssHover(cssDocument, currentOffset, styleNode.getContentStart(), project);
+        return cssHover(cssDocument, currentOffset, styleNode.getContentStart(), projectData);
     }
 
-    private Hover cssHover(ICSSDocument cssDocument, int currentOffset, int contentStart, ILspProject project) {
+    private Hover cssHover(ICSSDocument cssDocument, int currentOffset, int contentStart,
+            ActionScriptProjectData projectData) {
         IDefinition definition = null;
 
         if (cssDocument != null) {
@@ -475,12 +477,12 @@ public class HoverProvider {
                                     .getNamespaceForPrefix(cssSelector.getNamespacePrefix(), cssDocument);
                             if (cssNamespace != null) {
                                 XMLName xmlName = new XMLName(cssNamespace.getURI(), cssSelector.getElementName());
-                                IDefinition selectorDefinition = project.resolveXMLNameToDefinition(xmlName,
+                                IDefinition selectorDefinition = projectData.project.resolveXMLNameToDefinition(xmlName,
                                         MXMLDialect.DEFAULT);
                                 if (selectorDefinition instanceof IClassDefinition) {
                                     IClassDefinition classDefinition = (IClassDefinition) selectorDefinition;
                                     IStyleDefinition[] styleDefinitions = classDefinition
-                                            .getStyleDefinitions(project.getWorkspace());
+                                            .getStyleDefinitions(projectData.project.getWorkspace());
                                     if (styleDefinitions != null) {
                                         for (IStyleDefinition styleDef : styleDefinitions) {
                                             if (styleDef.getBaseName().equals(cssProperty.getName())) {
@@ -502,17 +504,22 @@ public class HoverProvider {
                 ICSSNamespaceDefinition cssNamespace = CSSDocumentUtils
                         .getNamespaceForPrefix(cssSelector.getNamespacePrefix(), cssDocument);
                 if (cssNamespace != null) {
-                    String nsPrefix = cssNamespace.getPrefix();
-                    int prefixEnd = contentStart + cssSelector.getAbsoluteStart()
-                            + nsPrefix.length();
-                    int elementNameStart = prefixEnd;
-                    if (nsPrefix.length() > 0) {
-                        elementNameStart++;
+                    int conditionsStart = contentStart + cssSelector.getAbsoluteEnd();
+                    for (ICSSSelectorCondition condition : cssSelector.getConditions()) {
+                        conditionsStart = contentStart + condition.getAbsoluteStart();
+                        break;
                     }
-                    if (currentOffset > elementNameStart) {
+                    String nsPrefix = cssNamespace.getPrefix();
+                    int elementNameStart = conditionsStart - cssSelector.getElementName().length();
+                    int prefixEnd = elementNameStart;
+                    if (nsPrefix.length() > 0) {
+                        prefixEnd--;
+                    }
+                    int prefixStart = prefixEnd - nsPrefix.length();
+                    if (currentOffset >= elementNameStart && currentOffset < conditionsStart) {
                         XMLName xmlName = new XMLName(cssNamespace.getURI(), cssSelector.getElementName());
-                        definition = project.resolveXMLNameToDefinition(xmlName, MXMLDialect.DEFAULT);
-                    } else if (currentOffset < prefixEnd) {
+                        definition = projectData.project.resolveXMLNameToDefinition(xmlName, MXMLDialect.DEFAULT);
+                    } else if (currentOffset >= prefixStart && currentOffset < prefixEnd) {
                         Hover result = new Hover();
                         StringBuilder detailBuilder = new StringBuilder();
                         if (nsPrefix.length() > 0) {
@@ -531,6 +538,6 @@ public class HoverProvider {
         if (definition == null) {
             return new Hover(Collections.emptyList(), null);
         }
-        return createHoverForDefinition(definition, null, project);
+        return createHoverForDefinition(definition, null, projectData.project);
     }
 }
