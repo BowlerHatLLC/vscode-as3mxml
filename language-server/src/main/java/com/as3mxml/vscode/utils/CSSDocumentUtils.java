@@ -17,11 +17,19 @@ package com.as3mxml.vscode.utils;
 
 import java.util.ArrayList;
 
+import org.apache.royale.compiler.css.ICSSCombinator;
 import org.apache.royale.compiler.css.ICSSDocument;
+import org.apache.royale.compiler.css.ICSSFontFace;
 import org.apache.royale.compiler.css.ICSSNamespaceDefinition;
 import org.apache.royale.compiler.css.ICSSNode;
+import org.apache.royale.compiler.css.ICSSProperty;
+import org.apache.royale.compiler.css.ICSSPropertyValue;
+import org.apache.royale.compiler.css.ICSSSelector;
+import org.apache.royale.compiler.css.ICSSSelectorCondition;
 import org.apache.royale.compiler.problems.ICompilerProblem;
 import org.apache.royale.compiler.tree.mxml.IMXMLStyleNode;
+
+import com.google.common.collect.ImmutableList;
 
 public class CSSDocumentUtils {
 	public static ICSSNamespaceDefinition getNamespaceForPrefix(String prefix, ICSSDocument cssDocument) {
@@ -50,6 +58,55 @@ public class CSSDocumentUtils {
 	public static ICSSNode getContainingCSSNodeIncludingStart(ICSSNode node, int offset) {
 		if (!containsWithStart(node, offset)) {
 			return null;
+		}
+		// certain children don't appear with getNthChild()
+		if (node instanceof ICSSProperty) {
+			ICSSProperty cssProperty = (ICSSProperty) node;
+			ICSSPropertyValue cssPropertyValue = cssProperty.getValue();
+			if (cssPropertyValue != null) {
+				ICSSNode result = getContainingCSSNodeIncludingStart(cssPropertyValue, offset);
+				if (result != null) {
+					return result;
+				}
+			}
+		} else if (node instanceof ICSSCombinator) {
+			ICSSCombinator cssCombinator = (ICSSCombinator) node;
+			ICSSSelector cssSelector = cssCombinator.getSelector();
+			if (cssSelector != null) {
+				ICSSNode result = getContainingCSSNodeIncludingStart(cssSelector, offset);
+				if (result != null) {
+					return result;
+				}
+			}
+		} else if (node instanceof ICSSSelector) {
+			ICSSSelector cssSelector = (ICSSSelector) node;
+			ICSSCombinator cssCombinator = cssSelector.getCombinator();
+			if (cssCombinator != null) {
+				ICSSNode result = getContainingCSSNodeIncludingStart(cssCombinator, offset);
+				if (result != null) {
+					return result;
+				}
+			}
+			ImmutableList<ICSSSelectorCondition> cssConditions = cssSelector.getConditions();
+			if (cssConditions != null) {
+				for (ICSSSelectorCondition cssCondition : cssConditions) {
+					ICSSNode result = getContainingCSSNodeIncludingStart(cssCondition, offset);
+					if (result != null) {
+						return result;
+					}
+				}
+			}
+		} else if (node instanceof ICSSFontFace) {
+			ICSSFontFace cssFontFace = (ICSSFontFace) node;
+			ImmutableList<ICSSProperty> cssProperties = cssFontFace.getProperties();
+			if (cssProperties != null) {
+				for (ICSSProperty cssProperty : cssProperties) {
+					ICSSNode result = getContainingCSSNodeIncludingStart(cssProperty, offset);
+					if (result != null) {
+						return result;
+					}
+				}
+			}
 		}
 		for (int i = 0, count = node.getArity(); i < count; i++) {
 			ICSSNode child = node.getNthChild(i);
