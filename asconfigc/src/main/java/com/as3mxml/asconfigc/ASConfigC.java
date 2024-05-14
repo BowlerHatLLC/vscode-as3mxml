@@ -331,6 +331,9 @@ public class ASConfigC {
 			if (json.has(TopLevelFields.EXTENDS)) {
 				String otherConfigPath = json.get(TopLevelFields.EXTENDS).asText();
 				File otherConfigFile = new File(otherConfigPath);
+				if (!otherConfigFile.isAbsolute()) {
+					otherConfigFile = new File(System.getProperty("user.dir"), otherConfigPath);
+				}
 				JsonNode otherJson = loadConfigFromFileWithSchema(otherConfigFile, schema);
 				json = ConfigUtils.mergeConfigs(json, otherJson);
 			}
@@ -1090,6 +1093,9 @@ public class ASConfigC {
 		}
 
 		File templateDirectory = new File(htmlTemplate);
+		if (!templateDirectory.isAbsolute()) {
+			templateDirectory = new File(System.getProperty("user.dir"), htmlTemplate);
+		}
 		if (!templateDirectory.exists()) {
 			throw new ASConfigCException("htmlTemplate directory does not exist: " + htmlTemplate);
 		}
