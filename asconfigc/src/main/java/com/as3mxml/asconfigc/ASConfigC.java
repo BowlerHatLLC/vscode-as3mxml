@@ -1209,9 +1209,15 @@ public class ASConfigC {
 			String libraryPath = libraryPathJSON.get(i).asText();
 			if (libraryPath.endsWith(FILE_EXTENSION_ANE)) {
 				File file = new File(libraryPath);
+				if (!file.isAbsolute()) {
+					file = new File(System.getProperty("user.dir"), libraryPath);
+				}
 				result.add(file);
 			} else {
 				File file = Paths.get(libraryPath).toFile();
+				if (!file.isAbsolute()) {
+					file = new File(System.getProperty("user.dir"), libraryPath);
+				}
 				if (!file.isDirectory()) {
 					continue;
 				}
