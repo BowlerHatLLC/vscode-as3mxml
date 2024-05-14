@@ -1,5 +1,13 @@
 # ActionScript & MXML for Visual Studio Code Changelog
 
+## 1.21.1
+
+### Fixed Issues
+
+- Build: Fixed detection of ANEs in `library-path` and `external-library-path` when _asconfig.json_ is not in the root of the workspace.
+- Build: Fixed resolution of relative paths in `htmlTemplate` and `extends` when _asconfig.json_ is not in the root of the workspace.
+- Hover: Fixed ASDoc code sample rendering when code block contains `@` symbol at the start of the line. Was incorrectly detected as an ASDoc tag instead of part of the code.
+
 ## 1.21.0
 
 ### Fixed Issues
