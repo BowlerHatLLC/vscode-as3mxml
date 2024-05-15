@@ -80,6 +80,89 @@ export default class ActionScriptTaskProvider
   extends BaseAsconfigTaskProvider
   implements vscode.TaskProvider
 {
+  resolveTask(
+    task: vscode.Task,
+    token?: vscode.CancellationToken
+  ): vscode.ProviderResult<vscode.Task> {
+    task.definition.task;
+    if (task.definition.type !== TASK_TYPE_ACTIONSCRIPT) {
+      return undefined;
+    }
+    if (typeof task.scope !== "object") {
+      return undefined;
+    }
+    const workspaceFolder = task.scope as vscode.WorkspaceFolder;
+    if (!workspaceFolder) {
+      return undefined;
+    }
+    const frameworkSDK = getFrameworkSDKPathWithFallbacks();
+    if (frameworkSDK === null) {
+      //we don't have a valid SDK
+      return undefined;
+    }
+    const taskDef = task.definition as ActionScriptTaskDefinition;
+    if (!taskDef.asconfig) {
+      // if the asconfig field is blank, populate it with a default value
+      return this.resolveTaskForMissingAsconfigField(
+        task,
+        taskDef,
+        workspaceFolder,
+        frameworkSDK
+      );
+    }
+    // nothing could be resolved
+    return undefined;
+  }
+
+  protected resolveTaskForMissingAsconfigField(
+    originalTask: vscode.Task,
+    taskDef: ActionScriptTaskDefinition,
+    workspaceFolder: vscode.WorkspaceFolder,
+    frameworkSDK: string
+  ): vscode.Task {
+    const jsonUri = vscode.Uri.joinPath(workspaceFolder.uri, ASCONFIG_JSON);
+    if (taskDef.clean) {
+      const newTask = this.getCleanTask(
+        originalTask.name,
+        jsonUri,
+        workspaceFolder,
+        frameworkSDK
+      );
+      // the new task's definition must strictly equal task.definition
+      newTask.definition = taskDef;
+      return newTask;
+    }
+    if (taskDef.watch) {
+      const newTask = this.getWatchTask(
+        originalTask.name,
+        jsonUri,
+        workspaceFolder,
+        frameworkSDK
+      );
+      // the new task's definition must strictly equal task.definition
+      newTask.definition = taskDef;
+      return newTask;
+    }
+    let isAIRProject = false;
+    const asconfigJson = this.readASConfigJSON(jsonUri);
+    if (asconfigJson !== null) {
+      isAIRProject =
+        this.isAIRMobile(asconfigJson) || this.isAIRDesktop(asconfigJson);
+    }
+    const newTask = this.getTask(
+      originalTask.name,
+      jsonUri,
+      workspaceFolder,
+      frameworkSDK,
+      taskDef.debug,
+      taskDef.air,
+      isAIRProject
+    );
+    // the new task's definition must strictly equal task.definition
+    newTask.definition = taskDef;
+    return newTask;
+  }
+
   protected provideTasksForASConfigJSON(
     jsonURI: vscode.Uri,
     workspaceFolder: vscode.WorkspaceFolder,
@@ -100,7 +183,7 @@ export default class ActionScriptTaskProvider
     let isMacOverrideNativeInstaller = false;
     let isWindowsOverrideShared = false;
     let isMacOverrideShared = false;
-    let asconfigJson = this.readASConfigJSON(jsonURI);
+    const asconfigJson = this.readASConfigJSON(jsonURI);
     if (asconfigJson !== null) {
       isLibrary = this.isLibrary(asconfigJson);
       isAnimate = this.isAnimate(asconfigJson);
@@ -126,19 +209,18 @@ export default class ActionScriptTaskProvider
       }
     }
 
-    let frameworkSDK = getFrameworkSDKPathWithFallbacks();
+    const frameworkSDK = getFrameworkSDKPathWithFallbacks();
     if (frameworkSDK === null) {
       //we don't have a valid SDK
       return;
     }
-    let command = this.getCommand(workspaceFolder);
 
     if (isAnimate) {
       //handled by the Animate task provider
       return;
     }
 
-    let taskNameSuffix = this.getTaskNameSuffix(jsonURI, workspaceFolder);
+    const taskNameSuffix = this.getTaskNameSuffix(jsonURI, workspaceFolder);
 
     //compile SWF or Royale JS with asconfigc
     result.push(
@@ -146,7 +228,6 @@ export default class ActionScriptTaskProvider
         `${TASK_NAME_COMPILE_DEBUG} - ${taskNameSuffix}`,
         jsonURI,
         workspaceFolder,
-        command,
         frameworkSDK,
         true,
         null,
@@ -158,11 +239,10 @@ export default class ActionScriptTaskProvider
         `${TASK_NAME_COMPILE_RELEASE} - ${taskNameSuffix}`,
         jsonURI,
         workspaceFolder,
-        command,
         frameworkSDK,
         false,
         null,
-        false
+        isAIRDesktop || isAIRMobile
       )
     );
     result.push(
@@ -170,7 +250,6 @@ export default class ActionScriptTaskProvider
         `${TASK_NAME_CLEAN} - ${taskNameSuffix}`,
         jsonURI,
         workspaceFolder,
-        command,
         frameworkSDK
       )
     );
@@ -181,7 +260,6 @@ export default class ActionScriptTaskProvider
           `${TASK_NAME_WATCH} - ${taskNameSuffix}`,
           jsonURI,
           workspaceFolder,
-          command,
           frameworkSDK
         )
       );
@@ -195,11 +273,10 @@ export default class ActionScriptTaskProvider
             `${TASK_NAME_PACKAGE_IOS_DEBUG} - ${taskNameSuffix}`,
             jsonURI,
             workspaceFolder,
-            command,
             frameworkSDK,
             true,
             PLATFORM_IOS,
-            false
+            isAIRDesktop || isAIRMobile
           )
         );
         result.push(
@@ -207,11 +284,10 @@ export default class ActionScriptTaskProvider
             `${TASK_NAME_PACKAGE_IOS_RELEASE} - ${taskNameSuffix}`,
             jsonURI,
             workspaceFolder,
-            command,
             frameworkSDK,
             false,
             PLATFORM_IOS,
-            false
+            isAIRDesktop || isAIRMobile
           )
         );
         result.push(
@@ -219,11 +295,10 @@ export default class ActionScriptTaskProvider
             `${TASK_NAME_PACKAGE_IOS_SIMULATOR_DEBUG} - ${taskNameSuffix}`,
             jsonURI,
             workspaceFolder,
-            command,
             frameworkSDK,
             true,
             PLATFORM_IOS_SIMULATOR,
-            false
+            isAIRDesktop || isAIRMobile
           )
         );
         result.push(
@@ -231,11 +306,10 @@ export default class ActionScriptTaskProvider
             `${TASK_NAME_PACKAGE_IOS_SIMULATOR_RELEASE} - ${taskNameSuffix}`,
             jsonURI,
             workspaceFolder,
-            command,
             frameworkSDK,
             false,
             PLATFORM_IOS_SIMULATOR,
-            false
+            isAIRDesktop || isAIRMobile
           )
         );
         result.push(
@@ -243,11 +317,10 @@ export default class ActionScriptTaskProvider
             `${TASK_NAME_PACKAGE_ANDROID_DEBUG} - ${taskNameSuffix}`,
             jsonURI,
             workspaceFolder,
-            command,
             frameworkSDK,
             true,
             PLATFORM_ANDROID,
-            false
+            isAIRDesktop || isAIRMobile
           )
         );
         result.push(
@@ -255,11 +328,10 @@ export default class ActionScriptTaskProvider
             `${TASK_NAME_PACKAGE_ANDROID_RELEASE} - ${taskNameSuffix}`,
             jsonURI,
             workspaceFolder,
-            command,
             frameworkSDK,
             false,
             PLATFORM_ANDROID,
-            false
+            isAIRDesktop || isAIRMobile
           )
         );
       }
@@ -278,11 +350,10 @@ export default class ActionScriptTaskProvider
             `${TASK_NAME_PACKAGE_DESKTOP_CAPTIVE} - ${taskNameSuffix}`,
             jsonURI,
             workspaceFolder,
-            command,
             frameworkSDK,
             false,
             PLATFORM_BUNDLE,
-            false
+            isAIRDesktop || isAIRMobile
           )
         );
       }
@@ -292,11 +363,10 @@ export default class ActionScriptTaskProvider
             `${TASK_NAME_PACKAGE_WINDOWS_CAPTIVE} - ${taskNameSuffix}`,
             jsonURI,
             workspaceFolder,
-            command,
             frameworkSDK,
             false,
             PLATFORM_WINDOWS,
-            false
+            isAIRDesktop || isAIRMobile
           )
         );
       } else if (isMacOverrideBundle) {
@@ -305,11 +375,10 @@ export default class ActionScriptTaskProvider
             `${TASK_NAME_PACKAGE_MAC_CAPTIVE} - ${taskNameSuffix}`,
             jsonURI,
             workspaceFolder,
-            command,
             frameworkSDK,
             false,
             PLATFORM_MAC,
-            false
+            isAIRDesktop || isAIRMobile
           )
         );
       }
@@ -320,11 +389,10 @@ export default class ActionScriptTaskProvider
             `${TASK_NAME_PACKAGE_WINDOWS_SHARED_DEBUG} - ${taskNameSuffix}`,
             jsonURI,
             workspaceFolder,
-            command,
             frameworkSDK,
             true,
             PLATFORM_WINDOWS,
-            false
+            isAIRDesktop || isAIRMobile
           )
         );
         result.push(
@@ -332,11 +400,10 @@ export default class ActionScriptTaskProvider
             `${TASK_NAME_PACKAGE_WINDOWS_SHARED_RELEASE} - ${taskNameSuffix}`,
             jsonURI,
             workspaceFolder,
-            command,
             frameworkSDK,
             false,
             PLATFORM_WINDOWS,
-            false
+            isAIRDesktop || isAIRMobile
           )
         );
       } else if (isMacOverrideShared) {
@@ -345,11 +412,10 @@ export default class ActionScriptTaskProvider
             `${TASK_NAME_PACKAGE_MAC_SHARED_DEBUG} - ${taskNameSuffix}`,
             jsonURI,
             workspaceFolder,
-            command,
             frameworkSDK,
-            false,
+            true,
             PLATFORM_MAC,
-            false
+            isAIRDesktop || isAIRMobile
           )
         );
         result.push(
@@ -357,11 +423,10 @@ export default class ActionScriptTaskProvider
             `${TASK_NAME_PACKAGE_MAC_SHARED_RELEASE} - ${taskNameSuffix}`,
             jsonURI,
             workspaceFolder,
-            command,
             frameworkSDK,
-            true,
+            false,
             PLATFORM_MAC,
-            false
+            isAIRDesktop || isAIRMobile
           )
         );
       }
@@ -372,11 +437,10 @@ export default class ActionScriptTaskProvider
             `${TASK_NAME_PACKAGE_WINDOWS_NATIVE} - ${taskNameSuffix}`,
             jsonURI,
             workspaceFolder,
-            command,
             frameworkSDK,
             false,
             PLATFORM_WINDOWS,
-            false
+            isAIRDesktop || isAIRMobile
           )
         );
       } else if (isMacOverrideNativeInstaller) {
@@ -385,11 +449,10 @@ export default class ActionScriptTaskProvider
             `${TASK_NAME_PACKAGE_MAC_NATIVE} - ${taskNameSuffix}`,
             jsonURI,
             workspaceFolder,
-            command,
             frameworkSDK,
             false,
             PLATFORM_MAC,
-            false
+            isAIRDesktop || isAIRMobile
           )
         );
       }
@@ -414,11 +477,10 @@ export default class ActionScriptTaskProvider
             `${taskName} - ${taskNameSuffix}`,
             jsonURI,
             workspaceFolder,
-            command,
             frameworkSDK,
             false,
             PLATFORM_AIR,
-            false
+            isAIRDesktop || isAIRMobile
           )
         );
       }
@@ -432,11 +494,10 @@ export default class ActionScriptTaskProvider
             `${TASK_NAME_PACKAGE_DESKTOP_CAPTIVE} - ${taskNameSuffix}`,
             jsonURI,
             workspaceFolder,
-            command,
             frameworkSDK,
             false,
             PLATFORM_BUNDLE,
-            false
+            isAIRDesktop || isAIRMobile
           )
         );
 
@@ -449,11 +510,10 @@ export default class ActionScriptTaskProvider
             `${taskName} - ${taskNameSuffix}`,
             jsonURI,
             workspaceFolder,
-            command,
             frameworkSDK,
             false,
             airPlatform,
-            false
+            isAIRDesktop || isAIRMobile
           )
         );
       }
@@ -467,11 +527,10 @@ export default class ActionScriptTaskProvider
             `${TASK_NAME_PACKAGE_DESKTOP_SHARED_DEBUG} - ${taskNameSuffix}`,
             jsonURI,
             workspaceFolder,
-            command,
             frameworkSDK,
             true,
             PLATFORM_AIR,
-            false
+            isAIRDesktop || isAIRMobile
           )
         );
         result.push(
@@ -479,11 +538,10 @@ export default class ActionScriptTaskProvider
             `${TASK_NAME_PACKAGE_DESKTOP_SHARED_RELEASE} - ${taskNameSuffix}`,
             jsonURI,
             workspaceFolder,
-            command,
             frameworkSDK,
             false,
             PLATFORM_AIR,
-            false
+            isAIRDesktop || isAIRMobile
           )
         );
       }
@@ -513,11 +571,10 @@ export default class ActionScriptTaskProvider
     description: string,
     jsonURI: vscode.Uri,
     workspaceFolder: vscode.WorkspaceFolder,
-    command: string[],
     sdk: string,
     debug: boolean,
     airPlatform: string,
-    unpackageANEs: boolean
+    isAIRProject: boolean
   ): vscode.Task {
     let asconfig: string = this.getASConfigValue(jsonURI, workspaceFolder.uri);
     let definition: ActionScriptTaskDefinition = {
@@ -540,7 +597,7 @@ export default class ActionScriptTaskProvider
     if (airPlatform) {
       options.push("--air", airPlatform);
     }
-    if (unpackageANEs) {
+    if (isAIRProject && debug && !airPlatform) {
       options.push("--unpackage-anes=true");
     }
     if (
@@ -556,6 +613,7 @@ export default class ActionScriptTaskProvider
     if (typeof jvmargs === "string") {
       options.push(`--jvmargs="${jvmargs}"`);
     }
+    const command = this.getCommand(workspaceFolder);
     if (command.length > 1) {
       options.unshift(...command.slice(1));
     }
@@ -578,7 +636,6 @@ export default class ActionScriptTaskProvider
     description: string,
     jsonURI: vscode.Uri,
     workspaceFolder: vscode.WorkspaceFolder,
-    command: string[],
     sdk: string
   ): vscode.Task {
     let asconfig: string = undefined;
@@ -614,6 +671,7 @@ export default class ActionScriptTaskProvider
     ) {
       options.push("--verbose=true");
     }
+    const command = this.getCommand(workspaceFolder);
     if (command.length > 1) {
       options.unshift(...command.slice(1));
     }
@@ -634,7 +692,6 @@ export default class ActionScriptTaskProvider
     description: string,
     jsonURI: vscode.Uri,
     workspaceFolder: vscode.WorkspaceFolder,
-    command: string[],
     sdk: string
   ): vscode.Task {
     let asconfig: string = undefined;
@@ -664,6 +721,7 @@ export default class ActionScriptTaskProvider
     if (jsonURI) {
       options.push("--project", jsonURI.fsPath);
     }
+    const command = this.getCommand(workspaceFolder);
     if (command.length > 1) {
       options.unshift(...command.slice(1));
     }

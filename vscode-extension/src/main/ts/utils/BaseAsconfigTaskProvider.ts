@@ -147,19 +147,7 @@ export default class BaseAsconfigTaskProvider {
     if (!jsonURI) {
       return undefined;
     }
-    let rootJSON = path.resolve(workspaceURI.fsPath, ASCONFIG_JSON);
-    if (rootJSON === jsonURI.fsPath) {
-      //the asconfig field should remain empty if it's the root
-      //asconfig.json in the workspace.
-      //this is different than TypeScript because we didn't originally
-      //create tasks for additional asconfig files in the workspace, and
-      //we don't want to break old tasks.json files that already existed
-      //before this feature was added.
-      //ideally, we'd be able to use resolveTask() to populate the
-      //asconfig field, but that function never seems to be called.
-      return undefined;
-    }
-    return jsonURI.toString().substr(workspaceURI.toString().length + 1);
+    return jsonURI.toString().substring(workspaceURI.toString().length + 1);
   }
 
   protected readASConfigJSON(jsonURI: vscode.Uri) {

@@ -16,10 +16,10 @@ limitations under the License.
 import * as fs from "fs";
 import * as path from "path";
 import * as vscode from "vscode";
-import getFrameworkSDKPathWithFallbacks from "./getFrameworkSDKPathWithFallbacks";
 import findAnimate from "./findAnimate";
 import BaseAsconfigTaskProvider from "./BaseAsconfigTaskProvider";
 
+const ASCONFIG_JSON = "asconfig.json";
 const FIELD_ANIMATE_OPTIONS = "animateOptions";
 const FIELD_FILE = "file";
 const MATCHER = [];
@@ -41,6 +41,66 @@ export default class ActionScriptTaskProvider
   extends BaseAsconfigTaskProvider
   implements vscode.TaskProvider
 {
+  resolveTask(
+    task: vscode.Task,
+    token?: vscode.CancellationToken
+  ): vscode.ProviderResult<vscode.Task> {
+    task.definition.task;
+    if (task.definition.type !== TASK_TYPE_ANIMATE) {
+      return undefined;
+    }
+    if (typeof task.scope !== "object") {
+      return undefined;
+    }
+    const workspaceFolder = task.scope as vscode.WorkspaceFolder;
+    if (!workspaceFolder) {
+      return undefined;
+    }
+    const animatePath = findAnimate();
+    if (!animatePath) {
+      //don't add the tasks if we cannot find Adobe Animate
+      return undefined;
+    }
+    const taskDef = task.definition as AnimateTaskDefinition;
+    if (!taskDef.asconfig) {
+      // if the asconfig field is blank, populate it with a default value
+      return this.resolveTaskForMissingAsconfigField(
+        task,
+        taskDef,
+        workspaceFolder,
+        animatePath
+      );
+    }
+    // nothing could be resolved
+    return undefined;
+  }
+
+  protected resolveTaskForMissingAsconfigField(
+    originalTask: vscode.Task,
+    taskDef: AnimateTaskDefinition,
+    workspaceFolder: vscode.WorkspaceFolder,
+    animatePath: string
+  ): vscode.Task {
+    const jsonUri = vscode.Uri.joinPath(workspaceFolder.uri, ASCONFIG_JSON);
+    let isAIR = false;
+    const asconfigJson = this.readASConfigJSON(jsonUri);
+    if (asconfigJson !== null) {
+      isAIR = this.isAIRMobile(asconfigJson) || this.isAIRDesktop(asconfigJson);
+    }
+    const newTask = this.getAnimateTask(
+      originalTask.name,
+      jsonUri,
+      workspaceFolder,
+      animatePath,
+      taskDef.debug,
+      taskDef.publish,
+      isAIR
+    );
+    // the new task's definition must strictly equal task.definition
+    newTask.definition = taskDef;
+    return newTask;
+  }
+
   protected provideTasksForASConfigJSON(
     jsonURI: vscode.Uri,
     workspaceFolder: vscode.WorkspaceFolder,
@@ -48,18 +108,11 @@ export default class ActionScriptTaskProvider
   ) {
     let isAnimate = false;
     let isAIR = false;
-    let asconfigJson = this.readASConfigJSON(jsonURI);
+    const asconfigJson = this.readASConfigJSON(jsonURI);
     if (asconfigJson !== null) {
       isAnimate = this.isAnimate(asconfigJson);
       isAIR = this.isAIRDesktop(asconfigJson) || this.isAIRMobile(asconfigJson);
     }
-
-    let frameworkSDK = getFrameworkSDKPathWithFallbacks();
-    if (frameworkSDK === null) {
-      //we don't have a valid SDK
-      return;
-    }
-    let command = this.getCommand(workspaceFolder);
 
     if (!isAnimate) {
       //handled by the ActionScript task provider
@@ -67,7 +120,7 @@ export default class ActionScriptTaskProvider
     }
 
     //compile SWF with Animate
-    let animatePath = findAnimate();
+    const animatePath = findAnimate();
     if (!animatePath) {
       //don't add the tasks if we cannot find Adobe Animate
       return;
@@ -81,13 +134,12 @@ export default class ActionScriptTaskProvider
       return;
     }
 
-    let taskNameSuffix = path.basename(flaPath);
+    const taskNameSuffix = path.basename(flaPath);
     result.push(
       this.getAnimateTask(
         `${TASK_NAME_COMPILE_DEBUG} - ${taskNameSuffix}`,
         jsonURI,
         workspaceFolder,
-        command,
         animatePath,
         true,
         false,
@@ -99,11 +151,10 @@ export default class ActionScriptTaskProvider
         `${TASK_NAME_COMPILE_RELEASE} - ${taskNameSuffix}`,
         jsonURI,
         workspaceFolder,
-        command,
         animatePath,
         false,
         false,
-        false
+        isAIR
       )
     );
     result.push(
@@ -111,11 +162,10 @@ export default class ActionScriptTaskProvider
         `${TASK_NAME_PUBLISH_DEBUG} - ${taskNameSuffix}`,
         jsonURI,
         workspaceFolder,
-        command,
         animatePath,
         true,
         true,
-        false
+        isAIR
       )
     );
     result.push(
@@ -123,11 +173,10 @@ export default class ActionScriptTaskProvider
         `${TASK_NAME_PUBLISH_RELEASE} - ${taskNameSuffix}`,
         jsonURI,
         workspaceFolder,
-        command,
         animatePath,
         false,
         true,
-        false
+        isAIR
       )
     );
   }
@@ -136,11 +185,10 @@ export default class ActionScriptTaskProvider
     description: string,
     jsonURI: vscode.Uri,
     workspaceFolder: vscode.WorkspaceFolder,
-    command: string[],
     animatePath: string,
     debug: boolean,
     publish: boolean,
-    unpackageANEs: boolean
+    isAIRProject: boolean
   ): vscode.Task {
     let asconfig: string = this.getASConfigValue(jsonURI, workspaceFolder.uri);
     let definition: AnimateTaskDefinition = {
@@ -160,6 +208,7 @@ export default class ActionScriptTaskProvider
     } else {
       options.push("--publish-animate=false");
     }
+    const unpackageANEs = debug && !publish && isAIRProject;
     if (unpackageANEs) {
       options.push("--unpackage-anes=true");
     }
@@ -173,6 +222,7 @@ export default class ActionScriptTaskProvider
     if (jsonURI) {
       options.push("--project", jsonURI.fsPath);
     }
+    const command = this.getCommand(workspaceFolder);
     if (command.length > 1) {
       options.unshift(...command.slice(1));
     }
