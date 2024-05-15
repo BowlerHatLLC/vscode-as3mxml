@@ -37,7 +37,7 @@ interface AnimateTaskDefinition extends vscode.TaskDefinition {
   asconfig?: string;
 }
 
-export default class ActionScriptTaskProvider
+export default class AnimateTaskProvider
   extends BaseAsconfigTaskProvider
   implements vscode.TaskProvider
 {
