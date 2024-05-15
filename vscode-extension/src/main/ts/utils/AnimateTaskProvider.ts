@@ -45,23 +45,24 @@ export default class ActionScriptTaskProvider
     task: vscode.Task,
     token?: vscode.CancellationToken
   ): vscode.ProviderResult<vscode.Task> {
-    task.definition.task;
     if (task.definition.type !== TASK_TYPE_ANIMATE) {
       return undefined;
     }
-    if (typeof task.scope !== "object") {
+    const taskDef = task.definition as AnimateTaskDefinition;
+    const animatePath = findAnimate();
+    if (!animatePath) {
+      //don't add the tasks if we cannot find Adobe Animate
+      return undefined;
+    }
+    if (task.scope === vscode.TaskScope.Workspace) {
+      return this.resolveTaskForMultiRootWorkspace(task, taskDef, animatePath);
+    } else if (typeof task.scope !== "object") {
       return undefined;
     }
     const workspaceFolder = task.scope as vscode.WorkspaceFolder;
     if (!workspaceFolder) {
       return undefined;
     }
-    const animatePath = findAnimate();
-    if (!animatePath) {
-      //don't add the tasks if we cannot find Adobe Animate
-      return undefined;
-    }
-    const taskDef = task.definition as AnimateTaskDefinition;
     if (!taskDef.asconfig) {
       // if the asconfig field is blank, populate it with a default value
       return this.resolveTaskForMissingAsconfigField(
@@ -73,6 +74,52 @@ export default class ActionScriptTaskProvider
     }
     // nothing could be resolved
     return undefined;
+  }
+
+  protected resolveTaskForMultiRootWorkspace(
+    originalTask: vscode.Task,
+    taskDef: AnimateTaskDefinition,
+    animatePath: string
+  ): vscode.Task {
+    if (vscode.workspace.workspaceFolders === undefined) {
+      return undefined;
+    }
+    const asconfigPath = taskDef.asconfig;
+    if (!asconfigPath) {
+      return undefined;
+    }
+    const asconfigPathParts = asconfigPath.split(/[\\\/]/g);
+    if (asconfigPathParts.length < 2) {
+      return undefined;
+    }
+    const workspaceNameToFind = asconfigPathParts[0];
+    const workspaceFolder = vscode.workspace.workspaceFolders.find(
+      (workspaceFolder) => workspaceFolder.name == workspaceNameToFind
+    );
+    if (!workspaceFolder) {
+      return undefined;
+    }
+    const jsonUri = vscode.Uri.joinPath(
+      workspaceFolder.uri,
+      ...asconfigPathParts.slice(1)
+    );
+    let isAIR = false;
+    const asconfigJson = this.readASConfigJSON(jsonUri);
+    if (asconfigJson !== null) {
+      isAIR = this.isAIRMobile(asconfigJson) || this.isAIRDesktop(asconfigJson);
+    }
+    const newTask = this.getAnimateTask(
+      originalTask.name,
+      jsonUri,
+      workspaceFolder,
+      animatePath,
+      taskDef.debug,
+      taskDef.publish,
+      isAIR
+    );
+    // the new task's definition must strictly equal task.definition
+    newTask.definition = taskDef;
+    return newTask;
   }
 
   protected resolveTaskForMissingAsconfigField(

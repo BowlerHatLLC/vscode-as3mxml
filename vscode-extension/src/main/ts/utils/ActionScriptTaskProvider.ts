@@ -84,23 +84,24 @@ export default class ActionScriptTaskProvider
     task: vscode.Task,
     token?: vscode.CancellationToken
   ): vscode.ProviderResult<vscode.Task> {
-    task.definition.task;
     if (task.definition.type !== TASK_TYPE_ACTIONSCRIPT) {
       return undefined;
     }
-    if (typeof task.scope !== "object") {
+    const taskDef = task.definition as ActionScriptTaskDefinition;
+    const frameworkSDK = getFrameworkSDKPathWithFallbacks();
+    if (frameworkSDK === null) {
+      //we don't have a valid SDK
+      return undefined;
+    }
+    if (task.scope === vscode.TaskScope.Workspace) {
+      return this.resolveTaskForMultiRootWorkspace(task, taskDef, frameworkSDK);
+    } else if (typeof task.scope !== "object") {
       return undefined;
     }
     const workspaceFolder = task.scope as vscode.WorkspaceFolder;
     if (!workspaceFolder) {
       return undefined;
     }
-    const frameworkSDK = getFrameworkSDKPathWithFallbacks();
-    if (frameworkSDK === null) {
-      //we don't have a valid SDK
-      return undefined;
-    }
-    const taskDef = task.definition as ActionScriptTaskDefinition;
     if (!taskDef.asconfig) {
       // if the asconfig field is blank, populate it with a default value
       return this.resolveTaskForMissingAsconfigField(
@@ -112,6 +113,53 @@ export default class ActionScriptTaskProvider
     }
     // nothing could be resolved
     return undefined;
+  }
+
+  protected resolveTaskForMultiRootWorkspace(
+    originalTask: vscode.Task,
+    taskDef: ActionScriptTaskDefinition,
+    frameworkSDK: string
+  ): vscode.Task {
+    if (vscode.workspace.workspaceFolders === undefined) {
+      return undefined;
+    }
+    const asconfigPath = taskDef.asconfig;
+    if (!asconfigPath) {
+      return undefined;
+    }
+    const asconfigPathParts = asconfigPath.split(/[\\\/]/g);
+    if (asconfigPathParts.length < 2) {
+      return undefined;
+    }
+    const workspaceNameToFind = asconfigPathParts[0];
+    const workspaceFolder = vscode.workspace.workspaceFolders.find(
+      (workspaceFolder) => workspaceFolder.name == workspaceNameToFind
+    );
+    if (!workspaceFolder) {
+      return undefined;
+    }
+    const jsonUri = vscode.Uri.joinPath(
+      workspaceFolder.uri,
+      ...asconfigPathParts.slice(1)
+    );
+    let isAIRProject = false;
+    const asconfigJson = this.readASConfigJSON(jsonUri);
+    if (asconfigJson !== null) {
+      isAIRProject =
+        this.isAIRMobile(asconfigJson) || this.isAIRDesktop(asconfigJson);
+    }
+    const result = this.getTask(
+      originalTask.name,
+      jsonUri,
+      workspaceFolder,
+      frameworkSDK,
+      taskDef.debug,
+      taskDef.air,
+      isAIRProject
+    );
+    // the new task's definition must strictly equal task.definition
+    result.definition = taskDef;
+    return result;
   }
 
   protected resolveTaskForMissingAsconfigField(
