@@ -140,6 +140,7 @@ import com.as3mxml.vscode.asdoc.VSCodeASDocDelegate;
 import com.as3mxml.vscode.commands.ICommandConstants;
 import com.as3mxml.vscode.compiler.CompilerShell;
 import com.as3mxml.vscode.compiler.problems.LSPFileNotFoundProblem;
+import com.as3mxml.vscode.compiler.problems.LSPMainClassNotFoundProblem;
 import com.as3mxml.vscode.compiler.problems.SyntaxFallbackProblem;
 import com.as3mxml.vscode.formatter.VSCodeFormatterConfiguration;
 import com.as3mxml.vscode.project.ActionScriptProjectData;
@@ -1859,6 +1860,12 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
                                 // even if mainClass is set, an entry must be added
                                 // to the files array
                                 configProblems.add(new LSPFileNotFoundProblem(files[files.length - 1],
+                                        problemPath != null ? problemPath.toString() : null));
+                            } else if (projectOptions.mainClass != null) {
+                                // the main class couldn't be resolved to a file
+                                // but we can still report a problem that
+                                // mentions the name of the main class.
+                                configProblems.add(new LSPMainClassNotFoundProblem(projectOptions.mainClass,
                                         problemPath != null ? problemPath.toString() : null));
                             } else {
                                 ConfigurationException e = new ConfigurationException.MustSpecifyTarget(null,

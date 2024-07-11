@@ -112,6 +112,7 @@ public class SimpleProjectConfigStrategy implements IProjectConfigStrategy {
         options.type = ProjectType.LIB;
         options.config = config;
         options.files = null;
+        options.mainClass = null;
         options.compilerOptions = compilerOptions;
         options.additionalOptions = null;
         options.targets = targets;

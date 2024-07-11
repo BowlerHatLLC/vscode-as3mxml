@@ -265,6 +265,7 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy {
         options.type = projectType;
         options.config = config;
         options.files = files;
+        options.mainClass = mainClass;
         options.compilerOptions = compilerOptions;
         options.additionalOptions = additionalOptions;
         options.targets = targets;

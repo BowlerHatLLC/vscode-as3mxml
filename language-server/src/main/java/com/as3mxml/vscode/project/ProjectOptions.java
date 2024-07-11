@@ -32,6 +32,7 @@ public class ProjectOptions {
      * where the drive letter could have different cases.
      */
     public String[] files;
+    public String mainClass;
     public List<String> compilerOptions;
     public List<String> additionalOptions;
 
@@ -41,6 +42,8 @@ public class ProjectOptions {
 
     public boolean equals(ProjectOptions other) {
         return other.type.equals(type) && other.config.equals(config) && Arrays.equals(other.files, files)
+                && ((other.mainClass == null && mainClass == null)
+                        || (other.mainClass != null && other.mainClass.equals(mainClass)))
                 && other.compilerOptions.equals(compilerOptions) && other.additionalOptions.equals(additionalOptions)
                 && other.targets.equals(targets);
     }
