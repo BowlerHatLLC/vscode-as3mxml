@@ -30,6 +30,7 @@
         <include>jsfl/*</include>
         <include>frameworks/*</include>
         <include>playerglobal_docs/*</include>
+        <include>intrinsics/**/*</include>
       </includes>
     </fileSet>
     <fileSet>

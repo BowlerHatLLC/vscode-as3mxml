@@ -17,6 +17,9 @@ package com.as3mxml.vscode.project;
 
 import java.io.File;
 import java.io.InputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -32,6 +35,7 @@ import com.networknt.schema.JsonSchema;
 import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.ValidationMessage;
 import com.networknt.schema.SpecVersion.VersionFlag;
+import com.as3mxml.asconfigc.ASConfigCException;
 import com.as3mxml.asconfigc.TopLevelFields;
 import com.as3mxml.asconfigc.compiler.CompilerOptions;
 import com.as3mxml.asconfigc.compiler.CompilerOptionsParser;
@@ -103,8 +107,9 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy {
         if (!asconfigFile.exists()) {
             return null;
         }
-        Path sdkPath = Paths.get(System.getProperty(PROPERTY_FRAMEWORK_LIB));
-        boolean isRoyale = ActionScriptSDKUtils.isRoyaleFramework(sdkPath);
+        Path frameworkPath = Paths.get(System.getProperty(PROPERTY_FRAMEWORK_LIB));
+        boolean isRoyale = ActionScriptSDKUtils.isRoyaleFramework(frameworkPath);
+        boolean isAIRSDK = ActionScriptSDKUtils.isAIRSDK(frameworkPath.resolve(".."));
         Path projectRoot = asconfigPath.getParent();
         String projectType = ProjectType.APP;
         String config = CONFIG_FLEX;
@@ -218,6 +223,24 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy {
                         // pass them in as String[], as the compiler expects.
                         additionalOptions.addAll(OptionsUtils.parseAdditionalOptions(additionalOptionsText));
                     }
+                }
+            }
+            if (isAIRSDK) {
+                File jarFile = null;
+                try {
+                    jarFile = new File(getClass().getProtectionDomain().getCodeSource().getLocation().toURI());
+                } catch (URISyntaxException e) {
+                    StringWriter stackTrace = new StringWriter();
+                    e.printStackTrace(new PrintWriter(stackTrace));
+                    throw new ASConfigCException(
+                            "Error: Failed to find AVM2 intrinsics.\n" + stackTrace.toString());
+                }
+                if (jarFile != null && jarFile.exists()) {
+                    if (additionalOptions == null) {
+                        additionalOptions = new ArrayList<>();
+                    }
+                    Path intrinsicsPath = jarFile.toPath().getParent().resolve("../intrinsics");
+                    additionalOptions.add("--source-path+=" + intrinsicsPath.toString());
                 }
             }
         } catch (UnknownCompilerOptionException e) {
