@@ -100,7 +100,7 @@ public class DefinitionDocumentationUtils {
                     int spaceIndex = paramName.indexOf(' ');
                     int tabIndex = paramName.indexOf('\t');
                     int delimiterIndex = spaceIndex;
-                    if (tabIndex < delimiterIndex) {
+                    if (tabIndex != -1 && (delimiterIndex == -1 || tabIndex < delimiterIndex)) {
                         delimiterIndex = tabIndex;
                     }
                     if (delimiterIndex > 0) {
@@ -158,7 +158,7 @@ public class DefinitionDocumentationUtils {
                     int spaceIndex = throwsName.indexOf(' ');
                     int tabIndex = throwsName.indexOf('\t');
                     int delimiterIndex = spaceIndex;
-                    if (tabIndex < delimiterIndex) {
+                    if (tabIndex != -1 && (delimiterIndex == -1 || tabIndex < delimiterIndex)) {
                         delimiterIndex = tabIndex;
                     }
                     if (delimiterIndex > 0) {
