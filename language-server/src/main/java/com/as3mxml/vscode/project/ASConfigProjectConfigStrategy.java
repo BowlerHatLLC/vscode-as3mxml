@@ -20,6 +20,7 @@ import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -68,6 +69,10 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy {
         this.workspaceFolder = workspaceFolder;
 
         asconfigPath = projectPath.resolve(ASCONFIG_JSON);
+    }
+
+    public boolean isSupportedForProject(Path projectPath) {
+        return Files.exists(projectPath.resolve(ASCONFIG_JSON));
     }
 
     public String getDefaultConfigurationProblemPath() {
