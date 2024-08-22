@@ -39,6 +39,9 @@ public class VSCodeASDocComment extends SourceLocation implements IASDocComment 
 	private static final Pattern endPreformatPattern = Pattern.compile("(?i)</(pre|listing|codeblock)>");
 	private static final Pattern markdownInlineCodePattern = Pattern.compile("`(.*?)`");
 	private static final Pattern asdocTagPattern = Pattern.compile("^\\s*\\*\\s+@\\w+");
+	private static final Pattern markdownStarPattern = Pattern.compile("(\\*{1,2})(\\w(?:[\\w ]+\\w)?)\\1");
+	private static final Pattern markdownUnderscorePattern = Pattern.compile("(_{1,2})(\\w(?:[\\w ]+\\w)?)\\1");
+	private static final Pattern markdownBacktickPattern = Pattern.compile("(`)(\\w(?:[\\w ]+\\w)?)\\1");
 
 	public VSCodeASDocComment(Token t) {
 		super((ISourceLocation) t);
@@ -271,6 +274,27 @@ public class VSCodeASDocComment extends SourceLocation implements IASDocComment 
 			line = line.trim();
 		}
 		if (useMarkdown) {
+			// first, escape anything that looks like Markdown formatting
+			// because ASDoc doesn't support native Markdown, and keeping it
+			// as-is may cause it to render in a way that the original author
+			// did not intend.
+			line = markdownStarPattern.matcher(line).replaceAll(matchResult -> {
+				String group1 = matchResult.group(1);
+				group1 = group1.replaceAll("\\*", Matcher.quoteReplacement("\\*"));
+				return Matcher.quoteReplacement(group1 + matchResult.group(2) + group1);
+			});
+			line = markdownUnderscorePattern.matcher(line).replaceAll(matchResult -> {
+				String group1 = matchResult.group(1);
+				group1 = group1.replaceAll("_", Matcher.quoteReplacement("\\_"));
+				return Matcher.quoteReplacement(group1 + matchResult.group(2) + group1);
+			});
+			line = markdownBacktickPattern.matcher(line).replaceAll(matchResult -> {
+				String group1 = matchResult.group(1);
+				group1 = group1.replaceAll("`", Matcher.quoteReplacement("\\`"));
+				return Matcher.quoteReplacement(group1 + matchResult.group(2) + group1);
+			});
+			// then, we want to replace the formatting tags from the HTML or
+			// DITA XML with unescaped Markdown formatting syntax.
 			line = line.replaceAll("(?i)</?(em|i)>", "_");
 			line = line.replaceAll("(?i)</?(strong|b)>", "**");
 			line = line.replaceAll("(?i)</?(code|codeph)>", "`");
