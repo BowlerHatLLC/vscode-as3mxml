@@ -50,7 +50,7 @@ import validateRoyale from "./utils/validateRoyale";
 const INVALID_SDK_ERROR =
   "as3mxml.sdk.editor in settings does not point to a valid SDK. Requires Apache Royale 0.9.10 or newer.";
 const INVALID_JAVA_ERROR =
-  "as3mxml.java.path in settings does not point to a valid executable. It cannot be a directory, and Java 8 or newer is required.";
+  "as3mxml.java.path in settings does not point to a valid executable. It cannot be a directory, and Java JDK 11 or newer is required.";
 const MISSING_JAVA_ERROR =
   "Could not locate valid Java executable. To configure Java manually, use the as3mxml.java.path setting.";
 const INITIALIZING_MESSAGE =

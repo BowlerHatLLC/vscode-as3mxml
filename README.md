@@ -20,7 +20,7 @@ This project is divided into several modules.
 
 ## Build instructions
 
-Requires JDK 8 (or newer), [Apache Maven](https://maven.apache.org/) and [Node.js](https://nodejs.org/). Run the following command in the root directory to build the extension:
+Requires JDK 11 (or newer), [Apache Maven](https://maven.apache.org/) and [Node.js](https://nodejs.org/). Run the following command in the root directory to build the extension:
 
 ```
 mvn clean package
