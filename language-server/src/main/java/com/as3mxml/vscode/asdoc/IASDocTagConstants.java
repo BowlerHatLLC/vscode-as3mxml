@@ -13,6 +13,9 @@ public interface IASDocTagConstants {
     public static final String RETURN = "return";
     public static final String SEE = "see";
     public static final String THROWS = "throws";
+    public static final String LANGVERSION = "langversion";
+    public static final String PLAYERVERSION = "playerversion";
+    public static final String PRODUCTVERSION = "productversion";
 
     public static final String[] TAGS = new String[] {
             COPY,
@@ -27,5 +30,8 @@ public interface IASDocTagConstants {
             RETURN,
             SEE,
             THROWS,
+            LANGVERSION,
+            PLAYERVERSION,
+            PRODUCTVERSION,
     };
 }
