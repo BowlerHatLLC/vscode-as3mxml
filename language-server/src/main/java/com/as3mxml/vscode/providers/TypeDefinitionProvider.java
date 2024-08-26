@@ -130,7 +130,7 @@ public class TypeDefinitionProvider {
 
 		IDefinition definition = null;
 
-		if (offsetNode instanceof IIdentifierNode) {
+		if (definition == null && offsetNode instanceof IIdentifierNode) {
 			IIdentifierNode identifierNode = (IIdentifierNode) offsetNode;
 			definition = DefinitionUtils.resolveTypeWithExtras(identifierNode, projectData.project);
 		}
