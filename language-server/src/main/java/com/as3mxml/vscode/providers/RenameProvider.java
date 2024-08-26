@@ -43,6 +43,8 @@ import org.apache.royale.compiler.tree.as.IDefinitionNode;
 import org.apache.royale.compiler.tree.as.IExpressionNode;
 import org.apache.royale.compiler.tree.as.IIdentifierNode;
 import org.apache.royale.compiler.tree.metadata.IEventTagNode;
+import org.apache.royale.compiler.tree.metadata.IInspectableTagNode;
+import org.apache.royale.compiler.tree.metadata.IStyleTagNode;
 import org.apache.royale.compiler.tree.mxml.IMXMLStyleNode;
 import org.apache.royale.compiler.units.ICompilationUnit;
 import org.apache.royale.compiler.units.ICompilationUnit.UnitType;
@@ -173,6 +175,34 @@ public class RenameProvider {
             } else if (eventType != null && eventType.equals(identifierNode.getName())) {
                 String eventTypeName = identifierNode.getName();
                 definition = project.resolveQNameToDefinition(eventTypeName);
+            }
+        }
+
+        if (definition == null && parentNode instanceof IStyleTagNode && offsetNode instanceof IIdentifierNode) {
+            IStyleTagNode parentStyleNode = (IStyleTagNode) parentNode;
+            IIdentifierNode identifierNode = (IIdentifierNode) offsetNode;
+            String styleName = parentStyleNode.getAttributeValue(IMetaAttributeConstants.NAME_STYLE_NAME);
+            String styleType = parentStyleNode.getAttributeValue(IMetaAttributeConstants.NAME_STYLE_TYPE);
+            String styleArrayType = parentStyleNode.getAttributeValue(IMetaAttributeConstants.NAME_STYLE_ARRAYTYPE);
+            if (styleName != null && styleName.equals(identifierNode.getName())) {
+                definition = parentStyleNode.getDefinition();
+            } else if (styleType != null && styleType.equals(identifierNode.getName())) {
+                String styleTypeName = identifierNode.getName();
+                definition = project.resolveQNameToDefinition(styleTypeName);
+            } else if (styleArrayType != null && styleArrayType.equals(identifierNode.getName())) {
+                String styleArrayTypeName = identifierNode.getName();
+                definition = project.resolveQNameToDefinition(styleArrayTypeName);
+            }
+        }
+
+        if (definition == null && parentNode instanceof IInspectableTagNode && offsetNode instanceof IIdentifierNode) {
+            IInspectableTagNode parentInspectableNode = (IInspectableTagNode) parentNode;
+            IIdentifierNode identifierNode = (IIdentifierNode) offsetNode;
+            String inspectableArrayType = parentInspectableNode
+                    .getAttributeValue(IMetaAttributeConstants.NAME_INSPECTABLE_ARRAYTYPE);
+            if (inspectableArrayType != null && inspectableArrayType.equals(identifierNode.getName())) {
+                String styleArrayTypeName = identifierNode.getName();
+                definition = project.resolveQNameToDefinition(styleArrayTypeName);
             }
         }
 

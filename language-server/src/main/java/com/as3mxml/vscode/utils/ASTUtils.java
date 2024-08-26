@@ -70,6 +70,8 @@ import org.apache.royale.compiler.tree.as.IScopedNode;
 import org.apache.royale.compiler.tree.as.ITransparentContainerNode;
 import org.apache.royale.compiler.tree.as.IVariableNode;
 import org.apache.royale.compiler.tree.metadata.IEventTagNode;
+import org.apache.royale.compiler.tree.metadata.IInspectableTagNode;
+import org.apache.royale.compiler.tree.metadata.IStyleTagNode;
 import org.apache.royale.compiler.tree.mxml.IMXMLSpecifierNode;
 import org.apache.royale.compiler.units.ICompilationUnit;
 
@@ -475,8 +477,8 @@ public class ASTUtils {
                 IIdentifierNode identifierNode = (IIdentifierNode) node;
                 IASNode parentNode = identifierNode.getParent();
                 IDefinition resolvedDefinition = null;
-                if (parentNode instanceof IEventTagNode) {
-                    IEventTagNode parentEventNode = (IEventTagNode) identifierNode.getParent();
+                if (resolvedDefinition == null && parentNode instanceof IEventTagNode) {
+                    IEventTagNode parentEventNode = (IEventTagNode) parentNode;
                     String eventName = parentEventNode.getAttributeValue(IMetaAttributeConstants.NAME_EVENT_NAME);
                     String eventType = parentEventNode.getAttributeValue(IMetaAttributeConstants.NAME_EVENT_TYPE);
                     if (eventName != null && eventName.equals(identifierNode.getName())) {
@@ -484,6 +486,31 @@ public class ASTUtils {
                     } else if (eventType != null && eventType.equals(identifierNode.getName())) {
                         String eventTypeName = identifierNode.getName();
                         resolvedDefinition = project.resolveQNameToDefinition(eventTypeName);
+                    }
+                }
+                if (resolvedDefinition == null && parentNode instanceof IStyleTagNode) {
+                    IStyleTagNode parentStyleNode = (IStyleTagNode) parentNode;
+                    String styleName = parentStyleNode.getAttributeValue(IMetaAttributeConstants.NAME_STYLE_NAME);
+                    String styleType = parentStyleNode.getAttributeValue(IMetaAttributeConstants.NAME_STYLE_TYPE);
+                    String styleArrayType = parentStyleNode
+                            .getAttributeValue(IMetaAttributeConstants.NAME_STYLE_ARRAYTYPE);
+                    if (styleName != null && styleName.equals(identifierNode.getName())) {
+                        resolvedDefinition = parentStyleNode.getDefinition();
+                    } else if (styleType != null && styleType.equals(identifierNode.getName())) {
+                        String styleTypeName = identifierNode.getName();
+                        resolvedDefinition = project.resolveQNameToDefinition(styleTypeName);
+                    } else if (styleArrayType != null && styleArrayType.equals(identifierNode.getName())) {
+                        String styleArrayTypeName = identifierNode.getName();
+                        resolvedDefinition = project.resolveQNameToDefinition(styleArrayTypeName);
+                    }
+                }
+                if (resolvedDefinition == null && parentNode instanceof IInspectableTagNode) {
+                    IInspectableTagNode parentInspectableNode = (IInspectableTagNode) parentNode;
+                    String inspectableArrayType = parentInspectableNode
+                            .getAttributeValue(IMetaAttributeConstants.NAME_INSPECTABLE_ARRAYTYPE);
+                    if (inspectableArrayType != null && inspectableArrayType.equals(identifierNode.getName())) {
+                        String styleArrayTypeName = identifierNode.getName();
+                        resolvedDefinition = project.resolveQNameToDefinition(styleArrayTypeName);
                     }
                 }
                 if (resolvedDefinition == null) {
