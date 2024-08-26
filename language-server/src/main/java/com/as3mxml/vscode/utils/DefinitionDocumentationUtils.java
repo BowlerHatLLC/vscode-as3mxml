@@ -22,8 +22,6 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Collection;
 
-import com.as3mxml.vscode.asdoc.VSCodeASDocComment;
-
 import org.apache.royale.compiler.asdoc.IASDocTag;
 import org.apache.royale.compiler.definitions.IDefinition;
 import org.apache.royale.compiler.definitions.IDocumentableDefinition;
@@ -34,11 +32,10 @@ import org.apache.royale.compiler.workspaces.IWorkspace;
 import org.apache.royale.swc.ISWC;
 import org.apache.royale.swc.dita.IDITAList;
 
+import com.as3mxml.vscode.asdoc.IASDocTagConstants;
+import com.as3mxml.vscode.asdoc.VSCodeASDocComment;
+
 public class DefinitionDocumentationUtils {
-    private static final String ASDOC_TAG_PARAM = "param";
-    private static final String ASDOC_TAG_RETURN = "return";
-    private static final String ASDOC_TAG_THROWS = "throws";
-    private static final String ASDOC_TAG_DEFAULT = "default";
     private static final String SDK_LIBRARY_PATH_SIGNATURE_UNIX = "/frameworks/libs/";
     private static final String SDK_LIBRARY_PATH_SIGNATURE_WINDOWS = "\\frameworks\\libs\\";
 
@@ -58,9 +55,9 @@ public class DefinitionDocumentationUtils {
             return null;
         }
         if (documentableDefinition instanceof IVariableDefinition) {
-            if (comment.hasTag(ASDOC_TAG_DEFAULT)) {
+            if (comment.hasTag(IASDocTagConstants.DEFAULT)) {
                 StringBuilder descriptionBuilder = new StringBuilder(description);
-                for (IASDocTag defaultTag : comment.getTagsByName(ASDOC_TAG_DEFAULT)) {
+                for (IASDocTag defaultTag : comment.getTagsByName(IASDocTagConstants.DEFAULT)) {
                     descriptionBuilder.append("\n\n");
                     if (useMarkdown) {
                         descriptionBuilder.append("_");
@@ -82,9 +79,9 @@ public class DefinitionDocumentationUtils {
             }
         }
         if (documentableDefinition instanceof IFunctionDefinition) {
-            if (comment.hasTag(ASDOC_TAG_PARAM)) {
+            if (comment.hasTag(IASDocTagConstants.PARAM)) {
                 StringBuilder descriptionBuilder = new StringBuilder(description);
-                for (IASDocTag paramTag : comment.getTagsByName(ASDOC_TAG_PARAM)) {
+                for (IASDocTag paramTag : comment.getTagsByName(IASDocTagConstants.PARAM)) {
                     descriptionBuilder.append("\n\n");
                     if (useMarkdown) {
                         descriptionBuilder.append("_");
@@ -121,9 +118,9 @@ public class DefinitionDocumentationUtils {
                 }
                 description = descriptionBuilder.toString();
             }
-            if (comment.hasTag(ASDOC_TAG_RETURN)) {
+            if (comment.hasTag(IASDocTagConstants.RETURN)) {
                 StringBuilder descriptionBuilder = new StringBuilder(description);
-                for (IASDocTag returnTag : comment.getTagsByName(ASDOC_TAG_RETURN)) {
+                for (IASDocTag returnTag : comment.getTagsByName(IASDocTagConstants.RETURN)) {
                     descriptionBuilder.append("\n\n");
                     if (useMarkdown) {
                         descriptionBuilder.append("_");
@@ -140,9 +137,9 @@ public class DefinitionDocumentationUtils {
         }
         if (documentableDefinition instanceof IVariableDefinition
                 || documentableDefinition instanceof IFunctionDefinition) {
-            if (comment.hasTag(ASDOC_TAG_THROWS)) {
+            if (comment.hasTag(IASDocTagConstants.THROWS)) {
                 StringBuilder descriptionBuilder = new StringBuilder(description);
-                for (IASDocTag throwsTag : comment.getTagsByName(ASDOC_TAG_THROWS)) {
+                for (IASDocTag throwsTag : comment.getTagsByName(IASDocTagConstants.THROWS)) {
                     descriptionBuilder.append("\n\n");
                     if (useMarkdown) {
                         descriptionBuilder.append("_");
@@ -195,7 +192,7 @@ public class DefinitionDocumentationUtils {
             return null;
         }
         comment.compile(useMarkdown);
-        Collection<IASDocTag> paramTags = comment.getTagsByName(ASDOC_TAG_PARAM);
+        Collection<IASDocTag> paramTags = comment.getTagsByName(IASDocTagConstants.PARAM);
         if (paramTags == null) {
             return null;
         }
