@@ -22,9 +22,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.as3mxml.vscode.compiler.problems.DisabledConfigConditionBlockProblem;
-import com.as3mxml.vscode.compiler.problems.UnusedImportProblem;
-
 import org.apache.royale.compiler.asdoc.IASDocComment;
 import org.apache.royale.compiler.common.ISourceLocation;
 import org.apache.royale.compiler.constants.IASLanguageConstants;
@@ -54,6 +51,7 @@ import org.apache.royale.compiler.tree.as.IASNode;
 import org.apache.royale.compiler.tree.as.IBinaryOperatorNode;
 import org.apache.royale.compiler.tree.as.IBlockNode;
 import org.apache.royale.compiler.tree.as.IClassNode;
+import org.apache.royale.compiler.tree.as.IDocumentableDefinitionNode;
 import org.apache.royale.compiler.tree.as.IExpressionNode;
 import org.apache.royale.compiler.tree.as.IFileNode;
 import org.apache.royale.compiler.tree.as.IFunctionCallNode;
@@ -72,10 +70,12 @@ import org.apache.royale.compiler.tree.as.IVariableNode;
 import org.apache.royale.compiler.tree.metadata.IEventTagNode;
 import org.apache.royale.compiler.tree.metadata.IInspectableTagNode;
 import org.apache.royale.compiler.tree.metadata.IStyleTagNode;
+import org.apache.royale.compiler.tree.metadata.ITypedTagNode;
 import org.apache.royale.compiler.tree.mxml.IMXMLSpecifierNode;
 import org.apache.royale.compiler.units.ICompilationUnit;
 
-import org.apache.royale.compiler.tree.as.IDocumentableDefinitionNode;
+import com.as3mxml.vscode.compiler.problems.DisabledConfigConditionBlockProblem;
+import com.as3mxml.vscode.compiler.problems.UnusedImportProblem;
 
 public class ASTUtils {
     private static final String DOT_STAR = ".*";
@@ -512,6 +512,13 @@ public class ASTUtils {
                         String styleArrayTypeName = identifierNode.getName();
                         resolvedDefinition = project.resolveQNameToDefinition(styleArrayTypeName);
                     }
+                }
+                // [ArrayElementType]
+                // [HostComponent]
+                // [InstanceType]
+                if (resolvedDefinition == null && parentNode instanceof ITypedTagNode) {
+                    String typeName = identifierNode.getName();
+                    resolvedDefinition = project.resolveQNameToDefinition(typeName);
                 }
                 if (resolvedDefinition == null) {
                     resolvedDefinition = identifierNode.resolve(project);

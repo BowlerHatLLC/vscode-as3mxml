@@ -45,6 +45,7 @@ import org.apache.royale.compiler.tree.as.IIdentifierNode;
 import org.apache.royale.compiler.tree.metadata.IEventTagNode;
 import org.apache.royale.compiler.tree.metadata.IInspectableTagNode;
 import org.apache.royale.compiler.tree.metadata.IStyleTagNode;
+import org.apache.royale.compiler.tree.metadata.ITypedTagNode;
 import org.apache.royale.compiler.tree.mxml.IMXMLStyleNode;
 import org.apache.royale.compiler.units.ICompilationUnit;
 import org.apache.royale.compiler.units.ICompilationUnit.UnitType;
@@ -204,6 +205,15 @@ public class RenameProvider {
                 String styleArrayTypeName = identifierNode.getName();
                 definition = project.resolveQNameToDefinition(styleArrayTypeName);
             }
+        }
+
+        // [ArrayElementType]
+        // [HostComponent]
+        // [InstanceType]
+        if (definition == null && parentNode instanceof ITypedTagNode && offsetNode instanceof IIdentifierNode) {
+            IIdentifierNode identifierNode = (IIdentifierNode) offsetNode;
+            String typeName = identifierNode.getName();
+            definition = project.resolveQNameToDefinition(typeName);
         }
 
         if (definition == null && offsetNode instanceof IDefinitionNode) {

@@ -35,6 +35,7 @@ import org.apache.royale.compiler.tree.as.INamespaceDecorationNode;
 import org.apache.royale.compiler.tree.metadata.IEventTagNode;
 import org.apache.royale.compiler.tree.metadata.IInspectableTagNode;
 import org.apache.royale.compiler.tree.metadata.IStyleTagNode;
+import org.apache.royale.compiler.tree.metadata.ITypedTagNode;
 import org.apache.royale.compiler.tree.mxml.IMXMLStyleNode;
 import org.apache.royale.compiler.units.ICompilationUnit;
 import org.eclipse.lsp4j.Hover;
@@ -204,6 +205,15 @@ public class HoverProvider {
                 String styleArrayTypeName = identifierNode.getName();
                 definition = project.resolveQNameToDefinition(styleArrayTypeName);
             }
+        }
+
+        // [ArrayElementType]
+        // [HostComponent]
+        // [InstanceType]
+        if (definition == null && parentNode instanceof ITypedTagNode && offsetNode instanceof IIdentifierNode) {
+            IIdentifierNode identifierNode = (IIdentifierNode) offsetNode;
+            String typeName = identifierNode.getName();
+            definition = project.resolveQNameToDefinition(typeName);
         }
 
         // INamespaceDecorationNode extends IIdentifierNode, but we don't want
