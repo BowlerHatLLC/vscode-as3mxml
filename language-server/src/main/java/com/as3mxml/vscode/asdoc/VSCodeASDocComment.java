@@ -113,14 +113,15 @@ public class VSCodeASDocComment extends SourceLocation implements IASDocComment 
 			if (c != -1) {
 				lines[0] = lines[0].substring(0, c);
 			}
+			n++;
 		}
-		// strip start of asdoc coment
+		// strip start of asdoc comment
 		String line = lines[0];
 		int lengthToRemove = Math.min(line.length(), 3);
-		line = line.substring(lengthToRemove);
+		line = " * " + line.substring(lengthToRemove);
+		lines[0] = line;
 		VSCodeASDocTag lastTag = null;
-		appendLine(sb, line, insidePreformatted);
-		for (int i = 1; i < n - 1; i++) {
+		for (int i = 0; i < n - 1; i++) {
 			line = lines[i];
 			if (insidePreformatted || !asdocTagPattern.matcher(line).find()) {
 				int star = line.indexOf("*");
