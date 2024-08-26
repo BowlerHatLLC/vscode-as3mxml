@@ -277,7 +277,7 @@ public class HoverProvider {
         String detail = DefinitionTextUtils.definitionToDetail(definition, project);
         detail = codeBlock(MARKED_STRING_LANGUAGE_ACTIONSCRIPT, detail);
         String docs = DefinitionDocumentationUtils.getDocumentationForDefinition(definition, true,
-                project.getWorkspace(), true);
+                project, true);
         if (docs != null) {
             detail += "\n\n---\n\n" + docs;
         }
@@ -291,7 +291,7 @@ public class HoverProvider {
                     detail += "\n\n---\n\n" + parentDetail;
                     String parentDocs = DefinitionDocumentationUtils.getDocumentationForDefinition(parentDefinition,
                             true,
-                            project.getWorkspace(), true);
+                            project, true);
                     if (parentDocs != null) {
                         detail += "\n\n---\n\n" + parentDocs;
                     }
@@ -338,7 +338,7 @@ public class HoverProvider {
         String detail = DefinitionTextUtils.definitionToDetail(definition, project);
         detail = codeBlock(MARKED_STRING_LANGUAGE_ACTIONSCRIPT, detail);
         String docs = DefinitionDocumentationUtils.getDocumentationForDefinition(definition, true,
-                project.getWorkspace(), true);
+                project, true);
         if (docs != null) {
             detail += "\n\n---\n\n" + docs;
         }
@@ -373,7 +373,7 @@ public class HoverProvider {
         String detail = DefinitionTextUtils.definitionToDetail(definition, projectData.project);
         detail = codeBlock(MARKED_STRING_LANGUAGE_ACTIONSCRIPT, detail);
         String docs = DefinitionDocumentationUtils.getDocumentationForDefinition(definition, true,
-                projectData.project.getWorkspace(), true);
+                projectData.project, true);
         if (docs != null) {
             detail += "\n\n---\n\n" + docs;
         }

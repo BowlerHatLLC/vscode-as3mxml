@@ -36,7 +36,7 @@ public class CompletionItemUtils {
         item.setDetail(DefinitionTextUtils.definitionToDetail(definition, project));
         item.setLabel(definition.getBaseName());
         String docs = DefinitionDocumentationUtils.getDocumentationForDefinition(definition, true,
-                project.getWorkspace(), false);
+                project, false);
         if (docs != null) {
             item.setDocumentation(new MarkupContent(MarkupKind.MARKDOWN, docs));
         }

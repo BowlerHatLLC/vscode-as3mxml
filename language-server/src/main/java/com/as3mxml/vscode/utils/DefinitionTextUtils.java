@@ -1027,7 +1027,7 @@ public class DefinitionTextUtils {
     private static void insertASDocIntoTextDocument(IDocumentableDefinition def, StringBuilder textDocumentBuilder,
             ICompilerProject currentProject, String indent) {
         String comment = DefinitionDocumentationUtils.getDocumentationForDefinition(def, false,
-                currentProject.getWorkspace(), true);
+                currentProject, true);
         if (comment == null) {
             return;
         }
