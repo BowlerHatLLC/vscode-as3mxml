@@ -231,6 +231,14 @@
       "description": "Instructs the ADT utility how to package the Adobe AIR application.",
       "additionalProperties": false,
       "properties": {
+        "licenseFile": {
+          "type": "string",
+          "description": "The AIR developer license file to use instead of lib/adt.cfg."
+        },
+        "licenseDevID": {
+          "type": "string",
+          "description": "The AIR developer ID to use instead of the one in lib/adt.cfg."
+        },
         "target": { "$ref": "#/definitions/airOptionsAllTargets" },
         "extdir": { "$ref": "#/definitions/airOptionsExtdir" },
         "files": { "$ref": "#/definitions/airOptionsFiles" },

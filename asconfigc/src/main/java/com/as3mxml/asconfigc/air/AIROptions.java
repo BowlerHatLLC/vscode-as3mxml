@@ -28,6 +28,9 @@ public class AIROptions {
 	public static final String CONNECT = "connect";
 	public static final String LISTEN = "listen";
 
+	public static final String LICENSE_FILE = "licenseFile";
+	public static final String LICENSE_DEV_ID = "licenseDevID";
+
 	// ios
 	public static final String SAMPLER = "sampler";
 	public static final String HIDE_ANE_LIB_SYMBOLS = "hideAneLibSymbols";

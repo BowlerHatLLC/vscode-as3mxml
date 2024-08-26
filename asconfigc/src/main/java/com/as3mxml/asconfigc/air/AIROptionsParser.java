@@ -30,6 +30,15 @@ public class AIROptionsParser {
 
 	public void parse(String platform, boolean debug, String applicationDescriptorPath, String applicationContentPath,
 			List<String> modulePaths, List<String> workerPaths, JsonNode options, List<String> result) {
+		if (options.has(AIROptions.LICENSE_DEV_ID)) {
+			setValueWithoutAssignment(AIROptions.LICENSE_DEV_ID, options.get(AIROptions.LICENSE_DEV_ID).asText(),
+					result);
+		}
+		if (options.has(AIROptions.LICENSE_FILE)) {
+			setValueWithoutAssignment(AIROptions.LICENSE_FILE, options.get(AIROptions.LICENSE_FILE).asText(),
+					result);
+		}
+
 		result.add("-" + AIROptions.PACKAGE);
 
 		// AIR_SIGNING_OPTIONS begin
@@ -232,6 +241,8 @@ public class AIROptionsParser {
 				case AIROptions.EXTDIR:
 				case AIROptions.FILES:
 				case AIROptions.HIDE_ANE_LIB_SYMBOLS:
+				case AIROptions.LICENSE_DEV_ID:
+				case AIROptions.LICENSE_FILE:
 				case AIROptions.OUTPUT:
 				case AIROptions.PLATFORMSDK:
 				case AIROptions.SAMPLER:
