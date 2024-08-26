@@ -122,7 +122,7 @@ public class ImplementationProvider {
 
         IInterfaceDefinition interfaceDefinition = null;
 
-        if (offsetNode instanceof IIdentifierNode) {
+        if (interfaceDefinition == null && offsetNode instanceof IIdentifierNode) {
             IIdentifierNode expressionNode = (IIdentifierNode) offsetNode;
             IDefinition resolvedDefinition = expressionNode.resolve(project);
             if (resolvedDefinition instanceof IInterfaceDefinition) {
