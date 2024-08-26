@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.royale.compiler.common.ISourceLocation;
+import org.apache.royale.compiler.constants.IMetaAttributeConstants;
 import org.apache.royale.compiler.definitions.IClassDefinition;
 import org.apache.royale.compiler.definitions.IDefinition;
 import org.apache.royale.compiler.definitions.IFunctionDefinition;
@@ -37,6 +38,7 @@ import org.apache.royale.compiler.mxml.IMXMLTagData;
 import org.apache.royale.compiler.scopes.IASScope;
 import org.apache.royale.compiler.tree.as.IASNode;
 import org.apache.royale.compiler.tree.as.IIdentifierNode;
+import org.apache.royale.compiler.tree.metadata.IEventTagNode;
 import org.apache.royale.compiler.tree.mxml.IMXMLStyleNode;
 import org.apache.royale.compiler.units.ICompilationUnit;
 import org.apache.royale.compiler.units.ICompilationUnit.UnitType;
@@ -144,20 +146,35 @@ public class ReferencesProvider {
             return Collections.emptyList();
         }
 
-        if (offsetNode instanceof IIdentifierNode) {
+        IDefinition definition = null;
+        IASNode parentNode = offsetNode.getParent();
+
+        if (definition == null && parentNode instanceof IEventTagNode && offsetNode instanceof IIdentifierNode) {
+            IEventTagNode parentEventNode = (IEventTagNode) parentNode;
             IIdentifierNode identifierNode = (IIdentifierNode) offsetNode;
-            IDefinition resolved = DefinitionUtils.resolveWithExtras(identifierNode, project);
-            if (resolved == null) {
-                return Collections.emptyList();
+            String eventName = parentEventNode.getAttributeValue(IMetaAttributeConstants.NAME_EVENT_NAME);
+            String eventType = parentEventNode.getAttributeValue(IMetaAttributeConstants.NAME_EVENT_TYPE);
+            if (eventName != null && eventName.equals(identifierNode.getName())) {
+                definition = parentEventNode.getDefinition();
+            } else if (eventType != null && eventType.equals(identifierNode.getName())) {
+                String eventTypeName = identifierNode.getName();
+                definition = project.resolveQNameToDefinition(eventTypeName);
             }
-            List<Location> result = new ArrayList<>();
-            referencesForDefinition(resolved, project, result);
-            return result;
         }
 
-        // VSCode may call references() when there isn't necessarily a
-        // definition referenced at the current position.
-        return Collections.emptyList();
+        if (definition == null && offsetNode instanceof IIdentifierNode) {
+            IIdentifierNode identifierNode = (IIdentifierNode) offsetNode;
+            definition = DefinitionUtils.resolveWithExtras(identifierNode, project);
+        }
+
+        if (definition == null) {
+            // VSCode may call references() when there isn't necessarily a
+            // definition referenced at the current position.
+            return Collections.emptyList();
+        }
+        List<Location> result = new ArrayList<>();
+        referencesForDefinition(definition, project, result);
+        return result;
     }
 
     private List<? extends Location> mxmlReferences(IMXMLTagData offsetTag, int currentOffset,

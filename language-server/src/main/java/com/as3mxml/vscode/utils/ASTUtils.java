@@ -69,6 +69,7 @@ import org.apache.royale.compiler.tree.as.IScopedDefinitionNode;
 import org.apache.royale.compiler.tree.as.IScopedNode;
 import org.apache.royale.compiler.tree.as.ITransparentContainerNode;
 import org.apache.royale.compiler.tree.as.IVariableNode;
+import org.apache.royale.compiler.tree.metadata.IEventTagNode;
 import org.apache.royale.compiler.tree.mxml.IMXMLSpecifierNode;
 import org.apache.royale.compiler.units.ICompilationUnit;
 
@@ -472,7 +473,22 @@ public class ASTUtils {
         if (node.isTerminal()) {
             if (node instanceof IIdentifierNode) {
                 IIdentifierNode identifierNode = (IIdentifierNode) node;
-                IDefinition resolvedDefinition = identifierNode.resolve(project);
+                IASNode parentNode = identifierNode.getParent();
+                IDefinition resolvedDefinition = null;
+                if (parentNode instanceof IEventTagNode) {
+                    IEventTagNode parentEventNode = (IEventTagNode) identifierNode.getParent();
+                    String eventName = parentEventNode.getAttributeValue(IMetaAttributeConstants.NAME_EVENT_NAME);
+                    String eventType = parentEventNode.getAttributeValue(IMetaAttributeConstants.NAME_EVENT_TYPE);
+                    if (eventName != null && eventName.equals(identifierNode.getName())) {
+                        resolvedDefinition = parentEventNode.getDefinition();
+                    } else if (eventType != null && eventType.equals(identifierNode.getName())) {
+                        String eventTypeName = identifierNode.getName();
+                        resolvedDefinition = project.resolveQNameToDefinition(eventTypeName);
+                    }
+                }
+                if (resolvedDefinition == null) {
+                    resolvedDefinition = identifierNode.resolve(project);
+                }
                 if (resolvedDefinition == definition) {
                     result.add(identifierNode);
                 } else if (resolvedDefinition instanceof IClassDefinition && definition instanceof IFunctionDefinition

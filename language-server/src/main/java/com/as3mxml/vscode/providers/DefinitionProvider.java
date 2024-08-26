@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 
 import org.apache.royale.compiler.common.ISourceLocation;
 import org.apache.royale.compiler.common.XMLName;
+import org.apache.royale.compiler.constants.IMetaAttributeConstants;
 import org.apache.royale.compiler.definitions.IClassDefinition;
 import org.apache.royale.compiler.definitions.IDefinition;
 import org.apache.royale.compiler.definitions.IFunctionDefinition;
@@ -39,6 +40,7 @@ import org.apache.royale.compiler.tree.as.IFunctionNode;
 import org.apache.royale.compiler.tree.as.IIdentifierNode;
 import org.apache.royale.compiler.tree.as.ILanguageIdentifierNode;
 import org.apache.royale.compiler.tree.as.IReturnNode;
+import org.apache.royale.compiler.tree.metadata.IEventTagNode;
 import org.apache.royale.compiler.tree.mxml.IMXMLStyleNode;
 import org.apache.royale.compiler.units.ICompilationUnit;
 import org.eclipse.lsp4j.DefinitionParams;
@@ -166,6 +168,20 @@ public class DefinitionProvider {
 
         IDefinition definition = null;
         Range sourceRange = null;
+        IASNode parentNode = offsetNode.getParent();
+
+        if (definition == null && parentNode instanceof IEventTagNode && offsetNode instanceof IIdentifierNode) {
+            IEventTagNode parentEventNode = (IEventTagNode) parentNode;
+            IIdentifierNode identifierNode = (IIdentifierNode) offsetNode;
+            String eventName = parentEventNode.getAttributeValue(IMetaAttributeConstants.NAME_EVENT_NAME);
+            String eventType = parentEventNode.getAttributeValue(IMetaAttributeConstants.NAME_EVENT_TYPE);
+            if (eventName != null && eventName.equals(identifierNode.getName())) {
+                definition = parentEventNode.getDefinition();
+            } else if (eventType != null && eventType.equals(identifierNode.getName())) {
+                String eventTypeName = identifierNode.getName();
+                definition = projectData.project.resolveQNameToDefinition(eventTypeName);
+            }
+        }
 
         if (definition == null && offsetNode instanceof IReturnNode) {
             IReturnNode returnNode = (IReturnNode) offsetNode;
@@ -216,7 +232,6 @@ public class DefinitionProvider {
             return Either.forLeft(Collections.emptyList());
         }
 
-        IASNode parentNode = offsetNode.getParent();
         if (definition instanceof IClassDefinition && parentNode instanceof IFunctionCallNode) {
             IFunctionCallNode functionCallNode = (IFunctionCallNode) parentNode;
             if (functionCallNode.isNewExpression()) {
