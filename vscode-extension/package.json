@@ -50,7 +50,7 @@
     "@vscode/vsce": "^2.27.0",
     "vscode-jsonrpc": "^8.2.1",
     "vscode-languageclient": "^9.0.1",
-    "webpack": "^5.92.0",
+    "webpack": "^5.94.0",
     "webpack-cli": "^5.1.4"
   },
   "activationEvents": [
