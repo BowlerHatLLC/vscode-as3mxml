@@ -35,22 +35,22 @@
     "build-debug": "mvn package"
   },
   "engines": {
-    "vscode": "^1.70.0"
+    "vscode": "^1.82.0"
   },
   "devDependencies": {
     "@rgrove/parse-xml": "^4.1.0",
-    "@types/mocha": "^10.0.6",
-    "@types/node": "^14.18.63",
-    "@types/vscode": "^1.70.0",
+    "@types/mocha": "^10.0.7",
+    "@types/node": "^18.19.48",
+    "@types/vscode": "^1.82.0",
     "glob": "^8.1.0",
     "json5": "^2.2.3",
     "mocha": "^10.4.0",
     "ts-loader": "^9.5.1",
-    "typescript": "^5.4.5",
-    "@vscode/vsce": "^2.27.0",
+    "typescript": "^5.5.4",
+    "@vscode/vsce": "^3.0.0",
     "vscode-jsonrpc": "^8.2.1",
     "vscode-languageclient": "^9.0.1",
-    "webpack": "^5.92.0",
+    "webpack": "^5.94.0",
     "webpack-cli": "^5.1.4"
   },
   "activationEvents": [
