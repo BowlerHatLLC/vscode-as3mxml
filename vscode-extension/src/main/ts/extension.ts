@@ -47,12 +47,11 @@ import selectRoyalePreferredTarget from "./commands/selectRoyalePreferredTarget"
 import getRoyalePreferredTarget from "./utils/getRoyalePreferredTarget";
 import validateRoyale from "./utils/validateRoyale";
 
-const INVALID_SDK_ERROR =
-  "as3mxml.sdk.editor in settings does not point to a valid SDK. Requires Apache Royale 0.9.10 or newer.";
-const INVALID_JAVA_ERROR =
-  "as3mxml.java.path in settings does not point to a valid executable. It cannot be a directory, and Java JDK 11 or newer is required.";
-const MISSING_JAVA_ERROR =
-  "Could not locate valid Java executable. To configure Java manually, use the as3mxml.java.path setting.";
+const MINIMUM_APACHE_ROYALE_VERSION = "0.9.10";
+const MINIMUM_JDK_VERSION = "11";
+const INVALID_SDK_ERROR = `as3mxml.sdk.editor in settings does not point to a valid SDK. Requires Apache Royale ${MINIMUM_APACHE_ROYALE_VERSION} or newer.`;
+const INVALID_JAVA_ERROR = `as3mxml.java.path in settings does not point to a valid executable. It cannot be a directory, and Java JDK ${MINIMUM_JDK_VERSION} or newer is required.`;
+const MISSING_JAVA_ERROR = `Could not locate valid Java executable. Java JDK ${MINIMUM_JDK_VERSION} or newer is required. To configure Java manually, use the as3mxml.java.path setting.`;
 const INITIALIZING_MESSAGE =
   "Initializing ActionScript & MXML language server...";
 const RELOAD_WINDOW_MESSAGE =
