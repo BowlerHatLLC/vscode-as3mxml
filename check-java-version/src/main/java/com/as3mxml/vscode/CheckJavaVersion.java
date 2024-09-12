@@ -23,18 +23,23 @@ public class CheckJavaVersion {
     public static final int GOOD_VERSION = 0;
     public static final int BAD_VERSION = 100;
 
+    public static final int MINIMUM_MAJOR_VERSION = 11;
+    public static final int MINIMUM_MINOR_VERSION = 0;
+
     public static void main(String[] args) {
         String version = System.getProperty("java.specification.version");
         String[] versionParts = version.split("-")[0].split("\\.");
         int major = Integer.parseInt(versionParts[0]);
-        if (major > 1) {
+        if (major > MINIMUM_MAJOR_VERSION) {
             System.exit(GOOD_VERSION);
         }
         if (versionParts.length > 1) {
             int minor = Integer.parseInt(versionParts[1]);
-            if (major == 1 && minor >= 8) {
+            if (major == MINIMUM_MAJOR_VERSION && minor >= MINIMUM_MINOR_VERSION) {
                 System.exit(GOOD_VERSION);
             }
+        } else if (major == MINIMUM_MAJOR_VERSION) {
+            System.exit(GOOD_VERSION);
         }
         System.exit(BAD_VERSION);
     }
