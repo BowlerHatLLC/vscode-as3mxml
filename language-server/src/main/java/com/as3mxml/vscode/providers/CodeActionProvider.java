@@ -20,22 +20,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import com.as3mxml.vscode.commands.ICommandConstants;
-import com.as3mxml.vscode.project.ILspProject;
-import com.as3mxml.vscode.project.ActionScriptProjectData;
-import com.as3mxml.vscode.utils.ASTUtils;
-import com.as3mxml.vscode.utils.CodeActionsUtils;
-import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
-import com.as3mxml.vscode.utils.CompilerProjectUtils;
-import com.as3mxml.vscode.utils.FileTracker;
-import com.as3mxml.vscode.utils.ImportRange;
-import com.as3mxml.vscode.utils.LanguageServerCompilerUtils;
-import com.as3mxml.vscode.utils.MXMLDataUtils;
-import com.as3mxml.vscode.utils.SourcePathUtils;
-import com.as3mxml.vscode.utils.ActionScriptProjectManager;
-import com.google.common.collect.Lists;
-import com.google.gson.JsonObject;
+import java.util.stream.Collectors;
 
 import org.apache.royale.compiler.definitions.IDefinition;
 import org.apache.royale.compiler.definitions.IInterfaceDefinition;
@@ -63,6 +48,22 @@ import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.WorkspaceEdit;
 import org.eclipse.lsp4j.jsonrpc.CancelChecker;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
+
+import com.as3mxml.vscode.commands.ICommandConstants;
+import com.as3mxml.vscode.project.ActionScriptProjectData;
+import com.as3mxml.vscode.project.ILspProject;
+import com.as3mxml.vscode.utils.ASTUtils;
+import com.as3mxml.vscode.utils.ActionScriptProjectManager;
+import com.as3mxml.vscode.utils.CodeActionsUtils;
+import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
+import com.as3mxml.vscode.utils.CompilerProjectUtils;
+import com.as3mxml.vscode.utils.FileTracker;
+import com.as3mxml.vscode.utils.ImportRange;
+import com.as3mxml.vscode.utils.LanguageServerCompilerUtils;
+import com.as3mxml.vscode.utils.MXMLDataUtils;
+import com.as3mxml.vscode.utils.SourcePathUtils;
+import com.google.common.collect.Lists;
+import com.google.gson.JsonObject;
 
 public class CodeActionProvider {
     private static final String FILE_EXTENSION_MXML = ".mxml";
@@ -133,6 +134,16 @@ public class CodeActionProvider {
         }
         if (cancelToken != null) {
             cancelToken.checkCanceled();
+        }
+        List<String> only = params.getContext().getOnly();
+        if (only != null) {
+            codeActions = codeActions.stream().filter(item -> {
+                if (item.isLeft()) {
+                    return true;
+                }
+                CodeAction codeAction = item.getRight();
+                return only.contains(codeAction.getKind());
+            }).collect(Collectors.toList());
         }
         return codeActions;
     }
