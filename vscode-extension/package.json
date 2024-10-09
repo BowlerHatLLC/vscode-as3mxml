@@ -201,7 +201,7 @@
       {
         "view": "explorer",
         "contents": "%viewsWelcome.workbench.createNewActionScriptProject%",
-        "when": "workspaceFolderCount == 0"
+        "when": "workspaceFolderCount == 0 && config.actionscript.views.explorer.showCreateNewActionScriptProject"
       }
     ],
     "languages": [
@@ -628,6 +628,11 @@
           "default": "off",
           "description": "(Advanced) Logs the communication between Visual Studio Code and the ActionScript & MXML language server",
           "scope": "window"
+        },
+        "actionscript.views.explorer.showCreateNewActionScriptProject": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show or hides the create new ActionScript project view in explorer"
         }
       }
     },
