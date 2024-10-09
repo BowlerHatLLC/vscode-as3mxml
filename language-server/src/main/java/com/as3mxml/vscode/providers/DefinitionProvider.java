@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 
 import org.apache.royale.compiler.common.ISourceLocation;
 import org.apache.royale.compiler.common.XMLName;
+import org.apache.royale.compiler.constants.IASKeywordConstants;
 import org.apache.royale.compiler.constants.IMetaAttributeConstants;
 import org.apache.royale.compiler.definitions.IClassDefinition;
 import org.apache.royale.compiler.definitions.IDefinition;
@@ -255,13 +256,29 @@ public class DefinitionProvider {
                 case SUPER: {
                     IClassNode classNode = (IClassNode) offsetNode.getAncestorOfType(IClassNode.class);
                     if (classNode != null) {
-                        expressionToResolve = classNode.getBaseClassExpressionNode();
+                        if (parentNode instanceof IFunctionCallNode) {
+                            IFunctionCallNode functionCallNode = (IFunctionCallNode) parentNode;
+                            if (IASKeywordConstants.SUPER.equals(functionCallNode.getFunctionName())) {
+                                expressionToResolve = (IExpressionNode) languageIdentifierNode;
+                                IClassDefinition classDefinition = classNode.getDefinition();
+                                if (classDefinition != null) {
+                                    IClassDefinition baseClassDefinition = classDefinition
+                                            .resolveBaseClass(projectData.project);
+                                    if (baseClassDefinition != null) {
+                                        definition = baseClassDefinition.getConstructor();
+                                    }
+                                }
+                            }
+                        }
+                        if (definition == null && expressionToResolve == null) {
+                            expressionToResolve = classNode.getBaseClassExpressionNode();
+                        }
                     }
                     break;
                 }
                 default:
             }
-            if (expressionToResolve != null) {
+            if (definition == null && expressionToResolve != null) {
                 definition = expressionToResolve.resolve(projectData.project);
             }
         }
