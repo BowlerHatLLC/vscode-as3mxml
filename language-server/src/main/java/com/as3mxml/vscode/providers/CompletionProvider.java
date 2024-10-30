@@ -147,7 +147,7 @@ public class CompletionProvider {
     private boolean completionSupportsSnippets;
     private boolean completionSupportsSimpleSnippets;
     private boolean frameworkSDKIsRoyale;
-    private List<String> completionTypes = new ArrayList<>();
+    private Set<String> completionTypes = new HashSet<>();
 
     public CompletionProvider(ActionScriptProjectManager actionScriptProjectManager, FileTracker fileTracker,
             boolean completionSupportsSnippets, boolean completionSupportsSimpleSnippets,
