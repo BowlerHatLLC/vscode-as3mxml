@@ -1357,7 +1357,7 @@ public class CompletionProvider {
         } while (classDefinition instanceof IClassDefinition);
 
         List<CompletionItem> resultItems = result.getItems();
-        ArrayList<String> functionNames = new ArrayList<>();
+        Set<String> functionNames = new HashSet<>();
         for (IDefinition definition : propertyDefinitions) {
             if (!(definition instanceof IFunctionDefinition) || definition.isStatic()) {
                 continue;
@@ -1908,7 +1908,7 @@ public class CompletionProvider {
     private void addEventMetadataToAutoCompleteMXML(TypeScope typeScope, boolean isAttribute, String prefix,
             boolean includeOpenTagBracket, boolean includeOpenTagPrefix, char nextChar, ILspProject project,
             CompletionList result) {
-        ArrayList<String> eventNames = new ArrayList<>();
+        Set<String> eventNames = new HashSet<>();
         IDefinition definition = typeScope.getDefinition();
         while (definition instanceof IClassDefinition) {
             IClassDefinition classDefinition = (IClassDefinition) definition;
@@ -1971,7 +1971,7 @@ public class CompletionProvider {
     private void addStyleMetadataToAutoCompleteMXML(TypeScope typeScope, boolean isAttribute, String prefix,
             boolean includeOpenTagBracket, boolean includeOpenTagPrefix, char nextChar, ILspProject project,
             CompletionList result) {
-        ArrayList<String> styleNames = new ArrayList<>();
+        Set<String> styleNames = new HashSet<>();
         IDefinition definition = typeScope.getDefinition();
         List<CompletionItem> items = result.getItems();
         while (definition instanceof IClassDefinition) {
