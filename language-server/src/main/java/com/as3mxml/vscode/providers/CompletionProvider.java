@@ -21,6 +21,7 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -58,6 +59,7 @@ import org.apache.royale.compiler.definitions.IVariableDefinition.VariableClassi
 import org.apache.royale.compiler.definitions.metadata.IMetaTag;
 import org.apache.royale.compiler.definitions.metadata.IMetaTagAttribute;
 import org.apache.royale.compiler.filespecs.IFileSpecification;
+import org.apache.royale.compiler.internal.definitions.ScopedDefinitionBase;
 import org.apache.royale.compiler.internal.mxml.MXMLData;
 import org.apache.royale.compiler.internal.mxml.MXMLTagData;
 import org.apache.royale.compiler.internal.projects.CompilerProject;
@@ -1831,8 +1833,19 @@ public class CompletionProvider {
             String prefix, boolean includeOpenTagBracket, boolean includeOpenTagPrefix, char nextChar,
             IFunctionNode prioritySuperFunction, boolean isParamOfTypeFunction, AddImportData addImportData,
             Position xmlnsPosition, IMXMLTagData offsetTag, ILspProject project, CompletionList result) {
-        IMetaTag[] excludeMetaTags = typeScope.getDefinition()
-                .getMetaTagsByName(IMetaAttributeConstants.ATTRIBUTE_EXCLUDE);
+        ScopedDefinitionBase typeScopeDef = typeScope.getDefinition();
+        List<IMetaTag> excludeMetaTags = new ArrayList<>();
+        if (typeScopeDef instanceof IClassDefinition) {
+            IClassDefinition current = (IClassDefinition) typeScopeDef;
+            while (current != null) {
+                IMetaTag[] currentTags = current.getMetaTagsByName(IMetaAttributeConstants.ATTRIBUTE_EXCLUDE);
+                excludeMetaTags.addAll(Arrays.asList(currentTags));
+                current = current.resolveBaseClass(project);
+            }
+        } else {
+            IMetaTag[] currentTags = typeScopeDef.getMetaTagsByName(IMetaAttributeConstants.ATTRIBUTE_EXCLUDE);
+            excludeMetaTags.addAll(Arrays.asList(currentTags));
+        }
         ArrayList<IDefinition> memberAccessDefinitions = new ArrayList<>();
         Set<INamespaceDefinition> namespaceSet = ScopeUtils.getNamespaceSetForScopes(typeScope, otherScope, project);
 
@@ -1850,7 +1863,7 @@ public class CompletionProvider {
                 // reporting an error. we might as well just skip them.
                 continue;
             }
-            if (excludeMetaTags != null && excludeMetaTags.length > 0) {
+            if (excludeMetaTags != null && excludeMetaTags.size() > 0) {
                 boolean exclude = false;
                 for (IMetaTag excludeMetaTag : excludeMetaTags) {
                     String excludeName = excludeMetaTag.getAttributeValue(IMetaAttributeConstants.NAME_EXCLUDE_NAME);
