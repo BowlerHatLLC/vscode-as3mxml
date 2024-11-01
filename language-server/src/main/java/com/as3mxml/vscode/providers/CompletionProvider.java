@@ -92,6 +92,7 @@ import org.apache.royale.compiler.tree.as.ILanguageIdentifierNode;
 import org.apache.royale.compiler.tree.as.ILanguageIdentifierNode.LanguageIdentifierKind;
 import org.apache.royale.compiler.tree.as.IMemberAccessExpressionNode;
 import org.apache.royale.compiler.tree.as.IModifierNode;
+import org.apache.royale.compiler.tree.as.INamespaceAccessExpressionNode;
 import org.apache.royale.compiler.tree.as.IOperatorNode.OperatorType;
 import org.apache.royale.compiler.tree.as.IPackageNode;
 import org.apache.royale.compiler.tree.as.IScopedNode;
@@ -705,6 +706,13 @@ public class CompletionProvider {
                     return result;
                 }
             }
+        }
+
+        // namespace access
+        if (parentNode != null && parentNode instanceof INamespaceAccessExpressionNode) {
+            // we don't want this falling into scope completion
+            // TODO: ideally, we'd complete namespaces and members in them
+            return result;
         }
 
         // function overrides
