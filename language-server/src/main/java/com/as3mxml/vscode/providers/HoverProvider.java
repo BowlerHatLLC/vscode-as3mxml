@@ -32,7 +32,6 @@ import org.apache.royale.compiler.tree.as.IExpressionNode;
 import org.apache.royale.compiler.tree.as.IFunctionCallNode;
 import org.apache.royale.compiler.tree.as.IIdentifierNode;
 import org.apache.royale.compiler.tree.as.ILanguageIdentifierNode;
-import org.apache.royale.compiler.tree.as.INamespaceDecorationNode;
 import org.apache.royale.compiler.tree.metadata.IEventTagNode;
 import org.apache.royale.compiler.tree.metadata.IInspectableTagNode;
 import org.apache.royale.compiler.tree.metadata.IStyleTagNode;
@@ -217,11 +216,10 @@ public class HoverProvider {
             definition = project.resolveQNameToDefinition(typeName);
         }
 
-        // INamespaceDecorationNode extends IIdentifierNode, but we don't want
-        // any hover information for it.
+        // ILanguageIdentifierNode is typically combined with IIdentifierNode,
+        // but we have a different way to get hover information for it.
         if (definition == null && offsetNode instanceof IIdentifierNode
-                && !(offsetNode instanceof ILanguageIdentifierNode)
-                && !(offsetNode instanceof INamespaceDecorationNode)) {
+                && !(offsetNode instanceof ILanguageIdentifierNode)) {
             IIdentifierNode identifierNode = (IIdentifierNode) offsetNode;
             sourceRange = new Range();
             sourceRange.setStart(new Position(offsetNode.getLine(), offsetNode.getColumn()));
