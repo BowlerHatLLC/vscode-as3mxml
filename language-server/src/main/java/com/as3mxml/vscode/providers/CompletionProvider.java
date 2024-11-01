@@ -95,6 +95,7 @@ import org.apache.royale.compiler.tree.as.ILanguageIdentifierNode.LanguageIdenti
 import org.apache.royale.compiler.tree.as.IMemberAccessExpressionNode;
 import org.apache.royale.compiler.tree.as.IModifierNode;
 import org.apache.royale.compiler.tree.as.INamespaceAccessExpressionNode;
+import org.apache.royale.compiler.tree.as.INamespaceDecorationNode;
 import org.apache.royale.compiler.tree.as.IOperatorNode.OperatorType;
 import org.apache.royale.compiler.tree.as.IPackageNode;
 import org.apache.royale.compiler.tree.as.IScopedNode;
@@ -670,8 +671,8 @@ public class CompletionProvider {
                 if ((line != leftOperand.getEndLine() && line != rightOperand.getLine())
                         || (line == leftOperand.getEndLine() && column > leftOperand.getEndColumn())
                         || (line == rightOperand.getLine() && column <= rightOperand.getColumn())) {
-                    autoCompleteMemberAccess(memberAccessNode, nextChar, isParamOfTypeFunction, addImportData, project,
-                            result);
+                    autoCompleteMemberAccess(memberAccessNode, nextChar, isParamOfTypeFunction, addImportData,
+                            project, result);
                     return result;
                 }
             }
@@ -689,8 +690,8 @@ public class CompletionProvider {
                 isValidLeft = false;
             }
             if (offsetNode == memberAccessNode.getRightOperandNode() || isValidLeft) {
-                autoCompleteMemberAccess(memberAccessNode, nextChar, isParamOfTypeFunction, addImportData, project,
-                        result);
+                autoCompleteMemberAccess(memberAccessNode, nextChar, isParamOfTypeFunction, addImportData,
+                        project, result);
                 return result;
             }
         }
@@ -703,8 +704,8 @@ public class CompletionProvider {
             if (rightOperandNode instanceof IIdentifierNode) {
                 IIdentifierNode identifierNode = (IIdentifierNode) rightOperandNode;
                 if (identifierNode.getName().equals("")) {
-                    autoCompleteMemberAccess(memberAccessNode, nextChar, isParamOfTypeFunction, addImportData, project,
-                            result);
+                    autoCompleteMemberAccess(memberAccessNode, nextChar, isParamOfTypeFunction, addImportData,
+                            project, result);
                     return result;
                 }
             }
@@ -712,8 +713,17 @@ public class CompletionProvider {
 
         // namespace access
         if (parentNode != null && parentNode instanceof INamespaceAccessExpressionNode) {
+            INamespaceAccessExpressionNode namespaceAccessNode = (INamespaceAccessExpressionNode) parentNode;
+            IASNode gpNode = parentNode.getParent();
+            if (gpNode != null && gpNode instanceof IMemberAccessExpressionNode) {
+                IMemberAccessExpressionNode memberAccessNode = (IMemberAccessExpressionNode) gpNode;
+                if (namespaceAccessNode == memberAccessNode.getRightOperandNode()) {
+                    autoCompleteMemberAccess(memberAccessNode, nextChar, isParamOfTypeFunction,
+                            addImportData, project, result);
+                    return result;
+                }
+            }
             // we don't want this falling into scope completion
-            // TODO: ideally, we'd complete namespaces and members in them
             return result;
         }
 
@@ -769,7 +779,8 @@ public class CompletionProvider {
                 IScopedNode scopedNode = (IScopedNode) currentNodeForScope;
 
                 // include all members and local things that are in scope
-                autoCompleteScope(scopedNode, false, nextChar, isParamOfTypeFunction, addImportData, project, result);
+                autoCompleteScope(scopedNode, false, nextChar, isParamOfTypeFunction, addImportData,
+                        project, result);
 
                 // include all public definitions
                 IASScope scope = scopedNode.getScope();
@@ -1286,8 +1297,9 @@ public class CompletionProvider {
                 priorityNewClass, false, addImportData);
     }
 
-    private void autoCompleteScope(IScopedNode scopedNode, boolean typesOnly, char nextChar,
-            boolean isParamOfTypeFunction, AddImportData addImportData, ILspProject project, CompletionList result) {
+    private void autoCompleteScope(IScopedNode scopedNode, boolean typesOnly,
+            char nextChar, boolean isParamOfTypeFunction, AddImportData addImportData, ILspProject project,
+            CompletionList result) {
         IScopedNode currentNode = scopedNode;
         ASScope scope = (ASScope) scopedNode.getScope();
         while (currentNode != null) {
@@ -1296,12 +1308,12 @@ public class CompletionProvider {
             boolean staticOnly = currentNode == scopedNode && isType;
             if (currentScope instanceof TypeScope && !typesOnly) {
                 TypeScope typeScope = (TypeScope) currentScope;
-                addDefinitionsInTypeScopeToAutoComplete(typeScope, scope, scopedNode, true, true, false, false, null,
-                        false, false, nextChar, null, isParamOfTypeFunction, addImportData, null, null, project,
-                        result);
+                addDefinitionsInTypeScopeToAutoComplete(typeScope, scope, null, scopedNode, true, true, false,
+                        false, null, false, false, nextChar, null, isParamOfTypeFunction, addImportData, null, null,
+                        project, result);
                 if (!staticOnly) {
-                    addDefinitionsInTypeScopeToAutoCompleteActionScript(typeScope, scope, scopedNode, false, nextChar,
-                            null, isParamOfTypeFunction, addImportData, project, result);
+                    addDefinitionsInTypeScopeToAutoCompleteActionScript(typeScope, scope, null, scopedNode,
+                            false, nextChar, null, isParamOfTypeFunction, addImportData, project, result);
                 }
             } else {
                 Collection<IDefinition> localDefs = new ArrayList<>(currentScope.getAllLocalDefinitions());
@@ -1494,16 +1506,32 @@ public class CompletionProvider {
         }
     }
 
-    private void autoCompleteMemberAccess(IMemberAccessExpressionNode node, char nextChar,
+    private void autoCompleteMemberAccess(IMemberAccessExpressionNode node,
+            char nextChar,
             boolean isParamOfTypeFunction, AddImportData addImportData,
             ILspProject project, CompletionList result) {
         ASScope scope = (ASScope) node.getContainingScope().getScope();
         IExpressionNode leftOperand = node.getLeftOperandNode();
+        IExpressionNode rightOperand = node.getRightOperandNode();
+        Set<INamespaceDefinition> namespaceSet = null;
+        if (rightOperand instanceof INamespaceAccessExpressionNode) {
+            INamespaceAccessExpressionNode nsNode = (INamespaceAccessExpressionNode) rightOperand;
+            IExpressionNode leftNsOperand = nsNode.getLeftOperandNode();
+            if (leftNsOperand instanceof INamespaceDecorationNode) {
+                IDefinition resolved = leftNsOperand.resolve(project);
+                if (resolved != null && resolved instanceof INamespaceDefinition) {
+                    INamespaceDefinition nsDefinition = (INamespaceDefinition) resolved;
+                    namespaceSet = new HashSet<>();
+                    namespaceSet.add(nsDefinition);
+                }
+            }
+        }
         IDefinition leftDefinition = leftOperand.resolve(project);
         if (leftDefinition != null && leftDefinition instanceof ITypeDefinition) {
             ITypeDefinition typeDefinition = (ITypeDefinition) leftDefinition;
             TypeScope typeScope = (TypeScope) typeDefinition.getContainedScope();
-            addDefinitionsInTypeScopeToAutoCompleteActionScript(typeScope, scope, node, true, nextChar, null,
+            addDefinitionsInTypeScopeToAutoCompleteActionScript(typeScope, scope, namespaceSet, node, true, nextChar,
+                    null,
                     isParamOfTypeFunction, addImportData, project, result);
             return;
         }
@@ -1517,7 +1545,8 @@ public class CompletionProvider {
                 ITypeDefinition elementType = vectorDef.resolveElementType(project);
                 if (elementType != null) {
                     TypeScope typeScope = (TypeScope) elementType.getContainedScope();
-                    addDefinitionsInTypeScopeToAutoCompleteActionScript(typeScope, scope, node, false, nextChar,
+                    addDefinitionsInTypeScopeToAutoCompleteActionScript(typeScope, scope, namespaceSet, node, false,
+                            nextChar,
                             null, isParamOfTypeFunction, addImportData, project, result);
                     return;
                 }
@@ -1540,7 +1569,7 @@ public class CompletionProvider {
                 }
             }
 
-            addDefinitionsInTypeScopeToAutoCompleteActionScript(typeScope, scope, node, false, nextChar,
+            addDefinitionsInTypeScopeToAutoCompleteActionScript(typeScope, scope, namespaceSet, node, false, nextChar,
                     prioritySuperFunction, isParamOfTypeFunction, addImportData, project, result);
             return;
         }
@@ -1812,23 +1841,28 @@ public class CompletionProvider {
     }
 
     private void addDefinitionsInTypeScopeToAutoCompleteActionScript(TypeScope typeScope, ASScope otherScope,
-            IASNode offsetNode, boolean isStatic, char nextChar, IFunctionNode prioritySuperFunction,
+            Set<INamespaceDefinition> namespaceSet, IASNode offsetNode, boolean isStatic, char nextChar,
+            IFunctionNode prioritySuperFunction,
             boolean isParamOfTypeFunction, AddImportData addImportData, ILspProject project, CompletionList result) {
-        addDefinitionsInTypeScopeToAutoComplete(typeScope, otherScope, offsetNode, isStatic, false, false, false, null,
+        addDefinitionsInTypeScopeToAutoComplete(typeScope, otherScope, namespaceSet, offsetNode, isStatic, false, false,
+                false, null,
                 false, false, nextChar, prioritySuperFunction, isParamOfTypeFunction, addImportData, null, null,
                 project, result);
     }
 
     private void addDefinitionsInTypeScopeToAutoCompleteMXML(TypeScope typeScope, ASScope otherScope,
-            boolean isAttribute, String prefix, boolean includeOpenTagBracket, boolean includeOpenTagPrefix,
+            boolean isAttribute, String prefix, boolean includeOpenTagBracket,
+            boolean includeOpenTagPrefix,
             AddImportData addImportData, Position xmlnsPosition, IMXMLTagData offsetTag,
             ILspProject project, CompletionList result) {
-        addDefinitionsInTypeScopeToAutoComplete(typeScope, otherScope, null, false, false, true, isAttribute,
+        addDefinitionsInTypeScopeToAutoComplete(typeScope, otherScope, null, null, false, false, true,
+                isAttribute,
                 prefix, includeOpenTagBracket, includeOpenTagPrefix, (char) -1, null, false, addImportData,
                 xmlnsPosition, offsetTag, project, result);
     }
 
-    private void addDefinitionsInTypeScopeToAutoComplete(TypeScope typeScope, ASScope otherScope, IASNode offsetNode,
+    private void addDefinitionsInTypeScopeToAutoComplete(TypeScope typeScope, ASScope otherScope,
+            Set<INamespaceDefinition> namespaceSet, IASNode offsetNode,
             boolean isStatic, boolean includeSuperStatics, boolean forMXML, boolean isAttribute,
             String prefix, boolean includeOpenTagBracket, boolean includeOpenTagPrefix, char nextChar,
             IFunctionNode prioritySuperFunction, boolean isParamOfTypeFunction, AddImportData addImportData,
@@ -1847,7 +1881,9 @@ public class CompletionProvider {
             excludeMetaTags.addAll(Arrays.asList(currentTags));
         }
         ArrayList<IDefinition> memberAccessDefinitions = new ArrayList<>();
-        Set<INamespaceDefinition> namespaceSet = ScopeUtils.getNamespaceSetForScopes(typeScope, otherScope, project);
+        if (namespaceSet == null) {
+            namespaceSet = ScopeUtils.getNamespaceSetForScopes(typeScope, otherScope, project);
+        }
 
         boolean isInterfaceScope = typeScope.getDefinition() instanceof IInterfaceDefinition;
         typeScope.getAllPropertiesForMemberAccess((CompilerProject) project, memberAccessDefinitions, namespaceSet);
