@@ -896,25 +896,29 @@ public class CompletionProvider {
                                 .getFileSpecification(offsetUnit.getAbsoluteFilename());
                         MXMLNamespace fxNS = MXMLNamespaceUtils.getMXMLLanguageNamespace(fileSpec,
                                 project.getWorkspace());
-                        IMXMLData mxmlParent = offsetTag.getParent();
-                        if (mxmlParent != null && parentTag.equals(mxmlParent.getRootTag())) {
+                        if (fxNS != null) {
+                            IMXMLTagData gpTag = parentTag.getParentTag();
+                            IMXMLData mxmlParent = offsetTag.getParent();
+                            if ((mxmlParent != null && parentTag.equals(mxmlParent.getRootTag()))
+                                    || (gpTag != null && fxNS.uri.equals(gpTag.getURI()))) {
+                                if (offsetPrefix.length() == 0) {
+                                    // this tag doesn't have a prefix
+                                    addRootMXMLLanguageTagsToAutoComplete(offsetTag, fxNS.prefix, true,
+                                            includeOpenTagBracket, result);
+                                } else if (offsetPrefix.equals(fxNS.prefix)) {
+                                    // this tag has a prefix
+                                    addRootMXMLLanguageTagsToAutoComplete(offsetTag, fxNS.prefix, false, false, result);
+                                }
+                            }
                             if (offsetPrefix.length() == 0) {
                                 // this tag doesn't have a prefix
-                                addRootMXMLLanguageTagsToAutoComplete(offsetTag, fxNS.prefix, true,
-                                        includeOpenTagBracket, result);
+                                addMXMLLanguageTagToAutoComplete(IMXMLLanguageConstants.COMPONENT, fxNS.prefix,
+                                        includeOpenTagBracket, true, result);
                             } else if (offsetPrefix.equals(fxNS.prefix)) {
                                 // this tag has a prefix
-                                addRootMXMLLanguageTagsToAutoComplete(offsetTag, fxNS.prefix, false, false, result);
+                                addMXMLLanguageTagToAutoComplete(IMXMLLanguageConstants.COMPONENT, fxNS.prefix, false,
+                                        false, result);
                             }
-                        }
-                        if (offsetPrefix.length() == 0) {
-                            // this tag doesn't have a prefix
-                            addMXMLLanguageTagToAutoComplete(IMXMLLanguageConstants.COMPONENT, fxNS.prefix,
-                                    includeOpenTagBracket, true, result);
-                        } else if (offsetPrefix.equals(fxNS.prefix)) {
-                            // this tag has a prefix
-                            addMXMLLanguageTagToAutoComplete(IMXMLLanguageConstants.COMPONENT, fxNS.prefix, false,
-                                    false, result);
                         }
                         String defaultPropertyName = classDefinition.getDefaultPropertyName(project);
                         // if [DefaultProperty] is set, then we can instantiate
@@ -982,11 +986,15 @@ public class CompletionProvider {
                 IMXMLData mxmlParent = offsetTag.getParent();
                 IFileSpecification fileSpec = fileTracker.getFileSpecification(offsetUnit.getAbsoluteFilename());
                 MXMLNamespace fxNS = MXMLNamespaceUtils.getMXMLLanguageNamespace(fileSpec, project.getWorkspace());
-                if (mxmlParent != null && offsetTag.equals(mxmlParent.getRootTag())) {
-                    addRootMXMLLanguageTagsToAutoComplete(offsetTag, fxNS.prefix, true, includeOpenTagBracket, result);
+                if (fxNS != null) {
+                    if ((mxmlParent != null && offsetTag.equals(mxmlParent.getRootTag()))
+                            || (parentTag != null && fxNS.uri.equals(parentTag.getURI()))) {
+                        addRootMXMLLanguageTagsToAutoComplete(offsetTag, fxNS.prefix,
+                                true, includeOpenTagBracket, result);
+                    }
+                    addMXMLLanguageTagToAutoComplete(IMXMLLanguageConstants.COMPONENT, fxNS.prefix,
+                            includeOpenTagBracket, true, result);
                 }
-                addMXMLLanguageTagToAutoComplete(IMXMLLanguageConstants.COMPONENT, fxNS.prefix, includeOpenTagBracket,
-                        true, result);
                 String defaultPropertyName = classDefinition.getDefaultPropertyName(project);
                 // if [DefaultProperty] is set, then we can instantiate
                 // types as child elements
