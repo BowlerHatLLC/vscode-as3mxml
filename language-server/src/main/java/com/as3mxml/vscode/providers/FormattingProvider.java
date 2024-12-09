@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.apache.royale.compiler.config.ConfigurationPathResolver;
 import org.apache.royale.compiler.problems.ICompilerProblem;
+import org.apache.royale.compiler.problems.UnexpectedExceptionProblem;
 import org.apache.royale.formatter.ASTokenFormatter;
 import org.apache.royale.formatter.FormatterSettings;
 import org.apache.royale.formatter.FormatterUtils;
@@ -69,10 +70,20 @@ public class FormattingProvider {
             MXMLTokenFormatter formatter = new MXMLTokenFormatter(settings);
             List<ICompilerProblem> problems = new ArrayList<>();
             formattedFileText = formatter.format(path.toString(), fileText, problems);
+            for (ICompilerProblem problem : problems) {
+                if (problem instanceof UnexpectedExceptionProblem) {
+                    System.err.println(problem);
+                }
+            }
         } else if (path.toString().endsWith(FILE_EXTENSION_AS)) {
             ASTokenFormatter formatter = new ASTokenFormatter(settings);
             List<ICompilerProblem> problems = new ArrayList<>();
             formattedFileText = formatter.format(path.toString(), fileText, problems);
+            for (ICompilerProblem problem : problems) {
+                if (problem instanceof UnexpectedExceptionProblem) {
+                    System.err.println(problem);
+                }
+            }
         }
         if (fileText.equals(formattedFileText)) {
             return Collections.emptyList();
