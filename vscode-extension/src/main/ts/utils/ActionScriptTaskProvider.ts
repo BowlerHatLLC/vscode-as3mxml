@@ -76,7 +76,7 @@ interface ActionScriptTaskDefinition extends vscode.TaskDefinition {
   watch?: boolean;
 }
 
-const MINIMUM_APACHE_ROYALE_VERSION = "0.9.10";
+const WATCH_MINIMUM_APACHE_ROYALE_VERSION = "0.9.10";
 
 export default class ActionScriptTaskProvider
   extends BaseAsconfigTaskProvider
@@ -304,7 +304,7 @@ export default class ActionScriptTaskProvider
       )
     );
 
-    if (validateRoyale(frameworkSDK, MINIMUM_APACHE_ROYALE_VERSION)) {
+    if (validateRoyale(frameworkSDK, WATCH_MINIMUM_APACHE_ROYALE_VERSION)) {
       result.push(
         this.getWatchTask(
           `${TASK_NAME_WATCH} - ${taskNameSuffix}`,

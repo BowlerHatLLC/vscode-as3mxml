@@ -47,7 +47,7 @@ import selectRoyalePreferredTarget from "./commands/selectRoyalePreferredTarget"
 import getRoyalePreferredTarget from "./utils/getRoyalePreferredTarget";
 import validateRoyale from "./utils/validateRoyale";
 
-const MINIMUM_APACHE_ROYALE_VERSION = "0.9.10";
+const MINIMUM_APACHE_ROYALE_VERSION = "0.9.12";
 const MINIMUM_JDK_VERSION = "11";
 const INVALID_SDK_ERROR = `as3mxml.sdk.editor in settings does not point to a valid SDK. Requires Apache Royale ${MINIMUM_APACHE_ROYALE_VERSION} or newer.`;
 const INVALID_JAVA_ERROR = `as3mxml.java.path in settings does not point to a valid executable. It cannot be a directory, and Java JDK ${MINIMUM_JDK_VERSION} or newer is required.`;
