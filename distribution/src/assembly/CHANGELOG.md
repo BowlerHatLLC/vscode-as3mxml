@@ -1,5 +1,37 @@
 # ActionScript & MXML for Visual Studio Code Changelog
 
+## 1.22.0
+
+### New Features
+
+- Build: Added support for `licenseFile` and `licenseDevID` to `airOptions` in _asconfig.json_.
+- Completion: Added support for completion of fields after `::` operator.
+- General: Added support for `avm2.intrinsics.memory` package when using ASC 2.0 compiler from AIR SDK.
+- Hover: Namespace identifiers before `::` are now resolved.
+- General: Resolves documentation for `@inheritDoc` ASDoc tag.
+- Settings: Added `actionscript.views.explorer.showCreateNewActionScriptProject` setting to optionally hide the welcome view.
+
+### Fixed Issues
+
+- Completion: Fixed ignored `[Exclude]` metadata on superclasses.
+- Definition: Ctrl+click on `super()` function call now resolves super constructor instead of super class.
+- General: Fix ignored `type` parameter in `[ArrayElementType]`, `[HostComponent]`, and `[InstanceType]` for hover, rename, definition, and references.
+- General: Fix ignored `type` and `arrayType` parameters in `[Style]` and `[Inspectable]` for hover, rename, definition, and references.
+- General: Detect `name` parameter of `[Event]` as an identifier that can .
+- General: Fixed detection of ASDoc comment descriptions starting on same line as `/**`.
+- General: Fixed incorrect detection of Markdown syntax in HTML doc comments.
+- General: Fixed space versus tab detection in `@param` and `@throws` ASDoc tags.
+- Syntax: Fix incorrect highlighting of escape sequences in verbatim strings.
+- Tasks: Fixed resolution of `asconfig` field in multi-root workspaces where task is defined in the _.code-workspace_ file.
+
+### Other Changes
+
+- Config: When `mainClass` is not found, the error is now more clear about its origin (instead of "must specify target").
+- Completion: Improved performance by checking for duplicates in a `Set` instead of a `List`.
+- Dependencies: Apache Royale compiler updated to v0.9.12. This fixes issues with null pointer exceptions, formatting AS3 and MXML code, and more.
+- General: Requires JDK 11 or newer due to new Royale minimum requirements. Previously JDK 8 or newer was required.
+- Tasks: Allow `asconfig` field to be left blank or set to "asconfig.json", and the task will resolve either way.
+
 ## 1.21.1
 
 ### Fixed Issues
