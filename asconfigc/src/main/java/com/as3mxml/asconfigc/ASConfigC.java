@@ -134,7 +134,7 @@ public class ASConfigC {
 		storepassOption.setOptionalArg(true);
 		options.addOption(storepassOption);
 		Option unpackageOption = new Option(null, "unpackage-anes", true,
-				"Unpackage native extensions to the output directory when creating a debug build for the Adobe AIR simulator.");
+				"Unpackage native extensions to the output directory for the Adobe AIR simulator.");
 		unpackageOption.setArgName("true OR false");
 		unpackageOption.setOptionalArg(true);
 		options.addOption(unpackageOption);
@@ -1176,10 +1176,6 @@ public class ASConfigC {
 		}
 		if (!options.unpackageANEs) {
 			// don't copy anything if it's not requested.
-			return;
-		}
-		if (!debugBuild) {
-			// don't copy anything when it's a release build.
 			return;
 		}
 		if (compilerOptionsJSON == null) {
