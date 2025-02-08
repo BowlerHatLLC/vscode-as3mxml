@@ -128,7 +128,13 @@ public class FileTracker {
         StringBuilder builder = new StringBuilder();
         builder.append(sourceText.substring(0, offset));
         builder.append(change.getText());
-        builder.append(sourceText.substring(offset + change.getRangeLength()));
+        Integer rangeLength = change.getRangeLength();
+        if (rangeLength == null) {
+            Position end = range.getEnd();
+            reader = new StringReader(sourceText);
+            rangeLength = LanguageServerCompilerUtils.getOffsetFromPosition(reader, end) - offset;
+        }
+        builder.append(sourceText.substring(offset + rangeLength));
         return builder.toString();
     }
 }
