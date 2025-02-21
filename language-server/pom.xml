@@ -125,7 +125,7 @@ limitations under the License.
     <dependency>
       <groupId>com.networknt</groupId>
       <artifactId>json-schema-validator</artifactId>
-      <version>1.0.66</version>
+      <version>1.5.6</version>
     </dependency>
     <dependency>
       <groupId>org.dom4j</groupId>
