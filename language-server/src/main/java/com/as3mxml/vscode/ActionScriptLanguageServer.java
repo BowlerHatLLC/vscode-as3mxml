@@ -17,6 +17,7 @@ package com.as3mxml.vscode;
 
 import java.io.File;
 import java.net.URI;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -126,8 +127,9 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
         } else if (params.getRootUri() != null) {
             // some clients don't support workspace folders, but if they pass in
             // a root URI, we can treat it like a workspace folder
-            WorkspaceFolder folder = new WorkspaceFolder();
-            folder.setUri(params.getRootUri());
+            Path projectRoot = Paths.get(URI.create(params.getRootUri()));
+            WorkspaceFolder folder = new WorkspaceFolder(projectRoot.toUri().toString(),
+                    projectRoot.getFileName().toString());
             actionScriptServices.addWorkspaceFolder(folder);
         }
 

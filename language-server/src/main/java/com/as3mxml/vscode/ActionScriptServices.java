@@ -1420,7 +1420,8 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             return;
         }
         Path projectRoot = Paths.get(oldFrameworkSDKPath);
-        WorkspaceFolder folder = new WorkspaceFolder(projectRoot.toUri().toString());
+        WorkspaceFolder folder = new WorkspaceFolder(projectRoot.toUri().toString(),
+                projectRoot.getFileName().toString());
         fallbackConfig = new SimpleProjectConfigStrategy(projectRoot, folder);
         ActionScriptProjectData fallbackProjectData = actionScriptProjectManager.setFallbackProjectData(projectRoot,
                 folder, fallbackConfig);
