@@ -77,6 +77,8 @@ let royaleTargetStatusBarItem: vscode.StatusBarItem;
 let pendingQuickCompileAndDebug = false;
 let pendingQuickCompileAndRun = false;
 let as3mxmlCodeIntelligenceReady = false;
+let actionScriptTaskProvider: ActionScriptTaskProvider;
+let animateTaskProvider: AnimateTaskProvider;
 
 function getValidatedEditorSDKConfiguration(
   javaExecutablePath: string
@@ -114,6 +116,8 @@ function onDidChangeConfiguration(event: vscode.ConfigurationChangeEvent) {
     javaExecutablePath = findJava(javaSettingsPath, (javaPath) => {
       return validateJava(savedContext.extensionPath, javaPath);
     });
+    actionScriptTaskProvider.javaExecutablePath = javaExecutablePath;
+    animateTaskProvider.javaExecutablePath = javaExecutablePath;
     editorSDKHome = getValidatedEditorSDKConfiguration(javaExecutablePath);
     needsSDKUpdate = true;
     needsRestart = true;
@@ -502,18 +506,17 @@ export function activate(context: vscode.ExtensionContext) {
   updateRoyaleTargetStatusBarItem();
   refreshRoyaleTargetStatusBarItemVisibility();
 
+  actionScriptTaskProvider = new ActionScriptTaskProvider(
+    context,
+    javaExecutablePath
+  );
   context.subscriptions.push(
-    vscode.tasks.registerTaskProvider(
-      "actionscript",
-      new ActionScriptTaskProvider(context, javaExecutablePath)
-    )
+    vscode.tasks.registerTaskProvider("actionscript", actionScriptTaskProvider)
   );
 
+  animateTaskProvider = new AnimateTaskProvider(context, javaExecutablePath);
   context.subscriptions.push(
-    vscode.tasks.registerTaskProvider(
-      "animate",
-      new AnimateTaskProvider(context, javaExecutablePath)
-    )
+    vscode.tasks.registerTaskProvider("animate", animateTaskProvider)
   );
 
   context.subscriptions.push(

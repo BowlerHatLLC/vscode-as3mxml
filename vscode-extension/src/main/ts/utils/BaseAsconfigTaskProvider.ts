@@ -32,12 +32,12 @@ const FIELD_TYPE = "type";
 const TYPE_LIB = "lib";
 
 export default class BaseAsconfigTaskProvider {
-  constructor(
-    context: vscode.ExtensionContext,
-    public javaExecutablePath: string
-  ) {
+  constructor(context: vscode.ExtensionContext, javaExecutablePath: string) {
     this._context = context;
+    this.javaExecutablePath = javaExecutablePath;
   }
+
+  javaExecutablePath: string | null;
 
   protected _context: vscode.ExtensionContext;
 
