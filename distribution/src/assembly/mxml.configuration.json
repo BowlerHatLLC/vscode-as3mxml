@@ -1,68 +1,64 @@
 {
-	"comments":
-	{
-		"lineComment": "",
-		"blockComment": [ "<!--", "-->" ]
-	},
-	"brackets":
-	[
-		[ "<", ">" ],
-		[ "{", "}" ],
-		[ "[", "]" ],
-		[ "(", ")" ]
-	],
-	"autoClosingPairs":
-	[
-		{
-			"open": "{",
-			"close": "}"
-		},
-		{
-			"open": "[",
-			"close": "]"
-		},
-		{
-			"open": "(",
-			"close": ")"
-		},
-		{
-			"open": "\"",
-			"close": "\"",
-			"notIn":
-			[
-				"string"
-			]
-		},
-		{
-			"open": "'",
-			"close": "'",
-			"notIn":
-			[
-				"string",
-				"comment"
-			]
-		},
-		{
-			"open": "/**",
-			"close": " */",
-			"notIn":
-			[
-				"string"
-			]
-		}
-	],
-	"surroundingPairs":
-	[
-		["<", ">"],
-		["'", "'"],
-		["\"", "\""]
-	],
-	"folding":
-	{
-		"markers":
-		{
-			"start": "^\\s*<!--\\s*#?region\\s*-->",
-			"end": "^\\s*<!--\\s*#?endregion-->"
-		}
-	}
+  "comments": {
+    "blockComment": ["<!--", "-->"]
+  },
+  "brackets": [
+    ["<!--", "-->"],
+    ["<", ">"],
+    ["{", "}"],
+    ["[", "]"],
+    ["(", ")"]
+  ],
+  "autoClosingPairs": [
+    {
+      "open": "{",
+      "close": "}"
+    },
+    {
+      "open": "[",
+      "close": "]"
+    },
+    {
+      "open": "(",
+      "close": ")"
+    },
+    {
+      "open": "\"",
+      "close": "\"",
+      "notIn": ["string"]
+    },
+    {
+      "open": "'",
+      "close": "'",
+      "notIn": ["string", "comment"]
+    },
+    {
+      "open": "/**",
+      "close": " */",
+      "notIn": ["string"]
+    },
+    {
+      "open": "<!--",
+      "close": "-->",
+      "notIn": ["comment", "string"]
+    }
+  ],
+  "surroundingPairs": [
+    { "open": "'", "close": "'" },
+    { "open": "\"", "close": "\"" },
+    { "open": "{", "close": "}" },
+    { "open": "[", "close": "]" },
+    { "open": "(", "close": ")" },
+    { "open": "<", "close": ">" }
+  ],
+  "colorizedBracketPairs": [],
+  "folding": {
+    "markers": {
+      "start": "^\\s*<!--\\s*#?region\\s*-->",
+      "end": "^\\s*<!--\\s*#?endregion-->"
+    }
+  },
+  "wordPattern": {
+    "pattern": "(-?\\d*\\.\\d\\w*)|([^\\`\\~\\!\\@\\#\\$\\%\\^\\&\\*\\(\\)\\=\\+\\[\\{\\]\\}\\\\\\|\\;\\:\\'\\\"\\,\\.\\<\\>\\/\\?\\s]+)"
+  }
 }
