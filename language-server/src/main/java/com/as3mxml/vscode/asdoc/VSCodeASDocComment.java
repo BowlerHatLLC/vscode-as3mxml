@@ -129,7 +129,7 @@ public class VSCodeASDocComment extends SourceLocation implements IASDocComment 
 				{
 					if (lastTag != null) {
 						StringBuilder tagDescriptionBuilder = new StringBuilder(lastTag.description);
-						appendTagLine(tagDescriptionBuilder, line.substring(star + 1));
+						appendTagLine(tagDescriptionBuilder, line.substring(star + 1), insidePreformatted);
 						lastTag.description = tagDescriptionBuilder.toString();
 					} else {
 						appendLine(sb, line.substring(star + 1), insidePreformatted);
@@ -155,7 +155,7 @@ public class VSCodeASDocComment extends SourceLocation implements IASDocComment 
 				}
 				StringBuilder tagDescriptionBuilder = new StringBuilder();
 				if (after < line.length() - 1) {
-					appendTagLine(tagDescriptionBuilder, line.substring(after + 1));
+					appendTagLine(tagDescriptionBuilder, line.substring(after + 1), false);
 				}
 				VSCodeASDocTag newTag = null;
 				if (token instanceof ISourceLocation) {
@@ -211,13 +211,15 @@ public class VSCodeASDocComment extends SourceLocation implements IASDocComment 
 	public void paste(IASDocComment source) {
 	}
 
-	private void appendTagLine(StringBuilder sb, String line) {
+	private void appendTagLine(StringBuilder sb, String line, boolean addNewLine) {
 		line = reformatLine(line);
 		if (line.length() == 0) {
 			return;
 		}
 		sb.append(line);
-		if (sb.charAt(sb.length() - 1) != ' ') {
+		if (addNewLine) {
+			sb.append("\n");
+		} else if (sb.charAt(sb.length() - 1) != ' ' && sb.charAt(sb.length() - 1) != '\n') {
 			// if we don't currently end with a space, add an extra
 			// space before the next line is appended
 			sb.append(" ");
