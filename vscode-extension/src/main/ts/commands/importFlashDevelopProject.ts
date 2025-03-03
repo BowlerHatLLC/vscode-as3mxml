@@ -133,7 +133,11 @@ function importFlashDevelopProjectInternal(
   } catch (error) {
     addError(ERROR_PROJECT_PARSE + projectFilePath);
     if (error instanceof Error) {
-      getOutputChannel().appendLine(error.stack);
+      if (error.stack) {
+        getOutputChannel().appendLine(error.stack);
+      } else {
+        getOutputChannel().appendLine(error.message);
+      }
     }
     return false;
   }
@@ -240,7 +244,7 @@ function migrateProjectFile(project: any, result: any) {
 }
 
 function migrateClasspathsElement(classpathsElement: any, result: any) {
-  let sourcePaths = [];
+  let sourcePaths: string[] = [];
   let children = classpathsElement.children as any[];
   children.forEach((child) => {
     if (child.type !== "element" || child.name !== "class") {
@@ -261,7 +265,7 @@ function migrateClasspathsElement(classpathsElement: any, result: any) {
 }
 
 function migrateCompileTargetsElement(compileTargetsElement: any, result: any) {
-  let files = [];
+  let files: string[] = [];
   let children = compileTargetsElement.children as any[];
   children.forEach((child) => {
     if (child.type !== "element" || child.name !== "compile") {
@@ -329,9 +333,8 @@ function migrateOutputElement(outputElement: any, result: any) {
       result.compilerOptions["default-background-color"] = backgroundColor;
     } else if ("preferredSDK" in attributes) {
       let frameworkSDKConfig = vscode.workspace.getConfiguration("as3mxml");
-      let frameworkSDK =
-        frameworkSDKConfig.inspect("sdk.framework").workspaceValue;
-      if (!frameworkSDK) {
+      let frameworkSDKInspection = frameworkSDKConfig.inspect("sdk.framework");
+      if (!frameworkSDKInspection || !frameworkSDKInspection.workspaceValue) {
         let preferredSDK = attributes.preferredSDK as string;
         let validatedSDKPath = validateFrameworkSDK(preferredSDK);
         if (validatedSDKPath !== null) {
@@ -467,7 +470,7 @@ function migrateBuildElement(buildElement: any, result: any) {
 }
 
 function migrateLibraryPathsElement(libraryPathsElement: any, result: any) {
-  let libraryPaths = [];
+  let libraryPaths: string[] = [];
   let children = libraryPathsElement.children as any[];
   children.forEach((child) => {
     if (child.type !== "element" || child.name !== "element") {
@@ -491,7 +494,7 @@ function migrateExternalLibraryPathsElement(
   externalLibraryPathsElement: any,
   result: any
 ) {
-  let externalLibraryPaths = [];
+  let externalLibraryPaths: string[] = [];
   let children = externalLibraryPathsElement.children as any[];
   children.forEach((child) => {
     if (child.type !== "element" || child.name !== "element") {
@@ -515,7 +518,7 @@ function migrateIncludeLibrariesElement(
   includeLibrariesElement: any,
   result: any
 ) {
-  let includeLibraries = [];
+  let includeLibraries: string[] = [];
   let children = includeLibrariesElement.children as any[];
   children.forEach((child) => {
     if (child.type !== "element" || child.name !== "element") {

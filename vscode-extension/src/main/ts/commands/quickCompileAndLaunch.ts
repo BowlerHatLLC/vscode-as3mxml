@@ -17,8 +17,8 @@ import * as vscode from "vscode";
 import * as child_process from "child_process";
 import * as fs from "fs";
 import * as path from "path";
-import json5 from "json5/dist/index.mjs";
 import findAnimate from "../utils/findAnimate";
+const json5 = require("json5");
 
 const QUICK_COMPILE_MESSAGE = "Building ActionScript & MXML project...";
 const CANNOT_LAUNCH_QUICK_COMPILE_FAILED_ERROR =
@@ -41,7 +41,7 @@ export default function quickCompileAndLaunch(uris: string[], debug: boolean) {
       } as any;
     });
     vscode.window.showQuickPick(items).then((result) => {
-      if (!("uri" in result)) {
+      if (!result || !("uri" in result)) {
         return;
       }
       quickCompileAndLaunchURI(result["uri"] as string, debug);
@@ -77,10 +77,18 @@ async function quickCompileAndLaunchURI(uri: string, debug: boolean) {
               let animateFile = getAnimateFile(uri);
               if (animateFile) {
                 let animatePath = findAnimate();
+                if (!animatePath) {
+                  reject();
+                  return;
+                }
 
                 let extension = vscode.extensions.getExtension(
                   "bowlerhatllc.vscode-as3mxml"
                 );
+                if (!extension) {
+                  reject();
+                  return;
+                }
                 let fileName = debug ? "debug-movie.jsfl" : "test-movie.jsfl";
                 let jsflPath = path.resolve(
                   extension.extensionPath,

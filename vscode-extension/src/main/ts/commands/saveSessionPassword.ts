@@ -15,9 +15,11 @@ limitations under the License.
 */
 import * as vscode from "vscode";
 
-let savedPassword = null;
+let savedPassword: string | undefined = undefined;
 
-export default async function saveSessionPassword(): Promise<string> {
+export default async function saveSessionPassword(): Promise<
+  string | undefined
+> {
   do {
     savedPassword = await vscode.window.showInputBox({
       placeHolder: "Password",

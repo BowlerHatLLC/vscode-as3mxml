@@ -51,7 +51,7 @@ export default function findAnimate(): string | null {
     return null;
   }
   if (process.platform === "win32") {
-    let animatePath: string = null;
+    let animatePath: string | null = null;
     ADOBE_FOLDERS_WINDOWS.find((folderPath) => {
       if (
         !fs.existsSync(folderPath) ||
@@ -82,7 +82,7 @@ export default function findAnimate(): string | null {
     return animatePath;
   } else if (process.platform === "darwin") {
     //macOS
-    let animatePath: string = null;
+    let animatePath: string | null = null;
     let files = fs.readdirSync(APPLICATIONS_MACOS);
     files.find((filePath) => {
       filePath = path.resolve(APPLICATIONS_MACOS, filePath);

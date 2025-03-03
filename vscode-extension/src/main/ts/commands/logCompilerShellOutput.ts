@@ -17,14 +17,14 @@ import * as vscode from "vscode";
 
 const OUTPUT_CHANNEL_NAME = "ActionScript & MXML: Quick Compile";
 
-let outputChannel: vscode.OutputChannel = null;
+let outputChannel: vscode.OutputChannel | null = null;
 
 export default function logCompilerShellOutput(
-  message: string,
+  message: string | null | undefined,
   line: boolean = true,
   clear: boolean = false
 ) {
-  if (outputChannel === null) {
+  if (!outputChannel) {
     outputChannel = vscode.window.createOutputChannel(OUTPUT_CHANNEL_NAME);
   }
   outputChannel.show(true);

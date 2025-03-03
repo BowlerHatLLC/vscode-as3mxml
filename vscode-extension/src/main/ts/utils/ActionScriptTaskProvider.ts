@@ -32,7 +32,7 @@ const PLATFORM_BUNDLE = "bundle";
 const TARGET_AIR = "air";
 const TARGET_BUNDLE = "bundle";
 const TARGET_NATIVE = "native";
-const MATCHER = [];
+const MATCHER: string[] = [];
 const TASK_TYPE_ACTIONSCRIPT = "actionscript";
 const TASK_SOURCE_ACTIONSCRIPT = "ActionScript";
 const TASK_SOURCE_AIR = "Adobe AIR";
@@ -91,7 +91,7 @@ export default class ActionScriptTaskProvider
     }
     const taskDef = task.definition as ActionScriptTaskDefinition;
     const frameworkSDK = getFrameworkSDKPathWithFallbacks();
-    if (frameworkSDK === null) {
+    if (!frameworkSDK) {
       //we don't have a valid SDK
       return undefined;
     }
@@ -121,7 +121,7 @@ export default class ActionScriptTaskProvider
     originalTask: vscode.Task,
     taskDef: ActionScriptTaskDefinition,
     frameworkSDK: string
-  ): vscode.Task {
+  ): vscode.Task | undefined {
     if (vscode.workspace.workspaceFolders === undefined) {
       return undefined;
     }
@@ -215,9 +215,13 @@ export default class ActionScriptTaskProvider
 
   protected provideTasksForASConfigJSON(
     jsonURI: vscode.Uri,
-    workspaceFolder: vscode.WorkspaceFolder,
+    workspaceFolder: vscode.WorkspaceFolder | undefined,
     result: vscode.Task[]
-  ) {
+  ): void {
+    if (!workspaceFolder) {
+      return;
+    }
+
     let isLibrary = false;
     let isAnimate = false;
     let isAIRMobile = false;
@@ -260,7 +264,7 @@ export default class ActionScriptTaskProvider
     }
 
     const frameworkSDK = getFrameworkSDKPathWithFallbacks();
-    if (frameworkSDK === null) {
+    if (!frameworkSDK) {
       //we don't have a valid SDK
       return;
     }
@@ -280,7 +284,7 @@ export default class ActionScriptTaskProvider
         workspaceFolder,
         frameworkSDK,
         true,
-        null,
+        undefined,
         isAIRDesktop || isAIRMobile
       )
     );
@@ -291,7 +295,7 @@ export default class ActionScriptTaskProvider
         workspaceFolder,
         frameworkSDK,
         false,
-        null,
+        undefined,
         isAIRDesktop || isAIRMobile
       )
     );
@@ -622,11 +626,14 @@ export default class ActionScriptTaskProvider
     jsonURI: vscode.Uri,
     workspaceFolder: vscode.WorkspaceFolder,
     sdk: string,
-    debug: boolean,
-    airPlatform: string,
+    debug: boolean | undefined,
+    airPlatform: string | undefined,
     isAIRProject: boolean
   ): vscode.Task {
-    let asconfig: string = this.getASConfigValue(jsonURI, workspaceFolder.uri);
+    let asconfig: string | undefined = this.getASConfigValue(
+      jsonURI,
+      workspaceFolder.uri
+    );
     let definition: ActionScriptTaskDefinition = {
       type: TASK_TYPE_ACTIONSCRIPT,
       debug,
@@ -667,8 +674,7 @@ export default class ActionScriptTaskProvider
     if (command.length > 1) {
       options.unshift(...command.slice(1));
     }
-    let source =
-      airPlatform === null ? TASK_SOURCE_ACTIONSCRIPT : TASK_SOURCE_AIR;
+    let source = !airPlatform ? TASK_SOURCE_ACTIONSCRIPT : TASK_SOURCE_AIR;
     let execution = new vscode.ProcessExecution(command[0], options);
     let task = new vscode.Task(
       definition,
@@ -688,7 +694,7 @@ export default class ActionScriptTaskProvider
     workspaceFolder: vscode.WorkspaceFolder,
     sdk: string
   ): vscode.Task {
-    let asconfig: string = undefined;
+    let asconfig: string | undefined = undefined;
     if (jsonURI) {
       let rootJSON = path.resolve(workspaceFolder.uri.fsPath, ASCONFIG_JSON);
       if (rootJSON !== jsonURI.fsPath) {
@@ -744,7 +750,7 @@ export default class ActionScriptTaskProvider
     workspaceFolder: vscode.WorkspaceFolder,
     sdk: string
   ): vscode.Task {
-    let asconfig: string = undefined;
+    let asconfig: string | undefined = undefined;
     if (jsonURI) {
       let rootJSON = path.resolve(workspaceFolder.uri.fsPath, ASCONFIG_JSON);
       if (rootJSON !== jsonURI.fsPath) {

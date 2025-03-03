@@ -24,9 +24,9 @@ import getJavaClassPathDelimiter from "./getJavaClassPathDelimiter";
  * Returns null if the SDK is not valid.
  */
 export default function validateEditorSDK(
-  extensionPath: string,
-  javaPath: string,
-  sdkPath: string
+  extensionPath: string | null,
+  javaPath: string | null,
+  sdkPath: string | null
 ): string | null {
   if (!sdkPath || !javaPath || !extensionPath) {
     return null;

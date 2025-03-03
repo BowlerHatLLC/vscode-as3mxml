@@ -41,7 +41,7 @@ const BUTTON_LABEL_FLASH_BUILDER = "Flash Builder";
 const BUTTON_LABEL_FLASH_DEVELOP = "FlashDevelop";
 
 export function checkForProjectsToImport() {
-  if (!shouldPromptToImport()) {
+  if (!vscode.workspace.workspaceFolders || !shouldPromptToImport()) {
     return;
   }
 
@@ -138,6 +138,9 @@ async function importProjectInWorkspaceFolder(
       ],
       { placeHolder: MESSAGE_CHOOSE_FORMAT }
     );
+    if (!result) {
+      return null;
+    }
     switch (result.label) {
       case BUTTON_LABEL_FLASH_BUILDER: {
         isFlashDevelop = false;

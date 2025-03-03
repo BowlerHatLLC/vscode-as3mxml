@@ -66,12 +66,12 @@ const NO_SDK = "$(alert) No SDK";
 const FILE_EXTENSION_AS = ".as";
 const FILE_EXTENSION_MXML = ".mxml";
 const FILE_NAME_ASCONFIG_JSON = "asconfig.json";
-let savedContext: vscode.ExtensionContext;
-let savedLanguageClient: LanguageClient;
+let savedContext: vscode.ExtensionContext | null;
+let savedLanguageClient: LanguageClient | null;
 let isLanguageClientReady = false;
-let editorSDKHome: string;
-let javaExecutablePath: string;
-let frameworkSDKHome: string;
+let editorSDKHome: string | null;
+let javaExecutablePath: string | null;
+let frameworkSDKHome: string | null;
 let sdkStatusBarItem: vscode.StatusBarItem;
 let royaleTargetStatusBarItem: vscode.StatusBarItem;
 let pendingQuickCompileAndDebug = false;
@@ -81,8 +81,11 @@ let actionScriptTaskProvider: ActionScriptTaskProvider;
 let animateTaskProvider: AnimateTaskProvider;
 
 function getValidatedEditorSDKConfiguration(
-  javaExecutablePath: string
-): string {
+  javaExecutablePath: string | null
+): string | null {
+  if (!savedContext) {
+    return null;
+  }
   let result = vscode.workspace
     .getConfiguration("as3mxml")
     .get("sdk.editor") as string;
@@ -114,6 +117,9 @@ function onDidChangeConfiguration(event: vscode.ConfigurationChangeEvent) {
       .getConfiguration("as3mxml")
       .get("java.path") as string;
     javaExecutablePath = findJava(javaSettingsPath, (javaPath) => {
+      if (!savedContext) {
+        return false;
+      }
       return validateJava(savedContext.extensionPath, javaPath);
     });
     actionScriptTaskProvider.javaExecutablePath = javaExecutablePath;
@@ -151,12 +157,13 @@ function onDidChangeConfiguration(event: vscode.ConfigurationChangeEvent) {
 }
 
 function updateSDKStatusBarItem() {
-  let sdkShortName = NO_SDK;
   if (frameworkSDKHome) {
-    sdkShortName = findSDKShortName(frameworkSDKHome);
+    sdkStatusBarItem.text = findSDKShortName(frameworkSDKHome) ?? NO_SDK;
+    sdkStatusBarItem.tooltip = frameworkSDKHome ?? undefined;
+  } else {
+    sdkStatusBarItem.text = NO_SDK;
+    sdkStatusBarItem.tooltip = undefined;
   }
-  sdkStatusBarItem.text = sdkShortName;
-  sdkStatusBarItem.tooltip = frameworkSDKHome;
 }
 
 function refreshSDKStatusBarItemVisibility() {
@@ -255,17 +262,17 @@ export function activate(context: vscode.ExtensionContext) {
     .getConfiguration("as3mxml")
     .get("java.path") as string;
   javaExecutablePath = findJava(javaSettingsPath, (javaPath) => {
-    return validateJava(savedContext.extensionPath, javaPath);
+    return validateJava(context.extensionPath, javaPath);
   });
   editorSDKHome = getValidatedEditorSDKConfiguration(javaExecutablePath);
   frameworkSDKHome = getFrameworkSDKPathWithFallbacks();
-  savedContext.subscriptions.push(
+  context.subscriptions.push(
     vscode.workspace.onDidChangeConfiguration(onDidChangeConfiguration)
   );
-  savedContext.subscriptions.push(
+  context.subscriptions.push(
     vscode.window.onDidChangeVisibleTextEditors(onDidChangeVisibleTextEditors)
   );
-  savedContext.subscriptions.push(
+  context.subscriptions.push(
     vscode.workspace.onDidSaveTextDocument((textDocument) => {
       if (!savedLanguageClient || !isLanguageClientReady) {
         return;
@@ -277,12 +284,12 @@ export function activate(context: vscode.ExtensionContext) {
       updateRoyaleTargetStatusBarItem();
       vscode.commands.executeCommand(
         "as3mxml.setRoyalePreferredTarget",
-        getRoyalePreferredTarget(savedContext)
+        getRoyalePreferredTarget(context)
       );
     })
   );
 
-  savedContext.subscriptions.push(
+  context.subscriptions.push(
     vscode.languages.setLanguageConfiguration("actionscript", {
       //this code is MIT licensed from Microsoft's official TypeScript
       //extension that's built into VSCode
@@ -338,23 +345,23 @@ export function activate(context: vscode.ExtensionContext) {
     })
   );
 
-  savedContext.subscriptions.push(
+  context.subscriptions.push(
     vscode.commands.registerCommand(
       "as3mxml.createNewProject",
       createNewProject
     )
   );
-  savedContext.subscriptions.push(
+  context.subscriptions.push(
     vscode.commands.registerCommand(
       "as3mxml.selectWorkspaceSDK",
       selectWorkspaceSDK
     )
   );
-  savedContext.subscriptions.push(
+  context.subscriptions.push(
     vscode.commands.registerCommand(
       "as3mxml.selectRoyalePreferredTarget",
       async () => {
-        await selectRoyalePreferredTarget(savedContext);
+        await selectRoyalePreferredTarget(context);
         updateRoyaleTargetStatusBarItem();
         vscode.commands.executeCommand(
           "as3mxml.setRoyalePreferredTarget",
@@ -363,32 +370,32 @@ export function activate(context: vscode.ExtensionContext) {
       }
     )
   );
-  savedContext.subscriptions.push(
+  context.subscriptions.push(
     vscode.commands.registerCommand("as3mxml.restartServer", restartServer)
   );
-  savedContext.subscriptions.push(
+  context.subscriptions.push(
     vscode.commands.registerCommand(
       "as3mxml.logCompilerShellOutput",
       logCompilerShellOutput
     )
   );
-  savedContext.subscriptions.push(
+  context.subscriptions.push(
     vscode.commands.registerCommand(
       "as3mxml.saveSessionPassword",
       saveSessionPassword
     )
   );
-  savedContext.subscriptions.push(
+  context.subscriptions.push(
     vscode.commands.registerCommand("as3mxml.importFlashBuilderProject", () => {
       pickProjectInWorkspace(true, false);
     })
   );
-  savedContext.subscriptions.push(
+  context.subscriptions.push(
     vscode.commands.registerCommand("as3mxml.importFlashDevelopProject", () => {
       pickProjectInWorkspace(false, true);
     })
   );
-  savedContext.subscriptions.push(
+  context.subscriptions.push(
     vscode.commands.registerCommand("as3mxml.quickCompileAndDebug", () => {
       let enabled = vscode.workspace
         .getConfiguration("as3mxml")
@@ -401,9 +408,12 @@ export function activate(context: vscode.ExtensionContext) {
           commands.some((command) => command === "as3mxml.getActiveProjectURIs")
         ) {
           vscode.commands
-            .executeCommand("as3mxml.getActiveProjectURIs", true)
-            .then((uris: string[]) => {
-              if (uris.length === 0) {
+            .executeCommand<string[] | undefined>(
+              "as3mxml.getActiveProjectURIs",
+              true
+            )
+            .then((uris: string[] | undefined) => {
+              if (!uris || uris.length === 0) {
                 //no projects with asconfig.json files
                 return;
               }
@@ -438,7 +448,7 @@ export function activate(context: vscode.ExtensionContext) {
       });
     })
   );
-  savedContext.subscriptions.push(
+  context.subscriptions.push(
     vscode.commands.registerCommand("as3mxml.quickCompileAndRun", () => {
       let enabled = vscode.workspace
         .getConfiguration("as3mxml")
@@ -451,9 +461,12 @@ export function activate(context: vscode.ExtensionContext) {
           commands.some((command) => command === "as3mxml.getActiveProjectURIs")
         ) {
           vscode.commands
-            .executeCommand("as3mxml.getActiveProjectURIs", true)
-            .then((uris: string[]) => {
-              if (uris.length === 0) {
+            .executeCommand<string[] | undefined>(
+              "as3mxml.getActiveProjectURIs",
+              true
+            )
+            .then((uris: string[] | undefined) => {
+              if (!uris || uris.length === 0) {
                 //no projects with asconfig.json files
                 return;
               }
@@ -544,7 +557,7 @@ export function activate(context: vscode.ExtensionContext) {
      * May be null or undefined if no SDK is selected or the currently
      * selected SDK is invalid.
      */
-    get frameworkSDKPath(): string {
+    get frameworkSDKPath(): string | null {
       return frameworkSDKHome;
     },
   };
@@ -582,7 +595,7 @@ function startClient() {
     return;
   }
 
-  if (hasInvalidJava()) {
+  if (!javaExecutablePath || hasInvalidJava()) {
     vscode.window.showErrorMessage(INVALID_JAVA_ERROR);
     return;
   }
@@ -599,6 +612,11 @@ function startClient() {
     { location: vscode.ProgressLocation.Window },
     (progress) => {
       return new Promise<void>(async (resolve, reject) => {
+        if (!savedContext || !javaExecutablePath) {
+          resolve();
+          vscode.window.showErrorMessage(STARTUP_ERROR);
+          return;
+        }
         progress.report({ message: INITIALIZING_MESSAGE });
         let clientOptions: LanguageClientOptions = {
           documentSelector: [
@@ -663,7 +681,7 @@ function startClient() {
         // if JDK 11 or newer is ever required, it's probably a good idea to
         // add the following option:
         // args.unshift("-Xlog:all=warning:stderr")
-        let primaryWorkspaceFolder: vscode.WorkspaceFolder = null;
+        let primaryWorkspaceFolder: vscode.WorkspaceFolder | undefined;
         if (vscode.workspace.workspaceFolders !== undefined) {
           primaryWorkspaceFolder = vscode.workspace.workspaceFolders[0];
         }

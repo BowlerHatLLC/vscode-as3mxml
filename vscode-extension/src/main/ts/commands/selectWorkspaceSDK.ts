@@ -19,7 +19,7 @@ import * as path from "path";
 import findSDKName from "../utils/findSDKName";
 import validateFrameworkSDK from "../utils/validateFrameworkSDK";
 import findSDKInLocalRoyaleNodeModule from "../utils/findSDKInLocalRoyaleNodeModule";
-import findSDKInRoyaleHomeEnvironmentVariable from "../utils/findSDKInRoyaleHomeEnvironmentVariable";
+import findSDKInRoyaleHomeEnvVar from "../utils/findSDKInRoyaleHomeEnvVar";
 import findSDKInFlexHomeEnvironmentVariable from "../utils/findSDKInFlexHomeEnvironmentVariable";
 import findSDKsInPathEnvironmentVariable from "../utils/findSDKsInPathEnvironmentVariable";
 
@@ -73,7 +73,7 @@ function openSettingsForSearchPaths() {
           return selectWorkspaceSDK();
         }
         let config = vscode.workspace.getConfiguration("as3mxml");
-        let searchPaths: string[] = config.get("sdk.searchPaths");
+        let searchPaths: string[] | undefined = config.get("sdk.searchPaths");
         if (!searchPaths) {
           searchPaths = [];
         }
@@ -89,7 +89,7 @@ function openSettingsForSearchPaths() {
           let searchPathsInspection = vscode.workspace
             .getConfiguration("as3mxml")
             .inspect("sdk.searchPaths");
-          if (searchPathsInspection.workspaceValue) {
+          if (searchPathsInspection && searchPathsInspection.workspaceValue) {
             config.update(
               "sdk.searchPaths",
               searchPaths,
@@ -126,7 +126,7 @@ function addSDKItem(
   }
   allPaths.push(path);
   let label = findSDKName(path);
-  if (label === null) {
+  if (!label) {
     //we couldn't find the name of this SDK
     if (!require) {
       //if it's not required, skip it
@@ -168,7 +168,7 @@ function checkSearchPath(
 function createSearchPathsItem(): SDKQuickPickItem {
   let item: SDKQuickPickItem = {
     label: "Add more SDKs to this list...",
-    description: null,
+    description: undefined,
     detail: "Choose a folder containing one or more ActionScript SDKs",
     custom: true,
   };
@@ -183,13 +183,13 @@ export default function selectWorkspaceSDK(
   //for convenience, add an option to open user settings and define custom SDK paths
   items.push(createSearchPathsItem());
   //start with the current framework and editor SDKs
-  let frameworkSDK = <string>(
-    vscode.workspace.getConfiguration("as3mxml").get("sdk.framework")
-  );
+  let frameworkSDK: string | undefined | null = vscode.workspace
+    .getConfiguration("as3mxml")
+    .get("sdk.framework");
   frameworkSDK = validateFrameworkSDK(frameworkSDK);
-  let editorSDK = <string>(
-    vscode.workspace.getConfiguration("as3mxml").get("sdk.editor")
-  );
+  let editorSDK: string | undefined | null = vscode.workspace
+    .getConfiguration("as3mxml")
+    .get("sdk.editor");
   editorSDK = validateFrameworkSDK(editorSDK);
   let addedEditorSDK = false;
   if (frameworkSDK) {
@@ -235,7 +235,7 @@ export default function selectWorkspaceSDK(
     addSDKItem(editorSDK, DESCRIPTION_EDITOR_SDK, items, allPaths, true);
   }
   //check if the ROYALE_HOME environment variable is defined
-  let royaleHome = findSDKInRoyaleHomeEnvironmentVariable();
+  let royaleHome = findSDKInRoyaleHomeEnvVar();
   if (royaleHome) {
     addSDKItem(royaleHome, DESCRIPTION_ROYALE_HOME, items, allPaths, false);
   }
@@ -254,7 +254,7 @@ export default function selectWorkspaceSDK(
       placeHolder: "Select an ActionScript SDK for this workspace",
     })
     .then(
-      (value: SDKQuickPickItem) => {
+      (value: SDKQuickPickItem | undefined) => {
         if (!value) {
           //no new SDK was picked, so do nothing
           return Promise.resolve(undefined);
@@ -276,6 +276,9 @@ export default function selectWorkspaceSDK(
           vscode.workspace
             .getConfiguration("as3mxml")
             .update("sdk.framework", newFrameworkPath, configurationTarget);
+        }
+        if (!newFrameworkPath) {
+          return Promise.resolve(undefined);
         }
         return Promise.resolve(vscode.Uri.file(newFrameworkPath));
       },

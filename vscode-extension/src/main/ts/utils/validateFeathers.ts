@@ -23,10 +23,10 @@ const PATH_SDK_DESCRIPTION_FLEX = "flex-sdk-description.xml";
 const PATH_MANIFEST_FEATHERS = "frameworks/projects/feathers/manifest.xml";
 
 export default function validateFeathers(
-  sdkPath: string,
+  sdkPath: string | null,
   minVersion?: string
 ): boolean {
-  if (!validateFrameworkSDK(sdkPath)) {
+  if (!sdkPath || !validateFrameworkSDK(sdkPath)) {
     return false;
   }
   const feathersManifestPath = path.join(sdkPath, PATH_MANIFEST_FEATHERS);
@@ -46,6 +46,9 @@ export default function validateFeathers(
     XML_VERSION_START,
     XML_VERSION_END
   );
+  if (!versionString) {
+    return false;
+  }
   const versionParts = versionString.split("-")[0].split(".");
   const minVersionParts = minVersion.split("-")[0].split(".");
   const major = versionParts.length > 0 ? versionParts[0] : 0;
@@ -72,7 +75,7 @@ function readBetween(
   fileContents: string,
   startText: string,
   endText: string
-): string {
+): string | null {
   let startIndex = fileContents.indexOf(startText);
   if (startIndex !== -1) {
     startIndex += startText.length;

@@ -17,7 +17,7 @@ import validateFrameworkSDK from "./validateFrameworkSDK";
 
 const ENVIRONMENT_VARIABLE_ROYALE_HOME = "ROYALE_HOME";
 
-export default function findSDKInRoyaleHomeEnvironmentVariable(): string {
+export default function findSDKInRoyaleHomeEnvVar(): string | null {
   if (ENVIRONMENT_VARIABLE_ROYALE_HOME in process.env) {
     let flexHome = process.env.ROYALE_HOME;
     //this may return null

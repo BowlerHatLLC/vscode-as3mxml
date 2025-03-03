@@ -22,7 +22,7 @@ import BaseAsconfigTaskProvider from "./BaseAsconfigTaskProvider";
 const ASCONFIG_JSON = "asconfig.json";
 const FIELD_ANIMATE_OPTIONS = "animateOptions";
 const FIELD_FILE = "file";
-const MATCHER = [];
+const MATCHER: string[] = [];
 const TASK_TYPE_ANIMATE = "animate";
 const TASK_SOURCE_ANIMATE = "Adobe Animate";
 const TASK_NAME_COMPILE_DEBUG = "compile debug";
@@ -80,7 +80,7 @@ export default class AnimateTaskProvider
     originalTask: vscode.Task,
     taskDef: AnimateTaskDefinition,
     animatePath: string
-  ): vscode.Task {
+  ): vscode.Task | undefined {
     if (vscode.workspace.workspaceFolders === undefined) {
       return undefined;
     }
@@ -149,10 +149,14 @@ export default class AnimateTaskProvider
   }
 
   protected provideTasksForASConfigJSON(
-    jsonURI: vscode.Uri,
-    workspaceFolder: vscode.WorkspaceFolder,
+    jsonURI: vscode.Uri | undefined,
+    workspaceFolder: vscode.WorkspaceFolder | undefined,
     result: vscode.Task[]
-  ) {
+  ): void {
+    if (!workspaceFolder) {
+      return;
+    }
+
     let isAnimate = false;
     let isAIR = false;
     const asconfigJson = this.readASConfigJSON(jsonURI);
@@ -230,14 +234,17 @@ export default class AnimateTaskProvider
 
   private getAnimateTask(
     description: string,
-    jsonURI: vscode.Uri,
+    jsonURI: vscode.Uri | undefined,
     workspaceFolder: vscode.WorkspaceFolder,
     animatePath: string,
     debug: boolean,
     publish: boolean,
     isAIRProject: boolean
   ): vscode.Task {
-    let asconfig: string = this.getASConfigValue(jsonURI, workspaceFolder.uri);
+    let asconfig: string | undefined = this.getASConfigValue(
+      jsonURI,
+      workspaceFolder.uri
+    );
     let definition: AnimateTaskDefinition = {
       type: TASK_TYPE_ANIMATE,
       debug,

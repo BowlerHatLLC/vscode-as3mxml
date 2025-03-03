@@ -118,7 +118,9 @@ function openOrAddFolderAndCreateNewProject(addToWorkspace: boolean) {
         if (addToWorkspace) {
           if (
             !vscode.workspace.updateWorkspaceFolders(
-              vscode.workspace.workspaceFolders.length,
+              vscode.workspace.workspaceFolders
+                ? vscode.workspace.workspaceFolders.length
+                : 0,
               0,
               { uri: uri }
             )
@@ -188,7 +190,7 @@ async function createNewProjectAtUri(
           title: "Select a project type…",
         }
       )
-      .then((result) => (projectType = result));
+      .then((result) => (projectType = result as ProjectQuickPickItem));
   } else if (isRoyale) {
     projectType = { royale: true };
   } else if (isFeathers) {
@@ -204,7 +206,7 @@ async function createNewProjectAtUri(
           title: "Select a project type…",
         }
       )
-      .then((result) => (projectType = result));
+      .then((result) => (projectType = result as ProjectQuickPickItem));
   } else {
     await vscode.window
       .showQuickPick(
@@ -216,11 +218,11 @@ async function createNewProjectAtUri(
           title: "Select a project type…",
         }
       )
-      .then((result) => (projectType = result));
+      .then((result) => (projectType = result as ProjectQuickPickItem));
   }
 
   if (!projectType) {
-    return;
+    return Promise.resolve(false);
   }
 
   fs.mkdirSync(projectRoot, { recursive: true });
@@ -321,13 +323,13 @@ async function createNewProjectAtUri(
 }
 
 function createAirDescriptor(
-  descriptorTemplatePath: string,
+  descriptorTemplatePath: string | null | undefined,
   projectType: ProjectQuickPickItem,
   swfFileName: string,
   applicationId: string,
   fileName: string
 ): string | null {
-  if (!fs.existsSync(descriptorTemplatePath)) {
+  if (!descriptorTemplatePath || !fs.existsSync(descriptorTemplatePath)) {
     return null;
   }
   let descriptorContents = fs.readFileSync(descriptorTemplatePath, {
@@ -382,7 +384,7 @@ function createAsconfigJson(
   mainClassName: string,
   swfFileName: string,
   descriptorFileName: string | null,
-  mobile: boolean
+  mobile: boolean | undefined
 ): string {
   return `{
 	"config": ${mobile ? `"airmobile"` : `"air"`},

@@ -16,7 +16,7 @@ limitations under the License.
 import * as vscode from "vscode";
 import * as path from "path";
 import * as fs from "fs";
-import json5 from "json5/dist/index.mjs";
+const json5 = require("json5");
 
 const ASCONFIG_JSON = "asconfig.json";
 const FILE_EXTENSION_AS = ".as";
@@ -32,7 +32,10 @@ const FIELD_TYPE = "type";
 const TYPE_LIB = "lib";
 
 export default class BaseAsconfigTaskProvider {
-  constructor(context: vscode.ExtensionContext, javaExecutablePath: string) {
+  constructor(
+    context: vscode.ExtensionContext,
+    javaExecutablePath: string | null
+  ) {
     this._context = context;
     this.javaExecutablePath = javaExecutablePath;
   }
@@ -70,7 +73,11 @@ export default class BaseAsconfigTaskProvider {
             //we couldn't find asconfig.json, but an .as or .mxml file
             //is currently open from the this workspace, so might as
             //well provide the tasks
-            this.provideTasksForASConfigJSON(null, workspaceFolder, result);
+            this.provideTasksForASConfigJSON(
+              undefined,
+              workspaceFolder,
+              result
+            );
           }
         }
       }
@@ -86,12 +93,10 @@ export default class BaseAsconfigTaskProvider {
   }
 
   protected provideTasksForASConfigJSON(
-    jsonURI: vscode.Uri,
-    workspaceFolder: vscode.WorkspaceFolder,
+    jsonURI: vscode.Uri | undefined,
+    workspaceFolder: vscode.WorkspaceFolder | undefined,
     result: vscode.Task[]
-  ) {
-    return undefined;
-  }
+  ): void {}
 
   protected getCommand(workspaceRoot: vscode.WorkspaceFolder): string[] {
     let nodeModulesBin = path.join(
@@ -133,6 +138,9 @@ export default class BaseAsconfigTaskProvider {
   }
 
   protected getDefaultCommand(): string[] {
+    if (!this.javaExecutablePath) {
+      return [];
+    }
     return [
       this.javaExecutablePath,
       "-jar",
@@ -141,16 +149,16 @@ export default class BaseAsconfigTaskProvider {
   }
 
   protected getASConfigValue(
-    jsonURI: vscode.Uri,
+    jsonURI: vscode.Uri | undefined,
     workspaceURI: vscode.Uri
-  ): string {
+  ): string | undefined {
     if (!jsonURI) {
       return undefined;
     }
     return jsonURI.toString().substring(workspaceURI.toString().length + 1);
   }
 
-  protected readASConfigJSON(jsonURI: vscode.Uri) {
+  protected readASConfigJSON(jsonURI: vscode.Uri | undefined) {
     if (!jsonURI) {
       return null;
     }

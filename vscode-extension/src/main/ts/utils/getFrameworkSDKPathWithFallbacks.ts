@@ -16,12 +16,12 @@ limitations under the License.
 import * as vscode from "vscode";
 import validateFrameworkSDK from "./validateFrameworkSDK";
 import findSDKInLocalRoyaleNodeModule from "./findSDKInLocalRoyaleNodeModule";
-import findSDKInRoyaleHomeEnvironmentVariable from "./findSDKInRoyaleHomeEnvironmentVariable";
+import findSDKInRoyaleHomeEnvVar from "./findSDKInRoyaleHomeEnvVar";
 import findSDKInFlexHomeEnvironmentVariable from "./findSDKInFlexHomeEnvironmentVariable";
 import findSDKsInPathEnvironmentVariable from "./findSDKsInPathEnvironmentVariable";
 
 export default function getFrameworkSDKPathWithFallbacks(): string | null {
-  let sdkPath: string = null;
+  let sdkPath: string | null = null;
   let frameworkSetting = <string>(
     vscode.workspace.getConfiguration("as3mxml").get("sdk.framework")
   );
@@ -48,7 +48,7 @@ export default function getFrameworkSDKPathWithFallbacks(): string | null {
   }
   if (!sdkPath) {
     //the ROYALE_HOME environment variable may point to an SDK
-    sdkPath = findSDKInRoyaleHomeEnvironmentVariable();
+    sdkPath = findSDKInRoyaleHomeEnvVar();
   }
   if (!sdkPath) {
     //the FLEX_HOME environment variable may point to an SDK

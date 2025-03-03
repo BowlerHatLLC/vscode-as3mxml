@@ -23,8 +23,11 @@ const TARGET_JS_ROYALE = "JSRoyale";
 const TARGET_SWF = "SWF";
 
 export default function getRoyalePreferredTarget(
-  context: vscode.ExtensionContext
+  context: vscode.ExtensionContext | undefined | null
 ): string {
+  if (!context) {
+    return TARGET_SWF;
+  }
   if (!validateRoyale(getFrameworkSDKPathWithFallbacks())) {
     // not royale, so clear the preferred target
     context.workspaceState.update(ROYALE_PREFERRED_TARGET, undefined);
@@ -44,7 +47,7 @@ export default function getRoyalePreferredTarget(
     return savedPreferredTarget;
   }
 
-  let newTarget: string;
+  let newTarget: string | null | undefined = null;
   if (allWorkspaceTargets.has(TARGET_JS_ROYALE)) {
     // prefer JSRoyale
     newTarget = TARGET_JS_ROYALE;

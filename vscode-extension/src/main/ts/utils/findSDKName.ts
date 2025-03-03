@@ -45,7 +45,7 @@ function readBetween(
   return null;
 }
 
-function readName(fileContents: string, includeBuild: boolean): string {
+function readName(fileContents: string, includeBuild: boolean): string | null {
   let sdkName = readBetween(fileContents, XML_NAME_START, XML_NAME_END);
   if (sdkName === NAME_ROYALE) {
     //in royale-sdk-description.xml, the version appears in a different field
@@ -71,21 +71,24 @@ function readName(fileContents: string, includeBuild: boolean): string {
   return sdkName;
 }
 
-export default function findSDKName(sdkPath: string): string | null {
-  let sdkName: string = null;
+export default function findSDKName(sdkPath: string | null): string | null {
+  if (!sdkPath) {
+    return null;
+  }
+  let sdkName: string | null = null;
   let royaleDescriptionPath = path.join(sdkPath, PATH_SDK_DESCRIPTION_ROYALE);
   if (fs.existsSync(royaleDescriptionPath)) {
     let royaleDescription = fs.readFileSync(royaleDescriptionPath, "utf8");
     sdkName = readName(royaleDescription, false);
   }
-  if (sdkName === null) {
+  if (!sdkName) {
     let flexDescriptionPath = path.join(sdkPath, PATH_SDK_DESCRIPTION_FLEX);
     if (fs.existsSync(flexDescriptionPath)) {
       let flexDescription = fs.readFileSync(flexDescriptionPath, "utf8");
       sdkName = readName(flexDescription, false);
     }
   }
-  if (sdkName === null) {
+  if (!sdkName) {
     let airDescriptionPath = path.join(sdkPath, PATH_SDK_DESCRIPTION_AIR);
     if (fs.existsSync(airDescriptionPath)) {
       let airDescription = fs.readFileSync(airDescriptionPath, "utf8");

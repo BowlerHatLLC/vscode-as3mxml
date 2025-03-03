@@ -16,7 +16,7 @@ limitations under the License.
 import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
-import { parseXml } from "@rgrove/parse-xml";
+import { parseXml, XmlElement } from "@rgrove/parse-xml";
 import validateFrameworkSDK from "../utils/validateFrameworkSDK";
 
 const FILE_ASCONFIG_JSON = "asconfig.json";
@@ -186,8 +186,8 @@ function findSDKs(workspaceFolder: vscode.WorkspaceFolder): FlashBuilderSDK[] {
   } catch (error) {
     return [];
   }
-  let rootElement = sdksElement.children[0];
-  let rootChildren = rootElement.children;
+  let rootElement = sdksElement.children[0] as XmlElement;
+  let rootChildren = rootElement.children as any[];
   return rootChildren
     .filter((child) => {
       if (child.type !== "element" || child.name !== "sdk") {
@@ -261,13 +261,17 @@ function importFlashBuilderProjectInternal(
     return false;
   }
 
-  let linkedResources = null;
+  let linkedResources: EclipseLinkedResource[] | null = null;
   try {
     linkedResources = findLinkedResources(workspaceFolder);
   } catch (error) {
     addWarning(WARNING_CANNOT_FIND_LINKED_RESOURCES);
     if (error instanceof Error) {
-      getOutputChannel().appendLine(error.stack);
+      if (error.stack) {
+        getOutputChannel().appendLine(error.stack);
+      } else {
+        getOutputChannel().appendLine(error.message);
+      }
     }
     linkedResources = [];
   }
@@ -281,7 +285,11 @@ function importFlashBuilderProjectInternal(
   } catch (error) {
     addError(ERROR_CANNOT_FIND_SDKS);
     if (error instanceof Error) {
-      getOutputChannel().appendLine(error.stack);
+      if (error.stack) {
+        getOutputChannel().appendLine(error.stack);
+      } else {
+        getOutputChannel().appendLine(error.message);
+      }
     }
     return false;
   }
@@ -301,7 +309,11 @@ function importFlashBuilderProjectInternal(
   } catch (error) {
     addError(ERROR_PROJECT_PARSE);
     if (error instanceof Error) {
-      getOutputChannel().appendLine(error.stack);
+      if (error.stack) {
+        getOutputChannel().appendLine(error.stack);
+      } else {
+        getOutputChannel().appendLine(error.message);
+      }
     }
     return false;
   }
@@ -423,7 +435,11 @@ function createProjectFiles(
       } catch (error) {
         addError(ERROR_PROJECT_PARSE);
         if (error instanceof Error) {
-          getOutputChannel().appendLine(error.stack);
+          if (error.stack) {
+            getOutputChannel().appendLine(error.stack);
+          } else {
+            getOutputChannel().appendLine(error.message);
+          }
         }
         return false;
       }
@@ -644,9 +660,9 @@ function migrateCompilerElement(
 ) {
   let attributes = compilerElement.attributes;
   let frameworkSDKConfig = vscode.workspace.getConfiguration("as3mxml");
-  let frameworkSDK = frameworkSDKConfig.inspect("sdk.framework").workspaceValue;
-  if (!frameworkSDK) {
-    let sdk: FlashBuilderSDK;
+  let frameworkSDKInspection = frameworkSDKConfig.inspect("sdk.framework");
+  if (!frameworkSDKInspection || !frameworkSDKInspection.workspaceValue) {
+    let sdk: FlashBuilderSDK | undefined;
     let useFlashSDK = false;
     if ("useFlashSDK" in attributes) {
       useFlashSDK = attributes.useFlashSDK === "true";
@@ -727,7 +743,7 @@ function migrateCompilerElement(
   ) {
     result.compilerOptions["target-player"] = attributes.targetPlayerVersion;
   }
-  let sourceFolderPath: string = null;
+  let sourceFolderPath: string | null | undefined = null;
   if ("sourceFolderPath" in attributes) {
     sourceFolderPath = attributes.sourceFolderPath;
     if (!isFlexLibrary) {
@@ -760,7 +776,7 @@ function migrateCompilerElement(
 
 function migrateCompilerSourcePathElement(
   compilerSourcePathElement: any,
-  sourceFolderPath: string,
+  sourceFolderPath: string | null | undefined,
   linkedResources: EclipseLinkedResource[],
   result: any
 ) {
@@ -813,7 +829,7 @@ function findOnSourcePath(thePath: string, folderPath: string, result: any) {
     //only search for relative paths on the source path
     return thePath;
   }
-  let sourcePath = result.compilerOptions["source-path"];
+  let sourcePath: string[] = result.compilerOptions["source-path"];
   if (sourcePath) {
     sourcePath.some((sourcePath) => {
       let newPath = path.posix.join(sourcePath, thePath);
@@ -832,7 +848,7 @@ function findOnSourcePath(thePath: string, folderPath: string, result: any) {
 }
 
 function stripSourcePath(thePath: string, result: any) {
-  let sourcePath = result.compilerOptions["source-path"];
+  let sourcePath: string[] = result.compilerOptions["source-path"];
   if (sourcePath) {
     sourcePath.some((sourcePath) => {
       if (thePath.startsWith(sourcePath + path.posix.sep)) {
@@ -850,8 +866,8 @@ function migrateCompilerLibraryPathElement(
   linkedResources: EclipseLinkedResource[],
   result: any
 ) {
-  let libraryPaths = [];
-  let externalLibraryPaths = [];
+  let libraryPaths: string[] = [];
+  let externalLibraryPaths: string[] = [];
 
   let defaultLinkType = "0";
   let libraryPathAttributes = libraryPathElement.attributes;
@@ -959,7 +975,7 @@ function migrateBuildTargetsElement(
     let isBlackBerry =
       platformId === "com.qnx.flexide.multiplatform.qnx.platform";
     let isDefault = platformId === "default";
-    let buildTargetChildren = buildTarget.children;
+    let buildTargetChildren = buildTarget.children as any[];
     let multiPlatformSettings = findChildElementByName(
       children,
       "multiPlatformSettings"
@@ -1038,15 +1054,15 @@ function migrateBuildTargetsElement(
           platformOptions.signingOptions.storetype = "pkcs12";
         }
       }
-      let airSettingsChildren = airSettings.children;
+      let airSettingsChildren = airSettings.children as any[];
       let anePaths = findChildElementByName(airSettingsChildren, "anePaths");
       if (anePaths) {
-        let anePathsChildren = anePaths.children;
+        let anePathsChildren = anePaths.children as any[];
         let anePathEntries = anePathsChildren.filter((child) => {
           return child.type === "element" && child.name === "anePathEntry";
         });
         if (anePathEntries.length > 0) {
-          let extdir = [];
+          let extdir: string[] = [];
           anePathEntries.forEach((anePathEntry) => {
             let anePathEntryAttributes = anePathEntry.attributes;
             if ("path" in anePathEntryAttributes) {

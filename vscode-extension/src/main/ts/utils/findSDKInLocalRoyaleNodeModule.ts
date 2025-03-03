@@ -27,7 +27,7 @@ export default function findSDKInLocalRoyaleNodeModule(): string | null {
   }
   for (let i = 0, count = MODULE_NAMES.length; i < count; i++) {
     let moduleName = MODULE_NAMES[i];
-    let nodeModule = path.join(
+    let nodeModule: string | null = path.join(
       vscode.workspace.workspaceFolders[0].uri.fsPath,
       NODE_MODULES,
       MODULE_ORG,

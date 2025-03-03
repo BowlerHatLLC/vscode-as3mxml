@@ -16,7 +16,7 @@ limitations under the License.
 import * as fs from "fs";
 import * as path from "path";
 import * as vscode from "vscode";
-import json5 from "json5/dist/index.mjs";
+const json5 = require("json5");
 
 const FILE_ASCONFIG_JSON = "asconfig.json";
 const FILE_EXTENSION_AS = ".as";
@@ -25,13 +25,13 @@ const FILE_EXTENSION_MXML = ".mxml";
 export class ActionScriptSourcePath extends vscode.TreeItem {
   constructor(
     file: vscode.Uri | string,
-    workspaceFolder: vscode.WorkspaceFolder | null
+    workspaceFolder: vscode.WorkspaceFolder | null | undefined
   ) {
-    let contextValue: string = null;
-    let command: vscode.Command;
+    let contextValue: string | undefined = undefined;
+    let command: vscode.Command | undefined = undefined;
     let collapsibleState = vscode.TreeItemCollapsibleState.None;
-    let resourceUri: vscode.Uri = undefined;
-    let label: string = undefined;
+    let resourceUri: vscode.Uri | undefined = undefined;
+    let label: string | undefined = undefined;
     if (typeof file === "string") {
       label = file;
     } //uri
@@ -54,14 +54,14 @@ export class ActionScriptSourcePath extends vscode.TreeItem {
         };
       }
     }
-    super(label, collapsibleState);
+    super(label ?? "", collapsibleState);
     this.resourceUri = resourceUri;
     this.command = command;
     this.contextValue = contextValue;
     this.workspaceFolder = workspaceFolder;
   }
 
-  workspaceFolder: vscode.WorkspaceFolder | null;
+  workspaceFolder: vscode.WorkspaceFolder | null | undefined;
 }
 
 export default class ActionScriptSourcePathDataProvider
@@ -69,8 +69,8 @@ export default class ActionScriptSourcePathDataProvider
 {
   private _onDidChangeTreeData: vscode.EventEmitter<ActionScriptSourcePath | null> =
     new vscode.EventEmitter<ActionScriptSourcePath | null>();
-  private _rootSourcePaths: ActionScriptSourcePath[];
-  private _rootPathStrings: Set<string>;
+  private _rootSourcePaths: ActionScriptSourcePath[] = [];
+  private _rootPathStrings: Set<string> = new Set();
 
   constructor() {
     let watcher = vscode.workspace.createFileSystemWatcher("**/asconfig.json");
@@ -123,12 +123,15 @@ export default class ActionScriptSourcePathDataProvider
     }
 
     let elementUri = element.resourceUri;
+    if (!elementUri) {
+      return Promise.resolve([]);
+    }
     let elementPath = elementUri.fsPath;
     if (!fs.statSync(elementPath).isDirectory()) {
       return Promise.resolve([]);
     }
     let files = fs.readdirSync(elementPath);
-    let sourcePaths = [];
+    let sourcePaths: Array<ActionScriptSourcePath> = [];
     files.forEach((filePath) => {
       filePath = path.join(elementPath, filePath);
       if (fs.statSync(filePath).isDirectory()) {
@@ -154,8 +157,8 @@ export default class ActionScriptSourcePathDataProvider
   }
 
   private refreshSourcePaths() {
-    this._rootSourcePaths = [];
-    this._rootPathStrings = new Set();
+    this._rootSourcePaths.length = 0;
+    this._rootPathStrings.clear();
     if (vscode.workspace.workspaceFolders == undefined) {
       this._onDidChangeTreeData.fire(null);
       return;
@@ -192,7 +195,9 @@ export default class ActionScriptSourcePathDataProvider
                   resolvedRootUri,
                   workspaceFolder
                 );
-                let name = path.basename(rootPath.resourceUri.fsPath);
+                let name = rootPath.resourceUri
+                  ? path.basename(rootPath.resourceUri.fsPath)
+                  : "";
                 let extension = path.extname(name);
                 if (extension.length > 0) {
                   //don't show the file extension
@@ -231,10 +236,9 @@ export default class ActionScriptSourcePathDataProvider
       return;
     }
     let count = rootPathLabel.split(path.sep).length;
-    let resolved = path.resolve(
-      rootPath.resourceUri.fsPath,
-      "..".repeat(count)
-    );
+    let resolved = rootPath.resourceUri
+      ? path.resolve(rootPath.resourceUri.fsPath, "..".repeat(count))
+      : "";
     rootPath.label = path.basename(resolved) + path.sep + rootPathLabel;
   }
 
