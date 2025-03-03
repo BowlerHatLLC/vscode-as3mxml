@@ -6,6 +6,7 @@ public interface IASDocTagConstants {
     public static final String EVENT_TYPE = "eventType";
     public static final String EXAMPLE = "example";
     public static final String EXAMPLE_TEXT = "exampleText";
+    public static final String INCLUDE_EXAMPLE = "includeExample";
     public static final String INHERIT_DOC = "inheritDoc";
     public static final String INTERNAL = "internal";
     public static final String PARAM = "param";
@@ -23,6 +24,7 @@ public interface IASDocTagConstants {
             EVENT_TYPE,
             EXAMPLE,
             EXAMPLE_TEXT,
+            INCLUDE_EXAMPLE,
             INHERIT_DOC,
             INTERNAL,
             PARAM,
