@@ -22,7 +22,7 @@ import * as vscode from "vscode";
  * case of an Apache Royale SDK where the real SDK appears in royale-asjs.
  * Returns null if the SDK is not valid.
  */
-export default function validateFrameworkSDK(sdkPath: string): string {
+export default function validateFrameworkSDK(sdkPath: string): string | null {
   if (!sdkPath) {
     return null;
   }

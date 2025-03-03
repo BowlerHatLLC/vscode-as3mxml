@@ -33,7 +33,7 @@ function readBetween(
   fileContents: string,
   startText: string,
   endText: string
-): string {
+): string | null {
   let startIndex = fileContents.indexOf(startText);
   if (startIndex !== -1) {
     startIndex += startText.length;
@@ -71,7 +71,7 @@ function readName(fileContents: string, includeBuild: boolean): string {
   return sdkName;
 }
 
-export default function findSDKName(sdkPath: string): string {
+export default function findSDKName(sdkPath: string): string | null {
   let sdkName: string = null;
   let royaleDescriptionPath = path.join(sdkPath, PATH_SDK_DESCRIPTION_ROYALE);
   if (fs.existsSync(royaleDescriptionPath)) {

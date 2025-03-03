@@ -18,7 +18,7 @@ import * as path from "path";
 export default function findJava(
   settingsPath: string,
   validate: (javaPath: string) => boolean
-): string {
+): string | null {
   if (settingsPath) {
     if (validate(settingsPath)) {
       return settingsPath;

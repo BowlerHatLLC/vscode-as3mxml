@@ -21,7 +21,7 @@ const NODE_MODULES = "node_modules";
 const MODULE_ORG = "@apache-royale";
 const MODULE_NAMES = ["royale-js", "royale-js-swf"];
 
-export default function findSDKInLocalRoyaleNodeModule(): string {
+export default function findSDKInLocalRoyaleNodeModule(): string | null {
   if (vscode.workspace.workspaceFolders === undefined) {
     return null;
   }

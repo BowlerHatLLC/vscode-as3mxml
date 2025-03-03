@@ -27,7 +27,7 @@ export default function validateEditorSDK(
   extensionPath: string,
   javaPath: string,
   sdkPath: string
-): string {
+): string | null {
   if (!sdkPath || !javaPath || !extensionPath) {
     return null;
   }

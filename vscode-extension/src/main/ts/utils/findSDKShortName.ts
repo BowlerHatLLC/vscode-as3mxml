@@ -45,7 +45,7 @@ function stripAfterNextSpace(
   return sdkName.substr(0, index);
 }
 
-export default function findSDKShortName(sdkPath: string): string {
+export default function findSDKShortName(sdkPath: string): string | null {
   let sdkName = findSDKName(sdkPath);
   if (sdkName === null) {
     return null;

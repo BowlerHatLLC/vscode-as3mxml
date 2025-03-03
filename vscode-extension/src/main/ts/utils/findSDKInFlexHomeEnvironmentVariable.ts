@@ -17,7 +17,7 @@ import validateFrameworkSDK from "./validateFrameworkSDK";
 
 const ENVIRONMENT_VARIABLE_FLEX_HOME = "FLEX_HOME";
 
-export default function findSDKInFlexHomeEnvironmentVariable(): string {
+export default function findSDKInFlexHomeEnvironmentVariable(): string | null {
   if (ENVIRONMENT_VARIABLE_FLEX_HOME in process.env) {
     let flexHome = process.env.FLEX_HOME;
     //this may return null

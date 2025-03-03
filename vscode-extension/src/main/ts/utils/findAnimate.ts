@@ -30,7 +30,7 @@ const ADOBE_FOLDERS_WINDOWS = [
 ];
 const EXE_NAMES_WINDOWS = ["Animate.exe", "Flash.exe"];
 
-export default function findAnimate(): string {
+export default function findAnimate(): string | null {
   let settingsPath = vscode.workspace
     .getConfiguration("as3mxml")
     .get("sdk.animate") as string;

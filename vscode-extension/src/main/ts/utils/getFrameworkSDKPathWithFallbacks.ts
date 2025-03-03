@@ -20,7 +20,7 @@ import findSDKInRoyaleHomeEnvironmentVariable from "./findSDKInRoyaleHomeEnviron
 import findSDKInFlexHomeEnvironmentVariable from "./findSDKInFlexHomeEnvironmentVariable";
 import findSDKsInPathEnvironmentVariable from "./findSDKsInPathEnvironmentVariable";
 
-export default function getFrameworkSDKPathWithFallbacks(): string {
+export default function getFrameworkSDKPathWithFallbacks(): string | null {
   let sdkPath: string = null;
   let frameworkSetting = <string>(
     vscode.workspace.getConfiguration("as3mxml").get("sdk.framework")
