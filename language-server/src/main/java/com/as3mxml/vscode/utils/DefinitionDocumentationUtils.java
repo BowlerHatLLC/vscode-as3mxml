@@ -340,6 +340,25 @@ public class DefinitionDocumentationUtils {
                 description = descriptionBuilder.toString();
             }
         }
+        if (comment.hasTag(IASDocTagConstants.EXAMPLE)) {
+            StringBuilder descriptionBuilder = new StringBuilder(description);
+            for (IASDocTag exampleTag : comment.getTagsByName(IASDocTagConstants.EXAMPLE)) {
+                String exampleDescription = exampleTag.getDescription();
+                if (exampleDescription != null) {
+                    descriptionBuilder.append("\n\n");
+                    if (useMarkdown) {
+                        descriptionBuilder.append("_");
+                    }
+                    descriptionBuilder.append("@example");
+                    if (useMarkdown) {
+                        descriptionBuilder.append("_");
+                    }
+                    descriptionBuilder.append("\n");
+                    descriptionBuilder.append(exampleDescription);
+                }
+            }
+            description = descriptionBuilder.toString();
+        }
         return description;
     }
 }
