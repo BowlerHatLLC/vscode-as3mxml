@@ -16,7 +16,7 @@ limitations under the License.
 import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
-const json5 = require("json5");
+import json5 from "json5/dist/index.mjs";
 
 const ASCONFIG_JSON = "asconfig.json";
 

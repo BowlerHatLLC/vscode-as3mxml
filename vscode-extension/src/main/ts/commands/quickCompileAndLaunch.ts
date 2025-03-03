@@ -18,7 +18,7 @@ import * as child_process from "child_process";
 import * as fs from "fs";
 import * as path from "path";
 import findAnimate from "../utils/findAnimate";
-const json5 = require("json5");
+import json5 from "json5/dist/index.mjs";
 
 const QUICK_COMPILE_MESSAGE = "Building ActionScript & MXML project...";
 const CANNOT_LAUNCH_QUICK_COMPILE_FAILED_ERROR =
