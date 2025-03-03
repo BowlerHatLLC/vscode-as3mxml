@@ -103,6 +103,7 @@ function onDidChangeConfiguration(event: vscode.ConfigurationChangeEvent) {
   if (
     event.affectsConfiguration("as3mxml.java.path") ||
     event.affectsConfiguration("as3mxml.sdk.editor") ||
+    event.affectsConfiguration("as3mxml.languageServer.enabled") ||
     event.affectsConfiguration("as3mxml.languageServer.jvmargs")
   ) {
     //we're going to try to kill the language server and then restart
@@ -570,6 +571,14 @@ function startClient() {
     //something very bad happened!
     return;
   }
+  if (
+    !vscode.workspace
+      .getConfiguration("as3mxml")
+      .get("languageServer.enabled") as boolean
+  ) {
+    return;
+  }
+
   if (hasInvalidJava()) {
     vscode.window.showErrorMessage(INVALID_JAVA_ERROR);
     return;

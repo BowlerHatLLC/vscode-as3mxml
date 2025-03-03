@@ -435,6 +435,11 @@
           "default": true,
           "description": "Specifies if the experimental quick compile commands are enabled or not."
         },
+        "as3mxml.languageServer.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "(Advanced) Specifies if the ActionScript & MXML language server is enabled."
+        },
         "as3mxml.languageServer.jvmargs": {
           "type": "string",
           "default": null,
