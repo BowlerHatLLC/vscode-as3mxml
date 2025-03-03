@@ -28,6 +28,7 @@ import org.apache.royale.compiler.definitions.IClassDefinition;
 import org.apache.royale.compiler.definitions.IClassDefinition.IClassIterator;
 import org.apache.royale.compiler.definitions.IDefinition;
 import org.apache.royale.compiler.definitions.IDocumentableDefinition;
+import org.apache.royale.compiler.definitions.IEventDefinition;
 import org.apache.royale.compiler.definitions.IFunctionDefinition;
 import org.apache.royale.compiler.definitions.IInterfaceDefinition;
 import org.apache.royale.compiler.definitions.IParameterDefinition;
@@ -340,24 +341,32 @@ public class DefinitionDocumentationUtils {
                 description = descriptionBuilder.toString();
             }
         }
-        if (comment.hasTag(IASDocTagConstants.EXAMPLE)) {
-            StringBuilder descriptionBuilder = new StringBuilder(description);
-            for (IASDocTag exampleTag : comment.getTagsByName(IASDocTagConstants.EXAMPLE)) {
-                String exampleDescription = exampleTag.getDescription();
-                if (exampleDescription != null) {
-                    descriptionBuilder.append("\n\n");
-                    if (useMarkdown) {
-                        descriptionBuilder.append("_");
+        if (definition instanceof IEventDefinition) {
+            if (comment.hasTag(IASDocTagConstants.EVENT_TYPE)) {
+                StringBuilder descriptionBuilder = new StringBuilder(description);
+                for (IASDocTag eventTypeTag : comment.getTagsByName(IASDocTagConstants.EVENT_TYPE)) {
+                    String eventTypeDescription = eventTypeTag.getDescription();
+                    if (eventTypeDescription != null) {
+                        descriptionBuilder.append("\n\n");
+                        if (useMarkdown) {
+                            descriptionBuilder.append("_");
+                        }
+                        descriptionBuilder.append("@eventType");
+                        if (useMarkdown) {
+                            descriptionBuilder.append("_");
+                        }
+                        descriptionBuilder.append(" ");
+                        if (useMarkdown) {
+                            descriptionBuilder.append("`");
+                        }
+                        descriptionBuilder.append(eventTypeDescription);
+                        if (useMarkdown) {
+                            descriptionBuilder.append("`");
+                        }
                     }
-                    descriptionBuilder.append("@example");
-                    if (useMarkdown) {
-                        descriptionBuilder.append("_");
-                    }
-                    descriptionBuilder.append("\n");
-                    descriptionBuilder.append(exampleDescription);
                 }
+                description = descriptionBuilder.toString();
             }
-            description = descriptionBuilder.toString();
         }
         return description;
     }
