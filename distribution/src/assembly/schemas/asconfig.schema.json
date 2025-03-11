@@ -557,6 +557,13 @@
             "type": "string"
           }
         },
+        "includes": {
+          "type": "array",
+          "description": "Specifies a list of classes or other symbols to link in the output, regardless of whether they are referenced.",
+          "items": {
+            "type": "string"
+          }
+        },
         "include-libraries": {
           "type": "array",
           "description": "Specifies a list of SWC files to link in the output, regardless of whether they are referenced.",
