@@ -595,6 +595,35 @@ class CompilerOptionsParserTests {
 	}
 
 	@Test
+	void testIncludes() {
+		String value1 = "com.example.MyClass";
+		String value2 = "com.example.AnotherClass";
+		String value3 = "TopLevel";
+
+		ObjectNode options = JsonNodeFactory.instance.objectNode();
+		ArrayNode includes = JsonNodeFactory.instance.arrayNode();
+
+		includes.add(JsonNodeFactory.instance.textNode(value1));
+		includes.add(JsonNodeFactory.instance.textNode(value2));
+		includes.add(JsonNodeFactory.instance.textNode(value3));
+
+		options.set(CompilerOptions.INCLUDES, includes);
+
+		ArrayList<String> result = new ArrayList<>();
+		try {
+			parser.parse(options, null, result);
+		} catch (UnknownCompilerOptionException e) {
+		}
+		Assertions.assertEquals(3, result.size(), "CompilerOptionsParser.parse() created incorrect number of options.");
+		Assertions.assertEquals("--" + CompilerOptions.INCLUDES + "+=" + value1, result.get(0),
+				"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
+		Assertions.assertEquals("--" + CompilerOptions.INCLUDES + "+=" + value2, result.get(1),
+				"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
+		Assertions.assertEquals("--" + CompilerOptions.INCLUDES + "+=" + value3, result.get(2),
+				"CompilerOptionsParser.parse() incorrectly formatted compiler option.");
+	}
+
+	@Test
 	void testIncludeLibraries() {
 		String value1 = "library/path1.swc";
 		String value2 = "library/path2 with spaces.swc";

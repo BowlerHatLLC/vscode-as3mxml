@@ -34,6 +34,7 @@ public class CompilerOptions {
 	public static final String DIRECTORY = "directory";
 	public static final String DUMP_CONFIG = "dump-config";
 	public static final String EXTERNAL_LIBRARY_PATH = "external-library-path";
+	public static final String INCLUDES = "includes";
 	public static final String INCLUDE_LIBRARIES = "include-libraries";
 	public static final String KEEP_ALL_TYPE_SELECTORS = "keep-all-type-selectors";
 	public static final String KEEP_AS3_METADATA = "keep-as3-metadata";
