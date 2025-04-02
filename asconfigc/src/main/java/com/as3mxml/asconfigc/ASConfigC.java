@@ -47,8 +47,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
+
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
+import org.apache.commons.compress.archivers.zip.ZipFile;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -1260,10 +1261,10 @@ public class ASConfigC {
 		}
 
 		try {
-			ZipFile zipFile = new ZipFile(aneFile);
-			Enumeration<?> zipEntries = zipFile.entries();
+			ZipFile zipFile = ZipFile.builder().setFile(aneFile).get();
+			Enumeration<?> zipEntries = zipFile.getEntries();
 			while (zipEntries.hasMoreElements()) {
-				ZipEntry zipEntry = (ZipEntry) zipEntries.nextElement();
+				ZipArchiveEntry zipEntry = (ZipArchiveEntry) zipEntries.nextElement();
 				if (zipEntry.isDirectory()) {
 					continue;
 				}
@@ -1271,6 +1272,18 @@ public class ASConfigC {
 				File destFile = new File(currentAneDirectory, zipEntry.getName());
 				File destParent = new File(destFile.getParent());
 				destParent.mkdirs();
+
+				if (zipEntry.isUnixSymlink()) {
+					Path link = destFile.toPath();
+					Path target = Paths.get(zipFile.getUnixSymlink(zipEntry));
+					try {
+						Files.createSymbolicLink(link, target);
+						continue;
+					} catch (Exception e) {
+						System.out.println("Failed to create symbolic link: " + currentAneDirectory.toPath().relativize(link)
+								+ " -> " + target + ", will write as regular file instead." );
+					}
+				}
 
 				BufferedInputStream inStream = new BufferedInputStream(zipFile.getInputStream(zipEntry));
 				FileOutputStream fileOutStream = new FileOutputStream(destFile);
