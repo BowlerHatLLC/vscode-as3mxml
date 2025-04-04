@@ -164,6 +164,9 @@ public class ActionScriptLanguageServer implements LanguageServer, LanguageClien
         workspaceSymbolOptions.setResolveProvider(true);
         serverCapabilities.setWorkspaceSymbolProvider(workspaceSymbolOptions);
 
+        // TODO: uncomment when InlayHintProvider is implemented
+        // serverCapabilities.setInlayHintProvider(true);
+
         WorkspaceServerCapabilities workspaceCapabilities = new WorkspaceServerCapabilities();
         WorkspaceFoldersOptions workspaceFoldersOptions = new WorkspaceFoldersOptions();
         workspaceFoldersOptions.setSupported(true);

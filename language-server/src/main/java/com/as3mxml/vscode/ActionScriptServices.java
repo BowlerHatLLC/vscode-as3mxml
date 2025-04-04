@@ -103,6 +103,8 @@ import org.eclipse.lsp4j.FileEvent;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.HoverParams;
 import org.eclipse.lsp4j.ImplementationParams;
+import org.eclipse.lsp4j.InlayHint;
+import org.eclipse.lsp4j.InlayHintParams;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.LocationLink;
 import org.eclipse.lsp4j.MessageParams;
@@ -157,6 +159,7 @@ import com.as3mxml.vscode.providers.ExecuteCommandProvider;
 import com.as3mxml.vscode.providers.FormattingProvider;
 import com.as3mxml.vscode.providers.HoverProvider;
 import com.as3mxml.vscode.providers.ImplementationProvider;
+import com.as3mxml.vscode.providers.InlayHintProvider;
 import com.as3mxml.vscode.providers.LintingProvider;
 import com.as3mxml.vscode.providers.ReferencesProvider;
 import com.as3mxml.vscode.providers.RenameProvider;
@@ -842,6 +845,33 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         provider.organizeImports_insertNewLineBetweenTopLevelPackages = sources_organizeImports_insertNewLineBetweenTopLevelPackages;
         provider.setPreferredRoyaleTargetCallback = value -> setPreferredRoyaleTarget(value);
         return provider.executeCommand(params);
+    }
+
+    @Override
+    public CompletableFuture<List<InlayHint>> inlayHint(InlayHintParams params) {
+        if (!concurrentRequests) {
+            return CompletableFuture.completedFuture(inlayHint2(params, null));
+        }
+        return CompletableFutures.computeAsync(compilerWorkspace.getExecutorService(), cancelToken -> {
+            cancelToken.checkCanceled();
+            return inlayHint2(params, cancelToken);
+        });
+    }
+
+    private List<InlayHint> inlayHint2(InlayHintParams params, CancelChecker cancelToken) {
+        // make sure that the latest changes have been passed to
+        // workspace.fileChanged() before proceeding
+        if (realTimeProblemsChecker != null) {
+            realTimeProblemsChecker.updateNow();
+        }
+
+        compilerWorkspace.startBuilding();
+        try {
+            InlayHintProvider provider = new InlayHintProvider(actionScriptProjectManager, fileTracker);
+            return provider.inlayHint(params, cancelToken);
+        } finally {
+            compilerWorkspace.doneBuilding();
+        }
     }
 
     /**
