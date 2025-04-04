@@ -266,15 +266,22 @@ public class TypeDefinitionProvider {
 									MXMLDialect.DEFAULT);
 							if (selectorDefinition instanceof IClassDefinition) {
 								IClassDefinition classDefinition = (IClassDefinition) selectorDefinition;
-								IStyleDefinition[] styleDefinitions = classDefinition
-										.getStyleDefinitions(projectData.project.getWorkspace());
-								if (styleDefinitions != null) {
-									for (IStyleDefinition styleDef : styleDefinitions) {
-										if (styleDef.getBaseName().equals(cssProperty.getName())) {
-											definition = styleDef;
-											break;
+								IClassDefinition currentClass = classDefinition;
+								while (currentClass != null) {
+									IStyleDefinition[] styleDefinitions = currentClass
+											.getStyleDefinitions(projectData.project.getWorkspace());
+									if (styleDefinitions != null) {
+										for (IStyleDefinition styleDef : styleDefinitions) {
+											if (styleDef.getBaseName().equals(cssProperty.getName())) {
+												definition = styleDef;
+												break;
+											}
 										}
 									}
+									if (definition != null) {
+										break;
+									}
+									currentClass = currentClass.resolveBaseClass(projectData.project);
 								}
 								if (definition != null) {
 									break;
