@@ -30,6 +30,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.antlr.runtime.ANTLRStringStream;
 import org.apache.royale.compiler.asdoc.IASDocTag;
 import org.apache.royale.compiler.common.ASModifier;
 import org.apache.royale.compiler.common.ISourceLocation;
@@ -39,6 +40,8 @@ import org.apache.royale.compiler.constants.IASKeywordConstants;
 import org.apache.royale.compiler.constants.IASLanguageConstants;
 import org.apache.royale.compiler.constants.IMXMLCoreConstants;
 import org.apache.royale.compiler.constants.IMetaAttributeConstants;
+import org.apache.royale.compiler.css.ICSSDocument;
+import org.apache.royale.compiler.css.ICSSNode;
 import org.apache.royale.compiler.definitions.IAccessorDefinition;
 import org.apache.royale.compiler.definitions.IAppliedVectorDefinition;
 import org.apache.royale.compiler.definitions.IClassDefinition;
@@ -59,6 +62,7 @@ import org.apache.royale.compiler.definitions.IVariableDefinition.VariableClassi
 import org.apache.royale.compiler.definitions.metadata.IMetaTag;
 import org.apache.royale.compiler.definitions.metadata.IMetaTagAttribute;
 import org.apache.royale.compiler.filespecs.IFileSpecification;
+import org.apache.royale.compiler.internal.css.CSSDocument;
 import org.apache.royale.compiler.internal.definitions.ScopedDefinitionBase;
 import org.apache.royale.compiler.internal.mxml.MXMLData;
 import org.apache.royale.compiler.internal.mxml.MXMLTagData;
@@ -125,6 +129,7 @@ import com.as3mxml.vscode.project.ILspProject;
 import com.as3mxml.vscode.utils.ASTUtils;
 import com.as3mxml.vscode.utils.ActionScriptProjectManager;
 import com.as3mxml.vscode.utils.AddImportData;
+import com.as3mxml.vscode.utils.CSSDocumentUtils;
 import com.as3mxml.vscode.utils.CodeActionsUtils;
 import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
 import com.as3mxml.vscode.utils.CompilerProjectUtils;
@@ -197,16 +202,6 @@ public class CompletionProvider {
                 }
                 return Either.forRight(result);
             }
-            if (uriString.endsWith(FILE_EXTENSION_CSS)) {
-                CompletionList result = new CompletionList();
-                result.setIsIncomplete(false);
-                result.setItems(new ArrayList<>());
-                if (cancelToken != null) {
-                    cancelToken.checkCanceled();
-                }
-                return Either.forRight(result);
-            }
-            ILspProject project = projectData.project;
 
             IncludeFileData includeFileData = projectData.includedFiles.get(path.toString());
             int currentOffset = LanguageServerCompilerUtils.getOffsetFromPosition(fileTracker.getReader(path), position,
@@ -220,6 +215,32 @@ public class CompletionProvider {
                 }
                 return Either.forRight(result);
             }
+
+            if (uriString.endsWith(FILE_EXTENSION_CSS)) {
+                String cssText = fileTracker.getText(path);
+                CSSDocument cssDocument = null;
+                if (cssText != null) {
+                    cssDocument = CSSDocument.parse(new ANTLRStringStream(cssText), new ArrayList<>());
+                }
+                if (cssDocument == null) {
+                    CompletionList result = new CompletionList();
+                    result.setIsIncomplete(false);
+                    result.setItems(new ArrayList<>());
+                    if (cancelToken != null) {
+                        cancelToken.checkCanceled();
+                    }
+                    return Either.forRight(result);
+                }
+
+                cssDocument.setSourcePath(path.toString());
+                CompletionList result = cssCompletion(cssDocument, currentOffset, 0, projectData);
+                if (cancelToken != null) {
+                    cancelToken.checkCanceled();
+                }
+                return Either.forRight(result);
+            }
+
+            ILspProject project = projectData.project;
             boolean isMXML = uriString.endsWith(FILE_EXTENSION_MXML);
             if (isMXML) {
                 MXMLData mxmlData = actionScriptProjectManager.getMXMLDataForPath(path, projectData);
@@ -280,11 +301,8 @@ public class CompletionProvider {
                 // special case for <fx:Style>
                 // because CSS shouldn't include ActionScript completion
 
-                // IMXMLStyleNode styleNode = (IMXMLStyleNode) offsetSourceLocation;
-
-                CompletionList result = new CompletionList();
-                result.setIsIncomplete(false);
-                result.setItems(new ArrayList<>());
+                IMXMLStyleNode styleNode = (IMXMLStyleNode) offsetSourceLocation;
+                CompletionList result = cssCompletion(styleNode, currentOffset, projectData);
                 if (cancelToken != null) {
                     cancelToken.checkCanceled();
                 }
@@ -1119,6 +1137,35 @@ public class CompletionProvider {
                 }
             }
         }
+        return result;
+    }
+
+    private CompletionList cssCompletion(IMXMLStyleNode styleNode, int currentOffset,
+            ActionScriptProjectData projectData) {
+        ICSSDocument cssDocument = styleNode.getCSSDocument(new ArrayList<>());
+        if (cssDocument == null) {
+            CompletionList result = new CompletionList();
+            result.setIsIncomplete(false);
+            result.setItems(new ArrayList<>());
+            return result;
+        }
+        return cssCompletion(cssDocument, currentOffset, styleNode.getContentStart(), projectData);
+    }
+
+    private CompletionList cssCompletion(ICSSDocument cssDocument, int currentOffset, int contentStart,
+            ActionScriptProjectData projectData) {
+        CompletionList result = new CompletionList();
+        result.setIsIncomplete(false);
+        result.setItems(new ArrayList<>());
+
+        if (cssDocument != null) {
+            // ICSSNode cssNode =
+            // CSSDocumentUtils.getContainingCSSNodeIncludingStart(cssDocument,
+            // currentOffset - contentStart);
+
+            // TODO: provide completion for CSS
+        }
+
         return result;
     }
 
