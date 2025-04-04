@@ -31,7 +31,7 @@ import org.apache.royale.compiler.tree.as.IASNode;
 import org.apache.royale.compiler.tree.as.IExpressionNode;
 import org.apache.royale.compiler.tree.as.IFunctionCallNode;
 import org.apache.royale.compiler.tree.as.IIdentifierNode;
-import org.eclipse.lsp4j.Hover;
+import org.apache.royale.compiler.tree.as.ILiteralNode;
 import org.eclipse.lsp4j.InlayHint;
 import org.eclipse.lsp4j.InlayHintKind;
 import org.eclipse.lsp4j.InlayHintParams;
@@ -45,26 +45,30 @@ import org.eclipse.lsp4j.jsonrpc.CancelChecker;
 import com.as3mxml.vscode.project.ActionScriptProjectData;
 import com.as3mxml.vscode.utils.ActionScriptProjectManager;
 import com.as3mxml.vscode.utils.DefinitionDocumentationUtils;
-import com.as3mxml.vscode.utils.DefinitionUtils;
-import com.as3mxml.vscode.utils.FileTracker;
 import com.as3mxml.vscode.utils.LanguageServerCompilerUtils;
-import com.as3mxml.vscode.utils.MXMLDataUtils;
 
 public class InlayHintProvider {
     private static final String FILE_EXTENSION_AS = ".as";
     private static final String FILE_EXTENSION_MXML = ".mxml";
 
     private ActionScriptProjectManager actionScriptProjectManager;
-    private FileTracker fileTracker;
 
-    public InlayHintProvider(ActionScriptProjectManager actionScriptProjectManager, FileTracker fileTracker) {
+    public String inlayHints_parameterNames_enabled = "none";
+    public boolean inlayHints_parameterNames_suppressWhenArgumentMatchesName = true;
+
+    public InlayHintProvider(ActionScriptProjectManager actionScriptProjectManager) {
         this.actionScriptProjectManager = actionScriptProjectManager;
-        this.fileTracker = fileTracker;
     }
 
     public List<InlayHint> inlayHint(InlayHintParams params, CancelChecker cancelToken) {
         if (cancelToken != null) {
             cancelToken.checkCanceled();
+        }
+        if ("none".equals(inlayHints_parameterNames_enabled)) {
+            if (cancelToken != null) {
+                cancelToken.checkCanceled();
+            }
+            return Collections.emptyList();
         }
         TextDocumentIdentifier textDocument = params.getTextDocument();
         Range range = params.getRange();
@@ -172,6 +176,9 @@ public class InlayHintProvider {
                 int minLength = Math.min(paramDefs.length, argNodes.length);
                 for (int i = 0; i < minLength; i++) {
                     IExpressionNode argNode = argNodes[i];
+                    if ("literals".equals(inlayHints_parameterNames_enabled) && !(argNode instanceof ILiteralNode)) {
+                        continue;
+                    }
                     int argLine = argNode.getLine();
                     int argColumn = argNode.getColumn();
                     if (argLine == -1 || argColumn == -1) {
@@ -183,7 +190,9 @@ public class InlayHintProvider {
                         if (paramDef.isRest()) {
                             paramName = "rest";
                         } else {
-                            paramName = "param" + i;
+                            // parameter doesn't have a name, for some reason,
+                            // so skip it!
+                            continue;
                         }
                     }
                     if (paramDef.isRest()) {
@@ -192,6 +201,11 @@ public class InlayHintProvider {
                     boolean needsPaddingLeft = false;
                     if (argNode instanceof IIdentifierNode) {
                         IIdentifierNode argIdentifier = (IIdentifierNode) argNode;
+                        String identiferName = argIdentifier.getName();
+                        if (inlayHints_parameterNames_suppressWhenArgumentMatchesName
+                                && paramName.equals(identiferName)) {
+                            continue;
+                        }
                         // if the identifier is missing, add a little extra
                         // padding after the preceding ( or , character
                         needsPaddingLeft = "".equals(argIdentifier.getName());

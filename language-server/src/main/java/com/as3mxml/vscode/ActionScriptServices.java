@@ -226,6 +226,8 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     private boolean sources_organizeImports_addMissingImports = true;
     private boolean sources_organizeImports_removeUnusedImports = true;
     private boolean sources_organizeImports_insertNewLineBetweenTopLevelPackages = true;
+    private String inlayHints_parameterNames_enabled = "none";
+    private boolean inlayHints_parameterNames_suppressWhenArgumentMatchesName = true;
     private boolean format_enabled = true;
     private boolean lint_enabled = false;
     private String preferredRoyaleTarget = null;
@@ -867,7 +869,9 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
 
         compilerWorkspace.startBuilding();
         try {
-            InlayHintProvider provider = new InlayHintProvider(actionScriptProjectManager, fileTracker);
+            InlayHintProvider provider = new InlayHintProvider(actionScriptProjectManager);
+            provider.inlayHints_parameterNames_enabled = inlayHints_parameterNames_enabled;
+            provider.inlayHints_parameterNames_suppressWhenArgumentMatchesName = inlayHints_parameterNames_suppressWhenArgumentMatchesName;
             return provider.inlayHint(params, cancelToken);
         } finally {
             compilerWorkspace.doneBuilding();
@@ -1338,6 +1342,8 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         this.updateSourcesOrganizeImportsAddMissingImports(settings);
         this.updateSourcesOrganizeImportsRemoveUnusedImports(settings);
         this.updateSourcesOrganizeImportsInsertNewLineBetweenTopLevelPackages(settings);
+        this.updateInlayHintsParameterNamesEnabled(settings);
+        this.updateInlayHintsParameterNamesSuppressWhenArgumentMatchesName(settings);
         this.updateFormatEnable(settings);
         this.updateFormatSemicolons(settings);
         this.updateFormatPlaceOpenBraceOnNewLine(settings);
@@ -2597,6 +2603,85 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             return;
         }
         sources_organizeImports_insertNewLineBetweenTopLevelPackages = newInsertNewLineBetweenTopLevelPackages;
+    }
+
+    private void updateInlayHintsParameterNamesEnabled(JsonObject settings) {
+        if (!settings.has("as3mxml")) {
+            return;
+        }
+        JsonElement as3mxmlElement = settings.get("as3mxml");
+        if (!as3mxmlElement.isJsonObject()) {
+            return;
+        }
+        JsonObject as3mxml = as3mxmlElement.getAsJsonObject();
+        if (!as3mxml.has("inlayHints")) {
+            return;
+        }
+        JsonElement inlayHintsElement = as3mxml.get("inlayHints");
+        if (!inlayHintsElement.isJsonObject()) {
+            return;
+        }
+        JsonObject inlayHints = inlayHintsElement.getAsJsonObject();
+        if (!inlayHints.has("parameterNames")) {
+            return;
+        }
+        JsonElement parameterNamesElement = inlayHints.get("parameterNames");
+        if (!parameterNamesElement.isJsonObject()) {
+            return;
+        }
+        JsonObject parameterNames = parameterNamesElement.getAsJsonObject();
+        if (!parameterNames.has("enabled")) {
+            return;
+        }
+        JsonElement enabledElement = parameterNames.get("enabled");
+        if (!enabledElement.isJsonPrimitive()) {
+            return;
+        }
+        String newEnabled = enabledElement.getAsString();
+        if (inlayHints_parameterNames_enabled.equals(newEnabled)) {
+            return;
+        }
+        inlayHints_parameterNames_enabled = newEnabled;
+    }
+
+    private void updateInlayHintsParameterNamesSuppressWhenArgumentMatchesName(JsonObject settings) {
+        if (!settings.has("as3mxml")) {
+            return;
+        }
+        JsonElement as3mxmlElement = settings.get("as3mxml");
+        if (!as3mxmlElement.isJsonObject()) {
+            return;
+        }
+        JsonObject as3mxml = as3mxmlElement.getAsJsonObject();
+        if (!as3mxml.has("inlayHints")) {
+            return;
+        }
+        JsonElement inlayHintsElement = as3mxml.get("inlayHints");
+        if (!inlayHintsElement.isJsonObject()) {
+            return;
+        }
+        JsonObject inlayHints = inlayHintsElement.getAsJsonObject();
+        if (!inlayHints.has("parameterNames")) {
+            return;
+        }
+        JsonElement parameterNamesElement = inlayHints.get("parameterNames");
+        if (!parameterNamesElement.isJsonObject()) {
+            return;
+        }
+        JsonObject parameterNames = parameterNamesElement.getAsJsonObject();
+        if (!parameterNames.has("suppressWhenArgumentMatchesName")) {
+            return;
+        }
+        JsonElement suppressWhenArgumentMatchesNameElement = parameterNames.get("suppressWhenArgumentMatchesName");
+        if (!suppressWhenArgumentMatchesNameElement.isJsonPrimitive()) {
+            return;
+        }
+        boolean newInlayHintsParameterNamesSuppressWhenArgumentMatchesName = suppressWhenArgumentMatchesNameElement
+                .getAsBoolean();
+        if (inlayHints_parameterNames_suppressWhenArgumentMatchesName == newInlayHintsParameterNamesSuppressWhenArgumentMatchesName) {
+            return;
+        }
+        inlayHints_parameterNames_suppressWhenArgumentMatchesName = newInlayHintsParameterNamesSuppressWhenArgumentMatchesName;
     }
 
     private void updateFormatEnable(JsonObject settings) {
