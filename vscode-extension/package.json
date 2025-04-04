@@ -504,6 +504,21 @@
           "default": true,
           "description": "When organizing imports, determines if a new line is inserted between top level packages"
         },
+        "as3mxml.inlayHints.parameterNames.enabled": {
+          "type": "string",
+          "enum": [
+            "all",
+            "literals",
+            "none"
+          ],
+          "default": "none",
+          "description": "Enable or disable inlay hints for ActionScript parameter names"
+        },
+        "as3mxml.inlayHints.parameterNames.suppressWhenArgumentMatchesName": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable or disable inlay hints for ActionScript parameter names when the argument value matches the parameter name"
+        },
         "as3mxml.format.enabled": {
           "type": "boolean",
           "default": true,
