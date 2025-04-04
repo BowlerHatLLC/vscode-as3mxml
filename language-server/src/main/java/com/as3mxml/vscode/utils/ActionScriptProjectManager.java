@@ -290,6 +290,36 @@ public class ActionScriptProjectManager {
         return ASTUtils.getContainingNodeOrDocCommentIncludingStart(ast, currentOffset);
     }
 
+    public List<IASNode> getEmbeddedActionScriptNodesInMXMLTag(IMXMLTagData tag, Path path,
+            ActionScriptProjectData projectData) {
+        List<IASNode> result = new ArrayList<>();
+        ILspProject project = projectData.project;
+        for (IMXMLTagAttributeData attributeData : tag.getAttributeDatas()) {
+            // some attributes can have ActionScript completion, such as
+            // events and properties with data binding
+
+            IDefinition resolvedDefinition = project.resolveXMLNameToDefinition(tag.getXMLName(), tag.getMXMLDialect());
+            // prominic/Moonshine-IDE#/203: don't allow interface definitions because
+            // we cannot resolve specifiers. <fx:Component> resolves to an interface
+            // definition, and it can have an id attribute.
+            if (resolvedDefinition == null || !(resolvedDefinition instanceof IClassDefinition)) {
+                // we can't figure out which class the tag represents!
+                // maybe the user hasn't defined the tag's namespace or something
+                continue;
+            }
+            IASNode offsetNode = getOffsetNode(path, attributeData.getAbsoluteStart(), projectData);
+            if (offsetNode == null) {
+                continue;
+            }
+            IClassDefinition tagDefinition = (IClassDefinition) resolvedDefinition;
+            IDefinition attributeDefinition = project.resolveSpecifier(tagDefinition, attributeData.getShortName());
+            if (attributeDefinition != null) {
+                result.add(offsetNode);
+            }
+        }
+        return result;
+    }
+
     public IASNode getEmbeddedActionScriptNodeInMXMLTag(IMXMLTagData tag, Path path, int currentOffset,
             ActionScriptProjectData projectData) {
         ILspProject project = projectData.project;
