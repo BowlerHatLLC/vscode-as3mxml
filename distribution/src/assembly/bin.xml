@@ -60,6 +60,8 @@
       <includes>
         <include>asconfigc*.jar</include>
         <include>commons-cli*.jar</include>
+        <include>commons-compress-*.jar</include>
+        <include>commons-io-*.jar</include>
         <include>commons-lang*.jar</include>
       </includes>
     </fileSet>
