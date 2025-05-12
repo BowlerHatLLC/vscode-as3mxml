@@ -102,6 +102,10 @@ public class InlayHintProvider {
         }
 
         IASNode ast = actionScriptProjectManager.getAST(path, projectData);
+        if (ast == null) {
+            // can happen if the file is completely empty
+            return Collections.emptyList();
+        }
         List<InlayHint> result = actionScriptInlayHint(ast, range, projectData);
         if (cancelToken != null) {
             cancelToken.checkCanceled();
