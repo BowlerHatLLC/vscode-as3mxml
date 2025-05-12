@@ -54,7 +54,8 @@ import com.as3mxml.vscode.utils.ActionScriptProjectManager;
 import com.as3mxml.vscode.utils.DefinitionURI;
 
 public class WorkspaceSymbolProvider {
-	private static final Pattern FULLY_QUALIFIED_NAME_PATTERN = Pattern.compile("^(\\w+\\.)+\\w*$");
+	private static final Pattern FULLY_QUALIFIED_NAME_PATTERN = Pattern
+			.compile("^([A-Za-z0_\\$][A-Za-z0-9_\\$]*\\.)*[A-Za-z_\\$][A-Za-z0-9_\\$]*$");
 	private ActionScriptProjectManager actionScriptProjectManager;
 	public SymbolCapabilities symbolCapabilities;
 
