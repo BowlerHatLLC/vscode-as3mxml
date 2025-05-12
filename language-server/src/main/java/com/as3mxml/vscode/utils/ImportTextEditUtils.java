@@ -31,7 +31,7 @@ import org.eclipse.lsp4j.TextEdit;
 
 public class ImportTextEditUtils {
     private static final Pattern organizeImportPattern = Pattern
-            .compile("(?m)^([ \\t]*)import ((\\w+\\.)+\\w+(\\.\\*)?);?");
+            .compile("(?m)^([ \\t]*)import (([\\w\\$]+\\.)+[\\w\\$]+(\\.\\*)?);?");
     private static final Pattern packagePattern = Pattern
             .compile("(?m)^package(?: [\\w\\.]+)*\\s*\\{(?:[ \\t]*[\\r\\n]+)+([ \\t]*)");
     private static final Pattern mxmlScriptPattern = Pattern
