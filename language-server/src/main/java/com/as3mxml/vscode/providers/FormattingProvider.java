@@ -5,7 +5,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.royale.compiler.clients.problems.CompilerProblemCategorizer;
 import org.apache.royale.compiler.config.ConfigurationPathResolver;
+import org.apache.royale.compiler.problems.CompilerProblemSeverity;
 import org.apache.royale.compiler.problems.ICompilerProblem;
 import org.apache.royale.compiler.problems.UnexpectedExceptionProblem;
 import org.apache.royale.formatter.ASTokenFormatter;
@@ -78,19 +80,37 @@ public class FormattingProvider {
             MXMLTokenFormatter formatter = new MXMLTokenFormatter(settings);
             List<ICompilerProblem> problems = new ArrayList<>();
             formattedFileText = formatter.format(path.toString(), fileText, problems);
+            boolean hasErrors = false;
+            CompilerProblemCategorizer categorizer = new CompilerProblemCategorizer(null);
             for (ICompilerProblem problem : problems) {
                 if (problem instanceof UnexpectedExceptionProblem) {
                     System.err.println(problem);
                 }
+                CompilerProblemSeverity severity = categorizer.getProblemSeverity(problem);
+                if (severity == CompilerProblemSeverity.ERROR) {
+                    hasErrors = true;
+                }
+            }
+            if (hasErrors) {
+                return Collections.emptyList();
             }
         } else if (path.toString().endsWith(FILE_EXTENSION_AS)) {
             ASTokenFormatter formatter = new ASTokenFormatter(settings);
             List<ICompilerProblem> problems = new ArrayList<>();
             formattedFileText = formatter.format(path.toString(), fileText, problems);
+            boolean hasErrors = false;
+            CompilerProblemCategorizer categorizer = new CompilerProblemCategorizer(null);
             for (ICompilerProblem problem : problems) {
                 if (problem instanceof UnexpectedExceptionProblem) {
                     System.err.println(problem);
                 }
+                CompilerProblemSeverity severity = categorizer.getProblemSeverity(problem);
+                if (severity == CompilerProblemSeverity.ERROR) {
+                    hasErrors = true;
+                }
+            }
+            if (hasErrors) {
+                return Collections.emptyList();
             }
         }
         if (fileText.equals(formattedFileText)) {
