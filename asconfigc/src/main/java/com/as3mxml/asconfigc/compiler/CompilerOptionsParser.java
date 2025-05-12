@@ -559,10 +559,6 @@ public class CompilerOptionsParser {
 			String defineName = currentValue.get(CompilerOptions.DEFINE__NAME).asText();
 			JsonNode defineValue = currentValue.get(CompilerOptions.DEFINE__VALUE);
 			String defineValueAsString = defineValue.asText();
-			if (defineValue.isTextual()) {
-				defineValueAsString = defineValueAsString.replace("\"", "\\\"");
-				defineValueAsString = "\"" + defineValueAsString + "\"";
-			}
 			result.add("--" + optionName + "+=" + defineName + "," + defineValueAsString);
 		}
 	}
