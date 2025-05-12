@@ -1340,7 +1340,7 @@
 		<key>metadata</key>
 		<dict>
 			<key>begin</key>
-			<string>\[\s*\b(\w+)\b</string>
+			<string>\[\s*\b([A-Za-z_\$][A-Za-z0-9_\$]+)\b</string>
 			<key>beginCaptures</key>
 			<dict>
 				<key>1</key>
