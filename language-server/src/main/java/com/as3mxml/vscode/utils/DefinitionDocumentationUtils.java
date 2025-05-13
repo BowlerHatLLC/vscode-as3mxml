@@ -47,6 +47,12 @@ import com.as3mxml.vscode.asdoc.VSCodeASDocComment;
 public class DefinitionDocumentationUtils {
     private static final String SDK_LIBRARY_PATH_SIGNATURE_UNIX = "/frameworks/libs/";
     private static final String SDK_LIBRARY_PATH_SIGNATURE_WINDOWS = "\\frameworks\\libs\\";
+    private static final String LOCALE_EN_US = "locale/en_US/";
+    private static final String PLAYERGLOBAL = "playerglobal";
+    private static final String AIRGLOBAL = "airglobal";
+    private static final String RB_SWC_SUFFIX = "_rb.swc";
+    private static final String FRAMEWORKS = "frameworks";
+    private static final String FILE_EXTENSION_SWC = ".swc";
 
     public static String getDocumentationForDefinition(IDefinition definition, boolean useMarkdown,
             ICompilerProject project, boolean allowDITA) {
@@ -96,7 +102,8 @@ public class DefinitionDocumentationUtils {
             boolean useMarkdown, IWorkspace workspace, boolean allowDITA) {
         VSCodeASDocComment comment = (VSCodeASDocComment) documentableDefinition.getExplicitSourceComment();
         String definitionFilePath = documentableDefinition.getContainingFilePath();
-        if (allowDITA && comment == null && definitionFilePath != null && definitionFilePath.endsWith(".swc")) {
+        if (allowDITA && comment == null && definitionFilePath != null
+                && definitionFilePath.endsWith(FILE_EXTENSION_SWC)) {
             IDITAList ditaList = null;
             File swcFile = new File(definitionFilePath);
             if (swcFile.exists()) {
@@ -105,24 +112,34 @@ public class DefinitionDocumentationUtils {
                 String fileName = swcFile.getName();
                 ditaList = swc.getDITAList();
 
-                // next, if it's a SDK/framework liberary, check for an
+                // next, if it's a SDK/framework library, check for an
                 // associated resource bundle .swc
                 if (ditaList == null && (definitionFilePath.contains(SDK_LIBRARY_PATH_SIGNATURE_UNIX)
                         || definitionFilePath.contains(SDK_LIBRARY_PATH_SIGNATURE_WINDOWS))) {
-                    String rbName = fileName.substring(0, fileName.length() - 4) + "_rb.swc";
+                    String swcBaseName = fileName.substring(0, fileName.length() - 4);
+                    String rbName = swcBaseName + RB_SWC_SUFFIX;
                     File frameworksDir = swcFile.getParentFile();
-                    while (!frameworksDir.getName().equals("frameworks")) {
+                    while (!frameworksDir.getName().equals(FRAMEWORKS)) {
                         frameworksDir = frameworksDir.getParentFile();
                     }
-                    File rbSwcFile = new File(frameworksDir, "locale/en_US/" + rbName);
+                    File rbSwcFile = new File(frameworksDir, LOCALE_EN_US + rbName);
                     if (rbSwcFile.exists()) {
                         ISWC rbSwc = workspace.getSWCManager().get(rbSwcFile);
                         ditaList = rbSwc.getDITAList();
+                    } else if (fileName.contains(AIRGLOBAL)) {
+                        // airglobal_rb.swc may not exist, but
+                        // playerglobal_rb.swc may be used as a fallback
+                        rbName = PLAYERGLOBAL + RB_SWC_SUFFIX;
+                        rbSwcFile = new File(frameworksDir, LOCALE_EN_US + rbName);
+                        if (rbSwcFile.exists()) {
+                            ISWC rbSwc = workspace.getSWCManager().get(rbSwcFile);
+                            ditaList = rbSwc.getDITAList();
+                        }
                     }
                 }
                 // finally, fall back to the bundled documentation for
                 // playerglobal or airglobal, if the filename matches
-                if (ditaList == null && (fileName.contains("playerglobal") || fileName.contains("airglobal"))) {
+                if (ditaList == null && (fileName.contains(PLAYERGLOBAL) || fileName.contains(AIRGLOBAL))) {
                     try {
                         File jarPath = new File(DefinitionDocumentationUtils.class.getProtectionDomain().getCodeSource()
                                 .getLocation().toURI());

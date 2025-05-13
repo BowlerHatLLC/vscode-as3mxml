@@ -382,7 +382,20 @@ public final class VSCodePackageDITAParser implements IPackageDITAParser {
 				}
 				InputStream stream = null;
 				String fileName = new File(swcFilePath).getName();
-				if (fileName.endsWith(".swc")
+				String filePath = "docs/" + packageName + ".xml";
+				ISWC swc = workspace.getSWCManager().get(new File(swcFilePath));
+				if (swc == null) {
+					return null;
+				}
+				try {
+					ZipFile zipFile = new ZipFile(swc.getSWCFile());
+					stream = SWCReader.getInputStream(zipFile, filePath);
+				} catch (ZipException e) {
+					return null;
+				} catch (IOException e) {
+					return null;
+				}
+				if (stream == null && fileName.endsWith(".swc")
 						&& (fileName.contains("playerglobal") || fileName.contains("airglobal"))) {
 					try {
 						File jarPath = new File(VSCodePackageDITAParser.class.getProtectionDomain().getCodeSource()
@@ -393,20 +406,6 @@ public final class VSCodePackageDITAParser implements IPackageDITAParser {
 					} catch (URISyntaxException e) {
 						return null;
 					} catch (FileNotFoundException e) {
-						return null;
-					}
-				} else {
-					String filePath = "docs/" + packageName + ".xml";
-					ISWC swc = workspace.getSWCManager().get(new File(swcFilePath));
-					if (swc == null) {
-						return null;
-					}
-					try {
-						ZipFile zipFile = new ZipFile(swc.getSWCFile());
-						stream = SWCReader.getInputStream(zipFile, filePath);
-					} catch (ZipException e) {
-						return null;
-					} catch (IOException e) {
 						return null;
 					}
 				}
