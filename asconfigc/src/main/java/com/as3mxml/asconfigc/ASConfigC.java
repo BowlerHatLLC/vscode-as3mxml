@@ -61,6 +61,7 @@ import org.apache.commons.cli.UnrecognizedOptionException;
 
 import com.as3mxml.asconfigc.air.AIROptions;
 import com.as3mxml.asconfigc.air.AIROptionsParser;
+import com.as3mxml.asconfigc.air.AIRPlatform;
 import com.as3mxml.asconfigc.air.AIRSigningOptions;
 import com.as3mxml.asconfigc.animate.AnimateOptions;
 import com.as3mxml.asconfigc.compiler.CompilerOptions;
@@ -447,6 +448,18 @@ public class ASConfigC {
 				Iterator<String> fieldNames = application.fieldNames();
 				while (fieldNames.hasNext()) {
 					String fieldName = fieldNames.next();
+					if (AIRPlatform.WINDOWS.equals(fieldName)
+							&& !System.getProperty("os.name").toLowerCase().startsWith("windows")) {
+						// AIR can't compile for Windows from macOS, so we can
+						// skip this one
+						continue;
+					}
+					if (AIRPlatform.MAC.equals(fieldName)
+							&& !System.getProperty("os.name").toLowerCase().startsWith("mac")) {
+						// AIR can't compile for macOS from Windows, so we can
+						// skip this one
+						continue;
+					}
 					String airDescriptorPath = application.get(fieldName).asText();
 					airDescriptorPaths.add(airDescriptorPath);
 				}
