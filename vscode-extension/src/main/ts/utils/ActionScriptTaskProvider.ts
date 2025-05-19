@@ -28,6 +28,7 @@ const PLATFORM_ANDROID = "android";
 const PLATFORM_AIR = "air";
 const PLATFORM_WINDOWS = "windows";
 const PLATFORM_MAC = "mac";
+const PLATFORM_LINUX = "linux";
 const PLATFORM_BUNDLE = "bundle";
 const TARGET_AIR = "air";
 const TARGET_BUNDLE = "bundle";
@@ -60,12 +61,20 @@ const TASK_NAME_PACKAGE_MAC_SHARED_DEBUG =
   "package macOS debug (shared runtime)";
 const TASK_NAME_PACKAGE_MAC_SHARED_RELEASE =
   "package macOS release (shared runtime)";
+const TASK_NAME_PACKAGE_LINUX_SHARED_DEBUG =
+  "package Linux debug (shared runtime)";
+const TASK_NAME_PACKAGE_LINUX_SHARED_RELEASE =
+  "package Linux release (shared runtime)";
 const TASK_NAME_PACKAGE_WINDOWS_CAPTIVE =
   "package Windows release (captive runtime)";
 const TASK_NAME_PACKAGE_MAC_CAPTIVE = "package macOS release (captive runtime)";
+const TASK_NAME_PACKAGE_LINUX_CAPTIVE =
+  "package Linux release (captive runtime)";
 const TASK_NAME_PACKAGE_WINDOWS_NATIVE =
   "package Windows release (native installer)";
 const TASK_NAME_PACKAGE_MAC_NATIVE = "package macOS release (native installer)";
+const TASK_NAME_PACKAGE_LINUX_NATIVE =
+  "package Linux release (native installer)";
 
 interface ActionScriptTaskDefinition extends vscode.TaskDefinition {
   type: typeof TASK_TYPE_ACTIONSCRIPT;
@@ -233,10 +242,13 @@ export default class ActionScriptTaskProvider
     let isRootTargetNativeInstaller = false;
     let isWindowsOverrideBundle = false;
     let isMacOverrideBundle = false;
+    let isLinuxOverrideBundle = false;
     let isWindowsOverrideNativeInstaller = false;
     let isMacOverrideNativeInstaller = false;
+    let isLinuxOverrideNativeInstaller = false;
     let isWindowsOverrideShared = false;
     let isMacOverrideShared = false;
+    let isLinuxOverrideShared = false;
     const asconfigJson = this.readASConfigJSON(jsonURI);
     if (asconfigJson !== null) {
       isLibrary = this.isLibrary(asconfigJson);
@@ -254,12 +266,16 @@ export default class ActionScriptTaskProvider
           this.isRootTargetNativeInstaller(asconfigJson);
         isWindowsOverrideShared = this.isWindowsOverrideShared(asconfigJson);
         isMacOverrideShared = this.isMacOverrideShared(asconfigJson);
+        isLinuxOverrideShared = this.isLinuxOverrideShared(asconfigJson);
         isWindowsOverrideBundle = this.isWindowsOverrideBundle(asconfigJson);
         isMacOverrideBundle = this.isMacOverrideBundle(asconfigJson);
+        isLinuxOverrideBundle = this.isLinuxOverrideBundle(asconfigJson);
         isWindowsOverrideNativeInstaller =
           this.isWindowsOverrideNativeInstaller(asconfigJson);
         isMacOverrideNativeInstaller =
           this.isMacOverrideNativeInstaller(asconfigJson);
+        isLinuxOverrideNativeInstaller =
+          this.isLinuxOverrideNativeInstaller(asconfigJson);
       }
     }
 
@@ -398,7 +414,11 @@ export default class ActionScriptTaskProvider
       //to determine what to display in the list of tasks.
 
       //captive runtime
-      if (isWindowsOverrideBundle || isMacOverrideBundle) {
+      if (
+        isWindowsOverrideBundle ||
+        isMacOverrideBundle ||
+        isLinuxOverrideBundle
+      ) {
         result.push(
           this.getTask(
             `${TASK_NAME_PACKAGE_DESKTOP_CAPTIVE} - ${taskNameSuffix}`,
@@ -432,6 +452,18 @@ export default class ActionScriptTaskProvider
             frameworkSDK,
             false,
             PLATFORM_MAC,
+            isAIRDesktop || isAIRMobile
+          )
+        );
+      } else if (isLinuxOverrideBundle) {
+        result.push(
+          this.getTask(
+            `${TASK_NAME_PACKAGE_LINUX_CAPTIVE} - ${taskNameSuffix}`,
+            jsonURI,
+            workspaceFolder,
+            frameworkSDK,
+            false,
+            PLATFORM_LINUX,
             isAIRDesktop || isAIRMobile
           )
         );
@@ -483,6 +515,29 @@ export default class ActionScriptTaskProvider
             isAIRDesktop || isAIRMobile
           )
         );
+      } else if (isLinuxOverrideShared) {
+        result.push(
+          this.getTask(
+            `${TASK_NAME_PACKAGE_LINUX_SHARED_DEBUG} - ${taskNameSuffix}`,
+            jsonURI,
+            workspaceFolder,
+            frameworkSDK,
+            true,
+            PLATFORM_LINUX,
+            isAIRDesktop || isAIRMobile
+          )
+        );
+        result.push(
+          this.getTask(
+            `${TASK_NAME_PACKAGE_LINUX_SHARED_RELEASE} - ${taskNameSuffix}`,
+            jsonURI,
+            workspaceFolder,
+            frameworkSDK,
+            false,
+            PLATFORM_LINUX,
+            isAIRDesktop || isAIRMobile
+          )
+        );
       }
       //native installers
       else if (isWindowsOverrideNativeInstaller) {
@@ -509,6 +564,18 @@ export default class ActionScriptTaskProvider
             isAIRDesktop || isAIRMobile
           )
         );
+      } else if (isLinuxOverrideNativeInstaller) {
+        result.push(
+          this.getTask(
+            `${TASK_NAME_PACKAGE_LINUX_NATIVE} - ${taskNameSuffix}`,
+            jsonURI,
+            workspaceFolder,
+            frameworkSDK,
+            false,
+            PLATFORM_LINUX,
+            isAIRDesktop || isAIRMobile
+          )
+        );
       }
 
       //--- root target in airOptions
@@ -517,11 +584,14 @@ export default class ActionScriptTaskProvider
       //desktop platform. if it is overridden, it should be skipped to avoid
       //duplicate items in the list.
       const isWindows = process.platform === "win32";
+      const isMac = process.platform === "darwin";
+      const isLinux = process.platform === "linux";
 
       if (
         isRootTargetNativeInstaller &&
         ((isWindows && !isWindowsOverrideNativeInstaller) ||
-          (!isWindows && !isMacOverrideNativeInstaller))
+          (isMac && !isMacOverrideNativeInstaller) ||
+          (isLinux && !isLinuxOverrideNativeInstaller))
       ) {
         let taskName = isWindows
           ? TASK_NAME_PACKAGE_WINDOWS_NATIVE
@@ -541,7 +611,8 @@ export default class ActionScriptTaskProvider
       if (
         (isRootTargetBundle || isRootTargetEmpty) &&
         ((isWindows && !isWindowsOverrideBundle) ||
-          (!isWindows && !isMacOverrideBundle))
+          (isMac && !isMacOverrideBundle) ||
+          (isLinux && !isLinuxOverrideBundle))
       ) {
         result.push(
           this.getTask(
@@ -574,7 +645,8 @@ export default class ActionScriptTaskProvider
       if (
         (isRootTargetShared || isRootTargetEmpty) &&
         ((isWindows && !isWindowsOverrideShared) ||
-          (!isWindows && !isMacOverrideShared))
+          (isMac && !isMacOverrideShared) ||
+          (isLinux && !isLinuxOverrideShared))
       ) {
         result.push(
           this.getTask(
@@ -834,6 +906,26 @@ export default class ActionScriptTaskProvider
     return target === TARGET_AIR;
   }
 
+  private isLinuxOverrideShared(asconfigJson: any): boolean {
+    if (process.platform !== "linux") {
+      return false;
+    }
+    if (!(FIELD_AIR_OPTIONS in asconfigJson)) {
+      return false;
+    }
+    let airOptions = asconfigJson[FIELD_AIR_OPTIONS];
+    if (!(PLATFORM_LINUX in airOptions)) {
+      return false;
+    }
+    let linux = airOptions[PLATFORM_LINUX];
+    if (!(FIELD_TARGET in linux)) {
+      //if target is omitted, defaults to bundle
+      return false;
+    }
+    let target = linux[FIELD_TARGET];
+    return target === TARGET_AIR;
+  }
+
   private isWindowsOverrideNativeInstaller(asconfigJson: any): boolean {
     if (process.platform !== "win32") {
       return false;
@@ -871,6 +963,26 @@ export default class ActionScriptTaskProvider
       return false;
     }
     let target = mac[FIELD_TARGET];
+    return target === TARGET_NATIVE;
+  }
+
+  private isLinuxOverrideNativeInstaller(asconfigJson: any): boolean {
+    if (process.platform !== "linux") {
+      return false;
+    }
+    if (!(FIELD_AIR_OPTIONS in asconfigJson)) {
+      return false;
+    }
+    let airOptions = asconfigJson[FIELD_AIR_OPTIONS];
+    if (!(PLATFORM_LINUX in airOptions)) {
+      return false;
+    }
+    let linux = airOptions[PLATFORM_LINUX];
+    if (!(FIELD_TARGET in linux)) {
+      //if target is omitted, defaults to bundle
+      return false;
+    }
+    let target = linux[FIELD_TARGET];
     return target === TARGET_NATIVE;
   }
 
@@ -919,6 +1031,26 @@ export default class ActionScriptTaskProvider
       return true;
     }
     let target = mac[FIELD_TARGET];
+    return target === TARGET_BUNDLE;
+  }
+
+  private isLinuxOverrideBundle(asconfigJson: any): boolean {
+    if (process.platform !== "linux") {
+      return false;
+    }
+    if (!(FIELD_AIR_OPTIONS in asconfigJson)) {
+      return false;
+    }
+    let airOptions = asconfigJson[FIELD_AIR_OPTIONS];
+    if (!(PLATFORM_LINUX in airOptions)) {
+      return false;
+    }
+    let linux = airOptions[PLATFORM_LINUX];
+    if (!(FIELD_TARGET in linux)) {
+      //if target is omitted, default to bundle
+      return true;
+    }
+    let target = linux[FIELD_TARGET];
     return target === TARGET_BUNDLE;
   }
 
