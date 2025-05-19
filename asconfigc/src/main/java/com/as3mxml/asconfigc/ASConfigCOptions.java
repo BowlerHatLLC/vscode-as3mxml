@@ -85,9 +85,7 @@ public class ASConfigCOptions {
 				} else if (osName.startsWith("windows")) {
 					air = AIRPlatform.WINDOWS;
 				} else {
-					throw new Error(
-							"Adobe AIR target \"bundle\" specified, but current operating system not recognized: "
-									+ System.getProperty("os.name"));
+					air = AIRPlatform.LINUX;
 				}
 			}
 		}

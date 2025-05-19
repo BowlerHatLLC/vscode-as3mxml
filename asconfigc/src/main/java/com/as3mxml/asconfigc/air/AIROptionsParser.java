@@ -46,7 +46,8 @@ public class AIROptionsParser {
 		// mobile signing options must be specified later!
 		if (platform.equals(AIRPlatform.AIR)
 				|| platform.equals(AIRPlatform.WINDOWS)
-				|| platform.equals(AIRPlatform.MAC)) {
+				|| platform.equals(AIRPlatform.MAC)
+				|| platform.equals(AIRPlatform.LINUX)) {
 			if (options.has(AIROptions.SIGNING_OPTIONS)
 					&& !overridesOptionForPlatform(options, AIROptions.SIGNING_OPTIONS, platform)) {
 				parseSigningOptions(options.get(AIROptions.SIGNING_OPTIONS), debug, result);
@@ -62,6 +63,10 @@ public class AIROptionsParser {
 				} else if (osName.startsWith("windows")
 						&& overridesOptionForPlatform(options, AIROptions.SIGNING_OPTIONS, AIRPlatform.WINDOWS)) {
 					parseSigningOptions(options.get(AIRPlatform.WINDOWS).get(AIROptions.SIGNING_OPTIONS), debug,
+							result);
+				} else if (!osName.startsWith("windows") && !osName.startsWith("mac")
+						&& overridesOptionForPlatform(options, AIROptions.SIGNING_OPTIONS, AIRPlatform.LINUX)) {
+					parseSigningOptions(options.get(AIRPlatform.LINUX).get(AIROptions.SIGNING_OPTIONS), debug,
 							result);
 				}
 			}
@@ -104,6 +109,11 @@ public class AIROptionsParser {
 					break;
 				}
 				case AIRPlatform.MAC: {
+					// captive runtime
+					setValueWithoutAssignment(AIROptions.TARGET, AIRTarget.BUNDLE, result);
+					break;
+				}
+				case AIRPlatform.LINUX: {
 					// captive runtime
 					setValueWithoutAssignment(AIROptions.TARGET, AIRTarget.BUNDLE, result);
 					break;
@@ -234,6 +244,7 @@ public class AIROptionsParser {
 				case AIRPlatform.IOS_SIMULATOR:
 				case AIRPlatform.MAC:
 				case AIRPlatform.WINDOWS:
+				case AIRPlatform.LINUX:
 
 				case AIROptions.AIR_DOWNLOAD_URL:
 				case AIROptions.ARCH:

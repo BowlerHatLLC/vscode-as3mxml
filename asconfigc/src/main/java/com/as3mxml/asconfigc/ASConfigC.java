@@ -446,18 +446,25 @@ public class ASConfigC {
 				// if it's an object, and we're compiling and not packaging an
 				// AIR app, we need to use all of the descriptors
 				Iterator<String> fieldNames = application.fieldNames();
+				String osName = System.getProperty("os.name").toLowerCase();
 				while (fieldNames.hasNext()) {
 					String fieldName = fieldNames.next();
 					if (AIRPlatform.WINDOWS.equals(fieldName)
-							&& !System.getProperty("os.name").toLowerCase().startsWith("windows")) {
-						// AIR can't compile for Windows from macOS, so we can
-						// skip this one
+							&& !osName.startsWith("windows")) {
+						// AIR can't compile for Windows from macOS or Linux, so
+						// we can skip this one
 						continue;
 					}
 					if (AIRPlatform.MAC.equals(fieldName)
-							&& !System.getProperty("os.name").toLowerCase().startsWith("mac")) {
-						// AIR can't compile for macOS from Windows, so we can
-						// skip this one
+							&& !osName.startsWith("mac")) {
+						// AIR can't compile for macOS from Windows or Linux, so
+						// we can skip this one
+						continue;
+					}
+					if (AIRPlatform.LINUX.equals(fieldName)
+							&& (osName.startsWith("windows") || osName.startsWith("mac"))) {
+						// AIR can't compile for Linux from Windows or macOS, so
+						// we can skip this one
 						continue;
 					}
 					String airDescriptorPath = application.get(fieldName).asText();
