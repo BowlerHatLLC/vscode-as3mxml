@@ -48,6 +48,7 @@ import org.apache.royale.compiler.tree.mxml.IMXMLEventSpecifierNode;
 import org.apache.royale.compiler.tree.mxml.IMXMLNode;
 import org.apache.royale.compiler.tree.mxml.IMXMLPropertySpecifierNode;
 import org.apache.royale.compiler.tree.mxml.IMXMLSingleDataBindingNode;
+import org.apache.royale.compiler.tree.mxml.IMXMLSpecifierNode;
 import org.apache.royale.compiler.units.ICompilationUnit;
 import org.apache.royale.utils.FilenameNormalization;
 import org.eclipse.lsp4j.DocumentSymbol;
@@ -308,7 +309,7 @@ public class ActionScriptProjectManager {
                 continue;
             }
             IASNode offsetNode = getOffsetNode(path, attributeData.getAbsoluteStart(), projectData);
-            if (offsetNode == null) {
+            if (offsetNode == null || !(offsetNode instanceof IMXMLSpecifierNode)) {
                 continue;
             }
             IClassDefinition tagDefinition = (IClassDefinition) resolvedDefinition;
