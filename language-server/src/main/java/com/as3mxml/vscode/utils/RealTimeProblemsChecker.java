@@ -71,6 +71,8 @@ public class RealTimeProblemsChecker implements Runnable {
 	public synchronized void setCompilationUnit(ICompilationUnit compilationUnit, IFileSpecification fileSpec,
 			ActionScriptProjectData projectData) {
 		if (this.compilationUnit != null && this.compilationUnit != compilationUnit) {
+			// if the compilation unit has changing, let's report the previous
+			// one's problems quickly and move on to the new one.
 			updateNow();
 			pendingProjectData = projectData;
 			pendingCompilationUnit = compilationUnit;
@@ -83,6 +85,9 @@ public class RealTimeProblemsChecker implements Runnable {
 		pendingProjectData = null;
 		pendingCompilationUnit = null;
 		pendingFileSpec = null;
+		// make these requests, but allow the compiler to handle things in a
+		// background thread for now. we can force it to complete synchronously
+		// later, if we need to.
 		syntaxTreeRequest = compilationUnit.getSyntaxTreeRequest();
 		fileScopeRequest = compilationUnit.getFileScopeRequest();
 		outgoingDepsRequest = compilationUnit.getOutgoingDependenciesRequest();
@@ -116,6 +121,8 @@ public class RealTimeProblemsChecker implements Runnable {
 			abcBytesRequest = compilationUnit.getABCBytesRequest();
 		}
 		try {
+			// force all requests to finish immediately because we can no longer
+			// wait for the background thread and need the results now.
 			syntaxTreeRequest.get();
 			fileScopeRequest.get();
 			outgoingDepsRequest.get();
@@ -173,6 +180,10 @@ public class RealTimeProblemsChecker implements Runnable {
 		if (abcBytesRequest == null) {
 			abcBytesRequest = compilationUnit.getABCBytesRequest();
 		}
+		// wait until all requests are done before publishing diagnostics.
+		// they will either finish in the compiler's background thread, or they
+		// will be forced to complete synchronously in the updateNow() method
+		// in this class.
 		if (syntaxTreeRequest.isDone() && fileScopeRequest.isDone() && outgoingDepsRequest.isDone()
 				&& abcBytesRequest.isDone()) {
 			publishDiagnostics();
