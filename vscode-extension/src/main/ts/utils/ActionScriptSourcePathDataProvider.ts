@@ -53,6 +53,7 @@ export class ActionScriptSourcePath extends vscode.TreeItem {
           arguments: [resourceUri],
         };
       }
+      label = path.basename(resourceUri.fsPath);
     }
     super(label ?? "", collapsibleState);
     this.resourceUri = resourceUri;
