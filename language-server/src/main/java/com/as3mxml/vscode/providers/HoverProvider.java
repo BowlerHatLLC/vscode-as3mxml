@@ -39,11 +39,14 @@ import org.apache.royale.compiler.internal.css.CSSDocument;
 import org.apache.royale.compiler.internal.mxml.MXMLData;
 import org.apache.royale.compiler.internal.mxml.MXMLDialect;
 import org.apache.royale.compiler.mxml.IMXMLTagData;
+import org.apache.royale.compiler.tree.ASTNodeID;
 import org.apache.royale.compiler.tree.as.IASNode;
 import org.apache.royale.compiler.tree.as.IClassNode;
 import org.apache.royale.compiler.tree.as.IExpressionNode;
 import org.apache.royale.compiler.tree.as.IFunctionCallNode;
+import org.apache.royale.compiler.tree.as.IFunctionNode;
 import org.apache.royale.compiler.tree.as.IIdentifierNode;
+import org.apache.royale.compiler.tree.as.IKeywordNode;
 import org.apache.royale.compiler.tree.as.ILanguageIdentifierNode;
 import org.apache.royale.compiler.tree.metadata.IEventTagNode;
 import org.apache.royale.compiler.tree.metadata.IInspectableTagNode;
@@ -306,6 +309,14 @@ public class HoverProvider {
             }
             if (definition == null && expressionToResolve != null) {
                 definition = expressionToResolve.resolve(project);
+            }
+        }
+
+        if (definition == null && parentNode instanceof IFunctionNode && offsetNode instanceof IKeywordNode) {
+            IKeywordNode keywordNode = (IKeywordNode) offsetNode;
+            if (ASTNodeID.KeywordFunctionID.equals(keywordNode.getNodeID())) {
+                IFunctionNode functionNode = (IFunctionNode) parentNode;
+                definition = functionNode.getDefinition();
             }
         }
 
