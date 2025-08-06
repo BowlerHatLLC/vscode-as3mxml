@@ -26,6 +26,7 @@ import org.antlr.runtime.ANTLRStringStream;
 import org.apache.royale.compiler.common.ISourceLocation;
 import org.apache.royale.compiler.common.XMLName;
 import org.apache.royale.compiler.constants.IASKeywordConstants;
+import org.apache.royale.compiler.constants.IASLanguageConstants.BuiltinType;
 import org.apache.royale.compiler.constants.IMetaAttributeConstants;
 import org.apache.royale.compiler.css.ICSSDocument;
 import org.apache.royale.compiler.css.ICSSNamespaceDefinition;
@@ -312,6 +313,14 @@ public class DefinitionProvider {
                             expressionToResolve = classNode.getBaseClassExpressionNode();
                         }
                     }
+                    break;
+                }
+                case ANY_TYPE: {
+                    definition = projectData.project.getBuiltinType(BuiltinType.ANY_TYPE);
+                    break;
+                }
+                case VOID: {
+                    definition = projectData.project.getBuiltinType(BuiltinType.VOID);
                     break;
                 }
                 default:
