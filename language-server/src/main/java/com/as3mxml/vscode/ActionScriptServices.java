@@ -371,6 +371,10 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             realTimeProblemsChecker.updateNow();
         }
 
+        if (cancelToken != null) {
+            cancelToken.checkCanceled();
+        }
+
         compilerWorkspace.startBuilding();
         try {
             CompletionProvider provider = new CompletionProvider(actionScriptProjectManager, fileTracker,
@@ -412,6 +416,10 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             realTimeProblemsChecker.updateNow();
         }
 
+        if (cancelToken != null) {
+            cancelToken.checkCanceled();
+        }
+
         compilerWorkspace.startBuilding();
         try {
             HoverProvider provider = new HoverProvider(actionScriptProjectManager, fileTracker);
@@ -442,6 +450,10 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         // workspace.fileChanged() before proceeding
         if (realTimeProblemsChecker != null) {
             realTimeProblemsChecker.updateNow();
+        }
+
+        if (cancelToken != null) {
+            cancelToken.checkCanceled();
         }
 
         compilerWorkspace.startBuilding();
@@ -477,6 +489,10 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             realTimeProblemsChecker.updateNow();
         }
 
+        if (cancelToken != null) {
+            cancelToken.checkCanceled();
+        }
+
         compilerWorkspace.startBuilding();
         try {
             DefinitionProvider provider = new DefinitionProvider(actionScriptProjectManager, fileTracker);
@@ -508,6 +524,10 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         // workspace.fileChanged() before proceeding
         if (realTimeProblemsChecker != null) {
             realTimeProblemsChecker.updateNow();
+        }
+
+        if (cancelToken != null) {
+            cancelToken.checkCanceled();
         }
 
         compilerWorkspace.startBuilding();
@@ -542,6 +562,10 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             realTimeProblemsChecker.updateNow();
         }
 
+        if (cancelToken != null) {
+            cancelToken.checkCanceled();
+        }
+
         compilerWorkspace.startBuilding();
         try {
             ImplementationProvider provider = new ImplementationProvider(actionScriptProjectManager, fileTracker);
@@ -572,6 +596,10 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         // workspace.fileChanged() before proceeding
         if (realTimeProblemsChecker != null) {
             realTimeProblemsChecker.updateNow();
+        }
+
+        if (cancelToken != null) {
+            cancelToken.checkCanceled();
         }
 
         compilerWorkspace.startBuilding();
@@ -614,6 +642,10 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             realTimeProblemsChecker.updateNow();
         }
 
+        if (cancelToken != null) {
+            cancelToken.checkCanceled();
+        }
+
         compilerWorkspace.startBuilding();
         try {
             WorkspaceSymbolProvider provider = new WorkspaceSymbolProvider(actionScriptProjectManager);
@@ -640,6 +672,10 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         // workspace.fileChanged() before proceeding
         if (realTimeProblemsChecker != null) {
             realTimeProblemsChecker.updateNow();
+        }
+
+        if (cancelToken != null) {
+            cancelToken.checkCanceled();
         }
 
         compilerWorkspace.startBuilding();
@@ -674,6 +710,10 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         // workspace.fileChanged() before proceeding
         if (realTimeProblemsChecker != null) {
             realTimeProblemsChecker.updateNow();
+        }
+
+        if (cancelToken != null) {
+            cancelToken.checkCanceled();
         }
 
         compilerWorkspace.startBuilding();
@@ -712,6 +752,10 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         // workspace.fileChanged() before proceeding
         if (realTimeProblemsChecker != null) {
             realTimeProblemsChecker.updateNow();
+        }
+
+        if (cancelToken != null) {
+            cancelToken.checkCanceled();
         }
 
         compilerWorkspace.startBuilding();
@@ -766,6 +810,10 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             realTimeProblemsChecker.updateNow();
         }
 
+        if (cancelToken != null) {
+            cancelToken.checkCanceled();
+        }
+
         compilerWorkspace.startBuilding();
         try {
             FormattingProvider provider = new FormattingProvider(fileTracker);
@@ -810,6 +858,10 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         // workspace.fileChanged() before proceeding
         if (realTimeProblemsChecker != null) {
             realTimeProblemsChecker.updateNow();
+        }
+
+        if (cancelToken != null) {
+            cancelToken.checkCanceled();
         }
 
         compilerWorkspace.startBuilding();
@@ -865,6 +917,10 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         // workspace.fileChanged() before proceeding
         if (realTimeProblemsChecker != null) {
             realTimeProblemsChecker.updateNow();
+        }
+
+        if (cancelToken != null) {
+            cancelToken.checkCanceled();
         }
 
         compilerWorkspace.startBuilding();
