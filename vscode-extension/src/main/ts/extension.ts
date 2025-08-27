@@ -560,6 +560,15 @@ export function activate(context: vscode.ExtensionContext) {
     get frameworkSDKPath(): string | null {
       return frameworkSDKHome;
     },
+
+    /**
+     * The absolute file path of the currently selected editor SDK.
+     * May be null or undefined if no SDK is selected or the currently
+     * selected SDK is invalid.
+     */
+    get editorSDKPath(): string | null {
+      return editorSDKHome;
+    },
   };
 }
 
