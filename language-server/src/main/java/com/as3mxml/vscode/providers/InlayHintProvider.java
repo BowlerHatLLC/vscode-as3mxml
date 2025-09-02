@@ -90,11 +90,14 @@ public class InlayHintProvider {
 
         if (uriString.endsWith(FILE_EXTENSION_MXML)) {
             MXMLData mxmlData = actionScriptProjectManager.getMXMLDataForPath(path, projectData);
-            List<InlayHint> result = mxmlInlayHint(mxmlData, range, path, projectData);
-            if (cancelToken != null) {
-                cancelToken.checkCanceled();
+            if (mxmlData != null) {
+                List<InlayHint> result = mxmlInlayHint(mxmlData, range, path, projectData);
+                if (cancelToken != null) {
+                    cancelToken.checkCanceled();
+                }
+                return result;
             }
-            return result;
+            return Collections.emptyList();
         }
 
         if (!uriString.endsWith(FILE_EXTENSION_AS)) {
