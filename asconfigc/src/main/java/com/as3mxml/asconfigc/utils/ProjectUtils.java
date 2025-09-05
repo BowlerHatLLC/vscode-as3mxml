@@ -241,6 +241,22 @@ public class ProjectUtils {
 		return jarPath;
 	}
 
+	public static Path findAsdocJarPath(String sdkPath) {
+		Path jarPath = Paths.get(sdkPath, "lib", "asdoc.jar");
+
+		if (Files.exists(jarPath)) {
+			return jarPath;
+		}
+
+		jarPath = Paths.get(sdkPath, "lib", "legacy", "asdoc.jar");
+
+		if (Files.exists(jarPath)) {
+			return jarPath;
+		}
+
+		return null;
+	}
+
 	public static Path findAdobeAIRPackagerJarPath(String sdkPath) {
 		Path jarPath = Paths.get(sdkPath, "lib", JAR_NAME_ADT);
 		if (Files.exists(jarPath)) {
