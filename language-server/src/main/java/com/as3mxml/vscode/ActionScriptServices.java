@@ -913,6 +913,13 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     }
 
     private List<InlayHint> inlayHint2(InlayHintParams params, CancelChecker cancelToken) {
+        if ("none".equals(inlayHints_parameterNames_enabled)) {
+            if (cancelToken != null) {
+                cancelToken.checkCanceled();
+            }
+            return Collections.emptyList();
+        }
+
         // make sure that the latest changes have been passed to
         // workspace.fileChanged() before proceeding
         if (realTimeProblemsChecker != null) {
