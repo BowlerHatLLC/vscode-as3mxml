@@ -104,6 +104,10 @@ public class RealTimeProblemsChecker implements Runnable {
 	}
 
 	public synchronized void updateNow() {
+		updateNow(true);
+	}
+
+	public synchronized void updateNow(boolean getAllRequests) {
 		applyPending();
 		if (compilationUnit == null) {
 			return;
@@ -120,14 +124,16 @@ public class RealTimeProblemsChecker implements Runnable {
 		if (abcBytesRequest == null) {
 			abcBytesRequest = compilationUnit.getABCBytesRequest();
 		}
-		try {
-			// force all requests to finish immediately because we can no longer
-			// wait for the background thread and need the results now.
-			syntaxTreeRequest.get();
-			fileScopeRequest.get();
-			outgoingDepsRequest.get();
-			abcBytesRequest.get();
-		} catch (InterruptedException e) {
+		if (getAllRequests) {
+			try {
+				// force all requests to finish immediately because we can no longer
+				// wait for the background thread and need the results now.
+				syntaxTreeRequest.get();
+				fileScopeRequest.get();
+				outgoingDepsRequest.get();
+				abcBytesRequest.get();
+			} catch (InterruptedException e) {
+			}
 		}
 	}
 

@@ -368,7 +368,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         // make sure that the latest changes have been passed to
         // workspace.fileChanged() before proceeding
         if (realTimeProblemsChecker != null) {
-            realTimeProblemsChecker.updateNow();
+            realTimeProblemsChecker.updateNow(false);
         }
 
         if (cancelToken != null) {
@@ -413,7 +413,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         // make sure that the latest changes have been passed to
         // workspace.fileChanged() before proceeding
         if (realTimeProblemsChecker != null) {
-            realTimeProblemsChecker.updateNow();
+            realTimeProblemsChecker.updateNow(false);
         }
 
         if (cancelToken != null) {
@@ -449,7 +449,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         // make sure that the latest changes have been passed to
         // workspace.fileChanged() before proceeding
         if (realTimeProblemsChecker != null) {
-            realTimeProblemsChecker.updateNow();
+            realTimeProblemsChecker.updateNow(false);
         }
 
         if (cancelToken != null) {
@@ -486,7 +486,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         // make sure that the latest changes have been passed to
         // workspace.fileChanged() before proceeding
         if (realTimeProblemsChecker != null) {
-            realTimeProblemsChecker.updateNow();
+            realTimeProblemsChecker.updateNow(false);
         }
 
         if (cancelToken != null) {
@@ -523,7 +523,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         // make sure that the latest changes have been passed to
         // workspace.fileChanged() before proceeding
         if (realTimeProblemsChecker != null) {
-            realTimeProblemsChecker.updateNow();
+            realTimeProblemsChecker.updateNow(false);
         }
 
         if (cancelToken != null) {
@@ -559,7 +559,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         // make sure that the latest changes have been passed to
         // workspace.fileChanged() before proceeding
         if (realTimeProblemsChecker != null) {
-            realTimeProblemsChecker.updateNow();
+            realTimeProblemsChecker.updateNow(false);
         }
 
         if (cancelToken != null) {
@@ -595,7 +595,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         // make sure that the latest changes have been passed to
         // workspace.fileChanged() before proceeding
         if (realTimeProblemsChecker != null) {
-            realTimeProblemsChecker.updateNow();
+            realTimeProblemsChecker.updateNow(false);
         }
 
         if (cancelToken != null) {
@@ -639,7 +639,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         // make sure that the latest changes have been passed to
         // workspace.fileChanged() before proceeding
         if (realTimeProblemsChecker != null) {
-            realTimeProblemsChecker.updateNow();
+            realTimeProblemsChecker.updateNow(false);
         }
 
         if (cancelToken != null) {
@@ -671,7 +671,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         // make sure that the latest changes have been passed to
         // workspace.fileChanged() before proceeding
         if (realTimeProblemsChecker != null) {
-            realTimeProblemsChecker.updateNow();
+            realTimeProblemsChecker.updateNow(false);
         }
 
         if (cancelToken != null) {
@@ -709,7 +709,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         // make sure that the latest changes have been passed to
         // workspace.fileChanged() before proceeding
         if (realTimeProblemsChecker != null) {
-            realTimeProblemsChecker.updateNow();
+            realTimeProblemsChecker.updateNow(false);
         }
 
         if (cancelToken != null) {
@@ -751,7 +751,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         // make sure that the latest changes have been passed to
         // workspace.fileChanged() before proceeding
         if (realTimeProblemsChecker != null) {
-            realTimeProblemsChecker.updateNow();
+            realTimeProblemsChecker.updateNow(false);
         }
 
         if (cancelToken != null) {
@@ -807,7 +807,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         // make sure that the latest changes have been passed to
         // workspace.fileChanged() before proceeding
         if (realTimeProblemsChecker != null) {
-            realTimeProblemsChecker.updateNow();
+            realTimeProblemsChecker.updateNow(false);
         }
 
         if (cancelToken != null) {
@@ -857,7 +857,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         // make sure that the latest changes have been passed to
         // workspace.fileChanged() before proceeding
         if (realTimeProblemsChecker != null) {
-            realTimeProblemsChecker.updateNow();
+            realTimeProblemsChecker.updateNow(false);
         }
 
         if (cancelToken != null) {
@@ -916,7 +916,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         // make sure that the latest changes have been passed to
         // workspace.fileChanged() before proceeding
         if (realTimeProblemsChecker != null) {
-            realTimeProblemsChecker.updateNow();
+            realTimeProblemsChecker.updateNow(false);
         }
 
         if (cancelToken != null) {
