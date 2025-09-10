@@ -32,6 +32,7 @@ import org.apache.royale.compiler.tree.as.IExpressionNode;
 import org.apache.royale.compiler.tree.as.IFunctionCallNode;
 import org.apache.royale.compiler.tree.as.IIdentifierNode;
 import org.apache.royale.compiler.tree.as.ILiteralNode;
+import org.apache.royale.compiler.tree.mxml.IMXMLScriptNode;
 import org.eclipse.lsp4j.InlayHint;
 import org.eclipse.lsp4j.InlayHintKind;
 import org.eclipse.lsp4j.InlayHintParams;
@@ -152,6 +153,16 @@ public class InlayHintProvider {
 
     private boolean findInlayHints(IASNode node, Range range, ActionScriptProjectData projectData,
             List<InlayHint> result) {
+        if (node instanceof IMXMLScriptNode) {
+            IMXMLScriptNode scriptNode = (IMXMLScriptNode) node;
+            for (IASNode asNode : scriptNode.getASNodes()) {
+                if (findInlayHints(asNode, range, projectData, result)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         Position start = range.getStart();
         Position end = range.getEnd();
         int line = node.getLine();
