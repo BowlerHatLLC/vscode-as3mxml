@@ -2,11 +2,11 @@ package com.as3mxml.vscode.project;
 
 import org.apache.royale.compiler.internal.projects.CompilerProject;
 import org.apache.royale.compiler.internal.projects.DefinitionPriority;
-import org.apache.royale.compiler.internal.units.ASCompilationUnit;
+import org.apache.royale.compiler.internal.units.MXMLCompilationUnit;
 import org.apache.royale.compiler.targets.ITarget.TargetType;
 
-public class LspASCompilationUnit extends ASCompilationUnit {
-	public LspASCompilationUnit(CompilerProject project, String path,
+public class LspMXMLCompilationUnit extends MXMLCompilationUnit {
+	public LspMXMLCompilationUnit(CompilerProject project, String path,
 			DefinitionPriority.BasePriority basePriority,
 			int order,
 			String qname) {
@@ -15,10 +15,9 @@ public class LspASCompilationUnit extends ASCompilationUnit {
 
 	@Override
 	protected void removeAST() {
-		// using a custom subclass of ASCompilationUnit to override this method
-		// because the default implementation allows ASTs to be garbage
-		// collected, and the scopes can get out of sync.
-		// that's probably a Royale compiler bug, but a workaround is easier.
+		// at the time this was written, MXMLCompilationUnit doesn't do anything
+		// in removeAST(), but if that ever changes, we should probably have the
+		// same empty override as LspASCompilationUnit.
 	}
 
 	@Override
@@ -26,7 +25,7 @@ public class LspASCompilationUnit extends ASCompilationUnit {
 		getSyntaxTreeRequest();
 		getFileScopeRequest();
 		// if this method gets called as part of real-time problem checking
-		// getting the other requests can get very expensive, so skip them.
+		// getting the other requests can get very expensive, so skip them
 		// the skipped requests should still get triggered eventually.
 	}
 }

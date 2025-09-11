@@ -32,6 +32,7 @@ public class LspProject extends RoyaleProject implements ILspProject {
 		// collected, and the scopes can get out of sync.
 		// that's probably a Royale compiler bug, but a workaround is easier.
 		getSourceCompilationUnitFactory().addHandler(LspASSourceFileHandler.INSTANCE);
+		getSourceCompilationUnitFactory().addHandler(LspMXMLSourceFileHandler.INSTANCE);
 	}
 
 	public Set<String> getQNamesOfDependencies(ICompilationUnit from) {
