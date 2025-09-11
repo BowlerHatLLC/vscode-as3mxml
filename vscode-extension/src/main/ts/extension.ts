@@ -86,9 +86,9 @@ function getValidatedEditorSDKConfiguration(
   if (!savedContext) {
     return null;
   }
-  let result = vscode.workspace
+  let result: string | undefined | null = vscode.workspace
     .getConfiguration("as3mxml")
-    .get("sdk.editor") as string;
+    .get("sdk.editor");
   //this may return null
   return validateEditorSDK(
     savedContext.extensionPath,
@@ -113,9 +113,9 @@ function onDidChangeConfiguration(event: vscode.ConfigurationChangeEvent) {
   ) {
     //we're going to try to kill the language server and then restart
     //it with the new settings
-    const javaSettingsPath = vscode.workspace
+    const javaSettingsPath: string | undefined | null = vscode.workspace
       .getConfiguration("as3mxml")
-      .get("java.path") as string;
+      .get("java.path");
     javaExecutablePath = findJava(javaSettingsPath, (javaPath) => {
       if (!savedContext) {
         return false;
@@ -132,9 +132,8 @@ function onDidChangeConfiguration(event: vscode.ConfigurationChangeEvent) {
   if (needsSDKUpdate || event.affectsConfiguration("as3mxml.sdk.framework")) {
     frameworkSDKHome = getFrameworkSDKPathWithFallbacks();
     if (!frameworkSDKHome) {
-      let explicitFrameworkSetting = vscode.workspace
-        .getConfiguration("as3mxml")
-        .get("sdk.framework") as string;
+      const explicitFrameworkSetting: string | undefined | null =
+        vscode.workspace.getConfiguration("as3mxml").get("sdk.framework");
       needsRestart = !explicitFrameworkSetting;
     }
     needsSDKUpdate = true;
@@ -258,9 +257,9 @@ function restartServer() {
 export function activate(context: vscode.ExtensionContext) {
   savedContext = context;
   checkForProjectsToImport();
-  let javaSettingsPath = vscode.workspace
+  const javaSettingsPath: string | undefined | null = vscode.workspace
     .getConfiguration("as3mxml")
-    .get("java.path") as string;
+    .get("java.path");
   javaExecutablePath = findJava(javaSettingsPath, (javaPath) => {
     return validateJava(context.extensionPath, javaPath);
   });
@@ -578,16 +577,16 @@ export function deactivate() {
 }
 
 function hasInvalidJava(): boolean {
-  let javaPath = vscode.workspace
+  const javaPath: string | undefined | null = vscode.workspace
     .getConfiguration("as3mxml")
-    .get("java.path") as string;
+    .get("java.path");
   return !javaExecutablePath && javaPath != null;
 }
 
 function hasInvalidEditorSDK(): boolean {
-  let sdkPath = vscode.workspace
+  const sdkPath: string | undefined | null = vscode.workspace
     .getConfiguration("as3mxml")
-    .get("sdk.editor") as string;
+    .get("sdk.editor");
   return !editorSDKHome && sdkPath != null;
 }
 
@@ -680,9 +679,9 @@ function startClient() {
         if (process.platform === "darwin") {
           args.unshift("-Dapple.awt.UIElement=true");
         }
-        let jvmargsString = vscode.workspace
+        let jvmargsString: string | undefined | null = vscode.workspace
           .getConfiguration("as3mxml")
-          .get("languageServer.jvmargs") as string;
+          .get("languageServer.jvmargs");
         if (jvmargsString) {
           let jvmargs = jvmargsString.split(" ");
           args.unshift(...jvmargs);

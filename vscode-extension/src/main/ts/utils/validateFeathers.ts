@@ -23,7 +23,7 @@ const PATH_SDK_DESCRIPTION_FLEX = "flex-sdk-description.xml";
 const PATH_MANIFEST_FEATHERS = "frameworks/projects/feathers/manifest.xml";
 
 export default function validateFeathers(
-  sdkPath: string | null,
+  sdkPath: string | undefined | null,
   minVersion?: string
 ): boolean {
   if (!sdkPath || !validateFrameworkSDK(sdkPath)) {

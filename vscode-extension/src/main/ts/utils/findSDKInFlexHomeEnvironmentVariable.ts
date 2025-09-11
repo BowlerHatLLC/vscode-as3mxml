@@ -19,9 +19,11 @@ const ENVIRONMENT_VARIABLE_FLEX_HOME = "FLEX_HOME";
 
 export default function findSDKInFlexHomeEnvironmentVariable(): string | null {
   if (ENVIRONMENT_VARIABLE_FLEX_HOME in process.env) {
-    let flexHome = process.env.FLEX_HOME;
-    //this may return null
-    return validateFrameworkSDK(flexHome);
+    const FLEX_HOME = process.env[ENVIRONMENT_VARIABLE_FLEX_HOME];
+    if (FLEX_HOME) {
+      //this may return null
+      return validateFrameworkSDK(FLEX_HOME);
+    }
   }
   return null;
 }

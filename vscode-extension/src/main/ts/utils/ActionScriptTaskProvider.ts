@@ -736,7 +736,7 @@ export default class ActionScriptTaskProvider
     ) {
       options.push("--verbose=true");
     }
-    let jvmargs = vscode.workspace
+    const jvmargs = vscode.workspace
       .getConfiguration("as3mxml")
       .get("asconfigc.jvmargs");
     if (typeof jvmargs === "string") {

@@ -22,9 +22,9 @@ import findSDKsInPathEnvironmentVariable from "./findSDKsInPathEnvironmentVariab
 
 export default function getFrameworkSDKPathWithFallbacks(): string | null {
   let sdkPath: string | null = null;
-  let frameworkSetting = <string>(
-    vscode.workspace.getConfiguration("as3mxml").get("sdk.framework")
-  );
+  const frameworkSetting: string | undefined | null = vscode.workspace
+    .getConfiguration("as3mxml")
+    .get("sdk.framework");
   if (frameworkSetting) {
     //no fallbacks if this SDK isn't valid!
     //this may return null
@@ -32,9 +32,9 @@ export default function getFrameworkSDKPathWithFallbacks(): string | null {
   }
   if (!sdkPath) {
     //for legacy reasons, we support falling back to the editor SDK
-    let editorSetting = <string>(
-      vscode.workspace.getConfiguration("as3mxml").get("sdk.editor")
-    );
+    const editorSetting: string | undefined | null = vscode.workspace
+      .getConfiguration("as3mxml")
+      .get("sdk.editor");
     if (editorSetting) {
       //no fallbacks if this SDK isn't valid!
       //this may return null
@@ -57,7 +57,7 @@ export default function getFrameworkSDKPathWithFallbacks(): string | null {
   if (!sdkPath) {
     //this should be the same SDK that is used if the user tries to run the
     //compiler from the command line without an absolute path
-    let sdkPaths = findSDKsInPathEnvironmentVariable();
+    const sdkPaths = findSDKsInPathEnvironmentVariable();
     if (sdkPaths.length > 0) {
       sdkPath = sdkPaths[0];
     }

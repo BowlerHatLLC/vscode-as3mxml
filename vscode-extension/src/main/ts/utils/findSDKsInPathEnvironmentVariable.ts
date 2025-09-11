@@ -29,7 +29,10 @@ export default function findSDKsInPathEnvironmentVariable(): string[] {
     return result;
   }
 
-  let PATH = process.env.PATH as string;
+  let PATH = process.env.PATH;
+  if (!PATH) {
+    return result;
+  }
   let paths = PATH.split(path.delimiter);
   paths.forEach((currentPath) => {
     //first check if this directory contains the NPM version of Apache Royale

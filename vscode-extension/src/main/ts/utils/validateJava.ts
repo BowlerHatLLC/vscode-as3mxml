@@ -19,8 +19,11 @@ import * as path from "path";
 
 export default function validateJava(
   extensionPath: string,
-  javaPath: string
+  javaPath: string | undefined | null
 ): boolean {
+  if (!javaPath) {
+    return false;
+  }
   //on macOS, /usr/libexec/java_home may be specified accidentally
   //it's an executable, and it returns 0 (even if it receives invalid
   //options), so for usability, we treat it as a special case.

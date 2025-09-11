@@ -111,9 +111,9 @@ export default class BaseAsconfigTaskProvider {
       if (fs.existsSync(winPath)) {
         return [winPath];
       }
-      let useBundled = <string>(
-        vscode.workspace.getConfiguration("as3mxml").get("asconfigc.useBundled")
-      );
+      const useBundled = vscode.workspace
+        .getConfiguration("as3mxml")
+        .get("asconfigc.useBundled");
       if (!useBundled) {
         //use an executable on the system path
         return [executableName];
@@ -126,9 +126,9 @@ export default class BaseAsconfigTaskProvider {
     if (fs.existsSync(unixPath)) {
       return [unixPath];
     }
-    let useBundled = <string>(
-      vscode.workspace.getConfiguration("as3mxml").get("asconfigc.useBundled")
-    );
+    const useBundled = vscode.workspace
+      .getConfiguration("as3mxml")
+      .get("asconfigc.useBundled");
     if (!useBundled) {
       //use an executable on the system path
       return [executableName];

@@ -212,7 +212,7 @@ export default function selectWorkspaceSDK(
     );
   }
   //if the user has defined search paths for SDKs, include them
-  let searchPaths = vscode.workspace
+  const searchPaths = vscode.workspace
     .getConfiguration("as3mxml")
     .get("sdk.searchPaths");
   if (Array.isArray(searchPaths)) {

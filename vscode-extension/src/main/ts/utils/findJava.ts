@@ -16,7 +16,7 @@ limitations under the License.
 import * as path from "path";
 
 export default function findJava(
-  settingsPath: string,
+  settingsPath: string | undefined | null,
   validate: (javaPath: string) => boolean
 ): string | null {
   if (settingsPath) {
@@ -34,21 +34,25 @@ export default function findJava(
   }
 
   if ("JAVA_HOME" in process.env) {
-    let javaHome = <string>process.env.JAVA_HOME;
-    let javaPath = path.join(javaHome, "bin", executableFile);
-    if (validate(javaPath)) {
-      return javaPath;
+    let JAVA_HOME = process.env.JAVA_HOME;
+    if (JAVA_HOME) {
+      let javaPath = path.join(JAVA_HOME, "bin", executableFile);
+      if (validate(javaPath)) {
+        return javaPath;
+      }
     }
   }
 
   if ("PATH" in process.env) {
-    let PATH = <string>process.env.PATH;
-    let paths = PATH.split(path.delimiter);
-    let pathCount = paths.length;
-    for (let i = 0; i < pathCount; i++) {
-      let javaPath = path.join(paths[i], executableFile);
-      if (validate(javaPath)) {
-        return javaPath;
+    const PATH = process.env.PATH;
+    if (PATH) {
+      let paths = PATH.split(path.delimiter);
+      let pathCount = paths.length;
+      for (let i = 0; i < pathCount; i++) {
+        let javaPath = path.join(paths[i], executableFile);
+        if (validate(javaPath)) {
+          return javaPath;
+        }
       }
     }
   }

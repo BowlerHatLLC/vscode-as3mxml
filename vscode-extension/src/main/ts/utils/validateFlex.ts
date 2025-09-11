@@ -22,7 +22,7 @@ const XML_VERSION_END = "</version>";
 const PATH_SDK_DESCRIPTION_FLEX = "flex-sdk-description.xml";
 
 export default function validateFlex(
-  sdkPath: string | null,
+  sdkPath: string | undefined | null,
   minVersion?: string
 ): boolean {
   if (!sdkPath || !validateFrameworkSDK(sdkPath)) {

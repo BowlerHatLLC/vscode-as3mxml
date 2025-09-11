@@ -40,17 +40,17 @@
   "devDependencies": {
     "@rgrove/parse-xml": "^4.2.0",
     "@types/mocha": "^10.0.10",
-    "@types/node": "^18.19.78",
+    "@types/node": "^18.19.124",
     "@types/vscode": "^1.82.0",
     "@vscode/vsce": "^3.2.2",
     "glob": "^8.1.0",
     "json5": "^2.2.3",
     "mocha": "^11.1.0",
     "ts-loader": "^9.5.2",
-    "typescript": "^5.8.2",
+    "typescript": "~5.9.2",
     "vscode-jsonrpc": "^8.2.1",
     "vscode-languageclient": "^9.0.1",
-    "webpack": "^5.98.0",
+    "webpack": "^5.101.3",
     "webpack-cli": "^6.0.1"
   },
   "activationEvents": [
