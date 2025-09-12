@@ -1,5 +1,41 @@
 # ActionScript & MXML for Visual Studio Code Changelog
 
+## 1.23.0
+
+### New Features
+
+- Build: Added Adobe AIR packaging tasks for Linux.
+- Build: Added `includes` to `compilerOptions` section.
+- General: Added `as3mxml.languageServer.enabled` property, which may be set to `false` to disable the language server.
+- Hover, Definition: Support detection of ActionScript class references in `<fx:Style>` MXML tags and in _.css_ files in Apache Flex and Apache Royale projects.
+- Hover: Anonymous functions without a name can now provide documentation using the `function` keyword instead.
+- Hover: Detect `@eventType`, `@example`, and `@includeExample` ASDoc tags.
+- Inlay Hints: Added inlay hints for function parameter names. Disabled by default, but set `as3mxml.inlayHints.parameterNames.enabled` to either `"all"` or `"literals"` to enable this feature. Also adds `as3mxml.inlayHints.parameterNames.suppressWhenArgumentMatchesName` setting to customize the behavior further.
+- Syntax: Improved both ActionScript and MXML bracket pairs, word pattern detection, and other syntax options.
+
+### Fixed Issues
+
+- Build: Fixed strict requirement for Adobe AIR application descriptors on platforms that the current operating system cannot target.
+- Build: Fixed appending of `define` to compiler options in a way that caused values with spaces to behave differently on Windows and macOS.
+- Build: Fixed tasks continuing to use value after changing `as3mxml.java.path` setting.
+- Formatting: Require all syntax errors to be fixed before formatting may be used.
+- General: Add workaround for missing range length for text document change events if language client doesn't provide it.
+- Hover, Definition: Added missing support for `*` and `void` core language types.
+- Hover: Added missing documentation for certain classes in _playerglobal.swc_ and _airglobal.swc_. Now checks _playerglobal_rb.swc_, if the SDK includes it.
+- Hover: Fixed detection of tag values in ASDoc comments to allow both spaces and tabs after the tag name.
+- Syntax: Fix arrays incorrectly highlighted as metadata in some situations.
+- Syntax: Fixed highlighting of symbols with names containing the _$_ character.
+- Workspace Symbols: Fixed search failing to find symbols with names containing the _$_ character.
+- Views: Fixed missing labels in ActionScript Source Paths view tree items.
+
+### Other Changes
+
+- Dependencies: eclipse/lsp4j language server updated to v0.24.0.
+- Extensibility: Exposed `editorSDKPath` property to other extensions.
+- General: Improved performance when iterating over ActionScript code embedded in MXML specifier nodes.
+- Problems: Improved performance of checking for problems in real-time as the user types.
+- Build: Allow `unpackage-anes` command line option for bundled asconfigc for release builds.
+
 ## 1.22.0
 
 ### New Features
