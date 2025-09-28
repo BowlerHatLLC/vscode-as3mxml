@@ -391,7 +391,7 @@ function createAsconfigJson(
 	"compilerOptions": {
 		"source-path": [
 			"src",
-			"libs-src"
+			"libs_src"
 		],
 		"library-path": [
 			"libs"
@@ -412,7 +412,7 @@ function createAsconfigJsonRoyale(mainClassName: string): string {
 		],
 		"source-path": [
 			"src",
-			"libs-src"
+			"libs_src"
 		],
 		"library-path": [
 			"libs"
