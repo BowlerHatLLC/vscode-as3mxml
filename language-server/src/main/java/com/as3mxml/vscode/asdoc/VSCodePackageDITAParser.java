@@ -18,13 +18,11 @@
  */
 package com.as3mxml.vscode.asdoc;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.StringReader;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
@@ -123,110 +121,7 @@ public final class VSCodePackageDITAParser implements IPackageDITAParser {
 				if (defElement == null) {
 					return null;
 				}
-				String defName = defElement.getName();
-				String description = null;
-				if (definition instanceof IStyleDefinition) {
-					Element descriptionElement = defElement.element("description");
-					if (descriptionElement == null) {
-						return null;
-					}
-					description = descriptionElement.asXML();
-				} else {
-					Element apiDetailElement = defElement.element(defName + "Detail");
-					if (apiDetailElement == null) {
-						return null;
-					}
-					Element apiDescElement = apiDetailElement.element("apiDesc");
-					if (apiDescElement == null) {
-						return null;
-					}
-					description = apiDescElement.asXML();
-				}
-				StringBuilder builder = new StringBuilder();
-				builder.append("/**");
-				BufferedReader reader = new BufferedReader(new StringReader(description));
-				String line = null;
-				while ((line = reader.readLine()) != null) {
-					builder.append("\n * ");
-					builder.append(line);
-				}
-				if ("apiValue".equals(defName)) {
-					Element apiDetailElement = defElement.element(defName + "Detail");
-					if (apiDetailElement != null) {
-						Element apiDefElement = apiDetailElement.element(defName + "Def");
-						if (apiDefElement != null) {
-							Element apiDefaultValueElement = apiDefElement.element("apiDefaultValue");
-							if (apiDefaultValueElement != null) {
-								String defaultDescription = apiDefaultValueElement.getStringValue();
-								defaultDescription = defaultDescription.replaceAll("\n", " ");
-								builder.append("\n * @default ");
-								builder.append(defaultDescription);
-							}
-						}
-					}
-				}
-				if ("apiValue".equals(defName) || "apiOperation".equals(defName) || "apiConstructor".equals(defName)) {
-					Element apiDetailElement = defElement.element(defName + "Detail");
-					if (apiDetailElement != null) {
-						Element apiDefElement = apiDetailElement.element(defName + "Def");
-						if (apiDefElement != null) {
-							for (Object element : apiDefElement.elements("apiException")) {
-								Element apiExceptionElement = (Element) element;
-								Element apiItemNameElement = apiExceptionElement.element("apiItemName");
-								builder.append("\n * @throws ");
-								if (apiItemNameElement == null) {
-									builder.append("_");
-								} else {
-									builder.append(apiItemNameElement.getStringValue());
-									Element paramApiDescElement = apiExceptionElement.element("apiDesc");
-									if (paramApiDescElement != null) {
-										String paramDescription = paramApiDescElement.getStringValue();
-										paramDescription = paramDescription.replaceAll("\n", " ");
-										builder.append(" ");
-										builder.append(paramDescription);
-									}
-								}
-							}
-						}
-					}
-				}
-				if ("apiOperation".equals(defName) || "apiConstructor".equals(defName)) {
-					Element apiDetailElement = defElement.element(defName + "Detail");
-					if (apiDetailElement != null) {
-						Element apiDefElement = apiDetailElement.element(defName + "Def");
-						if (apiDefElement != null) {
-							for (Object element : apiDefElement.elements("apiParam")) {
-								Element apiParamElement = (Element) element;
-								Element apiItemNameElement = apiParamElement.element("apiItemName");
-								builder.append("\n * @param ");
-								if (apiItemNameElement == null) {
-									builder.append("_");
-								} else {
-									builder.append(apiItemNameElement.getStringValue());
-									Element paramApiDescElement = apiParamElement.element("apiDesc");
-									if (paramApiDescElement != null) {
-										String paramDescription = paramApiDescElement.getStringValue();
-										paramDescription = paramDescription.replaceAll("\n", " ");
-										builder.append(" ");
-										builder.append(paramDescription);
-									}
-								}
-							}
-							Element apiReturnElement = apiDefElement.element("apiReturn");
-							if (apiReturnElement != null) {
-								Element returnApiDescElement = apiReturnElement.element("apiDesc");
-								if (returnApiDescElement != null) {
-									String returnDescription = returnApiDescElement.getStringValue();
-									returnDescription = returnDescription.replaceAll("\n", " ");
-									builder.append("\n * @return ");
-									builder.append(returnDescription);
-								}
-							}
-						}
-					}
-				}
-				builder.append("\n */");
-				return new VSCodeASDocComment(builder.toString());
+				return VSCodeASDocComment.getComment(defElement);
 			}
 
 			private Element getDefinitionDITAFromParentTypeDef(IDefinition definition, ITypeDefinition typeDef) {
