@@ -252,12 +252,14 @@ public class RealTimeProblemsChecker implements Runnable {
 				}
 			}
 
-			ILspProject project = projectData.project;
-			String qualifiedName = CompilationUnitUtils.getPrimaryQualifiedName(compilationUnit);
-			Set<String> requiredImports = project.getQNamesOfDependencies(compilationUnit);
 			IASNode ast = syntaxTreeRequest.get().getAST();
-			ASTUtils.findUnusedImportProblems(ast, qualifiedName, requiredImports, problems);
-			ASTUtils.findDisabledConfigConditionBlockProblems(ast, problems);
+			if (ast != null) {
+				ILspProject project = projectData.project;
+				String qualifiedName = CompilationUnitUtils.getPrimaryQualifiedName(compilationUnit);
+				Set<String> requiredImports = project.getQNamesOfDependencies(compilationUnit);
+				ASTUtils.findUnusedImportProblems(ast, qualifiedName, requiredImports, problems);
+				ASTUtils.findDisabledConfigConditionBlockProblems(ast, problems);
+			}
 		} catch (Exception e) {
 			System.err.println("Exception in compiler while checking for problems: " + e);
 			e.printStackTrace(System.err);
