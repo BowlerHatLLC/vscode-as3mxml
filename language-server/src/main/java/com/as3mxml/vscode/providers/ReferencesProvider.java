@@ -157,7 +157,7 @@ public class ReferencesProvider {
                 }
                 // if we're inside an <fx:Script> tag, we want ActionScript lookup,
                 // so that's why we call isMXMLTagValidForCompletion()
-                if (MXMLDataUtils.isMXMLCodeIntelligenceAvailableForTag(offsetTag)) {
+                if (MXMLDataUtils.isMXMLCodeIntelligenceAvailableForTag(offsetTag, currentOffset)) {
                     ICompilationUnit offsetUnit = CompilerProjectUtils.findCompilationUnit(path, project);
                     List<? extends Location> result = mxmlReferences(offsetTag, currentOffset, offsetUnit, project);
                     if (cancelToken != null) {

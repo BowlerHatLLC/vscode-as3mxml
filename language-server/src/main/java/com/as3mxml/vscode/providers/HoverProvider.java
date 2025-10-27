@@ -160,7 +160,7 @@ public class HoverProvider {
                 }
                 // if we're inside an <fx:Script> tag, we want ActionScript hover,
                 // so that's why we call isMXMLTagValidForCompletion()
-                if (MXMLDataUtils.isMXMLCodeIntelligenceAvailableForTag(offsetTag)) {
+                if (MXMLDataUtils.isMXMLCodeIntelligenceAvailableForTag(offsetTag, currentOffset)) {
                     Hover result = mxmlHover(offsetTag, currentOffset, projectData.project);
                     if (cancelToken != null) {
                         cancelToken.checkCanceled();

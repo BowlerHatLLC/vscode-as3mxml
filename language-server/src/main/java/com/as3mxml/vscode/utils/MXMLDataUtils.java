@@ -68,6 +68,23 @@ public class MXMLDataUtils {
         return true;
     }
 
+    public static boolean isLanguageTag(String tagName, IMXMLTagData tag) {
+        if (tag == null || tagName == null) {
+            return false;
+        }
+        String shortName = tag.getShortName();
+        if (!tagName.equals(shortName)) {
+            return false;
+        }
+        String uri = tag.getURI();
+        if (uri == null || (!uri.equals(IMXMLLanguageConstants.NAMESPACE_MXML_2009)
+                && !uri.equals(IMXMLLanguageConstants.NAMESPACE_MXML_2006)
+                && !uri.equals(IMXMLLanguageConstants.NAMESPACE_MXML_2012))) {
+            return false;
+        }
+        return true;
+    }
+
     public static boolean needsNamespace(IMXMLTagData offsetTag, String prefix, String uri) {
         if (offsetTag == null) {
             return false;
@@ -221,14 +238,12 @@ public class MXMLDataUtils {
         return result.resolveType(project);
     }
 
-    public static boolean isMXMLCodeIntelligenceAvailableForTag(IMXMLTagData tag) {
+    public static boolean isMXMLCodeIntelligenceAvailableForTag(IMXMLTagData tag, int currentOffset) {
         if (tag.getXMLName().equals(tag.getMXMLDialect().resolveScript())) {
-            // not available inside an <fx:Script> tag that isn't self-closing
-            return tag.isEmptyTag();
+            return tag.isEmptyTag() || (tag.isOpenTag() && currentOffset < (tag.getAbsoluteEnd() - 1));
         }
         if (tag.getXMLName().equals(tag.getMXMLDialect().resolveStyle())) {
-            // not available inside an <fx:Style> tag that isn't self-closing
-            return tag.isEmptyTag();
+            return tag.isEmptyTag() || (tag.isOpenTag() && currentOffset < (tag.getAbsoluteEnd() - 1));
         }
         return true;
     }

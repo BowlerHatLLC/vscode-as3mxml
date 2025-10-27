@@ -160,7 +160,7 @@ public class DefinitionProvider {
                 }
                 // if we're inside an <fx:Script> tag, we want ActionScript lookup,
                 // so that's why we call isMXMLTagValidForCompletion()
-                if (MXMLDataUtils.isMXMLCodeIntelligenceAvailableForTag(offsetTag)) {
+                if (MXMLDataUtils.isMXMLCodeIntelligenceAvailableForTag(offsetTag, currentOffset)) {
                     List<? extends Location> result = mxmlDefinition(offsetTag, currentOffset, projectData);
                     if (cancelToken != null) {
                         cancelToken.checkCanceled();

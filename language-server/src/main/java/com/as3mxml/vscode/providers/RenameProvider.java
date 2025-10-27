@@ -170,7 +170,7 @@ public class RenameProvider {
                 }
                 // if we're inside an <fx:Script> tag, we want ActionScript rename,
                 // so that's why we call isMXMLTagValidForCompletion()
-                if (MXMLDataUtils.isMXMLCodeIntelligenceAvailableForTag(offsetTag)) {
+                if (MXMLDataUtils.isMXMLCodeIntelligenceAvailableForTag(offsetTag, currentOffset)) {
                     ICompilationUnit offsetUnit = CompilerProjectUtils.findCompilationUnit(path, project);
                     WorkspaceEdit result = mxmlRename(offsetTag, currentOffset, params.getNewName(), offsetUnit,
                             project);

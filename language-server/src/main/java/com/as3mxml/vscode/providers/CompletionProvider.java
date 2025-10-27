@@ -258,7 +258,7 @@ public class CompletionProvider {
                     }
                     // if we're inside an <fx:Script> tag, we want ActionScript completion,
                     // so that's why we call isMXMLTagValidForCompletion()
-                    if (MXMLDataUtils.isMXMLCodeIntelligenceAvailableForTag(offsetTag)) {
+                    if (MXMLDataUtils.isMXMLCodeIntelligenceAvailableForTag(offsetTag, currentOffset)) {
                         ICompilationUnit offsetUnit = CompilerProjectUtils.findCompilationUnit(path, project);
                         CompletionList result = mxmlCompletion(offsetTag, path, currentOffset, offsetUnit, project);
                         if (cancelToken != null) {
@@ -900,6 +900,38 @@ public class CompletionProvider {
                         nextChar, null, addImportData, xmlnsPosition);
             }
             return result;
+        }
+
+        if (MXMLDataUtils.isLanguageTag(IMXMLLanguageConstants.BINDING, offsetTag)) {
+            if (isAttribute) {
+                addBindingLanguageAttributesToAutoCompleteMXML(result, nextChar);
+                return result;
+            }
+        } else if (MXMLDataUtils.isLanguageTag(IMXMLLanguageConstants.COMPONENT, offsetTag)) {
+            if (isAttribute) {
+                addComponentLanguageAttributesToAutoCompleteMXML(result, nextChar);
+                return result;
+            }
+        } else if (MXMLDataUtils.isLanguageTag(IMXMLLanguageConstants.DEFINITION, offsetTag)) {
+            if (isAttribute) {
+                addDefinitionLanguageAttributesToAutoCompleteMXML(result, nextChar);
+                return result;
+            }
+        } else if (MXMLDataUtils.isLanguageTag(IMXMLLanguageConstants.MODEL, offsetTag)) {
+            if (isAttribute) {
+                addModelLanguageAttributesToAutoCompleteMXML(result, nextChar);
+                return result;
+            }
+        } else if (MXMLDataUtils.isLanguageTag(IMXMLLanguageConstants.SCRIPT, offsetTag)) {
+            if (isAttribute) {
+                addScriptLanguageAttributesToAutoCompleteMXML(result, nextChar);
+                return result;
+            }
+        } else if (MXMLDataUtils.isLanguageTag(IMXMLLanguageConstants.STYLE, offsetTag)) {
+            if (isAttribute) {
+                addStyleLanguageAttributesToAutoCompleteMXML(result, nextChar);
+                return result;
+            }
         }
 
         IDefinition offsetDefinition = MXMLDataUtils.getDefinitionForMXMLTag(offsetTag, project);
@@ -1850,6 +1882,111 @@ public class CompletionProvider {
                 addLanguageAttributesToAutoCompleteMXML(typeScope, scope, nextChar, project, result);
             }
         }
+    }
+
+    private void addBindingLanguageAttributesToAutoCompleteMXML(CompletionList result, char nextChar) {
+        List<CompletionItem> items = result.getItems();
+
+        CompletionItem sourceItem = new CompletionItem();
+        sourceItem.setKind(CompletionItemKind.Keyword);
+        sourceItem.setLabel(IMXMLLanguageConstants.ATTRIBUTE_SOURCE);
+        if ((completionSupportsSnippets || completionSupportsSimpleSnippets) && nextChar != '=') {
+            sourceItem.setInsertTextFormat(InsertTextFormat.Snippet);
+            sourceItem.setInsertText(IMXMLLanguageConstants.ATTRIBUTE_SOURCE + "=\"$0\"");
+        }
+        items.add(sourceItem);
+
+        CompletionItem destItem = new CompletionItem();
+        destItem.setKind(CompletionItemKind.Keyword);
+        destItem.setLabel(IMXMLLanguageConstants.ATTRIBUTE_DESTINATION);
+        if ((completionSupportsSnippets || completionSupportsSimpleSnippets) && nextChar != '=') {
+            destItem.setInsertTextFormat(InsertTextFormat.Snippet);
+            destItem.setInsertText(IMXMLLanguageConstants.ATTRIBUTE_DESTINATION + "=\"$0\"");
+        }
+        items.add(destItem);
+    }
+
+    private void addComponentLanguageAttributesToAutoCompleteMXML(CompletionList result, char nextChar) {
+        List<CompletionItem> items = result.getItems();
+
+        CompletionItem classNameItem = new CompletionItem();
+        classNameItem.setKind(CompletionItemKind.Keyword);
+        classNameItem.setLabel(IMXMLLanguageConstants.ATTRIBUTE_CLASS_NAME);
+        if ((completionSupportsSnippets || completionSupportsSimpleSnippets) && nextChar != '=') {
+            classNameItem.setInsertTextFormat(InsertTextFormat.Snippet);
+            classNameItem.setInsertText(IMXMLLanguageConstants.ATTRIBUTE_CLASS_NAME + "=\"$0\"");
+        }
+        items.add(classNameItem);
+
+        CompletionItem idItem = new CompletionItem();
+        idItem.setKind(CompletionItemKind.Keyword);
+        idItem.setLabel(IMXMLLanguageConstants.ATTRIBUTE_ID);
+        if ((completionSupportsSnippets || completionSupportsSimpleSnippets) && nextChar != '=') {
+            idItem.setInsertTextFormat(InsertTextFormat.Snippet);
+            idItem.setInsertText(IMXMLLanguageConstants.ATTRIBUTE_ID + "=\"$0\"");
+        }
+        items.add(idItem);
+    }
+
+    private void addDefinitionLanguageAttributesToAutoCompleteMXML(CompletionList result, char nextChar) {
+        List<CompletionItem> items = result.getItems();
+
+        CompletionItem nameItem = new CompletionItem();
+        nameItem.setKind(CompletionItemKind.Keyword);
+        nameItem.setLabel(IMXMLLanguageConstants.ATTRIBUTE_NAME);
+        if ((completionSupportsSnippets || completionSupportsSimpleSnippets) && nextChar != '=') {
+            nameItem.setInsertTextFormat(InsertTextFormat.Snippet);
+            nameItem.setInsertText(IMXMLLanguageConstants.ATTRIBUTE_NAME + "=\"$0\"");
+        }
+        items.add(nameItem);
+    }
+
+    private void addModelLanguageAttributesToAutoCompleteMXML(CompletionList result, char nextChar) {
+        List<CompletionItem> items = result.getItems();
+
+        CompletionItem sourceItem = new CompletionItem();
+        sourceItem.setKind(CompletionItemKind.Keyword);
+        sourceItem.setLabel(IMXMLLanguageConstants.ATTRIBUTE_SOURCE);
+        if ((completionSupportsSnippets || completionSupportsSimpleSnippets) && nextChar != '=') {
+            sourceItem.setInsertTextFormat(InsertTextFormat.Snippet);
+            sourceItem.setInsertText(IMXMLLanguageConstants.ATTRIBUTE_SOURCE + "=\"$0\"");
+        }
+        items.add(sourceItem);
+
+        CompletionItem idItem = new CompletionItem();
+        idItem.setKind(CompletionItemKind.Keyword);
+        idItem.setLabel(IMXMLLanguageConstants.ATTRIBUTE_ID);
+        if ((completionSupportsSnippets || completionSupportsSimpleSnippets) && nextChar != '=') {
+            idItem.setInsertTextFormat(InsertTextFormat.Snippet);
+            idItem.setInsertText(IMXMLLanguageConstants.ATTRIBUTE_ID + "=\"$0\"");
+        }
+        items.add(idItem);
+    }
+
+    private void addScriptLanguageAttributesToAutoCompleteMXML(CompletionList result, char nextChar) {
+        List<CompletionItem> items = result.getItems();
+
+        CompletionItem sourceItem = new CompletionItem();
+        sourceItem.setKind(CompletionItemKind.Keyword);
+        sourceItem.setLabel(IMXMLLanguageConstants.ATTRIBUTE_SOURCE);
+        if ((completionSupportsSnippets || completionSupportsSimpleSnippets) && nextChar != '=') {
+            sourceItem.setInsertTextFormat(InsertTextFormat.Snippet);
+            sourceItem.setInsertText(IMXMLLanguageConstants.ATTRIBUTE_SOURCE + "=\"$0\"");
+        }
+        items.add(sourceItem);
+    }
+
+    private void addStyleLanguageAttributesToAutoCompleteMXML(CompletionList result, char nextChar) {
+        List<CompletionItem> items = result.getItems();
+
+        CompletionItem sourceItem = new CompletionItem();
+        sourceItem.setKind(CompletionItemKind.Keyword);
+        sourceItem.setLabel(IMXMLLanguageConstants.ATTRIBUTE_SOURCE);
+        if ((completionSupportsSnippets || completionSupportsSimpleSnippets) && nextChar != '=') {
+            sourceItem.setInsertTextFormat(InsertTextFormat.Snippet);
+            sourceItem.setInsertText(IMXMLLanguageConstants.ATTRIBUTE_SOURCE + "=\"$0\"");
+        }
+        items.add(sourceItem);
     }
 
     private void addLanguageAttributesToAutoCompleteMXML(TypeScope typeScope, ASScope otherScope, char nextChar,
