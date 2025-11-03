@@ -35,13 +35,13 @@
     "build-debug": "mvn package"
   },
   "engines": {
-    "vscode": "^1.82.0"
+    "vscode": "^1.96.0"
   },
   "devDependencies": {
     "@rgrove/parse-xml": "^4.2.0",
     "@types/mocha": "^10.0.10",
-    "@types/node": "^18.19.124",
-    "@types/vscode": "^1.82.0",
+    "@types/node": "^20.19.24",
+    "@types/vscode": "^1.96.0",
     "@vscode/vsce": "^3.2.2",
     "glob": "^8.1.0",
     "json5": "^2.2.3",
