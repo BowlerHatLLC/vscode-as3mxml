@@ -38,10 +38,10 @@ import org.apache.royale.compiler.common.PrefixMap;
 import org.apache.royale.compiler.common.XMLName;
 import org.apache.royale.compiler.constants.IASKeywordConstants;
 import org.apache.royale.compiler.constants.IASLanguageConstants;
+import org.apache.royale.compiler.constants.IASLanguageConstants.BuiltinType;
 import org.apache.royale.compiler.constants.IMXMLCoreConstants;
 import org.apache.royale.compiler.constants.IMetaAttributeConstants;
 import org.apache.royale.compiler.css.ICSSDocument;
-import org.apache.royale.compiler.css.ICSSNode;
 import org.apache.royale.compiler.definitions.IAccessorDefinition;
 import org.apache.royale.compiler.definitions.IAppliedVectorDefinition;
 import org.apache.royale.compiler.definitions.IClassDefinition;
@@ -70,7 +70,9 @@ import org.apache.royale.compiler.internal.projects.CompilerProject;
 import org.apache.royale.compiler.internal.scopes.ASProjectScope.DefinitionPromise;
 import org.apache.royale.compiler.internal.scopes.ASScope;
 import org.apache.royale.compiler.internal.scopes.TypeScope;
+import org.apache.royale.compiler.internal.tree.as.ContainerNode;
 import org.apache.royale.compiler.internal.tree.as.FullNameNode;
+import org.apache.royale.compiler.internal.tree.as.ObjectLiteralNode;
 import org.apache.royale.compiler.mxml.IMXMLData;
 import org.apache.royale.compiler.mxml.IMXMLDataManager;
 import org.apache.royale.compiler.mxml.IMXMLLanguageConstants;
@@ -100,6 +102,7 @@ import org.apache.royale.compiler.tree.as.IMemberAccessExpressionNode;
 import org.apache.royale.compiler.tree.as.IModifierNode;
 import org.apache.royale.compiler.tree.as.INamespaceAccessExpressionNode;
 import org.apache.royale.compiler.tree.as.INamespaceDecorationNode;
+import org.apache.royale.compiler.tree.as.IObjectLiteralValuePairNode;
 import org.apache.royale.compiler.tree.as.IOperatorNode.OperatorType;
 import org.apache.royale.compiler.tree.as.IPackageNode;
 import org.apache.royale.compiler.tree.as.IScopedNode;
@@ -129,7 +132,6 @@ import com.as3mxml.vscode.project.ILspProject;
 import com.as3mxml.vscode.utils.ASTUtils;
 import com.as3mxml.vscode.utils.ActionScriptProjectManager;
 import com.as3mxml.vscode.utils.AddImportData;
-import com.as3mxml.vscode.utils.CSSDocumentUtils;
 import com.as3mxml.vscode.utils.CodeActionsUtils;
 import com.as3mxml.vscode.utils.CompilationUnitUtils.IncludeFileData;
 import com.as3mxml.vscode.utils.CompilerProjectUtils;
@@ -1668,6 +1670,38 @@ public class CompletionProvider {
 
             addDefinitionsInTypeScopeToAutoCompleteActionScript(typeScope, scope, namespaceSet, node, false, nextChar,
                     prioritySuperFunction, isParamOfTypeFunction, addImportData, project, result);
+
+            if (leftDefinition instanceof IVariableDefinition
+                    && (project.getBuiltinType(BuiltinType.OBJECT).equals(leftType))
+                    || project.getBuiltinType(BuiltinType.ANY_TYPE).equals(leftType)) {
+                IVariableDefinition varDefinition = (IVariableDefinition) leftDefinition;
+                IVariableNode varNode = varDefinition.getVariableNode();
+                if (varNode != null) {
+                    IExpressionNode assignedValueNode = varNode.getAssignedValueNode();
+                    if (assignedValueNode instanceof ObjectLiteralNode) {
+                        ObjectLiteralNode objectLiteralNode = (ObjectLiteralNode) assignedValueNode;
+                        ContainerNode contentsNode = objectLiteralNode.getContentsNode();
+                        if (contentsNode != null) {
+                            for (int i = 0; i < contentsNode.getChildCount(); i++) {
+                                IASNode child = contentsNode.getChild(i);
+                                if (child instanceof IObjectLiteralValuePairNode) {
+                                    IObjectLiteralValuePairNode valuePairNode = (IObjectLiteralValuePairNode) child;
+                                    IExpressionNode nameNode = valuePairNode.getNameNode();
+                                    if (nameNode instanceof IIdentifierNode) {
+                                        IIdentifierNode identifierNode = (IIdentifierNode) nameNode;
+                                        String propertyName = identifierNode.getName();
+                                        CompletionItem dynamicPropertyItem = new CompletionItem();
+                                        dynamicPropertyItem.setLabel(propertyName);
+                                        dynamicPropertyItem.setDetail("(dynamic property)");
+                                        dynamicPropertyItem.setKind(CompletionItemKind.Property);
+                                        result.getItems().add(dynamicPropertyItem);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
             return;
         }
 
