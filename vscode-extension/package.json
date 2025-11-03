@@ -54,28 +54,12 @@
     "webpack-cli": "^6.0.1"
   },
   "activationEvents": [
-    "onLanguage:actionscript",
-    "onLanguage:mxml",
     "workspaceContains:**/asconfig.json",
     "workspaceContains:**/asconfig.*.json",
     "workspaceContains:.actionScriptProperties",
     "workspaceContains:*.as3proj",
-    "onView:actionScriptSourcePaths",
-    "onCommand:as3mxml.organizeImportsInUri",
-    "onCommand:as3mxml.organizeImportsInDirectory",
-    "onCommand:as3mxml.removeUnusedImportsInUri",
-    "onCommand:as3mxml.addMissingImportsInUri",
-    "onCommand:as3mxml.sortImportsInUri",
-    "onCommand:as3mxml.saveSessionPassword",
-    "onCommand:as3mxml.selectWorkspaceSDK",
-    "onCommand:as3mxml.restartServer",
-    "onCommand:as3mxml.importFlashBuilderProject",
-    "onCommand:as3mxml.importFlashDevelopProject",
     "onCommand:as3mxml.quickCompile",
-    "onCommand:as3mxml.quickCompileAndDebug",
-    "onCommand:as3mxml.quickCompileAndRun",
-    "onCommand:as3mxml.getActiveProjectURIs",
-    "onCommand:as3mxml.createNewProject"
+    "onCommand:as3mxml.getActiveProjectURIs"
   ],
   "contributes": {
     "commands": [
