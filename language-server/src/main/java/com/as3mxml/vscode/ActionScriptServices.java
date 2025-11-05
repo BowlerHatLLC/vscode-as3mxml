@@ -970,7 +970,9 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         }
 
         if (fallbackConfig != null && projectData.equals(actionScriptProjectManager.getFallbackProjectData())) {
-            fallbackConfig.didOpen(path);
+            if (textDocumentUri.endsWith(FILE_EXTENSION_AS) || textDocumentUri.endsWith(FILE_EXTENSION_MXML)) {
+                fallbackConfig.didOpen(path);
+            }
         }
 
         getProject(projectData);
@@ -1117,7 +1119,9 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             clearProblems = true;
         } else {
             if (fallbackConfig != null && projectData.equals(actionScriptProjectManager.getFallbackProjectData())) {
-                fallbackConfig.didClose(path);
+                if (textDocumentUri.endsWith(FILE_EXTENSION_AS) || textDocumentUri.endsWith(FILE_EXTENSION_MXML)) {
+                    fallbackConfig.didClose(path);
+                }
                 clearProblems = true;
             }
 
@@ -1520,7 +1524,11 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         for (Path openFilePath : fileTracker.getOpenFiles()) {
             ActionScriptProjectData projectData = actionScriptProjectManager.getProjectDataForSourceFile(openFilePath);
             if (fallbackProjectData.equals(projectData)) {
-                fallbackConfig.didOpen(openFilePath);
+                String openFilePathString = openFilePath.getFileName().toString();
+                if (openFilePathString.endsWith(FILE_EXTENSION_AS)
+                        || openFilePathString.endsWith(FILE_EXTENSION_MXML)) {
+                    fallbackConfig.didOpen(openFilePath);
+                }
             }
         }
     }
