@@ -427,12 +427,18 @@
         "as3mxml.languageServer.jvmargs": {
           "type": "string",
           "default": null,
-          "description": "(Advanced) Specifies extra arguments that the extension will pass to the Java virtual machine when launching the language server. Example: \"-Xmx1024m -noverify\" sets the maximum heap size to 1024 MB and bypasses Java class verification."
+          "description": "(Advanced) Specifies extra arguments that the extension will pass to the Java virtual machine when launching the language server. Example: \"-Xmx1024m -noverify\" sets the maximum heap size to 1024 MB and bypasses Java class verification.",
+          "tags": [
+            "advanced"
+          ]
         },
         "as3mxml.languageServer.concurrentRequests": {
           "type": "boolean",
           "default": true,
-          "description": "(Advanced) Specifies if requests to the language server will be processed concurrently or in a queue. Disabling concurrency will result in slower code intelligence, but it may be more stable if code intelligence stops working."
+          "description": "(Advanced) Specifies if requests to the language server will be processed concurrently or in a queue. Disabling concurrency will result in slower code intelligence, but it may be more stable if code intelligence stops working.",
+          "tags": [
+            "advanced"
+          ]
         },
         "as3mxml.asconfigc.jvmargs": {
           "type": "string",
@@ -453,7 +459,10 @@
             "null"
           ],
           "default": null,
-          "description": "(Advanced) Specifies the folder path of the Apache Royale SDK used internally by the extension for code intelligence. Unless you know what you're doing, you should probably set as3mxml.sdk.framework instead."
+          "description": "(Advanced) Specifies the folder path of the Apache Royale SDK used internally by the extension for code intelligence. Unless you know what you're doing, you should probably set as3mxml.sdk.framework instead.",
+          "tags": [
+            "advanced"
+          ]
         },
         "as3mxml.sdk.animate": {
           "type": [
@@ -631,7 +640,10 @@
           ],
           "default": "off",
           "description": "(Advanced) Logs the communication between Visual Studio Code and the ActionScript & MXML language server",
-          "scope": "window"
+          "scope": "window",
+          "tags": [
+            "advanced"
+          ]
         },
         "actionscript.views.explorer.showCreateNewActionScriptProject": {
           "type": "boolean",
