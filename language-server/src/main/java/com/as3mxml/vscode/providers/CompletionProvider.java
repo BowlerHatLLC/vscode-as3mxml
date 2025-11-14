@@ -1672,8 +1672,8 @@ public class CompletionProvider {
                     prioritySuperFunction, isParamOfTypeFunction, addImportData, project, result);
 
             if (leftDefinition instanceof IVariableDefinition
-                    && (project.getBuiltinType(BuiltinType.OBJECT).equals(leftType))
-                    || project.getBuiltinType(BuiltinType.ANY_TYPE).equals(leftType)) {
+                    && (project.getBuiltinType(BuiltinType.OBJECT).equals(leftType)
+                            || project.getBuiltinType(BuiltinType.ANY_TYPE).equals(leftType))) {
                 IVariableDefinition varDefinition = (IVariableDefinition) leftDefinition;
                 IVariableNode varNode = varDefinition.getVariableNode();
                 if (varNode != null) {
