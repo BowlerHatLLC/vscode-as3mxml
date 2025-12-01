@@ -315,6 +315,11 @@ public class ProjectUtils {
 				if (excludes != null && excludes.contains(innerFilePath)) {
 					continue;
 				}
+				String innerFileName = innerFile.getName();
+				if (innerFileName.startsWith("._") || innerFileName.equals(".DS_Store")) {
+					// macOS system files that can be ignored
+					continue;
+				}
 				result.add(innerFilePath);
 			}
 		}
