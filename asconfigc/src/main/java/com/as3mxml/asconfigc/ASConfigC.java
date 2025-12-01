@@ -1144,7 +1144,13 @@ public class ASConfigC {
 					"Failed to create output directory for HTML template: " + outputDirectory.getAbsolutePath() + ".");
 		}
 		try {
-			for (File file : inputDirectory.listFiles()) {
+			File[] files = inputDirectory.listFiles();
+			if (files == null) {
+				// this file is invalid for some reason
+				System.err.println("Skipping HTML template directory: " + inputDirectory.getAbsolutePath());
+				return;
+			}
+			for (File file : files) {
 				if (file.isDirectory()) {
 					File newOutputDirectory = new File(outputDirectory, file.getName());
 					copyHTMLTemplateDirectory(file, newOutputDirectory);

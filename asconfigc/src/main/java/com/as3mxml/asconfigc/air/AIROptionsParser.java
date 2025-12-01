@@ -430,10 +430,15 @@ public class AIROptionsParser {
 			// accept a directory, but it only seems to work with files, so
 			// we read the directory contents to add the files individually
 			File[] files = srcFile.listFiles();
-			for (int i = 0, length = files.length; i < length; i++) {
-				File file = files[i];
-				String fileDestPath = Paths.get(destPath, file.getName()).toString();
-				addFile(file, fileDestPath, result);
+			if (files == null) {
+				// this file is invalid for some reason
+				System.err.println("Skipping AIR file path: " + srcFile.getAbsolutePath());
+			} else {
+				for (int i = 0, length = files.length; i < length; i++) {
+					File file = files[i];
+					String fileDestPath = Paths.get(destPath, file.getName()).toString();
+					addFile(file, fileDestPath, result);
+				}
 			}
 			return;
 		}
