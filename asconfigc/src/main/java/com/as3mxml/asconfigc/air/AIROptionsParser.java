@@ -436,7 +436,12 @@ public class AIROptionsParser {
 			} else {
 				for (int i = 0, length = files.length; i < length; i++) {
 					File file = files[i];
-					String fileDestPath = Paths.get(destPath, file.getName()).toString();
+					String fileName = file.getName();
+					if (fileName.startsWith("._") || fileName.equals(".DS_Store")) {
+						// macOS system files that can be ignored
+						continue;
+					}
+					String fileDestPath = Paths.get(destPath, fileName).toString();
 					addFile(file, fileDestPath, result);
 				}
 			}
