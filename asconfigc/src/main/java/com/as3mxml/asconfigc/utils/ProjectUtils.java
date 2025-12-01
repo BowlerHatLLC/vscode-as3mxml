@@ -297,7 +297,7 @@ public class ProjectUtils {
 				System.err.println("Skipping assets in source path: " + sourcePath);
 				continue;
 			}
-			for (File innerFile : file.listFiles()) {
+			for (File innerFile : listedFiles) {
 				String innerFilePath = innerFile.getAbsolutePath();
 				if (innerFile.isDirectory()) {
 					sourcePathsCopy.add(innerFilePath);
