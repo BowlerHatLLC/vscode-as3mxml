@@ -20,6 +20,7 @@
 package com.as3mxml.vscode.asdoc;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -47,6 +48,7 @@ public class VSCodeASDocComment extends SourceLocation implements IASDocComment 
 	private static final Pattern markdownBacktickPattern = Pattern.compile("(`)(\\w(?:[\\w ]+\\w)?)\\1");
 
 	public static VSCodeASDocComment getComment(Element defElement) {
+		BufferedReader reader = null;
 		try {
 			String defName = defElement.getName();
 			String description = null;
@@ -66,12 +68,14 @@ public class VSCodeASDocComment extends SourceLocation implements IASDocComment 
 			}
 			StringBuilder builder = new StringBuilder();
 			builder.append("/**");
-			BufferedReader reader = new BufferedReader(new StringReader(description));
+			reader = new BufferedReader(new StringReader(description));
 			String line = null;
 			while ((line = reader.readLine()) != null) {
 				builder.append("\n * ");
 				builder.append(line);
 			}
+			reader.close();
+			reader = null;
 			if ("apiValue".equals(defName)) {
 				Element apiDetailElement = defElement.element(defName + "Detail");
 				if (apiDetailElement != null) {
@@ -146,11 +150,33 @@ public class VSCodeASDocComment extends SourceLocation implements IASDocComment 
 						}
 					}
 				}
+				Element exampleElement = apiDetailElement.element("example");
+				// if conref is defined, the example is in an external file
+				if (exampleElement != null && exampleElement.attribute("conref") == null) {
+					builder.append("\n * @example ");
+					String example = exampleElement.asXML();
+					reader = new BufferedReader(new StringReader(example));
+					while ((line = reader.readLine()) != null) {
+						builder.append("\n * ");
+						builder.append(line);
+					}
+					reader.close();
+					reader = null;
+				}
 			}
 			builder.append("\n */");
 			return new VSCodeASDocComment(builder.toString());
 		} catch (Exception e) {
 			return null;
+		} finally {
+			if (reader != null) {
+				try {
+					reader.close();
+				} catch (IOException e) {
+				} finally {
+					reader = null;
+				}
+			}
 		}
 	}
 
