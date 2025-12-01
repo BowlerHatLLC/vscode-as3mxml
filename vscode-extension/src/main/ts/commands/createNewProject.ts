@@ -390,7 +390,8 @@ function createAsconfigJson(
 	"config": ${mobile ? `"airmobile"` : `"air"`},
 	"compilerOptions": {
 		"source-path": [
-			"src"
+			"src",
+			"libs_src"
 		],
 		"library-path": [
 			"libs"
@@ -410,7 +411,8 @@ function createAsconfigJsonRoyale(mainClassName: string): string {
 			"JSRoyale"
 		],
 		"source-path": [
-			"src"
+			"src",
+			"libs_src"
 		],
 		"library-path": [
 			"libs"
