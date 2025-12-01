@@ -138,22 +138,38 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy {
             return null;
         }
         JsonNode json = null;
-        try {
-            String contents = FileUtils.readFileToString(asconfigFile);
-            ObjectMapper mapper = new ObjectMapper();
-            // VSCode allows comments, so we should too
-            mapper.configure(JsonParser.Feature.ALLOW_COMMENTS, true);
-            mapper.configure(JsonParser.Feature.ALLOW_TRAILING_COMMA, true);
-            json = mapper.readTree(contents);
-            Set<ValidationMessage> errors = schema.validate(json);
-            if (!errors.isEmpty()) {
-                // don't print anything to the console. the editor will validate
-                // and display any errors, if necessary.
+        File currentAsconfigFile = asconfigFile;
+        while (currentAsconfigFile != null) {
+            JsonNode currentJson = null;
+            try {
+                String contents = FileUtils.readFileToString(currentAsconfigFile);
+                ObjectMapper mapper = new ObjectMapper();
+                // VSCode allows comments, so we should too
+                mapper.configure(JsonParser.Feature.ALLOW_COMMENTS, true);
+                mapper.configure(JsonParser.Feature.ALLOW_TRAILING_COMMA, true);
+                currentJson = mapper.readTree(contents);
+                Set<ValidationMessage> errors = schema.validate(currentJson);
+                if (!errors.isEmpty()) {
+                    // don't print anything to the console. the editor will validate
+                    // and display any errors, if necessary.
+                    return null;
+                }
+            } catch (Exception e) {
+                // this exception is expected sometimes if the JSON is invalid
                 return null;
             }
-        } catch (Exception e) {
-            // this exception is expected sometimes if the JSON is invalid
-            return null;
+            if (json != null) {
+                json = ConfigUtils.mergeConfigs(json, currentJson);
+            } else {
+                json = currentJson;
+            }
+            if (currentJson.has(TopLevelFields.EXTENDS)) {
+                String extendsPath = currentJson.get(TopLevelFields.EXTENDS).asText();
+                currentAsconfigFile = new File(extendsPath);
+
+            } else {
+                currentAsconfigFile = null;
+            }
         }
         try {
             if (json.has(TopLevelFields.TYPE)) // optional, defaults to "app"
