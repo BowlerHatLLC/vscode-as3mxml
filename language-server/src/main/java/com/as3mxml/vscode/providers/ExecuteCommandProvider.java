@@ -171,6 +171,10 @@ public class ExecuteCommandProvider {
         for (int i = 0; i < directories.size(); i++) {
             File currentDir = directories.get(i);
             File[] files = currentDir.listFiles();
+            if (files == null) {
+                // this file is invalid for some reason
+                continue;
+            }
             for (File file : files) {
                 if (file.isDirectory()) {
                     // add this directory to the list to search
