@@ -1157,6 +1157,10 @@ public class ASConfigC {
 					continue;
 				}
 				String fileName = file.getName();
+				if (fileName.startsWith("._") || fileName.equals(".DS_Store")) {
+					// macOS system files that can be ignored
+					continue;
+				}
 				int extensionIndex = fileName.lastIndexOf('.');
 				if (extensionIndex != -1) {
 					String extension = fileName.substring(extensionIndex);
