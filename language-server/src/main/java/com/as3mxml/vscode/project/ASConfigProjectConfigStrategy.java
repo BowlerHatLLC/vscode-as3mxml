@@ -142,7 +142,7 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy {
         while (currentAsconfigFile != null) {
             JsonNode currentJson = null;
             try {
-                String contents = FileUtils.readFileToString(currentAsconfigFile);
+                String contents = FileUtils.readFileToString(currentAsconfigFile, "utf-8");
                 ObjectMapper mapper = new ObjectMapper();
                 // VSCode allows comments, so we should too
                 mapper.configure(JsonParser.Feature.ALLOW_COMMENTS, true);
