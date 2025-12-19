@@ -619,14 +619,33 @@ public class ActionScriptProjectManager {
                 int endColumn = column;
                 IDefinitionNode node = definition.getNode();
                 if (node != null) {
+                    // prefer the node ranges, if available, because they may
+                    // be more accurate
                     endLine = node.getEndLine();
-                    if (endLine == -1) {
-                        endLine = line;
-                    }
                     endColumn = node.getEndColumn();
-                    if (endColumn == -1) {
-                        endColumn = column;
+                }
+                if (endLine == -1 && endColumn == -1) {
+                    // if the node end is missing, that's a compiler bug, but
+                    // try to find the name because the selection range uses
+                    // the name, and the selection range must be contained
+                    // within the range, or vscode will complain.
+                    int nameLine = definition.getNameLine();
+                    int nameColumn = definition.getNameColumn();
+                    if (nameLine != -1 && nameColumn != -1 && nameLine >= endLine) {
+                        endLine = nameLine;
+                        endColumn = nameColumn;
+                        int nameEnd = definition.getNameEnd();
+                        int nameStart = definition.getNameStart();
+                        if (nameStart != -1 && nameEnd != -1) {
+                            endColumn += (nameEnd - nameStart);
+                        }
                     }
+                }
+                if (endLine == -1) {
+                    endLine = line;
+                }
+                if (endColumn == -1) {
+                    endColumn = column;
                 }
                 start.setLine(line);
                 start.setCharacter(column);
