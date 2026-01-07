@@ -84,6 +84,7 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.networknt.schema.JsonSchema;
 import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.SpecVersion.VersionFlag;
@@ -104,6 +105,7 @@ public class ASConfigC {
 	private static final String FILE_NAME_BIN_JS_DEBUG = "bin/js-debug";
 	private static final String FILE_NAME_BIN_JS_RELEASE = "bin/js-release";
 	private static final Pattern COMPILER_OPTION_OUTPUT_PATTERN = Pattern.compile("^-{1,2}output\\b");
+	private static final String TARGET_SWF = "SWF";
 
 	public static void main(String[] args) {
 		CommandLineParser parser = new DefaultParser();
@@ -864,6 +866,12 @@ public class ASConfigC {
 		}
 		if (compilerOptionsJson.has(CompilerOptions.TARGETS)) {
 			configRequiresRoyale = true;
+
+			JsonNode targetsJson = compilerOptionsJson.get(CompilerOptions.TARGETS);
+			if (targetsJson.isArray()) {
+				ArrayNode targetsArray = (ArrayNode) targetsJson;
+				isSWFTargetOnly = targetsArray.size() == 1 && targetsArray.get(0).asText().equals(TARGET_SWF);
+			}
 		}
 		if (compilerOptionsJson.has(CompilerOptions.SOURCE_MAP)) {
 			// source-map compiler option is supported by Royale
