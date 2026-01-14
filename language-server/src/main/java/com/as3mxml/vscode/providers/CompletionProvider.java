@@ -2366,6 +2366,14 @@ public class CompletionProvider {
         if (isDuplicateTypeDefinition(definition)) {
             return;
         }
+        if (definition.isInternal()) {
+            IPackageNode packageNode = (IPackageNode) offsetNode.getAncestorOfType(IPackageNode.class);
+            if (packageNode != null) {
+                if (!packageNode.getQualifiedName().equals(definition.getPackageName())) {
+                    return;
+                }
+            }
+        }
         int priority = 0;
         if (priorityNewClass != null && definition instanceof IClassDefinition) {
             IClassDefinition classDefinition = (IClassDefinition) definition;
