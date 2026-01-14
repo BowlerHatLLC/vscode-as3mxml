@@ -62,6 +62,7 @@ import org.apache.royale.compiler.tree.as.IInterfaceNode;
 import org.apache.royale.compiler.tree.as.ILiteralContainerNode;
 import org.apache.royale.compiler.tree.as.ILiteralNode;
 import org.apache.royale.compiler.tree.as.IMemberAccessExpressionNode;
+import org.apache.royale.compiler.tree.as.INonResolvingIdentifierNode;
 import org.apache.royale.compiler.tree.as.IPackageNode;
 import org.apache.royale.compiler.tree.as.IScopedDefinitionNode;
 import org.apache.royale.compiler.tree.as.IScopedNode;
@@ -473,7 +474,7 @@ public class ASTUtils {
     public static void findIdentifiersForDefinition(IASNode node, IDefinition definition, ICompilerProject project,
             List<IIdentifierNode> result) {
         if (node.isTerminal()) {
-            if (node instanceof IIdentifierNode) {
+            if (node instanceof IIdentifierNode && !(node instanceof INonResolvingIdentifierNode)) {
                 IIdentifierNode identifierNode = (IIdentifierNode) node;
                 IASNode parentNode = identifierNode.getParent();
                 IDefinition resolvedDefinition = null;
