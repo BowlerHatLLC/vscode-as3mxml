@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.royale.compiler.common.ISourceLocation;
+import org.apache.royale.compiler.definitions.IClassDefinition;
 import org.apache.royale.compiler.definitions.IDefinition;
 import org.apache.royale.compiler.definitions.IFunctionDefinition;
 import org.apache.royale.compiler.definitions.IParameterDefinition;
@@ -187,6 +188,10 @@ public class InlayHintProvider {
         if (node instanceof IFunctionCallNode) {
             IFunctionCallNode functionCallNode = (IFunctionCallNode) node;
             IDefinition calledDefinition = functionCallNode.resolveCalledExpression(projectData.project);
+            if (calledDefinition instanceof IClassDefinition) {
+                IClassDefinition classDefinition = (IClassDefinition) calledDefinition;
+                calledDefinition = classDefinition.getConstructor();
+            }
             if (calledDefinition instanceof IFunctionDefinition) {
                 IFunctionDefinition functionDefinition = (IFunctionDefinition) calledDefinition;
                 IParameterDefinition[] paramDefs = functionDefinition.getParameters();
