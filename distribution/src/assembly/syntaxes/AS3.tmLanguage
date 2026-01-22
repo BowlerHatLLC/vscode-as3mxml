@@ -139,6 +139,26 @@
 			<key>name</key>
 			<string>keyword.operator.actionscript.3</string>
 		</dict>
+		<key>conditional_compilation</key>
+		<dict>
+			<key>match</key>
+			<string>(?x) (^|\s+|;) (\b\w+\b)::(\b\w+\b)</string>
+			<key>captures</key>
+			<dict>
+				<key>2</key>
+				<dict>
+					<key>name</key>
+					<string>constant.other.actionscript.3</string>
+				</dict>
+				<key>3</key>
+				<dict>
+					<key>name</key>
+					<string>constant.other.actionscript.3</string>
+				</dict>
+			</dict>
+			<key>name</key>
+			<string>meta.conditional.actionscript.3</string>
+		</dict>
 		<key>class</key>
 		<dict>
 			<key>begin</key>
@@ -170,6 +190,10 @@
 				<dict>
 					<key>include</key>
 					<string>#class_declaration</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#declaration_code_block</string>
 				</dict>
 				<dict>
 					<key>include</key>
@@ -259,6 +283,10 @@
 					<key>include</key>
 					<string>#object_literal</string>
 				</dict>
+				<dict>
+					<key>include</key>
+					<string>#conditional_compilation</string>
+				</dict>
 			</array>
 		</dict>
 		<key>namespace_declaration</key>
@@ -319,7 +347,7 @@
 				</dict>
 			</array>
 		</dict>
-		<key>code_block</key>
+		<key>declaration_code_block</key>
 		<dict>
 			<key>begin</key>
 			<string>\{</string>
@@ -331,7 +359,115 @@
 			<array>
 				<dict>
 					<key>include</key>
-					<string>#code_block</string>
+					<string>#method</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#variable_declaration</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#comments</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#strings</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#regexp</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#numbers</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#primitive_types</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#primitive_error_types</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#dynamic_type</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#primitive_functions</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#language_constants</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#language_variables</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#guess_type</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#guess_constant</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#other_operators</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#arithmetic_operators</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#logical_operators</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#array_access_operators</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#vector_creation_operators</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#control_keywords</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#other_keywords</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#use_namespace</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#functions</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#import</string>
+				</dict>
+			</array>
+		</dict>
+		<key>local_code_block</key>
+		<dict>
+			<key>begin</key>
+			<string>\{</string>
+			<key>end</key>
+			<string>\}</string>
+			<key>name</key>
+			<string>meta.code_block.actionscript.3</string>
+			<key>patterns</key>
+			<array>
+				<dict>
+					<key>include</key>
+					<string>#local_code_block</string>
 				</dict>
 				<dict>
 					<key>include</key>
@@ -900,7 +1036,7 @@
 				</dict>
 				<dict>
 					<key>include</key>
-					<string>#code_block</string>
+					<string>#local_code_block</string>
 				</dict>
 			</array>
 		</dict>
