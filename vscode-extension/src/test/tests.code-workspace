@@ -1,13 +1,13 @@
 {
   "folders": [
     {
-      "path": "application_workspace"
+      "path": "application_workspace",
     },
     {
-      "path": "library_workspace"
-    }
+      "path": "library_workspace",
+    },
   ],
   "settings": {
-    "as3mxml.sdk.editor": "/Users/joshtynjala/Development/apache/royale-asjs"
-  }
+    // "as3mxml.sdk.editor": "/Users/joshtynjala/Development/apache/royale-asjs"
+  },
 }
