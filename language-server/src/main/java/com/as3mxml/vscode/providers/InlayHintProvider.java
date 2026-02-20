@@ -187,67 +187,7 @@ public class InlayHintProvider {
 
         if (node instanceof IFunctionCallNode) {
             IFunctionCallNode functionCallNode = (IFunctionCallNode) node;
-            IDefinition calledDefinition = functionCallNode.resolveCalledExpression(projectData.project);
-            if (calledDefinition instanceof IClassDefinition) {
-                IClassDefinition classDefinition = (IClassDefinition) calledDefinition;
-                calledDefinition = classDefinition.getConstructor();
-            }
-            if (calledDefinition instanceof IFunctionDefinition) {
-                IFunctionDefinition functionDefinition = (IFunctionDefinition) calledDefinition;
-                IParameterDefinition[] paramDefs = functionDefinition.getParameters();
-                IExpressionNode[] argNodes = functionCallNode.getArgumentNodes();
-                int minLength = Math.min(paramDefs.length, argNodes.length);
-                for (int i = 0; i < minLength; i++) {
-                    IExpressionNode argNode = argNodes[i];
-                    if ("literals".equals(inlayHints_parameterNames_enabled) && !(argNode instanceof ILiteralNode)) {
-                        continue;
-                    }
-                    int argLine = argNode.getLine();
-                    int argColumn = argNode.getColumn();
-                    if (argLine == -1 || argColumn == -1) {
-                        continue;
-                    }
-                    IParameterDefinition paramDef = paramDefs[i];
-                    String paramName = paramDef.getBaseName();
-                    if (paramName == null || paramName.length() == 0) {
-                        if (paramDef.isRest()) {
-                            paramName = "rest";
-                        } else {
-                            // parameter doesn't have a name, for some reason,
-                            // so skip it!
-                            continue;
-                        }
-                    }
-                    if (paramDef.isRest()) {
-                        paramName = "..." + paramName;
-                    }
-                    boolean needsPaddingLeft = false;
-                    if (argNode instanceof IIdentifierNode) {
-                        IIdentifierNode argIdentifier = (IIdentifierNode) argNode;
-                        String identiferName = argIdentifier.getName();
-                        if (inlayHints_parameterNames_suppressWhenArgumentMatchesName
-                                && paramName.equals(identiferName)) {
-                            continue;
-                        }
-                        // if the identifier is missing, add a little extra
-                        // padding after the preceding ( or , character
-                        needsPaddingLeft = "".equals(argIdentifier.getName());
-                    }
-                    InlayHint inlayHint = new InlayHint();
-                    inlayHint.setLabel(paramName + ":");
-                    inlayHint.setPosition(new Position(argLine, argColumn));
-                    inlayHint.setKind(InlayHintKind.Parameter);
-                    inlayHint.setPaddingRight(true);
-                    inlayHint.setPaddingLeft(needsPaddingLeft);
-                    String markdown = DefinitionDocumentationUtils.getDocumentationForParameter(paramDef, true,
-                            projectData.project.getWorkspace());
-                    if (markdown != null) {
-                        inlayHint.setTooltip(new MarkupContent(MarkupKind.MARKDOWN, markdown));
-                    }
-                    result.add(inlayHint);
-                }
-            }
-            return false;
+            addFunctionCallNodeToResult(functionCallNode, projectData, result);
         } else if (node.isTerminal()) {
             return false;
         }
@@ -260,5 +200,69 @@ public class InlayHintProvider {
         }
 
         return false;
+    }
+
+    private void addFunctionCallNodeToResult(IFunctionCallNode functionCallNode, ActionScriptProjectData projectData, List<InlayHint> result)
+    {
+        IDefinition calledDefinition = functionCallNode.resolveCalledExpression(projectData.project);
+        if (calledDefinition instanceof IClassDefinition) {
+            IClassDefinition classDefinition = (IClassDefinition) calledDefinition;
+            calledDefinition = classDefinition.getConstructor();
+        }
+        if (calledDefinition instanceof IFunctionDefinition) {
+            IFunctionDefinition functionDefinition = (IFunctionDefinition) calledDefinition;
+            IParameterDefinition[] paramDefs = functionDefinition.getParameters();
+            IExpressionNode[] argNodes = functionCallNode.getArgumentNodes();
+            int minLength = Math.min(paramDefs.length, argNodes.length);
+            for (int i = 0; i < minLength; i++) {
+                IExpressionNode argNode = argNodes[i];
+                if ("literals".equals(inlayHints_parameterNames_enabled) && !(argNode instanceof ILiteralNode)) {
+                    continue;
+                }
+                int argLine = argNode.getLine();
+                int argColumn = argNode.getColumn();
+                if (argLine == -1 || argColumn == -1) {
+                    continue;
+                }
+                IParameterDefinition paramDef = paramDefs[i];
+                String paramName = paramDef.getBaseName();
+                if (paramName == null || paramName.length() == 0) {
+                    if (paramDef.isRest()) {
+                        paramName = "rest";
+                    } else {
+                        // parameter doesn't have a name, for some reason,
+                        // so skip it!
+                        continue;
+                    }
+                }
+                if (paramDef.isRest()) {
+                    paramName = "..." + paramName;
+                }
+                boolean needsPaddingLeft = false;
+                if (argNode instanceof IIdentifierNode) {
+                    IIdentifierNode argIdentifier = (IIdentifierNode) argNode;
+                    String identiferName = argIdentifier.getName();
+                    if (inlayHints_parameterNames_suppressWhenArgumentMatchesName
+                            && paramName.equals(identiferName)) {
+                        continue;
+                    }
+                    // if the identifier is missing, add a little extra
+                    // padding after the preceding ( or , character
+                    needsPaddingLeft = "".equals(argIdentifier.getName());
+                }
+                InlayHint inlayHint = new InlayHint();
+                inlayHint.setLabel(paramName + ":");
+                inlayHint.setPosition(new Position(argLine, argColumn));
+                inlayHint.setKind(InlayHintKind.Parameter);
+                inlayHint.setPaddingRight(true);
+                inlayHint.setPaddingLeft(needsPaddingLeft);
+                String markdown = DefinitionDocumentationUtils.getDocumentationForParameter(paramDef, true,
+                        projectData.project.getWorkspace());
+                if (markdown != null) {
+                    inlayHint.setTooltip(new MarkupContent(MarkupKind.MARKDOWN, markdown));
+                }
+                result.add(inlayHint);
+            }
+        }
     }
 }
