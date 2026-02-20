@@ -1,5 +1,26 @@
 # ActionScript & MXML for Visual Studio Code Changelog
 
+## 1.24.0
+
+### New Features
+
+- Completion: Include dynamic properties in suggestions for variables initialized with an object literal.
+- Completion: Added a number of special attributes in completion for core MXML language tags, like `<fx:Component>` and `<fx:Script>`.
+- Hover: Include `@example` ASDoc tags on hover with example code.
+
+### Fixed Issues
+
+- Build: Fixed missing detection of SWF-only compilation with Royale `targets` compiler option.
+- Build: Fixed incorrect copying of _.DS\_Store_ and _.\__ files on macOS when copying HTML template or `files` in `airOptions`.
+- Build: Fixed null exceptions when listing files in certain paths.
+- Completion: Fixed `internal` classes in other packages appearing as suggestions.
+- General: Fixed warning caused by generated selection range not being completely contained within definition range.
+- General: Fixed "CSS is an unsupported type" being reported incorrectly in certain contexts.
+- General: Handle null abstract syntax tree in real-time problem checker.
+- Inlay Hints: Fixed missing inlay hints for constructors and nested function calls.
+- References: Fixed non-resolving identifiers incorrectly being considered references.
+- Syntax: Fixed highlighting issues with conditional compilation blocks.
+
 ## 1.23.0
 
 ### New Features
