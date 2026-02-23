@@ -21,12 +21,17 @@ public class AIRTarget {
 	public static final String ANE = "ane";
 	public static final String BUNDLE = "bundle";
 	public static final String NATIVE = "native";
+	public static final String CMDLINE = "cmdline";
 
 	public static final String APK = "apk";
 	public static final String APK_CAPTIVE_RUNTIME = "apk-captive-runtime";
 	public static final String APK_DEBUG = "apk-debug";
 	public static final String APK_EMULATOR = "apk-emulator";
 	public static final String APK_PROFILE = "apk-profile";
+	public static final String AAB = "aab";
+	public static final String AAB_DEBUG = "aab-debug";
+	public static final String ANDROID_STUDIO = "android-studio";
+	public static final String ANDROID_STUDIO_DEBUG = "android-studio-debug";
 
 	public static final String IPA_APP_STORE = "ipa-app-store";
 	public static final String IPA_AD_HOC = "ipa-ad-hoc";
