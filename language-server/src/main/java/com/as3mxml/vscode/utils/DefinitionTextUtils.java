@@ -714,6 +714,10 @@ public class DefinitionTextUtils {
         StringBuilder detailBuilder = new StringBuilder();
         if (definition instanceof IClassDefinition) {
             IClassDefinition classDefinition = (IClassDefinition) definition;
+            if (classDefinition.isFinal()) {
+                detailBuilder.append(IASKeywordConstants.FINAL);
+                detailBuilder.append(" ");
+            }
             if (classDefinition.isDynamic()) {
                 detailBuilder.append(IASKeywordConstants.DYNAMIC);
                 detailBuilder.append(" ");
