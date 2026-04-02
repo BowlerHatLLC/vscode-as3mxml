@@ -92,7 +92,7 @@ Debug and run Apache Royale with Visual Studio Code's built-in support for debug
 
 ## Nightly builds
 
-Continuous integration produces builds on every push to the repository. Visit the [Actions page for vscode-as3mxml](https://github.com/BowlerHatLLC/vscode-as3mxml/actions?query=branch%3Amain+is%3Asuccess+event%3Apush) to find the most recent successful runs. Each run should have an artifact attached that is named **vscode-as3mxml**. Download this file, unzip it, and you'll get a _.vsix_ file that may be installed by Visual Studio Code.
+Continuous integration produces builds on every push to the repository. Visit the [Actions page for vscode-as3mxml](https://github.com/BowlerHatLLC/vscode-as3mxml/actions?query=branch%3Amain+is%3Asuccess+event%3Apush) to find the most recent successful runs. Each run should have an artifact attached with the file extension _.vsix_. You may install this file in Visual Studio Code from the menu in the **Extensions** view or by running the **Extensions: Install from VSIX…** command.
 
 ## Support this project
 
