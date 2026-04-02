@@ -7,6 +7,7 @@
 - Completion: Include dynamic properties in suggestions for variables initialized with an object literal.
 - Completion: Added a number of special attributes in completion for core MXML language tags, like `<fx:Component>` and `<fx:Script>`.
 - Hover: Include `@example` ASDoc tags on hover with example code.
+- Build: Added `cmdline`, `airn`, `ane`, `aab-debug`, `android-studio` and `android-studio-debug` Adobe AIR targets to _asconfig.json_.
 
 ### Fixed Issues
 
@@ -17,6 +18,7 @@
 - General: Fixed warning caused by generated selection range not being completely contained within definition range.
 - General: Fixed "CSS is an unsupported type" being reported incorrectly in certain contexts.
 - General: Handle null abstract syntax tree in real-time problem checker.
+- Hover: Fixed missing `final` on classes that are final.
 - Inlay Hints: Fixed missing inlay hints for constructors and nested function calls.
 - References: Fixed non-resolving identifiers incorrectly being considered references.
 - Syntax: Fixed highlighting issues with conditional compilation blocks.
