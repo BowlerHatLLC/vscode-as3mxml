@@ -1,5 +1,5 @@
 /*
-Copyright 2016-2025 Bowler Hat LLC
+Copyright 2016-2026 Bowler Hat LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -202,8 +202,8 @@ public class InlayHintProvider {
         return false;
     }
 
-    private void addFunctionCallNodeToResult(IFunctionCallNode functionCallNode, ActionScriptProjectData projectData, List<InlayHint> result)
-    {
+    private void addFunctionCallNodeToResult(IFunctionCallNode functionCallNode, ActionScriptProjectData projectData,
+            List<InlayHint> result) {
         IDefinition calledDefinition = functionCallNode.resolveCalledExpression(projectData.project);
         if (calledDefinition instanceof IClassDefinition) {
             IClassDefinition classDefinition = (IClassDefinition) calledDefinition;
