@@ -1910,6 +1910,8 @@ public class CompletionProvider {
                     result);
             addStyleMetadataToAutoCompleteMXML(typeScope, isAttribute, propertyElementPrefix, includeOpenTagBracket,
                     includeOpenTagPrefix, nextChar, project, result);
+            addEffectMetadataToAutoCompleteMXML(typeScope, isAttribute, propertyElementPrefix, includeOpenTagBracket,
+                    includeOpenTagPrefix, nextChar, project, result);
             addEventMetadataToAutoCompleteMXML(typeScope, isAttribute, propertyElementPrefix, includeOpenTagBracket,
                     includeOpenTagPrefix, nextChar, project, result);
             if (isAttribute) {
@@ -2330,6 +2332,85 @@ public class CompletionProvider {
                             insertTextBuilder.append(IMXMLCoreConstants.colon);
                         }
                         insertTextBuilder.append(escapedStyleName);
+                        insertTextBuilder.append(">");
+                    }
+                    item.setInsertText(insertTextBuilder.toString());
+                }
+                items.add(item);
+            }
+            definition = classDefinition.resolveBaseClass(project);
+        }
+    }
+
+    private void addEffectMetadataToAutoCompleteMXML(TypeScope typeScope, boolean isAttribute, String prefix,
+            boolean includeOpenTagBracket, boolean includeOpenTagPrefix, char nextChar, ILspProject project,
+            CompletionList result) {
+        Set<String> effectNames = new HashSet<>();
+        IDefinition definition = typeScope.getDefinition();
+        List<CompletionItem> items = result.getItems();
+        while (definition instanceof IClassDefinition) {
+            IClassDefinition classDefinition = (IClassDefinition) definition;
+            IMetaTag[] effectMetaTags = definition.getMetaTagsByName(IMetaAttributeConstants.ATTRIBUTE_EFFECT);
+            for (IMetaTag effectMetaTag : effectMetaTags) {
+                String effectName = effectMetaTag.getAttributeValue(IMetaAttributeConstants.NAME_EFFECT_NAME);
+                if (effectName == null || effectName.length() == 0) {
+                    // vscode expects all items to have a name
+                    continue;
+                }
+                if (effectNames.contains(effectName)) {
+                    // avoid duplicates!
+                    continue;
+                }
+                effectNames.add(effectName);
+                IDefinition effectDefinition = project.resolveSpecifier(classDefinition, effectName);
+                if (effectDefinition == null) {
+                    continue;
+                }
+                boolean foundExisting = false;
+                for (CompletionItem item : items) {
+                    if (item.getLabel().equals(effectName)) {
+                        // we want to avoid adding a duplicate item with the same
+                        // name. in flex, it's possible for a component to have
+                        // a property and a style with the same name.
+                        // if there's a conflict, the compiler will know how to handle it.
+                        foundExisting = true;
+                        break;
+                    }
+                }
+                if (foundExisting) {
+                    break;
+                }
+
+                String escapedEffectName = effectName;
+                if (completionSupportsSnippets || completionSupportsSimpleSnippets) {
+                    escapedEffectName = effectName.replaceAll("\\$",
+                            Matcher.quoteReplacement("\\$"));
+                }
+                CompletionItem item = CompletionItemUtils.createDefinitionItem(effectDefinition, project);
+                if (isAttribute && (completionSupportsSnippets || completionSupportsSimpleSnippets)
+                        && nextChar != '=') {
+                    item.setInsertTextFormat(InsertTextFormat.Snippet);
+                    item.setInsertText(escapedEffectName + "=\"$0\"");
+                } else if (!isAttribute) {
+                    StringBuilder insertTextBuilder = new StringBuilder();
+                    if (includeOpenTagBracket) {
+                        insertTextBuilder.append("<");
+                    }
+                    if (includeOpenTagPrefix && prefix != null && prefix.length() > 0) {
+                        insertTextBuilder.append(prefix);
+                        insertTextBuilder.append(IMXMLCoreConstants.colon);
+                    }
+                    insertTextBuilder.append(escapedEffectName);
+                    if (completionSupportsSnippets || completionSupportsSimpleSnippets) {
+                        item.setInsertTextFormat(InsertTextFormat.Snippet);
+                        insertTextBuilder.append(">");
+                        insertTextBuilder.append("$0");
+                        insertTextBuilder.append("</");
+                        if (prefix != null && prefix.length() > 0) {
+                            insertTextBuilder.append(prefix);
+                            insertTextBuilder.append(IMXMLCoreConstants.colon);
+                        }
+                        insertTextBuilder.append(escapedEffectName);
                         insertTextBuilder.append(">");
                     }
                     item.setInsertText(insertTextBuilder.toString());

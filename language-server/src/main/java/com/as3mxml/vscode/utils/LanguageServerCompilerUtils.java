@@ -35,6 +35,7 @@ import org.apache.royale.compiler.definitions.IAccessorDefinition;
 import org.apache.royale.compiler.definitions.IClassDefinition;
 import org.apache.royale.compiler.definitions.IConstantDefinition;
 import org.apache.royale.compiler.definitions.IDefinition;
+import org.apache.royale.compiler.definitions.IEffectDefinition;
 import org.apache.royale.compiler.definitions.IEventDefinition;
 import org.apache.royale.compiler.definitions.IFunctionDefinition;
 import org.apache.royale.compiler.definitions.IInterfaceDefinition;
@@ -324,6 +325,8 @@ public class LanguageServerCompilerUtils {
             return CompletionItemKind.Event;
         } else if (definition instanceof IStyleDefinition) {
             return CompletionItemKind.Field;
+        } else if (definition instanceof IEffectDefinition) {
+            return CompletionItemKind.Field;
         }
         return CompletionItemKind.Value;
     }
@@ -366,6 +369,8 @@ public class LanguageServerCompilerUtils {
         } else if (definition instanceof IEventDefinition) {
             return SymbolKind.Event;
         } else if (definition instanceof IStyleDefinition) {
+            return SymbolKind.Field;
+        } else if (definition instanceof IEffectDefinition) {
             return SymbolKind.Field;
         }
         return SymbolKind.Object;
