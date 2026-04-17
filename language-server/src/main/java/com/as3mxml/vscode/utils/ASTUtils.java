@@ -514,9 +514,12 @@ public class ASTUtils {
                         resolvedDefinition = project.resolveQNameToDefinition(styleArrayTypeName);
                     }
                 }
+                // [AccessibilityClass(implementation)]
+                // [Alternative(replacement)]
                 // [ArrayElementType]
                 // [HostComponent]
                 // [InstanceType]
+                // [SkinClass]
                 if (resolvedDefinition == null && parentNode instanceof ITypedTagNode) {
                     String typeName = identifierNode.getName();
                     resolvedDefinition = project.resolveQNameToDefinition(typeName);

@@ -262,9 +262,12 @@ public class RenameProvider {
             }
         }
 
+        // [AccessibilityClass(implementation)]
+        // [Alternative(replacement)]
         // [ArrayElementType]
         // [HostComponent]
         // [InstanceType]
+        // [SkinClass]
         if (definition == null && parentNode instanceof ITypedTagNode && offsetNode instanceof IIdentifierNode) {
             IIdentifierNode identifierNode = (IIdentifierNode) offsetNode;
             String typeName = identifierNode.getName();
