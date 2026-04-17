@@ -46,11 +46,14 @@ import org.apache.royale.compiler.internal.tree.as.ConfigConditionBlockNode;
 import org.apache.royale.compiler.internal.tree.as.FileNode;
 import org.apache.royale.compiler.problems.ICompilerProblem;
 import org.apache.royale.compiler.projects.ICompilerProject;
+import org.apache.royale.compiler.scopes.IASScope;
+import org.apache.royale.compiler.scopes.IDefinitionSet;
 import org.apache.royale.compiler.tree.ASTNodeID;
 import org.apache.royale.compiler.tree.as.IASNode;
 import org.apache.royale.compiler.tree.as.IBinaryOperatorNode;
 import org.apache.royale.compiler.tree.as.IBlockNode;
 import org.apache.royale.compiler.tree.as.IClassNode;
+import org.apache.royale.compiler.tree.as.IDefinitionNode;
 import org.apache.royale.compiler.tree.as.IDocumentableDefinitionNode;
 import org.apache.royale.compiler.tree.as.IExpressionNode;
 import org.apache.royale.compiler.tree.as.IFileNode;
@@ -67,7 +70,9 @@ import org.apache.royale.compiler.tree.as.IPackageNode;
 import org.apache.royale.compiler.tree.as.IScopedDefinitionNode;
 import org.apache.royale.compiler.tree.as.IScopedNode;
 import org.apache.royale.compiler.tree.as.ITransparentContainerNode;
+import org.apache.royale.compiler.tree.as.ITypeNode;
 import org.apache.royale.compiler.tree.as.IVariableNode;
+import org.apache.royale.compiler.tree.metadata.IDefaultPropertyTagNode;
 import org.apache.royale.compiler.tree.metadata.IEventTagNode;
 import org.apache.royale.compiler.tree.metadata.IInspectableTagNode;
 import org.apache.royale.compiler.tree.metadata.IStyleTagNode;
@@ -512,6 +517,22 @@ public class ASTUtils {
                     if (inspectableArrayType != null && inspectableArrayType.equals(identifierNode.getName())) {
                         String styleArrayTypeName = identifierNode.getName();
                         resolvedDefinition = project.resolveQNameToDefinition(styleArrayTypeName);
+                    }
+                }
+                if (resolvedDefinition == null && parentNode instanceof IDefaultPropertyTagNode) {
+                    IDefaultPropertyTagNode parentDefaultPropNode = (IDefaultPropertyTagNode) parentNode;
+                    String propName = identifierNode.getName();
+                    IDefinitionNode decoratedNode = parentDefaultPropNode.getDecoratedDefinitionNode();
+                    if (decoratedNode instanceof ITypeNode) {
+                        ITypeNode typeNode = (ITypeNode) decoratedNode;
+                        IScopedNode scopedNode = typeNode.getScopedNode();
+                        if (scopedNode != null) {
+                            IASScope scope = scopedNode.getScope();
+                            IDefinitionSet definitionSet = scope.getLocalDefinitionSetByName(propName);
+                            if (definitionSet.getSize() > 0) {
+                                resolvedDefinition = definitionSet.getDefinition(0);
+                            }
+                        }
                     }
                 }
                 // [AccessibilityClass(implementation)]

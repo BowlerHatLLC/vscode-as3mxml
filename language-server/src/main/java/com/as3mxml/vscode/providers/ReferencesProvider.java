@@ -23,8 +23,8 @@ import java.util.List;
 
 import org.antlr.runtime.ANTLRStringStream;
 import org.apache.royale.compiler.common.ISourceLocation;
-import org.apache.royale.compiler.constants.IMetaAttributeConstants;
 import org.apache.royale.compiler.common.XMLName;
+import org.apache.royale.compiler.constants.IMetaAttributeConstants;
 import org.apache.royale.compiler.css.ICSSDocument;
 import org.apache.royale.compiler.css.ICSSNamespaceDefinition;
 import org.apache.royale.compiler.css.ICSSNode;
@@ -48,8 +48,13 @@ import org.apache.royale.compiler.mxml.IMXMLLanguageConstants;
 import org.apache.royale.compiler.mxml.IMXMLTagAttributeData;
 import org.apache.royale.compiler.mxml.IMXMLTagData;
 import org.apache.royale.compiler.scopes.IASScope;
+import org.apache.royale.compiler.scopes.IDefinitionSet;
 import org.apache.royale.compiler.tree.as.IASNode;
+import org.apache.royale.compiler.tree.as.IDefinitionNode;
 import org.apache.royale.compiler.tree.as.IIdentifierNode;
+import org.apache.royale.compiler.tree.as.IScopedNode;
+import org.apache.royale.compiler.tree.as.ITypeNode;
+import org.apache.royale.compiler.tree.metadata.IDefaultPropertyTagNode;
 import org.apache.royale.compiler.tree.metadata.IEventTagNode;
 import org.apache.royale.compiler.tree.metadata.IInspectableTagNode;
 import org.apache.royale.compiler.tree.metadata.IStyleTagNode;
@@ -245,6 +250,25 @@ public class ReferencesProvider {
             if (inspectableArrayType != null && inspectableArrayType.equals(identifierNode.getName())) {
                 String styleArrayTypeName = identifierNode.getName();
                 definition = project.resolveQNameToDefinition(styleArrayTypeName);
+            }
+        }
+
+        if (definition == null && parentNode instanceof IDefaultPropertyTagNode
+                && offsetNode instanceof IIdentifierNode) {
+            IDefaultPropertyTagNode parentDefaultPropNode = (IDefaultPropertyTagNode) parentNode;
+            IIdentifierNode identifierNode = (IIdentifierNode) offsetNode;
+            String propName = identifierNode.getName();
+            IDefinitionNode decoratedNode = parentDefaultPropNode.getDecoratedDefinitionNode();
+            if (decoratedNode instanceof ITypeNode) {
+                ITypeNode typeNode = (ITypeNode) decoratedNode;
+                IScopedNode scopedNode = typeNode.getScopedNode();
+                if (scopedNode != null) {
+                    IASScope scope = scopedNode.getScope();
+                    IDefinitionSet definitionSet = scope.getLocalDefinitionSetByName(propName);
+                    if (definitionSet.getSize() > 0) {
+                        definition = definitionSet.getDefinition(0);
+                    }
+                }
             }
         }
 
