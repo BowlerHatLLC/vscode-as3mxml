@@ -195,7 +195,8 @@ public class DefinitionDocumentationUtils {
             if (description == null || description.length() == 0) {
                 return null;
             }
-            return getDocumentationForDefinitionInternal(typeDefinition, comment, useMarkdown, project, allowDITA);
+            return getDocumentationForDefinitionInternal(documentableMemberDef, comment, useMarkdown, project,
+                    allowDITA);
         }
         return null;
     }
