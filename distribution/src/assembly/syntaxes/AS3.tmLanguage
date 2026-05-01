@@ -68,10 +68,6 @@
 		</dict>
 		<dict>
 			<key>include</key>
-			<string>#primitive_functions</string>
-		</dict>
-		<dict>
-			<key>include</key>
 			<string>#language_constants</string>
 		</dict>
 		<dict>
@@ -121,6 +117,10 @@
 		<dict>
 			<key>include</key>
 			<string>#functions</string>
+		</dict>
+		<dict>
+			<key>include</key>
+			<string>#function_call</string>
 		</dict>
 	</array>
 	<key>repository</key>
@@ -233,10 +233,6 @@
 				</dict>
 				<dict>
 					<key>include</key>
-					<string>#primitive_functions</string>
-				</dict>
-				<dict>
-					<key>include</key>
 					<string>#language_constants</string>
 				</dict>
 				<dict>
@@ -286,6 +282,10 @@
 				<dict>
 					<key>include</key>
 					<string>#conditional_compilation</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#function_call</string>
 				</dict>
 			</array>
 		</dict>
@@ -395,10 +395,6 @@
 				</dict>
 				<dict>
 					<key>include</key>
-					<string>#primitive_functions</string>
-				</dict>
-				<dict>
-					<key>include</key>
 					<string>#language_constants</string>
 				</dict>
 				<dict>
@@ -452,6 +448,10 @@
 				<dict>
 					<key>include</key>
 					<string>#import</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#function_call</string>
 				</dict>
 			</array>
 		</dict>
@@ -503,10 +503,6 @@
 				</dict>
 				<dict>
 					<key>include</key>
-					<string>#primitive_functions</string>
-				</dict>
-				<dict>
-					<key>include</key>
 					<string>#language_constants</string>
 				</dict>
 				<dict>
@@ -560,6 +556,10 @@
 				<dict>
 					<key>include</key>
 					<string>#import</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#function_call</string>
 				</dict>
 			</array>
 		</dict>
@@ -1112,10 +1112,6 @@
 				</dict>
 				<dict>
 					<key>include</key>
-					<string>#primitive_functions</string>
-				</dict>
-				<dict>
-					<key>include</key>
 					<string>#language_constants</string>
 				</dict>
 				<dict>
@@ -1153,6 +1149,10 @@
 				<dict>
 					<key>include</key>
 					<string>#variable_declaration</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#function_call</string>
 				</dict>
 			</array>
 		</dict>
@@ -1207,10 +1207,6 @@
 				</dict>
 				<dict>
 					<key>include</key>
-					<string>#primitive_functions</string>
-				</dict>
-				<dict>
-					<key>include</key>
 					<string>#language_constants</string>
 				</dict>
 				<dict>
@@ -1236,6 +1232,10 @@
 				<dict>
 					<key>include</key>
 					<string>#functions</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#function_call</string>
 				</dict>
 			</array>
 		</dict>
@@ -1364,18 +1364,18 @@
 			<key>match</key>
 			<string>\b((Argument|Definition|Eval|Internal|Range|Reference|Security|Syntax|Type|URI|Verify)?Error)\b</string>
 		</dict>
-		<key>primitive_functions</key>
+		<key>function_call</key>
 		<dict>
 			<key>captures</key>
 			<dict>
 				<key>1</key>
 				<dict>
 					<key>name</key>
-					<string>support.function.actionscript.3</string>
+					<string>entity.name.function.actionscript.3</string>
 				</dict>
 			</dict>
 			<key>match</key>
-			<string>\b(decodeURI|decodeURIComponent|encodeURI|encodeURIComponent|escape|isFinite|isNaN|isXMLName|parseFloat|parseInt|trace|unescape)(?=\s*\()</string>
+			<string>\b([A-Za-z0-9_\$]+)(?=\s*\()</string>
 		</dict>
 		<key>regexp</key>
 		<dict>
