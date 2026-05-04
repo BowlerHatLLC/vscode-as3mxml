@@ -120,6 +120,10 @@
 		</dict>
 		<dict>
 			<key>include</key>
+			<string>#primitive_functions</string>
+		</dict>
+		<dict>
+			<key>include</key>
 			<string>#function_call</string>
 		</dict>
 	</array>
@@ -282,6 +286,10 @@
 				<dict>
 					<key>include</key>
 					<string>#conditional_compilation</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#primitive_functions</string>
 				</dict>
 				<dict>
 					<key>include</key>
@@ -451,6 +459,10 @@
 				</dict>
 				<dict>
 					<key>include</key>
+					<string>#primitive_functions</string>
+				</dict>
+				<dict>
+					<key>include</key>
 					<string>#function_call</string>
 				</dict>
 			</array>
@@ -556,6 +568,10 @@
 				<dict>
 					<key>include</key>
 					<string>#import</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#primitive_functions</string>
 				</dict>
 				<dict>
 					<key>include</key>
@@ -1152,6 +1168,10 @@
 				</dict>
 				<dict>
 					<key>include</key>
+					<string>#primitive_functions</string>
+				</dict>
+				<dict>
+					<key>include</key>
 					<string>#function_call</string>
 				</dict>
 			</array>
@@ -1232,6 +1252,10 @@
 				<dict>
 					<key>include</key>
 					<string>#functions</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#primitive_functions</string>
 				</dict>
 				<dict>
 					<key>include</key>
@@ -1363,6 +1387,19 @@
 			</dict>
 			<key>match</key>
 			<string>\b((Argument|Definition|Eval|Internal|Range|Reference|Security|Syntax|Type|URI|Verify)?Error)\b</string>
+		</dict>
+		<key>primitive_functions</key>
+		<dict>
+			<key>captures</key>
+			<dict>
+				<key>1</key>
+				<dict>
+					<key>name</key>
+					<string>support.function.actionscript.3</string>
+				</dict>
+			</dict>
+			<key>match</key>
+			<string>\b(decodeURI|decodeURIComponent|encodeURI|encodeURIComponent|escape|isFinite|isNaN|isXMLName|parseFloat|parseInt|trace|unescape)(?=\s*\()</string>
 		</dict>
 		<key>function_call</key>
 		<dict>
