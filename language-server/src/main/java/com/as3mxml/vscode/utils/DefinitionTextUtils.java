@@ -368,6 +368,10 @@ public class DefinitionTextUtils {
             textDocumentBuilder.append(IASKeywordConstants.DYNAMIC);
             textDocumentBuilder.append(" ");
         }
+        if (classDefinition.isAbstract()) {
+            textDocumentBuilder.append(IASKeywordConstants.ABSTRACT);
+            textDocumentBuilder.append(" ");
+        }
         textDocumentBuilder.append(IASKeywordConstants.CLASS);
         textDocumentBuilder.append(" ");
         appendDefinitionName(classDefinition, textDocumentBuilder, definitionToFind, includeASDoc, result);
@@ -715,12 +719,20 @@ public class DefinitionTextUtils {
         StringBuilder detailBuilder = new StringBuilder();
         if (definition instanceof IClassDefinition) {
             IClassDefinition classDefinition = (IClassDefinition) definition;
+            if (classDefinition.isInternal()) {
+                detailBuilder.append(IASKeywordConstants.INTERNAL);
+                detailBuilder.append(" ");
+            }
             if (classDefinition.isFinal()) {
                 detailBuilder.append(IASKeywordConstants.FINAL);
                 detailBuilder.append(" ");
             }
             if (classDefinition.isDynamic()) {
                 detailBuilder.append(IASKeywordConstants.DYNAMIC);
+                detailBuilder.append(" ");
+            }
+            if (classDefinition.isAbstract()) {
+                detailBuilder.append(IASKeywordConstants.ABSTRACT);
                 detailBuilder.append(" ");
             }
             detailBuilder.append(IASKeywordConstants.CLASS);
@@ -749,6 +761,10 @@ public class DefinitionTextUtils {
             }
         } else if (definition instanceof IInterfaceDefinition) {
             IInterfaceDefinition interfaceDefinition = (IInterfaceDefinition) definition;
+            if (interfaceDefinition.isInternal()) {
+                detailBuilder.append(IASKeywordConstants.INTERNAL);
+                detailBuilder.append(" ");
+            }
             detailBuilder.append(IASKeywordConstants.INTERFACE);
             detailBuilder.append(" ");
             detailBuilder.append(interfaceDefinition.getQualifiedName());
