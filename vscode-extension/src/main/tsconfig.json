@@ -3,9 +3,10 @@
     "strict": true,
     "erasableSyntaxOnly": true,
     "module": "commonjs",
+    "moduleResolution": "bundler",
     "target": "es6",
     "outDir": "../../target",
-    "lib": ["es6"],
-    "sourceMap": true
+    "sourceMap": true,
+    "rootDir": "./ts"
   }
 }

@@ -1,10 +1,12 @@
 {
-	"compilerOptions":
-	{
-		"module": "commonjs",
-		"target": "es6",
-		"outDir": "../../target/test",
-		"lib": ["es6"],
-		"sourceMap": true
-	}
+  "compilerOptions": {
+    "strict": false,
+    "erasableSyntaxOnly": true,
+    "module": "commonjs",
+    "moduleResolution": "bundler",
+    "target": "es6",
+    "outDir": "../../target/test",
+    "sourceMap": true,
+    "rootDir": "./ts"
+  }
 }

@@ -14,8 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 import * as path from "path";
-import * as glob from "glob";
-import * as Mocha from "mocha";
+import Mocha from "mocha";
+import glob from "glob";
 
 export function run(): Promise<void> {
   const mocha = new Mocha({ ui: "tdd", color: true });
