@@ -79,9 +79,10 @@ let pendingQuickCompileAndRun = false;
 let as3mxmlCodeIntelligenceReady = false;
 let actionScriptTaskProvider: ActionScriptTaskProvider;
 let animateTaskProvider: AnimateTaskProvider;
+let as3mxmlOutputChannel: vscode.OutputChannel | undefined;
 
 function getValidatedEditorSDKConfiguration(
-  javaExecutablePath: string | null
+  javaExecutablePath: string | null,
 ): string | null {
   if (!savedContext) {
     return null;
@@ -93,7 +94,7 @@ function getValidatedEditorSDKConfiguration(
   return validateEditorSDK(
     savedContext.extensionPath,
     javaExecutablePath,
-    result
+    result,
   );
 }
 
@@ -233,7 +234,7 @@ function restartServer() {
   vscode.commands.executeCommand(
     "setContext",
     "as3mxml.codeIntelligenceReady",
-    as3mxmlCodeIntelligenceReady
+    as3mxmlCodeIntelligenceReady,
   );
   languageClient.stop().then(
     () => {
@@ -250,12 +251,15 @@ function restartServer() {
             vscode.commands.executeCommand("workbench.action.reloadWindow");
           }
         });
-    }
+    },
   );
 }
 
 export function activate(context: vscode.ExtensionContext) {
   savedContext = context;
+  as3mxmlOutputChannel = vscode.window.createOutputChannel(
+    "ActionScript & MXML",
+  );
   checkForProjectsToImport();
   const javaSettingsPath: string | undefined | null = vscode.workspace
     .getConfiguration("as3mxml")
@@ -266,10 +270,10 @@ export function activate(context: vscode.ExtensionContext) {
   editorSDKHome = getValidatedEditorSDKConfiguration(javaExecutablePath);
   frameworkSDKHome = getFrameworkSDKPathWithFallbacks();
   context.subscriptions.push(
-    vscode.workspace.onDidChangeConfiguration(onDidChangeConfiguration)
+    vscode.workspace.onDidChangeConfiguration(onDidChangeConfiguration),
   );
   context.subscriptions.push(
-    vscode.window.onDidChangeVisibleTextEditors(onDidChangeVisibleTextEditors)
+    vscode.window.onDidChangeVisibleTextEditors(onDidChangeVisibleTextEditors),
   );
   context.subscriptions.push(
     vscode.workspace.onDidSaveTextDocument((textDocument) => {
@@ -283,9 +287,9 @@ export function activate(context: vscode.ExtensionContext) {
       updateRoyaleTargetStatusBarItem();
       vscode.commands.executeCommand(
         "as3mxml.setRoyalePreferredTarget",
-        getRoyalePreferredTarget(context)
+        getRoyalePreferredTarget(context),
       );
-    })
+    }),
   );
 
   context.subscriptions.push(
@@ -341,20 +345,20 @@ export function activate(context: vscode.ExtensionContext) {
           },
         },
       ],
-    })
+    }),
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
       "as3mxml.createNewProject",
-      createNewProject
-    )
+      createNewProject,
+    ),
   );
   context.subscriptions.push(
     vscode.commands.registerCommand(
       "as3mxml.selectWorkspaceSDK",
-      selectWorkspaceSDK
-    )
+      selectWorkspaceSDK,
+    ),
   );
   context.subscriptions.push(
     vscode.commands.registerCommand(
@@ -364,35 +368,35 @@ export function activate(context: vscode.ExtensionContext) {
         updateRoyaleTargetStatusBarItem();
         vscode.commands.executeCommand(
           "as3mxml.setRoyalePreferredTarget",
-          getRoyalePreferredTarget(savedContext)
+          getRoyalePreferredTarget(savedContext),
         );
-      }
-    )
+      },
+    ),
   );
   context.subscriptions.push(
-    vscode.commands.registerCommand("as3mxml.restartServer", restartServer)
+    vscode.commands.registerCommand("as3mxml.restartServer", restartServer),
   );
   context.subscriptions.push(
     vscode.commands.registerCommand(
       "as3mxml.logCompilerShellOutput",
-      logCompilerShellOutput
-    )
+      logCompilerShellOutput,
+    ),
   );
   context.subscriptions.push(
     vscode.commands.registerCommand(
       "as3mxml.saveSessionPassword",
-      saveSessionPassword
-    )
+      saveSessionPassword,
+    ),
   );
   context.subscriptions.push(
     vscode.commands.registerCommand("as3mxml.importFlashBuilderProject", () => {
       pickProjectInWorkspace(true, false);
-    })
+    }),
   );
   context.subscriptions.push(
     vscode.commands.registerCommand("as3mxml.importFlashDevelopProject", () => {
       pickProjectInWorkspace(false, true);
-    })
+    }),
   );
   context.subscriptions.push(
     vscode.commands.registerCommand("as3mxml.quickCompileAndDebug", () => {
@@ -407,10 +411,9 @@ export function activate(context: vscode.ExtensionContext) {
           commands.some((command) => command === "as3mxml.getActiveProjectURIs")
         ) {
           vscode.commands
-            .executeCommand<string[] | undefined>(
-              "as3mxml.getActiveProjectURIs",
-              true
-            )
+            .executeCommand<
+              string[] | undefined
+            >("as3mxml.getActiveProjectURIs", true)
             .then((uris: string[] | undefined) => {
               if (!uris || uris.length === 0) {
                 //no projects with asconfig.json files
@@ -425,9 +428,9 @@ export function activate(context: vscode.ExtensionContext) {
               fs.existsSync(
                 path.resolve(
                   workspaceFolder.uri.fsPath,
-                  FILE_NAME_ASCONFIG_JSON
-                )
-              )
+                  FILE_NAME_ASCONFIG_JSON,
+                ),
+              ),
             )
           ) {
             //skip the message if there aren't any workspace folders
@@ -441,11 +444,11 @@ export function activate(context: vscode.ExtensionContext) {
           logCompilerShellOutput(
             QUICK_COMPILE_AND_DEBUG_INIT_MESSAGE,
             true,
-            false
+            false,
           );
         }
       });
-    })
+    }),
   );
   context.subscriptions.push(
     vscode.commands.registerCommand("as3mxml.quickCompileAndRun", () => {
@@ -460,10 +463,9 @@ export function activate(context: vscode.ExtensionContext) {
           commands.some((command) => command === "as3mxml.getActiveProjectURIs")
         ) {
           vscode.commands
-            .executeCommand<string[] | undefined>(
-              "as3mxml.getActiveProjectURIs",
-              true
-            )
+            .executeCommand<
+              string[] | undefined
+            >("as3mxml.getActiveProjectURIs", true)
             .then((uris: string[] | undefined) => {
               if (!uris || uris.length === 0) {
                 //no projects with asconfig.json files
@@ -478,9 +480,9 @@ export function activate(context: vscode.ExtensionContext) {
               fs.existsSync(
                 path.resolve(
                   workspaceFolder.uri.fsPath,
-                  FILE_NAME_ASCONFIG_JSON
-                )
-              )
+                  FILE_NAME_ASCONFIG_JSON,
+                ),
+              ),
             )
           ) {
             //skip the message if there aren't any workspace folders
@@ -494,12 +496,12 @@ export function activate(context: vscode.ExtensionContext) {
           logCompilerShellOutput(
             QUICK_COMPILE_AND_RUN_INIT_MESSAGE,
             true,
-            false
+            false,
           );
           return;
         }
       });
-    })
+    }),
   );
 
   //don't activate these things unless we're in a workspace
@@ -507,7 +509,7 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(
       vscode.window.createTreeView("actionScriptSourcePaths", {
         treeDataProvider: new ActionScriptSourcePathDataProvider(),
-      })
+      }),
     );
   }
 
@@ -520,22 +522,22 @@ export function activate(context: vscode.ExtensionContext) {
 
   actionScriptTaskProvider = new ActionScriptTaskProvider(
     context,
-    javaExecutablePath
+    javaExecutablePath,
   );
   context.subscriptions.push(
-    vscode.tasks.registerTaskProvider("actionscript", actionScriptTaskProvider)
+    vscode.tasks.registerTaskProvider("actionscript", actionScriptTaskProvider),
   );
 
   animateTaskProvider = new AnimateTaskProvider(context, javaExecutablePath);
   context.subscriptions.push(
-    vscode.tasks.registerTaskProvider("animate", animateTaskProvider)
+    vscode.tasks.registerTaskProvider("animate", animateTaskProvider),
   );
 
   context.subscriptions.push(
     vscode.workspace.registerTextDocumentContentProvider(
       "swc",
-      new SWCTextDocumentContentProvider()
-    )
+      new SWCTextDocumentContentProvider(),
+    ),
   );
 
   startClient();
@@ -642,6 +644,7 @@ function startClient() {
             //this is just the default behavior, but we need to define both
             protocol2Code: (value) => vscode.Uri.parse(value),
           },
+          outputChannel: as3mxmlOutputChannel,
           initializationOptions: {
             preferredRoyaleTarget: getRoyalePreferredTarget(savedContext),
             notifyActiveProject: true,
@@ -673,7 +676,7 @@ function startClient() {
         ];
         if (frameworkSDKHome) {
           args.unshift(
-            "-Droyalelib=" + path.join(frameworkSDKHome, "frameworks")
+            "-Droyalelib=" + path.join(frameworkSDKHome, "frameworks"),
           );
         }
         if (process.platform === "darwin") {
@@ -708,7 +711,7 @@ function startClient() {
         vscode.commands.executeCommand(
           "setContext",
           "as3mxml.codeIntelligenceReady",
-          as3mxmlCodeIntelligenceReady
+          as3mxmlCodeIntelligenceReady,
         );
         isLanguageClientReady = false;
         // NOTE: isLanguageClientReady and as3mxmlCodeIntelligenceReady mean
@@ -723,19 +726,19 @@ function startClient() {
           "actionscript",
           "ActionScript & MXML Language Server",
           executable,
-          clientOptions
+          clientOptions,
         );
         savedLanguageClient.onNotification(
           "as3mxml/logCompilerShellOutput",
           (notification: string) => {
             logCompilerShellOutput(notification, false, false);
-          }
+          },
         );
         savedLanguageClient.onNotification(
           "as3mxml/clearCompilerShellOutput",
           () => {
             logCompilerShellOutput(null, false, true);
-          }
+          },
         );
         savedLanguageClient.onNotification(
           "as3mxml/setActionScriptActive",
@@ -744,11 +747,11 @@ function startClient() {
             vscode.commands.executeCommand(
               "setContext",
               "as3mxml.codeIntelligenceReady",
-              as3mxmlCodeIntelligenceReady
+              as3mxmlCodeIntelligenceReady,
             );
             refreshSDKStatusBarItemVisibility();
             refreshRoyaleTargetStatusBarItemVisibility();
-          }
+          },
         );
 
         try {
@@ -763,7 +766,7 @@ function startClient() {
         isLanguageClientReady = true;
         vscode.commands.executeCommand(
           "as3mxml.setRoyalePreferredTarget",
-          getRoyalePreferredTarget(savedContext)
+          getRoyalePreferredTarget(savedContext),
         );
         if (pendingQuickCompileAndDebug) {
           vscode.commands.executeCommand("as3mxml.quickCompileAndDebug");
@@ -773,6 +776,6 @@ function startClient() {
         pendingQuickCompileAndDebug = false;
         pendingQuickCompileAndRun = false;
       });
-    }
+    },
   );
 }
