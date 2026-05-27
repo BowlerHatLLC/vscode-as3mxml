@@ -66,8 +66,14 @@ public class DefinitionURI {
 			List<ActionScriptProjectData> allProjectData = actionScriptProjectManager
 					.getAllProjectDataForSWCFile(Paths.get(result.swcFilePath));
 			if (allProjectData.size() > 0) {
-				ActionScriptProjectData projectData = allProjectData.get(0);
-				ILspProject project = projectData.project;
+				ILspProject project = null;
+				while (allProjectData.size() > 0) {
+					ActionScriptProjectData projectData = allProjectData.remove(0);
+					project = projectData.project;
+					if (project != null) {
+						break;
+					}
+				}
 				if (project != null) {
 					result.project = project;
 					String currentSymbol = symbols.remove(0);
