@@ -356,6 +356,17 @@
             "signingOptions": { "$ref": "#/definitions/signingOptions" },
             "target": { "$ref": "#/definitions/airOptionsDesktopTargets" }
           }
+        },
+        "linux": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "extdir": { "$ref": "#/definitions/airOptionsExtdir" },
+            "files": { "$ref": "#/definitions/airOptionsFiles" },
+            "output": { "$ref": "#/definitions/airOptionsOutput" },
+            "signingOptions": { "$ref": "#/definitions/signingOptions" },
+            "target": { "$ref": "#/definitions/airOptionsDesktopTargets" }
+          }
         }
       }
     },
@@ -371,7 +382,8 @@
             "ios_simulator": { "$ref": "#/definitions/singleApplication" },
             "android": { "$ref": "#/definitions/singleApplication" },
             "windows": { "$ref": "#/definitions/singleApplication" },
-            "mac": { "$ref": "#/definitions/singleApplication" }
+            "mac": { "$ref": "#/definitions/singleApplication" },
+            "linux": { "$ref": "#/definitions/singleApplication" }
           }
         }
       ]
