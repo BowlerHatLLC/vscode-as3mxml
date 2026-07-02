@@ -694,7 +694,11 @@ function startClient() {
         // args.unshift("-Xlog:all=warning:stderr")
         let primaryWorkspaceFolder: vscode.WorkspaceFolder | undefined;
         if (vscode.workspace.workspaceFolders !== undefined) {
-          primaryWorkspaceFolder = vscode.workspace.workspaceFolders[0];
+          primaryWorkspaceFolder = vscode.workspace.workspaceFolders.find(
+            (folder) =>
+              fs.existsSync(folder.uri.fsPath) &&
+              fs.statSync(folder.uri.fsPath).isDirectory(),
+          );
         }
         //uncomment to allow a debugger to attach to the language server
         //args.unshift("-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005,quiet=y");
