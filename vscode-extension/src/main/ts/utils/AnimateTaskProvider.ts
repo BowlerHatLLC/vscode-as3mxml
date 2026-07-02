@@ -43,7 +43,7 @@ export default class AnimateTaskProvider
 {
   resolveTask(
     task: vscode.Task,
-    token?: vscode.CancellationToken
+    token?: vscode.CancellationToken,
   ): vscode.ProviderResult<vscode.Task> {
     if (task.definition.type !== TASK_TYPE_ANIMATE) {
       return undefined;
@@ -69,7 +69,7 @@ export default class AnimateTaskProvider
         task,
         taskDef,
         workspaceFolder,
-        animatePath
+        animatePath,
       );
     }
     // nothing could be resolved
@@ -79,7 +79,7 @@ export default class AnimateTaskProvider
   protected resolveTaskForMultiRootWorkspace(
     originalTask: vscode.Task,
     taskDef: AnimateTaskDefinition,
-    animatePath: string
+    animatePath: string,
   ): vscode.Task | undefined {
     if (vscode.workspace.workspaceFolders === undefined) {
       return undefined;
@@ -94,14 +94,14 @@ export default class AnimateTaskProvider
     }
     const workspaceNameToFind = asconfigPathParts[0];
     const workspaceFolder = vscode.workspace.workspaceFolders.find(
-      (workspaceFolder) => workspaceFolder.name == workspaceNameToFind
+      (workspaceFolder) => workspaceFolder.name == workspaceNameToFind,
     );
     if (!workspaceFolder) {
       return undefined;
     }
     const jsonUri = vscode.Uri.joinPath(
       workspaceFolder.uri,
-      ...asconfigPathParts.slice(1)
+      ...asconfigPathParts.slice(1),
     );
     let isAIR = false;
     const asconfigJson = this.readASConfigJSON(jsonUri);
@@ -115,10 +115,12 @@ export default class AnimateTaskProvider
       animatePath,
       taskDef.debug,
       taskDef.publish,
-      isAIR
+      isAIR,
     );
-    // the new task's definition must strictly equal task.definition
-    newTask.definition = taskDef;
+    if (newTask) {
+      // the new task's definition must strictly equal task.definition
+      newTask.definition = taskDef;
+    }
     return newTask;
   }
 
@@ -126,8 +128,8 @@ export default class AnimateTaskProvider
     originalTask: vscode.Task,
     taskDef: AnimateTaskDefinition,
     workspaceFolder: vscode.WorkspaceFolder,
-    animatePath: string
-  ): vscode.Task {
+    animatePath: string,
+  ): vscode.Task | undefined {
     const jsonUri = vscode.Uri.joinPath(workspaceFolder.uri, ASCONFIG_JSON);
     let isAIR = false;
     const asconfigJson = this.readASConfigJSON(jsonUri);
@@ -141,17 +143,19 @@ export default class AnimateTaskProvider
       animatePath,
       taskDef.debug,
       taskDef.publish,
-      isAIR
+      isAIR,
     );
-    // the new task's definition must strictly equal task.definition
-    newTask.definition = taskDef;
+    if (newTask) {
+      // the new task's definition must strictly equal task.definition
+      newTask.definition = taskDef;
+    }
     return newTask;
   }
 
   protected provideTasksForASConfigJSON(
     jsonURI: vscode.Uri | undefined,
     workspaceFolder: vscode.WorkspaceFolder | undefined,
-    result: vscode.Task[]
+    result: vscode.Task[],
   ): void {
     if (!workspaceFolder) {
       return;
@@ -186,50 +190,54 @@ export default class AnimateTaskProvider
     }
 
     const taskNameSuffix = path.basename(flaPath);
-    result.push(
-      this.getAnimateTask(
-        `${TASK_NAME_COMPILE_DEBUG} - ${taskNameSuffix}`,
-        jsonURI,
-        workspaceFolder,
-        animatePath,
-        true,
-        false,
-        isAIR
-      )
+    const compileDebugTask = this.getAnimateTask(
+      `${TASK_NAME_COMPILE_DEBUG} - ${taskNameSuffix}`,
+      jsonURI,
+      workspaceFolder,
+      animatePath,
+      true,
+      false,
+      isAIR,
     );
-    result.push(
-      this.getAnimateTask(
-        `${TASK_NAME_COMPILE_RELEASE} - ${taskNameSuffix}`,
-        jsonURI,
-        workspaceFolder,
-        animatePath,
-        false,
-        false,
-        isAIR
-      )
+    if (compileDebugTask) {
+      result.push(compileDebugTask);
+    }
+    const compileReleaseTask = this.getAnimateTask(
+      `${TASK_NAME_COMPILE_RELEASE} - ${taskNameSuffix}`,
+      jsonURI,
+      workspaceFolder,
+      animatePath,
+      false,
+      false,
+      isAIR,
     );
-    result.push(
-      this.getAnimateTask(
-        `${TASK_NAME_PUBLISH_DEBUG} - ${taskNameSuffix}`,
-        jsonURI,
-        workspaceFolder,
-        animatePath,
-        true,
-        true,
-        isAIR
-      )
+    if (compileReleaseTask) {
+      result.push(compileReleaseTask);
+    }
+    const publishDebugTask = this.getAnimateTask(
+      `${TASK_NAME_PUBLISH_DEBUG} - ${taskNameSuffix}`,
+      jsonURI,
+      workspaceFolder,
+      animatePath,
+      true,
+      true,
+      isAIR,
     );
-    result.push(
-      this.getAnimateTask(
-        `${TASK_NAME_PUBLISH_RELEASE} - ${taskNameSuffix}`,
-        jsonURI,
-        workspaceFolder,
-        animatePath,
-        false,
-        true,
-        isAIR
-      )
+    if (publishDebugTask) {
+      result.push(publishDebugTask);
+    }
+    const publishReleaseTask = this.getAnimateTask(
+      `${TASK_NAME_PUBLISH_RELEASE} - ${taskNameSuffix}`,
+      jsonURI,
+      workspaceFolder,
+      animatePath,
+      false,
+      true,
+      isAIR,
     );
+    if (publishReleaseTask) {
+      result.push(publishReleaseTask);
+    }
   }
 
   private getAnimateTask(
@@ -239,11 +247,11 @@ export default class AnimateTaskProvider
     animatePath: string,
     debug: boolean,
     publish: boolean,
-    isAIRProject: boolean
-  ): vscode.Task {
+    isAIRProject: boolean,
+  ): vscode.Task | undefined {
     let asconfig: string | undefined = this.getASConfigValue(
       jsonURI,
-      workspaceFolder.uri
+      workspaceFolder.uri,
     );
     let definition: AnimateTaskDefinition = {
       type: TASK_TYPE_ANIMATE,
@@ -277,6 +285,9 @@ export default class AnimateTaskProvider
       options.push("--project", jsonURI.fsPath);
     }
     const command = this.getCommand(workspaceFolder);
+    if (command.length === 0) {
+      return undefined;
+    }
     if (command.length > 1) {
       options.unshift(...command.slice(1));
     }
@@ -287,7 +298,7 @@ export default class AnimateTaskProvider
       description,
       TASK_SOURCE_ANIMATE,
       execution,
-      MATCHER
+      MATCHER,
     );
     task.group = vscode.TaskGroup.Build;
     return task;
