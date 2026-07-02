@@ -839,6 +839,9 @@ export default class ActionScriptTaskProvider
       options.push("--verbose=true");
     }
     const command = this.getCommand(workspaceFolder);
+    if (command.length === 0) {
+      return undefined;
+    }
     if (command.length > 1) {
       options.unshift(...command.slice(1));
     }
@@ -889,6 +892,9 @@ export default class ActionScriptTaskProvider
       options.push("--project", jsonURI.fsPath);
     }
     const command = this.getCommand(workspaceFolder);
+    if (command.length === 0) {
+      return undefined;
+    }
     if (command.length > 1) {
       options.unshift(...command.slice(1));
     }
