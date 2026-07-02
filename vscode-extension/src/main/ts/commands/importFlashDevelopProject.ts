@@ -49,9 +49,15 @@ const WARNING_LIBRARY_ASSETS = "Library assets are not supported. Skipping... ";
 const CHANNEL_NAME_IMPORTER = "FlashDevelop Importer";
 
 export function isFlashDevelopProject(folder: vscode.WorkspaceFolder) {
+  if (
+    !fs.existsSync(folder.uri.fsPath) ||
+    !fs.statSync(folder.uri.fsPath).isDirectory()
+  ) {
+    return false;
+  }
   let idealProjectPath = path.resolve(
     folder.uri.fsPath,
-    folder.name + FILE_EXTENSION_AS3PROJ
+    folder.name + FILE_EXTENSION_AS3PROJ,
   );
   if (fs.existsSync(idealProjectPath)) {
     return true;
@@ -64,7 +70,7 @@ export function isFlashDevelopProject(folder: vscode.WorkspaceFolder) {
 function findProjectFile(folder: vscode.WorkspaceFolder) {
   let idealProjectPath = path.resolve(
     folder.uri.fsPath,
-    folder.name + FILE_EXTENSION_AS3PROJ
+    folder.name + FILE_EXTENSION_AS3PROJ,
   );
   if (fs.existsSync(idealProjectPath)) {
     return idealProjectPath;
@@ -79,7 +85,7 @@ function findProjectFile(folder: vscode.WorkspaceFolder) {
 }
 
 export function importFlashDevelopProject(
-  workspaceFolder: vscode.WorkspaceFolder
+  workspaceFolder: vscode.WorkspaceFolder,
 ) {
   getOutputChannel().clear();
   getOutputChannel().appendLine(MESSAGE_IMPORT_START);
@@ -93,7 +99,7 @@ export function importFlashDevelopProject(
 }
 
 function importFlashDevelopProjectInternal(
-  workspaceFolder: vscode.WorkspaceFolder
+  workspaceFolder: vscode.WorkspaceFolder,
 ) {
   if (!workspaceFolder) {
     addError(ERROR_NO_FOLDER);
@@ -125,7 +131,7 @@ function importFlashDevelopProjectInternal(
     let result = createProjectFiles(
       workspaceFolder.uri.fsPath,
       projectFilePath,
-      project
+      project,
     );
     if (!result) {
       return false;
@@ -148,7 +154,7 @@ function importFlashDevelopProjectInternal(
 function createProjectFiles(
   folderPath: string,
   projectFilePath: string,
-  project: any
+  project: any,
 ) {
   let result: any = {
     compilerOptions: {},
@@ -181,7 +187,7 @@ function migrateProjectFile(project: any, result: any) {
   }
   let compileTargetsElement = findChildElementByName(
     rootChildren,
-    "compileTargets"
+    "compileTargets",
   );
   if (compileTargetsElement) {
     migrateCompileTargetsElement(compileTargetsElement, result);
@@ -196,21 +202,21 @@ function migrateProjectFile(project: any, result: any) {
   }
   let libraryPathsElement = findChildElementByName(
     rootChildren,
-    "libraryPaths"
+    "libraryPaths",
   );
   if (libraryPathsElement) {
     migrateLibraryPathsElement(libraryPathsElement, result);
   }
   let externalLibraryPathsElement = findChildElementByName(
     rootChildren,
-    "externalLibraryPaths"
+    "externalLibraryPaths",
   );
   if (externalLibraryPathsElement) {
     migrateExternalLibraryPathsElement(externalLibraryPathsElement, result);
   }
   let includeLibrariesElement = findChildElementByName(
     rootChildren,
-    "includeLibraries"
+    "includeLibraries",
   );
   if (includeLibrariesElement) {
     migrateIncludeLibrariesElement(includeLibrariesElement, result);
@@ -221,14 +227,14 @@ function migrateProjectFile(project: any, result: any) {
   }
   let preBuildCommandElement = findChildElementByName(
     rootChildren,
-    "preBuildCommand"
+    "preBuildCommand",
   );
   if (preBuildCommandElement) {
     migratePreBuildCommandElement(preBuildCommandElement, result);
   }
   let postBuildCommandElement = findChildElementByName(
     rootChildren,
-    "postBuildCommand"
+    "postBuildCommand",
   );
   if (postBuildCommandElement) {
     migratePostBuildCommandElement(postBuildCommandElement, result);
@@ -492,7 +498,7 @@ function migrateLibraryPathsElement(libraryPathsElement: any, result: any) {
 
 function migrateExternalLibraryPathsElement(
   externalLibraryPathsElement: any,
-  result: any
+  result: any,
 ) {
   let externalLibraryPaths: string[] = [];
   let children = externalLibraryPathsElement.children as any[];
@@ -516,7 +522,7 @@ function migrateExternalLibraryPathsElement(
 
 function migrateIncludeLibrariesElement(
   includeLibrariesElement: any,
-  result: any
+  result: any,
 ) {
   let includeLibraries: string[] = [];
   let children = includeLibrariesElement.children as any[];
