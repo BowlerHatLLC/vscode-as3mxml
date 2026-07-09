@@ -129,6 +129,11 @@ public class CompilerShell implements IASConfigCCompiler {
         }
     }
 
+    public void buildASDoc(String projectType, String swcToOutputTo, List<String> compilerOptions, Path workspaceRoot,
+            Path sdkPath) {
+
+    }
+
     public void dispose() {
         if (process == null) {
             return;

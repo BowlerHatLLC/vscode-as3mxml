@@ -26,4 +26,8 @@ import com.as3mxml.asconfigc.ASConfigCException;
 public interface IASConfigCCompiler {
 	public void compile(String projectType, List<String> compilerOptions, Path workspaceRoot, Path sdkPath)
 			throws ASConfigCException;
+
+	public void buildASDoc(String projectType, String swcToIncludeIn, List<String> asdocOptions, Path workspaceRoot,
+			Path sdkPath)
+			throws ASConfigCException;
 }
