@@ -281,7 +281,10 @@ public class LanguageServerCompilerUtils {
     }
 
     private static Optional<Path> getFilePath(URI uri) {
-        if (!uri.getScheme().equals("file")) {
+        if (!uri.getScheme().equals("file")
+                || uri.getFragment() != null
+                || uri.getAuthority() != null
+                || uri.getPort() != -1) {
             return Optional.empty();
         } else {
             return Optional.of(Paths.get(uri));
