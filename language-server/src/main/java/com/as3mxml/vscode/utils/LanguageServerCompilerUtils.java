@@ -286,9 +286,16 @@ public class LanguageServerCompilerUtils {
                 || uri.getAuthority() != null
                 || uri.getPort() != -1) {
             return Optional.empty();
-        } else {
-            return Optional.of(Paths.get(uri));
         }
+        Path parsedPath = null;
+        try {
+            parsedPath = Paths.get(uri);
+        } catch (Exception e) {
+            // we explicitly detect several invalid parts of the URI above, but
+            // there might be some that we missed, so better to be safe.
+            return Optional.empty();
+        }
+        return Optional.of(parsedPath);
     }
 
     public static CompletionItemKind getCompletionItemKindFromDefinition(IDefinition definition) {
