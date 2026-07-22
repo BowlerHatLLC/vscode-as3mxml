@@ -15,11 +15,18 @@ limitations under the License.
 */
 package com.as3mxml.vscode.providers;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 
 import org.antlr.runtime.ANTLRStringStream;
+import org.apache.commons.io.IOUtils;
 import org.apache.royale.compiler.common.ISourceLocation;
 import org.apache.royale.compiler.constants.IASKeywordConstants;
 import org.apache.royale.compiler.constants.IMetaAttributeConstants;
@@ -76,6 +83,8 @@ import com.as3mxml.vscode.utils.DefinitionUtils;
 import com.as3mxml.vscode.utils.FileTracker;
 import com.as3mxml.vscode.utils.LanguageServerCompilerUtils;
 import com.as3mxml.vscode.utils.MXMLDataUtils;
+import com.as3mxml.vscode.utils.MXMLNamespace;
+import com.as3mxml.vscode.utils.MXMLNamespaceUtils;
 import com.google.common.collect.ImmutableList;
 
 public class HoverProvider {
@@ -410,6 +419,45 @@ public class HoverProvider {
     private Hover mxmlHover(IMXMLTagData offsetTag, int currentOffset, ILspProject project) {
         IDefinition definition = MXMLDataUtils.getDefinitionForMXMLNameAtOffset(offsetTag, currentOffset, project);
         if (definition == null) {
+            MXMLNamespace fxNS = MXMLNamespaceUtils.getMXMLLanguageNamespace(offsetTag.getSource(),
+                    project.getWorkspace());
+            if (fxNS != null && fxNS.uri.equals(offsetTag.getURI())) {
+                File basePath = null;
+                try {
+                    File jarPath = new File(HoverProvider.class.getProtectionDomain().getCodeSource()
+                            .getLocation().toURI());
+                    basePath = jarPath.getParentFile().getParentFile();
+                } catch (URISyntaxException e) {
+                }
+                String docs = null;
+                if (basePath != null) {
+                    File mdFile = new File(basePath,
+                            "mxml_docs" + File.separator + offsetTag.getShortName() + ".md");
+                    try {
+                        if (mdFile.exists() && !mdFile.isDirectory()) {
+                            FileInputStream mdStream = new FileInputStream(mdFile);
+                            docs = IOUtils.toString(mdStream, StandardCharsets.UTF_8);
+                        }
+                    } catch (FileNotFoundException e) {
+                    } catch (IOException e) {
+                    }
+                }
+
+                if (docs != null) {
+                    Hover result = new Hover();
+                    StringBuilder detailBuilder = new StringBuilder();
+                    detailBuilder.append("<");
+                    detailBuilder.append(offsetTag.getName());
+                    detailBuilder.append(">");
+                    String detail = codeBlock(MARKED_STRING_LANGUAGE_XML, detailBuilder.toString());
+                    if (docs != null) {
+                        detail += "\n\n---\n\n" + docs;
+                    }
+                    result.setContents(new MarkupContent(MarkupKind.MARKDOWN, detail));
+                    return result;
+                }
+            }
+
             return new Hover(Collections.emptyList(), null);
         }
 
