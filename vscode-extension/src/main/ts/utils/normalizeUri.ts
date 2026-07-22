@@ -16,6 +16,9 @@ limitations under the License.
 import * as vscode from "vscode";
 
 export default function normalizeUri(value: vscode.Uri): string {
+  if (value.authority || value.fragment) {
+    value = value.with({ fragment: "", authority: "" });
+  }
   if (/^win32/.test(process.platform)) {
     //there are a couple of inconsistencies on Windows
     //between VSCode and Java
