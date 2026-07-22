@@ -40,12 +40,11 @@ import org.apache.royale.compiler.internal.css.CSSDocument;
 import org.apache.royale.compiler.internal.mxml.MXMLData;
 import org.apache.royale.compiler.internal.mxml.MXMLDialect;
 import org.apache.royale.compiler.mxml.IMXMLTagData;
-import org.apache.royale.compiler.tree.ASTNodeID;
 import org.apache.royale.compiler.tree.as.IASNode;
 import org.apache.royale.compiler.tree.as.IClassNode;
+import org.apache.royale.compiler.tree.as.IDefinitionNode;
 import org.apache.royale.compiler.tree.as.IExpressionNode;
 import org.apache.royale.compiler.tree.as.IFunctionCallNode;
-import org.apache.royale.compiler.tree.as.IFunctionNode;
 import org.apache.royale.compiler.tree.as.IIdentifierNode;
 import org.apache.royale.compiler.tree.as.IKeywordNode;
 import org.apache.royale.compiler.tree.as.ILanguageIdentifierNode;
@@ -324,11 +323,24 @@ public class HoverProvider {
             }
         }
 
-        if (definition == null && parentNode instanceof IFunctionNode && offsetNode instanceof IKeywordNode) {
+        if (definition == null && parentNode instanceof IDefinitionNode && offsetNode instanceof IKeywordNode) {
             IKeywordNode keywordNode = (IKeywordNode) offsetNode;
-            if (ASTNodeID.KeywordFunctionID.equals(keywordNode.getNodeID())) {
-                IFunctionNode functionNode = (IFunctionNode) parentNode;
-                definition = functionNode.getDefinition();
+            boolean validDefinitionKeyword = false;
+            switch (keywordNode.getNodeID()) {
+                case KeywordClassID:
+                case KeywordInterfaceID:
+                case KeywordVarID:
+                case KeywordConstID:
+                case KeywordFunctionID:
+                case KeywordGetID:
+                case KeywordSetID:
+                    validDefinitionKeyword = true;
+                    break;
+                default:
+            }
+            if (validDefinitionKeyword) {
+                IDefinitionNode definitionNode = (IDefinitionNode) parentNode;
+                definition = definitionNode.getDefinition();
             }
         }
 
