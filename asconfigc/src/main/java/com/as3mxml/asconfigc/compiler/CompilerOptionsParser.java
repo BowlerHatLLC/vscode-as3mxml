@@ -537,7 +537,7 @@ public class CompilerOptionsParser {
 		}
 		for (int i = 0; i < size; i++) {
 			String currentValue = values.get(i);
-			result.add("--" + optionName + "+=\"" + currentValue.toString() + "\"");
+			result.add("--" + optionName + "+=" + currentValue.toString());
 		}
 	}
 
