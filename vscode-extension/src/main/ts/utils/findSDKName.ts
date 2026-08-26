@@ -32,7 +32,7 @@ const NAME_ROYALE = "Apache Royale";
 function readBetween(
   fileContents: string,
   startText: string,
-  endText: string
+  endText: string,
 ): string | null {
   let startIndex = fileContents.indexOf(startText);
   if (startIndex !== -1) {
@@ -45,28 +45,32 @@ function readBetween(
   return null;
 }
 
-function readName(fileContents: string, includeBuild: boolean): string | null {
+function readName(
+  fileContents: string,
+  includeBuild: boolean,
+  includeVersion: boolean,
+): string | null {
   let sdkName = readBetween(fileContents, XML_NAME_START, XML_NAME_END);
-  if (sdkName === NAME_ROYALE) {
+  if (includeVersion) {
     //in royale-sdk-description.xml, the version appears in a different field
     sdkName +=
       " " + readBetween(fileContents, XML_VERSION_START, XML_VERSION_END);
-    //we should also display the output targets
-    let hasJS = fileContents.indexOf(XML_OUTPUT_TARGET_JS) !== -1;
-    let hasSWF = fileContents.indexOf(XML_OUTPUT_TARGET_SWF) !== -1;
-    if (hasJS && !hasSWF) {
-      sdkName += " (JS Only)";
-    } else if (hasJS && hasSWF) {
-      sdkName += " (JS & SWF)";
-    } else if (!hasJS && hasSWF) {
-      sdkName += " (SWF Only)";
-    }
   }
   if (sdkName !== null && includeBuild) {
     let build = readBetween(fileContents, XML_BUILD_START, XML_BUILD_END);
     if (build !== null) {
       sdkName += "." + build;
     }
+  }
+  // we should also display the output targets, if available
+  let hasJS = fileContents.indexOf(XML_OUTPUT_TARGET_JS) !== -1;
+  let hasSWF = fileContents.indexOf(XML_OUTPUT_TARGET_SWF) !== -1;
+  if (hasJS && !hasSWF) {
+    sdkName += " (JS Only)";
+  } else if (hasJS && hasSWF) {
+    sdkName += " (JS & SWF)";
+  } else if (!hasJS && hasSWF) {
+    sdkName += " (SWF Only)";
   }
   return sdkName;
 }
@@ -79,20 +83,20 @@ export default function findSDKName(sdkPath: string | null): string | null {
   let royaleDescriptionPath = path.join(sdkPath, PATH_SDK_DESCRIPTION_ROYALE);
   if (fs.existsSync(royaleDescriptionPath)) {
     let royaleDescription = fs.readFileSync(royaleDescriptionPath, "utf8");
-    sdkName = readName(royaleDescription, false);
+    sdkName = readName(royaleDescription, false, true);
   }
   if (!sdkName) {
     let flexDescriptionPath = path.join(sdkPath, PATH_SDK_DESCRIPTION_FLEX);
     if (fs.existsSync(flexDescriptionPath)) {
       let flexDescription = fs.readFileSync(flexDescriptionPath, "utf8");
-      sdkName = readName(flexDescription, false);
+      sdkName = readName(flexDescription, false, false);
     }
   }
   if (!sdkName) {
     let airDescriptionPath = path.join(sdkPath, PATH_SDK_DESCRIPTION_AIR);
     if (fs.existsSync(airDescriptionPath)) {
       let airDescription = fs.readFileSync(airDescriptionPath, "utf8");
-      sdkName = readName(airDescription, true);
+      sdkName = readName(airDescription, true, false);
     }
   }
   return sdkName;
