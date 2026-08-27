@@ -605,7 +605,7 @@ function startClient() {
     return;
   }
 
-  if (!javaExecutablePath || hasInvalidJava()) {
+  if (hasInvalidJava()) {
     vscode.window.showErrorMessage(INVALID_JAVA_ERROR);
     return;
   }
