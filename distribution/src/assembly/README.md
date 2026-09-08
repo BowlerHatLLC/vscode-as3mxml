@@ -33,8 +33,8 @@ Extension created and maintained by [Josh Tynjala](https://patreon.com/josht). B
 
 ## Minimum Requirements
 
-- Visual Studio Code 1.82
-- Java JDK 11 or newer
+- Visual Studio Code 1.96
+- Java JDK 17 or newer
 
 ## asconfig.json
 
