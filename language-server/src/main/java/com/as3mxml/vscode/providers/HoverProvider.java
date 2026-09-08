@@ -338,8 +338,6 @@ public class HoverProvider {
             switch (keywordNode.getNodeID()) {
                 case KeywordClassID:
                 case KeywordInterfaceID:
-                case KeywordVarID:
-                case KeywordConstID:
                 case KeywordFunctionID:
                 case KeywordGetID:
                 case KeywordSetID:
