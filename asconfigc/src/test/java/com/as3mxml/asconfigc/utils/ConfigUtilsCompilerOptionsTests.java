@@ -20,8 +20,8 @@ import java.util.Iterator;
 
 import com.as3mxml.asconfigc.TopLevelFields;
 import com.as3mxml.asconfigc.compiler.CompilerOptions;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -127,9 +127,9 @@ class ConfigUtilsCompilerOptionsTests {
 		Assertions.assertTrue(compilerOptions.has(CompilerOptions.SOURCE_PATH));
 		JsonNode resultValue = compilerOptions.get(CompilerOptions.SOURCE_PATH);
 		Assertions.assertTrue(resultValue.isArray());
-		Iterator<JsonNode> elements = resultValue.elements();
+		Iterator<JsonNode> elements = resultValue.iterator();
 		Assertions.assertTrue(elements.hasNext());
-		String resultValue0 = elements.next().asText();
+		String resultValue0 = elements.next().asString();
 		Assertions.assertEquals(baseValue, resultValue0);
 		Assertions.assertFalse(elements.hasNext());
 	}
@@ -148,9 +148,9 @@ class ConfigUtilsCompilerOptionsTests {
 		Assertions.assertTrue(compilerOptions.has(CompilerOptions.SOURCE_PATH));
 		JsonNode resultValue = compilerOptions.get(CompilerOptions.SOURCE_PATH);
 		Assertions.assertTrue(resultValue.isArray());
-		Iterator<JsonNode> elements = resultValue.elements();
+		Iterator<JsonNode> elements = resultValue.iterator();
 		Assertions.assertTrue(elements.hasNext());
-		String resultValue0 = elements.next().asText();
+		String resultValue0 = elements.next().asString();
 		Assertions.assertEquals(baseValue, resultValue0);
 		Assertions.assertFalse(elements.hasNext());
 	}
@@ -169,9 +169,9 @@ class ConfigUtilsCompilerOptionsTests {
 		Assertions.assertTrue(compilerOptions.has(CompilerOptions.SOURCE_PATH));
 		JsonNode resultValue = compilerOptions.get(CompilerOptions.SOURCE_PATH);
 		Assertions.assertTrue(resultValue.isArray());
-		Iterator<JsonNode> elements = resultValue.elements();
+		Iterator<JsonNode> elements = resultValue.iterator();
 		Assertions.assertTrue(elements.hasNext());
-		String resultValue0 = elements.next().asText();
+		String resultValue0 = elements.next().asString();
 		Assertions.assertEquals(newValue, resultValue0);
 		Assertions.assertFalse(elements.hasNext());
 	}
@@ -190,9 +190,9 @@ class ConfigUtilsCompilerOptionsTests {
 		Assertions.assertTrue(compilerOptions.has(CompilerOptions.SOURCE_PATH));
 		JsonNode resultValue = compilerOptions.get(CompilerOptions.SOURCE_PATH);
 		Assertions.assertTrue(resultValue.isArray());
-		Iterator<JsonNode> elements = resultValue.elements();
+		Iterator<JsonNode> elements = resultValue.iterator();
 		Assertions.assertTrue(elements.hasNext());
-		String resultValue0 = elements.next().asText();
+		String resultValue0 = elements.next().asString();
 		Assertions.assertEquals(newValue, resultValue0);
 		Assertions.assertFalse(elements.hasNext());
 	}
@@ -213,12 +213,12 @@ class ConfigUtilsCompilerOptionsTests {
 		Assertions.assertTrue(compilerOptions.has(CompilerOptions.SOURCE_PATH));
 		JsonNode resultValue = compilerOptions.get(CompilerOptions.SOURCE_PATH);
 		Assertions.assertTrue(resultValue.isArray());
-		Iterator<JsonNode> elements = resultValue.elements();
+		Iterator<JsonNode> elements = resultValue.iterator();
 		Assertions.assertTrue(elements.hasNext());
-		String resultValue0 = elements.next().asText();
+		String resultValue0 = elements.next().asString();
 		Assertions.assertEquals(baseValue, resultValue0);
 		Assertions.assertTrue(elements.hasNext());
-		String resultValue1 = elements.next().asText();
+		String resultValue1 = elements.next().asString();
 		Assertions.assertEquals(newValue, resultValue1);
 		Assertions.assertFalse(elements.hasNext());
 	}
@@ -238,9 +238,9 @@ class ConfigUtilsCompilerOptionsTests {
 		Assertions.assertTrue(compilerOptions.has(CompilerOptions.SOURCE_PATH));
 		JsonNode resultValue = compilerOptions.get(CompilerOptions.SOURCE_PATH);
 		Assertions.assertTrue(resultValue.isArray());
-		Iterator<JsonNode> elements = resultValue.elements();
+		Iterator<JsonNode> elements = resultValue.iterator();
 		Assertions.assertTrue(elements.hasNext());
-		String resultValue0 = elements.next().asText();
+		String resultValue0 = elements.next().asString();
 		Assertions.assertEquals(duplicateValue, resultValue0);
 		Assertions.assertFalse(elements.hasNext());
 	}
@@ -264,12 +264,12 @@ class ConfigUtilsCompilerOptionsTests {
 		Assertions.assertTrue(compilerOptions.has(CompilerOptions.DEFINE));
 		JsonNode resultValue = compilerOptions.get(CompilerOptions.DEFINE);
 		Assertions.assertTrue(resultValue.isArray());
-		Iterator<JsonNode> elements = resultValue.elements();
+		Iterator<JsonNode> elements = resultValue.iterator();
 		Assertions.assertTrue(elements.hasNext());
 		JsonNode resultValue0 = elements.next();
 		Assertions.assertTrue(resultValue0.has(CompilerOptions.DEFINE__NAME));
 		Assertions.assertTrue(resultValue0.has(CompilerOptions.DEFINE__VALUE));
-		String result0Name = resultValue0.get(CompilerOptions.DEFINE__NAME).asText();
+		String result0Name = resultValue0.get(CompilerOptions.DEFINE__NAME).asString();
 		boolean result0Value = resultValue0.get(CompilerOptions.DEFINE__VALUE).asBoolean();
 		Assertions.assertEquals(baseName, result0Name);
 		Assertions.assertEquals(baseValue, result0Value);
@@ -291,12 +291,12 @@ class ConfigUtilsCompilerOptionsTests {
 		Assertions.assertTrue(compilerOptions.has(CompilerOptions.DEFINE));
 		JsonNode resultValue = compilerOptions.get(CompilerOptions.DEFINE);
 		Assertions.assertTrue(resultValue.isArray());
-		Iterator<JsonNode> elements = resultValue.elements();
+		Iterator<JsonNode> elements = resultValue.iterator();
 		Assertions.assertTrue(elements.hasNext());
 		JsonNode resultValue0 = elements.next();
 		Assertions.assertTrue(resultValue0.has(CompilerOptions.DEFINE__NAME));
 		Assertions.assertTrue(resultValue0.has(CompilerOptions.DEFINE__VALUE));
-		String result0Name = resultValue0.get(CompilerOptions.DEFINE__NAME).asText();
+		String result0Name = resultValue0.get(CompilerOptions.DEFINE__NAME).asString();
 		boolean result0Value = resultValue0.get(CompilerOptions.DEFINE__VALUE).asBoolean();
 		Assertions.assertEquals(newName, result0Name);
 		Assertions.assertEquals(newValue, result0Value);
@@ -321,12 +321,12 @@ class ConfigUtilsCompilerOptionsTests {
 		Assertions.assertTrue(compilerOptions.has(CompilerOptions.DEFINE));
 		JsonNode resultValue = compilerOptions.get(CompilerOptions.DEFINE);
 		Assertions.assertTrue(resultValue.isArray());
-		Iterator<JsonNode> elements = resultValue.elements();
+		Iterator<JsonNode> elements = resultValue.iterator();
 		Assertions.assertTrue(elements.hasNext());
 		JsonNode resultValue0 = elements.next();
 		Assertions.assertTrue(resultValue0.has(CompilerOptions.DEFINE__NAME));
 		Assertions.assertTrue(resultValue0.has(CompilerOptions.DEFINE__VALUE));
-		String result0Name = resultValue0.get(CompilerOptions.DEFINE__NAME).asText();
+		String result0Name = resultValue0.get(CompilerOptions.DEFINE__NAME).asString();
 		boolean result0Value = resultValue0.get(CompilerOptions.DEFINE__VALUE).asBoolean();
 		Assertions.assertEquals(baseName, result0Name);
 		Assertions.assertEquals(baseValue, result0Value);
@@ -334,7 +334,7 @@ class ConfigUtilsCompilerOptionsTests {
 		JsonNode resultValue1 = elements.next();
 		Assertions.assertTrue(resultValue1.has(CompilerOptions.DEFINE__NAME));
 		Assertions.assertTrue(resultValue1.has(CompilerOptions.DEFINE__VALUE));
-		String result1Name = resultValue1.get(CompilerOptions.DEFINE__NAME).asText();
+		String result1Name = resultValue1.get(CompilerOptions.DEFINE__NAME).asString();
 		boolean result1Value = resultValue1.get(CompilerOptions.DEFINE__VALUE).asBoolean();
 		Assertions.assertEquals(newName, result1Name);
 		Assertions.assertEquals(newValue, result1Value);
@@ -358,12 +358,12 @@ class ConfigUtilsCompilerOptionsTests {
 		Assertions.assertTrue(compilerOptions.has(CompilerOptions.DEFINE));
 		JsonNode resultValue = compilerOptions.get(CompilerOptions.DEFINE);
 		Assertions.assertTrue(resultValue.isArray());
-		Iterator<JsonNode> elements = resultValue.elements();
+		Iterator<JsonNode> elements = resultValue.iterator();
 		Assertions.assertTrue(elements.hasNext());
 		JsonNode resultValue0 = elements.next();
 		Assertions.assertTrue(resultValue0.has(CompilerOptions.DEFINE__NAME));
 		Assertions.assertTrue(resultValue0.has(CompilerOptions.DEFINE__VALUE));
-		String result0Name = resultValue0.get(CompilerOptions.DEFINE__NAME).asText();
+		String result0Name = resultValue0.get(CompilerOptions.DEFINE__NAME).asString();
 		boolean result0Value = resultValue0.get(CompilerOptions.DEFINE__VALUE).asBoolean();
 		Assertions.assertEquals(duplicateName, result0Name);
 		Assertions.assertEquals(newValue, result0Value);

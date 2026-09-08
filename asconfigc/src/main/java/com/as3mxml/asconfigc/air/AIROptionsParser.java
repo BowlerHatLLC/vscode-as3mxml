@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 
 public class AIROptionsParser {
 	public AIROptionsParser() {
@@ -31,11 +31,11 @@ public class AIROptionsParser {
 	public void parse(String platform, boolean debug, String applicationDescriptorPath, String applicationContentPath,
 			List<String> modulePaths, List<String> workerPaths, JsonNode options, List<String> result) {
 		if (options.has(AIROptions.LICENSE_DEV_ID)) {
-			setValueWithoutAssignment(AIROptions.LICENSE_DEV_ID, options.get(AIROptions.LICENSE_DEV_ID).asText(),
+			setValueWithoutAssignment(AIROptions.LICENSE_DEV_ID, options.get(AIROptions.LICENSE_DEV_ID).asString(),
 					result);
 		}
 		if (options.has(AIROptions.LICENSE_FILE)) {
-			setValueWithoutAssignment(AIROptions.LICENSE_FILE, options.get(AIROptions.LICENSE_FILE).asText(),
+			setValueWithoutAssignment(AIROptions.LICENSE_FILE, options.get(AIROptions.LICENSE_FILE).asString(),
 					result);
 		}
 
@@ -74,9 +74,10 @@ public class AIROptionsParser {
 		// AIR_SIGNING_OPTIONS end
 
 		if (overridesOptionForPlatform(options, AIROptions.TARGET, platform)) {
-			setValueWithoutAssignment(AIROptions.TARGET, options.get(platform).get(AIROptions.TARGET).asText(), result);
+			setValueWithoutAssignment(AIROptions.TARGET, options.get(platform).get(AIROptions.TARGET).asString(),
+					result);
 		} else if (options.has(AIROptions.TARGET)) {
-			setValueWithoutAssignment(AIROptions.TARGET, options.get(AIROptions.TARGET).asText(), result);
+			setValueWithoutAssignment(AIROptions.TARGET, options.get(AIROptions.TARGET).asString(), result);
 		} else {
 			switch (platform) {
 				case AIRPlatform.ANDROID: {
@@ -150,10 +151,10 @@ public class AIROptionsParser {
 		// Android options begin
 		if (overridesOptionForPlatform(options, AIROptions.AIR_DOWNLOAD_URL, platform)) {
 			setValueWithoutAssignment(AIROptions.AIR_DOWNLOAD_URL,
-					options.get(platform).get(AIROptions.AIR_DOWNLOAD_URL).asText(), result);
+					options.get(platform).get(AIROptions.AIR_DOWNLOAD_URL).asString(), result);
 		}
 		if (overridesOptionForPlatform(options, AIROptions.ARCH, platform)) {
-			setValueWithoutAssignment(AIROptions.ARCH, options.get(platform).get(AIROptions.ARCH).asText(), result);
+			setValueWithoutAssignment(AIROptions.ARCH, options.get(platform).get(AIROptions.ARCH).asString(), result);
 		}
 		// Android options end
 
@@ -171,10 +172,10 @@ public class AIROptionsParser {
 		// NATIVE_SIGNING_OPTIONS end
 
 		if (overridesOptionForPlatform(options, AIROptions.OUTPUT, platform)) {
-			String outputPath = options.get(platform).get(AIROptions.OUTPUT).asText();
+			String outputPath = options.get(platform).get(AIROptions.OUTPUT).asString();
 			result.add(outputPath);
 		} else if (options.has(AIROptions.OUTPUT)) {
-			String outputPath = options.get(AIROptions.OUTPUT).asText();
+			String outputPath = options.get(AIROptions.OUTPUT).asString();
 			result.add(outputPath);
 		} else {
 			// output is not defined, so generate an appropriate file name based
@@ -197,7 +198,7 @@ public class AIROptionsParser {
 
 		if (overridesOptionForPlatform(options, AIROptions.PLATFORMSDK, platform)) {
 			setPathValueWithoutAssignment(AIROptions.PLATFORMSDK,
-					options.get(platform).get(AIROptions.PLATFORMSDK).asText(), result);
+					options.get(platform).get(AIROptions.PLATFORMSDK).asString(), result);
 		}
 
 		// FILE_OPTIONS begin
@@ -224,17 +225,17 @@ public class AIROptionsParser {
 			parseExtdir(options.get(AIROptions.EXTDIR), result);
 		}
 		if (overridesOptionForPlatform(options, AIROptions.RESDIR, platform)) {
-			setPathValueWithoutAssignment(AIROptions.RESDIR, options.get(platform).get(AIROptions.RESDIR).asText(),
+			setPathValueWithoutAssignment(AIROptions.RESDIR, options.get(platform).get(AIROptions.RESDIR).asString(),
 					result);
 		} else if (options.has(AIROptions.RESDIR)) {
-			setPathValueWithoutAssignment(AIROptions.RESDIR, options.get(AIROptions.RESDIR).asText(), result);
+			setPathValueWithoutAssignment(AIROptions.RESDIR, options.get(AIROptions.RESDIR).asString(), result);
 		}
 		// FILE_OPTIONS end
 
 		// ANE_OPTIONS begin
 		// ANE_OPTIONS end
 
-		Iterator<String> fieldNames = options.fieldNames();
+		Iterator<String> fieldNames = options.propertyNames().iterator();
 		while (fieldNames.hasNext()) {
 			String fieldName = fieldNames.next();
 			switch (fieldName) {
@@ -301,7 +302,7 @@ public class AIROptionsParser {
 
 	private void parseExtdir(JsonNode extdir, List<String> result) {
 		for (int i = 0, size = extdir.size(); i < size; i++) {
-			String current = extdir.get(i).asText();
+			String current = extdir.get(i).asString();
 			setPathValueWithoutAssignment(AIROptions.EXTDIR, current, result);
 		}
 	}
@@ -342,11 +343,11 @@ public class AIROptionsParser {
 			JsonNode fileNode = files.get(i);
 			String srcFile = null;
 			String destPath = null;
-			if (fileNode.isTextual()) {
-				srcFile = fileNode.asText();
+			if (fileNode.isString()) {
+				srcFile = fileNode.asString();
 			} else {
-				srcFile = fileNode.get(AIROptions.FILES__FILE).asText();
-				destPath = fileNode.get(AIROptions.FILES__PATH).asText();
+				srcFile = fileNode.get(AIROptions.FILES__FILE).asString();
+				destPath = fileNode.get(AIROptions.FILES__PATH).asString();
 			}
 			File fileToAdd = new File(srcFile);
 			File absoluteFileToAdd = fileToAdd;
@@ -466,7 +467,7 @@ public class AIROptionsParser {
 				JsonNode connectValue = platformOptions.get(AIROptions.CONNECT);
 				if (!connectValue.isBoolean()) {
 					result.add("-" + AIROptions.CONNECT);
-					result.add(connectValue.asText());
+					result.add(connectValue.asString());
 				} else if (connectValue.asBoolean() == true) {
 					result.add("-" + AIROptions.CONNECT);
 				}
@@ -476,7 +477,7 @@ public class AIROptionsParser {
 				JsonNode listenValue = platformOptions.get(AIROptions.LISTEN);
 				if (!listenValue.isBoolean()) {
 					result.add("-" + AIROptions.LISTEN);
-					result.add(listenValue.asText());
+					result.add(listenValue.asString());
 				} else if (listenValue.asBoolean() == true) {
 					result.add("-" + AIROptions.LISTEN);
 				}
@@ -501,29 +502,29 @@ public class AIROptionsParser {
 
 		if (signingOptions.has(AIRSigningOptions.PROVISIONING_PROFILE)) {
 			setPathValueWithoutAssignment(AIRSigningOptions.PROVISIONING_PROFILE,
-					signingOptions.get(AIRSigningOptions.PROVISIONING_PROFILE).asText(), result);
+					signingOptions.get(AIRSigningOptions.PROVISIONING_PROFILE).asString(), result);
 		}
 		if (signingOptions.has(AIRSigningOptions.ALIAS)) {
-			setValueWithoutAssignment(AIRSigningOptions.ALIAS, signingOptions.get(AIRSigningOptions.ALIAS).asText(),
+			setValueWithoutAssignment(AIRSigningOptions.ALIAS, signingOptions.get(AIRSigningOptions.ALIAS).asString(),
 					result);
 		}
 		if (signingOptions.has(AIRSigningOptions.STORETYPE)) {
 			setValueWithoutAssignment(AIRSigningOptions.STORETYPE,
-					signingOptions.get(AIRSigningOptions.STORETYPE).asText(), result);
+					signingOptions.get(AIRSigningOptions.STORETYPE).asString(), result);
 		}
 		if (signingOptions.has(AIRSigningOptions.KEYSTORE)) {
 			setPathValueWithoutAssignment(AIRSigningOptions.KEYSTORE,
-					signingOptions.get(AIRSigningOptions.KEYSTORE).asText(), result);
+					signingOptions.get(AIRSigningOptions.KEYSTORE).asString(), result);
 		}
 		if (signingOptions.has(AIRSigningOptions.PROVIDER_NAME)) {
 			setValueWithoutAssignment(AIRSigningOptions.PROVIDER_NAME,
-					signingOptions.get(AIRSigningOptions.PROVIDER_NAME).asText(), result);
+					signingOptions.get(AIRSigningOptions.PROVIDER_NAME).asString(), result);
 		}
 		if (signingOptions.has(AIRSigningOptions.TSA)) {
-			setValueWithoutAssignment(AIRSigningOptions.TSA, signingOptions.get(AIRSigningOptions.TSA).asText(),
+			setValueWithoutAssignment(AIRSigningOptions.TSA, signingOptions.get(AIRSigningOptions.TSA).asString(),
 					result);
 		}
-		Iterator<String> fieldNames = signingOptions.fieldNames();
+		Iterator<String> fieldNames = signingOptions.propertyNames().iterator();
 		while (fieldNames.hasNext()) {
 			String fieldName = fieldNames.next();
 			switch (fieldName) {

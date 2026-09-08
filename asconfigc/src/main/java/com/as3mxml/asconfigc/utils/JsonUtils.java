@@ -18,13 +18,13 @@ package com.as3mxml.asconfigc.utils;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 
 public class JsonUtils {
 	public static List<String> jsonNodeToListOfStrings(JsonNode node) {
 		ArrayList<String> result = new ArrayList<>();
 		for (int i = 0, size = node.size(); i < size; i++) {
-			result.add(node.get(i).asText());
+			result.add(node.get(i).asString());
 		}
 		return result;
 	}

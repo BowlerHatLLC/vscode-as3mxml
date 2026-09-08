@@ -41,9 +41,11 @@ import com.as3mxml.asconfigc.utils.ConfigUtils;
 import com.as3mxml.asconfigc.utils.JsonUtils;
 import com.as3mxml.asconfigc.utils.OptionsUtils;
 import com.as3mxml.vscode.utils.ActionScriptSDKUtils;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.json.JsonReadFeature;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
+
 import com.networknt.schema.Error;
 import com.networknt.schema.Schema;
 import com.networknt.schema.SchemaRegistry;
@@ -142,10 +144,11 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy {
             JsonNode currentJson = null;
             try {
                 String contents = FileUtils.readFileToString(currentAsconfigFile, "utf-8");
-                ObjectMapper mapper = new ObjectMapper();
-                // VSCode allows comments, so we should too
-                mapper.configure(JsonParser.Feature.ALLOW_COMMENTS, true);
-                mapper.configure(JsonParser.Feature.ALLOW_TRAILING_COMMA, true);
+                ObjectMapper mapper = JsonMapper.builder()
+                        // VSCode allows comments, so we should too
+                        .configure(JsonReadFeature.ALLOW_JAVA_COMMENTS, true)
+                        .configure(JsonReadFeature.ALLOW_TRAILING_COMMA, true)
+                        .build();
                 currentJson = mapper.readTree(contents);
                 List<Error> errors = schema.validate(currentJson);
                 if (!errors.isEmpty()) {
@@ -163,7 +166,7 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy {
                 json = currentJson;
             }
             if (currentJson.has(TopLevelFields.EXTENDS)) {
-                String extendsPath = currentJson.get(TopLevelFields.EXTENDS).asText();
+                String extendsPath = currentJson.get(TopLevelFields.EXTENDS).asString();
                 currentAsconfigFile = new File(extendsPath);
 
             } else {
@@ -173,11 +176,11 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy {
         try {
             if (json.has(TopLevelFields.TYPE)) // optional, defaults to "app"
             {
-                projectType = json.get(TopLevelFields.TYPE).asText();
+                projectType = json.get(TopLevelFields.TYPE).asString();
             }
             if (json.has(TopLevelFields.CONFIG)) // optional, defaults to "flex"
             {
-                config = json.get(TopLevelFields.CONFIG).asText();
+                config = json.get(TopLevelFields.CONFIG).asString();
             }
             if (json.has(TopLevelFields.FILES)) // optional
             {
@@ -185,7 +188,7 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy {
                 int fileCount = jsonFiles.size();
                 files = new String[fileCount];
                 for (int i = 0; i < fileCount; i++) {
-                    String pathString = jsonFiles.get(i).asText();
+                    String pathString = jsonFiles.get(i).asString();
                     Path filePath = projectRoot.resolve(pathString);
                     files[i] = filePath.toString();
                 }
@@ -205,7 +208,7 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy {
                     targets = new ArrayList<>();
                     JsonNode jsonTargets = jsonCompilerOptions.get(CompilerOptions.TARGETS);
                     for (int i = 0, count = jsonTargets.size(); i < count; i++) {
-                        String target = jsonTargets.get(i).asText();
+                        String target = jsonTargets.get(i).asString();
                         targets.add(target);
                     }
                 }
@@ -216,7 +219,7 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy {
                 }
             }
             if (projectType.equals(ProjectType.APP) && json.has(TopLevelFields.MAIN_CLASS)) {
-                mainClass = json.get(TopLevelFields.MAIN_CLASS).asText();
+                mainClass = json.get(TopLevelFields.MAIN_CLASS).asString();
                 String resolvedMainClass = ConfigUtils.resolveMainClass(mainClass, sourcePaths, projectRoot.toString());
                 if (resolvedMainClass != null) {
                     Path mainClassPath = Paths.get(resolvedMainClass);
@@ -231,13 +234,13 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy {
                 additionalOptions = new ArrayList<>();
                 JsonNode jsonAdditionalOptions = json.get(TopLevelFields.ADDITIONAL_OPTIONS);
                 if (jsonAdditionalOptions.isArray()) {
-                    Iterator<JsonNode> iterator = jsonAdditionalOptions.elements();
+                    Iterator<JsonNode> iterator = jsonAdditionalOptions.iterator();
                     while (iterator.hasNext()) {
                         JsonNode jsonOption = iterator.next();
-                        additionalOptions.add(jsonOption.asText());
+                        additionalOptions.add(jsonOption.asString());
                     }
                 } else {
-                    String additionalOptionsText = jsonAdditionalOptions.asText();
+                    String additionalOptionsText = jsonAdditionalOptions.asString();
                     if (additionalOptionsText != null) {
                         // split the additionalOptions into separate values so that we can
                         // pass them in as String[], as the compiler expects.

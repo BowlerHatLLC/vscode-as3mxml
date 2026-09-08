@@ -18,7 +18,7 @@ package com.as3mxml.asconfigc.compiler;
 import java.util.Iterator;
 import java.util.List;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import com.as3mxml.asconfigc.utils.OptionsFormatter;
 import com.as3mxml.asconfigc.utils.JsonUtils;
 
@@ -43,7 +43,7 @@ public class CompilerOptionsParser {
 	}
 
 	public void parse(JsonNode options, Boolean debugBuild, List<String> result) throws UnknownCompilerOptionException {
-		Iterator<String> iterator = options.fieldNames();
+		Iterator<String> iterator = options.propertyNames().iterator();
 		while (iterator.hasNext()) {
 			String key = iterator.next();
 			switch (key) {
@@ -72,19 +72,19 @@ public class CompilerOptionsParser {
 					break;
 				}
 				case CompilerOptions.CONTEXT_ROOT: {
-					OptionsFormatter.setValue(key, options.get(key).asText(), result);
+					OptionsFormatter.setValue(key, options.get(key).asString(), result);
 					break;
 				}
 				case CompilerOptions.CONTRIBUTOR: {
-					OptionsFormatter.setValue(key, options.get(key).asText(), result);
+					OptionsFormatter.setValue(key, options.get(key).asString(), result);
 					break;
 				}
 				case CompilerOptions.CREATOR: {
-					OptionsFormatter.setValue(key, options.get(key).asText(), result);
+					OptionsFormatter.setValue(key, options.get(key).asString(), result);
 					break;
 				}
 				case CompilerOptions.DATE: {
-					OptionsFormatter.setValue(key, options.get(key).asText(), result);
+					OptionsFormatter.setValue(key, options.get(key).asString(), result);
 					break;
 				}
 				case CompilerOptions.DEBUG: {
@@ -95,15 +95,15 @@ public class CompilerOptionsParser {
 					break;
 				}
 				case CompilerOptions.DEBUG_PASSWORD: {
-					OptionsFormatter.setValue(key, options.get(key).asText(), result);
+					OptionsFormatter.setValue(key, options.get(key).asString(), result);
 					break;
 				}
 				case CompilerOptions.DEFAULT_BACKGROUND_COLOR: {
-					OptionsFormatter.setValue(key, options.get(key).asText(), result);
+					OptionsFormatter.setValue(key, options.get(key).asString(), result);
 					break;
 				}
 				case CompilerOptions.DEFAULT_FRAME_RATE: {
-					OptionsFormatter.setValue(key, options.get(key).asText(), result);
+					OptionsFormatter.setValue(key, options.get(key).asString(), result);
 					break;
 				}
 				case CompilerOptions.DEFAULT_SIZE: {
@@ -124,7 +124,7 @@ public class CompilerOptionsParser {
 					break;
 				}
 				case CompilerOptions.DESCRIPTION: {
-					OptionsFormatter.setValue(key, options.get(key).asText(), result);
+					OptionsFormatter.setValue(key, options.get(key).asString(), result);
 					break;
 				}
 				case CompilerOptions.DIRECTORY: {
@@ -132,7 +132,7 @@ public class CompilerOptionsParser {
 					break;
 				}
 				case CompilerOptions.DUMP_CONFIG: {
-					OptionsFormatter.setPathValue(key, options.get(key).asText(), result);
+					OptionsFormatter.setPathValue(key, options.get(key).asString(), result);
 					break;
 				}
 				case CompilerOptions.EXCLUDE_DEFAULTS_CSS_FILES: {
@@ -158,11 +158,11 @@ public class CompilerOptionsParser {
 					break;
 				}
 				case CompilerOptions.HTML_OUTPUT_FILENAME: {
-					OptionsFormatter.setPathValue(key, options.get(key).asText(), result);
+					OptionsFormatter.setPathValue(key, options.get(key).asString(), result);
 					break;
 				}
 				case CompilerOptions.HTML_TEMPLATE: {
-					OptionsFormatter.setPathValue(key, options.get(key).asText(), result);
+					OptionsFormatter.setPathValue(key, options.get(key).asString(), result);
 					break;
 				}
 				case CompilerOptions.INCLUDE_CLASSES: {
@@ -226,7 +226,7 @@ public class CompilerOptionsParser {
 					break;
 				}
 				case CompilerOptions.JS_OUTPUT: {
-					OptionsFormatter.setPathValue(key, options.get(key).asText(), result);
+					OptionsFormatter.setPathValue(key, options.get(key).asString(), result);
 					break;
 				}
 				case CompilerOptions.JS_OUTPUT_OPTIMIZATION: {
@@ -235,11 +235,11 @@ public class CompilerOptionsParser {
 					break;
 				}
 				case CompilerOptions.JS_OUTPUT_TYPE: {
-					OptionsFormatter.setValue(key, options.get(key).asText(), result);
+					OptionsFormatter.setValue(key, options.get(key).asString(), result);
 					break;
 				}
 				case CompilerOptions.JS_VECTOR_EMULATION_CLASS: {
-					OptionsFormatter.setValue(key, options.get(key).asText(), result);
+					OptionsFormatter.setValue(key, options.get(key).asString(), result);
 					break;
 				}
 				case CompilerOptions.JS_VECTOR_INDEX_CHECKS: {
@@ -260,7 +260,7 @@ public class CompilerOptionsParser {
 					break;
 				}
 				case CompilerOptions.LANGUAGE: {
-					OptionsFormatter.setValue(key, options.get(key).asText(), result);
+					OptionsFormatter.setValue(key, options.get(key).asString(), result);
 					break;
 				}
 				case CompilerOptions.LIBRARY_PATH: {
@@ -269,7 +269,7 @@ public class CompilerOptionsParser {
 					break;
 				}
 				case CompilerOptions.LINK_REPORT: {
-					OptionsFormatter.setPathValue(key, options.get(key).asText(), result);
+					OptionsFormatter.setPathValue(key, options.get(key).asString(), result);
 					break;
 				}
 				case CompilerOptions.LOAD_CONFIG: {
@@ -305,11 +305,11 @@ public class CompilerOptionsParser {
 					break;
 				}
 				case CompilerOptions.OUTPUT: {
-					OptionsFormatter.setPathValue(key, options.get(key).asText(), result);
+					OptionsFormatter.setPathValue(key, options.get(key).asString(), result);
 					break;
 				}
 				case CompilerOptions.PRELOADER: {
-					OptionsFormatter.setValue(key, options.get(key).asText(), result);
+					OptionsFormatter.setValue(key, options.get(key).asString(), result);
 					break;
 				}
 				case CompilerOptions.PREVENT_RENAME_PUBLIC_SYMBOLS: {
@@ -397,7 +397,7 @@ public class CompilerOptionsParser {
 					break;
 				}
 				case CompilerOptions.PUBLISHER: {
-					OptionsFormatter.setValue(key, options.get(key).asText(), result);
+					OptionsFormatter.setValue(key, options.get(key).asString(), result);
 					break;
 				}
 				case CompilerOptions.REMOVE_CIRCULARS: {
@@ -405,7 +405,7 @@ public class CompilerOptionsParser {
 					break;
 				}
 				case CompilerOptions.SERVICES: {
-					OptionsFormatter.setValue(key, options.get(key).asText(), result);
+					OptionsFormatter.setValue(key, options.get(key).asString(), result);
 					break;
 				}
 				case CompilerOptions.SHOW_UNUSED_TYPE_SELECTOR_WARNINGS: {
@@ -413,7 +413,7 @@ public class CompilerOptionsParser {
 					break;
 				}
 				case CompilerOptions.SIZE_REPORT: {
-					OptionsFormatter.setPathValue(key, options.get(key).asText(), result);
+					OptionsFormatter.setPathValue(key, options.get(key).asString(), result);
 					break;
 				}
 				case CompilerOptions.SOURCE_MAP: {
@@ -421,7 +421,7 @@ public class CompilerOptionsParser {
 					break;
 				}
 				case CompilerOptions.SOURCE_MAP_SOURCE_ROOT: {
-					OptionsFormatter.setValue(key, options.get(key).asText(), result);
+					OptionsFormatter.setValue(key, options.get(key).asString(), result);
 					break;
 				}
 				case CompilerOptions.SOURCE_PATH: {
@@ -452,11 +452,11 @@ public class CompilerOptionsParser {
 					break;
 				}
 				case CompilerOptions.SWF_VERSION: {
-					OptionsFormatter.setValue(key, options.get(key).asText(), result);
+					OptionsFormatter.setValue(key, options.get(key).asString(), result);
 					break;
 				}
 				case CompilerOptions.TARGET_PLAYER: {
-					OptionsFormatter.setValue(key, options.get(key).asText(), result);
+					OptionsFormatter.setValue(key, options.get(key).asString(), result);
 					break;
 				}
 				case CompilerOptions.TARGETS: {
@@ -470,16 +470,16 @@ public class CompilerOptionsParser {
 						List<String> values = JsonUtils.jsonNodeToListOfStrings(themeNode);
 						OptionsFormatter.setThenAppendPaths(key, values, result);
 					} else {
-						OptionsFormatter.setPathValue(key, options.get(key).asText(), result);
+						OptionsFormatter.setPathValue(key, options.get(key).asString(), result);
 					}
 					break;
 				}
 				case CompilerOptions.TITLE: {
-					OptionsFormatter.setValue(key, options.get(key).asText(), result);
+					OptionsFormatter.setValue(key, options.get(key).asString(), result);
 					break;
 				}
 				case CompilerOptions.TOOLS_LOCALE: {
-					OptionsFormatter.setValue(key, options.get(key).asText(), result);
+					OptionsFormatter.setValue(key, options.get(key).asString(), result);
 					break;
 				}
 				case CompilerOptions.USE_DIRECT_BLIT: {
@@ -524,8 +524,8 @@ public class CompilerOptionsParser {
 		}
 		for (int i = 0; i < size; i++) {
 			JsonNode currentValue = values.get(i);
-			String uri = currentValue.get(CompilerOptions.NAMESPACE__URI).asText();
-			String manifest = currentValue.get(CompilerOptions.NAMESPACE__MANIFEST).asText();
+			String uri = currentValue.get(CompilerOptions.NAMESPACE__URI).asString();
+			String manifest = currentValue.get(CompilerOptions.NAMESPACE__MANIFEST).asString();
 			result.add("--" + CompilerOptions.NAMESPACE + "+=" + uri + "," + manifest);
 		}
 	}
@@ -556,9 +556,9 @@ public class CompilerOptionsParser {
 		}
 		for (int i = 0; i < size; i++) {
 			JsonNode currentValue = values.get(i);
-			String defineName = currentValue.get(CompilerOptions.DEFINE__NAME).asText();
+			String defineName = currentValue.get(CompilerOptions.DEFINE__NAME).asString();
 			JsonNode defineValue = currentValue.get(CompilerOptions.DEFINE__VALUE);
-			String defineValueAsString = defineValue.asText();
+			String defineValueAsString = defineValue.asString();
 			result.add("--" + optionName + "+=" + defineName + "," + defineValueAsString);
 		}
 	}
@@ -568,13 +568,13 @@ public class CompilerOptionsParser {
 			JsonNode file = files.get(i);
 			String src = null;
 			String dest = null;
-			if (file.isTextual()) {
-				String filePath = file.asText();
+			if (file.isString()) {
+				String filePath = file.asString();
 				src = filePath;
 				dest = filePath;
 			} else {
-				src = file.get(CompilerOptions.INCLUDE_FILE__FILE).asText();
-				dest = file.get(CompilerOptions.INCLUDE_FILE__PATH).asText();
+				src = file.get(CompilerOptions.INCLUDE_FILE__FILE).asString();
+				dest = file.get(CompilerOptions.INCLUDE_FILE__PATH).asString();
 			}
 			result.add("--" + CompilerOptions.INCLUDE_FILE + "+=" + dest + "," + src);
 		}

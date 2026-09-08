@@ -78,12 +78,14 @@ import com.as3mxml.asconfigc.utils.JsonUtils;
 import com.as3mxml.asconfigc.utils.OptionsFormatter;
 import com.as3mxml.asconfigc.utils.OptionsUtils;
 import com.as3mxml.asconfigc.utils.ProjectUtils;
-import com.fasterxml.jackson.core.JsonLocation;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
+
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.TokenStreamLocation;
+import tools.jackson.core.json.JsonReadFeature;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.node.ArrayNode;
 import com.networknt.schema.Error;
 import com.networknt.schema.Schema;
 import com.networknt.schema.SchemaRegistry;
@@ -313,10 +315,11 @@ public class ASConfigC {
 				System.out.println("Reading configuration file...");
 			}
 			String contents = new String(Files.readAllBytes(configFile.toPath()));
-			ObjectMapper mapper = new ObjectMapper();
-			// VSCode allows comments, so we should too
-			mapper.configure(JsonParser.Feature.ALLOW_COMMENTS, true);
-			mapper.configure(JsonParser.Feature.ALLOW_TRAILING_COMMA, true);
+			ObjectMapper mapper = JsonMapper.builder()
+					// VSCode allows comments, so we should too
+					.configure(JsonReadFeature.ALLOW_JAVA_COMMENTS, true)
+					.configure(JsonReadFeature.ALLOW_TRAILING_COMMA, true)
+					.build();
 			json = mapper.readTree(contents);
 			if (options.verbose) {
 				System.out.println("Validating configuration file...");
@@ -331,7 +334,7 @@ public class ASConfigC {
 				throw new ASConfigCException(combinedMessage.toString());
 			}
 			if (json.has(TopLevelFields.EXTENDS)) {
-				String otherConfigPath = json.get(TopLevelFields.EXTENDS).asText();
+				String otherConfigPath = json.get(TopLevelFields.EXTENDS).asString();
 				File otherConfigFile = new File(otherConfigPath);
 				if (!otherConfigFile.isAbsolute()) {
 					otherConfigFile = new File(System.getProperty("user.dir"), otherConfigPath);
@@ -339,9 +342,9 @@ public class ASConfigC {
 				JsonNode otherJson = loadConfigFromFileWithSchema(otherConfigFile, schema);
 				json = ConfigUtils.mergeConfigs(json, otherJson);
 			}
-		} catch (JsonProcessingException e) {
+		} catch (JacksonException e) {
 			// this exception is expected sometimes if the JSON is invalid
-			JsonLocation location = e.getLocation();
+			TokenStreamLocation location = e.getLocation();
 			throw new ASConfigCException(
 					"Invalid configuration in file " + configFile.getName() + ":\n" + e.getOriginalMessage() + " (line "
 							+ location.getLineNr() + ", column " + location.getColumnNr() + ")");
@@ -356,7 +359,7 @@ public class ASConfigC {
 		try {
 			String configAsString = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(json);
 			System.out.println(configAsString);
-		} catch (JsonProcessingException e) {
+		} catch (JacksonException e) {
 			throw new ASConfigCException("Failed to write config: " + e);
 		}
 	}
@@ -385,10 +388,10 @@ public class ASConfigC {
 		airOptions = new ArrayList<>();
 		projectType = ProjectType.APP;
 		if (json.has(TopLevelFields.TYPE)) {
-			projectType = json.get(TopLevelFields.TYPE).asText();
+			projectType = json.get(TopLevelFields.TYPE).asString();
 		}
 		if (json.has(TopLevelFields.CONFIG)) {
-			String configName = json.get(TopLevelFields.CONFIG).asText();
+			String configName = json.get(TopLevelFields.CONFIG).asString();
 			detectConfigRequirements(configName);
 			compilerOptions.add("+configname=" + configName);
 		}
@@ -404,19 +407,19 @@ public class ASConfigC {
 				sourcePaths = JsonUtils.jsonNodeToListOfStrings(sourcePath);
 			}
 			if (compilerOptionsJSON.has(CompilerOptions.OUTPUT)) {
-				swfOutputPath = compilerOptionsJSON.get(CompilerOptions.OUTPUT).asText();
+				swfOutputPath = compilerOptionsJSON.get(CompilerOptions.OUTPUT).asString();
 			}
 			if (compilerOptionsJSON.has(CompilerOptions.JS_OUTPUT)) {
-				jsOutputPath = compilerOptionsJSON.get(CompilerOptions.JS_OUTPUT).asText();
+				jsOutputPath = compilerOptionsJSON.get(CompilerOptions.JS_OUTPUT).asString();
 			}
 		}
 		if (json.has(TopLevelFields.ADDITIONAL_OPTIONS)) {
 			JsonNode jsonAdditionalOptions = json.get(TopLevelFields.ADDITIONAL_OPTIONS);
 			if (jsonAdditionalOptions.isArray()) {
-				jsonAdditionalOptions.elements()
-						.forEachRemaining((jsonOption) -> compilerOptions.add(jsonOption.asText()));
+				jsonAdditionalOptions.iterator()
+						.forEachRemaining((jsonOption) -> compilerOptions.add(jsonOption.asString()));
 			} else {
-				String additionalOptions = jsonAdditionalOptions.asText();
+				String additionalOptions = jsonAdditionalOptions.asString();
 				if (additionalOptions != null) {
 					// split the additionalOptions into separate values so that we can
 					// pass them in as String[], as the compiler expects.
@@ -431,22 +434,22 @@ public class ASConfigC {
 			configRequiresAIR = true;
 			airDescriptorPaths = new ArrayList<String>();
 			JsonNode application = json.get(TopLevelFields.APPLICATION);
-			if (application.isTextual()) {
+			if (application.isString()) {
 				// if it's a string, just use it as is for all platforms
-				String airDescriptorPath = application.asText();
+				String airDescriptorPath = application.asString();
 				airDescriptorPaths.add(airDescriptorPath);
 			} else if (options.air != null) {
 				// if it's an object, and we're packaging an AIR app, we need to
 				// grab the descriptor for the platform we're targeting
 				// we can ignore the rest
 				if (application.has(options.air)) {
-					String airDescriptorPath = application.get(options.air).asText();
+					String airDescriptorPath = application.get(options.air).asString();
 					airDescriptorPaths.add(airDescriptorPath);
 				}
 			} else {
 				// if it's an object, and we're compiling and not packaging an
 				// AIR app, we need to use all of the descriptors
-				Iterator<String> fieldNames = application.fieldNames();
+				Iterator<String> fieldNames = application.propertyNames().iterator();
 				String osName = System.getProperty("os.name").toLowerCase();
 				while (fieldNames.hasNext()) {
 					String fieldName = fieldNames.next();
@@ -468,7 +471,7 @@ public class ASConfigC {
 						// we can skip this one
 						continue;
 					}
-					String airDescriptorPath = application.get(fieldName).asText();
+					String airDescriptorPath = application.get(fieldName).asString();
 					airDescriptorPaths.add(airDescriptorPath);
 				}
 			}
@@ -503,7 +506,7 @@ public class ASConfigC {
 				JsonNode module = modulesJSON.get(i);
 				String output = "";
 				if (module.has(ModuleFields.OUTPUT)) {
-					output = module.get(ModuleFields.OUTPUT).asText();
+					output = module.get(ModuleFields.OUTPUT).asString();
 					moduleOutputPaths.add(output);
 				}
 				if (output.length() > 0) {
@@ -517,7 +520,7 @@ public class ASConfigC {
 					moduleCompilerOptions
 							.add("--" + CompilerOptions.LOAD_EXTERNS + "+=" + linkReportFile.getAbsolutePath());
 				}
-				String file = module.get(ModuleFields.FILE).asText();
+				String file = module.get(ModuleFields.FILE).asString();
 				moduleCompilerOptions.add("--");
 				moduleCompilerOptions.add(file);
 				allModuleCompilerOptions.add(moduleCompilerOptions);
@@ -535,13 +538,13 @@ public class ASConfigC {
 				JsonNode worker = workersJSON.get(i);
 				String output = "";
 				if (worker.has(WorkerFields.OUTPUT)) {
-					output = worker.get(WorkerFields.OUTPUT).asText();
+					output = worker.get(WorkerFields.OUTPUT).asString();
 				}
 				if (output.length() > 0) {
 					workerOutputPaths.add(output);
 					workerCompilerOptions.add("--" + CompilerOptions.OUTPUT + "=" + output);
 				}
-				String file = worker.get(WorkerFields.FILE).asText();
+				String file = worker.get(WorkerFields.FILE).asString();
 				workerCompilerOptions.add("--");
 				workerCompilerOptions.add(file);
 				allWorkerCompilerOptions.add(workerCompilerOptions);
@@ -553,7 +556,7 @@ public class ASConfigC {
 			JsonNode files = json.get(TopLevelFields.FILES);
 			if (projectType.equals(ProjectType.LIB)) {
 				for (int i = 0, size = files.size(); i < size; i++) {
-					String file = files.get(i).asText();
+					String file = files.get(i).asString();
 					compilerOptions.add("--include-sources+=" + file);
 				}
 			} else {
@@ -563,10 +566,10 @@ public class ASConfigC {
 					compilerOptions.add("--");
 					// mainClass is preferred, but for backwards compatibility,
 					// we need to support setting the entry point with files too
-					mainFile = files.get(size - 1).asText();
+					mainFile = files.get(size - 1).asString();
 				}
 				for (int i = 0; i < size; i++) {
-					String file = files.get(i).asText();
+					String file = files.get(i).asString();
 					compilerOptions.add(file);
 				}
 			}
@@ -575,7 +578,7 @@ public class ASConfigC {
 		if (ProjectType.APP.equals(projectType) && json.has(TopLevelFields.MAIN_CLASS)) {
 			// if set already, clear it because we're going to replace it
 			boolean hadMainFile = mainFile != null;
-			String mainClass = json.get(TopLevelFields.MAIN_CLASS).asText();
+			String mainClass = json.get(TopLevelFields.MAIN_CLASS).asString();
 			mainFile = ConfigUtils.resolveMainClass(mainClass, sourcePaths, System.getProperty("user.dir"));
 			if (mainFile == null) {
 				throw new ASConfigCException("Main class not found in source paths: " + mainClass);
@@ -589,7 +592,7 @@ public class ASConfigC {
 		if (json.has(TopLevelFields.ANIMATE_OPTIONS)) {
 			JsonNode animateOptions = json.get(TopLevelFields.ANIMATE_OPTIONS);
 			if (animateOptions.has(AnimateOptions.FILE)) {
-				animateFile = animateOptions.get(AnimateOptions.FILE).asText();
+				animateFile = animateOptions.get(AnimateOptions.FILE).asString();
 				Path animateFilePath = Paths.get(animateFile);
 				if (!animateFilePath.isAbsolute()) {
 					animateFile = Paths.get(System.getProperty("user.dir")).resolve(animateFile).toString();
@@ -608,7 +611,7 @@ public class ASConfigC {
 			copySourcePathAssets = json.get(TopLevelFields.COPY_SOURCE_PATH_ASSETS).asBoolean();
 		}
 		if (json.has(TopLevelFields.HTML_TEMPLATE)) {
-			htmlTemplate = json.get(TopLevelFields.HTML_TEMPLATE).asText();
+			htmlTemplate = json.get(TopLevelFields.HTML_TEMPLATE).asString();
 
 			// the HTML template needs to be parsed after files and outputPath have
 			// both been parsed
@@ -869,7 +872,7 @@ public class ASConfigC {
 			JsonNode targetsJson = compilerOptionsJson.get(CompilerOptions.TARGETS);
 			if (targetsJson.isArray()) {
 				ArrayNode targetsArray = (ArrayNode) targetsJson;
-				isSWFTargetOnly = targetsArray.size() == 1 && targetsArray.get(0).asText().equals(TARGET_SWF);
+				isSWFTargetOnly = targetsArray.size() == 1 && targetsArray.get(0).asString().equals(TARGET_SWF);
 			}
 		}
 		if (compilerOptionsJson.has(CompilerOptions.SOURCE_MAP)) {
@@ -1245,7 +1248,7 @@ public class ASConfigC {
 
 	private void findANEs(JsonNode libraryPathJSON, List<File> result) throws ASConfigCException {
 		for (int i = 0, size = libraryPathJSON.size(); i < size; i++) {
-			String libraryPath = libraryPathJSON.get(i).asText();
+			String libraryPath = libraryPathJSON.get(i).asString();
 			if (libraryPath.endsWith(FILE_EXTENSION_ANE)) {
 				File file = new File(libraryPath);
 				if (!file.isAbsolute()) {
@@ -1389,9 +1392,9 @@ public class ASConfigC {
 		JsonNode filesJSON = airOptionsJSON.get(AIROptions.FILES);
 		for (int i = 0, size = filesJSON.size(); i < size; i++) {
 			JsonNode fileJSON = filesJSON.get(i);
-			if (fileJSON.isTextual()) // just a string
+			if (fileJSON.isString()) // just a string
 			{
-				String filePath = fileJSON.asText();
+				String filePath = fileJSON.asString();
 				File srcFile = new File(filePath);
 				if (outputIsJS) {
 					File outputDirectoryJSDebug = new File(outputDirectory, FILE_NAME_BIN_JS_DEBUG);
@@ -1409,14 +1412,14 @@ public class ASConfigC {
 				}
 			} else // JSON object
 			{
-				String srcFilePath = fileJSON.get(AIROptions.FILES__FILE).asText();
+				String srcFilePath = fileJSON.get(AIROptions.FILES__FILE).asString();
 				File srcFile = new File(srcFilePath);
 				if (!srcFile.isAbsolute()) {
 					srcFile = new File(System.getProperty("user.dir"), srcFilePath);
 				}
 				boolean srcIsDir = srcFile.isDirectory();
 
-				String destFilePath = fileJSON.get(AIROptions.FILES__PATH).asText();
+				String destFilePath = fileJSON.get(AIROptions.FILES__PATH).asString();
 				File destFile = new File(outputDirectory, destFilePath);
 
 				Path relativePath = outputDirectory.toPath().relativize(destFile.toPath());

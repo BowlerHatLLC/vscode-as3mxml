@@ -30,10 +30,10 @@ import com.as3mxml.asconfigc.air.AIROptions;
 import com.as3mxml.asconfigc.air.AIRPlatform;
 import com.as3mxml.asconfigc.air.AIRSigningOptions;
 import com.as3mxml.asconfigc.compiler.CompilerOptions;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.ObjectNode;
 
 public class ConfigUtils {
 	private static final String FILE_EXTENSION_AS = ".as";
@@ -115,12 +115,13 @@ public class ConfigUtils {
 		ObjectNode result = mapper.createObjectNode();
 
 		Set<String> allFieldNames = new HashSet<>();
-		Iterator<String> fieldNames = baseConfigData.fieldNames();
+
+		Iterator<String> fieldNames = baseConfigData.propertyNames().iterator();
 		while (fieldNames.hasNext()) {
 			String fieldName = fieldNames.next();
 			allFieldNames.add(fieldName);
 		}
-		fieldNames = configData.fieldNames();
+		fieldNames = configData.propertyNames().iterator();
 		while (fieldNames.hasNext()) {
 			String fieldName = fieldNames.next();
 			allFieldNames.add(fieldName);
@@ -162,13 +163,13 @@ public class ConfigUtils {
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode result = mapper.createObjectNode();
 
-		Iterator<String> fieldNames = baseObject.fieldNames();
+		Iterator<String> fieldNames = baseObject.propertyNames().iterator();
 		while (fieldNames.hasNext()) {
 			String fieldName = fieldNames.next();
 			result.set(fieldName, baseObject.get(fieldName));
 		}
 
-		fieldNames = object.fieldNames();
+		fieldNames = object.propertyNames().iterator();
 		while (fieldNames.hasNext()) {
 			String fieldName = fieldNames.next();
 			result.set(fieldName, object.get(fieldName));
@@ -179,13 +180,13 @@ public class ConfigUtils {
 	private static JsonNode mergeArrays(JsonNode array, JsonNode baseArray) {
 		Set<JsonNode> combinedNodes = new HashSet<>();
 
-		Iterator<JsonNode> elements = baseArray.elements();
+		Iterator<JsonNode> elements = baseArray.iterator();
 		while (elements.hasNext()) {
 			JsonNode element = elements.next();
 			combinedNodes.add(element);
 		}
 
-		elements = array.elements();
+		elements = array.iterator();
 		while (elements.hasNext()) {
 			JsonNode element = elements.next();
 			combinedNodes.add(element);
@@ -200,13 +201,13 @@ public class ConfigUtils {
 	private static JsonNode mergeArraysWithComparisonKey(JsonNode array, JsonNode baseArray, String comparisonKey) {
 		Set<JsonNode> combinedNodes = new HashSet<>();
 
-		Iterator<JsonNode> elements = array.elements();
+		Iterator<JsonNode> elements = array.iterator();
 		while (elements.hasNext()) {
 			JsonNode element = elements.next();
 			combinedNodes.add(element);
 		}
 
-		elements = baseArray.elements();
+		elements = baseArray.iterator();
 		while (elements.hasNext()) {
 			JsonNode element = elements.next();
 			if (combinedNodes.stream().noneMatch(otherElement -> {
@@ -226,13 +227,13 @@ public class ConfigUtils {
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode result = mapper.createObjectNode();
 
-		Iterator<String> fieldNames = baseCompilerOptions.fieldNames();
+		Iterator<String> fieldNames = baseCompilerOptions.propertyNames().iterator();
 		while (fieldNames.hasNext()) {
 			String fieldName = fieldNames.next();
 			result.set(fieldName, baseCompilerOptions.get(fieldName));
 		}
 
-		fieldNames = compilerOptions.fieldNames();
+		fieldNames = compilerOptions.propertyNames().iterator();
 		while (fieldNames.hasNext()) {
 			String fieldName = fieldNames.next();
 			JsonNode newValue = compilerOptions.get(fieldName);
@@ -260,12 +261,12 @@ public class ConfigUtils {
 	}
 
 	private static JsonNode mergeApplication(JsonNode application, JsonNode baseApplication) {
-		if (application.isTextual()) {
+		if (application.isString()) {
 			return application;
 		}
 
 		JsonNode result = null;
-		if (baseApplication.isTextual()) {
+		if (baseApplication.isString()) {
 			ObjectMapper mapper = new ObjectMapper();
 			ObjectNode stringAsObject = mapper.createObjectNode();
 
@@ -294,12 +295,12 @@ public class ConfigUtils {
 		ObjectNode result = mapper.createObjectNode();
 
 		Set<String> allFieldNames = new HashSet<>();
-		Iterator<String> fieldNames = baseAirOptions.fieldNames();
+		Iterator<String> fieldNames = baseAirOptions.propertyNames().iterator();
 		while (fieldNames.hasNext()) {
 			String fieldName = fieldNames.next();
 			allFieldNames.add(fieldName);
 		}
-		fieldNames = airOptions.fieldNames();
+		fieldNames = airOptions.propertyNames().iterator();
 		while (fieldNames.hasNext()) {
 			String fieldName = fieldNames.next();
 			allFieldNames.add(fieldName);

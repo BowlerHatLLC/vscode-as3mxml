@@ -20,7 +20,7 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import com.as3mxml.asconfigc.utils.ProjectUtils;
 import com.as3mxml.asconfigc.compiler.CompilerOptions;
 
@@ -32,20 +32,21 @@ public class HTMLTemplateOptionsParser {
 		Map<String, String> result = new HashMap<>();
 		if (compilerOptions != null && compilerOptions.has(CompilerOptions.DEFAULT_SIZE)) {
 			JsonNode defaultSizeJson = compilerOptions.get(CompilerOptions.DEFAULT_SIZE);
-			result.put(HTMLTemplateOptions.WIDTH, defaultSizeJson.get(CompilerOptions.DEFAULT_SIZE__WIDTH).asText());
-			result.put(HTMLTemplateOptions.HEIGHT, defaultSizeJson.get(CompilerOptions.DEFAULT_SIZE__HEIGHT).asText());
+			result.put(HTMLTemplateOptions.WIDTH, defaultSizeJson.get(CompilerOptions.DEFAULT_SIZE__WIDTH).asString());
+			result.put(HTMLTemplateOptions.HEIGHT,
+					defaultSizeJson.get(CompilerOptions.DEFAULT_SIZE__HEIGHT).asString());
 		} else {
 			result.put(HTMLTemplateOptions.WIDTH, "100%");
 			result.put(HTMLTemplateOptions.HEIGHT, "100%");
 		}
 		if (compilerOptions != null && compilerOptions.has(CompilerOptions.DEFAULT_BACKGROUND_COLOR)) {
-			String defaultBackgroundColor = compilerOptions.get(CompilerOptions.DEFAULT_BACKGROUND_COLOR).asText();
+			String defaultBackgroundColor = compilerOptions.get(CompilerOptions.DEFAULT_BACKGROUND_COLOR).asString();
 			result.put(HTMLTemplateOptions.BGCOLOR, defaultBackgroundColor);
 		} else {
 			result.put(HTMLTemplateOptions.BGCOLOR, "#ffffff");
 		}
 		if (compilerOptions != null && compilerOptions.has(CompilerOptions.TARGET_PLAYER)) {
-			String targetPlayer = compilerOptions.get(CompilerOptions.TARGET_PLAYER).asText();
+			String targetPlayer = compilerOptions.get(CompilerOptions.TARGET_PLAYER).asString();
 			String[] parts = targetPlayer.split("\\.");
 			result.put(HTMLTemplateOptions.VERSION_MAJOR, parts[0]);
 			if (parts.length > 1) {

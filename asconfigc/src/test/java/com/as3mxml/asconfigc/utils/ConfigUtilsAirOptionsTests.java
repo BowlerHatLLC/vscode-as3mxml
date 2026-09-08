@@ -22,8 +22,8 @@ import com.as3mxml.asconfigc.TopLevelFields;
 import com.as3mxml.asconfigc.air.AIROptions;
 import com.as3mxml.asconfigc.air.AIRPlatform;
 import com.as3mxml.asconfigc.air.AIRSigningOptions;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -44,7 +44,7 @@ class ConfigUtilsAirOptionsTests {
 		JsonNode airOptions = result.get(TopLevelFields.AIR_OPTIONS);
 		Assertions.assertTrue(airOptions.isObject());
 		Assertions.assertTrue(airOptions.has(AIROptions.OUTPUT));
-		String resultValue = airOptions.get(AIROptions.OUTPUT).asText();
+		String resultValue = airOptions.get(AIROptions.OUTPUT).asString();
 		Assertions.assertEquals(baseValue, resultValue);
 	}
 
@@ -60,7 +60,7 @@ class ConfigUtilsAirOptionsTests {
 		JsonNode airOptions = result.get(TopLevelFields.AIR_OPTIONS);
 		Assertions.assertTrue(airOptions.isObject());
 		Assertions.assertTrue(airOptions.has(AIROptions.OUTPUT));
-		String resultValue = airOptions.get(AIROptions.OUTPUT).asText();
+		String resultValue = airOptions.get(AIROptions.OUTPUT).asString();
 		Assertions.assertEquals(baseValue, resultValue);
 	}
 
@@ -76,7 +76,7 @@ class ConfigUtilsAirOptionsTests {
 		JsonNode airOptions = result.get(TopLevelFields.AIR_OPTIONS);
 		Assertions.assertTrue(airOptions.isObject());
 		Assertions.assertTrue(airOptions.has(AIROptions.OUTPUT));
-		String resultValue = airOptions.get(AIROptions.OUTPUT).asText();
+		String resultValue = airOptions.get(AIROptions.OUTPUT).asString();
 		Assertions.assertEquals(newValue, resultValue);
 	}
 
@@ -92,7 +92,7 @@ class ConfigUtilsAirOptionsTests {
 		JsonNode airOptions = result.get(TopLevelFields.AIR_OPTIONS);
 		Assertions.assertTrue(airOptions.isObject());
 		Assertions.assertTrue(airOptions.has(AIROptions.OUTPUT));
-		String resultValue = airOptions.get(AIROptions.OUTPUT).asText();
+		String resultValue = airOptions.get(AIROptions.OUTPUT).asString();
 		Assertions.assertEquals(newValue, resultValue);
 	}
 
@@ -110,7 +110,7 @@ class ConfigUtilsAirOptionsTests {
 		JsonNode airOptions = result.get(TopLevelFields.AIR_OPTIONS);
 		Assertions.assertTrue(airOptions.isObject());
 		Assertions.assertTrue(airOptions.has(AIROptions.OUTPUT));
-		String resultValue = airOptions.get(AIROptions.OUTPUT).asText();
+		String resultValue = airOptions.get(AIROptions.OUTPUT).asString();
 		Assertions.assertEquals(newValue, resultValue);
 	}
 
@@ -133,13 +133,13 @@ class ConfigUtilsAirOptionsTests {
 		Assertions.assertTrue(airOptions.has(AIROptions.FILES));
 		JsonNode resultValue = airOptions.get(AIROptions.FILES);
 		Assertions.assertTrue(resultValue.isArray());
-		Iterator<JsonNode> elements = resultValue.elements();
+		Iterator<JsonNode> elements = resultValue.iterator();
 		Assertions.assertTrue(elements.hasNext());
 		JsonNode resultValue0 = elements.next();
 		Assertions.assertTrue(resultValue0.has(AIROptions.FILES__FILE));
 		Assertions.assertTrue(resultValue0.has(AIROptions.FILES__PATH));
-		String result0File = resultValue0.get(AIROptions.FILES__FILE).asText();
-		String result0Path = resultValue0.get(AIROptions.FILES__PATH).asText();
+		String result0File = resultValue0.get(AIROptions.FILES__FILE).asString();
+		String result0Path = resultValue0.get(AIROptions.FILES__PATH).asString();
 		Assertions.assertEquals(baseFile, result0File);
 		Assertions.assertEquals(basePath, result0Path);
 		Assertions.assertFalse(elements.hasNext());
@@ -160,13 +160,13 @@ class ConfigUtilsAirOptionsTests {
 		Assertions.assertTrue(airOptions.has(AIROptions.FILES));
 		JsonNode resultValue = airOptions.get(AIROptions.FILES);
 		Assertions.assertTrue(resultValue.isArray());
-		Iterator<JsonNode> elements = resultValue.elements();
+		Iterator<JsonNode> elements = resultValue.iterator();
 		Assertions.assertTrue(elements.hasNext());
 		JsonNode resultValue0 = elements.next();
 		Assertions.assertTrue(resultValue0.has(AIROptions.FILES__FILE));
 		Assertions.assertTrue(resultValue0.has(AIROptions.FILES__PATH));
-		String result0File = resultValue0.get(AIROptions.FILES__FILE).asText();
-		String result0Path = resultValue0.get(AIROptions.FILES__PATH).asText();
+		String result0File = resultValue0.get(AIROptions.FILES__FILE).asString();
+		String result0Path = resultValue0.get(AIROptions.FILES__PATH).asString();
 		Assertions.assertEquals(newFile, result0File);
 		Assertions.assertEquals(newPath, result0Path);
 		Assertions.assertFalse(elements.hasNext());
@@ -190,21 +190,21 @@ class ConfigUtilsAirOptionsTests {
 		Assertions.assertTrue(airOptions.has(AIROptions.FILES));
 		JsonNode resultValue = airOptions.get(AIROptions.FILES);
 		Assertions.assertTrue(resultValue.isArray());
-		Iterator<JsonNode> elements = resultValue.elements();
+		Iterator<JsonNode> elements = resultValue.iterator();
 		Assertions.assertTrue(elements.hasNext());
 		JsonNode resultValue0 = elements.next();
 		Assertions.assertTrue(resultValue0.has(AIROptions.FILES__FILE));
 		Assertions.assertTrue(resultValue0.has(AIROptions.FILES__PATH));
-		String result0File = resultValue0.get(AIROptions.FILES__FILE).asText();
-		String result0Path = resultValue0.get(AIROptions.FILES__PATH).asText();
+		String result0File = resultValue0.get(AIROptions.FILES__FILE).asString();
+		String result0Path = resultValue0.get(AIROptions.FILES__PATH).asString();
 		Assertions.assertEquals(baseFile, result0File);
 		Assertions.assertEquals(basePath, result0Path);
 		Assertions.assertTrue(elements.hasNext());
 		JsonNode resultValue1 = elements.next();
 		Assertions.assertTrue(resultValue1.has(AIROptions.FILES__FILE));
 		Assertions.assertTrue(resultValue1.has(AIROptions.FILES__PATH));
-		String result1Name = resultValue1.get(AIROptions.FILES__FILE).asText();
-		String result1Value = resultValue1.get(AIROptions.FILES__PATH).asText();
+		String result1Name = resultValue1.get(AIROptions.FILES__FILE).asString();
+		String result1Value = resultValue1.get(AIROptions.FILES__PATH).asString();
 		Assertions.assertEquals(newFile, result1Name);
 		Assertions.assertEquals(newPath, result1Value);
 		Assertions.assertFalse(elements.hasNext());
@@ -227,13 +227,13 @@ class ConfigUtilsAirOptionsTests {
 		Assertions.assertTrue(airOptions.has(AIROptions.FILES));
 		JsonNode resultValue = airOptions.get(AIROptions.FILES);
 		Assertions.assertTrue(resultValue.isArray());
-		Iterator<JsonNode> elements = resultValue.elements();
+		Iterator<JsonNode> elements = resultValue.iterator();
 		Assertions.assertTrue(elements.hasNext());
 		JsonNode resultValue0 = elements.next();
 		Assertions.assertTrue(resultValue0.has(AIROptions.FILES__FILE));
 		Assertions.assertTrue(resultValue0.has(AIROptions.FILES__PATH));
-		String result0File = resultValue0.get(AIROptions.FILES__FILE).asText();
-		String result0Path = resultValue0.get(AIROptions.FILES__PATH).asText();
+		String result0File = resultValue0.get(AIROptions.FILES__FILE).asString();
+		String result0Path = resultValue0.get(AIROptions.FILES__PATH).asString();
 		Assertions.assertEquals(newFile, result0File);
 		Assertions.assertEquals(duplicatePath, result0Path);
 		Assertions.assertFalse(elements.hasNext());
@@ -264,11 +264,11 @@ class ConfigUtilsAirOptionsTests {
 		Assertions.assertFalse(signingOptions.has(AIRSigningOptions.RELEASE));
 
 		Assertions.assertTrue(signingOptions.has(AIRSigningOptions.KEYSTORE));
-		String resultKeystore = signingOptions.get(AIRSigningOptions.KEYSTORE).asText();
+		String resultKeystore = signingOptions.get(AIRSigningOptions.KEYSTORE).asString();
 		Assertions.assertEquals(baseKeystore, resultKeystore);
 
 		Assertions.assertTrue(signingOptions.has(AIRSigningOptions.STORETYPE));
-		String resultStoretype = signingOptions.get(AIRSigningOptions.STORETYPE).asText();
+		String resultStoretype = signingOptions.get(AIRSigningOptions.STORETYPE).asString();
 		Assertions.assertEquals(baseStoretype, resultStoretype);
 	}
 
@@ -293,11 +293,11 @@ class ConfigUtilsAirOptionsTests {
 		Assertions.assertFalse(signingOptions.has(AIRSigningOptions.RELEASE));
 
 		Assertions.assertTrue(signingOptions.has(AIRSigningOptions.KEYSTORE));
-		String resultKeystore = signingOptions.get(AIRSigningOptions.KEYSTORE).asText();
+		String resultKeystore = signingOptions.get(AIRSigningOptions.KEYSTORE).asString();
 		Assertions.assertEquals(baseKeystore, resultKeystore);
 
 		Assertions.assertTrue(signingOptions.has(AIRSigningOptions.STORETYPE));
-		String resultStoretype = signingOptions.get(AIRSigningOptions.STORETYPE).asText();
+		String resultStoretype = signingOptions.get(AIRSigningOptions.STORETYPE).asString();
 		Assertions.assertEquals(baseStoretype, resultStoretype);
 	}
 
@@ -322,11 +322,11 @@ class ConfigUtilsAirOptionsTests {
 		Assertions.assertFalse(signingOptions.has(AIRSigningOptions.RELEASE));
 
 		Assertions.assertTrue(signingOptions.has(AIRSigningOptions.PROVIDER_NAME));
-		String resultProviderName = signingOptions.get(AIRSigningOptions.PROVIDER_NAME).asText();
+		String resultProviderName = signingOptions.get(AIRSigningOptions.PROVIDER_NAME).asString();
 		Assertions.assertEquals(newProviderName, resultProviderName);
 
 		Assertions.assertTrue(signingOptions.has(AIRSigningOptions.STORETYPE));
-		String resultStoretype = signingOptions.get(AIRSigningOptions.STORETYPE).asText();
+		String resultStoretype = signingOptions.get(AIRSigningOptions.STORETYPE).asString();
 		Assertions.assertEquals(newStoretype, resultStoretype);
 	}
 
@@ -351,11 +351,11 @@ class ConfigUtilsAirOptionsTests {
 		Assertions.assertFalse(signingOptions.has(AIRSigningOptions.RELEASE));
 
 		Assertions.assertTrue(signingOptions.has(AIRSigningOptions.PROVIDER_NAME));
-		String resultProviderName = signingOptions.get(AIRSigningOptions.PROVIDER_NAME).asText();
+		String resultProviderName = signingOptions.get(AIRSigningOptions.PROVIDER_NAME).asString();
 		Assertions.assertEquals(newProviderName, resultProviderName);
 
 		Assertions.assertTrue(signingOptions.has(AIRSigningOptions.STORETYPE));
-		String resultStoretype = signingOptions.get(AIRSigningOptions.STORETYPE).asText();
+		String resultStoretype = signingOptions.get(AIRSigningOptions.STORETYPE).asString();
 		Assertions.assertEquals(newStoretype, resultStoretype);
 	}
 
@@ -385,11 +385,11 @@ class ConfigUtilsAirOptionsTests {
 		Assertions.assertFalse(signingOptions.has(AIRSigningOptions.KEYSTORE));
 
 		Assertions.assertTrue(signingOptions.has(AIRSigningOptions.PROVIDER_NAME));
-		String resultProviderName = signingOptions.get(AIRSigningOptions.PROVIDER_NAME).asText();
+		String resultProviderName = signingOptions.get(AIRSigningOptions.PROVIDER_NAME).asString();
 		Assertions.assertEquals(newProviderName, resultProviderName);
 
 		Assertions.assertTrue(signingOptions.has(AIRSigningOptions.STORETYPE));
-		String resultStoretype = signingOptions.get(AIRSigningOptions.STORETYPE).asText();
+		String resultStoretype = signingOptions.get(AIRSigningOptions.STORETYPE).asString();
 		Assertions.assertEquals(newStoretype, resultStoretype);
 	}
 
@@ -429,11 +429,11 @@ class ConfigUtilsAirOptionsTests {
 		Assertions.assertFalse(debug.has(AIRSigningOptions.KEYSTORE));
 
 		Assertions.assertTrue(debug.has(AIRSigningOptions.PROVIDER_NAME));
-		String resultDebugProviderName = debug.get(AIRSigningOptions.PROVIDER_NAME).asText();
+		String resultDebugProviderName = debug.get(AIRSigningOptions.PROVIDER_NAME).asString();
 		Assertions.assertEquals(newDebugProviderName, resultDebugProviderName);
 
 		Assertions.assertTrue(debug.has(AIRSigningOptions.STORETYPE));
-		String resultDebugStoretype = debug.get(AIRSigningOptions.STORETYPE).asText();
+		String resultDebugStoretype = debug.get(AIRSigningOptions.STORETYPE).asString();
 		Assertions.assertEquals(newDebugStoretype, resultDebugStoretype);
 
 		JsonNode release = signingOptions.get(AIRSigningOptions.RELEASE);
@@ -442,11 +442,11 @@ class ConfigUtilsAirOptionsTests {
 		Assertions.assertFalse(release.has(AIRSigningOptions.KEYSTORE));
 
 		Assertions.assertTrue(release.has(AIRSigningOptions.PROVIDER_NAME));
-		String resultReleaseProviderName = release.get(AIRSigningOptions.PROVIDER_NAME).asText();
+		String resultReleaseProviderName = release.get(AIRSigningOptions.PROVIDER_NAME).asString();
 		Assertions.assertEquals(newReleaseProviderName, resultReleaseProviderName);
 
 		Assertions.assertTrue(release.has(AIRSigningOptions.STORETYPE));
-		String resultReleaseStoretype = release.get(AIRSigningOptions.STORETYPE).asText();
+		String resultReleaseStoretype = release.get(AIRSigningOptions.STORETYPE).asString();
 		Assertions.assertEquals(newReleaseStoretype, resultReleaseStoretype);
 	}
 
@@ -483,11 +483,11 @@ class ConfigUtilsAirOptionsTests {
 		Assertions.assertFalse(debug.has(AIRSigningOptions.KEYSTORE));
 
 		Assertions.assertTrue(debug.has(AIRSigningOptions.PROVIDER_NAME));
-		String resultDebugProviderName = debug.get(AIRSigningOptions.PROVIDER_NAME).asText();
+		String resultDebugProviderName = debug.get(AIRSigningOptions.PROVIDER_NAME).asString();
 		Assertions.assertEquals(newDebugProviderName, resultDebugProviderName);
 
 		Assertions.assertTrue(debug.has(AIRSigningOptions.STORETYPE));
-		String resultDebugStoretype = debug.get(AIRSigningOptions.STORETYPE).asText();
+		String resultDebugStoretype = debug.get(AIRSigningOptions.STORETYPE).asString();
 		Assertions.assertEquals(newDebugStoretype, resultDebugStoretype);
 
 		JsonNode release = signingOptions.get(AIRSigningOptions.RELEASE);
@@ -496,11 +496,11 @@ class ConfigUtilsAirOptionsTests {
 		Assertions.assertFalse(release.has(AIRSigningOptions.KEYSTORE));
 
 		Assertions.assertTrue(release.has(AIRSigningOptions.PROVIDER_NAME));
-		String resultReleaseProviderName = release.get(AIRSigningOptions.PROVIDER_NAME).asText();
+		String resultReleaseProviderName = release.get(AIRSigningOptions.PROVIDER_NAME).asString();
 		Assertions.assertEquals(newReleaseProviderName, resultReleaseProviderName);
 
 		Assertions.assertTrue(release.has(AIRSigningOptions.STORETYPE));
-		String resultReleaseStoretype = release.get(AIRSigningOptions.STORETYPE).asText();
+		String resultReleaseStoretype = release.get(AIRSigningOptions.STORETYPE).asString();
 		Assertions.assertEquals(newReleaseStoretype, resultReleaseStoretype);
 	}
 
@@ -534,11 +534,11 @@ class ConfigUtilsAirOptionsTests {
 		Assertions.assertFalse(signingOptions.has(AIRSigningOptions.KEYSTORE));
 
 		Assertions.assertTrue(signingOptions.has(AIRSigningOptions.PROVIDER_NAME));
-		String resultProviderName = signingOptions.get(AIRSigningOptions.PROVIDER_NAME).asText();
+		String resultProviderName = signingOptions.get(AIRSigningOptions.PROVIDER_NAME).asString();
 		Assertions.assertEquals(newProviderName, resultProviderName);
 
 		Assertions.assertTrue(signingOptions.has(AIRSigningOptions.STORETYPE));
-		String resultStoretype = signingOptions.get(AIRSigningOptions.STORETYPE).asText();
+		String resultStoretype = signingOptions.get(AIRSigningOptions.STORETYPE).asString();
 		Assertions.assertEquals(newStoretype, resultStoretype);
 	}
 
@@ -559,7 +559,7 @@ class ConfigUtilsAirOptionsTests {
 		JsonNode android = airOptions.get(AIRPlatform.ANDROID);
 		Assertions.assertTrue(android.isObject());
 		Assertions.assertTrue(android.has(AIROptions.OUTPUT));
-		String resultValue = android.get(AIROptions.OUTPUT).asText();
+		String resultValue = android.get(AIROptions.OUTPUT).asString();
 		Assertions.assertEquals(baseValue, resultValue);
 	}
 
@@ -578,7 +578,7 @@ class ConfigUtilsAirOptionsTests {
 		JsonNode android = airOptions.get(AIRPlatform.ANDROID);
 		Assertions.assertTrue(android.isObject());
 		Assertions.assertTrue(android.has(AIROptions.OUTPUT));
-		String resultValue = android.get(AIROptions.OUTPUT).asText();
+		String resultValue = android.get(AIROptions.OUTPUT).asString();
 		Assertions.assertEquals(baseValue, resultValue);
 	}
 
@@ -597,7 +597,7 @@ class ConfigUtilsAirOptionsTests {
 		JsonNode android = airOptions.get(AIRPlatform.ANDROID);
 		Assertions.assertTrue(android.isObject());
 		Assertions.assertTrue(android.has(AIROptions.OUTPUT));
-		String resultValue = android.get(AIROptions.OUTPUT).asText();
+		String resultValue = android.get(AIROptions.OUTPUT).asString();
 		Assertions.assertEquals(baseValue, resultValue);
 	}
 
@@ -616,7 +616,7 @@ class ConfigUtilsAirOptionsTests {
 		JsonNode android = airOptions.get(AIRPlatform.ANDROID);
 		Assertions.assertTrue(android.isObject());
 		Assertions.assertTrue(android.has(AIROptions.OUTPUT));
-		String resultValue = android.get(AIROptions.OUTPUT).asText();
+		String resultValue = android.get(AIROptions.OUTPUT).asString();
 		Assertions.assertEquals(newValue, resultValue);
 	}
 
@@ -635,7 +635,7 @@ class ConfigUtilsAirOptionsTests {
 		JsonNode android = airOptions.get(AIRPlatform.ANDROID);
 		Assertions.assertTrue(android.isObject());
 		Assertions.assertTrue(android.has(AIROptions.OUTPUT));
-		String resultValue = android.get(AIROptions.OUTPUT).asText();
+		String resultValue = android.get(AIROptions.OUTPUT).asString();
 		Assertions.assertEquals(newValue, resultValue);
 	}
 
@@ -654,7 +654,7 @@ class ConfigUtilsAirOptionsTests {
 		JsonNode android = airOptions.get(AIRPlatform.ANDROID);
 		Assertions.assertTrue(android.isObject());
 		Assertions.assertTrue(android.has(AIROptions.OUTPUT));
-		String resultValue = android.get(AIROptions.OUTPUT).asText();
+		String resultValue = android.get(AIROptions.OUTPUT).asString();
 		Assertions.assertEquals(newValue, resultValue);
 	}
 
@@ -675,7 +675,7 @@ class ConfigUtilsAirOptionsTests {
 		JsonNode android = airOptions.get(AIRPlatform.ANDROID);
 		Assertions.assertTrue(android.isObject());
 		Assertions.assertTrue(android.has(AIROptions.OUTPUT));
-		String resultValue = android.get(AIROptions.OUTPUT).asText();
+		String resultValue = android.get(AIROptions.OUTPUT).asString();
 		Assertions.assertEquals(newValue, resultValue);
 	}
 

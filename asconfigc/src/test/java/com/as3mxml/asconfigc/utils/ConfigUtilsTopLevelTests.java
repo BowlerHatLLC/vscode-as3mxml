@@ -20,8 +20,8 @@ import java.util.Iterator;
 
 import com.as3mxml.asconfigc.TopLevelFields;
 import com.as3mxml.asconfigc.air.AIRPlatform;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -85,9 +85,9 @@ class ConfigUtilsTopLevelTests {
 		Assertions.assertTrue(result.has(TopLevelFields.FILES));
 		JsonNode resultValue = result.get(TopLevelFields.FILES);
 		Assertions.assertTrue(resultValue.isArray());
-		Iterator<JsonNode> elements = resultValue.elements();
+		Iterator<JsonNode> elements = resultValue.iterator();
 		Assertions.assertTrue(elements.hasNext());
-		String resultValue0 = elements.next().asText();
+		String resultValue0 = elements.next().asString();
 		Assertions.assertEquals(baseValue, resultValue0);
 		Assertions.assertFalse(elements.hasNext());
 	}
@@ -102,9 +102,9 @@ class ConfigUtilsTopLevelTests {
 		Assertions.assertTrue(result.has(TopLevelFields.FILES));
 		JsonNode resultValue = result.get(TopLevelFields.FILES);
 		Assertions.assertTrue(resultValue.isArray());
-		Iterator<JsonNode> elements = resultValue.elements();
+		Iterator<JsonNode> elements = resultValue.iterator();
 		Assertions.assertTrue(elements.hasNext());
-		String resultValue0 = elements.next().asText();
+		String resultValue0 = elements.next().asString();
 		Assertions.assertEquals(newValue, resultValue0);
 		Assertions.assertFalse(elements.hasNext());
 	}
@@ -120,9 +120,9 @@ class ConfigUtilsTopLevelTests {
 		Assertions.assertTrue(result.has(TopLevelFields.FILES));
 		JsonNode resultValue = result.get(TopLevelFields.FILES);
 		Assertions.assertTrue(resultValue.isArray());
-		Iterator<JsonNode> elements = resultValue.elements();
+		Iterator<JsonNode> elements = resultValue.iterator();
 		Assertions.assertTrue(elements.hasNext());
-		String resultValue0 = elements.next().asText();
+		String resultValue0 = elements.next().asString();
 		Assertions.assertEquals(newValue, resultValue0);
 		Assertions.assertFalse(elements.hasNext());
 	}
@@ -140,7 +140,7 @@ class ConfigUtilsTopLevelTests {
 		JsonNode configData = mapper.readTree("{}");
 		JsonNode result = ConfigUtils.mergeConfigs(configData, baseConfigData);
 		Assertions.assertTrue(result.has(TopLevelFields.APPLICATION));
-		String resultValue = result.get(TopLevelFields.APPLICATION).asText();
+		String resultValue = result.get(TopLevelFields.APPLICATION).asString();
 		Assertions.assertEquals(baseValue, resultValue);
 	}
 
@@ -152,7 +152,7 @@ class ConfigUtilsTopLevelTests {
 		JsonNode configData = mapper.readTree("{" + "\"application\": \"" + newValue + "\"" + "}");
 		JsonNode result = ConfigUtils.mergeConfigs(configData, baseConfigData);
 		Assertions.assertTrue(result.has(TopLevelFields.APPLICATION));
-		String resultValue = result.get(TopLevelFields.APPLICATION).asText();
+		String resultValue = result.get(TopLevelFields.APPLICATION).asString();
 		Assertions.assertEquals(newValue, resultValue);
 	}
 
@@ -165,7 +165,7 @@ class ConfigUtilsTopLevelTests {
 		JsonNode configData = mapper.readTree("{" + "\"application\": \"" + newValue + "\"" + "}");
 		JsonNode result = ConfigUtils.mergeConfigs(configData, baseConfigData);
 		Assertions.assertTrue(result.has(TopLevelFields.APPLICATION));
-		String resultValue = result.get(TopLevelFields.APPLICATION).asText();
+		String resultValue = result.get(TopLevelFields.APPLICATION).asString();
 		Assertions.assertEquals(newValue, resultValue);
 	}
 
@@ -183,9 +183,9 @@ class ConfigUtilsTopLevelTests {
 		Assertions.assertTrue(resultValue.isObject());
 		Assertions.assertTrue(resultValue.has(AIRPlatform.IOS));
 		Assertions.assertTrue(resultValue.has(AIRPlatform.ANDROID));
-		String resultValue0 = resultValue.get(AIRPlatform.IOS).asText();
+		String resultValue0 = resultValue.get(AIRPlatform.IOS).asString();
 		Assertions.assertEquals(resultValue0, baseValue0);
-		String resultValue1 = resultValue.get(AIRPlatform.ANDROID).asText();
+		String resultValue1 = resultValue.get(AIRPlatform.ANDROID).asString();
 		Assertions.assertEquals(resultValue1, baseValue1);
 	}
 
@@ -203,9 +203,9 @@ class ConfigUtilsTopLevelTests {
 		Assertions.assertTrue(resultValue.isObject());
 		Assertions.assertTrue(resultValue.has(AIRPlatform.IOS));
 		Assertions.assertTrue(resultValue.has(AIRPlatform.ANDROID));
-		String resultValue0 = resultValue.get(AIRPlatform.IOS).asText();
+		String resultValue0 = resultValue.get(AIRPlatform.IOS).asString();
 		Assertions.assertEquals(resultValue0, newValue0);
-		String resultValue1 = resultValue.get(AIRPlatform.ANDROID).asText();
+		String resultValue1 = resultValue.get(AIRPlatform.ANDROID).asString();
 		Assertions.assertEquals(resultValue1, newValue1);
 	}
 
@@ -230,13 +230,13 @@ class ConfigUtilsTopLevelTests {
 		Assertions.assertTrue(resultValue.has(AIRPlatform.ANDROID));
 		Assertions.assertTrue(resultValue.has(AIRPlatform.WINDOWS));
 		Assertions.assertTrue(resultValue.has(AIRPlatform.MAC));
-		String resultValue0 = resultValue.get(AIRPlatform.IOS).asText();
+		String resultValue0 = resultValue.get(AIRPlatform.IOS).asString();
 		Assertions.assertEquals(resultValue0, newValue0);
-		String resultValue1 = resultValue.get(AIRPlatform.ANDROID).asText();
+		String resultValue1 = resultValue.get(AIRPlatform.ANDROID).asString();
 		Assertions.assertEquals(resultValue1, newValue1);
-		String resultValue2 = resultValue.get(AIRPlatform.MAC).asText();
+		String resultValue2 = resultValue.get(AIRPlatform.MAC).asString();
 		Assertions.assertEquals(resultValue2, newValue2);
-		String resultValue3 = resultValue.get(AIRPlatform.WINDOWS).asText();
+		String resultValue3 = resultValue.get(AIRPlatform.WINDOWS).asString();
 		Assertions.assertEquals(resultValue3, baseValue2);
 	}
 
@@ -259,17 +259,17 @@ class ConfigUtilsTopLevelTests {
 		Assertions.assertTrue(resultValue.has(AIRPlatform.MAC));
 		Assertions.assertTrue(resultValue.has(AIRPlatform.IOS_SIMULATOR));
 		Assertions.assertTrue(resultValue.has(AIRPlatform.AIR));
-		String resultValue0 = resultValue.get(AIRPlatform.IOS).asText();
+		String resultValue0 = resultValue.get(AIRPlatform.IOS).asString();
 		Assertions.assertEquals(resultValue0, newValue0);
-		String resultValue1 = resultValue.get(AIRPlatform.ANDROID).asText();
+		String resultValue1 = resultValue.get(AIRPlatform.ANDROID).asString();
 		Assertions.assertEquals(resultValue1, newValue1);
-		String resultValue2 = resultValue.get(AIRPlatform.MAC).asText();
+		String resultValue2 = resultValue.get(AIRPlatform.MAC).asString();
 		Assertions.assertEquals(resultValue2, baseValue);
-		String resultValue3 = resultValue.get(AIRPlatform.WINDOWS).asText();
+		String resultValue3 = resultValue.get(AIRPlatform.WINDOWS).asString();
 		Assertions.assertEquals(resultValue3, baseValue);
-		String resultValue4 = resultValue.get(AIRPlatform.IOS_SIMULATOR).asText();
+		String resultValue4 = resultValue.get(AIRPlatform.IOS_SIMULATOR).asString();
 		Assertions.assertEquals(resultValue4, baseValue);
-		String resultValue5 = resultValue.get(AIRPlatform.AIR).asText();
+		String resultValue5 = resultValue.get(AIRPlatform.AIR).asString();
 		Assertions.assertEquals(resultValue5, baseValue);
 	}
 
@@ -284,7 +284,7 @@ class ConfigUtilsTopLevelTests {
 		JsonNode configData = mapper.readTree("{" + "\"application\": \"" + newValue + "\"" + "}");
 		JsonNode result = ConfigUtils.mergeConfigs(configData, baseConfigData);
 		Assertions.assertTrue(result.has(TopLevelFields.APPLICATION));
-		String resultValue = result.get(TopLevelFields.APPLICATION).asText();
+		String resultValue = result.get(TopLevelFields.APPLICATION).asString();
 		Assertions.assertEquals(resultValue, newValue);
 	}
 }
