@@ -70,6 +70,7 @@ import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.RenameFile;
 import org.eclipse.lsp4j.RenameParams;
 import org.eclipse.lsp4j.ResourceOperation;
+import org.eclipse.lsp4j.SnippetTextEdit;
 import org.eclipse.lsp4j.TextDocumentEdit;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.TextEdit;
@@ -523,7 +524,7 @@ public class RenameProvider {
                 // no need to check this file
                 continue;
             }
-            ArrayList<TextEdit> textEdits = new ArrayList<>();
+            List<Either<TextEdit, SnippetTextEdit>> textEdits = new ArrayList<>();
             if (unit.getAbsoluteFilename().endsWith(FILE_EXTENSION_MXML)) {
                 IMXMLDataManager mxmlDataManager = project.getWorkspace().getMXMLDataManager();
                 MXMLData mxmlData = (MXMLData) mxmlDataManager
@@ -553,7 +554,7 @@ public class RenameProvider {
                         }
                         textEdit.setRange(range);
 
-                        textEdits.add(textEdit);
+                        textEdits.add(Either.forLeft(textEdit));
                     }
                 }
             }
@@ -571,7 +572,7 @@ public class RenameProvider {
                     }
                     textEdit.setRange(range);
 
-                    textEdits.add(textEdit);
+                    textEdits.add(Either.forLeft(textEdit));
                 }
             }
             if (textEdits.size() == 0) {
