@@ -69,7 +69,6 @@ import com.as3mxml.asconfigc.compiler.CompilerOptionsParser;
 import com.as3mxml.asconfigc.compiler.ConfigName;
 import com.as3mxml.asconfigc.compiler.ModuleFields;
 import com.as3mxml.asconfigc.compiler.ProjectType;
-import com.as3mxml.asconfigc.compiler.RoyaleTarget;
 import com.as3mxml.asconfigc.compiler.WorkerFields;
 import com.as3mxml.asconfigc.htmlTemplate.HTMLTemplateOptionsParser;
 import com.as3mxml.asconfigc.utils.ApacheRoyaleUtils;
@@ -85,10 +84,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.networknt.schema.JsonSchema;
-import com.networknt.schema.JsonSchemaFactory;
-import com.networknt.schema.SpecVersion.VersionFlag;
-import com.networknt.schema.ValidationMessage;
+import com.networknt.schema.Error;
+import com.networknt.schema.Schema;
+import com.networknt.schema.SchemaRegistry;
+import com.networknt.schema.dialect.Dialects;
 
 /**
  * Parses asconfig.json and executes the compiler with the specified options.
@@ -293,10 +292,10 @@ public class ASConfigC {
 	}
 
 	private JsonNode loadConfigFromFile(File configFile) throws ASConfigCException {
-		JsonSchema schema = null;
+		Schema schema = null;
 		try (InputStream schemaInputStream = getClass().getResourceAsStream("/schemas/asconfig.schema.json")) {
-			JsonSchemaFactory factory = JsonSchemaFactory.getInstance(VersionFlag.V7);
-			schema = factory.getSchema(schemaInputStream);
+			SchemaRegistry schemaRegistry = SchemaRegistry.withDialect(Dialects.getDraft7());
+			schema = schemaRegistry.getSchema(schemaInputStream);
 		} catch (Exception e) {
 			// this exception is unexpected, so it should be reported
 			throw new ASConfigCException("Failed to load asconfig.json schema: " + e);
@@ -304,7 +303,7 @@ public class ASConfigC {
 		return loadConfigFromFileWithSchema(configFile, schema);
 	}
 
-	private JsonNode loadConfigFromFileWithSchema(File configFile, JsonSchema schema) throws ASConfigCException {
+	private JsonNode loadConfigFromFileWithSchema(File configFile, Schema schema) throws ASConfigCException {
 		JsonNode json = null;
 		try {
 			if (options.verbose) {
@@ -322,11 +321,11 @@ public class ASConfigC {
 			if (options.verbose) {
 				System.out.println("Validating configuration file...");
 			}
-			Set<ValidationMessage> errors = schema.validate(json);
+			List<Error> errors = schema.validate(json);
 			if (!errors.isEmpty()) {
 				StringBuilder combinedMessage = new StringBuilder();
 				combinedMessage.append("Invalid asconfig.json:\n");
-				for (ValidationMessage error : errors) {
+				for (Error error : errors) {
 					combinedMessage.append(error.getMessage() + "\n");
 				}
 				throw new ASConfigCException(combinedMessage.toString());

@@ -27,28 +27,27 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.networknt.schema.JsonSchema;
-import com.networknt.schema.JsonSchemaFactory;
-import com.networknt.schema.ValidationMessage;
-import com.networknt.schema.SpecVersion.VersionFlag;
+import org.apache.commons.io.FileUtils;
+import org.eclipse.lsp4j.WorkspaceFolder;
+
 import com.as3mxml.asconfigc.ASConfigCException;
 import com.as3mxml.asconfigc.TopLevelFields;
 import com.as3mxml.asconfigc.compiler.CompilerOptions;
 import com.as3mxml.asconfigc.compiler.CompilerOptionsParser;
-import com.as3mxml.asconfigc.compiler.ProjectType;
 import com.as3mxml.asconfigc.compiler.CompilerOptionsParser.UnknownCompilerOptionException;
+import com.as3mxml.asconfigc.compiler.ProjectType;
 import com.as3mxml.asconfigc.utils.ConfigUtils;
 import com.as3mxml.asconfigc.utils.JsonUtils;
 import com.as3mxml.asconfigc.utils.OptionsUtils;
 import com.as3mxml.vscode.utils.ActionScriptSDKUtils;
-
-import org.apache.commons.io.FileUtils;
-import org.eclipse.lsp4j.WorkspaceFolder;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.networknt.schema.Error;
+import com.networknt.schema.Schema;
+import com.networknt.schema.SchemaRegistry;
+import com.networknt.schema.dialect.Dialects;
 
 /**
  * Configures a project using an asconfig.json file.
@@ -127,10 +126,10 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy {
         List<String> compilerOptions = null;
         List<String> targets = null;
         List<String> sourcePaths = null;
-        JsonSchema schema = null;
+        Schema schema = null;
         try (InputStream schemaInputStream = getClass().getResourceAsStream("/schemas/asconfig.schema.json")) {
-            JsonSchemaFactory factory = JsonSchemaFactory.getInstance(VersionFlag.V7);
-            schema = factory.getSchema(schemaInputStream);
+            SchemaRegistry schemaRegistry = SchemaRegistry.withDialect(Dialects.getDraft7());
+            schema = schemaRegistry.getSchema(schemaInputStream);
         } catch (Exception e) {
             // this exception is unexpected, so it should be reported
             System.err.println("Failed to load asconfig.json schema: " + e);
@@ -148,7 +147,7 @@ public class ASConfigProjectConfigStrategy implements IProjectConfigStrategy {
                 mapper.configure(JsonParser.Feature.ALLOW_COMMENTS, true);
                 mapper.configure(JsonParser.Feature.ALLOW_TRAILING_COMMA, true);
                 currentJson = mapper.readTree(contents);
-                Set<ValidationMessage> errors = schema.validate(currentJson);
+                List<Error> errors = schema.validate(currentJson);
                 if (!errors.isEmpty()) {
                     // don't print anything to the console. the editor will validate
                     // and display any errors, if necessary.
