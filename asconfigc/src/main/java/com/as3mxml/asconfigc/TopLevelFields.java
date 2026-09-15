@@ -30,4 +30,5 @@ public class TopLevelFields {
 	public static final String MAIN_CLASS = "mainClass";
 	public static final String MODULES = "modules";
 	public static final String WORKERS = "workers";
+	public static final String ASDOC_OPTIONS = "asdocOptions";
 }
