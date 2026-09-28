@@ -310,7 +310,7 @@
             "arch": {
               "type": "string",
               "description": "Specifies the CPU architecture to target on Android.",
-              "pattern": "^(armv7|armv8|x86|x86_64)$"
+              "pattern": "^(armv7|armv8|x86|x86_64|all)$"
             },
             "airDownloadURL": {
               "type": "string",
