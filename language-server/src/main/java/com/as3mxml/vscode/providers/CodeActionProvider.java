@@ -87,7 +87,7 @@ public class CodeActionProvider {
         TextDocumentIdentifier textDocument = params.getTextDocument();
         String uriString = textDocument.getUri();
         Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(uriString);
-        if (path == null) {
+        if (path == null || path.getFileName().toString().startsWith(".")) {
             if (cancelToken != null) {
                 cancelToken.checkCanceled();
             }

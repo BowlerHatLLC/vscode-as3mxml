@@ -954,7 +954,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             return;
         }
         Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocumentUri);
-        if (path == null) {
+        if (path == null || path.getFileName().toString().startsWith(".")) {
             return;
         }
 
@@ -1013,9 +1013,10 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             return;
         }
         Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocumentUri);
-        if (path == null) {
+        if (path == null || path.getFileName().toString().startsWith(".")) {
             return;
         }
+
         fileTracker.changeFile(path, params.getContentChanges());
 
         ActionScriptProjectData projectData = actionScriptProjectManager.getProjectDataForSourceFile(path);
@@ -1103,7 +1104,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             return;
         }
         Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocumentUri);
-        if (path == null) {
+        if (path == null || path.getFileName().toString().startsWith(".")) {
             return;
         }
 
@@ -1178,7 +1179,7 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
             return;
         }
         Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(textDocumentUri);
-        if (path == null) {
+        if (path == null || path.getFileName().toString().startsWith(".")) {
             return;
         }
         ActionScriptProjectData projectData = actionScriptProjectManager.getProjectDataForSourceFile(path);

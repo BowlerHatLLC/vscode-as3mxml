@@ -260,7 +260,7 @@ public class ExecuteCommandProvider {
         }
 
         Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(uri);
-        if (path == null) {
+        if (path == null || path.getFileName().toString().startsWith(".")) {
             if (cancelToken != null) {
                 cancelToken.checkCanceled();
             }
@@ -340,7 +340,7 @@ public class ExecuteCommandProvider {
     private void organizeImportsInUri(String uri, OrganizeImportsKind kind,
             Map<String, List<TextEdit>> changes) {
         Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(uri);
-        if (path == null) {
+        if (path == null || path.getFileName().toString().startsWith(".")) {
             return;
         }
         ActionScriptProjectData projectData = actionScriptProjectManager.getProjectDataForSourceFile(path);
