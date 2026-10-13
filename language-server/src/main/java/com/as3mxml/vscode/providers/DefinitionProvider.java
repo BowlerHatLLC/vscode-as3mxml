@@ -372,12 +372,22 @@ public class DefinitionProvider {
         if (definition == null) {
             XMLName offsetXMLName = offsetTag.getXMLName();
             if ((offsetXMLName.equals(offsetTag.getMXMLDialect().resolveStyle())
-                    || offsetXMLName.equals(offsetTag.getMXMLDialect().resolveScript()))
+                    || offsetXMLName.equals(offsetTag.getMXMLDialect().resolveScript())
+                    || offsetXMLName.equals(offsetTag.getMXMLDialect().resolveString())
+                    || offsetXMLName.equals(offsetTag.getMXMLDialect().resolveModel())
+                    || offsetXMLName.equals(offsetTag.getMXMLDialect().resolveXML()))
                     && offsetTag.isOffsetInAttributeList(currentOffset)) {
                 IMXMLTagAttributeData attributeData = MXMLDataUtils.getMXMLTagAttributeWithValueAtOffset(offsetTag,
                         currentOffset);
                 if (attributeData != null && attributeData.getName().equals(IMXMLLanguageConstants.ATTRIBUTE_SOURCE)) {
-                    Path sourcePath = Paths.get(attributeData.getRawValue());
+                    String rawSourcePath = attributeData.getRawValue().trim();
+                    if (rawSourcePath.startsWith("/")) {
+                        String sourceFileOnSourcePath = projectData.project.getSourceFileFromSourcePath(rawSourcePath);
+                        if (sourceFileOnSourcePath != null) {
+                            rawSourcePath = sourceFileOnSourcePath;
+                        }
+                    }
+                    Path sourcePath = Paths.get(rawSourcePath);
                     if (!sourcePath.isAbsolute()) {
                         sourcePath = Paths.get(offsetTag.getSourcePath()).getParent().resolve(sourcePath);
                     }
