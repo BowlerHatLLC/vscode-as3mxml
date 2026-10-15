@@ -785,9 +785,6 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
         return CompletableFuture.completedFuture(new CodeLens());
     }
 
-    /**
-     * This feature is not implemented at this time.
-     */
     @Override
     public CompletableFuture<List<? extends TextEdit>> formatting(DocumentFormattingParams params) {
         if (!concurrentRequests) {
