@@ -30,8 +30,9 @@ import com.as3mxml.vscode.utils.LanguageServerCompilerUtils;
 
 public class FormattingProvider {
     private static final String FILE_EXTENSION_AS = ".as";
-    private static final String FILE_EXTENSION_CSS = ".css";
     private static final String FILE_EXTENSION_MXML = ".mxml";
+    private static final String LANGUAGE_ID_ACTIONSCRIPT = "actionscript";
+    private static final String LANGUAGE_ID_MXML = "mxml";
 
     private FileTracker fileTracker;
 
@@ -46,6 +47,11 @@ public class FormattingProvider {
         TextDocumentIdentifier textDocument = params.getTextDocument();
         FormattingOptions options = params.getOptions();
         String uriString = textDocument.getUri();
+        if (fileTracker.isOpen(uriString)) {
+            String uriText = fileTracker.getText(uriString);
+            String languageId = fileTracker.getLanguageId(uriString);
+            return formatText(uriText, uriString, languageId, options, cancelToken);
+        }
         Path path = LanguageServerCompilerUtils.getPathFromLanguageServerURI(uriString);
         if (path == null || path.getFileName().toString().startsWith(".")) {
             if (cancelToken != null) {
@@ -53,14 +59,21 @@ public class FormattingProvider {
             }
             return Collections.emptyList();
         }
-        if (uriString.endsWith(FILE_EXTENSION_CSS)) {
+        String fileText = fileTracker.getText(path);
+        String languageId = fileTracker.getLanguageId(path);
+        return formatText(fileText, path.toString(), languageId, options, cancelToken);
+    }
+
+    private List<? extends TextEdit> formatText(String fileText, String pathString, String languageId,
+            FormattingOptions options,
+            CancelChecker cancelToken) {
+        if (fileText == null) {
             if (cancelToken != null) {
                 cancelToken.checkCanceled();
             }
             return Collections.emptyList();
         }
-        String fileText = fileTracker.getText(path);
-        if (fileText == null) {
+        if (!LANGUAGE_ID_ACTIONSCRIPT.equals(languageId) && !LANGUAGE_ID_MXML.equals(languageId)) {
             if (cancelToken != null) {
                 cancelToken.checkCanceled();
             }
@@ -76,10 +89,10 @@ public class FormattingProvider {
         Configuration configuration = configurator.getConfiguration();
         FormatterSettings settings = FormatterUtils.configurationToFormatterSettings(configuration);
         String formattedFileText = fileText;
-        if (path.toString().endsWith(FILE_EXTENSION_MXML)) {
+        if (LANGUAGE_ID_MXML.equals(languageId)) {
             MXMLTokenFormatter formatter = new MXMLTokenFormatter(settings);
             List<ICompilerProblem> problems = new ArrayList<>();
-            formattedFileText = formatter.format(path.toString(), fileText, problems);
+            formattedFileText = formatter.format(pathString, fileText, problems);
             boolean hasErrors = false;
             CompilerProblemCategorizer categorizer = new CompilerProblemCategorizer(null);
             for (ICompilerProblem problem : problems) {
@@ -94,10 +107,10 @@ public class FormattingProvider {
             if (hasErrors) {
                 return Collections.emptyList();
             }
-        } else if (path.toString().endsWith(FILE_EXTENSION_AS)) {
+        } else if (LANGUAGE_ID_ACTIONSCRIPT.equals(languageId)) {
             ASTokenFormatter formatter = new ASTokenFormatter(settings);
             List<ICompilerProblem> problems = new ArrayList<>();
-            formattedFileText = formatter.format(path.toString(), fileText, problems);
+            formattedFileText = formatter.format(pathString, fileText, problems);
             boolean hasErrors = false;
             CompilerProblemCategorizer categorizer = new CompilerProblemCategorizer(null);
             for (ICompilerProblem problem : problems) {

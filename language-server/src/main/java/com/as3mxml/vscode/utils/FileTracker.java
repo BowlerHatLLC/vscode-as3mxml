@@ -35,7 +35,14 @@ import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextDocumentContentChangeEvent;
 
 public class FileTracker {
+    private static final String FILE_EXTENSION_AS = ".as";
+    private static final String FILE_EXTENSION_MXML = ".mxml";
+    private static final String LANGUAGE_ID_ACTIONSCRIPT = "actionscript";
+    private static final String LANGUAGE_ID_MXML = "mxml";
+
     private Map<Path, String> sourceByPath = new HashMap<>();
+    private Map<String, String> sourceByUri = new HashMap<>();
+    private Map<String, String> languageIdByUri = new HashMap<>();
     private LanguageServerFileSpecGetter fileSpecGetter;
 
     public FileTracker(IWorkspace compilerWorkspace) {
@@ -44,6 +51,10 @@ public class FileTracker {
 
     public boolean isOpen(Path path) {
         return sourceByPath.containsKey(path);
+    }
+
+    public boolean isOpen(String uri) {
+        return sourceByUri.containsKey(uri);
     }
 
     public Set<Path> getOpenFiles() {
@@ -56,6 +67,36 @@ public class FileTracker {
 
     public String closeFile(Path path) {
         return sourceByPath.remove(path);
+    }
+
+    public void openURI(String uri, String languageId, String text) {
+        sourceByUri.put(uri, text);
+        languageIdByUri.put(uri, languageId);
+    }
+
+    public String closeURI(String uri) {
+        if (!isOpen(uri)) {
+            return null;
+        }
+        languageIdByUri.remove(uri);
+        return sourceByUri.remove(uri);
+    }
+
+    public void changeURI(String uri, List<TextDocumentContentChangeEvent> contentChanges) {
+        if (!isOpen(uri)) {
+            return;
+        }
+        for (TextDocumentContentChangeEvent change : contentChanges) {
+            if (change.getRange() == null) {
+                sourceByUri.put(uri, change.getText());
+            } else if (sourceByUri.containsKey(uri)) {
+                String existingText = sourceByUri.get(uri);
+                String newText = patch(existingText, change);
+                sourceByUri.put(uri, newText);
+            } else {
+                System.err.println("Failed to apply changes to code intelligence from URI: " + uri);
+            }
+        }
     }
 
     public void changeFile(Path path, List<TextDocumentContentChangeEvent> contentChanges) {
@@ -94,6 +135,24 @@ public class FileTracker {
             }
         }
         return reader;
+    }
+
+    public String getLanguageId(String uri) {
+        return languageIdByUri.get(uri);
+    }
+
+    public String getLanguageId(Path path) {
+        String pathString = path.toString();
+        if (pathString.endsWith(FILE_EXTENSION_AS)) {
+            return LANGUAGE_ID_ACTIONSCRIPT;
+        } else if (pathString.endsWith(FILE_EXTENSION_MXML)) {
+            return LANGUAGE_ID_MXML;
+        }
+        return null;
+    }
+
+    public String getText(String uri) {
+        return sourceByUri.get(uri);
     }
 
     public String getText(Path path) {

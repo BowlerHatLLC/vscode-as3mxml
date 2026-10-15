@@ -68,6 +68,8 @@ public class LanguageServerCompilerUtils {
     private static final String FILE_EXTENSION_AS = ".as";
     private static final String SDK_LIBRARY_PATH_SIGNATURE_UNIX = "/frameworks/libs/";
     private static final String SDK_LIBRARY_PATH_SIGNATURE_WINDOWS = "\\frameworks\\libs\\";
+    private static final String URI_SCHEME_UNTITLED = "untitled:";
+    private static final String URI_SCHEME_VSCODE_USERDATA = "vscode-userdata:";
 
     /**
      * Converts an URI from the language server protocol to a Path.
@@ -85,7 +87,8 @@ public class LanguageServerCompilerUtils {
         }
         Optional<Path> optionalPath = getFilePath(uri);
         if (!optionalPath.isPresent()) {
-            if (!apiURI.startsWith("vscode-userdata:/")) {
+            if (!apiURI.startsWith(URI_SCHEME_VSCODE_USERDATA)
+                    && !apiURI.startsWith(URI_SCHEME_UNTITLED)) {
                 System.err.println("Could not find URI " + uri);
             }
             return null;

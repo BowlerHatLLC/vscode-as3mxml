@@ -193,6 +193,9 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     private static final String FILE_EXTENSION_CSS = ".css";
     private static final String FILE_EXTENSION_MXML = ".mxml";
     private static final String FILE_EXTENSION_SWC = ".swc";
+    private static final String LANGUAGE_ID_ACTIONSCRIPT = "actionscript";
+    private static final String LANGUAGE_ID_MXML = "mxml";
+    private static final String URI_SCHEME_UNTITLED = "untitled:";
     private static final String PROPERTY_FRAMEWORK_LIB = "royalelib";
     private static final String ROYALE_ASJS_RELATIVE_PATH_CHILD = "./royale-asjs";
     private static final String FRAMEWORKS_RELATIVE_PATH_CHILD = "./frameworks";
@@ -944,6 +947,14 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     public void didOpen(DidOpenTextDocumentParams params) {
         TextDocumentItem textDocument = params.getTextDocument();
         String textDocumentUri = textDocument.getUri();
+        if (textDocumentUri.startsWith(URI_SCHEME_UNTITLED)) {
+            String languageId = textDocument.getLanguageId();
+            if (!LANGUAGE_ID_ACTIONSCRIPT.equals(languageId) && !LANGUAGE_ID_MXML.equals(languageId)) {
+                return;
+            }
+            fileTracker.openURI(textDocumentUri, languageId, textDocument.getText());
+            return;
+        }
         if (!textDocumentUri.endsWith(FILE_EXTENSION_AS) && !textDocumentUri.endsWith(FILE_EXTENSION_MXML)
                 && !textDocumentUri.endsWith(FILE_EXTENSION_CSS)) {
             // code intelligence is available only in .as and .mxml files
@@ -1003,6 +1014,12 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     public void didChange(DidChangeTextDocumentParams params) {
         VersionedTextDocumentIdentifier textDocument = params.getTextDocument();
         String textDocumentUri = textDocument.getUri();
+        if (textDocumentUri.startsWith(URI_SCHEME_UNTITLED)) {
+            if (fileTracker.isOpen(textDocumentUri)) {
+                fileTracker.changeURI(textDocumentUri, params.getContentChanges());
+            }
+            return;
+        }
         if (!textDocumentUri.endsWith(FILE_EXTENSION_AS) && !textDocumentUri.endsWith(FILE_EXTENSION_MXML)
                 && !textDocumentUri.endsWith(FILE_EXTENSION_CSS)) {
             // code intelligence is available only in .as and .mxml files
@@ -1094,6 +1111,12 @@ public class ActionScriptServices implements TextDocumentService, WorkspaceServi
     public void didClose(DidCloseTextDocumentParams params) {
         TextDocumentIdentifier textDocument = params.getTextDocument();
         String textDocumentUri = textDocument.getUri();
+        if (textDocumentUri.startsWith(URI_SCHEME_UNTITLED)) {
+            if (fileTracker.isOpen(textDocumentUri)) {
+                fileTracker.closeURI(textDocumentUri);
+            }
+            return;
+        }
         if (!textDocumentUri.endsWith(FILE_EXTENSION_AS) && !textDocumentUri.endsWith(FILE_EXTENSION_MXML)
                 && !textDocumentUri.endsWith(FILE_EXTENSION_CSS)) {
             // code intelligence is available only in .as and .mxml files
