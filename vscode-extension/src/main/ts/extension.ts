@@ -631,7 +631,9 @@ function startClient() {
         let clientOptions: LanguageClientOptions = {
           documentSelector: [
             { scheme: "file", language: "actionscript" },
+            { scheme: "untitled", language: "actionscript" },
             { scheme: "file", language: "mxml" },
+            { scheme: "untitled", language: "mxml" },
             { scheme: "file", language: "css" },
           ],
           synchronize: {
