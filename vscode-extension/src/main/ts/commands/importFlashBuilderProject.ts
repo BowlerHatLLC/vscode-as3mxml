@@ -909,9 +909,8 @@ function migrateCompilerLibraryPathElement(
       if (
         kind !== "1" && //folder
         kind !== "3" && //swc
-        kind !== "5"
+        kind !== "5" //ane
       ) {
-        //ane
         console.warn(
           "Skipping library with unknown kind " +
             kind +
