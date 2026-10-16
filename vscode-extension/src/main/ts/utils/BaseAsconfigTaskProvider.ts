@@ -18,6 +18,7 @@ import * as path from "path";
 import * as fs from "fs";
 import json5 from "json5/dist/index.mjs";
 
+const NPM_MODULE_ASCONFIGC = "asconfigc";
 const ASCONFIG_JSON = "asconfig.json";
 const FILE_EXTENSION_AS = ".as";
 const FILE_EXTENSION_MXML = ".mxml";
@@ -34,7 +35,7 @@ const TYPE_LIB = "lib";
 export default class BaseAsconfigTaskProvider {
   constructor(
     context: vscode.ExtensionContext,
-    javaExecutablePath: string | null
+    javaExecutablePath: string | null,
   ) {
     this._context = context;
     this.javaExecutablePath = javaExecutablePath;
@@ -45,7 +46,7 @@ export default class BaseAsconfigTaskProvider {
   protected _context: vscode.ExtensionContext;
 
   provideTasks(
-    token: vscode.CancellationToken
+    token: vscode.CancellationToken,
   ): vscode.ProviderResult<vscode.Task[]> {
     if (vscode.workspace.workspaceFolders === undefined) {
       return [];
@@ -55,7 +56,7 @@ export default class BaseAsconfigTaskProvider {
       let result: vscode.Task[] = [];
       let asconfigJSONs = await vscode.workspace.findFiles(
         "**/asconfig*.json",
-        "**/node_modules/**"
+        "**/node_modules/**",
       );
       asconfigJSONs.forEach((jsonURI) => {
         let workspaceFolder = vscode.workspace.getWorkspaceFolder(jsonURI);
@@ -76,7 +77,7 @@ export default class BaseAsconfigTaskProvider {
             this.provideTasksForASConfigJSON(
               undefined,
               workspaceFolder,
-              result
+              result,
             );
           }
         }
@@ -87,7 +88,7 @@ export default class BaseAsconfigTaskProvider {
 
   resolveTask(
     task: vscode.Task,
-    token?: vscode.CancellationToken
+    token?: vscode.CancellationToken,
   ): vscode.ProviderResult<vscode.Task> {
     return undefined;
   }
@@ -95,19 +96,18 @@ export default class BaseAsconfigTaskProvider {
   protected provideTasksForASConfigJSON(
     jsonURI: vscode.Uri | undefined,
     workspaceFolder: vscode.WorkspaceFolder | undefined,
-    result: vscode.Task[]
+    result: vscode.Task[],
   ): void {}
 
   protected getCommand(workspaceRoot: vscode.WorkspaceFolder): string[] {
-    let nodeModulesBin = path.join(
+    const nodeModulesBin = path.join(
       workspaceRoot.uri.fsPath,
       "node_modules",
-      ".bin"
+      ".bin",
     );
     if (process.platform === "win32") {
-      let executableName = "asconfigc.cmd";
       //start out by looking for asconfigc in the workspace's local Node modules
-      let winPath = path.join(nodeModulesBin, executableName);
+      const winPath = path.join(nodeModulesBin, NPM_MODULE_ASCONFIGC + ".cmd");
       if (fs.existsSync(winPath)) {
         return [winPath];
       }
@@ -116,13 +116,12 @@ export default class BaseAsconfigTaskProvider {
         .get("asconfigc.useBundled");
       if (!useBundled) {
         //use an executable on the system path
-        return [executableName];
+        return ["npx", NPM_MODULE_ASCONFIGC];
       }
       //use the version bundled with the extension
       return this.getDefaultCommand();
     }
-    let executableName = "asconfigc";
-    let unixPath = path.join(nodeModulesBin, executableName);
+    const unixPath = path.join(nodeModulesBin, NPM_MODULE_ASCONFIGC);
     if (fs.existsSync(unixPath)) {
       return [unixPath];
     }
@@ -131,7 +130,7 @@ export default class BaseAsconfigTaskProvider {
       .get("asconfigc.useBundled");
     if (!useBundled) {
       //use an executable on the system path
-      return [executableName];
+      return ["npx", NPM_MODULE_ASCONFIGC];
     }
     //use the version bundled with the extension
     return this.getDefaultCommand();
@@ -150,7 +149,7 @@ export default class BaseAsconfigTaskProvider {
 
   protected getASConfigValue(
     jsonURI: vscode.Uri | undefined,
-    workspaceURI: vscode.Uri
+    workspaceURI: vscode.Uri,
   ): string | undefined {
     if (!jsonURI) {
       return undefined;
