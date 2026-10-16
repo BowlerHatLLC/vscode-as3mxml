@@ -283,6 +283,7 @@ function importFlashBuilderProjectInternal(
   }
   //these are built-in linked resources that cannot be configured by the user
   linkedResources.push({ name: "PROJECT_FRAMEWORKS", path: "${flexlib}" });
+  linkedResources.push({ name: "FRAMEWORKS", path: "${flexlib}" });
   linkedResources.push({ name: "SDK_THEMES_DIR", path: "${flexlib}/.." });
 
   let sdks = null;
