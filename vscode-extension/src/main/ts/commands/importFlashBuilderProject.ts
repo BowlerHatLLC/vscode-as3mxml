@@ -788,7 +788,7 @@ function migrateCompilerSourcePathElement(
 ) {
   let sourcePaths = [];
   if (sourceFolderPath) {
-    sourcePaths.push(sourceFolderPath);
+    sourcePaths.push(sourceFolderPath.replace(/\\/g, "/"));
   }
   let children = compilerSourcePathElement.children as any[];
   children.forEach((child) => {
@@ -811,7 +811,7 @@ function migrateCompilerSourcePathElement(
         );
         return;
       }
-      sourcePaths.push(sourcePath);
+      sourcePaths.push(sourcePath.replace(/\\/g, "/"));
     }
   });
   if (sourcePaths.length > 0) {
@@ -931,10 +931,10 @@ function migrateCompilerLibraryPathElement(
       }
       if (linkType === "1") {
         //library-path
-        libraryPaths.push(libraryPath);
+        libraryPaths.push(libraryPath.replace(/\\/g, "/"));
       } else if (linkType === "2") {
         //external-ibrary-path
-        externalLibraryPaths.push(libraryPath);
+        externalLibraryPaths.push(libraryPath.replace(/\\/g, "/"));
       } else if (linkType === "3") {
         //runtime shared library
         console.warn(
