@@ -32,6 +32,7 @@ import com.as3mxml.asconfigc.compiler.ProjectType;
 public class ProjectUtils {
 	private static final String JAR_NAME_ADT = "adt.jar";
 	private static final String AIR_NAMESPACE_PREFIX = "<application xmlns=\"";
+	private static final List<String> SOURCE_CONTROL_DIRECTORY_NAMES = Arrays.asList(".git", ".svn", ".hg", ".jj");
 
 	public static String findAIRDescriptorOutputPath(String mainFile, String airDescriptor, String outputPath,
 			String projectPath, boolean isSWF, boolean debugBuild) {
@@ -311,6 +312,11 @@ public class ProjectUtils {
 					continue;
 				}
 				if (innerFile.isDirectory()) {
+					if (SOURCE_CONTROL_DIRECTORY_NAMES.contains(innerFile.getName())) {
+						// we accept most types of files, including hidden ones,
+						// but it's a bad idea to copy source control directories
+						continue;
+					}
 					sourcePathsCopy.add(innerFilePath);
 					size++;
 					continue;
