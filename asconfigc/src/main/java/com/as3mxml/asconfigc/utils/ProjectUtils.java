@@ -334,6 +334,10 @@ public class ProjectUtils {
 					// macOS system files that can be ignored
 					continue;
 				}
+				if (innerFileName.equals("Thumbs.db")) {
+					// windows system files that can be ignored
+					continue;
+				}
 				result.add(innerFilePath);
 			}
 		}
