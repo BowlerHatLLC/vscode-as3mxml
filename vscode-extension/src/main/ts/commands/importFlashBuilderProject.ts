@@ -556,9 +556,9 @@ function migrateActionScriptProperties(
     return null;
   }
 
-  let applicationPath = null;
+  let applicationPath: string | null = null;
   if ("path" in appAttributes) {
-    applicationPath = appAttributes.path;
+    applicationPath = injectPathTokens(appAttributes.path, linkedResources);
   }
   if (!applicationPath) {
     applicationPath = isFlexApp ? "MyProject.mxml" : "MyProject.as";
@@ -701,7 +701,7 @@ function migrateCompilerElement(
     attributes.useApolloConfig === "true"
   ) {
     result.application = path.posix.join(
-      attributes.sourceFolderPath,
+      injectPathTokens(attributes.sourceFolderPath, linkedResources),
       getApplicationNameFromPath(appPath) + "-app.xml",
     );
   }
@@ -722,7 +722,7 @@ function migrateCompilerElement(
   if ("outputFolderPath" in attributes) {
     let fileExtension = isFlexLibrary ? FILE_EXTENSION_SWC : FILE_EXTENSION_SWF;
     result.compilerOptions.output = path.posix.join(
-      attributes.outputFolderPath,
+      injectPathTokens(attributes.outputFolderPath, linkedResources),
       getApplicationNameFromPath(appPath) + fileExtension,
     );
   }
@@ -750,11 +750,14 @@ function migrateCompilerElement(
   ) {
     result.compilerOptions["target-player"] = attributes.targetPlayerVersion;
   }
-  let sourceFolderPath: string | null | undefined = null;
+  let sourceFolderPath: string | null = null;
   if ("sourceFolderPath" in attributes) {
-    sourceFolderPath = attributes.sourceFolderPath;
+    sourceFolderPath = attributes.sourceFolderPath.replace(/\\/g, "/");
     if (!isFlexLibrary) {
-      let mainFilePath = path.posix.join(attributes.sourceFolderPath, appPath);
+      let mainFilePath = path.posix.join(
+        attributes.sourceFolderPath.replace(/\\/g, "/"),
+        appPath,
+      );
       result.files.push(mainFilePath);
     }
   }
@@ -798,7 +801,7 @@ function migrateCompilerSourcePathElement(
     }
     let attributes = child.attributes;
     if ("path" in attributes && "kind" in attributes) {
-      let sourcePath = resolvePathWithTokens(
+      let sourcePath = injectPathTokens(
         attributes.path as string,
         linkedResources,
       );
@@ -820,7 +823,7 @@ function migrateCompilerSourcePathElement(
   }
 }
 
-function resolvePathWithTokens(
+function injectPathTokens(
   pathWithTokens: string,
   linkedResources: EclipseLinkedResource[],
 ) {
@@ -893,7 +896,7 @@ function migrateCompilerLibraryPathElement(
       "kind" in libraryPathEntryAttributes &&
       "linkType" in libraryPathEntryAttributes
     ) {
-      let libraryPath = resolvePathWithTokens(
+      let libraryPath = injectPathTokens(
         libraryPathEntryAttributes.path as string,
         linkedResources,
       );
@@ -1006,7 +1009,7 @@ function migrateBuildTargetsElement(
       if ("provisioningFile" in buildTargetAttributes) {
         let provisioningFile = buildTargetAttributes.provisioningFile;
         if (provisioningFile) {
-          provisioningFile = resolvePathWithTokens(
+          provisioningFile = injectPathTokens(
             provisioningFile,
             linkedResources,
           );
@@ -1051,7 +1054,7 @@ function migrateBuildTargetsElement(
       if ("airCertificatePath" in airSettingsAttributes) {
         let airCertificatePath = airSettingsAttributes.airCertificatePath;
         if (airCertificatePath) {
-          airCertificatePath = resolvePathWithTokens(
+          airCertificatePath = injectPathTokens(
             airCertificatePath,
             linkedResources,
           );
@@ -1073,7 +1076,7 @@ function migrateBuildTargetsElement(
             let anePathEntryAttributes = anePathEntry.attributes;
             if ("path" in anePathEntryAttributes) {
               let extdirPath = anePathEntryAttributes.path;
-              extdirPath = resolvePathWithTokens(extdirPath, linkedResources);
+              extdirPath = injectPathTokens(extdirPath, linkedResources);
               extdir.push(extdirPath);
             }
           });
@@ -1161,7 +1164,7 @@ function migrateThemeElement(
   }
   if ("themeLocation" in themeAttributes) {
     let themeLocation = themeAttributes.themeLocation;
-    themeLocation = resolvePathWithTokens(themeLocation, linkedResources);
+    themeLocation = injectPathTokens(themeLocation, linkedResources);
     result.compilerOptions.theme = themeLocation;
   }
 }
@@ -1181,7 +1184,7 @@ function migrateIncludeClassesElement(
     })
     .map((child) => {
       let includeClassesPath = child.attributes.path;
-      return resolvePathWithTokens(includeClassesPath, linkedResources);
+      return injectPathTokens(includeClassesPath, linkedResources);
     });
   if (newClasses.length > 0) {
     result.compilerOptions["include-classes"] = newClasses;
