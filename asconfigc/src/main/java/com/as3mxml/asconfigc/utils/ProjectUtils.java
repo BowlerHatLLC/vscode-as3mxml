@@ -261,6 +261,9 @@ public class ProjectUtils {
 			// the parent directory of the main file is automatically added as a
 			// source path by the compiler
 			Path mainFileParent = Paths.get(mainFile).getParent();
+			if (mainFileParent == null) {
+				mainFileParent = Paths.get(".");
+			}
 			sourcePathsCopy.add(mainFileParent.toString());
 		}
 		for (int i = 0, size = sourcePathsCopy.size(); i < size; i++) {
@@ -337,6 +340,9 @@ public class ProjectUtils {
 			// the parent directory of the main file is automatically added as a
 			// source path by the compiler
 			Path mainFileParent = Paths.get(mainFile).getParent();
+			if (mainFileParent == null) {
+				mainFileParent = Paths.get(".");
+			}
 			sourcePathsCopy.add(mainFileParent.toString());
 		}
 		Path assetPathPath = Paths.get(assetPath);

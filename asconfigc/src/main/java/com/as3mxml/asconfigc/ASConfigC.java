@@ -1011,10 +1011,10 @@ public class ASConfigC {
 			// the parent directory of the main file is automatically added as a
 			// source path by the compiler
 			Path mainFileParent = Paths.get(mainFile).getParent();
-			// may be null if the path is already root
-			if (mainFileParent != null) {
-				sourcePathsCopy.add(mainFileParent.toString());
+			if (mainFileParent == null) {
+				mainFileParent = Paths.get(".");
 			}
+			sourcePathsCopy.add(mainFileParent.toString());
 		}
 		for (int i = 0, size = sourcePathsCopy.size(); i < size; i++) {
 			String sourcePath = sourcePathsCopy.get(i);
