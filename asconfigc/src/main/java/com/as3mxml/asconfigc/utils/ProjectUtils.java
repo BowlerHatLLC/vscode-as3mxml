@@ -264,7 +264,7 @@ public class ProjectUtils {
 			if (mainFileParent == null) {
 				mainFileParent = Paths.get(".");
 			}
-			sourcePathsCopy.add(mainFileParent.toString());
+			sourcePathsCopy.add(mainFileParent.normalize().toString());
 		}
 		for (int i = 0, size = sourcePathsCopy.size(); i < size; i++) {
 			String sourcePath = sourcePathsCopy.get(i);
@@ -272,10 +272,15 @@ public class ProjectUtils {
 			if (!path.isAbsolute()) {
 				// force all source paths into absolute paths
 				path = Paths.get(System.getProperty("user.dir"), sourcePath);
-				sourcePathsCopy.set(i, path.toString());
 			}
+			sourcePathsCopy.set(i, path.normalize().toString());
 		}
-		if (sourcePathsCopy.contains(outputDirectory)) {
+		Path outputDirectoryPath = Paths.get(outputDirectory);
+		if (!outputDirectoryPath.isAbsolute()) {
+			outputDirectoryPath = Paths.get(System.getProperty("user.dir"), outputDirectory);
+		}
+		outputDirectoryPath = outputDirectoryPath.normalize();
+		if (sourcePathsCopy.contains(outputDirectoryPath.toString())) {
 			// assets in source path will not be copied because the output
 			// directory is a source path
 			return result;
@@ -287,8 +292,8 @@ public class ProjectUtils {
 				if (!path.isAbsolute()) {
 					// force all excludes into absolute paths
 					path = Paths.get(System.getProperty("user.dir"), exclude);
-					excludes.set(i, path.toString());
 				}
+				excludes.set(i, path.normalize().toString());
 			}
 		}
 		for (int i = 0, size = sourcePathsCopy.size(); i < size; i++) {
@@ -302,6 +307,9 @@ public class ProjectUtils {
 			}
 			for (File innerFile : listedFiles) {
 				String innerFilePath = innerFile.getAbsolutePath();
+				if (excludes != null && excludes.contains(innerFilePath)) {
+					continue;
+				}
 				if (innerFile.isDirectory()) {
 					sourcePathsCopy.add(innerFilePath);
 					size++;
@@ -313,9 +321,6 @@ public class ProjectUtils {
 					extension = innerFilePath.substring(index);
 				}
 				if (extension != null && excludedExtensions != null && excludedExtensions.contains(extension)) {
-					continue;
-				}
-				if (excludes != null && excludes.contains(innerFilePath)) {
 					continue;
 				}
 				String innerFileName = innerFile.getName();
@@ -343,13 +348,13 @@ public class ProjectUtils {
 			if (mainFileParent == null) {
 				mainFileParent = Paths.get(".");
 			}
-			sourcePathsCopy.add(mainFileParent.toString());
+			sourcePathsCopy.add(mainFileParent.normalize().toString());
 		}
 		Path assetPathPath = Paths.get(assetPath);
 		if (!assetPathPath.isAbsolute()) {
 			assetPathPath = Paths.get(System.getProperty("user.dir"), assetPath);
-			assetPath = assetPathPath.toString();
 		}
+		assetPath = assetPathPath.normalize().toString();
 		String relativePath = null;
 		for (int i = 0, size = sourcePathsCopy.size(); i < size; i++) {
 			String sourcePath = sourcePathsCopy.get(i);
@@ -357,8 +362,9 @@ public class ProjectUtils {
 			if (!path.isAbsolute()) {
 				path = Paths.get(System.getProperty("user.dir"), sourcePath);
 			}
+			path = path.normalize();
 			if (assetPath.startsWith(path.toString())) {
-				relativePath = path.relativize(Paths.get(assetPath)).toString();
+				relativePath = path.relativize(assetPathPath).toString();
 			}
 		}
 		if (relativePath == null) {

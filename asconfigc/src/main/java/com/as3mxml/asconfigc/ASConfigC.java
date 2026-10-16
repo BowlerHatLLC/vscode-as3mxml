@@ -1079,6 +1079,7 @@ public class ASConfigC {
 		}
 		String outputDirectory = ProjectUtils.findOutputDirectory(mainFile, outputPathForTarget, !outputIsJS);
 		ArrayList<String> excludes = new ArrayList<>();
+		excludes.add(outputDirectory);
 		if (airDescriptorPaths != null) {
 			excludes.addAll(airDescriptorPaths);
 		}
