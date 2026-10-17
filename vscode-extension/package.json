@@ -441,6 +441,16 @@
             "advanced"
           ]
         },
+        "as3mxml.languageServer.autoMemoryPurge": {
+          "type": [
+            "boolean"
+          ],
+          "default": false,
+          "description": "(Advanced) Automatically purge the language server memory when max allotted memory is reached. Disabled by default.",
+          "tags": [
+            "advanced"
+          ]
+        },
         "as3mxml.asconfigc.jvmargs": {
           "type": "string",
           "default": null,

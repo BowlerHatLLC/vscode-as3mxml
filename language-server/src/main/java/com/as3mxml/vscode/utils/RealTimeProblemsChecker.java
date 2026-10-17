@@ -23,6 +23,7 @@ import java.util.Set;
 
 import com.as3mxml.vscode.project.ILspProject;
 import com.as3mxml.vscode.project.ActionScriptProjectData;
+import com.as3mxml.vscode.project.LspASCompilationUnit;
 
 import org.apache.royale.compiler.clients.problems.ProblemQuery;
 import org.apache.royale.compiler.filespecs.IFileSpecification;
@@ -85,6 +86,7 @@ public class RealTimeProblemsChecker implements Runnable {
 		pendingProjectData = null;
 		pendingCompilationUnit = null;
 		pendingFileSpec = null;
+		LspASCompilationUnit.setActiveUnit((LspASCompilationUnit) compilationUnit);
 		// make these requests, but allow the compiler to handle things in a
 		// background thread for now. we can force it to complete synchronously
 		// later, if we need to.
@@ -101,6 +103,7 @@ public class RealTimeProblemsChecker implements Runnable {
 		pendingProjectData = null;
 		pendingCompilationUnit = null;
 		pendingFileSpec = null;
+		LspASCompilationUnit.setActiveUnit(null);
 	}
 
 	public synchronized void updateNow() {

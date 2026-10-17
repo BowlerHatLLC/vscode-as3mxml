@@ -23,6 +23,7 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -58,7 +59,7 @@ public class FileTracker {
     }
 
     public Set<Path> getOpenFiles() {
-        return sourceByPath.keySet();
+        return new HashSet<>(sourceByPath.keySet());
     }
 
     public void openFile(Path path, String text) {
