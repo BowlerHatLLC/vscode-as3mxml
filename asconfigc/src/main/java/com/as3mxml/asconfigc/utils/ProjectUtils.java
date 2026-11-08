@@ -373,7 +373,7 @@ public class ProjectUtils {
 				path = Paths.get(System.getProperty("user.dir"), sourcePath);
 			}
 			path = path.normalize();
-			if (assetPath.startsWith(path.toString())) {
+			if (assetPath.startsWith(path.toString() + File.separatorChar)) {
 				relativePath = path.relativize(assetPathPath).toString();
 			}
 		}
