@@ -1309,7 +1309,9 @@ public class ASConfigC {
 					continue;
 				}
 
-				File destFile = new File(currentAneDirectory, zipEntry.getName());
+				String entryName = Paths.get(zipEntry.getName()).normalize().toString().replaceFirst("^(?:..[\\/])+",
+						"");
+				File destFile = new File(currentAneDirectory, entryName);
 				File destParent = new File(destFile.getParent());
 				destParent.mkdirs();
 
