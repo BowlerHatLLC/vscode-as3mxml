@@ -2772,7 +2772,8 @@ public class CompletionProvider {
                 project);
         if (attributeDefinition instanceof IVariableDefinition) {
             IVariableDefinition variableDefinition = (IVariableDefinition) attributeDefinition;
-            if (variableDefinition.getTypeAsDisplayString().equals(IASLanguageConstants.Boolean)) {
+            ITypeDefinition variableType = variableDefinition.resolveType(project);
+            if (variableType != null && variableType.getQualifiedName().equals(IASLanguageConstants.Boolean)) {
                 CompletionItem falseItem = new CompletionItem();
                 falseItem.setKind(CompletionItemKind.Value);
                 falseItem.setLabel(IASLanguageConstants.FALSE);
