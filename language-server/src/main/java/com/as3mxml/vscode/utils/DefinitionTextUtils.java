@@ -614,7 +614,7 @@ public class DefinitionTextUtils {
         textDocumentBuilder.append(" ");
         appendDefinitionName(variableDefinition, textDocumentBuilder, definitionToFind, includeASDoc, result);
         textDocumentBuilder.append(":");
-        textDocumentBuilder.append(getTypeAsDisplayString(variableDefinition));
+        textDocumentBuilder.append(getTypeAsDisplayString(variableDefinition, currentProject));
         if (variableDefinition instanceof IConstantDefinition) {
             IConstantDefinition constantDefinition = (IConstantDefinition) variableDefinition;
             Object initialValue = constantDefinition.resolveInitialValue(currentProject);
@@ -811,7 +811,7 @@ public class DefinitionTextUtils {
             }
             detailBuilder.append(variableDefinition.getQualifiedName());
             detailBuilder.append(":");
-            detailBuilder.append(getTypeAsDisplayString(variableDefinition));
+            detailBuilder.append(getTypeAsDisplayString(variableDefinition, currentProject));
             if (variableDefinition instanceof IConstantDefinition) {
                 IConstantDefinition constantDefinition = (IConstantDefinition) variableDefinition;
                 Object initialValue = constantDefinition.resolveInitialValue(currentProject);
@@ -857,7 +857,7 @@ public class DefinitionTextUtils {
             detailBuilder.append(IMetaAttributeConstants.NAME_EVENT_TYPE);
             detailBuilder.append("=");
             detailBuilder.append("\"");
-            detailBuilder.append(getTypeAsDisplayString(eventDefinition));
+            detailBuilder.append(getTypeAsDisplayString(eventDefinition, currentProject));
             detailBuilder.append("\"");
             detailBuilder.append(")");
             detailBuilder.append("]");
@@ -876,7 +876,7 @@ public class DefinitionTextUtils {
             detailBuilder.append(IMetaAttributeConstants.NAME_STYLE_TYPE);
             detailBuilder.append("=");
             detailBuilder.append("\"");
-            detailBuilder.append(getTypeAsDisplayString(styleDefinition));
+            detailBuilder.append(getTypeAsDisplayString(styleDefinition, currentProject));
             detailBuilder.append("\"");
             detailBuilder.append(")");
             detailBuilder.append("]");
@@ -949,7 +949,7 @@ public class DefinitionTextUtils {
                 labelBuilder.append(baseName);
             }
             labelBuilder.append(":");
-            labelBuilder.append(getTypeAsDisplayString(parameterDefinition));
+            labelBuilder.append(getTypeAsDisplayString(parameterDefinition, currentProject));
             if (parameterDefinition.hasDefaultValue()) {
                 labelBuilder.append(" = ");
                 Object defaultValue = parameterDefinition.resolveDefaultValue(currentProject);
@@ -1044,7 +1044,8 @@ public class DefinitionTextUtils {
         }
     }
 
-    private static String getTypeAsDisplayString(IDefinition definition) {
+    private static String getTypeAsDisplayString(IDefinition definition, ICompilerProject project) {
+        definition.resolveType(project);
         String typeAsDisplayString = definition.getTypeAsDisplayString();
         if (typeAsDisplayString.length() == 0) {
             // replace empty string with *
