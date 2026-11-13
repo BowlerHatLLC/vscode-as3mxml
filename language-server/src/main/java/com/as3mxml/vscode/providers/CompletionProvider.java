@@ -900,6 +900,15 @@ public class CompletionProvider {
             if (!isAttribute) {
                 autoCompleteDefinitionsForMXML(result, project, offsetUnit, offsetTag, true, includeOpenTagBracket,
                         nextChar, null, addImportData, xmlnsPosition);
+
+                IFileSpecification fileSpec = fileTracker.getFileSpecification(offsetUnit.getAbsoluteFilename());
+                MXMLNamespace fxNS = MXMLNamespaceUtils.getMXMLLanguageNamespace(fileSpec, project.getWorkspace());
+                if (fxNS != null) {
+                    addMXMLLanguageTagToAutoComplete(IMXMLLanguageConstants.COMPONENT, fxNS.prefix,
+                            includeOpenTagBracket, true, result);
+                    addMXMLLanguageTagToAutoComplete(IMXMLLanguageConstants.MODEL, fxNS.prefix,
+                            includeOpenTagBracket, true, result);
+                }
             }
             return result;
         }
@@ -1025,6 +1034,25 @@ public class CompletionProvider {
             } else if (MXMLDataUtils.isDeclarationsTag(parentTag)) {
                 autoCompleteTypesForMXMLFromExistingTag(result, project, offsetUnit, offsetTag, nextChar, null,
                         xmlnsPosition);
+
+                IFileSpecification fileSpec = fileTracker.getFileSpecification(offsetUnit.getAbsoluteFilename());
+                MXMLNamespace fxNS = MXMLNamespaceUtils.getMXMLLanguageNamespace(fileSpec, project.getWorkspace());
+                if (fxNS != null) {
+                    String offsetPrefix = offsetTag.getPrefix();
+                    if (offsetPrefix.length() == 0) {
+                        // this tag doesn't have a prefix
+                        addMXMLLanguageTagToAutoComplete(IMXMLLanguageConstants.COMPONENT, fxNS.prefix,
+                                includeOpenTagBracket, true, result);
+                        addMXMLLanguageTagToAutoComplete(IMXMLLanguageConstants.MODEL, fxNS.prefix,
+                                includeOpenTagBracket, true, result);
+                    } else if (offsetPrefix.equals(fxNS.prefix)) {
+                        // this tag has a prefix
+                        addMXMLLanguageTagToAutoComplete(IMXMLLanguageConstants.COMPONENT, fxNS.prefix, false,
+                                false, result);
+                        addMXMLLanguageTagToAutoComplete(IMXMLLanguageConstants.MODEL, fxNS.prefix, false,
+                                false, result);
+                    }
+                }
                 return result;
             } else if (offsetTag.getParent().getRootTag().equals(offsetTag)) {
                 autoCompleteTypesForMXMLFromExistingTag(result, project, offsetUnit, offsetTag, nextChar, null,
