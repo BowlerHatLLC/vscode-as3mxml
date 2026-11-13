@@ -976,9 +976,13 @@ public class CompletionProvider {
                                 // this tag doesn't have a prefix
                                 addMXMLLanguageTagToAutoComplete(IMXMLLanguageConstants.COMPONENT, fxNS.prefix,
                                         includeOpenTagBracket, true, result);
+                                addMXMLLanguageTagToAutoComplete(IMXMLLanguageConstants.MODEL, fxNS.prefix,
+                                        includeOpenTagBracket, true, result);
                             } else if (offsetPrefix.equals(fxNS.prefix)) {
                                 // this tag has a prefix
                                 addMXMLLanguageTagToAutoComplete(IMXMLLanguageConstants.COMPONENT, fxNS.prefix, false,
+                                        false, result);
+                                addMXMLLanguageTagToAutoComplete(IMXMLLanguageConstants.MODEL, fxNS.prefix, false,
                                         false, result);
                             }
                         }
@@ -1055,6 +1059,8 @@ public class CompletionProvider {
                                 true, includeOpenTagBracket, result);
                     }
                     addMXMLLanguageTagToAutoComplete(IMXMLLanguageConstants.COMPONENT, fxNS.prefix,
+                            includeOpenTagBracket, true, result);
+                    addMXMLLanguageTagToAutoComplete(IMXMLLanguageConstants.MODEL, fxNS.prefix,
                             includeOpenTagBracket, true, result);
                 }
                 String defaultPropertyName = classDefinition.getDefaultPropertyName(project);
