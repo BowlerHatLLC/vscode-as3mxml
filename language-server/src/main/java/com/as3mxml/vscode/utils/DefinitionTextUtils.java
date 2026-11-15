@@ -1051,6 +1051,17 @@ public class DefinitionTextUtils {
             // replace empty string with *
             return IASLanguageConstants.ANY_TYPE;
         }
+        if (definition instanceof IVariableDefinition
+                && IASLanguageConstants.Array.equals(typeAsDisplayString)) {
+            IMetaTag arrayElementTypeMeta = definition
+                    .getMetaTagByName(IMetaAttributeConstants.ATTRIBUTE_ARRAYELEMENTTYPE);
+            if (arrayElementTypeMeta != null) {
+                String arrayElementType = arrayElementTypeMeta.getValue();
+                if (arrayElementType != null && arrayElementType.length() > 0) {
+                    return typeAsDisplayString + " /* of " + arrayElementType + " */";
+                }
+            }
+        }
         return typeAsDisplayString;
     }
 
